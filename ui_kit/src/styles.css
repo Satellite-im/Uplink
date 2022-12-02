@@ -1,11 +1,11 @@
 :root {
     --animation-time: 0.15s;
 
-    --heading-size: 18px;
-    --subheading-size: 12pt;
-    --text-size: 11pt;
-    --text-size-less: 9pt;
-    --label-size: 10pt;
+    --heading-size: 1.1rem;
+    --subheading-size: 0.7rem;
+    --text-size: 0.7rem;
+    --text-size-less: 0.6rem;
+    --label-size: 0.5pt;
   
     --gap: 0.5rem;
     --gap-less: 0.25rem;
