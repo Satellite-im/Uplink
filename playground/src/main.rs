@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use ui_kit::{UiButton::{Button, Appearance}, UiTooltip::{Tooltip, ArrowPosition}};
+use ui_kit::{UiButton::{Button, Appearance}, UiTooltip::{Tooltip, ArrowPosition}, UiSwitch::Switch};
 
-const STYLES: &'static str = include_str!("./styles.css");
+const STYLES: &'static str = include_str!("./style.css");
 
 
 fn main() {
@@ -110,6 +110,11 @@ fn app(cx: Scope) -> Element {
                     }
                 )),
             },
+        },
+        Item {
+            name: String::from("Switch"),
+            desc: String::from("A on off switch."),
+            Switch {},
         }
     ))
 }

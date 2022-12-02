@@ -4,7 +4,7 @@ pub mod tooltip {
     use dioxus::prelude::*;
     use uuid::Uuid;
 
-    const STYLES: &'static str = include_str!("./styles.css");
+    const STYLES: &'static str = include_str!("./style.css");
 
     #[derive(PartialEq, Eq, Copy, Clone)]
     /// Which direction will the arrow on the popup point?

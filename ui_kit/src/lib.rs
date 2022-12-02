@@ -1,4 +1,5 @@
 pub use dioxus_heroicons::outline::Shape as Icon;
+pub use dioxus_heroicons::Icon as IconElement;
 
 pub mod button;
 pub use button::button as UiButton;
@@ -6,7 +7,10 @@ pub use button::button as UiButton;
 pub mod tooltip;
 pub use tooltip::tooltip as UiTooltip;
 
-const VARS: &'static str = include_str!("./styles.css");
+pub mod switch;
+pub use switch::switch as UiSwitch;
+
+const VARS: &'static str = include_str!("./style.css");
 
 /// Loads the stylesheet to string.
 pub fn get_styles(styles: &'static str) -> String {
