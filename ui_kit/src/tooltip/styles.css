@@ -1,21 +1,25 @@
 .tooltip {
   user-select: none;
-  height: calc(var(--height-input) / 2);
-  min-width: 80px;
+  max-width: 150px;
+  min-width: fit-content;
   border-radius: var(--border-radius-less);
   border: none;
   font-size: var(--text-size-less);
   color: var(--text-color-bright);
   background-color: var(--secondary);
-  padding: var(--gap-less);
   position: absolute;
   display: inline-flex;
   justify-content: center;
-  line-height: 1.8;
   z-index: 1000;
   -webkit-transition: opacity var(--animation-time) ease-in-out;
   -moz-transition: opacity var(--animation-time) ease-in-out;
   transition: opacity var(--animation-time) ease-in-out;
+  font-family: 'Space Mono', monospace;
+  font-size: var(--text-size-less);
+}
+
+.tooltip-text {
+  padding: var(--gap);
 }
 
 .tooltip-arrow-top,
@@ -34,12 +38,12 @@
 
 .tooltip-arrow-right {
   right: 100%;
-  top: calc(50% - 13px);
+  top: calc(50% - 1rem);
 }
 
 .tooltip-arrow-left {
   left: 100%;
-  top: calc(50% - 13px);
+  top: calc(50% - 1rem);
 }
 
 .tooltip-arrow-top-left::after {

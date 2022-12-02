@@ -68,7 +68,7 @@ pub mod tooltip {
                 class: {
                     format_args!("tooltip hidden tooltip-{} tooltip-{}", &UUID, arrow_position)
                 },
-                "{text}"
+                span { class: "tooltip-text", "{text}" }
             }
         })
     }
