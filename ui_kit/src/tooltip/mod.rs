@@ -55,8 +55,7 @@ pub mod tooltip {
     #[allow(non_snake_case)]
     pub fn Tooltip(cx: Scope<Props>) -> Element {
         let UUID: String = Uuid::new_v4().to_string();
-
-        let styles: String = STYLES.replace(".btn", &format!(".btn-{}", &UUID));
+        let styles = STYLES.replace(".tooltip", &format!(".tooltip-{}", &UUID));
 
         let arrow_position = get_arrow_position(&cx);
         let text = match cx.props.text.clone() {

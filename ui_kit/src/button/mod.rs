@@ -92,10 +92,11 @@ pub mod button {
     #[allow(non_snake_case)]
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let UUID: String = Uuid::new_v4().to_string();
-        
+
         let styles: String = STYLES.replace(".btn", &format!(".btn-{}", &UUID));
+        
         // This is needed because you can't have hyphens in javascript declarations.
-        let mut SAFE_UUID: String = UUID.clone().replace("-", "_");
+        let SAFE_UUID: String = UUID.clone().replace("-", "_");
         let script: String = SCRIPT.replace("DIUU", &UUID).replace("SAFE_UUID", &SAFE_UUID);
 
         let text = get_text(&cx);
