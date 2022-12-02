@@ -117,7 +117,20 @@ pub mod button {
                         title: "{text}",
                         disabled: "{disabled}",
                         class: {
-                            format_args!("btn appearance-{} btn-{}", appearance, UUID)
+                            format_args!("btn appearance-{} btn-{} {} {}", appearance, UUID, {
+                                if *disabled {
+                                    "btn-disabled"
+                                } else {
+                                    ""
+                                }
+                            },
+                            {
+                                if text.is_empty() {
+                                    "no-text"
+                                } else {
+                                    ""
+                                }
+                            })
                         },
                         // Optionally pass through click events.
                         onclick: move |e| emit(&cx, e),

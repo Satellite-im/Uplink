@@ -2,7 +2,7 @@
   user-select: none;
   height: calc(var(--height-input) / 2);
   min-width: 80px;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-less);
   border: none;
   font-size: var(--text-size-less);
   color: var(--text-color-bright);

@@ -56,10 +56,6 @@
     
 }
 
-body, html {
-    background: var(--background);
-}
-
 .visible {
     opacity: 1;
 }
