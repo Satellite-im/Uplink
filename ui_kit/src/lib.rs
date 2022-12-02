@@ -9,8 +9,8 @@ pub use tooltip::tooltip as UiTooltip;
 const VARS: &'static str = include_str!("./styles.css");
 
 /// Loads the stylesheet to string.
-pub fn get_styles(css_rule: &'static str, styles: &'static str, uuid: &String) -> String {
-    format!("{}{}", crate::VARS, styles.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
+pub fn get_styles(styles: &'static str) -> String {
+    format!("{}{}", crate::VARS, styles)
 }
 
 /// Loads the script to string.

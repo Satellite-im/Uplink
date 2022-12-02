@@ -4,8 +4,6 @@ pub mod tooltip {
     use dioxus::prelude::*;
     use uuid::Uuid;
 
-    use crate::get_styles;
-
     const STYLES: &'static str = include_str!("./styles.css");
 
     #[derive(PartialEq, Eq, Copy, Clone)]
@@ -55,10 +53,9 @@ pub mod tooltip {
 
     #[allow(non_snake_case)]
     pub fn Tooltip(cx: Scope<Props>) -> Element {
+        // You don't always need a UUID. It's used in this case because although the tooltip has generic styles, it needs a unique identifier for runtime actions.
         let UUID: String = Uuid::new_v4().to_string();
         
-        let styles = get_styles(".tooltip", STYLES, &UUID);
-
         let arrow_position = get_arrow_position(&cx);
         let text = match cx.props.text.clone() {
             Some(t) => t,
@@ -66,7 +63,7 @@ pub mod tooltip {
         };
 
         cx.render(rsx! {
-            style { "{styles}" },
+            style { "{STYLES}" },
             div {
                 class: {
                     format_args!("tooltip hidden tooltip-{}-{} tooltip-{}", &UUID, arrow_position, &UUID)

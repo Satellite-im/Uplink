@@ -94,10 +94,9 @@ pub mod button {
     #[allow(non_snake_case)]
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let UUID = Uuid::new_v4().to_string();
-        let SCRIPT_UUID = UUID.clone();
 
         let script = get_script(SCRIPT, &UUID);
-        let styles = get_styles(".btn", STYLES, &SCRIPT_UUID);
+        let styles = get_styles(STYLES);
 
         let text = get_text(&cx);
         let disabled = &cx.props.disabled.unwrap_or(false);
