@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{Icon, IconElement, elements::{button::{Button, Appearance}, tooltip::{ArrowPosition, Tooltip}}};
+use crate::{Icon, elements::{button::{Button, Appearance}, tooltip::{ArrowPosition, Tooltip}}};
 
 pub type To = &'static str;
 
