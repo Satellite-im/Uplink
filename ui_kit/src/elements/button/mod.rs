@@ -90,6 +90,24 @@ pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
     }
 }
 
+
+/// Returns a button element generated based on given props.
+/// 
+/// # Examples
+/// ```
+/// use ui_kit::{Icon, tooltip::{Tooltip, ArrowPosition}, components::nav::{Nav, Route}};
+/// 
+/// Button {
+///     appearance: Appearance::Primary,
+///     icon: Icon::Cog,
+///     tooltip: cx.render(rsx!(
+///         Tooltip { 
+///             arrow_position: ArrowPosition::Bottom, 
+///             text: String::from("Settings")
+///         }
+///     )),
+/// },
+/// ```
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();

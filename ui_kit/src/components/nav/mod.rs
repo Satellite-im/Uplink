@@ -52,6 +52,29 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
     }
 }
 
+/// Returns a nav component generated based on given props.
+/// 
+/// # Examples
+/// ```
+/// use dioxus::prelude::*;
+/// use ui_kit::{elements::{Icon, IconElement}, components::nav::{Nav, Route}};
+/// 
+/// let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern };
+/// let routes = vec![
+///     home,
+///     Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter },
+///     Route { to: "/fake/friends", name: "Friends", icon: Icon::Users },
+///     Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog },
+/// ];
+/// let active = routes[0].clone();
+/// 
+/// rsx! (
+///     Nav {
+///        routes: routes,
+///        active: active
+///    }
+/// )
+/// ```
 #[allow(non_snake_case)]
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(&cx, || get_active(&cx));

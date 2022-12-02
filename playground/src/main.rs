@@ -41,13 +41,13 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
 fn app(cx: Scope) -> Element {
     let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern };
-    let active = home.clone();
     let routes = vec![
         home,
         Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter },
         Route { to: "/fake/friends", name: "Friends", icon: Icon::Users },
         Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog },
     ];
+    let active = routes[0].clone();
 
     cx.render(rsx! (
         Item {
