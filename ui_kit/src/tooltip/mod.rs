@@ -4,6 +4,8 @@ pub mod tooltip {
     use dioxus::prelude::*;
     use uuid::Uuid;
 
+    use crate::get_styles;
+
     const STYLES: &'static str = include_str!("./styles.css");
 
     #[derive(PartialEq, Eq, Copy, Clone)]
@@ -42,11 +44,6 @@ pub mod tooltip {
         }
     }
 
-    /// Loads the stylesheet to string.
-    pub fn get_styles(css_rule: &'static str, uuid: &String) -> String {
-        format!("{}{}", crate::VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
-    }
-
     // Remember: owned props must implement PartialEq!
     #[derive(PartialEq, Eq, Props)]
     pub struct Props {
@@ -60,7 +57,7 @@ pub mod tooltip {
     pub fn Tooltip(cx: Scope<Props>) -> Element {
         let UUID: String = Uuid::new_v4().to_string();
         
-        let styles = get_styles(".tooltip", &UUID);
+        let styles = get_styles(".tooltip", STYLES, &UUID);
 
         let arrow_position = get_arrow_position(&cx);
         let text = match cx.props.text.clone() {
@@ -69,9 +66,7 @@ pub mod tooltip {
         };
 
         cx.render(rsx! {
-            style {
-                "{styles}" 
-            },
+            style { "{styles}" },
             div {
                 class: {
                     format_args!("tooltip hidden tooltip-{}-{} tooltip-{}", &UUID, arrow_position, &UUID)

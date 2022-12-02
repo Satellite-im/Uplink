@@ -6,6 +6,8 @@ pub mod button {
     use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
     use dioxus_heroicons::{outline::Shape, Icon};
 
+    use crate::{get_styles, get_script};
+
     const STYLES: &'static str = include_str!("./styles.css");
     const SCRIPT: &'static str = include_str!("./script.js");
 
@@ -88,23 +90,14 @@ pub mod button {
         }
     }
 
-    /// Loads the script to string.
-    pub fn get_script(uuid: &String) -> String {
-        // The replace is needed because you can't have hyphens in javascript declarations.
-        SCRIPT.replace("DIUU", &uuid).replace("SAFE_UUID", &uuid.clone().replace("-", "_"))
-    }
-
-    /// Loads the stylesheet to string.
-    pub fn get_styles(css_rule: &'static str, uuid: &String) -> String {
-        format!("{}{}", crate::VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
-    }
 
     #[allow(non_snake_case)]
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-        let UUID: String = Uuid::new_v4().to_string();
+        let UUID = Uuid::new_v4().to_string();
+        let SCRIPT_UUID = UUID.clone();
 
-        let script = get_script(&UUID);
-        let styles = get_styles(".btn", &UUID);
+        let script = get_script(SCRIPT, &UUID);
+        let styles = get_styles(".btn", STYLES, &SCRIPT_UUID);
 
         let text = get_text(&cx);
         let disabled = &cx.props.disabled.unwrap_or(false);
@@ -124,7 +117,7 @@ pub mod button {
                         title: "{text}",
                         disabled: "{disabled}",
                         class: {
-                            format_args!("btn appearance-{} btn-{}", appearance, &UUID)
+                            format_args!("btn appearance-{} btn-{}", appearance, UUID)
                         },
                         // Optionally pass through click events.
                         onclick: move |e| emit(&cx, e),
