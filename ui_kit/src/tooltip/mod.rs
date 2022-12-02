@@ -43,6 +43,11 @@ pub mod tooltip {
         }
     }
 
+    /// Loads the stylesheet to string.
+    pub fn get_styles(css_rule: &'static str, uuid: &String) -> String {
+        format!("{}{}", VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
+    }
+
     // Remember: owned props must implement PartialEq!
     #[derive(PartialEq, Eq, Props)]
     pub struct Props {
@@ -55,7 +60,7 @@ pub mod tooltip {
     #[allow(non_snake_case)]
     pub fn Tooltip(cx: Scope<Props>) -> Element {
         let UUID: String = Uuid::new_v4().to_string();
-        let styles = STYLES.replace(".tooltip", &format!(".tooltip-{}", &UUID));
+        let styles = get_styles(".tooltip", &UUID);
 
         let arrow_position = get_arrow_position(&cx);
         let text = match cx.props.text.clone() {

@@ -89,15 +89,23 @@ pub mod button {
         }
     }
 
+    /// Loads the script to string.
+    pub fn get_script(uuid: &String) -> String {
+        // The replace is needed because you can't have hyphens in javascript declarations.
+        SCRIPT.replace("DIUU", &uuid).replace("SAFE_UUID", &uuid.clone().replace("-", "_"))
+    }
+
+    /// Loads the stylesheet to string.
+    pub fn get_styles(css_rule: &'static str, uuid: &String) -> String {
+        format!("{}{}", VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
+    }
+
     #[allow(non_snake_case)]
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let UUID: String = Uuid::new_v4().to_string();
 
-        let styles: String = STYLES.replace(".btn", &format!(".btn-{}", &UUID));
-        
-        // This is needed because you can't have hyphens in javascript declarations.
-        let SAFE_UUID: String = UUID.clone().replace("-", "_");
-        let script: String = SCRIPT.replace("DIUU", &UUID).replace("SAFE_UUID", &SAFE_UUID);
+        let script = get_script(&UUID);
+        let styles = get_styles(".btn", &UUID);
 
         let text = get_text(&cx);
         let disabled = &cx.props.disabled.unwrap_or(false);
@@ -105,7 +113,7 @@ pub mod button {
 
         cx.render(
             rsx!(
-                style { "{VARS}", "{styles}" },
+                style { "{styles}" },
                 div {
                     style: "position: relative; display: inline-flex; justify-content: center;",
                     (cx.props.tooltip.is_some()).then(|| rsx!(
