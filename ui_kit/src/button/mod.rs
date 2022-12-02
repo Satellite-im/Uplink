@@ -88,11 +88,7 @@ pub mod button {
     #[allow(non_snake_case)]
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let UUID: String = Uuid::new_v4().to_string();
-
-        // This is needed because hyphens arn't great variable names
-        let mut SAFE_UUID: String = Uuid::new_v4().to_string();
-        SAFE_UUID = SAFE_UUID.replace("-", "_");
-
+        
         let vars = include_str!("../styles.css");
         let styles = include_str!("./styles.css").replace(".btn", &format!(".btn-{}", &UUID));
         let script = include_str!("./script.js").replace("DIUU", &UUID).replace("SAFE_UUID", &SAFE_UUID);
