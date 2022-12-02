@@ -1,0 +1,55 @@
+.btn {
+    user-select: none;
+    cursor: pointer;
+    border: none;
+
+    height: var(--height-input);
+    border-radius: var(--border-radius-more);
+
+    background: var(--primary);
+    color: var(--text-color-bright);
+
+    gap: var(--gap);
+    padding: 0 var(--padding);
+
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn svg {
+    stroke: var(--text-color-bright);
+    fill: transparent;
+}
+.btn:hover {
+    background-color: var(--primary-light);
+}
+.appearance-secondary {
+    background-color: var(--secondary);
+}
+.appearance-secondary:hover {
+    background-color: var(--secondary-light);
+}
+.appearance-success {
+    background-color: var(--green);
+}
+.appearance-success:hover {
+    background-color: var(--green-light);
+}
+.appearance-danger {
+    background-color: var(--secondary);
+    color: var(--red-light);
+}
+.appearance-danger:hover {
+    background-color: var(--red);
+    color: var(--text-color-bright);
+}
+.appearance-danger svg {
+    stroke: var(--red-light);
+}
+.appearance-danger:hover svg {
+    stroke: var(--text-color-bright);
+}
+[disabled] {
+    cursor: default;
+    opacity: 0.5;
+}

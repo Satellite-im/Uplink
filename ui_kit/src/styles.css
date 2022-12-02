@@ -1,0 +1,69 @@
+:root {
+    --animation-time: 0.15s;
+
+    --heading-size: 18px;
+    --subheading-size: 12pt;
+    --text-size: 11pt;
+    --text-size-less: 9pt;
+    --label-size: 10pt;
+  
+    --gap: 0.5rem;
+    --gap-less: 0.25rem;
+
+    --padding: 2rem;
+    --padding-less: 1rem;
+
+    --height-input: 40px;
+    --width-sidebar: 300px;
+
+    --border-radius: 8px;
+    --border-radius-less: 4px;
+    --border-radius-more: 20px;
+
+    --border-color: #17171a;
+
+    --text-color: #e1e1fc;
+    --text-color-muted: #6b6b87;
+    --text-color-dark: #acacbf;
+    --text-color-bright: #dfdff7;
+
+    --placeholder: #94919c;
+
+    --primary: #4D4DFF;
+    --primary-dark: #4343fa;
+    --primary-light: #5252f7;
+
+    --secondary: #3A3A3A;
+    --secondary-light: #39383b;
+    --secondary-dark: #29292b;
+
+    --background: #040405;
+    --background-light: #16161c;
+    --background-dark: #000000;
+
+    --foreground: #2C2C2C;
+    --foreground-light: #393939: 
+    --foreground-dark: #2C2C2C: 
+
+    --green: #00B894;
+    --green-light: #00c29c;
+
+    --red: #F93854;
+    --red-light: #fa4662;
+
+    --blue: #5252f7;
+    --blue-light: #5252f7;
+    
+}
+
+body, html {
+    background: var(--background);
+}
+
+.visible {
+    opacity: 1;
+}
+
+.hidden {
+    opacity: 0;
+}
