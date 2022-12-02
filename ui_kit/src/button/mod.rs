@@ -6,7 +6,6 @@ pub mod button {
     use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
     use dioxus_heroicons::{outline::Shape, Icon};
 
-    const VARS: &'static str = include_str!("../styles.css");
     const STYLES: &'static str = include_str!("./styles.css");
     const SCRIPT: &'static str = include_str!("./script.js");
 
@@ -97,7 +96,7 @@ pub mod button {
 
     /// Loads the stylesheet to string.
     pub fn get_styles(css_rule: &'static str, uuid: &String) -> String {
-        format!("{}{}", VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
+        format!("{}{}", crate::VARS, STYLES.replace(css_rule, &format!("{}-{}", css_rule, uuid)))
     }
 
     #[allow(non_snake_case)]
