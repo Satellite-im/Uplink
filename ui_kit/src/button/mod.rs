@@ -6,6 +6,10 @@ pub mod button {
     use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
     use dioxus_heroicons::{outline::Shape, Icon};
 
+    const VARS: &'static str = include_str!("../styles.css");
+    const STYLES: &'static str = include_str!("./styles.css");
+    const SCRIPT: &'static str = include_str!("./script.js");
+
     #[derive(Clone, PartialEq)]
     /// Decides the look and feel of a button, also modifies some functionality.
     pub enum Appearance {
@@ -89,9 +93,10 @@ pub mod button {
     pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         let UUID: String = Uuid::new_v4().to_string();
         
-        let vars = include_str!("../styles.css");
-        let styles = include_str!("./styles.css").replace(".btn", &format!(".btn-{}", &UUID));
-        let script = include_str!("./script.js").replace("DIUU", &UUID).replace("SAFE_UUID", &SAFE_UUID);
+        let styles: String = STYLES.replace(".btn", &format!(".btn-{}", &UUID));
+        // This is needed because you can't have hyphens in javascript declarations.
+        let mut SAFE_UUID: String = UUID.clone().replace("-", "_");
+        let script: String = SCRIPT.replace("DIUU", &UUID).replace("SAFE_UUID", &SAFE_UUID);
 
         let text = get_text(&cx);
         let disabled = &cx.props.disabled.unwrap_or(false);
@@ -99,7 +104,7 @@ pub mod button {
 
         cx.render(
             rsx!(
-                style { "{vars}", "{styles}" },
+                style { "{VARS}", "{styles}" },
                 div {
                     style: "position: relative; display: inline-flex; justify-content: center;",
                     (cx.props.tooltip.is_some()).then(|| rsx!(

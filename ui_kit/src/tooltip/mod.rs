@@ -4,6 +4,9 @@ pub mod tooltip {
     use dioxus::prelude::*;
     use uuid::Uuid;
 
+    const VARS: &'static str = include_str!("../styles.css");
+    const STYLES: &'static str = include_str!("./styles.css");
+
     #[derive(PartialEq, Eq, Copy, Clone)]
     /// Which direction will the arrow on the popup point?
     pub enum ArrowPosition {
@@ -53,9 +56,7 @@ pub mod tooltip {
     pub fn Tooltip(cx: Scope<Props>) -> Element {
         let UUID: String = Uuid::new_v4().to_string();
 
-        // TODO: Can this be a macro?
-        let vars = include_str!("../styles.css");
-        let styles = include_str!("./styles.css").replace(".tooltip", &format!(".tooltip-{}", &UUID));
+        let styles: String = STYLES.replace(".btn", &format!(".btn-{}", &UUID));
 
         let arrow_position = get_arrow_position(&cx);
         let text = match cx.props.text.clone() {
@@ -65,7 +66,7 @@ pub mod tooltip {
 
         cx.render(rsx! {
             style {
-                "{vars}"
+                "{VARS}"
                 "{styles}" 
             },
             div {
