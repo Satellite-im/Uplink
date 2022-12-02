@@ -45,14 +45,11 @@
     --foreground-light: #393939: 
     --foreground-dark: #2C2C2C: 
 
-    --green: #00B894;
-    --green-light: #00c29c;
+    --success: #00B894;
+    --success-light: #00c29c;
 
-    --red: #F93854;
-    --red-light: #fa4662;
-
-    --blue: #5252f7;
-    --blue-light: #5252f7;
+    --danger: #F93854;
+    --danger-light: #fa4662;
     
 }
 

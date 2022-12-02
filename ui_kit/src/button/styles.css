@@ -38,21 +38,21 @@
     background-color: var(--secondary-light);
 }
 .appearance-success {
-    background-color: var(--green);
+    background-color: var(--success);
 }
 .appearance-success:hover {
-    background-color: var(--green-light);
+    background-color: var(--success-light);
 }
 .appearance-danger {
     background-color: var(--secondary);
-    color: var(--red-light);
+    color: var(--danger-light);
 }
 .appearance-danger:hover {
-    background-color: var(--red);
+    background-color: var(--danger);
     color: var(--text-color-bright);
 }
 .appearance-danger svg {
-    stroke: var(--red-light);
+    stroke: var(--danger-light);
 }
 .appearance-danger:hover svg {
     stroke: var(--text-color-bright);
