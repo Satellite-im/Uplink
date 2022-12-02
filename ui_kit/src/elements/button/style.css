@@ -57,6 +57,12 @@
 .appearance-danger:hover svg {
     stroke: var(--text-color-bright);
 }
+.appearance-transparent {
+    background: transparent;
+}
+.appearance-transparent:hover {
+    background: var(--secondary);
+}
 
 .appearance-disabled {
     cursor: default;

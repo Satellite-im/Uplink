@@ -1,13 +1,11 @@
 use dioxus::prelude::*;
-use ui_kit::{UiButton::{Button, Appearance}, UiTooltip::{Tooltip, ArrowPosition}, UiSwitch::Switch};
+use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch}, Icon, IconElement, components::nav::{Nav, Route}};
 
-const STYLES: &'static str = include_str!("./style.css");
-
+const STYLE: &'static str = include_str!("./style.css");
 
 fn main() {
     dioxus::desktop::launch(app);
 }
-
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -18,10 +16,9 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-
     cx.render(rsx!(
         style {
-            "{STYLES}"
+            "{STYLE}"
         },
         div {
             class: "item",
@@ -43,6 +40,15 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 fn app(cx: Scope) -> Element {
+    let mut routes = vec![];
+    let home = Route {to:String::from("/fake/home"), name:String::from("Home"), icon: Icon::HomeModern };
+    let active = home.clone();
+
+    routes.push(home);
+    routes.push(Route {to:String::from("/fake/chat"), name:String::from("Chat"), icon: Icon::ChatBubbleBottomCenter });
+    routes.push(Route {to:String::from("/fake/friends"), name:String::from("Friends"), icon: Icon::Users });
+    routes.push(Route {to:String::from("/fake/settings"), name:String::from("Settings"), icon: Icon::Cog });
+
     cx.render(rsx! (
         Item {
             name: String::from("Button"),
@@ -94,7 +100,7 @@ fn app(cx: Scope) -> Element {
             desc: String::from("A normal button with just an icon."),
             Button {
                 appearance: Appearance::Primary,
-                icon: ui_kit::Icon::Language,
+                icon: ui_kit::Icon::Keyboard,
             },
         },
         Item {
@@ -115,6 +121,14 @@ fn app(cx: Scope) -> Element {
             name: String::from("Switch"),
             desc: String::from("A on off switch."),
             Switch {},
+        },
+        Item {
+            name: String::from("Nav"),
+            desc: String::from("Dynamic navbar component"),
+            Nav {
+                routes: routes,
+                active: active
+            },
         }
     ))
 }
