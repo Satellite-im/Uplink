@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{Icon, IconElement, elements::button::{Button, Appearance}};
+use crate::{Icon, IconElement, elements::{button::{Button, Appearance}, tooltip::{ArrowPosition, Tooltip}}};
 
-pub type To = String;
+pub type To = &'static str;
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -11,7 +11,7 @@ const STYLE: &'static str = include_str!("./style.css");
 pub struct Route {
     pub to: To,
     pub icon: Icon,
-    pub name: String,
+    pub name: &'static str,
 }
 
 #[derive(Props)]
@@ -31,6 +31,7 @@ pub fn emit(cx: &Scope<Props>, to: &To) {
     }
 }
 
+/// Gets the appearence for a nav button based on the active route
 pub fn get_appearence(active_route: &Route, route: &Route) -> Appearance {
     if active_route.to == route.to {
         Appearance::Primary
@@ -39,12 +40,13 @@ pub fn get_appearence(active_route: &Route, route: &Route) -> Appearance {
     }
 }
 
+/// Gets the active route, or returns a void one
 pub fn get_active(cx: &Scope<Props>) -> Route {
     match &cx.props.active {
         Some(f) => f.to_owned(),
         None => Route {
-            to: String::from("void"),
-            name: String::from("void"),
+            to: "!void",
+            name: "!void",
             icon: Icon::ExclamationTriangle
         },
     }
@@ -59,17 +61,25 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             style { "{STYLE}" }
             div {
                 class: "nav",
-                cx.props.routes.iter().map(|route| rsx!(
-                    Button {
-                        key: "{route.to}-{route.name}",
-                        icon: route.icon,
-                        onpress: move |_| {
-                            active.set(route.to_owned());
-                            emit(&cx, &route.to)
-                        },
-                        appearance: get_appearence(&active, &route)
-                    }
-                ))
+                cx.props.routes.iter().map(|route| {
+                    let UUID = Uuid::new_v4().to_string();
+
+                    rsx!(
+                        Button {
+                            key: "{UUID}",
+                            icon: route.icon,
+                            onpress: move |_| {
+                                active.set(route.to_owned());
+                                emit(&cx, &route.to)
+                            },
+                            tooltip: cx.render(rsx!(Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: route.name.into(),
+                            })),
+                            appearance: get_appearence(&active, &route)
+                        }
+                    )
+                })
             }
         )
     )
