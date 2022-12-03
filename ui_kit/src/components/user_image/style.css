@@ -1,8 +1,7 @@
 .user-image {
     width: var(--height-input);
     height: var(--height-input);
-    background-color: var(--secondary);
-    border-radius: var(--border-radius-more);
+    margin-right: 1rem;
     position: relative;
 }
 
@@ -11,6 +10,7 @@
     height: 100%;
     border-radius: 50%;
     background-size: cover;
+    background-color: var(--secondary);
 }
 
 .user-image .indicator {

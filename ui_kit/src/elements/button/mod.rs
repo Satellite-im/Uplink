@@ -1,39 +1,12 @@
-use std::fmt;
-
 use uuid::Uuid;
 
 use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 
-use crate::{get_styles, get_script, icons::{Icon, IconElement}};
+use crate::{get_styles, get_script, elements::Appearance, icons::{Icon, IconElement}};
 
 const STYLE: &'static str = include_str!("./style.css");
 const SCRIPT: &'static str = include_str!("./script.js");
 
-#[derive(Clone, PartialEq)]
-/// Decides the look and feel of a button, also modifies some functionality.
-pub enum Appearance {
-    Default,
-    Primary,
-    Secondary,
-    Success,
-    Danger,
-    Disabled,
-    Transparent,
-}
-
-impl fmt::Display for Appearance {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Appearance::Default => write!(f, "default"),
-            Appearance::Primary => write!(f, "primary"),
-            Appearance::Secondary => write!(f, "secondary"),
-            Appearance::Success => write!(f, "success"),
-            Appearance::Danger => write!(f, "danger"),
-            Appearance::Disabled => write!(f, "disabled"),
-            Appearance::Transparent => write!(f, "transparent"),
-        }
-    }
-}
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -49,6 +22,8 @@ pub struct Props<'a> {
     disabled: Option<bool>,
     #[props(optional)]
     appearance: Option<Appearance>,
+    #[props(optional)]
+    with_badge: Option<String>
 }
 
 /// Generates the optional text for the button.

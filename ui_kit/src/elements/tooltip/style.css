@@ -16,6 +16,7 @@
   transition: opacity var(--animation-time) ease-in-out;
   font-family: 'Space Mono', monospace;
   font-size: var(--text-size-less);
+  white-space: nowrap;
 }
 
 .tooltip-text {

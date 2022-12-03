@@ -1,0 +1,14 @@
+.topbar, .topbar .controls {
+    display: inline-flex;
+    gap: var(--gap);
+}
+
+.topbar {
+    width: 100%;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--gap);
+}
+
+.children {
+    flex: 1;
+}

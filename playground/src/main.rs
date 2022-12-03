@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage}};
+use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, topbar::Topbar}};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -62,11 +62,7 @@ fn app(cx: Scope) -> Element {
                 "),
                 platform: Platform::Mobile,
                 status: Status::Online
-            }
-        },
-        Item {
-            name: String::from("Profile Photo"),
-            desc: String::from("Profile photo, with indicator."),
+            },
             UserImage {
                 platform: Platform::Desktop,
                 status: Status::Idle
@@ -78,14 +74,22 @@ fn app(cx: Scope) -> Element {
             Indicator {
                 platform: Platform::Mobile,
                 status: Status::Online
-            }
-        },
-        Item {
-            name: String::from("Indicator"),
-            desc: String::from("Status indicator."),
+            },
+            Indicator {
+                platform: Platform::Mobile,
+                status: Status::Offline
+            },
             Indicator {
                 platform: Platform::Desktop,
                 status: Status::Idle
+            },
+            Indicator {
+                platform: Platform::Tv,
+                status: Status::Online
+            },
+            Indicator {
+                platform: Platform::Headless,
+                status: Status::DoNotDistrub
             }
         },
         Item {
@@ -161,6 +165,13 @@ fn app(cx: Scope) -> Element {
             Switch {},
         },
         Item {
+            name: String::from("Select Box"),
+            desc: String::from("Generic select box"),
+            Select {
+                options: vec!["Nothing".into(), "Something".into()]
+            }
+        },
+        Item {
             name: String::from("Nav"),
             desc: String::from("Dynamic navbar component"),
             Nav {
@@ -169,11 +180,53 @@ fn app(cx: Scope) -> Element {
             },
         },
         Item {
-            name: String::from("Select Box"),
-            desc: String::from("Generic select box"),
-            Select {
-                options: vec!["Nothing".into(), "Something".into()]
+            name: String::from("Topbar"),
+            desc: String::from("Reusable topbar component"),
+            Topbar {
+                with_back_button: true,
+                controls: cx.render(
+                    rsx! (
+                        Button {
+                            icon: Icon::Phone,
+                            appearance: Appearance::Secondary,
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: String::from("Audio Call")
+                                }
+                            )),
+                        },
+                        Button {
+                            icon: Icon::VideoCamera,
+                            appearance: Appearance::Secondary,
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: String::from("Video Call")
+                                }
+                            )),
+                        },
+                        Button {
+                            icon: Icon::Bell,
+                            appearance: Appearance::Secondary,
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: String::from("Notifications")
+                                }
+                            )),
+                        },
+                    )
+                ),
+                cx.render(
+                    rsx! (
+                        UserImage {
+                            platform: Platform::Desktop,
+                            status: Status::Online
+                        }
+                    )
+                ),
             }
-        }
+        },
     ))
 }
