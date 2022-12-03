@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch}, Icon, IconElement, components::nav::{Nav, Route}};
+use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, Icon, IconElement, components::nav::{Nav, Route}};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -129,6 +129,13 @@ fn app(cx: Scope) -> Element {
                 routes: routes,
                 active: active
             },
+        },
+        Item {
+            name: String::from("Select Box"),
+            desc: String::from("Generic select box"),
+            Select {
+                options: vec!["Nothing".into(), "Something".into()]
+            }
         }
     ))
 }

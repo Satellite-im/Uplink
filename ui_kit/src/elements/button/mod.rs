@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 
-use crate::{get_styles, get_script, Icon, IconElement};
+use crate::{get_styles, get_script, icons::{Icon, IconElement}};
 
 const STYLE: &'static str = include_str!("./style.css");
 const SCRIPT: &'static str = include_str!("./script.js");
@@ -94,7 +94,7 @@ pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
 /// Returns a button element generated based on given props.
 /// 
 /// # Examples
-/// ```
+/// ```no_run
 /// use ui_kit::{Icon, tooltip::{Tooltip, ArrowPosition}, components::nav::{Nav, Route}};
 /// 
 /// Button {

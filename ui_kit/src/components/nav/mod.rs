@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{Icon, elements::{button::{Button, Appearance}, tooltip::{ArrowPosition, Tooltip}}};
+use crate::{icons::Icon, elements::{button::{Button, Appearance}, tooltip::{ArrowPosition, Tooltip}}};
 
 pub type To = &'static str;
 
@@ -55,7 +55,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 /// Returns a nav component generated based on given props.
 /// 
 /// # Examples
-/// ```
+/// ```no_run
 /// use dioxus::prelude::*;
 /// use ui_kit::{elements::{Icon, IconElement}, components::nav::{Nav, Route}};
 /// 

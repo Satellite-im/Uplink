@@ -1,9 +1,7 @@
-pub use dioxus_heroicons::outline::Shape as Icon;
-pub use dioxus_heroicons::Icon as IconElement;
-
 pub mod elements;
 pub mod components;
 pub mod layout;
+pub mod icons;
 
 const VARS: &'static str = include_str!("./style.css");
 
