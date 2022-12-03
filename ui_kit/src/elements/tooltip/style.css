@@ -117,7 +117,7 @@
   position: absolute;
   top: 100%;
   left: 50%;
-  margin-left: -6px;
+  margin-left: -4px;
   border-width: var(--border-radius-less);
   border-style: solid;
   border-color: var(--secondary) transparent transparent transparent;

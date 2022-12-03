@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, Icon, IconElement, components::nav::{Nav, Route}};
+use ui_kit::{elements::{button::{Button, Appearance}, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage}};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -51,6 +51,44 @@ fn app(cx: Scope) -> Element {
 
     cx.render(rsx! (
         Item {
+            name: String::from("Profile Photo"),
+            desc: String::from("Profile photo, with indicator."),
+            UserImage {
+                image: String::from("
+                    data:image/png;base64,
+                    iVBORw0KGgoAAAANSUhEUgAAAAUA
+                    AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+                    9TXL0Y4OHwAAAABJRU5ErkJggg==
+                "),
+                platform: Platform::Mobile,
+                status: Status::Online
+            }
+        },
+        Item {
+            name: String::from("Profile Photo"),
+            desc: String::from("Profile photo, with indicator."),
+            UserImage {
+                platform: Platform::Desktop,
+                status: Status::Idle
+            }
+        },
+        Item {
+            name: String::from("Indicator"),
+            desc: String::from("Status indicator."),
+            Indicator {
+                platform: Platform::Mobile,
+                status: Status::Online
+            }
+        },
+        Item {
+            name: String::from("Indicator"),
+            desc: String::from("Status indicator."),
+            Indicator {
+                platform: Platform::Desktop,
+                status: Status::Idle
+            }
+        },
+        Item {
             name: String::from("Button"),
             desc: String::from("Standard button."),
             Button {
@@ -61,7 +99,7 @@ fn app(cx: Scope) -> Element {
                         text: String::from("Don't be lazy!")
                     }
                 )),
-                icon: ui_kit::Icon::Language,
+                icon: ui_kit::icons::Icon::Language,
             },
         },
         Item {
@@ -76,7 +114,7 @@ fn app(cx: Scope) -> Element {
                         text: String::from("Don't be lazy!")
                     }
                 )),
-                icon: ui_kit::Icon::Language,
+                icon: ui_kit::icons::Icon::Language,
             },
         },
         Item {
@@ -92,7 +130,7 @@ fn app(cx: Scope) -> Element {
                         text: String::from("Don't be lazy!")
                     }
                 )),
-                icon: ui_kit::Icon::Language,
+                icon: ui_kit::icons::Icon::Language,
             },
         },
         Item {
@@ -100,7 +138,7 @@ fn app(cx: Scope) -> Element {
             desc: String::from("A normal button with just an icon."),
             Button {
                 appearance: Appearance::Primary,
-                icon: ui_kit::Icon::Keyboard,
+                icon: ui_kit::icons::Icon::Keyboard,
             },
         },
         Item {
@@ -108,7 +146,7 @@ fn app(cx: Scope) -> Element {
             desc: String::from("A normal button with just an icon, and a tooltip."),
             Button {
                 appearance: Appearance::Primary,
-                icon: ui_kit::Icon::Cog,
+                icon: ui_kit::icons::Icon::Cog,
                 tooltip: cx.render(rsx!(
                     Tooltip { 
                         arrow_position: ArrowPosition::Bottom, 

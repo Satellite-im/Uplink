@@ -1,0 +1,20 @@
+.user-image {
+    width: var(--height-input);
+    height: var(--height-input);
+    background-color: var(--secondary);
+    border-radius: var(--border-radius-more);
+    position: relative;
+}
+
+.user-image .image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+.user-image .indicator {
+    position: absolute;
+    bottom: 0;
+    left: calc(100% - 1rem);
+}

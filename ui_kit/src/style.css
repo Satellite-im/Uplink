@@ -203,8 +203,11 @@ body, html {
     --foreground-light: #393939: 
     --foreground-dark: #2C2C2C: 
 
-    --success: #00B894;
+    --success: #1dd1a1;
     --success-light: #00c29c;
+
+    --warning: #f5af19;
+    --warning-light: #feca57;
 
     --danger: #F93854;
     --danger-light: #fa4662;

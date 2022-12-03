@@ -1,10 +1,12 @@
+use std::fmt;
+
 use dioxus::prelude::*;
 
 use crate::icons::{Icon, IconElement};
 
 const STYLE: &'static str = include_str!("./style.css");
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Platform {
     Desktop,
     Mobile,
@@ -23,12 +25,23 @@ impl Platform {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Status {
     Online,
     Offline,
     Idle,
     DoNotDistrub,
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Status::Online => write!(f, "online"),
+            Status::Offline => write!(f, "offline"),
+            Status::Idle => write!(f, "idle"),
+            Status::DoNotDistrub => write!(f, "do-not-distrub"),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Props)]
@@ -39,13 +52,15 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn Indicator(cx: Scope<Props>) -> Element {
-    let icon = &cx.props.platform;
+    let icon = cx.props.platform.to_icon();
+    let status = cx.props.status.to_string();
 
     cx.render(rsx! (
         style { "{STYLE}" },
         div {
+            class: "indicator indicator-{status}",
             IconElement {
-                icon: icon,
+                icon: icon
             }
         }
     ))
