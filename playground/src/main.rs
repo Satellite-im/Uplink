@@ -74,6 +74,18 @@ fn app(cx: Scope) -> Element {
             },
         },
         Item {
+            name: String::from("Input"),
+            desc: String::from("Validated input."),
+            Input {
+                placeholder: "Placeholder...".into(),
+                icon: Icon::MagnifyingGlass,
+                options: Options {
+                    with_label: "Labels Too!".into(),
+                    ..input_options
+                }
+            },
+        },
+        Item {
             name: String::from("Profile Photo"),
             desc: String::from("Profile photo, with indicator."),
             UserImage {

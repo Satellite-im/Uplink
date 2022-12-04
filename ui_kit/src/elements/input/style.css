@@ -6,13 +6,37 @@
 .input {
     height: var(--height-input-less);
     background: var(--secondary-dark);
-    border-radius: var(--border-radius-less);
+    border-radius: var(--border-radius);
 
     display: inline-flex;
     align-items: center;
     gap: var(--gap);
     padding: var(--gap);
     font-size: var(--text-size);
+
+    border: 1px solid var(--border-color);
+}
+
+.input .icon {
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+}
+
+.input-success {
+    border: 1px solid var(--success-light);
+}
+
+.input-success .icon svg {
+    stroke: var(--success-light);
+}
+
+.input-warning {
+    border: 1px solid var(--warning-light);
+}
+
+.input-warning .icon svg {
+    stroke: var(--warning-light);
 }
 
 .input input {
@@ -35,7 +59,7 @@
     stroke: var(--text-color-muted);
 }
 
-.input svg:hover {
+.clear-btn svg:nth-of-type(1):hover {
     stroke: var(--text-color-bright);
     cursor: pointer;
 }
@@ -46,11 +70,11 @@
 }
 
 ::-ms-input-placeholder{  /* Microsoft Edge */
-    color: var(--text-color-dark);
+    color: var(--text-color-muted);
 }
 ::-webkit-input-placeholder { /*  Safari */
-    color: var(--text-color-dark);
+    color: var(--text-color-muted);
 }
 ::placeholder { /* Chrome, Firefox, Opera */
-    color: var(--text-color-dark) !important;
+    color: var(--text-color-muted) !important;
 }

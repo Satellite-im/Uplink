@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 pub type ValidationError = String;
-use crate::icons::{Icon, IconElement};
+use crate::{icons::{Icon, IconElement}, elements::label::Label};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -21,6 +21,7 @@ pub struct Options {
     pub replace_spaces_underscore: bool, 
     pub disabled: bool,
     pub with_clear_btn: bool,
+    pub with_label: Option<&'static str>,
 }
 
 #[derive(Props)]
@@ -100,6 +101,20 @@ pub fn get_text(cx: &Scope<Props>) -> String {
     }
 }
 
+pub fn get_label(cx: &Scope<Props>) -> String {
+    let default_options = Options::default();
+    let props = cx.props.clone();
+
+    let options = match &props.options {
+        Some(opts) => opts,
+        None => &default_options,
+    };
+    let default_text = "";
+    match options.with_label {
+        Some(text) => (text.clone()).to_string(),
+        None => default_text.to_string(),
+    }
+}
 pub fn validate(cx: &Scope<Props>, val: &String) -> Option<ValidationError> {
     let default_validation = Validation::default();
     let default_options = Options::default();
@@ -142,16 +157,33 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         Some(opts) => opts,
         None => &default_options,
     };
+    let valid = use_state(&cx, || false);
+    let min_len = match options.with_validation {
+        Some(opts) => opts.min_length.unwrap_or_default(),
+        None => todo!(),
+    };
+    let label = get_label(&cx);
+
     cx.render(rsx! (
         style { "{STYLE}" }
         div {
             class: "input-group",
+            (!label.is_empty()).then(|| rsx! (
+                Label {
+                    text: label
+                }
+            ))
             div {
-                class: "input",
+                class: {
+                    format_args!("input {}", if **valid { "input-success" } else if !error.is_empty() { "input-warning" } else { "" })
+                },
                 // If an icon was provided, render it before the input.
                 (&cx.props.icon.is_some()).then(|| rsx!(
-                    IconElement { 
-                        icon: get_icon(&cx)
+                    span {
+                        class: "icon",
+                        IconElement { 
+                            icon: get_icon(&cx)
+                        }
                     }
                 )),
                 input {
@@ -163,7 +195,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         error.set(validation_result.clone());
                         val.set(current_val.clone());
                         if !validation_result.is_empty() {
+                            valid.set(false);
                             evt.cancel_bubble();
+                        } else if current_val.len() >= min_len as usize {
+                            valid.set(true);
                         }
                     }
                 }
@@ -172,6 +207,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: "clear-btn",
                         onclick: move |_| {
                             val.set("".into());
+                            valid.set(false);
                             error.set("".into());
                         },
                         IconElement { 
