@@ -4,6 +4,7 @@ pub mod button;
 pub mod tooltip;
 pub mod switch;
 pub mod select;
+pub mod input;
 
 #[derive(Clone, PartialEq)]
 /// Decides the look and feel of a button, also modifies some functionality.

@@ -12,6 +12,7 @@ pub struct Route {
     pub to: To,
     pub icon: Icon,
     pub name: &'static str,
+    pub with_badge: Option<String>
 }
 
 #[derive(Props)]
@@ -40,6 +41,14 @@ pub fn get_appearence(active_route: &Route, route: &Route) -> Appearance {
     }
 }
 
+/// Generates the an optional badge value
+pub fn get_badge(route: &Route) -> String {
+    match &route.with_badge {
+        Some(val) => val.to_owned(),
+        None => String::from(""),
+    }
+}
+
 /// Gets the active route, or returns a void one
 pub fn get_active(cx: &Scope<Props>) -> Route {
     match &cx.props.active {
@@ -47,7 +56,8 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
         None => Route {
             to: "!void",
             name: "!void",
-            icon: Icon::ExclamationTriangle
+            icon: Icon::ExclamationTriangle,
+            with_badge: None
         },
     }
 }
@@ -86,6 +96,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "nav",
                 cx.props.routes.iter().map(|route| {
                     let UUID = Uuid::new_v4().to_string();
+                    let badge = get_badge(&route);
 
                     rsx!(
                         Button {
@@ -95,6 +106,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 active.set(route.to_owned());
                                 emit(&cx, &route.to)
                             },
+                            with_badge: badge,
                             tooltip: cx.render(rsx!(Tooltip {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: route.name.into(),

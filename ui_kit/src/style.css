@@ -172,10 +172,11 @@ body, html {
     --padding-less: 1rem;
 
     --height-input: 40px;
+    --height-input-less: 32px;
     --width-sidebar: 300px;
 
     --border-radius: 8px;
-    --border-radius-less: 4px;
+    --border-radius-less: 2px;
     --border-radius-more: 20px;
 
     --border-color: #17171a;

@@ -35,6 +35,15 @@ pub fn get_text(cx: &Scope<Props>) -> String {
     }
 }
 
+/// Generates the optional badge for the button.
+/// If there is no badge provided, we'll return an empty string.
+pub fn get_badge(cx: &Scope<Props>) -> String {
+    match &cx.props.with_badge {
+        Some(val) => val.to_owned(),
+        None => String::from(""),
+    }
+}
+
 /// Generates the optional icon providing a fallback.
 /// If there is no icon provided, the button should not call this.
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
@@ -91,6 +100,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let styles = get_styles(STYLE);
 
     let text = get_text(&cx);
+    let badge = get_badge(&cx);
     let disabled = &cx.props.disabled.unwrap_or(false);
     let appearance = get_appearence(&cx);
 
@@ -99,8 +109,15 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             style { "{styles}" },
             div {
                 style: "position: relative; display: inline-flex; justify-content: center;",
+                class: "btn-wrap",
                 (cx.props.tooltip.is_some()).then(|| rsx!(
                     &cx.props.tooltip
+                )),
+                (!badge.is_empty()).then(|| rsx!(
+                    span { 
+                        class: "badge",
+                        "{badge}" 
+                    }
                 )),
                 button {
                     key: "{UUID}",

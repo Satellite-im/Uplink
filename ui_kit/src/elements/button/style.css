@@ -19,6 +19,10 @@
     transition: background-color var(--animation-time);
 }
 
+.btn-wrap {
+    position: relative;
+}
+
 .btn svg {
     stroke: var(--text-color-bright);
     fill: transparent;
@@ -26,6 +30,17 @@
 
 .btn:hover {
     background-color: var(--primary-light);
+}
+
+.btn-wrap .badge {
+    position: absolute;
+    bottom: calc(100% - 0.75rem);
+    left: calc(100% - 0.75rem);
+    background-color: var(--danger-light);
+    border-radius: var(--border-radius-less);
+    font-size: var(--text-size-less);
+    padding: 0 var(--gap-less);
+    color: var(--text-color-bright);
 }
 
 .btn.no-text {

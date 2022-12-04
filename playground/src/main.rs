@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, topbar::Topbar}};
+use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, topbar::Topbar}};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -40,16 +40,39 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 fn app(cx: Scope) -> Element {
-    let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern };
+    let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern, with_badge: None };
     let routes = vec![
         home,
-        Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter },
-        Route { to: "/fake/friends", name: "Friends", icon: Icon::Users },
-        Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog },
+        Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, with_badge: None },
+        Route { to: "/fake/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()) },
+        Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog, with_badge: None},
     ];
     let active = routes[0].clone();
 
+    let validation_options = Validation {
+        max_length: Some(6),
+        min_length: Some(3),
+        alpha_numeric_only: true,
+        no_whitespace: true,
+    };
+
+    let input_options = Options {
+        with_validation: Some(validation_options),
+        allow_inline_markdown: true,
+        replace_spaces_underscore: false,
+        with_clear_btn: true,
+        ..Options::default()
+    };
+
     cx.render(rsx! (
+        Item {
+            name: String::from("Input"),
+            desc: String::from("Validated input."),
+            Input {
+                placeholder: "Placeholder...".into(),
+                options: input_options
+            },
+        },
         Item {
             name: String::from("Profile Photo"),
             desc: String::from("Profile photo, with indicator."),
@@ -155,6 +178,17 @@ fn app(cx: Scope) -> Element {
                     Tooltip { 
                         arrow_position: ArrowPosition::Bottom, 
                         text: String::from("Settings")
+                    }
+                )),
+            },
+            Button {
+                appearance: Appearance::Secondary,
+                icon: ui_kit::icons::Icon::UserGroup,
+                with_badge: "5".into(),
+                tooltip: cx.render(rsx!(
+                    Tooltip { 
+                        arrow_position: ArrowPosition::Bottom, 
+                        text: String::from("Friends")
                     }
                 )),
             },
