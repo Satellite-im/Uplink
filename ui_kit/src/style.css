@@ -136,14 +136,17 @@
 }
 
 * {
-  @apply border-[#17171a];
+  border-color: #17171a;
 }
 
 html,
 body {
-  @apply w-full h-full font-poppins text-[#e1e1fc];
+  font-family: poppins;
+  color: var(--text-color);
 }
 
 svg {
-  @apply stroke-2;
+  stroke-width: 2;
+  fill: transparent;
+  stroke: currentColor;
 }

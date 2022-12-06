@@ -4,13 +4,10 @@ pub mod layout;
 pub mod icons;
 
 const VARS: &'static str = include_str!("./style.css");
-const TW: &'static str = include_str!("./tailwind.css");
-
 
 /// Loads the stylesheet to string.
 pub fn get_styles(styles: &'static str) -> String {
-    format!("{}{}", crate::VARS, styles);
-    format!("{}{}", crate::TW, styles)
+    format!("{}{}", crate::VARS, styles)
 }
 
 /// Loads the script to string.

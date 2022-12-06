@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, topbar::Topbar}};
 
 const STYLE: &'static str = include_str!("./style.css");
+const TW: &'static str = include_str!("../../ui_kit/src/tailwind.css");
+
 
 fn main() {
     dioxus::desktop::launch(app);
@@ -18,7 +20,8 @@ pub struct Props<'a> {
 pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         style {
-            "{STYLE}"
+            "{STYLE}",
+            "{TW}"
         },
         div {
             class: "item",
