@@ -187,8 +187,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )),
                 input {
+                    class: "bg-transparent",
                     value: "{val}",
                     placeholder: "{cx.props.placeholder}",
+                    r#type: "text",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         let validation_result = validate(&cx, &current_val).unwrap_or_default();
