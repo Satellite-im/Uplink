@@ -251,6 +251,11 @@ p {
     font-size: var(--text-size);
 }
 
+.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 
 @keyframes pulse {
     0% {

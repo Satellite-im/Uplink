@@ -96,12 +96,21 @@ fn app(cx: Scope) -> Element {
                 with_rename: true,
                 text: "Open Folder".into(),
             },
+            Folder {
+                disabled: true,
+                with_rename: true,
+                text: "Open Folder".into(),
+            },
         },
         Item {
             name: String::from("FIle"),
             desc: String::from("A clickable file"),
             File {
                 text: "Generic File".into(),
+            },
+            File {
+                text: "Generic File".into(),
+                disabled: true,
             },
             File {
                 with_rename: true,
@@ -306,6 +315,12 @@ fn app(cx: Scope) -> Element {
             UserImage {
                 platform: Platform::Mobile,
                 status: Status::Online,
+                typing: true,
+            },
+            UserImage {
+                platform: Platform::Mobile,
+                status: Status::Online,
+                with_username: "Joe Schmoe".into(),
                 typing: true,
             },
         },

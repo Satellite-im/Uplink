@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::indicator::{Indicator, Platform, Status};
+use crate::{components::indicator::{Indicator, Platform, Status}, elements::label::Label};
 
 const STYLE: &str = include_str!("./style.css");
 
@@ -12,6 +12,8 @@ pub struct Props {
     image: Option<String>,
     #[props(optional)]
     typing: Option<bool>,
+    #[props(optional)]
+    with_username: Option<String>,
     status: Status,
     platform: Platform,
 }
@@ -31,26 +33,36 @@ pub fn UserImage(cx: Scope<Props>) -> Element {
     let platform = &cx.props.platform;
     let typing = &cx.props.typing.unwrap_or_default();
 
+    let username = &cx.props.with_username.clone().unwrap_or_default();
+
     cx.render(rsx! (
         style { "{STYLE}" },
         div {
-            class: "user-image",
+            class: "user-image-wrap",
             div {
-                class: "image",
-                style: "background-image: url('{image_data}');",
-            },
-            typing.then(|| rsx!(
+                class: "user-image",
                 div {
-                    class: "profile-typing",
-                    div { class: "dot dot-1" },
-                    div { class: "dot dot-2" },
-                    div { class: "dot dot-3" }
+                    class: "image",
+                    style: "background-image: url('{image_data}');",
+                },
+                typing.then(|| rsx!(
+                    div {
+                        class: "profile-typing",
+                        div { class: "dot dot-1" },
+                        div { class: "dot dot-2" },
+                        div { class: "dot dot-3" }
+                    }
+                ))
+                Indicator {
+                    status: *status,
+                    platform: *platform,
+                }
+            },
+            (cx.props.with_username.is_some()).then(|| rsx!(
+                Label {
+                    text: username.to_string()
                 }
             ))
-            Indicator {
-                status: *status,
-                platform: *platform,
-            }
         }
     ))
 }

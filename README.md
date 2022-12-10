@@ -13,10 +13,10 @@ UI-Kit for Rust based satellite apps, specifically Dioxus.
 - [ ] Reaction Menu
 - [x] Typing Indicator
 - [x] Typing Indicator Message
-- [ ] Mini User (Favorites)
+- [x] Mini User (Favorites)
 - [ ] All Loading States
 - [x] Switch Disabled
-- [ ] Folder Disabled
+- [x] Folder Disabled
 - [x] Input Disabled
 - [ ] Generic Error
 - [x] File Embed

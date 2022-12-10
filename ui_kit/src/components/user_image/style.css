@@ -2,6 +2,7 @@
     width: fit-content;
     height: var(--height-input);
     position: relative;
+    align-self: center;
 }
 
 .user-image .image {
@@ -16,6 +17,26 @@
     position: absolute;
     bottom: 0;
     left: calc(100% - 1rem);
+}
+
+.user-image-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--gap);
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    min-width: calc(var(--height-input) + var(--gap));
+    justify-content: flex-end;
+}
+
+.user-image-wrap label {
+    display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .profile-typing {

@@ -8,6 +8,8 @@ pub struct Props<'a> {
     #[props(optional)]
     text: Option<String>,
     #[props(optional)]
+    disabled: Option<bool>,
+    #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
     onrename: Option<EventHandler<'a, String>>,
@@ -43,12 +45,16 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
 
+    let disabled = &cx.props.disabled.unwrap_or_default();
+
     cx.render(rsx!(
         style {
             "{STYLE}"
         },
         div {
-            class: "file",
+            class: {
+                format_args!("file {}", if *disabled { "disabled" } else { "" })
+            },
             div {
                 class: "icon",
                 onclick: move |_| emit_press(&cx),
@@ -58,6 +64,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             with_rename.then(|| rsx! (
                 Input {
+                    disabled: *disabled,
                     placeholder: placeholder,
                     onreturn: move |s| emit(&cx, s)
                 }
