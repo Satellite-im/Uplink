@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}}, layout::sidebar::Sidebar as ReusableSidebar};
+use ui_kit::{elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
 use crate::{layouts::chat::RouteInfo, store::{state::State, actions::Actions}};
@@ -40,10 +40,21 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             )),
             div {
                 id: "favorites",
-                UserImage {
-                    platform: Platform::Mobile,
-                    status: Status::Online,
-                    with_username: "Joey Tucan".into()
+                Label {
+                    text: "Favorites".into()
+                },
+                div {
+                    class: "vertically-scrollable",
+                    UserImage {
+                        platform: Platform::Mobile,
+                        status: Status::Online,
+                        with_username: "Joey Tucan".into()
+                    },
+                    UserImage {
+                        platform: Platform::Mobile,
+                        status: Status::Online,
+                        with_username: "Peir Pelican".into()
+                    }
                 }
             },
             sidebar_chats.iter().cloned().map(|chat| {

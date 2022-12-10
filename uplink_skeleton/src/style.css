@@ -15,3 +15,11 @@ body,
 .search-input .input-group {
     width: 100%;
 }
+
+.vertically-scrollable {
+    display: inline-flex;
+    gap: var(--gap);
+    width: 100%;
+    overflow-x: scroll;
+    height: fit-content;
+}

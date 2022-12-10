@@ -40,3 +40,10 @@
     cursor: pointer;
     background-color: var(--secondary-dark);
 } 
+
+#favorites {
+    display: inline-flex;
+    flex-direction: column;
+    align-content: flex-start;
+    gap: var(--gap);
+}
