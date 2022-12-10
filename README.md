@@ -11,12 +11,12 @@ UI-Kit for Rust based satellite apps, specifically Dioxus.
 - [x] Message Reply
 - [ ] Message Reply above Chatbar
 - [ ] Reaction Menu
-- [ ] Typing Indicator
-- [ ] Typing Indicator Message
+- [x] Typing Indicator
+- [x] Typing Indicator Message
 - [ ] Mini User (Favorites)
 - [ ] All Loading States
-- [ ] Switch Disabled
+- [x] Switch Disabled
 - [ ] Folder Disabled
-- [ ] Input Disabled
+- [x] Input Disabled
 - [ ] Generic Error
 - [x] File Embed

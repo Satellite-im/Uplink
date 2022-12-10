@@ -31,6 +31,8 @@ pub struct Props<'a> {
     #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
+    disabled: Option<bool>,
+    #[props(optional)]
     icon: Option<Icon>,
     #[props(optional)]
     options: Option<Options>,
@@ -170,10 +172,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let apply_validation_class = options.with_validation.is_some();
     let label = get_label(&cx);
 
+    let disabled = &cx.props.disabled.unwrap_or_default();
+
     cx.render(rsx! (
         style { "{STYLE}" }
         div {
-            class: "input-group",
+            class: {
+                format_args!("input-group {}", if *disabled { "disabled" } else { " "})
+            },
             (!label.is_empty()).then(|| rsx! (
                 Label {
                     text: label
@@ -193,6 +199,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )),
                 input {
+                    disabled: "{disabled}",
                     value: "{val}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {

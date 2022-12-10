@@ -266,6 +266,15 @@ fn app(cx: Scope) -> Element {
             },
         },
         Item {
+            name: String::from("Input Disabled"),
+            desc: String::from("Validated input."),
+            Input {
+                placeholder: "Placeholder...".into(),
+                options: input_options,
+                disabled: true,
+            },
+        },
+        Item {
             name: String::from("Input"),
             desc: String::from("Validated input."),
             Input {
@@ -293,7 +302,12 @@ fn app(cx: Scope) -> Element {
             UserImage {
                 platform: Platform::Desktop,
                 status: Status::Idle
-            }
+            },
+            UserImage {
+                platform: Platform::Mobile,
+                status: Status::Online,
+                typing: true,
+            },
         },
         Item {
             name: String::from("Indicator"),
@@ -401,6 +415,11 @@ fn app(cx: Scope) -> Element {
             name: String::from("Switch"),
             desc: String::from("A on off switch."),
             Switch {},
+        },
+        Item {
+            name: String::from("Switch Disabled"),
+            desc: String::from("A disabled on off switch."),
+            Switch { disabled: true },
         },
         Item {
             name: String::from("Select Box"),

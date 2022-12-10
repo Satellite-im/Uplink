@@ -10,6 +10,8 @@ pub struct Props {
     loading: Option<bool>,
     #[props(optional)]
     image: Option<String>,
+    #[props(optional)]
+    typing: Option<bool>,
     status: Status,
     platform: Platform,
 }
@@ -27,6 +29,7 @@ pub fn UserImage(cx: Scope<Props>) -> Element {
     let image_data: String = get_image(&cx);
     let status = &cx.props.status;
     let platform = &cx.props.platform;
+    let typing = &cx.props.typing.unwrap_or_default();
 
     cx.render(rsx! (
         style { "{STYLE}" },
@@ -36,6 +39,14 @@ pub fn UserImage(cx: Scope<Props>) -> Element {
                 class: "image",
                 style: "background-image: url('{image_data}');",
             },
+            typing.then(|| rsx!(
+                div {
+                    class: "profile-typing",
+                    div { class: "dot dot-1" },
+                    div { class: "dot dot-2" },
+                    div { class: "dot dot-3" }
+                }
+            ))
             Indicator {
                 status: *status,
                 platform: *platform,

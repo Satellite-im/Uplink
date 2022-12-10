@@ -16,19 +16,19 @@
 }
 
 
-.dot {
+.message-typing .dot {
     height: var(--text-size);
     width: var(--text-size);
     border-radius: 50%;
     background: var(--text-color-bright);
 }
 
-.dot-1 {
+.message-typing .dot-1 {
     animation: 1s pulse 0s infinite;
 }
-.dot-2 {
+.message-typing .dot-2 {
     animation: 1s pulse 0.33s infinite;
 }
-.dot-3 {
+.message-typing .dot-3 {
     animation: 1s pulse 0.66s infinite;
 }

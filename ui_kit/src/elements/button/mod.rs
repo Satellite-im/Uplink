@@ -111,7 +111,9 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             style { "{styles}" },
             div {
                 style: "position: relative; display: inline-flex; justify-content: center;",
-                class: "btn-wrap",
+                class: {
+                    format_args!("btn-wrap {}", if *disabled { "disabled" } else { "" })
+                },
                 (cx.props.tooltip.is_some()).then(|| rsx!(
                     &cx.props.tooltip
                 )),

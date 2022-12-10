@@ -89,3 +89,7 @@
 .appearance-disabled:hover {
     background: var(--secondary-dark);
 }
+
+.btn-wrap.disabled .btn {
+    cursor: not-allowed;
+}

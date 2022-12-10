@@ -8,6 +8,8 @@ pub struct Props<'a> {
     #[props(optional)]
     _loading: Option<bool>,
     #[props(optional)]
+    disabled: Option<bool>,
+    #[props(optional)]
     active: Option<bool>,
     #[props(optional)]
     onflipped: Option<EventHandler<'a, bool>>,
@@ -32,12 +34,16 @@ pub fn default_state(cx: &Scope<Props>) -> bool {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let checked_state = default_state(&cx);
-
+    let disabled = &cx.props.disabled.unwrap_or_default();
+    
     cx.render(rsx! {
         style { "{STYLE}" },
         label {
-            class: "switch",
+            class: {
+                format_args!("switch {}", if *disabled { "disabled" } else { "" })
+            },
             input {
+                disabled: "{disabled}",
                 "type": "checkbox",
                 checked: "{checked_state}",
                 oninput: move |e| emit(&cx, e.data.value == "true")
