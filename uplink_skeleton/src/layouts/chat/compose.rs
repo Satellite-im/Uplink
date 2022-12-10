@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use ui_kit::{layout::{topbar::Topbar, chatbar::Chatbar}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 
-use crate::store::state::State;
+use crate::store::{state::State, actions::Actions};
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -24,6 +24,8 @@ pub fn Compose(cx: Scope) -> Element {
     let title = active_participant.username();
     let subtext = active_participant.status_message().unwrap_or_default();
 
+    let is_favorite = state.read().chats.favorites.clone().contains(&active_chat);
+    
     cx.render(rsx!(
         div {
             id: "compose",
@@ -31,6 +33,19 @@ pub fn Compose(cx: Scope) -> Element {
                 with_back_button: false,
                 controls: cx.render(
                     rsx! (
+                        Button {
+                            icon: Icon::Heart,
+                            appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: String::from("Add Favorite")
+                                }
+                            )),
+                            onpress: move |_| {
+                                state.write().dispatch(Actions::ToggleFavorite(active_chat.clone()));
+                            }
+                        },
                         Button {
                             icon: Icon::Phone,
                             appearance: Appearance::Primary,

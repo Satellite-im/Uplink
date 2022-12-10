@@ -1,11 +1,11 @@
-use dioxus::prelude::*;
+use dioxus::{prelude::*, events::{MouseEvent, MouseData}, core::UiEvent};
 
 use crate::{components::indicator::{Indicator, Platform, Status}, elements::label::Label};
 
 const STYLE: &str = include_str!("./style.css");
 
-#[derive(Eq, PartialEq, Props)]
-pub struct Props {
+#[derive(Props)]
+pub struct Props<'a> {
     #[props(optional)]
     loading: Option<bool>,
     #[props(optional)]
@@ -14,6 +14,8 @@ pub struct Props {
     typing: Option<bool>,
     #[props(optional)]
     with_username: Option<String>,
+    #[props(optional)]
+    onpress: Option<EventHandler<'a, MouseEvent>>,
     status: Status,
     platform: Platform,
 }
@@ -26,8 +28,16 @@ pub fn get_image(cx: &Scope<Props>) -> String {
         .unwrap_or_default()
 }
 
+/// Tells the parent the user_image was interacted with.
+pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+    match &cx.props.onpress {
+        Some(f) => f.call(e),
+        None => {},
+    }
+}
+
 #[allow(non_snake_case)]
-pub fn UserImage(cx: Scope<Props>) -> Element {
+pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let image_data: String = get_image(&cx);
     let status = &cx.props.status;
     let platform = &cx.props.platform;
@@ -35,10 +45,15 @@ pub fn UserImage(cx: Scope<Props>) -> Element {
 
     let username = &cx.props.with_username.clone().unwrap_or_default();
 
+    let pressable = &cx.props.onpress.is_some();
+
     cx.render(rsx! (
         style { "{STYLE}" },
         div {
-            class: "user-image-wrap",
+            class: {
+                format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })
+            },
+            onclick: move |e| emit(&cx, e),
             div {
                 class: "user-image",
                 div {

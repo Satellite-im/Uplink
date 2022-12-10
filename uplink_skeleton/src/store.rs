@@ -30,6 +30,7 @@ pub mod actions {
         /// Deny a incoming friend request
         DenyRequest(Identity),
 
+
         // Friends
         Block(Identity),
         UnBlock(Identity),
@@ -42,6 +43,8 @@ pub mod actions {
         AddToSidebar(Chat),
         /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
         RemoveFromSidebar(Chat),
+        /// Adds or removes a chat from the favorites page
+        ToggleFavorite(Chat),
 
         // Messaging
         /// Records a new message and plays associated notifications
@@ -98,6 +101,8 @@ pub mod state {
         pub active: Chat,
         // Chats to show in the sidebar
         pub in_sidebar: Vec<Chat>,
+        // Favorite Chats
+        pub favorites: Vec<Chat>,
     }
 
     #[derive(Clone, Debug, Default)]
@@ -109,8 +114,6 @@ pub mod state {
         // Friend requests, incoming and outgoing.
         pub incoming_requests: Vec<Identity>,
         pub outgoing_requests: Vec<Identity>,
-        // Favorite Friends
-        pub favorites: Vec<Identity>,
     }
 
     #[derive(Clone, Debug, Default)]
@@ -152,6 +155,9 @@ pub mod state {
                 }
                 Actions::RemoveFromSidebar(_) => todo!(),
                 Actions::NewMessage(_, _) => todo!(),
+                Actions::ToggleFavorite(chat) => {
+                    mutations::toggle_favorite(self, &chat);
+                },
                 Actions::React(_, _, _) => todo!(),
                 Actions::Reply(_, _) => todo!(),
                 Actions::Send(_, _) => todo!(),
@@ -180,6 +186,27 @@ pub mod state {
 
         pub fn set_active_route(state: &mut State, to: String) {
             state.route.active = to;
+        }
+
+        pub fn toggle_favorite(state: &mut State, chat: &Chat) {
+            let mut faves = state.chats.favorites.clone();
+
+            if faves.contains(chat) {
+                let index = faves.iter().position(|c| c.id == chat.id).unwrap();
+                faves.remove(index);
+            } else {
+                faves.push(chat.clone());
+            }
+
+            state.chats.favorites = faves;
+        }
+    }
+
+    pub mod getters {
+        use super::{Chat, State};
+
+        pub fn is_favorite(state: &State, chat: &Chat) -> bool {
+            state.chats.favorites.contains(chat)
         }
     }
 

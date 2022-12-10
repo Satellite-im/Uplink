@@ -85,13 +85,13 @@ pub mod mock_state {
                 all: vec![active_chat.clone(), albert_chat.clone(), benny_chat.clone(), henry_chat.clone()],
                 active: active_chat.clone(),
                 in_sidebar: vec![active_chat.clone(), albert_chat.clone(), benny_chat.clone()],
+                favorites: vec![albert_chat.clone(), active_chat.clone()],
             },
             friends: Friends {
                 all: all_friends.clone(),
                 blocked: vec![nefarious_hacker.clone()],
                 incoming_requests: vec![nitt_swetir],
                 outgoing_requests: vec![phutur_phrehnd],
-                favorites: vec![ary_fletcher.clone(), henry_otango.clone()],
             },
         }
     }

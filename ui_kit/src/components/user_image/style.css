@@ -32,6 +32,10 @@
     justify-content: flex-end;
 }
 
+.user-image-wrap.pressable {
+    cursor: pointer;
+}
+
 .user-image-wrap label {
     display: block;
     text-overflow: ellipsis;

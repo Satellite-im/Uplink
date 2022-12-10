@@ -17,8 +17,8 @@
 
 
 .message-typing .dot {
-    height: var(--text-size);
-    width: var(--text-size);
+    height: var(--text-size-less);
+    width: var(--text-size-less);
     border-radius: 50%;
     background: var(--text-color-bright);
 }

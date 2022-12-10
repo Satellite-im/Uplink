@@ -16,6 +16,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let search_placeholder = String::from("Search...");
 
     let sidebar_chats = state.read().chats.in_sidebar.clone();
+    let favorites = state.read().chats.favorites.clone();
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -38,24 +39,40 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     active: cx.props.route_info.active.clone()
                 },
             )),
-            div {
-                id: "favorites",
-                Label {
-                    text: "Favorites".into()
-                },
+            // Only display favorites if we have some.
+            (favorites.len() > 0).then(|| rsx!(
                 div {
-                    class: "vertically-scrollable",
-                    UserImage {
-                        platform: Platform::Mobile,
-                        status: Status::Online,
-                        with_username: "Joey Tucan".into()
+                    id: "favorites",
+                    Label {
+                        text: "Favorites".into()
                     },
-                    UserImage {
-                        platform: Platform::Mobile,
-                        status: Status::Online,
-                        with_username: "Peir Pelican".into()
+                    div {
+                        class: "vertically-scrollable",
+                        favorites.iter().cloned().map(|chat| {
+                            // TODO: Make this dynamic for group chats
+                            let user = chat.participants.get(1);
+                            let parsed_user = match user {
+                                Some(u) => u.clone(),
+                                None => Identity::default(),
+                            };
+                            let id = parsed_user.did_key();
+                            rsx! (
+                                UserImage {
+                                    key: "{id}",
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    with_username: parsed_user.username(),
+                                    onpress: move |_| {
+                                        state.write().dispatch(Actions::ChatWith(chat.clone()));
+                                    }
+                                },
+                            )
+                        }),
                     }
-                }
+                },
+            )),
+            Label {
+                text: "Chats".into()
             },
             sidebar_chats.iter().cloned().map(|chat| {
                 // TODO: Make this dynamic for group chats
