@@ -1,0 +1,61 @@
+.message-reply-UUID {
+    border-radius: var(--border-radius-more);
+    border-bottom-right-radius: var(--border-radius);
+    min-height: var(--height-input);
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    align-self: flex-end;
+    gap: var(--gap);
+    /* Multiplication compensates for the prefix text */
+    margin-top: calc(var(--gap) * 2);
+    position: relative;
+}
+
+.message-reply-UUID .user-image {
+    transform: scale(0.75);
+}
+
+.message-reply-UUID .context-wrap {
+    align-self: flex-end;
+}
+
+.message-reply-UUID.loading {
+    opacity: 0.5;
+}
+
+.message-reply-UUID .text {
+    color: var(--text-color);
+    background-color: var(--primary);
+    padding: var(--gap-less) var(--padding-less);
+    border-radius: var(--border-radius-more);
+    border-bottom-right-radius: var(--border-radius-less);
+}
+
+.message-reply-UUID .content {
+    position: relative;
+}
+
+.message-reply-UUID.remote {
+    align-self: flex-start;
+}
+
+.message-reply-UUID.remote .remote-text {
+    border-radius: var(--border-radius-more);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.message-reply-UUID .prefix {
+    display: inline-flex;
+    position: absolute;
+    width: fit-content;
+    right: 0;
+    color: var(--text-color-muted);
+    bottom: calc(100% + var(--gap-less));
+    font-size: var(--text-size-less);
+}
+
+.message-reply-UUID.remote .prefix {
+    left: 0;
+    right: unset;
+}

@@ -1,0 +1,56 @@
+.context-menu {
+  position: fixed;
+  border-radius: var(--border-radius);
+  background-color: rgba(0,0,0,0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap-less);
+  gap: var(--gap-less);
+  color: var(--text-color-bright);
+  border: 1px solid var(--secondary);
+}
+
+.context-wrap {
+  width: 100%;
+  min-height: fit-content;
+  min-width: fit-content;
+  display: inline-flex;
+}
+
+.context-menu svg {
+  fill: transparent;
+  stroke: var(--text-color-bright);
+}
+.context-menu.hidden {
+  display: none;
+}
+.context-menu .context-item {
+  display: flex;
+  border-radius: var(--border-radius-less);
+  gap: 0.5rem;
+  align-items: center;
+  padding: var(--gap-less) var(--gap);
+}
+.context-menu .context-item:hover {
+  background: var(--primary);
+  cursor: pointer;
+}
+.context-menu .context-item.danger {
+  color: var(--danger-light);
+}
+.context-item .context-item.danger svg {
+  stroke: var(--danger-light);
+}
+.context-menu .context-item.danger:hover {
+  color: var(--text-color-bright);
+  background-color: var(--danger-light);
+}
+
+
+.context-menu hr {
+  border: none;
+  border-bottom: 1px solid var(--background);
+}

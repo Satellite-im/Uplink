@@ -1,0 +1,33 @@
+.file {
+    display: inline-flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    max-width: 100px;
+}
+
+.file .icon {
+    width: var(--icon-size-more);
+    height: var(--icon-size-more);
+    display: inline-flex;
+    align-content: center;
+    align-self: center;
+    cursor: pointer;
+}
+
+.file .icon svg {
+    fill: transparent;
+    stroke: var(--text-color);
+    width: 100%;
+    height: 100%;
+}
+
+.file .input-group {
+    width: 100%;
+}
+
+.file .input {
+    height: auto;
+    font-size: var(--text-size-less);
+    padding: var(--gap-less) var(--gap);
+}

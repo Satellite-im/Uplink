@@ -1,0 +1,22 @@
+.sidebar {
+    display: inline-flex;
+    flex-direction: column;
+    max-width: var(--sidebar-width);
+    height: 100%;
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar .search {
+    padding: var(--gap);
+    border-bottom: 1px solid transparent;
+}
+
+.sidebar .children {
+    flex: 1;
+    min-height: 0;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+    padding: var(--padding-less);
+    overflow-y: scroll;
+}

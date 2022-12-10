@@ -1,0 +1,18 @@
+.chatbar, .chatbar .controls {
+    display: inline-flex;
+    gap: var(--gap);
+}
+
+.chatbar {
+    width: 100%;
+    border-top: 1px solid transparent;
+    padding: var(--gap);
+}
+
+.chatbar .input-group {
+    flex: 1;
+}
+
+.chatbar .input-group .input {
+    border-radius: var(--border-radius-more);
+}
