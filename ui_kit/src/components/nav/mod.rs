@@ -5,7 +5,7 @@ use crate::{icons::Icon, elements::{Appearance, button::Button, tooltip::{ArrowP
 
 pub type To = &'static str;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Clone, PartialEq)]
 pub struct Route {
@@ -111,7 +111,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "nav",
                 cx.props.routes.iter().map(|route| {
                     let UUID = Uuid::new_v4().to_string();
-                    let badge = get_badge(&route);
+                    let badge = get_badge(route);
 
                     rsx!(
                         Button {
@@ -126,7 +126,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: route.name.into(),
                             })),
-                            appearance: get_appearence(&active, &route)
+                            appearance: get_appearence(active, route)
                         }
                     )
                 })

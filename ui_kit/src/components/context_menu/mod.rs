@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::icons::{Icon, IconElement};
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Props)]
 pub struct ItemProps<'a> {
@@ -60,7 +60,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let UUID = Uuid::new_v4().to_string().replace("-", "");
+    let UUID = Uuid::new_v4().to_string().replace('-', "");
 
     // Handles the hiding and showing of the context menu
     let script = include_str!("./context.js").replace("UUID", &UUID);

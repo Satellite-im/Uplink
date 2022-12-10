@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Order {
@@ -43,9 +43,9 @@ pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let scoped_styles = STYLE.replace("UUID", &UUID);
 
     let text = cx.props.with_text.clone().unwrap_or_default();
-    let loading = cx.props.loading.clone().unwrap_or_default();
-    let remote = cx.props.remote.clone().unwrap_or_default();
-    let order = cx.props.order.clone().unwrap_or(Order::Last);
+    let loading = cx.props.loading.unwrap_or_default();
+    let remote = cx.props.remote.unwrap_or_default();
+    let order = cx.props.order.unwrap_or(Order::Last);
     
     cx.render(rsx! (
         style { "{scoped_styles}" },
@@ -66,13 +66,13 @@ pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
                     } else { "".into() }
                 )
             },
-            (&cx.props.with_content.is_some()).then(|| rsx! (
+            (cx.props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
                     &cx.props.with_content,
                 },
             )),
-            (&cx.props.with_text.is_some()).then(|| rsx! (
+            (cx.props.with_text.is_some()).then(|| rsx! (
                 p {
                     class: "message-text",
                     "{text}"

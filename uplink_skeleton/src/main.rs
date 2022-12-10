@@ -9,9 +9,9 @@ use ui_kit::{icons::Icon, components::nav::Route as UIRoute};
 
 use crate::{layouts::chat::RouteInfo, pages::chat::Page as ChatPage};
 
-const STYLE: &'static str = include_str!("./style.css");
-const LAYOUT_STYLE: &'static str = include_str!("./layouts/style.css");
-const PAGES_STYLE: &'static str = include_str!("./pages/style.css");
+const STYLE: &str = include_str!("./style.css");
+const LAYOUT_STYLE: &str = include_str!("./layouts/style.css");
+const PAGES_STYLE: &str = include_str!("./pages/style.css");
 
 pub mod layouts;
 pub mod pages;

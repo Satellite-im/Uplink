@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::components::indicator::{Indicator, Status, Platform};
+use crate::components::indicator::{Indicator, Platform, Status};
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -15,10 +15,11 @@ pub struct Props {
 }
 
 pub fn get_image(cx: &Scope<Props>) -> String {
-    match &cx.props.image {
-        Some(image) => image.to_owned().split_whitespace().collect(),
-        None => "".into(),
-    }
+    cx.props
+        .image
+        .as_ref()
+        .map(|image| image.split_whitespace().collect())
+        .unwrap_or_default()
 }
 
 #[allow(non_snake_case)]

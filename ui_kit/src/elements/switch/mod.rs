@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 // Remember: owned props must implement PartialEq!
 #[derive(Props)]
@@ -40,7 +40,7 @@ pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             input {
                 "type": "checkbox",
                 checked: "{checked_state}",
-                oninput: move |e| emit(&cx, if e.data.value == "true" { true } else { false })
+                oninput: move |e| emit(&cx, e.data.value == "true")
             },
             span { class: "slider" }
         }

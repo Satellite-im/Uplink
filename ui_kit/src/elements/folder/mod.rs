@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 use crate::{icons::{Icon, IconElement}, elements::input::Input};
 
 #[derive(Props)]

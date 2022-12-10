@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Order {
@@ -47,9 +47,9 @@ pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
 
-    let loading = cx.props.loading.clone().unwrap_or_default();
-    let remote = cx.props.remote.clone().unwrap_or_default();
-    let remote_message = cx.props.remote_message.clone().unwrap_or_default();
+    let loading = cx.props.loading.unwrap_or_default();
+    let remote = cx.props.remote.unwrap_or_default();
+    let remote_message = cx.props.remote_message.unwrap_or_default();
     
     cx.render(rsx! (
         style { "{scoped_styles}" },
@@ -70,7 +70,7 @@ pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
             (cx.props.user_image.is_some() && remote_message).then(|| rsx! (
                 &cx.props.user_image
             )),
-            (&cx.props.with_text.is_some()).then(|| rsx! (
+            (cx.props.with_text.is_some()).then(|| rsx! (
                 div {
                     class: "content",
                     (!prefix.is_empty()).then(|| rsx!(

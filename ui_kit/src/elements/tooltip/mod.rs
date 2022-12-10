@@ -3,7 +3,7 @@ use std::fmt;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 /// Which direction will the arrow on the popup point?

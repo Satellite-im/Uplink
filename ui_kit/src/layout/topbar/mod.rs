@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::{icons::Icon, elements::{Appearance, button::Button}};
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -18,10 +18,7 @@ pub struct Props<'a> {
 
 /// If enabled, it will render the bool
 pub fn show_back_button(cx: &Scope<Props>) -> bool {
-    match cx.props.with_back_button {
-        Some(b) => b,
-        None => false,
-    }
+    cx.props.with_back_button.unwrap_or(false)
 }
 
 /// Emit the back button event
