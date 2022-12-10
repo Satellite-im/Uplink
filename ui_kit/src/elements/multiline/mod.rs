@@ -10,7 +10,7 @@ const STYLE: &str = include_str!("./style.css");
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    loading: Option<bool>,
+    _loading: Option<bool>,
     placeholder: String,
     #[props(optional)]
     default_text: Option<String>,
@@ -19,9 +19,9 @@ pub struct Props<'a> {
     #[props(optional)]
     options: Option<super::input::Options>,
     #[props(optional)]
-    onchange: Option<EventHandler<'a, String>>,
+    _onchange: Option<EventHandler<'a, String>>,
     #[props(optional)]
-    onreturn: Option<EventHandler<'a, String>>,
+    _onreturn: Option<EventHandler<'a, String>>,
 }
 
 #[allow(non_snake_case)]

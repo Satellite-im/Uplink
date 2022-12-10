@@ -3,7 +3,6 @@ use crate::elements::button::Button;
 use crate::icons::{Icon, IconElement};
 
 use dioxus::prelude::*;
-use uuid::Uuid;
 
 use humansize::format_size;
 use humansize::DECIMAL;

@@ -5,7 +5,7 @@ const STYLE: &str = include_str!("./style.css");
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    loading: Option<bool>,
+    _loading: Option<bool>,
     options: Vec<String>,
     #[props(optional)]
     onselect: Option<EventHandler<'a, String>>,

@@ -26,7 +26,7 @@ pub struct Options {
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    loading: Option<bool>,
+    _loading: Option<bool>,
     placeholder: String,
     #[props(optional)]
     default_text: Option<String>,

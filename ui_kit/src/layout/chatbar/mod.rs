@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::{icons::Icon, elements::{Appearance, button::Button, input::Input}};
+use crate::{icons::Icon, elements::input::Input};
 
 pub type To = &'static str;
 

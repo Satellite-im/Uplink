@@ -6,13 +6,13 @@ const STYLE: &str = include_str!("./style.css");
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    loading: Option<bool>,
-    min: i32,
-    max: i32,
+    _loading: Option<bool>,
+    _min: i32,
+    _max: i32,
     #[props(optional)]
     default_value: Option<i32>,
     #[props(optional)]
-    onflipped: Option<EventHandler<'a, i32>>,
+    _onflipped: Option<EventHandler<'a, i32>>,
 }
 
 pub fn get_default(cx: &Scope<Props>) -> i32 {
@@ -21,8 +21,8 @@ pub fn get_default(cx: &Scope<Props>) -> i32 {
 
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, Props>) -> Element<'a> {
-    let slider_value = use_state(&cx, || get_default(&cx));
-
+    let _slider_value = use_state(&cx, || get_default(&cx));
+    // TODO: Pending dioxus update for eval returning values
     cx.render(rsx! {
         style { "{STYLE}" },
         div {

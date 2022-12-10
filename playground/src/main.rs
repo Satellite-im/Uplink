@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
-use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}}, layout::topbar::Topbar};
+use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}, message_typing::MessageTyping}, layout::topbar::Topbar};
 
 const STYLE: &str = include_str!("./style.css");
 
@@ -70,6 +70,18 @@ fn app(cx: Scope) -> Element {
     let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
 
     cx.render(rsx! (
+        Item {
+            name: String::from("Typing Indicator"),
+            desc: String::from("Inline message typing indicator"),
+            MessageTyping {
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: Platform::Mobile,
+                        status: Status::Online
+                    }
+                ))
+            }
+        },
         Item {
             name: String::from("Folder"),
             desc: String::from("A clickable folder"),
