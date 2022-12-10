@@ -1,0 +1,63 @@
+.message-UUID {
+    background: var(--primary);
+    border-radius: var(--border-radius-more);
+    border-bottom-right-radius: var(--border-radius);
+    min-height: var(--height-input);
+    display: inline-flex;
+    align-items: center;
+    padding: var(--gap) var(--padding-less);
+    width: fit-content;
+    align-self: flex-end;
+}
+
+.message-UUID .context-wrap {
+    align-self: flex-end;
+}
+
+.message-UUID.message-loading {
+    opacity: 0.5;
+}
+
+.message-UUID .message-text {
+    color: var(--text-color);
+}
+
+.message-UUID.message-first {
+    border-radius: var(--border-radius-more);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.message-UUID.message-last {
+    border-radius: var(--border-radius-more);
+    border-top-right-radius: var(--border-radius);
+}
+
+.message-UUID.message-middle {
+    border-radius: var(--border-radius-more);
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.message-UUID.message-remote {
+    align-self: flex-start;
+    background: var(--secondary);
+    border-radius: var(--border-radius-more);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+
+.message-UUID.message-remote.message-first  {
+    border-radius: var(--border-radius-more);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.message-UUID.message-remote.message-last {
+    border-radius: var(--border-radius-more);
+    border-top-left-radius: var(--border-radius);
+}
+
+.message-UUID.message-remote.message-middle {
+    border-radius: var(--border-radius-more);
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+}

@@ -157,6 +157,19 @@ body, html {
         U+FEFF, U+FFFD;
 }
 
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+.defaultcursor {
+    cursor: default;
+}
   
 :root {
     --animation-time: 0.15s;
@@ -165,44 +178,44 @@ body, html {
     --text-size-less: 0.75rem;
     --text-size-more: 1.25rem;
   
-    --gap: 0.5rem;
+    --gap: 0.65rem;
     --gap-less: 0.25rem;
 
     --padding: 2rem;
     --padding-less: 1rem;
 
     --height-input: 40px;
-    --height-input-less: 32px;
+    --height-input-less: 36px;
     --width-sidebar: 300px;
+
+    --icon-size-more: 50px;
+
+    --sidebar-width: 300px;
 
     --border-radius: 4px;
     --border-radius-less: 2px;
     --border-radius-more: 20px;
 
-    --border-color: #17171a;
+    --border-color: #141414;
 
-    --text-color: #e1e1fc;
-    --text-color-muted: #6b6b87;
-    --text-color-dark: #acacbf;
+    --text-color: rgb(247, 247, 253);
+    --text-color-muted: #a3a3c7;
+    --text-color-dark: #676795;
     --text-color-bright: #dfdff7;
 
-    --placeholder: #94919c;
+    --placeholder: #aaaac9;
 
     --primary: #4D4DFF;
     --primary-dark: #4343fa;
-    --primary-light: #5252f7;
+    --primary-light: #6868fa;
 
-    --secondary: #3A3A3A;
-    --secondary-light: #39383b;
-    --secondary-dark: #29292b;
+    --secondary: #1d1d21;
+    --secondary-light: #8686a3;
+    --secondary-dark: #151518;
 
-    --background: #040405;
-    --background-light: #16161c;
+    --background: #000000;
+    --background-light: var(--secondary-light);
     --background-dark: #000000;
-
-    --foreground: #2C2C2C;
-    --foreground-light: #393939: 
-    --foreground-dark: #2C2C2C: 
 
     --success: #1dd1a1;
     --success-light: #00c29c;
@@ -215,10 +228,22 @@ body, html {
     
 }
 
+
+::selection {
+    background: var(--text-color-bright); /* WebKit/Blink Browsers */
+}
+::-moz-selection {
+    background: var(--text-color-bright); /* Gecko Browsers */
+}
+
 .visible {
     opacity: 1;
 }
 
 .hidden {
     opacity: 0;
+}
+
+p {
+    font-size: var(--text-size);
 }

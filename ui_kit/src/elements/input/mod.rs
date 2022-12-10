@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{prelude::*, events::KeyCode};
 
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
@@ -17,7 +17,6 @@ pub struct Validation {
 #[derive(Default, Clone, Copy)]
 pub struct Options {
     pub with_validation: Option<Validation>,
-    pub allow_inline_markdown: bool,
     pub replace_spaces_underscore: bool, 
     pub disabled: bool,
     pub with_clear_btn: bool,
@@ -26,6 +25,8 @@ pub struct Options {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    #[props(optional)]
+    loading: Option<bool>,
     placeholder: String,
     #[props(optional)]
     default_text: Option<String>,
@@ -41,6 +42,13 @@ pub struct Props<'a> {
 
 pub fn emit(cx: &Scope<Props>, s: String) {
     match &cx.props.onchange {
+        Some(f) => f.call(s),
+        None => {},
+    }
+}
+
+pub fn emit_return(cx: &Scope<Props>, s: String) {
+    match &cx.props.onreturn {
         Some(f) => f.call(s),
         None => {},
     }
@@ -160,8 +168,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let valid = use_state(&cx, || false);
     let min_len = match options.with_validation {
         Some(opts) => opts.min_length.unwrap_or_default(),
-        None => todo!(),
+        None => 0,
     };
+    let apply_validation_class = options.with_validation.is_some();
     let label = get_label(&cx);
 
     cx.render(rsx! (
@@ -175,7 +184,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ))
             div {
                 class: {
-                    format_args!("input {}", if **valid { "input-success" } else if !error.is_empty() { "input-warning" } else { "" })
+                    format_args!("input {}", if **valid && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
                 // If an icon was provided, render it before the input.
                 (&cx.props.icon.is_some()).then(|| rsx!(
@@ -200,15 +209,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
+                        emit(&cx, val.to_string());
+                    },
+                    onkeyup: move |evt| {
+                        if evt.key_code == KeyCode::Enter {
+                            emit_return(&cx, val.to_string());
+                        }
                     }
                 }
-                (options.with_clear_btn).then(|| rsx!(
+                (options.with_clear_btn && !val.is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
                             val.set("".into());
-                            valid.set(false);
                             error.set("".into());
+                            valid.set(false);
                         },
                         IconElement { 
                             icon: Icon::Backspace

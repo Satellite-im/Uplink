@@ -6,6 +6,8 @@ const STYLE: &'static str = include_str!("./style.css");
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
+    loading: Option<bool>,
+    #[props(optional)]
     active: Option<bool>,
     #[props(optional)]
     onflipped: Option<EventHandler<'a, bool>>,

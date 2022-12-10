@@ -46,6 +46,8 @@ impl fmt::Display for Status {
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
+    #[props(optional)]
+    loading: Option<bool>,
     platform: Platform,
     status: Status
 }

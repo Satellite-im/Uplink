@@ -1,0 +1,17 @@
+html,
+body, 
+#main {
+    height: 100%;
+    width: 100%;
+    background: var(--background);
+}
+
+#main {
+    position: relative;
+    overflow: hidden;
+}
+
+.search-input,
+.search-input .input-group {
+    width: 100%;
+}

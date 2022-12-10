@@ -1,2 +1,2 @@
 [workspace]
-members = ["./ui_kit", "./playground"]
+members = ["./ui_kit", "./playground", "./uplink_skeleton"]

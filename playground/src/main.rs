@@ -1,5 +1,7 @@
+use std::time::SystemTime;
+
 use dioxus::prelude::*;
-use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, topbar::Topbar}};
+use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}}, layout::topbar::Topbar};
 
 const STYLE: &'static str = include_str!("./style.css");
 
@@ -25,9 +27,11 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "header",
                 label {
+                    class: "l",
                     "{cx.props.name}"
                 },
                 p {
+                    class: "p",
                     "{cx.props.desc}"
                 },
             },
@@ -40,12 +44,12 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 fn app(cx: Scope) -> Element {
-    let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern, with_badge: None };
+    let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern, ..Route::default() };
     let routes = vec![
         home,
-        Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, with_badge: None },
-        Route { to: "/fake/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()) },
-        Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog, with_badge: None},
+        Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..Route::default() },
+        Route { to: "/fake/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()), loading: None },
+        Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog, ..Route::default() },
     ];
     let active = routes[0].clone();
 
@@ -58,13 +62,189 @@ fn app(cx: Scope) -> Element {
 
     let input_options = Options {
         with_validation: Some(validation_options),
-        allow_inline_markdown: true,
         replace_spaces_underscore: false,
         with_clear_btn: true,
         ..Options::default()
     };
 
+    let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
+
     cx.render(rsx! (
+        Item {
+            name: String::from("Folder"),
+            desc: String::from("A clickable folder"),
+            Folder {
+                text: "Folder One".into(),
+            },
+            Folder {
+                open: true,
+                text: "Open Folder".into(),
+            },
+            Folder {
+                with_rename: true,
+                text: "Open Folder".into(),
+            },
+        },
+        Item {
+            name: String::from("FIle"),
+            desc: String::from("A clickable file"),
+            File {
+                text: "Generic File".into(),
+            },
+            File {
+                with_rename: true,
+                text: "Generic File".into(),
+            },
+        },
+        Item {
+            name: String::from("Context Menu"),
+            desc: String::from("A wrapper component to add a context menu to a component"),
+            ContextMenu {
+                items: cx.render(rsx!(
+                    ContextItem {
+                        icon: Icon::EyeSlash,
+                        text: String::from("Mark Seen"),
+                    },
+                    hr{}
+                    ContextItem {
+                        text: String::from("Call"),
+                    },
+                    ContextItem {
+                        text: String::from("Share File"),
+                    },
+                    hr{}
+                    ContextItem {
+                        icon: Icon::XMark,
+                        text: String::from("Hide Chat"),
+                    },
+                    ContextItem {
+                        danger: true,
+                        icon: Icon::NoSymbol,
+                        text: String::from("Block User"),
+                    },
+                )),
+                User {
+                    username: "User With Context".into(),
+                    subtext: "Right click me to see my context menu!".into()
+                    user_image: cx.render(rsx!(
+                        UserImage {
+                            platform: Platform::Desktop,
+                            status: Status::Idle
+                        }
+                    )),
+                }
+            }
+        },
+        Item {
+            name: String::from("User"),
+            desc: String::from("A generic user component"),
+            User {
+                username: "John Doe".into(),
+                subtext: "Howdy, John! Wanna grab pizza later?".into()
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: Platform::Desktop,
+                        status: Status::Idle
+                    }
+                )),
+            }
+        },
+        Item {
+            name: String::from("User"),
+            desc: String::from("A generic user component"),
+            User {
+                username: "John Doe".into(),
+                subtext: "It is for these reasons that I regard the decision last year to shift our efforts in space from low to high gear as among the most important decisions that will be made during my incumbency in the office of the Presidency.".into()
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: Platform::Mobile,
+                        status: Status::Online
+                    }
+                )),
+                with_badge: "11".into()
+            }
+        },
+        Item {
+            name: String::from("Message Divider"),
+            desc: String::from("Divide a group of messages"),
+            MessageDivider {
+                text: "New messages".into(),
+                timestamp: some_time_long_ago,
+
+            }
+        },
+        Item {
+            name: String::from("Message Group"),
+            desc: String::from("Group of messages"),
+            MessageGroup {
+                user_image: cx.render(rsx!(
+                    UserImage {
+                    platform: Platform::Desktop,
+                    status: Status::Idle
+                    }
+                )),
+                with_sender: "John Doe | Satellite.im".into(),
+                timestamp: some_time_long_ago,
+                Message {
+                    order: Order::First,
+                    with_text: "A Message!".into()
+                },
+                Message {
+                    order: Order::Middle,
+                    with_text: "Another one.".into()
+                },
+                Message {
+                    order: Order::Last
+                    with_text: "It is for these reasons that I regard the decision last year to shift our efforts in space from low to high gear as among the most important decisions that will be made during my incumbency in the office of the Presidency.".into()
+                }
+            }
+        },
+        Item {
+            name: String::from("Message Group"),
+            desc: String::from("Group of messages"),
+            MessageGroup {
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: Platform::Mobile,
+                        status: Status::Online
+                    }
+                )),
+                remote: true,
+                timestamp: some_time_long_ago,
+                Message {
+                    remote: true,
+                    order: Order::First,
+                    with_text: "A Message!".into()
+                },
+                Message {
+                    remote: true,
+                    order: Order::Middle,
+                    with_text: "Another one.".into()
+                },
+                Message {
+                    remote: true,
+                    order: Order::Last
+                    with_text: "It is for these reasons that I regard the decision last year to shift our efforts in space from low to high gear as among the most important decisions that will be made during my incumbency in the office of the Presidency.".into()
+                }
+            }
+        },
+        Item {
+            name: String::from("Message"),
+            desc: String::from("Local message"),
+            Message {
+                order: Order::First,
+                with_text: "A Message!".into()
+            }
+        },
+        Item {
+            name: String::from("Message Remote"),
+            desc: String::from("Remote message"),
+            Message {
+                remote: true,
+                order: Order::First,
+                with_text: "A Message!".into()
+            }
+        },
         Item {
             name: String::from("Input"),
             desc: String::from("Validated input."),

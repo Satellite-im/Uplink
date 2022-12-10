@@ -1,0 +1,52 @@
+.message-group-wrap {
+    display: inline-flex;
+    gap: var(--gap);
+    position: relative;
+    padding-bottom: var(--gap);
+    padding-top: var(--gap);
+}
+
+.user-image {
+    align-self: flex-end;
+}
+
+.message-group {
+    display: inline-flex;
+    width: 100%;
+    flex-direction: column;
+    gap: var(--gap);
+    justify-content: flex-end;
+    position: relative;
+    margin-left: calc(var(--height-input) + var(--gap));
+}
+
+.message-group.remote {
+    margin: 0;
+    margin-right: calc(var(--height-input) + var(--gap));;
+}
+
+.message-group .sender {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + var(--gap-less));
+    color: var(--text-color-muted);
+    font-size: var(--text-size-less);
+}
+
+.message-group.remote .sender {
+    left: 0;
+    right: unset;
+}
+
+.time-ago {
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--gap-less));
+    color: var(--text-color-muted);
+    font-size: var(--text-size-less);
+}
+
+.message-group.remote .time-ago {
+    left: 0;
+    right: unset;
+}

@@ -1,0 +1,51 @@
+.user-UUID {
+    display: inline-flex;
+    gap: var(--gap);
+    position: relative;
+    height: fit-content;
+    width: 100%;
+}
+
+.user-UUID .user-image {
+    align-self: flex-start;
+}
+
+.user-UUID .username {
+    color: var(--text-color);
+}
+
+.user-UUID .subtext {
+    color: var(--text-color-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* number of lines to show */
+            line-clamp: 2; 
+    -webkit-box-orient: vertical;
+}
+
+.user-UUID .badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: var(--border-radius-less);
+    font-size: var(--text-size-less);
+    color: var(--text-color-bright);
+}
+
+.user-UUID .badge-prefix {
+    height: 100%;
+    background: var(--secondary-dark);
+    padding: var(--gap-less) var(--gap);
+    border-bottom-left-radius: var(--border-radius-less);
+    border-top-left-radius: var(--border-radius-less);
+    color: var(--text-color-dark)
+}
+
+.user-UUID .badge-count {
+    height: 100%;
+    background: var(--primary);
+    padding: var(--gap-less) var(--gap);
+    border-bottom-right-radius: var(--border-radius-less);
+    border-top-right-radius: var(--border-radius-less);
+}

@@ -12,8 +12,22 @@ pub struct Route {
     pub to: To,
     pub icon: Icon,
     pub name: &'static str,
-    pub with_badge: Option<String>
+    pub with_badge: Option<String>,
+    pub loading: Option<bool>
 }
+
+impl Default for Route {
+    fn default() -> Self {
+        Self { 
+            to: "",
+            icon: Icon::QuestionMarkCircle, 
+            name: "Default", 
+            with_badge: None, 
+            loading: None 
+        }
+    }
+}
+
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -57,7 +71,8 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
             to: "!void",
             name: "!void",
             icon: Icon::ExclamationTriangle,
-            with_badge: None
+            with_badge: None,
+            loading: None,
         },
     }
 }

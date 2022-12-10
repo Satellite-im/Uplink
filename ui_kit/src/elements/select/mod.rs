@@ -4,6 +4,8 @@ const STYLE: &'static str = include_str!("./style.css");
 
 #[derive(Props)]
 pub struct Props<'a> {
+    #[props(optional)]
+    loading: Option<bool>,
     options: Vec<String>,
     #[props(optional)]
     onselect: Option<EventHandler<'a, String>>,
@@ -20,6 +22,8 @@ pub fn emit(cx: &Scope<Props>, s: String) {
 #[allow(non_snake_case)]
 pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let iter = IntoIterator::into_iter(cx.props.options.clone());
+    // TODO: We should iterate through the options and figure out the maximum length of an option
+    // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
     cx.render(rsx!(
         style { "{STYLE}" }
         div { 

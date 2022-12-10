@@ -12,12 +12,12 @@ body, html {
     margin-bottom: 1rem;
 }
 
-.item label {
+.item .l {
     color: white;
     font-family: sans-serif;
 }
 
-.item p {
+.item .p {
     color: #6b6b87;
     font-family: sans-serif;
     font-size: smaller;

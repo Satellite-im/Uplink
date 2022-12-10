@@ -7,6 +7,8 @@ const STYLE: &'static str = include_str!("./style.css");
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
     #[props(optional)]
+    loading: Option<bool>,
+    #[props(optional)]
     image: Option<String>,
     status: Status,
     platform: Platform,

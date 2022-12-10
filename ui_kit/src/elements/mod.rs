@@ -6,6 +6,10 @@ pub mod switch;
 pub mod select;
 pub mod input;
 pub mod label;
+pub mod multiline;
+pub mod slider;
+pub mod folder;
+pub mod file;
 
 #[derive(Clone, PartialEq)]
 /// Decides the look and feel of a button, also modifies some functionality.

@@ -45,6 +45,8 @@ pub fn get_arrow_position(cx: &Scope<Props>) -> String {
 #[derive(PartialEq, Eq, Props)]
 pub struct Props {
     #[props(optional)]
+    loading: Option<bool>,
+    #[props(optional)]
     text: Option<String>,
     #[props(optional)]
     arrow_position: Option<ArrowPosition>,

@@ -1,0 +1,42 @@
+#compose {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: inline-flex;
+    flex-direction: column;
+}
+
+#compose #messages {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    overflow-y: scroll;
+    gap: var(--padding);
+    padding: var(--padding-less);
+    display: inline-flex;
+    flex-direction: column;
+}
+
+#compose .topbar .children .username {
+    color: var(--text-color);
+}
+
+#compose .topbar .children .status {
+    color: var(--text-color-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* number of lines to show */
+            line-clamp: 1; 
+    -webkit-box-orient: vertical;
+}
+
+.sidebar .user {
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+}
+
+.sidebar .user:hover {
+    cursor: pointer;
+    background-color: var(--secondary-dark);
+} 
