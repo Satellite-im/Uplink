@@ -22,6 +22,7 @@ pub fn emit(cx: &Scope<Props>, s: String) {
 #[allow(non_snake_case)]
 pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let iter = IntoIterator::into_iter(cx.props.options.clone());
+
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
     cx.render(rsx!(
@@ -31,7 +32,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             select {
                 onchange: move |e| emit(&cx, e.value.clone()),
                 iter.map(|val| rsx! (
-                    option { label: "{val}", value: "{val}" }
+                    option { key: "{val}", label: "{val}", value: "{val}" }
                 ))
             }
         }

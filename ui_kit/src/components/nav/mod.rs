@@ -110,12 +110,12 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "nav",
                 cx.props.routes.iter().map(|route| {
-                    let UUID = Uuid::new_v4().to_string();
                     let badge = get_badge(&route);
-
+                    let key: String = route.name.into();
+                    
                     rsx!(
                         Button {
-                            key: "{UUID}",
+                            key: "{key}",
                             icon: route.icon,
                             onpress: move |_| {
                                 active.set(route.to_owned());

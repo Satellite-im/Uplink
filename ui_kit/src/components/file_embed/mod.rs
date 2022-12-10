@@ -32,9 +32,7 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed(cx: Scope<Props>) -> Element {
-    let UUID = Uuid::new_v4().to_string();
-    
+pub fn FileEmbed(cx: Scope<Props>) -> Element {    
     let filename = cx.props.filename.clone().unwrap_or_default();
     let kind = cx.props.kind.clone().unwrap_or_default();
     let filesize = cx.props.filesize.clone().unwrap_or_default();
@@ -44,7 +42,6 @@ pub fn FileEmbed(cx: Scope<Props>) -> Element {
     cx.render(rsx! (
         style { "{STYLE}" },
         div {
-            key: "{UUID}",
             class: {
                 format_args!(
                     "file-embed {}",

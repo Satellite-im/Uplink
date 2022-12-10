@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 const STYLE: &'static str = include_str!("./style.css");
 

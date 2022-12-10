@@ -54,7 +54,6 @@ pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     cx.render(rsx! (
         style { "{scoped_styles}" },
         div {
-            key: "{UUID}",
             class: {
                 format_args!(
                     "message-reply-{} {} {}", 

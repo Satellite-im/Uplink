@@ -54,7 +54,6 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! (
         style { "{scoped_styles}" },
         div {
-            key: "{UUID}",
             class: "user user-{UUID} noselect defaultcursor",
             onclick: move |e| emit(&cx, e),
             (!badge.is_empty()).then(|| rsx!(

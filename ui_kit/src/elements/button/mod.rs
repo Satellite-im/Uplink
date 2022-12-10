@@ -122,7 +122,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )),
                 button {
-                    key: "{UUID}",
                     id: "{UUID}",
                     title: "{text}",
                     disabled: "{disabled}",

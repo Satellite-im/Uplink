@@ -70,14 +70,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 icon: Icon::EyeSlash,
                                 text: String::from("Mark Seen"),
                             },
-                            hr{}
+                            hr{ },
                             ContextItem {
                                 text: String::from("Call"),
                             },
                             ContextItem {
                                 text: String::from("Share File"),
                             },
-                            hr{}
+                            hr{ }
                             ContextItem {
                                 icon: Icon::XMark,
                                 text: String::from("Hide Chat"),
