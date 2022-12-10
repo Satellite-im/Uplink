@@ -247,3 +247,19 @@ body, html {
 p {
     font-size: var(--text-size);
 }
+
+
+@keyframes pulse {
+    0% {
+        background: var(--text-color-bright);
+    }
+    25% {
+        background: var(--text-color-bright);
+    }
+    75% {
+        background: var(--secondary);
+    }
+    100% {
+        background: var(--text-color-bright);
+    }
+}

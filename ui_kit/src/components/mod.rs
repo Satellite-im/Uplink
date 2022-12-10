@@ -9,6 +9,7 @@ pub mod message;
 pub mod message_reply;
 pub mod message_group;
 pub mod message_divider;
+pub mod message_typing;
 
 pub mod file_embed;
 

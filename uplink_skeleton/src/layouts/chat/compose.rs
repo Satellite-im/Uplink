@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
-use ui_kit::{layout::{topbar::Topbar, chatbar::Chatbar}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use ui_kit::{layout::{topbar::Topbar, chatbar::Chatbar}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 
 use crate::store::state::State;
@@ -196,6 +196,14 @@ pub fn Compose(cx: Scope) -> Element {
                         kind: "archive/zip".into(),
                         icon: Icon::ArchiveBoxArrowDown,
                     },
+                },
+                MessageTyping {
+                    user_image: cx.render(rsx!(
+                        UserImage {
+                            platform: Platform::Mobile,
+                            status: Status::Online
+                        }
+                    ))
                 }
             },
             Chatbar {
