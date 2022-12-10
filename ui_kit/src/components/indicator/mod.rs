@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 use crate::icons::{Icon, IconElement};
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Platform {

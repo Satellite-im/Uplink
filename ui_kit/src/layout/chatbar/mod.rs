@@ -4,7 +4,7 @@ use crate::{icons::Icon, elements::{Appearance, button::Button, input::Input}};
 
 pub type To = &'static str;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Clone, PartialEq)]
 pub struct Route {

@@ -3,7 +3,7 @@ use dioxus::{prelude::*, events::KeyCode};
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 
 #[derive(Default, Clone, Copy)]
@@ -61,21 +61,21 @@ pub fn submit(cx: &Scope<Props>, s: String) {
     }
 }
 
-pub fn validate_no_whitespace(val: &String) -> Option<ValidationError> {
+pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
     if val.contains(char::is_whitespace) {
         return Some("Spaces are not allowed.".into());
     }
     None
 }
 
-pub fn validate_alphanumeric(val: &String) -> Option<ValidationError> {
+pub fn validate_alphanumeric(val: &str) -> Option<ValidationError> {
     if val.chars().all(char::is_alphanumeric) {
         return Some("Only alphanumeric characters are accepted.".into());
     }
     None
 }
 
-pub fn validate_min_max(val: &String, min: Option<i32>, max: Option<i32>) -> Option<ValidationError> {
+pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option<ValidationError> {
     let max = max.unwrap_or_default() as usize;
     let min = min.unwrap_or_default() as usize;
 
@@ -111,29 +111,26 @@ pub fn get_text(cx: &Scope<Props>) -> String {
 
 pub fn get_label(cx: &Scope<Props>) -> String {
     let default_options = Options::default();
-    let props = cx.props.clone();
 
-    let options = match &props.options {
+    let options = match cx.props.options {
         Some(opts) => opts,
-        None => &default_options,
+        None => default_options,
     };
     let default_text = "";
     match options.with_label {
-        Some(text) => (text.clone()).to_string(),
+        Some(text) => text.to_string(),
         None => default_text.to_string(),
     }
 }
-pub fn validate(cx: &Scope<Props>, val: &String) -> Option<ValidationError> {
+pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
     let default_validation = Validation::default();
     let default_options = Options::default();
 
-    let props = cx.props.clone();
-
     let mut error: Option<ValidationError> = None;
 
-    let options = match &props.options {
+    let options = match cx.props.options {
         Some(opts) => opts,
-        None => &default_options,
+        None => default_options,
     };
 
     let validation = match &options.with_validation {
@@ -142,15 +139,15 @@ pub fn validate(cx: &Scope<Props>, val: &String) -> Option<ValidationError> {
     };
 
     if validation.alpha_numeric_only {
-        error = validate_alphanumeric(&val);
+        error = validate_alphanumeric(val);
     }
 
     if validation.no_whitespace {
-        error = validate_no_whitespace(&val);
+        error = validate_no_whitespace(val);
     }
 
     if validation.max_length.is_some() || validation.min_length.is_some() {
-        error = validate_min_max(&val, validation.min_length, validation.max_length);
+        error = validate_min_max(val, validation.min_length, validation.max_length);
     }
 
     error
@@ -187,7 +184,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     format_args!("input {}", if **valid && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
                 // If an icon was provided, render it before the input.
-                (&cx.props.icon.is_some()).then(|| rsx!(
+                (cx.props.icon.is_some()).then(|| rsx!(
                     span {
                         class: "icon",
                         IconElement { 

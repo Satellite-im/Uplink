@@ -4,8 +4,8 @@ use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 
 use crate::{get_styles, get_script, elements::Appearance, icons::{Icon, IconElement}};
 
-const STYLE: &'static str = include_str!("./style.css");
-const SCRIPT: &'static str = include_str!("./script.js");
+const STYLE: &str = include_str!("./style.css");
+const SCRIPT: &str = include_str!("./script.js");
 
 
 #[derive(Props)]
@@ -137,7 +137,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     // Optionally pass through click events.
                     onclick: move |e| emit(&cx, e),
                     // If an icon was provided, render it before the text.
-                    (&cx.props.icon.is_some()).then(|| rsx!(
+                    (cx.props.icon.is_some()).then(|| rsx!(
                         IconElement { 
                             icon: get_icon(&cx)
                         }

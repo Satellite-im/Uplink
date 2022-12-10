@@ -1,11 +1,10 @@
 use dioxus::prelude::*;
-use uuid::Uuid;
 
-use crate::{icons::Icon, elements::{Appearance, button::Button, tooltip::{ArrowPosition, Tooltip}}};
+use crate::{icons::Icon, elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}}};
 
 pub type To = &'static str;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(Clone, PartialEq)]
 pub struct Route {
@@ -126,7 +125,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 arrow_position: ArrowPosition::Bottom,
                                 text: route.name.into(),
                             })),
-                            appearance: get_appearence(&active, &route)
+                            appearance: get_appearence(active, route)
                         }
                     )
                 })

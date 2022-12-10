@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
-#[derive(PartialEq, Props)]
+#[derive(PartialEq, Eq, Props)]
 pub struct Props {
     #[props(optional)]
     loading: Option<bool>,

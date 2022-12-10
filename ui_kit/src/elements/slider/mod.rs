@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 // Remember: owned props must implement PartialEq!
 #[derive(Props)]
@@ -16,10 +16,7 @@ pub struct Props<'a> {
 }
 
 pub fn get_default(cx: &Scope<Props>) -> i32 {
-    match &cx.props.default_value {
-        Some(v) => v.clone(),
-        None => 0,
-    }
+    cx.props.default_value.unwrap_or_default()
 }
 
 #[allow(non_snake_case)]

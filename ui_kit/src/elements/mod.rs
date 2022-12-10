@@ -11,7 +11,7 @@ pub mod slider;
 pub mod folder;
 pub mod file;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 /// Decides the look and feel of a button, also modifies some functionality.
 pub enum Appearance {
     Default,

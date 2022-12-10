@@ -1,21 +1,21 @@
 pub mod actions {
-    use warp::{raygun::{Message, Reaction}, multipass::identity::Identity};
+    use warp::{
+        multipass::identity::Identity,
+        raygun::{Message, Reaction},
+    };
 
     use super::state::{Chat, To};
 
     /// Actions can be called with data and will internally dispatch nessisary mutations and Warp methods.
     pub enum Actions {
         // Account
-
         /// Sets the ID for the user.
         SetId(Identity),
 
         // Routes
-
         /// Set the active route
         Navigate(To),
         // Requests
-
         /// Send a new friend request
         SendRequest(Identity),
         /// To be fired when a friend request you sent is accepted
@@ -31,7 +31,6 @@ pub mod actions {
         DenyRequest(Identity),
 
         // Friends
-
         Block(Identity),
         UnBlock(Identity),
         /// Handles the display of "favorite" chats
@@ -45,7 +44,6 @@ pub mod actions {
         RemoveFromSidebar(Chat),
 
         // Messaging
-
         /// Records a new message and plays associated notifications
         NewMessage(Chat, Message),
         /// React to a given message by ID
@@ -53,7 +51,7 @@ pub mod actions {
         /// Reply to a given message by ID
         Reply(Chat, Message),
         /// Sends a message to the given chat
-        Send(Chat, Message)
+        Send(Chat, Message),
     }
 }
 
@@ -80,7 +78,7 @@ pub mod state {
         pub active: To,
     }
 
-    #[derive(Clone, Debug, PartialEq, Default)]
+    #[derive(Clone, Debug, PartialEq, Eq, Default)]
     pub struct Chat {
         // Warp generated UUID of the chat
         pub id: Uuid,
@@ -89,7 +87,7 @@ pub mod state {
         // Messages should only contain messages we want to render. Do not include the entire message history.
         pub messages: Vec<Message>,
         // Unread count for this chat, should be cleared when we view the chat.
-        pub unreads: u32
+        pub unreads: u32,
     }
 
     #[derive(Clone, Debug, Default)]
@@ -120,7 +118,7 @@ pub mod state {
         // All files
         pub all: Vec<Item>,
         // Optional, active folder.
-        pub active_folder: Option<Item>
+        pub active_folder: Option<Item>,
     }
 
     #[derive(Clone, Debug, Default)]
@@ -148,10 +146,10 @@ pub mod state {
                 Actions::ChatWith(chat) => {
                     // TODO: this should create a conversation in warp if one doesn't exist
                     mutations::set_active_chat(self, chat);
-                },
+                }
                 Actions::AddToSidebar(chat) => {
                     mutations::add_chat_to_sidebar(self, chat);
-                },
+                }
                 Actions::RemoveFromSidebar(_) => todo!(),
                 Actions::NewMessage(_, _) => todo!(),
                 Actions::React(_, _, _) => todo!(),
@@ -168,7 +166,7 @@ pub mod state {
 
     /// Mutations should be the only place updating the values in state.
     pub mod mutations {
-        use super::{State, Chat};
+        use super::{Chat, State};
 
         pub fn set_active_chat(state: &mut State, chat: Chat) {
             state.chats.active = chat;
@@ -185,9 +183,7 @@ pub mod state {
         }
     }
 
-    pub fn mock_state () -> State{
-        let generic_state = generate_mock();
-
-        generic_state
+    pub fn mock_state() -> State {
+        generate_mock()
     }
 }

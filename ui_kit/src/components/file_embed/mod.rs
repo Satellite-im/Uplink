@@ -8,7 +8,7 @@ use uuid::Uuid;
 use humansize::format_size;
 use humansize::DECIMAL;
 
-const STYLE: &'static str = include_str!("./style.css");
+const STYLE: &str = include_str!("./style.css");
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -35,9 +35,9 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 pub fn FileEmbed(cx: Scope<Props>) -> Element {    
     let filename = cx.props.filename.clone().unwrap_or_default();
     let kind = cx.props.kind.clone().unwrap_or_default();
-    let filesize = cx.props.filesize.clone().unwrap_or_default();
+    let filesize = cx.props.filesize.unwrap_or_default();
     let filesize_str = format_size(filesize, DECIMAL);
-    let remote = cx.props.remote.clone().unwrap_or_default();
+    let remote = cx.props.remote.unwrap_or_default();
 
     cx.render(rsx! (
         style { "{STYLE}" },

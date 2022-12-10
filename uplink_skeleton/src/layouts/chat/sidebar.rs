@@ -60,7 +60,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     chat.unreads.to_string()
                 } else { "".into() };
                 
-                let key = chat.id.clone();
+                let key = chat.id;
 
                 rsx!(
                     ContextMenu {
