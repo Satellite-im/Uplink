@@ -38,6 +38,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     active: cx.props.route_info.active.clone()
                 },
             )),
+            div {
+                id: "favorites",
+                UserImage {
+                    platform: Platform::Mobile,
+                    status: Status::Online,
+                    with_username: "Joey Tucan".into()
+                }
+            },
             sidebar_chats.iter().cloned().map(|chat| {
                 // TODO: Make this dynamic for group chats
                 let user = chat.participants.get(1);
