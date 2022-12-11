@@ -25,7 +25,7 @@ document.getElementById("UUID").addEventListener(
   false,
 )
 
-document.addEventListener("click", (ev) => {
+document.addEventListener("click", (_) => {
   const context_menu = document.getElementById("UUID-context-menu")
   context_menu.classList.add("hidden")
 })

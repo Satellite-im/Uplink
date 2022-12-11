@@ -38,7 +38,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             with_nav: cx.render(rsx!(
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone()
+                    active: cx.props.route_info.active.clone(),
+                    onnavigate: move |r| {
+                        use_router(&cx).replace_route(r, None, None);
+                    }
                 },
             )),
             // Only display favorites if we have some.
@@ -63,6 +66,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             rsx! (
                                 ContextMenu {
                                     key: "{id}",
+                                    id: id.to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Heart,
@@ -128,6 +132,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     rsx!(
                         ContextMenu {
                             key: "{key}",
+                            id: key.to_string(),
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::EyeSlash,

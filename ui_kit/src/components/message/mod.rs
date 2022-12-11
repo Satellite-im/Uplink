@@ -40,6 +40,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();
+    println!("rendering message {}", UUID);
 
     let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();

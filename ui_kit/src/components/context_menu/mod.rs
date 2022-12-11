@@ -52,6 +52,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    id: String,
     items: Element<'a>,
     children: Element<'a>,
     #[props(optional)]
@@ -60,21 +61,22 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let UUID = Uuid::new_v4().to_string().replace('-', "");
 
     // Handles the hiding and showing of the context menu
-    let script = include_str!("./context.js").replace("UUID", &UUID);
+    let script = include_str!("./context.js").replace("UUID", &cx.props.id);
 
-    let id = format!("{}-context-menu", &UUID);
+    let id = format!("{}-context-menu", &cx.props.id);
     
     let window = use_window(&cx);
+
+    println!("updating context menu");
 
     cx.render(rsx! {
         style { "{STYLE}" },
         div {
             class: "context-wrap",
             div {
-                id: "{UUID}",
+                id: "{cx.props.id}",
                 &cx.props.children,
             },
             div {

@@ -7,6 +7,7 @@ use tao::menu::{MenuBar as Menu, MenuItem};
 use store::state::mock_state;
 use ui_kit::{icons::Icon, components::nav::Route as UIRoute};
 
+use crate::pages::settings::settings::SettingsPage;
 use crate::{layouts::chat::RouteInfo, pages::chat::Page as ChatPage};
 
 const STYLE: &str = include_str!("./style.css");
@@ -63,17 +64,16 @@ fn main() {
 
 
 fn app(cx: Scope) -> Element {
-    let _state = use_context_provider(&cx, || mock_state());
-    
+    let _ = use_context_provider(&cx, || mock_state());
+
     let chat_route = UIRoute { to: "/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..UIRoute::default() };
+    let settings_route = UIRoute { to: "/settings", name: "Settings", icon: Icon::Cog, ..UIRoute::default() };
     let routes = vec![
-        chat_route,
+        chat_route.clone(),
         UIRoute { to: "/files", name: "Files", icon: Icon::Folder, ..UIRoute::default() },
         UIRoute { to: "/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()), loading: None },
-        UIRoute { to: "/settings", name: "Settings", icon: Icon::Cog, ..UIRoute::default() },
+        settings_route.clone()
     ];
-    let active_route = routes[0].clone();
-
     cx.render(rsx! (
         style { "{STYLE} {LAYOUT_STYLE} {PAGES_STYLE}" },
         Router {
@@ -81,8 +81,17 @@ fn app(cx: Scope) -> Element {
                 to: "/", 
                 ChatPage {
                     route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: chat_route.clone(),
+                    }
+                } 
+            },
+            Route { 
+                to: "/settings", 
+                SettingsPage {
+                    route_info: RouteInfo {
                         routes: routes,
-                        active: active_route,
+                        active: settings_route.clone(),
                     }
                 } 
             }

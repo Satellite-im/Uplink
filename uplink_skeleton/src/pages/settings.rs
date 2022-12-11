@@ -1,7 +1,7 @@
 pub mod settings {
     use dioxus::prelude::*;
 
-    use crate::layouts::chat::{sidebar::chat::ChatSidebar, RouteInfo, compose::chat::Compose};
+    use crate::layouts::chat::RouteInfo;
 
     #[derive(PartialEq, Props)]
     pub struct Props {
@@ -9,14 +9,11 @@ pub mod settings {
     }
 
     #[allow(non_snake_case)]
-    pub fn Settings(cx: Scope<Props>) -> Element {
+    pub fn SettingsPage(cx: Scope<Props>) -> Element {
         cx.render(rsx!(
             div {
-                id: "chat-page",
-                ChatSidebar {
-                    route_info: cx.props.route_info.clone()
-                },
-                Compose {},
+                id: "settings-page",
+                
             }
         ))
     }

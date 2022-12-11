@@ -153,6 +153,7 @@ pub fn Compose(cx: Scope) -> Element {
                     with_sender: "Jane Doe | Satellite.im".into(),
                     timestamp: some_time_long_ago,
                     ContextMenu {
+                        id: "message-temp".into(),
                         items: cx.render(rsx!(
                             ContextItem {
                                 icon: Icon::ArrowLongLeft,
