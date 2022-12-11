@@ -1,4 +1,4 @@
-.user-UUID {
+.user {
     display: inline-flex;
     gap: var(--gap);
     position: relative;
@@ -6,15 +6,24 @@
     width: 100%;
 }
 
-.user-UUID .user-image {
+
+.user.active {
+    background-color: var(--secondary-dark);
+}
+
+.user .image {
     align-self: flex-start;
 }
 
-.user-UUID .username {
+.user .user-image-wrap {
+    justify-content: flex-start;
+}
+
+.user .username {
     color: var(--text-color);
 }
 
-.user-UUID .subtext {
+.user .subtext {
     color: var(--text-color-muted);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -24,7 +33,7 @@
     -webkit-box-orient: vertical;
 }
 
-.user-UUID .badge {
+.user .badge {
     position: absolute;
     top: 0;
     right: 0;
@@ -33,7 +42,7 @@
     color: var(--text-color-bright);
 }
 
-.user-UUID .badge-prefix {
+.user .badge-prefix {
     height: 100%;
     background: var(--secondary-dark);
     padding: var(--gap-less) var(--gap);
@@ -42,7 +51,7 @@
     color: var(--text-color-dark)
 }
 
-.user-UUID .badge-count {
+.user .badge-count {
     height: 100%;
     background: var(--primary);
     padding: var(--gap-less) var(--gap);

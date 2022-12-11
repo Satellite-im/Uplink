@@ -20,7 +20,9 @@
 }
 
 .btn-wrap {
-    position: relative;
+    position: relative; 
+    display: inline-flex; 
+    justify-content: center;
 }
 
 .btn svg {
@@ -92,4 +94,9 @@
 
 .btn-wrap.disabled .btn {
     cursor: not-allowed;
+}
+.btn-wrap.small .btn {
+    padding: var(--gap-less);
+    height: var(--height-input-less);
+    width: var(--height-input-less);
 }

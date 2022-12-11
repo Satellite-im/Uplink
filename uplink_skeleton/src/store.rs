@@ -53,6 +53,10 @@ pub mod actions {
         React(Chat, Message, Reaction),
         /// Reply to a given message by ID
         Reply(Chat, Message),
+        /// Prep the UI for a message reply.
+        StartReplying(Chat, Message),
+        /// Clears the reply for a given chat
+        CancelReply(Chat),
         /// Sends a message to the given chat
         Send(Chat, Message),
     }
@@ -91,6 +95,8 @@ pub mod state {
         pub messages: Vec<Message>,
         // Unread count for this chat, should be cleared when we view the chat.
         pub unreads: u32,
+        // If a value exists, we will render the message we're replying to above the chatbar
+        pub replying_to: Option<Message>,
     }
 
     #[derive(Clone, Debug, Default)]
@@ -158,6 +164,12 @@ pub mod state {
                 Actions::ToggleFavorite(chat) => {
                     mutations::toggle_favorite(self, &chat);
                 },
+                Actions::StartReplying(chat, message) => {
+                    mutations::start_replying(self, &chat, &message);
+                },
+                Actions::CancelReply(chat) => {
+                    mutations::cancel_reply(self, &chat);
+                },
                 Actions::React(_, _, _) => todo!(),
                 Actions::Reply(_, _) => todo!(),
                 Actions::Send(_, _) => todo!(),
@@ -172,6 +184,8 @@ pub mod state {
 
     /// Mutations should be the only place updating the values in state.
     pub mod mutations {
+        use warp::raygun::Message;
+
         use super::{Chat, State};
 
         pub fn set_active_chat(state: &mut State, chat: Chat) {
@@ -199,6 +213,38 @@ pub mod state {
             }
 
             state.chats.favorites = faves;
+        }
+
+        pub fn start_replying(state: &mut State, chat: &Chat, message: &Message) {
+            let mut chats = state.chats.clone();
+            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            chats.all[chat_index].replying_to = Some(message.clone());
+
+            // Update the active state if it matches the one we're modifying
+            if state.chats.active.clone().id == chat.id {
+                chats.active = Chat {
+                    replying_to: Some(message.clone()),
+                    ..chats.all[chat_index].clone()
+                };
+            }
+
+            state.chats = chats;
+        }
+
+        pub fn cancel_reply(state: &mut State, chat: &Chat) {
+            let mut chats = state.chats.clone();
+            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            chats.all[chat_index].replying_to = None;
+
+            // Update the active state if it matches the one we're modifying
+            if state.chats.active.id == chat.id {
+                chats.active = Chat {
+                    replying_to: None,
+                    ..chats.all[chat_index].clone()
+                };
+            }
+
+            state.chats = chats;
         }
     }
 

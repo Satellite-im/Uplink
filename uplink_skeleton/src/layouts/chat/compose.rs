@@ -1,8 +1,9 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
-use ui_kit::{layout::{topbar::Topbar, chatbar::Chatbar}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
+use warp::raygun::Message as RaygunMessage;
 
 use crate::store::{state::State, actions::Actions};
 
@@ -25,6 +26,12 @@ pub fn Compose(cx: Scope) -> Element {
     let subtext = active_participant.status_message().unwrap_or_default();
 
     let is_favorite = state.read().chats.favorites.clone().contains(&active_chat);
+
+    let reply_chat = active_chat.clone();
+    let reply_message = match &state.read().chats.active.replying_to {
+        Some(m) => m.value().join("\n").to_string(),
+        None => "".into(),
+    };
     
     cx.render(rsx!(
         div {
@@ -48,7 +55,7 @@ pub fn Compose(cx: Scope) -> Element {
                         },
                         Button {
                             icon: Icon::Phone,
-                            appearance: Appearance::Primary,
+                            appearance: Appearance::Secondary,
                             tooltip: cx.render(rsx!(
                                 Tooltip { 
                                     arrow_position: ArrowPosition::Top, 
@@ -63,16 +70,6 @@ pub fn Compose(cx: Scope) -> Element {
                                 Tooltip { 
                                     arrow_position: ArrowPosition::Top, 
                                     text: String::from("Video Call")
-                                }
-                            )),
-                        },
-                        Button {
-                            icon: Icon::Bell,
-                            appearance: Appearance::Secondary,
-                            tooltip: cx.render(rsx!(
-                                Tooltip { 
-                                    arrow_position: ArrowPosition::Top, 
-                                    text: String::from("Notifications")
                                 }
                             )),
                         },
@@ -158,6 +155,11 @@ pub fn Compose(cx: Scope) -> Element {
                             ContextItem {
                                 icon: Icon::ArrowLongLeft,
                                 text: String::from("Reply"),
+                                onpress: move |_| {
+                                    let mut reply = RaygunMessage::default();
+                                    reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
+                                    state.write().dispatch(Actions::StartReplying(reply_chat.clone(), reply.clone()));
+                                }
                             },
                             ContextItem {
                                 icon: Icon::FaceSmile,
@@ -233,6 +235,26 @@ pub fn Compose(cx: Scope) -> Element {
                             }
                         )),
                     },
+                )),
+                with_replying_to: cx.render(rsx!(
+                    state.read().chats.active.replying_to.is_some().then(|| rsx!(
+                        Reply {
+                            remote: {
+                                let our_did = state.read().account.identity.did_key();
+                                let their_did = state.read().chats.active.replying_to.clone().unwrap_or_default().sender();
+                                our_did != their_did
+                            },
+                            onclose: move |_| {
+                                let new_chat = &state.read().chats.active.clone();
+                                state.write().dispatch(Actions::CancelReply(new_chat.clone()))
+                            },
+                            message: reply_message,
+                            UserImage {
+                                platform: Platform::Mobile,
+                                status: Status::Online
+                            },
+                        }
+                    ))
                 )),
                 with_file_upload: cx.render(rsx!(
                     Button {

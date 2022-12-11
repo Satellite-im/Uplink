@@ -14,6 +14,8 @@ pub struct Props<'a> {
     #[props(optional)]
     with_badge: Option<String>,
     #[props(optional)]
+    active: Option<bool>,
+    #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
 }
 
@@ -46,15 +48,18 @@ pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
 #[allow(non_snake_case)]
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();
-    let scoped_styles = STYLE.replace("UUID", &UUID);
     let time_ago = get_time_ago(&cx);
 
     let badge = get_badge(&cx);
 
+    let active = &cx.props.active.unwrap_or_default();
+
     cx.render(rsx! (
-        style { "{scoped_styles}" },
+        style { "{STYLE}" },
         div {
-            class: "user user-{UUID} noselect defaultcursor",
+            class: {
+                format_args!("user {} {} noselect defaultcursor", UUID, if *active { "active" } else { "" })
+            },
             onclick: move |e| emit(&cx, e),
             (!badge.is_empty()).then(|| rsx!(
                 span { 
@@ -71,7 +76,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             )),
             &cx.props.user_image,
             div {
-                class: "user-info",
+                class: "info",
                 p {
                     class: "username",
                     "{cx.props.username}"

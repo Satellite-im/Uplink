@@ -47,3 +47,14 @@
     align-content: flex-start;
     gap: var(--gap);
 }
+
+#chats .context-wrap,
+#chats .context-wrap > div:first-of-type {
+    width: 100%;
+}
+
+#chats {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+}

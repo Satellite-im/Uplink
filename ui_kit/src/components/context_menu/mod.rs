@@ -75,7 +75,6 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "context-wrap",
             div {
                 id: "{UUID}",
-                style: "width: 100%;",
                 &cx.props.children,
             },
             div {

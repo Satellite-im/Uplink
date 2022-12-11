@@ -1,4 +1,4 @@
-.message-reply-UUID {
+.message-reply {
     border-radius: var(--border-radius-more);
     border-bottom-right-radius: var(--border-radius);
     min-height: var(--height-input);
@@ -12,19 +12,19 @@
     position: relative;
 }
 
-.message-reply-UUID .user-image {
+.message-reply .user-image {
     transform: scale(0.75);
 }
 
-.message-reply-UUID .context-wrap {
+.message-reply .context-wrap {
     align-self: flex-end;
 }
 
-.message-reply-UUID.loading {
+.message-reply.loading {
     opacity: 0.5;
 }
 
-.message-reply-UUID .text {
+.message-reply .text {
     color: var(--text-color);
     background-color: var(--primary);
     padding: var(--gap-less) var(--padding-less);
@@ -32,20 +32,20 @@
     border-bottom-right-radius: var(--border-radius-less);
 }
 
-.message-reply-UUID .content {
+.message-reply .content {
     position: relative;
 }
 
-.message-reply-UUID.remote {
+.message-reply.remote {
     align-self: flex-start;
 }
 
-.message-reply-UUID.remote .remote-text {
+.message-reply.remote .remote-text {
     border-radius: var(--border-radius-more);
     border-bottom-left-radius: var(--border-radius);
 }
 
-.message-reply-UUID .prefix {
+.message-reply .prefix {
     display: inline-flex;
     position: absolute;
     width: fit-content;
@@ -55,7 +55,7 @@
     font-size: var(--text-size-less);
 }
 
-.message-reply-UUID.remote .prefix {
+.message-reply.remote .prefix {
     left: 0;
     right: unset;
 }

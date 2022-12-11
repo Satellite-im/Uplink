@@ -12,8 +12,11 @@ pub mod mock_state {
     fn fake_id(username: &'static str) -> Identity {
         let mut id = Identity::default();
 
+        let mut rng = rand::thread_rng();
+        let status_len = rng.gen_range(4,10);
+
         id.set_username(username);
-        id.set_status_message(lipsum(6).into());
+        id.set_status_message(lipsum(status_len).into());
         id
     }
 
@@ -41,6 +44,7 @@ pub mod mock_state {
             participants,
             messages,
             unreads: rng.gen_range(0,2),
+            replying_to: None,
         }
     }
 

@@ -25,7 +25,9 @@ pub struct Props<'a> {
     #[props(optional)]
     appearance: Option<Appearance>,
     #[props(optional)]
-    with_badge: Option<String>
+    with_badge: Option<String>,
+    #[props(optional)]
+    small: Option<bool>
 }
 
 /// Generates the optional text for the button.
@@ -103,16 +105,17 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let text = get_text(&cx);
     let badge = get_badge(&cx);
-    let disabled = &cx.props.disabled.unwrap_or(false);
+    let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
+
+    let small = &cx.props.small.unwrap_or_default();
 
     cx.render(
         rsx!(
             style { "{styles}" },
             div {
-                style: "position: relative; display: inline-flex; justify-content: center;",
                 class: {
-                    format_args!("btn-wrap {}", if *disabled { "disabled" } else { "" })
+                    format_args!("btn-wrap {} {}", if *disabled { "disabled" } else { "" }, if *small { "small" } else { "" })
                 },
                 (cx.props.tooltip.is_some()).then(|| rsx!(
                     &cx.props.tooltip
@@ -131,7 +134,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         format_args!(
                             "btn appearance-{} btn-{} {} {}", 
                             appearance, 
-                            UUID, 
+                            UUID,
                             if *disabled { "btn-disabled" } else { "" }, 
                             if text.is_empty() { "no-text" } else {""}
                         )

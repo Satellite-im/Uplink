@@ -1,4 +1,4 @@
-.message-UUID {
+.message {
     background: var(--primary);
     border-radius: var(--border-radius-more);
     border-bottom-right-radius: var(--border-radius);
@@ -10,35 +10,35 @@
     align-self: flex-end;
 }
 
-.message-UUID .context-wrap {
+.message .context-wrap {
     align-self: flex-end;
 }
 
-.message-UUID.message-loading {
+.message.message-loading {
     opacity: 0.5;
 }
 
-.message-UUID .message-text {
+.message .text {
     color: var(--text-color);
 }
 
-.message-UUID.message-first {
+.message.message-first {
     border-radius: var(--border-radius-more);
     border-bottom-right-radius: var(--border-radius);
 }
 
-.message-UUID.message-last {
+.message.message-last {
     border-radius: var(--border-radius-more);
     border-top-right-radius: var(--border-radius);
 }
 
-.message-UUID.message-middle {
+.message.message-middle {
     border-radius: var(--border-radius-more);
     border-top-right-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
 }
 
-.message-UUID.message-remote {
+.message.remote {
     align-self: flex-start;
     background: var(--secondary);
     border-radius: var(--border-radius-more);
@@ -46,17 +46,17 @@
 }
 
 
-.message-UUID.message-remote.message-first  {
+.message.remote.message-first  {
     border-radius: var(--border-radius-more);
     border-bottom-left-radius: var(--border-radius);
 }
 
-.message-UUID.message-remote.message-last {
+.message.remote.message-last {
     border-radius: var(--border-radius-more);
     border-top-left-radius: var(--border-radius);
 }
 
-.message-UUID.message-remote.message-middle {
+.message.remote.message-middle {
     border-radius: var(--border-radius-more);
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);

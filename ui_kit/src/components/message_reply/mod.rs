@@ -42,7 +42,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();
-    let scoped_styles = STYLE.replace("UUID", &UUID);
 
     let text = cx.props.with_text.clone().unwrap_or_default();
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
@@ -52,12 +51,11 @@ pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let remote_message = cx.props.remote_message.unwrap_or_default();
     
     cx.render(rsx! (
-        style { "{scoped_styles}" },
+        style { "{STYLE}" },
         div {
             class: {
                 format_args!(
-                    "message-reply-{} {} {}", 
-                    &UUID,
+                    "message-reply {} {}", 
                     if loading {
                         "loading"
                     } else { "" },

@@ -42,6 +42,7 @@
     overflow: hidden;
     white-space: nowrap;
     align-self: center;
+    max-width: 100%;
 }
 
 .profile-typing {

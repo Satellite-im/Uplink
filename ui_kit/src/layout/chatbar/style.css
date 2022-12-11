@@ -7,6 +7,7 @@
     width: 100%;
     border-top: 1px solid transparent;
     padding: var(--gap);
+    position: relative;
 }
 
 .chatbar .input-group {
@@ -15,4 +16,35 @@
 
 .chatbar .input-group .input {
     border-radius: var(--border-radius-more);
+}
+
+.inline-reply {
+    position: absolute;
+    left: var(--gap);
+    right: var(--gap);
+    bottom: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap-less);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.inline-reply .content {
+    display: inline-flex;
+}
+
+.inline-reply .reply-text {
+    color: var(--text-color);
+
+}
+
+.inline-reply .btn-wrap {
+    position: absolute;
+    top: var(--gap);
+    right: var(--gap);
+    z-index: 1;
 }

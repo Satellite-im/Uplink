@@ -40,7 +40,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();
-    let scoped_styles = STYLE.replace("UUID", &UUID);
 
     let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
@@ -48,17 +47,17 @@ pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let order = cx.props.order.unwrap_or(Order::Last);
     
     cx.render(rsx! (
-        style { "{scoped_styles}" },
+        style { "{STYLE}" },
         div {
             class: {
                 format_args!(
-                    "message-{} {} {} {}", 
+                    "message {} {} {} {}", 
                     &UUID,
                     if loading {
-                        "message-loading"
+                        "loading"
                     } else { "" },
                     if remote {
-                        "message-remote"
+                        "remote"
                     } else { "" },
                     if cx.props.order.is_some() {
                         order.to_string()
@@ -73,7 +72,7 @@ pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
             )),
             (cx.props.with_text.is_some()).then(|| rsx! (
                 p {
-                    class: "message-text",
+                    class: "text",
                     "{text}"
                 }
             ))

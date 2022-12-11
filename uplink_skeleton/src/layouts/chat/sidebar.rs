@@ -16,6 +16,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let search_placeholder = String::from("Search...");
 
     let sidebar_chats = state.read().chats.in_sidebar.clone();
+
+    let active_chat = state.read().chats.active.clone();
     let favorites = state.read().chats.favorites.clone();
 
     cx.render(rsx!(
@@ -49,6 +51,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat| {
+                            let favorites_chat = chat.clone();
+                            let remove_favorite = chat.clone();
                             // TODO: Make this dynamic for group chats
                             let user = chat.participants.get(1);
                             let parsed_user = match user {
@@ -57,15 +61,34 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             };
                             let id = parsed_user.did_key();
                             rsx! (
-                                UserImage {
+                                ContextMenu {
                                     key: "{id}",
-                                    platform: Platform::Mobile,
-                                    status: Status::Online,
-                                    with_username: parsed_user.username(),
-                                    onpress: move |_| {
-                                        state.write().dispatch(Actions::ChatWith(chat.clone()));
-                                    }
-                                },
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::Heart,
+                                            text: String::from("Remove Favorite"),
+                                            onpress: move |_| {
+                                                state.write().dispatch(Actions::ToggleFavorite(remove_favorite.clone()));
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::ChatBubbleBottomCenterText,
+                                            text: String::from("Chat"),
+                                            onpress: move |_| {
+                                                state.write().dispatch(Actions::ChatWith(favorites_chat.clone()));
+                                            }
+                                        }
+                                    )),
+                                    UserImage {
+                                        key: "{id}",
+                                        platform: Platform::Mobile,
+                                        status: Status::Online,
+                                        with_username: parsed_user.username(),
+                                        onpress: move |_| {
+                                            state.write().dispatch(Actions::ChatWith(chat.clone()));
+                                        }
+                                    },
+                                }
                             )
                         }),
                     }
@@ -74,74 +97,80 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             Label {
                 text: "Chats".into()
             },
-            sidebar_chats.iter().cloned().map(|chat| {
-                // TODO: Make this dynamic for group chats
-                let user = chat.participants.get(1);
-                let default_message = Message::default();
-                let parsed_user = match user {
-                    Some(u) => u.clone(),
-                    None => Identity::default(),
-                };
+            div {
+                id: "chats",
+                sidebar_chats.iter().cloned().map(|chat| {
+                    // TODO: Make this dynamic for group chats
+                    let user = chat.participants.get(1);
+                    let default_message = Message::default();
+                    let parsed_user = match user {
+                        Some(u) => u.clone(),
+                        None => Identity::default(),
+                    };
 
-                let last_message = chat.messages.last();
-                let unwrapped_message = match last_message {
-                    Some(m) => m,
-                    None => &default_message,
-                };
+                    let last_message = chat.messages.last();
+                    let unwrapped_message = match last_message {
+                        Some(m) => m,
+                        None => &default_message,
+                    };
 
-                let val = unwrapped_message.value();
-                let timestamp = unwrapped_message.date().timestamp_millis() as u64;
+                    let val = unwrapped_message.value();
+                    let timestamp = unwrapped_message.date().timestamp_millis() as u64;
 
-                let badge = if chat.unreads > 0 {
-                    chat.unreads.to_string()
-                } else { "".into() };
-                
-                let key = chat.id;
+                    let badge = if chat.unreads > 0 {
+                        chat.unreads.to_string()
+                    } else { "".into() };
+                    
+                    let key = chat.id;
 
-                rsx!(
-                    ContextMenu {
-                        key: "{key}",
-                        items: cx.render(rsx!(
-                            ContextItem {
-                                icon: Icon::EyeSlash,
-                                text: String::from("Mark Seen"),
-                            },
-                            hr{ },
-                            ContextItem {
-                                text: String::from("Call"),
-                            },
-                            ContextItem {
-                                text: String::from("Share File"),
-                            },
-                            hr{ }
-                            ContextItem {
-                                icon: Icon::XMark,
-                                text: String::from("Hide Chat"),
-                            },
-                            ContextItem {
-                                danger: true,
-                                icon: Icon::NoSymbol,
-                                text: String::from("Block User"),
-                            },
-                        )),
-                        User {
-                            username: parsed_user.username(),
-                            subtext: val.join("\n"),
-                            timestamp: timestamp,
-                            user_image: cx.render(rsx!(
-                                UserImage {
-                                    platform: Platform::Mobile,
-                                    status: Status::Online
-                                }
+                    let active = active_chat.id == chat.id;
+
+                    rsx!(
+                        ContextMenu {
+                            key: "{key}",
+                            items: cx.render(rsx!(
+                                ContextItem {
+                                    icon: Icon::EyeSlash,
+                                    text: String::from("Mark Seen"),
+                                },
+                                hr{ },
+                                ContextItem {
+                                    text: String::from("Call"),
+                                },
+                                ContextItem {
+                                    text: String::from("Share File"),
+                                },
+                                hr{ }
+                                ContextItem {
+                                    icon: Icon::XMark,
+                                    text: String::from("Hide Chat"),
+                                },
+                                ContextItem {
+                                    danger: true,
+                                    icon: Icon::NoSymbol,
+                                    text: String::from("Block User"),
+                                },
                             )),
-                            with_badge: badge,
-                            onpress: move |_| {
-                                state.write().dispatch(Actions::ChatWith(chat.clone()));
+                            User {
+                                username: parsed_user.username(),
+                                subtext: val.join("\n"),
+                                timestamp: timestamp,
+                                active: active,
+                                user_image: cx.render(rsx!(
+                                    UserImage {
+                                        platform: Platform::Mobile,
+                                        status: Status::Online
+                                    }
+                                )),
+                                with_badge: badge,
+                                onpress: move |_| {
+                                    state.write().dispatch(Actions::ChatWith(chat.clone()));
+                                }
                             }
                         }
-                    }
-                )}
-            )
+                    )}
+                )
+            }
         }
     ))
 }
