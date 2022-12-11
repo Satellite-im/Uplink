@@ -1,6 +1,5 @@
 use dioxus::{desktop::use_window, prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 use dioxus_heroicons::outline::Shape;
-use uuid::Uuid;
 
 use crate::icons::{Icon, IconElement};
 
@@ -68,8 +67,6 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let id = format!("{}-context-menu", &cx.props.id);
     
     let window = use_window(&cx);
-
-    println!("updating context menu");
 
     cx.render(rsx! {
         style { "{STYLE}" },

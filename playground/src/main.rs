@@ -69,6 +69,8 @@ fn app(cx: Scope) -> Element {
 
     let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
 
+    println!("rendering app");
+
     cx.render(rsx! (
         Item {
             name: String::from("Typing Indicator"),
@@ -121,6 +123,7 @@ fn app(cx: Scope) -> Element {
             name: String::from("Context Menu"),
             desc: String::from("A wrapper component to add a context menu to a component"),
             ContextMenu {
+                id: "mock".into(),
                 items: cx.render(rsx!(
                     ContextItem {
                         icon: Icon::EyeSlash,

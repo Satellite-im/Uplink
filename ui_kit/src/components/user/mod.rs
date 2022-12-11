@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
-use uuid::Uuid;
 
 const STYLE: &str = include_str!("./style.css");
 
@@ -47,7 +46,6 @@ pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
 
 #[allow(non_snake_case)]
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let UUID = Uuid::new_v4().to_string();
     let time_ago = get_time_ago(&cx);
 
     let badge = get_badge(&cx);
@@ -58,7 +56,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         style { "{STYLE}" },
         div {
             class: {
-                format_args!("user {} {} noselect defaultcursor", UUID, if *active { "active" } else { "" })
+                format_args!("user {} noselect defaultcursor", if *active { "active" } else { "" })
             },
             onclick: move |e| emit(&cx, e),
             (!badge.is_empty()).then(|| rsx!(

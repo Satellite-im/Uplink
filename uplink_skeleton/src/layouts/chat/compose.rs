@@ -32,8 +32,6 @@ pub fn Compose(cx: Scope) -> Element {
         Some(m) => m.value().join("\n").to_string(),
         None => "".into(),
     };
-
-    state.write().dispatch(Actions::ClearUnreads(active_chat.clone()));
     
     cx.render(rsx!(
         div {

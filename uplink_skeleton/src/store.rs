@@ -156,6 +156,7 @@ pub mod state {
                 Actions::UnFavorite(_) => todo!(),
                 Actions::ChatWith(chat) => {
                     // TODO: this should create a conversation in warp if one doesn't exist
+                    mutations::clear_unreads(self, &chat);
                     mutations::set_active_chat(self, chat);
                 }
                 Actions::AddToSidebar(chat) => {
