@@ -30,6 +30,7 @@ pub mod actions {
         /// Deny a incoming friend request
         DenyRequest(Identity),
 
+        
 
         // Friends
         Block(Identity),
@@ -59,6 +60,7 @@ pub mod actions {
         CancelReply(Chat),
         /// Sends a message to the given chat
         Send(Chat, Message),
+        ClearUnreads(Chat),
     }
 }
 
@@ -170,6 +172,9 @@ pub mod state {
                 Actions::CancelReply(chat) => {
                     mutations::cancel_reply(self, &chat);
                 },
+                Actions::ClearUnreads(chat) => {
+                    mutations::clear_unreads(self, &chat);
+                },
                 Actions::React(_, _, _) => todo!(),
                 Actions::Reply(_, _) => todo!(),
                 Actions::Send(_, _) => todo!(),
@@ -243,6 +248,32 @@ pub mod state {
                     ..chats.all[chat_index].clone()
                 };
             }
+
+            state.chats = chats;
+        }
+
+        pub fn clear_unreads(state: &mut State, chat: &Chat) {
+            let mut chats = state.chats.clone();
+            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            chats.all[chat_index].unreads = 0;
+
+            // Update the active state if it matches the one we're modifying
+            if state.chats.active.id == chat.id {
+                chats.active = Chat {
+                    unreads: 0,
+                    ..chats.all[chat_index].clone()
+                };
+            }
+
+            // Update the sidebar chats if it matches the one we're modifying
+            if state.chats.in_sidebar.contains(chat) {
+                for c in chats.in_sidebar.iter_mut() {
+                    if c.id == chat.id {
+                        c.unreads = 0;
+                    } 
+                }
+            }
+            
 
             state.chats = chats;
         }

@@ -9,7 +9,7 @@ UI-Kit for Rust based satellite apps, specifically Dioxus.
 - [ ] User with Controls
 - [x] Chatbar
 - [x] Message Reply
-- [ ] Message Reply above Chatbar
+- [x] Message Reply above Chatbar
 - [ ] Reaction Menu
 - [x] Typing Indicator
 - [x] Typing Indicator Message
