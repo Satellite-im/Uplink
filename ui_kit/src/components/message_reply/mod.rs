@@ -1,8 +1,6 @@
 use std::fmt;
 
 use dioxus::prelude::*;
-use uuid::Uuid;
-
 
 const STYLE: &str = include_str!("./style.css");
 
@@ -41,8 +39,6 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
-    let UUID = Uuid::new_v4().to_string();
-
     let text = cx.props.with_text.clone().unwrap_or_default();
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
 

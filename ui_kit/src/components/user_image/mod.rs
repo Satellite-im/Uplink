@@ -7,7 +7,7 @@ const STYLE: &str = include_str!("./style.css");
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    loading: Option<bool>,
+    _loading: Option<bool>,
     #[props(optional)]
     image: Option<String>,
     #[props(optional)]
