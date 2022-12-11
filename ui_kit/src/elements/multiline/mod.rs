@@ -4,9 +4,6 @@ use crate::elements::input::Input;
 use crate::icons::Icon;
 
 
-const STYLE: &str = include_str!("./style.css");
-
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -29,7 +26,6 @@ pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let default_text = cx.props.default_text.clone().unwrap_or_else(||"Placeholder...".to_owned());
 
     cx.render(rsx! (
-        style { "{STYLE}" }
         div {
             class: "multiline",
             Input {

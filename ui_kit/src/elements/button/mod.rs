@@ -2,9 +2,8 @@ use uuid::Uuid;
 
 use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 
-use crate::{get_styles, get_script, elements::Appearance, icons::{Icon, IconElement}};
+use crate::{get_script, elements::Appearance, icons::{Icon, IconElement}};
 
-const STYLE: &str = include_str!("./style.css");
 const SCRIPT: &str = include_str!("./script.js");
 
 
@@ -101,7 +100,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let UUID = Uuid::new_v4().to_string();
 
     let script = get_script(SCRIPT, &UUID);
-    let styles = get_styles(STYLE);
 
     let text = get_text(&cx);
     let badge = get_badge(&cx);
@@ -112,7 +110,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(
         rsx!(
-            style { "{styles}" },
             div {
                 class: {
                     format_args!("btn-wrap {} {}", if *disabled { "disabled" } else { "" }, if *small { "small" } else { "" })

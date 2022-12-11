@@ -3,8 +3,6 @@ use dioxus_heroicons::outline::Shape;
 
 use crate::icons::{Icon, IconElement};
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct ItemProps<'a> {
     #[props(optional)]
@@ -69,7 +67,6 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let window = use_window(&cx);
 
     cx.render(rsx! {
-        style { "{STYLE}" },
         div {
             class: "context-wrap",
             div {

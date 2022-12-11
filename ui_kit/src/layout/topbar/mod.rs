@@ -2,8 +2,6 @@ use dioxus::prelude::*;
 
 use crate::{icons::Icon, elements::{Appearance, button::Button}};
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -33,7 +31,6 @@ pub fn emit(cx: &Scope<Props>) {
 pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(
         rsx!(
-            style { "{STYLE}" }
             div {
                 class: "topbar",
                 (show_back_button(&cx)).then(|| rsx!(

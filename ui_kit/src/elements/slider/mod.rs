@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 // Remember: owned props must implement PartialEq!
 #[derive(Props)]
 pub struct Props<'a> {
@@ -24,7 +22,6 @@ pub fn Slider<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let _slider_value = use_state(&cx, || get_default(&cx));
     // TODO: Pending dioxus update for eval returning values
     cx.render(rsx! {
-        style { "{STYLE}" },
         div {
             class: "slider",
         }

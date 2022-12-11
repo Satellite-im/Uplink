@@ -2,8 +2,6 @@ use std::fmt;
 
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Order {
     First,
@@ -43,7 +41,6 @@ pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let order = cx.props.order.unwrap_or(Order::Last);
     
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: {
                 format_args!(

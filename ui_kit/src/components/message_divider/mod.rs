@@ -2,8 +2,6 @@ use std::time::Duration;
 
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
     text: Option<String>,
@@ -26,7 +24,6 @@ pub fn MessageDivider(cx: Scope<Props>) -> Element {
     let time_ago = get_time_ago(&cx);
 
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: "message-divider noselect defaultcursor",
             hr {},

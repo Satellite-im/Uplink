@@ -3,12 +3,7 @@ pub mod components;
 pub mod layout;
 pub mod icons;
 
-const VARS: &str = include_str!("./style.css");
-
-/// Loads the stylesheet to string.
-pub fn get_styles(styles: &str) -> String {
-    format!("{}{}", crate::VARS, styles)
-}
+pub const STYLE: &str = include_str!("./compiled_styles.css");
 
 /// Loads the script to string.
 pub fn get_script(script: &'static str, uuid: &str) -> String {

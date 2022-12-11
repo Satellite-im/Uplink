@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -26,7 +24,6 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
     cx.render(rsx!(
-        style { "{STYLE}" }
         div { 
             class: "select",
             select {

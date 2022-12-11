@@ -2,8 +2,6 @@ use dioxus::{prelude::*, events::{MouseEvent, MouseData}, core::UiEvent};
 
 use crate::{components::indicator::{Indicator, Platform, Status}, elements::label::Label};
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -48,7 +46,6 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let pressable = &cx.props.onpress.is_some();
 
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: {
                 format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })

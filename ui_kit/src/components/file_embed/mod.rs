@@ -7,8 +7,6 @@ use dioxus::prelude::*;
 use humansize::format_size;
 use humansize::DECIMAL;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(PartialEq, Props)]
 pub struct Props {
     #[props(optional)]
@@ -39,7 +37,6 @@ pub fn FileEmbed(cx: Scope<Props>) -> Element {
     let remote = cx.props.remote.unwrap_or_default();
 
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: {
                 format_args!(

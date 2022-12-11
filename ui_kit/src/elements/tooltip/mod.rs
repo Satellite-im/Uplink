@@ -3,8 +3,6 @@ use std::fmt;
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(PartialEq, Eq, Copy, Clone)]
 /// Which direction will the arrow on the popup point?
 pub enum ArrowPosition {
@@ -64,7 +62,6 @@ pub fn Tooltip(cx: Scope<Props>) -> Element {
     };
 
     cx.render(rsx! {
-        style { "{STYLE}" },
         div {
             class: {
                 format_args!("tooltip hidden tooltip-{} tooltip-{}", &UUID, arrow_position)

@@ -3,8 +3,6 @@ use dioxus::{prelude::*, events::KeyCode};
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
 
-const STYLE: &str = include_str!("./style.css");
-
 
 #[derive(Default, Clone, Copy)]
 pub struct Validation {
@@ -175,7 +173,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = &cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx! (
-        style { "{STYLE}" }
         div {
             class: {
                 format_args!("input-group {}", if *disabled { "disabled" } else { " "})

@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -15,9 +13,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
-        style {
-            "{STYLE}"
-        },
         div {
             class: "sidebar",
             div {

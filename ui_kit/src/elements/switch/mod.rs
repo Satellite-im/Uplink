@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 // Remember: owned props must implement PartialEq!
 #[derive(Props)]
 pub struct Props<'a> {
@@ -37,7 +35,6 @@ pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let disabled = &cx.props.disabled.unwrap_or_default();
     
     cx.render(rsx! {
-        style { "{STYLE}" },
         label {
             class: {
                 format_args!("switch {}", if *disabled { "disabled" } else { "" })

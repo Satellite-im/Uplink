@@ -2,8 +2,6 @@ use std::time::Duration;
 
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     children: Element<'a>,
@@ -28,7 +26,6 @@ pub fn MessageGroup<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
     
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: "message-group-wrap",
             remote.then(|| rsx!(

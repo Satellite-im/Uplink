@@ -1,0 +1,51 @@
+.message-reply {
+	border-radius: var(--border-radius-more);
+	border-bottom-right-radius: var(--border-radius);
+	min-height: var(--height-input);
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	align-self: flex-end;
+	gap: var(--gap);
+	margin-top: calc(var(--gap) * 2);
+	position: relative;
+	.user-image {
+		transform: scale(0.75);
+	}
+	.context-wrap {
+		align-self: flex-end;
+	}
+	&.loading {
+		opacity: 0.5;
+	}
+	.text {
+		color: var(--text-color);
+		background-color: var(--primary);
+		padding: var(--gap-less) var(--padding-less);
+		border-radius: var(--border-radius-more);
+		border-bottom-right-radius: var(--border-radius-less);
+	}
+	.content {
+		position: relative;
+	}
+	&.remote {
+		align-self: flex-start;
+		.remote-text {
+			border-radius: var(--border-radius-more);
+			border-bottom-left-radius: var(--border-radius);
+		}
+		.prefix {
+			left: 0;
+			right: unset;
+		}
+	}
+	.prefix {
+		display: inline-flex;
+		position: absolute;
+		width: fit-content;
+		right: 0;
+		color: var(--text-color-muted);
+		bottom: calc(100% + var(--gap-less));
+		font-size: var(--text-size-less);
+	}
+}

@@ -4,8 +4,6 @@ use crate::{icons::Icon, elements::{input::Input, label::Label, button::Button, 
 
 pub type To = &'static str;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
@@ -78,7 +76,6 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(
         rsx!(
-            style { "{STYLE}" }
             div {
                 class: "chatbar",
                 &cx.props.with_replying_to,

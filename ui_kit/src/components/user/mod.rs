@@ -2,8 +2,6 @@ use std::time::Duration;
 
 use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Props)]
 pub struct Props<'a> {
     username: String,
@@ -53,7 +51,6 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = &cx.props.active.unwrap_or_default();
 
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: {
                 format_args!("user {} noselect defaultcursor", if *active { "active" } else { "" })

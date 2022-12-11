@@ -4,8 +4,6 @@ use dioxus::prelude::*;
 
 use crate::icons::{Icon, IconElement};
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Platform {
     Desktop,
@@ -58,7 +56,6 @@ pub fn Indicator(cx: Scope<Props>) -> Element {
     let status = cx.props.status.to_string();
 
     cx.render(rsx! (
-        style { "{STYLE}" },
         div {
             class: "indicator indicator-{status}",
             IconElement {

@@ -4,8 +4,6 @@ use crate::{icons::Icon, elements::{Appearance, button::Button, tooltip::{Toolti
 
 pub type To = &'static str;
 
-const STYLE: &str = include_str!("./style.css");
-
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
@@ -105,7 +103,6 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(
         rsx!(
-            style { "{STYLE}" }
             div {
                 class: "nav",
                 cx.props.routes.iter().map(|route| {

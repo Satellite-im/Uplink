@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 
-const STYLE: &str = include_str!("./style.css");
 use crate::{icons::{Icon, IconElement}, elements::input::Input};
 
 #[derive(Props)]
@@ -48,9 +47,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = &cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx!(
-        style {
-            "{STYLE}"
-        },
         div {
             class: {
                 format_args!("file {}", if *disabled { "disabled" } else { "" })
