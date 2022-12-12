@@ -209,73 +209,51 @@ pub mod state {
         }
 
         pub fn toggle_favorite(state: &mut State, chat: &Chat) {
-            let mut faves = state.chats.favorites.clone();
-
-            if faves.contains(chat) {
-                let index = faves.iter().position(|c| c.id == chat.id).unwrap();
-                faves.remove(index);
+            if state.chats.favorites.contains(chat) {
+                let index = state.chats.favorites.iter().position(|c| c.id == chat.id).unwrap();
+                state.chats.favorites.remove(index);
             } else {
-                faves.push(chat.clone());
+                state.chats.favorites.push(chat.to_owned());
             }
-
-            state.chats.favorites = faves;
         }
 
         pub fn start_replying(state: &mut State, chat: &Chat, message: &Message) {
-            let mut chats = state.chats.clone();
-            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
-            chats.all[chat_index].replying_to = Some(message.clone());
+            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            state.chats.all[chat_index].replying_to = Some(message.to_owned());
 
             // Update the active state if it matches the one we're modifying
             if state.chats.active.clone().id == chat.id {
-                chats.active = Chat {
-                    replying_to: Some(message.clone()),
-                    ..state.chats.active.clone()
-                };
+                state.chats.active.replying_to = Some(message.to_owned());
             }
-
-            state.chats = chats;
         }
 
         pub fn cancel_reply(state: &mut State, chat: &Chat) {
-            let mut chats = state.chats.clone();
-            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
-            chats.all[chat_index].replying_to = None;
+            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            state.chats.all[chat_index].replying_to = None;
 
             // Update the active state if it matches the one we're modifying
             if state.chats.active.id == chat.id {
-                chats.active = Chat {
-                    replying_to: None,
-                    ..state.chats.active.clone()
-                };
+                state.chats.active.replying_to = None;
             }
-
-            state.chats = chats;
         }
 
         pub fn clear_unreads(state: &mut State, chat: &Chat) {
-            let mut chats = state.chats.clone();
-            let chat_index = chats.all.iter().position(|c| c.id == chat.id).unwrap();
-            chats.all[chat_index].unreads = 0;
+            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            state.chats.all[chat_index].unreads = 0;
 
             // Update the active state if it matches the one we're modifying
             if state.chats.active.id == chat.id {
-                chats.active = Chat {
-                    unreads: 0,
-                    ..chats.all[chat_index].clone()
-                };
+                state.chats.active.unreads = 0;
             }
 
             // Update the sidebar chats if it matches the one we're modifying
             if state.chats.in_sidebar.contains(chat) {
-                for c in chats.in_sidebar.iter_mut() {
+                for c in state.chats.in_sidebar.iter_mut() {
                     if c.id == chat.id {
                         c.unreads = 0;
                     } 
                 }
             }
-            
-            state.chats = chats;
         }
     }
 

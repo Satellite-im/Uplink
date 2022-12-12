@@ -67,7 +67,7 @@ pub mod mock_state {
 
         let ary_conversation_id = Uuid::new_v4();
 
-        let active_chat = fake_chat( vec![thisis_yeu.clone(), ary_fletcher.clone()], ary_conversation_id);
+        let ary_chat = fake_chat( vec![thisis_yeu.clone(), ary_fletcher.clone()], ary_conversation_id);
 
         let albert_conversation_id = Uuid::new_v4();
         let albert_chat = fake_chat( vec![thisis_yeu.clone(), albert_ford.clone()], albert_conversation_id);
@@ -86,10 +86,10 @@ pub mod mock_state {
                 active: "/chat".into(),
             },
             chats: Chats {
-                all: vec![active_chat.clone(), albert_chat.clone(), benny_chat.clone(), henry_chat.clone()],
-                active: active_chat.clone(),
-                in_sidebar: vec![active_chat.clone(), albert_chat.clone(), benny_chat.clone()],
-                favorites: vec![albert_chat.clone(), active_chat.clone()],
+                all: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone(), henry_chat.clone()],
+                active: ary_chat.clone(),
+                in_sidebar: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone()],
+                favorites: vec![albert_chat.clone(), ary_chat.clone()],
             },
             friends: Friends {
                 all: all_friends.clone(),
