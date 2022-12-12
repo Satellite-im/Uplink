@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
-use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}, message_typing::MessageTyping}, layout::topbar::Topbar};
+use ui_kit::{User as UserInfo, elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}, message_typing::MessageTyping, user_image_group::UserImageGroup}, layout::topbar::Topbar};
 
 const STYLE: &str = include_str!("./style.css");
 use ui_kit::STYLE as UIKIT_STYLES; 
@@ -20,9 +20,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
-        style {
-            "{UIKIT_STYLES} {STYLE}"
-        },
         div {
             class: "item",
             div {
@@ -72,15 +69,124 @@ fn app(cx: Scope) -> Element {
 
     println!("rendering app");
 
+    let sample_participants_2 = vec![
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Online,
+            photo: "".into(),
+            username: "Phil".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Idle,
+            photo: "".into(),
+            username: "Frank".into(),
+        },
+    ];
+
+    let sample_participants_3 = vec![
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Online,
+            photo: "".into(),
+            username: "Phil".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Idle,
+            photo: "".into(),
+            username: "Frank".into(),
+        },
+        UserInfo {
+            platform: Platform::Headless,
+            status: Status::Offline,
+            photo: "".into(),
+            username: "Sam".into(),
+        }
+    ];
+
+
+    let sample_participants_more = vec![
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Online,
+            photo: "".into(),
+            username: "Phil".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Idle,
+            photo: "".into(),
+            username: "Frank".into(),
+        },
+        UserInfo {
+            platform: Platform::Headless,
+            status: Status::Offline,
+            photo: "".into(),
+            username: "Sam".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Offline,
+            photo: "".into(),
+            username: "Valerie".into(),
+        }
+    ];
+
+    let sample_participants_more_2 = vec![
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Online,
+            photo: "".into(),
+            username: "Phil".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Idle,
+            photo: "".into(),
+            username: "Frank".into(),
+        },
+        UserInfo {
+            platform: Platform::Headless,
+            status: Status::Offline,
+            photo: "".into(),
+            username: "Sam".into(),
+        },
+        UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Offline,
+            photo: "".into(),
+            username: "Valerie".into(),
+        }
+    ];
+
+
     cx.render(rsx! (
+        style {
+            "{UIKIT_STYLES} {STYLE}"
+        },
+        Item {
+            name: String::from("User Image Group"),
+            desc: String::from("Group a bunch of user images into a nice icon that fits in the same space"),
+            cx.render(rsx!(
+                UserImageGroup {
+                    participants: sample_participants_more
+                },
+                UserImageGroup {
+                    participants: sample_participants_3
+                },
+                UserImageGroup {
+                    participants: sample_participants_2
+                }
+            ))
+        },
         Item {
             name: String::from("Typing Indicator"),
             desc: String::from("Inline message typing indicator"),
             MessageTyping {
                 user_image: cx.render(rsx!(
-                    UserImage {
-                        platform: Platform::Mobile,
-                        status: Status::Online
+                    UserImageGroup {
+                        participants: sample_participants_more_2
                     }
                 ))
             }
