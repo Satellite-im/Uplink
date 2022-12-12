@@ -27,7 +27,6 @@ pub fn Compose(cx: Scope) -> Element {
 
     let is_favorite = state.read().chats.favorites.clone().contains(&active_chat);
 
-    let reply_chat = active_chat.clone();
     let reply_message = match &state.read().chats.active.replying_to {
         Some(m) => m.value().join("\n").to_string(),
         None => "".into(),
@@ -158,8 +157,9 @@ pub fn Compose(cx: Scope) -> Element {
                                 text: String::from("Reply"),
                                 onpress: move |_| {
                                     let mut reply = RaygunMessage::default();
+                                    let chat = state.read().chats.active.clone();
                                     reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
-                                    state.write().dispatch(Actions::StartReplying(reply_chat.clone(), reply.clone()));
+                                    state.write().dispatch(Actions::StartReplying(chat, reply.clone()));
                                 }
                             },
                             ContextItem {

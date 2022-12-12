@@ -158,10 +158,10 @@ pub mod state {
                     // TODO: this should create a conversation in warp if one doesn't exist
                     mutations::clear_unreads(self, &chat);
                     mutations::set_active_chat(self, chat);
-                }
+                },
                 Actions::AddToSidebar(chat) => {
                     mutations::add_chat_to_sidebar(self, chat);
-                }
+                },
                 Actions::RemoveFromSidebar(_) => todo!(),
                 Actions::NewMessage(_, _) => todo!(),
                 Actions::ToggleFavorite(chat) => {
@@ -230,7 +230,7 @@ pub mod state {
             if state.chats.active.clone().id == chat.id {
                 chats.active = Chat {
                     replying_to: Some(message.clone()),
-                    ..chats.all[chat_index].clone()
+                    ..state.chats.active.clone()
                 };
             }
 
@@ -246,7 +246,7 @@ pub mod state {
             if state.chats.active.id == chat.id {
                 chats.active = Chat {
                     replying_to: None,
-                    ..chats.all[chat_index].clone()
+                    ..state.chats.active.clone()
                 };
             }
 
@@ -275,7 +275,6 @@ pub mod state {
                 }
             }
             
-
             state.chats = chats;
         }
     }

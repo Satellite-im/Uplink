@@ -7,6 +7,8 @@ use tao::menu::{MenuBar as Menu, MenuItem};
 use store::state::mock_state;
 use ui_kit::{icons::Icon, components::nav::Route as UIRoute};
 
+use ui_kit::STYLE as UIKIT_STYLES; 
+
 use crate::pages::settings::settings::SettingsPage;
 use crate::{layouts::chat::RouteInfo, pages::chat::Page as ChatPage};
 
@@ -75,7 +77,7 @@ fn app(cx: Scope) -> Element {
         settings_route.clone()
     ];
     cx.render(rsx! (
-        style { "{STYLE} {LAYOUT_STYLE} {PAGES_STYLE}" },
+        style { "{UIKIT_STYLES} {STYLE} {LAYOUT_STYLE} {PAGES_STYLE}" },
         Router {
             Route { 
                 to: "/", 
