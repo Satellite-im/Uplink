@@ -4259,7 +4259,9 @@ name = "uplink_skeleton"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "glob",
  "lipsum",
+ "rsass",
  "ui_kit",
  "uuid",
  "warp",

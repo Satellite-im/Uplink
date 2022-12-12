@@ -156,8 +156,8 @@ pub mod state {
                 Actions::UnFavorite(_) => todo!(),
                 Actions::ChatWith(chat) => {
                     // TODO: this should create a conversation in warp if one doesn't exist
+                    mutations::set_active_chat(self, &chat);
                     mutations::clear_unreads(self, &chat);
-                    mutations::set_active_chat(self, chat);
                 },
                 Actions::AddToSidebar(chat) => {
                     mutations::add_chat_to_sidebar(self, chat);
@@ -194,8 +194,8 @@ pub mod state {
 
         use super::{Chat, State};
 
-        pub fn set_active_chat(state: &mut State, chat: Chat) {
-            state.chats.active = chat;
+        pub fn set_active_chat(state: &mut State, chat: &Chat) {
+            state.chats.active = chat.clone();
         }
 
         pub fn add_chat_to_sidebar(state: &mut State, chat: Chat) {
@@ -209,11 +209,14 @@ pub mod state {
         }
 
         pub fn toggle_favorite(state: &mut State, chat: &Chat) {
-            if state.chats.favorites.contains(chat) {
-                let index = state.chats.favorites.iter().position(|c| c.id == chat.id).unwrap();
-                state.chats.favorites.remove(index);
+            let faves = &mut state.chats.favorites;
+
+            if faves.contains(chat) {
+                if let Some(index) = faves.iter().position(|c| c.id == chat.id) {
+                    faves.remove(index);
+                }
             } else {
-                state.chats.favorites.push(chat.to_owned());
+                faves.push(chat.clone());
             }
         }
 

@@ -12,9 +12,7 @@ use ui_kit::STYLE as UIKIT_STYLES;
 use crate::pages::settings::settings::SettingsPage;
 use crate::{layouts::chat::RouteInfo, pages::chat::Page as ChatPage};
 
-const STYLE: &str = include_str!("./style.css");
-const LAYOUT_STYLE: &str = include_str!("./layouts/style.css");
-const PAGES_STYLE: &str = include_str!("./pages/style.css");
+pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
 pub mod layouts;
 pub mod pages;
@@ -68,7 +66,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let _ = use_context_provider(&cx, || mock_state());
 
-    let chat_route = UIRoute { to: "/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..UIRoute::default() };
+    let chat_route = UIRoute { to: "/", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..UIRoute::default() };
     let settings_route = UIRoute { to: "/settings", name: "Settings", icon: Icon::Cog, ..UIRoute::default() };
     let routes = vec![
         chat_route.clone(),
@@ -77,7 +75,7 @@ fn app(cx: Scope) -> Element {
         settings_route.clone()
     ];
     cx.render(rsx! (
-        style { "{UIKIT_STYLES} {STYLE} {LAYOUT_STYLE} {PAGES_STYLE}" },
+        style { "{UIKIT_STYLES} {APP_STYLE}" },
         Router {
             Route { 
                 to: "/", 

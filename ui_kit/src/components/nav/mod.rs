@@ -32,7 +32,9 @@ pub struct Props<'a> {
     onnavigate: Option<EventHandler<'a, To>>,
     routes: Vec<Route>,
     #[props(optional)]
-    active: Option<Route>
+    active: Option<Route>,
+    #[props(optional)]
+    bubble: Option<bool>
 }
 
 /// Tells the parent the nav was interacted with.
@@ -101,14 +103,18 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(&cx, || get_active(&cx));
 
+    let bubble =  &cx.props.bubble.unwrap_or_default();
+
     cx.render(
         rsx!(
             div {
-                class: "nav",
+                class: {
+                    format_args!("nav {}", if *bubble { "bubble" } else { "" })
+                },
                 cx.props.routes.iter().map(|route| {
                     let badge = get_badge(&route);
                     let key: String = route.name.into();
-                    
+                    let name: String = route.name.into();
                     rsx!(
                         Button {
                             key: "{key}",
@@ -117,11 +123,18 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 active.set(route.to_owned());
                                 emit(&cx, &route.to)
                             },
+                            text: {
+                                format!("{}", if *bubble { name } else { "".into() })
+                            },
                             with_badge: badge,
-                            tooltip: cx.render(rsx!(Tooltip {
-                                arrow_position: ArrowPosition::Bottom,
-                                text: route.name.into(),
-                            })),
+                            tooltip: cx.render(rsx!(
+                                (!bubble).then(|| rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Bottom,
+                                        text: route.name.into(),
+                                    }
+                                ))
+                            )),
                             appearance: get_appearence(active, route)
                         }
                     )

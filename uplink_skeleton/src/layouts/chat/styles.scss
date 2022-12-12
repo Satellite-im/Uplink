@@ -1,3 +1,14 @@
+#chats .context-wrap,
+#chats .context-wrap > div:first-of-type {
+    width: 100%;
+}
+
+#chats {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+}
+
 #compose {
     flex: 1;
     min-width: 0;
@@ -30,31 +41,9 @@
             line-clamp: 1; 
     -webkit-box-orient: vertical;
 }
-
-.sidebar .user {
-    padding: var(--gap);
-    border-radius: var(--border-radius);
-}
-
-.sidebar .user:hover {
-    cursor: pointer;
-    background-color: var(--secondary-dark);
-} 
-
 #favorites {
     display: inline-flex;
     flex-direction: column;
     align-content: flex-start;
-    gap: var(--gap);
-}
-
-#chats .context-wrap,
-#chats .context-wrap > div:first-of-type {
-    width: 100%;
-}
-
-#chats {
-    display: inline-flex;
-    flex-direction: column;
     gap: var(--gap);
 }

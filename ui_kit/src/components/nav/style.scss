@@ -4,4 +4,14 @@
     justify-content: space-evenly;
     padding: var(--gap);
     border-top: 1px solid var(--border-color);
+
+    &.bubble {
+        flex-direction: column;
+        gap: var(--gap);
+
+        .btn {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
 }
