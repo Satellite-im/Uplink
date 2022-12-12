@@ -5,7 +5,7 @@ use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{u
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::store::{state::State, actions::Actions};
+use crate::store::{state::{State, getters::is_favorite}, actions::Actions};
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -25,7 +25,7 @@ pub fn Compose(cx: Scope) -> Element {
     let title = active_participant.username();
     let subtext = active_participant.status_message().unwrap_or_default();
 
-    let is_favorite = state.read().chats.favorites.clone().contains(&active_chat);
+    let is_favorite = is_favorite(&state.read(), &active_chat);
 
     let reply_message = match &state.read().chats.active.replying_to {
         Some(m) => m.value().join("\n").to_string(),
