@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 use ui_kit::{elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}, switch::Switch, select::Select, input::{Input, Validation, Options}, folder::Folder, file::File}, icons::Icon, components::{nav::{Nav, Route}, indicator::{Indicator, Platform, Status}, user_image::UserImage, message::{Message, Order}, message_group::MessageGroup, message_divider::MessageDivider, user::User, context_menu::{ContextMenu, ContextItem}, message_typing::MessageTyping}, layout::topbar::Topbar};
 
 const STYLE: &str = include_str!("./style.css");
+use ui_kit::STYLE as UIKIT_STYLES; 
 
 fn main() {
     dioxus::desktop::launch(app);
@@ -20,7 +21,7 @@ pub struct Props<'a> {
 pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         style {
-            "{STYLE}"
+            "{UIKIT_STYLES} {STYLE}"
         },
         div {
             class: "item",

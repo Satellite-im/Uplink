@@ -8,7 +8,6 @@ pub mod mock_state {
 
     use crate::store::state::{State, Route, Chats, Friends, Account, Chat};
 
-
     fn fake_id(username: &'static str) -> Identity {
         let mut id = Identity::default();
 
@@ -78,6 +77,9 @@ pub mod mock_state {
         let benny_conversation_id = Uuid::new_v4();
         let benny_chat = fake_chat( vec![thisis_yeu.clone(), benny_fredrick.clone()], benny_conversation_id);
 
+        let group_conversation_id = Uuid::new_v4();
+        let group_chat = fake_chat( vec![thisis_yeu.clone(), benny_fredrick.clone(), albert_ford.clone()], group_conversation_id);
+
         State {
             account: Account {
                 identity: thisis_yeu.clone(),
@@ -86,9 +88,9 @@ pub mod mock_state {
                 active: "/chat".into(),
             },
             chats: Chats {
-                all: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone(), henry_chat.clone()],
+                all: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone(), henry_chat.clone(), group_chat.clone()],
                 active: ary_chat.clone(),
-                in_sidebar: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone()],
+                in_sidebar: vec![ary_chat.clone(), albert_chat.clone(), benny_chat.clone(), group_chat.clone()],
                 favorites: vec![albert_chat.clone(), ary_chat.clone()],
             },
             friends: Friends {
