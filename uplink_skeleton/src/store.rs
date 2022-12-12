@@ -30,8 +30,6 @@ pub mod actions {
         /// Deny a incoming friend request
         DenyRequest(Identity),
 
-        
-
         // Friends
         Block(Identity),
         UnBlock(Identity),
@@ -158,24 +156,24 @@ pub mod state {
                     // TODO: this should create a conversation in warp if one doesn't exist
                     mutations::clear_unreads(self, &chat);
                     mutations::set_active_chat(self, chat);
-                },
+                }
                 Actions::AddToSidebar(chat) => {
                     mutations::add_chat_to_sidebar(self, chat);
-                },
+                }
                 Actions::RemoveFromSidebar(_) => todo!(),
                 Actions::NewMessage(_, _) => todo!(),
                 Actions::ToggleFavorite(chat) => {
                     mutations::toggle_favorite(self, &chat);
-                },
+                }
                 Actions::StartReplying(chat, message) => {
                     mutations::start_replying(self, &chat, &message);
-                },
+                }
                 Actions::CancelReply(chat) => {
                     mutations::cancel_reply(self, &chat);
-                },
+                }
                 Actions::ClearUnreads(chat) => {
                     mutations::clear_unreads(self, &chat);
-                },
+                }
                 Actions::React(_, _, _) => todo!(),
                 Actions::Reply(_, _) => todo!(),
                 Actions::Send(_, _) => todo!(),
@@ -209,16 +207,24 @@ pub mod state {
         }
 
         pub fn toggle_favorite(state: &mut State, chat: &Chat) {
-            if state.chats.favorites.contains(chat) {
-                let index = state.chats.favorites.iter().position(|c| c.id == chat.id).unwrap();
-                state.chats.favorites.remove(index);
+            let faves = &mut state.chats.favorites;
+
+            if faves.contains(chat) {
+                if let Some(index) = faves.iter().position(|c| c.id == chat.id) {
+                    faves.remove(index);
+                }
             } else {
-                state.chats.favorites.push(chat.to_owned());
+                faves.push(chat.clone());
             }
         }
 
         pub fn start_replying(state: &mut State, chat: &Chat, message: &Message) {
-            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            let chat_index = state
+                .chats
+                .all
+                .iter()
+                .position(|c| c.id == chat.id)
+                .unwrap();
             state.chats.all[chat_index].replying_to = Some(message.to_owned());
 
             // Update the active state if it matches the one we're modifying
@@ -228,7 +234,12 @@ pub mod state {
         }
 
         pub fn cancel_reply(state: &mut State, chat: &Chat) {
-            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            let chat_index = state
+                .chats
+                .all
+                .iter()
+                .position(|c| c.id == chat.id)
+                .unwrap();
             state.chats.all[chat_index].replying_to = None;
 
             // Update the active state if it matches the one we're modifying
@@ -238,7 +249,12 @@ pub mod state {
         }
 
         pub fn clear_unreads(state: &mut State, chat: &Chat) {
-            let chat_index = state.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            let chat_index = state
+                .chats
+                .all
+                .iter()
+                .position(|c| c.id == chat.id)
+                .unwrap();
             state.chats.all[chat_index].unreads = 0;
 
             // Update the active state if it matches the one we're modifying
@@ -251,7 +267,7 @@ pub mod state {
                 for c in state.chats.in_sidebar.iter_mut() {
                     if c.id == chat.id {
                         c.unreads = 0;
-                    } 
+                    }
                 }
             }
         }
