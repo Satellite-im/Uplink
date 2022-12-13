@@ -30,6 +30,12 @@
 
 #compose .topbar .children .username {
     color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* number of lines to show */
+            line-clamp: 1; 
+    -webkit-box-orient: vertical;
 }
 
 #compose .topbar .children .status {
