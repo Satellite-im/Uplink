@@ -1,6 +1,13 @@
 use dioxus::prelude::*;
 
-use crate::{icons::Icon, elements::{Appearance, button::Button, tooltip::{Tooltip, ArrowPosition}}};
+use crate::{
+    elements::{
+        button::Button,
+        tooltip::{ArrowPosition, Tooltip},
+        Appearance,
+    },
+    icons::Icon,
+};
 
 pub type To = &'static str;
 
@@ -10,21 +17,20 @@ pub struct Route {
     pub icon: Icon,
     pub name: &'static str,
     pub with_badge: Option<String>,
-    pub loading: Option<bool>
+    pub loading: Option<bool>,
 }
 
 impl Default for Route {
     fn default() -> Self {
-        Self { 
+        Self {
             to: "",
-            icon: Icon::QuestionMarkCircle, 
-            name: "Default", 
-            with_badge: None, 
-            loading: None 
+            icon: Icon::QuestionMarkCircle,
+            name: "Default",
+            with_badge: None,
+            loading: None,
         }
     }
 }
-
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -34,14 +40,14 @@ pub struct Props<'a> {
     #[props(optional)]
     active: Option<Route>,
     #[props(optional)]
-    bubble: Option<bool>
+    bubble: Option<bool>,
 }
 
 /// Tells the parent the nav was interacted with.
 pub fn emit(cx: &Scope<Props>, to: &To) {
     match &cx.props.onnavigate {
         Some(f) => f.call(to.to_owned()),
-        None => {},
+        None => {}
     }
 }
 
@@ -77,12 +83,12 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 }
 
 /// Returns a nav component generated based on given props.
-/// 
+///
 /// # Examples
 /// ```no_run
 /// use dioxus::prelude::*;
 /// use ui_kit::{elements::{Icon, IconElement}, components::nav::{Nav, Route}};
-/// 
+///
 /// let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern };
 /// let routes = vec![
 ///     home,
@@ -91,7 +97,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 ///     Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog },
 /// ];
 /// let active = routes[0].clone();
-/// 
+///
 /// rsx! (
 ///     Nav {
 ///        routes: routes,
@@ -102,43 +108,41 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 #[allow(non_snake_case)]
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(&cx, || get_active(&cx));
-    let bubble =  &cx.props.bubble.unwrap_or_default();
+    let bubble = &cx.props.bubble.unwrap_or_default();
 
-    cx.render(
-        rsx!(
-            div {
-                class: {
-                    format_args!("nav {}", if *bubble { "bubble" } else { "" })
-                },
-                cx.props.routes.iter().map(|route| {
-                    let badge = get_badge(&route);
-                    let key: String = route.name.into();
-                    let name: String = route.name.into();
-                    rsx!(
-                        Button {
-                            key: "{key}",
-                            icon: route.icon,
-                            onpress: move |_| {
-                                active.set(route.to_owned());
-                                emit(&cx, &route.to)
-                            },
-                            text: {
-                                format!("{}", if *bubble { name } else { "".into() })
-                            },
-                            with_badge: badge,
-                            tooltip: cx.render(rsx!(
-                                (!bubble).then(|| rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Bottom,
-                                        text: route.name.into(),
-                                    }
-                                ))
-                            )),
-                            appearance: get_appearence(active, route)
-                        }
-                    )
-                })
-            }
-        )
-    )
+    cx.render(rsx!(
+        div {
+            class: {
+                format_args!("nav {}", if *bubble { "bubble" } else { "" })
+            },
+            cx.props.routes.iter().map(|route| {
+                let badge = get_badge(&route);
+                let key: String = route.name.into();
+                let name: String = route.name.into();
+                rsx!(
+                    Button {
+                        key: "{key}",
+                        icon: route.icon,
+                        onpress: move |_| {
+                            active.set(route.to_owned());
+                            emit(&cx, &route.to)
+                        },
+                        text: {
+                            format!("{}", if *bubble { name } else { "".into() })
+                        },
+                        with_badge: badge,
+                        tooltip: cx.render(rsx!(
+                            (!bubble).then(|| rsx!(
+                                Tooltip {
+                                    arrow_position: ArrowPosition::Bottom,
+                                    text: route.name.into(),
+                                }
+                            ))
+                        )),
+                        appearance: get_appearence(active, route)
+                    }
+                )
+            })
+        }
+    ))
 }

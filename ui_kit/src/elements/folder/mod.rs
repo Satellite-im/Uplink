@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::{icons::{Icon, IconElement}, elements::input::Input};
+use crate::{
+    elements::input::Input,
+    icons::{Icon, IconElement},
+};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -28,17 +31,16 @@ pub fn get_text(cx: &Scope<Props>) -> String {
 pub fn emit(cx: &Scope<Props>, s: String) {
     match &cx.props.onrename {
         Some(f) => f.call(s),
-        None => {},
+        None => {}
     }
 }
 
 pub fn emit_press(cx: &Scope<Props>) {
     match &cx.props.onpress {
         Some(f) => f.call(()),
-        None => {},
+        None => {}
     }
 }
-
 
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
@@ -46,7 +48,11 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = get_text(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-    let icon = if *open { Icon::FolderOpen } else { Icon::Folder };
+    let icon = if *open {
+        Icon::FolderOpen
+    } else {
+        Icon::Folder
+    };
     let disabled = &cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx!(

@@ -1,5 +1,5 @@
-use crate::elements::Appearance;
 use crate::elements::button::Button;
+use crate::elements::Appearance;
 use crate::icons::{Icon, IconElement};
 
 use dioxus::prelude::*;
@@ -29,7 +29,7 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed(cx: Scope<Props>) -> Element {    
+pub fn FileEmbed(cx: Scope<Props>) -> Element {
     let filename = cx.props.filename.clone().unwrap_or_default();
     let kind = cx.props.kind.clone().unwrap_or_default();
     let filesize = cx.props.filesize.unwrap_or_default();

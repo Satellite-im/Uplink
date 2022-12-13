@@ -13,7 +13,7 @@ pub struct Props<'a> {
 pub fn emit(cx: &Scope<Props>, s: String) {
     match &cx.props.onselect {
         Some(f) => f.call(s),
-        None => {},
+        None => {}
     }
 }
 
@@ -24,7 +24,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // TODO: We should iterate through the options and figure out the maximum length of an option
     // use this to calculate the min-width of the selectbox. Our max width should always be 100%.
     cx.render(rsx!(
-        div { 
+        div {
             class: "select",
             select {
                 onchange: move |e| emit(&cx, e.value.clone()),

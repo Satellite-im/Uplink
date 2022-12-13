@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::{icons::Icon, elements::{Appearance, button::Button}};
+use crate::{
+    elements::{button::Button, Appearance},
+    icons::Icon,
+};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -23,32 +26,30 @@ pub fn show_back_button(cx: &Scope<Props>) -> bool {
 pub fn emit(cx: &Scope<Props>) {
     match &cx.props.onback {
         Some(f) => f.call(()),
-        None => {},
+        None => {}
     }
 }
 
 #[allow(non_snake_case)]
 pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    cx.render(
-        rsx!(
-            div {
-                class: "topbar",
-                (show_back_button(&cx)).then(|| rsx!(
-                    Button {
-                        icon: Icon::ChevronLeft,
-                        onpress: move |_| emit(&cx),
-                        appearance: Appearance::Secondary
-                    }
-                )),
-                div {
-                    class: "children",
-                    &cx.props.children
-                },
-                div {
-                    class: "controls",
-                    &cx.props.controls
+    cx.render(rsx!(
+        div {
+            class: "topbar",
+            (show_back_button(&cx)).then(|| rsx!(
+                Button {
+                    icon: Icon::ChevronLeft,
+                    onpress: move |_| emit(&cx),
+                    appearance: Appearance::Secondary
                 }
+            )),
+            div {
+                class: "children",
+                &cx.props.children
+            },
+            div {
+                class: "controls",
+                &cx.props.controls
             }
-        )
-    )
+        }
+    ))
 }

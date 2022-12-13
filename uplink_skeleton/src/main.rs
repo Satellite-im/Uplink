@@ -2,22 +2,22 @@ use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::prelude::*;
 
-use tao::window::WindowBuilder;
-use tao::menu::{MenuBar as Menu, MenuItem};
 use store::state::mock_state;
-use ui_kit::{icons::Icon, components::nav::Route as UIRoute};
+use tao::menu::{MenuBar as Menu, MenuItem};
+use tao::window::WindowBuilder;
+use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
-use ui_kit::STYLE as UIKIT_STYLES; 
+use ui_kit::STYLE as UIKIT_STYLES;
 
-use crate::pages::settings::settings::SettingsPage;
-use crate::{layouts::chat::RouteInfo, pages::chat::Page as ChatPage};
+use crate::layouts::settings::settings::SettingsLayout;
+use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
+pub mod components;
 pub mod layouts;
-pub mod pages;
-pub mod store;
 pub mod mock;
+pub mod store;
 
 fn main() {
     let mut main_menu = Menu::new();
@@ -56,44 +56,61 @@ fn main() {
         .with_inner_size(LogicalSize::new(950.0, 600.0))
         .with_min_inner_size(LogicalSize::new(330.0, 500.0));
 
-
-    dioxus::desktop::launch_cfg(app, |c| {
-        c.with_window(|_| window.with_menu(main_menu))
-    })
+    dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
 }
-
 
 fn app(cx: Scope) -> Element {
     let _ = use_context_provider(&cx, || mock_state());
 
-    let chat_route = UIRoute { to: "/", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..UIRoute::default() };
-    let settings_route = UIRoute { to: "/settings", name: "Settings", icon: Icon::Cog, ..UIRoute::default() };
+    let chat_route = UIRoute {
+        to: "/",
+        name: "Chat",
+        icon: Icon::ChatBubbleBottomCenter,
+        ..UIRoute::default()
+    };
+    let settings_route = UIRoute {
+        to: "/settings",
+        name: "Settings",
+        icon: Icon::Cog,
+        ..UIRoute::default()
+    };
     let routes = vec![
         chat_route.clone(),
-        UIRoute { to: "/files", name: "Files", icon: Icon::Folder, ..UIRoute::default() },
-        UIRoute { to: "/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()), loading: None },
-        settings_route.clone()
+        UIRoute {
+            to: "/files",
+            name: "Files",
+            icon: Icon::Folder,
+            ..UIRoute::default()
+        },
+        UIRoute {
+            to: "/friends",
+            name: "Friends",
+            icon: Icon::Users,
+            with_badge: Some("16".into()),
+            loading: None,
+        },
+        settings_route.clone(),
     ];
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         Router {
-            Route { 
-                to: "/", 
-                ChatPage {
+            Route {
+                to: "/",
+                ChatLayout {
                     route_info: RouteInfo {
                         routes: routes.clone(),
                         active: chat_route.clone(),
                     }
-                } 
+                }
             },
-            Route { 
-                to: "/settings", 
-                SettingsPage {
+            Route {
+                to: "/settings",
+                SettingsLayout {
                     route_info: RouteInfo {
                         routes: routes,
                         active: settings_route.clone(),
                     }
-                } 
+                }
             }
         }
     ))

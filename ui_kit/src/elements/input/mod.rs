@@ -43,21 +43,21 @@ pub struct Props<'a> {
 pub fn emit(cx: &Scope<Props>, s: String) {
     match &cx.props.onchange {
         Some(f) => f.call(s),
-        None => {},
+        None    => {},
     }
 }
 
 pub fn emit_return(cx: &Scope<Props>, s: String) {
     match &cx.props.onreturn {
         Some(f) => f.call(s),
-        None => {},
+        None    => {},
     }
 }
 
 pub fn submit(cx: &Scope<Props>, s: String) {
     match &cx.props.onreturn {
         Some(f) => f.call(s),
-        None => {},
+        None    => {},
     }
 }
 

@@ -17,7 +17,7 @@ pub struct Props<'a> {
 pub fn emit(cx: &Scope<Props>, state: bool) {
     match &cx.props.onflipped {
         Some(f) => f.call(state),
-        None => {},
+        None => {}
     }
 }
 
@@ -33,7 +33,7 @@ pub fn default_state(cx: &Scope<Props>) -> bool {
 pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let checked_state = default_state(&cx);
     let disabled = &cx.props.disabled.unwrap_or_default();
-    
+
     cx.render(rsx! {
         label {
             class: {

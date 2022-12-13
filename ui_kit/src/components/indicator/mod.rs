@@ -9,7 +9,7 @@ pub enum Platform {
     Desktop,
     Mobile,
     Tv,
-    Headless
+    Headless,
 }
 
 impl Platform {
@@ -18,7 +18,7 @@ impl Platform {
             Platform::Desktop => Icon::ComputerDesktop,
             Platform::Mobile => Icon::DevicePhoneMobile,
             Platform::Tv => Icon::Tv,
-            Platform::Headless => Icon::WrenchScrewdriver
+            Platform::Headless => Icon::WrenchScrewdriver,
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct Props {
     #[props(optional)]
     loading: Option<bool>,
     platform: Platform,
-    status: Status
+    status: Status,
 }
 
 #[allow(non_snake_case)]

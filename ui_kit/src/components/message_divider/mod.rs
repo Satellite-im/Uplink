@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 pub struct Props {
     text: Option<String>,
     #[props(optional)]
-    timestamp: Option<Duration>
+    timestamp: Option<Duration>,
 }
 
 pub fn get_time_ago(cx: &Scope<Props>) -> String {
@@ -14,7 +14,7 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 
     match cx.props.timestamp {
         Some(d) => f.convert(d),
-        None => "".into()
+        None => "".into(),
     }
 }
 
@@ -35,7 +35,7 @@ pub fn MessageDivider(cx: Scope<Props>) -> Element {
                 },
                 span {
                     class: "badge-count",
-                    "{time_ago}" 
+                    "{time_ago}"
                 }
             }
         }

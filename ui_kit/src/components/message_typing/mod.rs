@@ -5,7 +5,6 @@ pub struct Props<'a> {
     user_image: Element<'a>,
 }
 
-
 #[allow(non_snake_case)]
 pub fn MessageTyping<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! (

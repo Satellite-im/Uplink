@@ -26,7 +26,7 @@ impl fmt::Display for ArrowPosition {
             ArrowPosition::Right => write!(f, "arrow-right"),
             ArrowPosition::BottomLeft => write!(f, "arrow-bottom-left"),
             ArrowPosition::Bottom => write!(f, "arrow-bottom"),
-            ArrowPosition::BottomRight => write!(f, "arrow-bottom-right")
+            ArrowPosition::BottomRight => write!(f, "arrow-bottom-right"),
         }
     }
 }
@@ -54,7 +54,7 @@ pub struct Props {
 pub fn Tooltip(cx: Scope<Props>) -> Element {
     // You don't always need a UUID. It's used in this case because although the tooltip has generic styles, it needs a unique identifier for runtime actions.
     let UUID: String = Uuid::new_v4().to_string();
-    
+
     let arrow_position = get_arrow_position(&cx);
     let text = match cx.props.text.clone() {
         Some(t) => t,

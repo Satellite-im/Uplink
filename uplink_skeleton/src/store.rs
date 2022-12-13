@@ -156,7 +156,7 @@ pub mod state {
                     // TODO: this should create a conversation in warp if one doesn't exist
                     mutations::set_active_chat(self, &chat);
                     mutations::clear_unreads(self, &chat);
-                },
+                }
                 Actions::AddToSidebar(chat) => {
                     mutations::add_chat_to_sidebar(self, chat);
                 }

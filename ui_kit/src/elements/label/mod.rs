@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 pub struct Props {
     #[props(optional)]
     loading: Option<bool>,
-    text: String
+    text: String,
 }
 
 #[allow(non_snake_case)]

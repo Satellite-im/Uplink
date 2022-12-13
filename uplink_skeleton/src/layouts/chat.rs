@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::layouts::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo, compose::Compose};
+use crate::components::chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, RouteInfo};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -8,7 +8,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn Page(cx: Scope<Props>) -> Element {
+pub fn ChatLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "chat-page",

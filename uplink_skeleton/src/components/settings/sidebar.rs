@@ -1,9 +1,15 @@
 use std::str::FromStr;
 
 use dioxus::prelude::*;
-use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::nav::Nav, layout::sidebar::Sidebar as ReusableSidebar, components::nav::Route as UIRoute};
+use ui_kit::{
+    components::nav::Nav,
+    components::nav::Route as UIRoute,
+    elements::input::{Input, Options},
+    icons::Icon,
+    layout::sidebar::Sidebar as ReusableSidebar,
+};
 
-use crate::layouts::chat::RouteInfo;
+use crate::components::chat::RouteInfo;
 
 pub enum Page {
     Audio,
@@ -13,22 +19,20 @@ pub enum Page {
     Privacy,
 }
 
-
 impl FromStr for Page {
     fn from_str(input: &str) -> Result<Page, Self::Err> {
         match input {
-            "audio"         => Ok(Page::Audio),
-            "developer"     => Ok(Page::Developer),
-            "extensions"    => Ok(Page::Extensions),
-            "general"       => Ok(Page::General),
-            "privacy"       => Ok(Page::Privacy),
-            _               => Ok(Page::General),
+            "audio" => Ok(Page::Audio),
+            "developer" => Ok(Page::Developer),
+            "extensions" => Ok(Page::Extensions),
+            "general" => Ok(Page::General),
+            "privacy" => Ok(Page::Privacy),
+            _ => Ok(Page::General),
         }
     }
 
     type Err = ();
 }
-
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -40,18 +44,43 @@ pub struct Props<'a> {
 pub fn emit(cx: &Scope<Props>, e: Page) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None => {},
+        None => {}
     }
 }
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let search_placeholder = String::from("Search Settings...");
-    let general = UIRoute { to: "general", name: "General", icon: Icon::Cog, ..UIRoute::default() };
-    let privacy = UIRoute { to: "privacy", name: "Privacy", icon: Icon::LockClosed, ..UIRoute::default() };
-    let audio = UIRoute { to: "audio", name: "Audio", icon: Icon::MusicalNote, ..UIRoute::default() };
-    let extensions = UIRoute { to: "extensions", name: "Extensions", icon: Icon::Beaker, ..UIRoute::default() };
-    let developer = UIRoute { to: "developer", name: "Developer", icon: Icon::CommandLine, ..UIRoute::default() };
+    let general = UIRoute {
+        to: "general",
+        name: "General",
+        icon: Icon::Cog,
+        ..UIRoute::default()
+    };
+    let privacy = UIRoute {
+        to: "privacy",
+        name: "Privacy",
+        icon: Icon::LockClosed,
+        ..UIRoute::default()
+    };
+    let audio = UIRoute {
+        to: "audio",
+        name: "Audio",
+        icon: Icon::MusicalNote,
+        ..UIRoute::default()
+    };
+    let extensions = UIRoute {
+        to: "extensions",
+        name: "Extensions",
+        icon: Icon::Beaker,
+        ..UIRoute::default()
+    };
+    let developer = UIRoute {
+        to: "developer",
+        name: "Developer",
+        icon: Icon::CommandLine,
+        ..UIRoute::default()
+    };
     let routes = vec![
         general.clone(),
         privacy.clone(),

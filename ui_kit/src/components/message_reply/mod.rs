@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 pub enum Order {
     First,
     Middle,
-    Last
+    Last,
 }
 
 impl fmt::Display for Order {
@@ -36,18 +36,18 @@ pub struct Props<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
+pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let remote_message = cx.props.remote_message.unwrap_or_default();
-    
+
     cx.render(rsx! (
         div {
             class: {
                 format_args!(
-                    "message-reply {} {}", 
+                    "message-reply {} {}",
                     if loading {
                         "loading"
                     } else { "" },
@@ -72,7 +72,7 @@ pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
                         class: {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
-                        
+
                         "{text}"
                     }
                 }

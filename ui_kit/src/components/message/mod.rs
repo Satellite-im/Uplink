@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 pub enum Order {
     First,
     Middle,
-    Last
+    Last,
 }
 
 impl fmt::Display for Order {
@@ -30,21 +30,21 @@ pub struct Props<'a> {
     #[props(optional)]
     remote: Option<bool>,
     #[props(optional)]
-    order: Option<Order>
+    order: Option<Order>,
 }
 
 #[allow(non_snake_case)]
-pub fn Message<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
+pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
-    
+
     cx.render(rsx! (
         div {
             class: {
                 format_args!(
-                    "message {} {} {}", 
+                    "message {} {} {}",
                     if loading {
                         "loading"
                     } else { "" },

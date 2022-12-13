@@ -1,7 +1,16 @@
 pub mod settings {
     use dioxus::prelude::*;
 
-    use crate::layouts::{chat::RouteInfo, settings::{sidebar::{Sidebar, Page}, sub_pages::{general::GeneralSettings, audio::AudioSettings, privacy::PrivacySettings, extensions::ExtensionSettings, developer::DeveloperSettings}}};
+    use crate::components::{
+        chat::RouteInfo,
+        settings::{
+            sidebar::{Page, Sidebar},
+            sub_pages::{
+                audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
+                general::GeneralSettings, privacy::PrivacySettings,
+            },
+        },
+    };
 
     #[derive(PartialEq, Props)]
     pub struct Props {
@@ -16,7 +25,7 @@ pub mod settings {
     }
 
     #[allow(non_snake_case)]
-    pub fn SettingsPage(cx: Scope<Props>) -> Element {
+    pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         let to = use_state(&cx, || Page::General);
 
         cx.render(rsx!(
@@ -29,20 +38,20 @@ pub mod settings {
                     }
                 },
                 match to.get() {
-                    Page::General => cx.render(rsx! (
-                        GeneralSettings{}
+                    Page::General       => cx.render(rsx! (
+                        GeneralSettings {}
                     )),
-                    Page::Audio => cx.render(rsx! (
-                        AudioSettings{}
+                    Page::Audio         => cx.render(rsx! (
+                        AudioSettings {}
                     )),
-                    Page::Privacy => cx.render(rsx! (
-                        PrivacySettings{}
+                    Page::Privacy       => cx.render(rsx! (
+                        PrivacySettings {}
                     )),
-                    Page::Extensions => cx.render(rsx! (
-                        ExtensionSettings{}
+                    Page::Extensions    => cx.render(rsx! (
+                        ExtensionSettings {}
                     )),
-                    Page::Developer => cx.render(rsx! (
-                        DeveloperSettings{}
+                    Page::Developer     => cx.render(rsx! (
+                        DeveloperSettings {}
                     ))
                 }
             }

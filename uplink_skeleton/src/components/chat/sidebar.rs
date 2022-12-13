@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{layouts::chat::RouteInfo, store::{state::State, actions::Actions}};
+use crate::{components::chat::RouteInfo, store::{state::State, actions::Actions}};
 
 #[derive(PartialEq, Props)]
 pub struct Props {

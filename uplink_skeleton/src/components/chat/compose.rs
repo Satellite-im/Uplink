@@ -5,7 +5,7 @@ use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{u
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::{store::{state::{State, getters::is_favorite}, actions::Actions}, layouts::chat::sidebar::build_participants};
+use crate::{store::{state::{State, getters::is_favorite}, actions::Actions}, components::chat::sidebar::build_participants};
 
 use super::sidebar::build_participants_names;
 

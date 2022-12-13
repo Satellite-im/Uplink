@@ -1,4 +1,9 @@
-use dioxus::{desktop::use_window, prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
+use dioxus::{
+    core::UiEvent,
+    desktop::use_window,
+    events::{MouseData, MouseEvent},
+    prelude::*,
+};
 use dioxus_heroicons::outline::Shape;
 
 use crate::icons::{Icon, IconElement};
@@ -18,7 +23,7 @@ pub struct ItemProps<'a> {
 pub fn emit(cx: &Scope<ItemProps>, e: UiEvent<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None => {},
+        None => {}
     }
 }
 
@@ -36,7 +41,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             (cx.props.icon.is_some()).then(|| {
                 let icon = match cx.props.icon {
                     Some(shape) => shape,
-                    None => Shape::Cog,
+                    None        => Shape::Cog,
                 };
                 rsx! {
                     IconElement { icon: icon }

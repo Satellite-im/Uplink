@@ -33,8 +33,8 @@ pub struct Props<'a> {
 /// If there is no text provided, we'll return an empty string.
 pub fn get_text(cx: &Scope<Props>) -> String {
     match &cx.props.text {
-        Some(val) => val.to_owned(),
-        None => String::from(""),
+        Some(val)   => val.to_owned(),
+        None        => String::from(""),
     }
 }
 
@@ -42,8 +42,8 @@ pub fn get_text(cx: &Scope<Props>) -> String {
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
     match &cx.props.with_badge {
-        Some(val) => val.to_owned(),
-        None => String::from(""),
+        Some(val)   => val.to_owned(),
+        None        => String::from(""),
     }
 }
 
@@ -51,8 +51,8 @@ pub fn get_badge(cx: &Scope<Props>) -> String {
 /// If there is no icon provided, the button should not call this.
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
     match &cx.props.icon {
-        Some(icon) => icon.to_owned(),
-        None => Icon::QuestionMarkCircle,
+        Some(icon)  => icon.to_owned(),
+        None        => Icon::QuestionMarkCircle,
     }
 }
 
@@ -64,8 +64,8 @@ pub fn get_appearence(cx: &Scope<Props>) -> String {
         return Appearance::Disabled.to_string();
     }
     match &cx.props.appearance {
-        Some(appearance) => appearance.to_string(),
-        None => Appearance::Default.to_string(),
+        Some(appearance)    => appearance.to_string(),
+        None                => Appearance::Default.to_string(),
     }
 }
 
@@ -73,7 +73,7 @@ pub fn get_appearence(cx: &Scope<Props>) -> String {
 pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None => {},
+        None    => {},
     }
 }
 

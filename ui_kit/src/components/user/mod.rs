@@ -1,6 +1,10 @@
 use std::time::Duration;
 
-use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
+use dioxus::{
+    core::UiEvent,
+    events::{MouseData, MouseEvent},
+    prelude::*,
+};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -21,7 +25,7 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 
     match cx.props.timestamp {
         Some(d) => f.convert(Duration::from_millis(d)),
-        None => "".into()
+        None => "".into(),
     }
 }
 
@@ -38,7 +42,7 @@ pub fn get_badge(cx: &Scope<Props>) -> String {
 pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None => {},
+        None => {}
     }
 }
 
@@ -55,7 +59,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             onclick: move |e| emit(&cx, e),
             (!badge.is_empty()).then(|| rsx!(
-                span { 
+                span {
                     class: "badge",
                     span {
                         class: "badge-prefix",

@@ -1,9 +1,5 @@
-.sidebar .user {
-    padding: var(--gap);
-    border-radius: var(--border-radius);
+#chat-page,
+#settings-page {
+    display: inline-flex;
+    height: 100%;
 }
-
-.sidebar .user:hover {
-    cursor: pointer;
-    background-color: var(--secondary-dark);
-} 

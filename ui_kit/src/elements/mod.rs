@@ -1,15 +1,15 @@
 use std::fmt;
 
 pub mod button;
-pub mod tooltip;
-pub mod switch;
-pub mod select;
+pub mod file;
+pub mod folder;
 pub mod input;
 pub mod label;
 pub mod multiline;
+pub mod select;
 pub mod slider;
-pub mod folder;
-pub mod file;
+pub mod switch;
+pub mod tooltip;
 
 #[derive(Clone, PartialEq, Eq, Copy)]
 /// Decides the look and feel of a button, also modifies some functionality.

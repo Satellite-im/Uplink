@@ -1,6 +1,13 @@
-use dioxus::{prelude::*, events::{MouseEvent, MouseData}, core::UiEvent};
+use dioxus::{
+    core::UiEvent,
+    events::{MouseData, MouseEvent},
+    prelude::*,
+};
 
-use crate::{components::indicator::{Indicator, Platform, Status}, elements::label::Label};
+use crate::{
+    components::indicator::{Indicator, Platform, Status},
+    elements::label::Label,
+};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -30,7 +37,7 @@ pub fn get_image(cx: &Scope<Props>) -> String {
 pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None => {},
+        None => {}
     }
 }
 
