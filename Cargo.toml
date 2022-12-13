@@ -1,2 +1,15 @@
 [workspace]
 members = ["./ui_kit", "./playground", "./uplink_skeleton"]
+
+[profile.rapid]
+inherits = "dev"
+opt-level = 2
+incremental = true
+overflow-checks = false
+lto = "thin"
+panic = "unwind"
+codegen-units = 32
+
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 1

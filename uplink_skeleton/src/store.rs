@@ -139,6 +139,83 @@ pub mod state {
     }
 
     impl State {
+        /// Internal mutations should be the only place updating the values in state.
+
+        fn set_active_chat(&mut self, chat: &Chat) {
+            self.chats.active = chat.clone();
+        }
+
+        fn add_chat_to_sidebar(&mut self, chat: Chat) {
+            if !self.chats.in_sidebar.contains(&chat) {
+                self.chats.in_sidebar.push(chat);
+            }
+        }
+
+        fn set_active_route(&mut self, to: String) {
+            self.route.active = to;
+        }
+
+        fn toggle_favorite(&mut self, chat: &Chat) {
+            let faves = &mut self.chats.favorites;
+
+            if faves.contains(chat) {
+                if let Some(index) = faves.iter().position(|c| c.id == chat.id) {
+                    faves.remove(index);
+                }
+            } else {
+                faves.push(chat.clone());
+            }
+        }
+
+        fn start_replying(&mut self, chat: &Chat, message: &Message) {
+            let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            self.chats.all[chat_index].replying_to = Some(message.to_owned());
+
+            // Update the active state if it matches the one we're modifying
+            if self.chats.active.clone().id == chat.id {
+                self.chats.active.replying_to = Some(message.to_owned());
+            }
+        }
+
+        fn cancel_reply(&mut self, chat: &Chat) {
+            let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            self.chats.all[chat_index].replying_to = None;
+
+            // Update the active state if it matches the one we're modifying
+            if self.chats.active.id == chat.id {
+                self.chats.active.replying_to = None;
+            }
+        }
+
+        fn clear_unreads(&mut self, chat: &Chat) {
+            let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
+            self.chats.all[chat_index].unreads = 0;
+
+            // Update the active state if it matches the one we're modifying
+            if self.chats.active.id == chat.id {
+                self.chats.active.unreads = 0;
+            }
+
+            // Update the sidebar chats if it matches the one we're modifying
+            if self.chats.in_sidebar.contains(chat) {
+                for c in self.chats.in_sidebar.iter_mut() {
+                    if c.id == chat.id {
+                        c.unreads = 0;
+                    }
+                }
+            }
+        }
+
+        /// Getters
+        /// Getters are the only public facing methods besides dispatch.
+        /// Getters help retrieve data from state in common ways preventing reused code.
+
+        pub fn is_favorite(state: &State, chat: &Chat) -> bool {
+            state.chats.favorites.contains(chat)
+        }
+
+        /// Actions
+        /// Actions are how the UI tells the state it'd like to change it.
         pub fn dispatch(&mut self, action: Actions) {
             match action {
                 Actions::SetId(_) => todo!(),
@@ -154,122 +231,35 @@ pub mod state {
                 Actions::UnFavorite(_) => todo!(),
                 Actions::ChatWith(chat) => {
                     // TODO: this should create a conversation in warp if one doesn't exist
-                    mutations::set_active_chat(self, &chat);
-                    mutations::clear_unreads(self, &chat);
+                    self.set_active_chat(&chat);
+                    self.clear_unreads(&chat);
                 }
                 Actions::AddToSidebar(chat) => {
-                    mutations::add_chat_to_sidebar(self, chat);
+                    self.add_chat_to_sidebar(chat);
                 }
                 Actions::RemoveFromSidebar(_) => todo!(),
                 Actions::NewMessage(_, _) => todo!(),
                 Actions::ToggleFavorite(chat) => {
-                    mutations::toggle_favorite(self, &chat);
+                    self.toggle_favorite(&chat);
                 }
                 Actions::StartReplying(chat, message) => {
-                    mutations::start_replying(self, &chat, &message);
+                    self.start_replying(&chat, &message);
                 }
                 Actions::CancelReply(chat) => {
-                    mutations::cancel_reply(self, &chat);
+                    self.cancel_reply(&chat);
                 }
                 Actions::ClearUnreads(chat) => {
-                    mutations::clear_unreads(self, &chat);
+                    self.clear_unreads(&chat);
                 }
                 Actions::React(_, _, _) => todo!(),
                 Actions::Reply(_, _) => todo!(),
                 Actions::Send(_, _) => todo!(),
                 Actions::Navigate(to) => {
-                    mutations::set_active_route(self, to);
+                    self.set_active_route(to);
                 }
             }
 
             // TODO: Serialize and save on action
-        }
-    }
-
-    /// Mutations should be the only place updating the values in state.
-    pub mod mutations {
-        use warp::raygun::Message;
-
-        use super::{Chat, State};
-
-        pub fn set_active_chat(state: &mut State, chat: &Chat) {
-            state.chats.active = chat.clone();
-        }
-
-        pub fn add_chat_to_sidebar(state: &mut State, chat: Chat) {
-            if !state.chats.in_sidebar.contains(&chat) {
-                state.chats.in_sidebar.push(chat);
-            }
-        }
-
-        pub fn set_active_route(state: &mut State, to: String) {
-            state.route.active = to;
-        }
-
-        pub fn toggle_favorite(state: &mut State, chat: &Chat) {
-            let faves = &mut state.chats.favorites;
-
-            if faves.contains(chat) {
-                if let Some(index) = faves.iter().position(|c| c.id == chat.id) {
-                    faves.remove(index);
-                }
-            } else {
-                faves.push(chat.clone());
-            }
-        }
-
-        pub fn start_replying(state: &mut State, chat: &Chat, message: &Message) {
-            let chat_index = state
-                .chats
-                .all
-                .iter()
-                .position(|c| c.id == chat.id)
-                .unwrap();
-            state.chats.all[chat_index].replying_to = Some(message.to_owned());
-
-            // Update the active state if it matches the one we're modifying
-            if state.chats.active.clone().id == chat.id {
-                state.chats.active.replying_to = Some(message.to_owned());
-            }
-        }
-
-        pub fn cancel_reply(state: &mut State, chat: &Chat) {
-            let chat_index = state
-                .chats
-                .all
-                .iter()
-                .position(|c| c.id == chat.id)
-                .unwrap();
-            state.chats.all[chat_index].replying_to = None;
-
-            // Update the active state if it matches the one we're modifying
-            if state.chats.active.id == chat.id {
-                state.chats.active.replying_to = None;
-            }
-        }
-
-        pub fn clear_unreads(state: &mut State, chat: &Chat) {
-            let chat_index = state
-                .chats
-                .all
-                .iter()
-                .position(|c| c.id == chat.id)
-                .unwrap();
-            state.chats.all[chat_index].unreads = 0;
-
-            // Update the active state if it matches the one we're modifying
-            if state.chats.active.id == chat.id {
-                state.chats.active.unreads = 0;
-            }
-
-            // Update the sidebar chats if it matches the one we're modifying
-            if state.chats.in_sidebar.contains(chat) {
-                for c in state.chats.in_sidebar.iter_mut() {
-                    if c.id == chat.id {
-                        c.unreads = 0;
-                    }
-                }
-            }
         }
     }
 
