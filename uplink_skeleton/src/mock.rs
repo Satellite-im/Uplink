@@ -1,20 +1,25 @@
 pub mod mock_state {
 
+    use names::Generator;
     use uuid::Uuid;
     use rand::Rng;
     use rand::seq::SliceRandom;
     use lipsum::lipsum;
+    use titlecase::titlecase;
     use warp::{multipass::identity::Identity, raygun::Message, crypto::rand};
 
     use crate::store::state::{State, Route, Chats, Friends, Account, Chat};
 
-    fn fake_id(username: &'static str) -> Identity {
+    fn fake_id() -> Identity {
         let mut id = Identity::default();
+        let mut generator = Generator::default();
+        let mut username = generator.next().unwrap().replace("-", " ");
+        username = titlecase(&username);
 
         let mut rng = rand::thread_rng();
         let status_len = rng.gen_range(4,10);
 
-        id.set_username(username);
+        id.set_username(&username);
         id.set_status_message(lipsum(status_len).into());
         id
     }
@@ -48,7 +53,7 @@ pub mod mock_state {
     }
 
     pub fn generate_mock() -> State {
-        let all_friends = vec![fake_id("Albert Ford"), fake_id("Ary Fletcher"), fake_id("Henry Otango"), fake_id("Benny Fredrick")];
+        let all_friends = vec![fake_id(), fake_id(), fake_id(), fake_id()];
         
         let default_identity = Identity::default();
         let albert_ford = all_friends.get(0).unwrap_or( &default_identity);
@@ -56,13 +61,13 @@ pub mod mock_state {
         let henry_otango = all_friends.get(2).unwrap_or( &default_identity);
         let benny_fredrick = all_friends.get(3).unwrap_or( &default_identity);
 
-        let blocked = vec![fake_id("Nefarious Hacker")];
+        let blocked = vec![fake_id()];
         let nefarious_hacker = blocked.get(0).unwrap_or( &default_identity);
 
-        let nitt_swetir = fake_id("Nitt Swetir");
-        let phutur_phrehnd = fake_id("Phutur Phrehnd");
+        let nitt_swetir = fake_id();
+        let phutur_phrehnd = fake_id();
 
-        let thisis_yeu = fake_id("Thisis Yeu");
+        let thisis_yeu = fake_id();
 
         let ary_conversation_id = Uuid::new_v4();
 

@@ -66,7 +66,7 @@ pub mod state {
     use uuid::Uuid;
     use warp::{constellation::item::Item, multipass::identity::Identity, raygun::Message};
 
-    use crate::mock_state::mock_state::generate_mock;
+    use crate::mock::mock_state::generate_mock;
 
     use super::actions::Actions;
 

@@ -11,7 +11,8 @@ ui_kit = { path = "../ui_kit" }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
 warp = { git="https://github.com/Satellite-im/Warp.git", ref="master" }
-
+names = "0.14.0"
+titlecase = "2.2.1"
 
 [build-dependencies]
 glob = "0.3.0"
