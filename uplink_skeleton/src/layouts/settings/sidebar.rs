@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use dioxus::{prelude::*, core::UiEvent};
+use dioxus::prelude::*;
 use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::nav::Nav, layout::sidebar::Sidebar as ReusableSidebar, components::nav::Route as UIRoute};
 
 use crate::layouts::chat::RouteInfo;
@@ -80,8 +80,8 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
-                    onnavigate: move |r| {
-                        use_router(&cx).replace_route(r, None, None);
+                    onnavigate: move |route| {
+                        use_router(&cx).replace_route(route, None, None);
                     }
                 },
             )),
@@ -89,8 +89,8 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 routes: routes.clone(),
                 active: active_route,
                 bubble: true,
-                onnavigate: move |r| {
-                    emit(&cx, Page::from_str(r).unwrap());
+                onnavigate: move |route| {
+                    emit(&cx, Page::from_str(route).unwrap());
                 }
             }
         }
