@@ -8,6 +8,8 @@
     &.bubble {
         flex-direction: column;
         gap: var(--gap);
+        border: none;
+        padding: 0;
 
         .btn {
             width: 100%;
