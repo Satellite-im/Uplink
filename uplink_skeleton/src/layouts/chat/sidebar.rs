@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ui_kit::{elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}}, layout::sidebar::Sidebar as ReusableSidebar};
+use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
 use crate::{layouts::chat::RouteInfo, store::{state::State, actions::Actions}};
@@ -7,6 +7,36 @@ use crate::{layouts::chat::RouteInfo, store::{state::State, actions::Actions}};
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
+}
+
+pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
+    let mut user_info: Vec<UserInfo> = vec![];
+
+    for identity in identities {
+        user_info.push(UserInfo {
+            platform: Platform::Mobile,
+            status: Status::Online,
+            username: identity.username(),
+            photo: identity.graphics().profile_picture(),
+        })
+    }
+
+    user_info
+}
+
+pub fn build_participants_names(identities: &Vec<Identity>) -> String {
+    let mut participants_name = String::from("");
+
+    for identity in identities {
+        let name = format!("{}, ", identity.username());
+        participants_name.push_str(&name);
+    }
+
+    participants_name.pop();
+    participants_name.pop();
+
+
+    participants_name
 }
 
 #[allow(non_snake_case)]
@@ -63,6 +93,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 None => Identity::default(),
                             };
                             let id = parsed_user.did_key();
+                            let participants = chat.participants.clone();
+                            let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
                             rsx! (
                                 ContextMenu {
                                     key: "{id}",
@@ -83,15 +115,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                         }
                                     )),
-                                    UserImage {
+                                    UserImageGroup {
                                         key: "{id}",
-                                        platform: Platform::Mobile,
-                                        status: Status::Online,
-                                        with_username: parsed_user.username(),
+                                        participants: build_participants(&participants),
+                                        with_username: participants_name,
                                         onpress: move |_| {
                                             state.write().dispatch(Actions::ChatWith(chat.clone()));
                                         }
-                                    },
+                                    }
                                 }
                             )
                         }),
@@ -129,6 +160,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let active = active_chat.id == chat.id;
 
+                    let participants = chat.participants.clone();
+                    let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+
                     rsx!(
                         ContextMenu {
                             key: "{key}",
@@ -157,15 +191,21 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                             )),
                             User {
-                                username: parsed_user.username(),
+                                username: participants_name,
                                 subtext: val.join("\n"),
                                 timestamp: timestamp,
                                 active: active,
                                 user_image: cx.render(rsx!(
-                                    UserImage {
-                                        platform: Platform::Mobile,
-                                        status: Status::Online
-                                    }
+                                    if participants.len() <= 2 {rsx! (
+                                        UserImage {
+                                            platform: Platform::Mobile,
+                                            status: Status::Online
+                                        }
+                                    )} else {rsx! (
+                                        UserImageGroup {
+                                            participants: build_participants(&participants)
+                                        }
+                                    )}
                                 )),
                                 with_badge: badge,
                                 onpress: move |_| {

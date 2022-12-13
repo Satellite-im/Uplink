@@ -1,11 +1,13 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
-use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use ui_kit::{User as UserInfo, layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::store::{state::{State, getters::is_favorite}, actions::Actions};
+use crate::{store::{state::{State, getters::is_favorite}, actions::Actions}, layouts::chat::sidebar::build_participants};
+
+use super::sidebar::build_participants_names;
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -22,7 +24,6 @@ pub fn Compose(cx: Scope) -> Element {
         None => Identity::default(),
     };
 
-    let title = active_participant.username();
     let subtext = active_participant.status_message().unwrap_or_default();
 
     let is_favorite = is_favorite(&state.read().clone(), &active_chat);
@@ -31,7 +32,10 @@ pub fn Compose(cx: Scope) -> Element {
         Some(m) => m.value().join("\n").to_string(),
         None => "".into(),
     };
-    
+
+    let participants = active_chat.participants.clone();
+    let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { active_participant.username() };
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -76,15 +80,21 @@ pub fn Compose(cx: Scope) -> Element {
                 ),
                 cx.render(
                     rsx! (
-                        UserImage {
-                            platform: Platform::Desktop,
-                            status: Status::Idle
-                        },
+                        if participants.len() <= 2 {rsx! (
+                            UserImage {
+                                platform: Platform::Mobile,
+                                status: Status::Online
+                            }
+                        )} else {rsx! (
+                            UserImageGroup {
+                                participants: build_participants(&participants)
+                            }
+                        )}
                         div {
                             class: "user-info",
                             p {
                                 class: "username",
-                                "{title}"
+                                "{participants_name}"
                             },
                             p {
                                 class: "status",

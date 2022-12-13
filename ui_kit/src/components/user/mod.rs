@@ -65,7 +65,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                     span {
                         class: "badge-count",
-                        "{badge}" 
+                        "{badge}"
                     }
                 }
             )),

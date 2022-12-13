@@ -1,6 +1,6 @@
-use dioxus::{prelude::*, events::MouseEvent};
+use dioxus::{prelude::*, events::{MouseEvent, MouseData}, core::UiEvent};
 
-use crate::{User, components::user_image::UserImage};
+use crate::{User, components::user_image::UserImage, elements::label::Label};
 
 
 #[derive(Props)]
@@ -10,6 +10,15 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<'a, MouseEvent>>,
     #[props(optional)]
     typing: Option<bool>,
+    #[props(optional)]
+    with_username: Option<String>,
+}
+
+pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+    match &cx.props.onpress {
+        Some(f) => f.call(e),
+        None => {},
+    }
 }
 
 #[allow(non_snake_case)]
@@ -17,28 +26,49 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let pressable = &cx.props.onpress.is_some();
 
     let count: i64 = cx.props.participants.len() as i64 - 3;
+    let group = cx.props.participants.len() > 2;
+
+    let username = &cx.props.with_username.clone().unwrap_or_default();
+
+    let single_user = &cx.props.participants[1];
 
     cx.render(rsx! (
         div {
-            class: {
-                format_args!("user-image-group-wrap {} four-or-more", if *pressable { "pressable" } else { "" })
-            },
-            cx.props.participants.iter().map(|user| {
-                rsx!(
-                    UserImage {
-                        platform: user.platform,
-                        status: user.status
-                    }
-                )
-            })
+            class: "user-image-group",
             div {
-                class: "plus-some",
-                (count > 0).then(|| rsx!(
-                    p {
-                        "+{count}"
+                class: {
+                    format_args!("user-image-group-wrap {} {}", if *pressable { "pressable" } else { "" }, if group { "group" } else { "" })
+                },
+                onclick: move |e| emit(&cx, e),
+                if group {rsx!(
+                    cx.props.participants.iter().map(|user| {
+                        rsx!(
+                            UserImage {
+                                platform: user.platform,
+                                status: user.status
+                            }
+                        )
+                    }),
+                    div {
+                        class: "plus-some",
+                        (count > 0).then(|| rsx!(
+                            p {
+                                "+{count}"
+                            }
+                        ))
                     }
-                ))
+                )} else {rsx!(
+                    UserImage {
+                        platform: single_user.platform,
+                        status: single_user.status
+                    }
+                )}
             }
+            (cx.props.with_username.is_some()).then(|| rsx!(
+                Label {
+                    text: username.to_string()
+                }
+            ))
         }
     ))
 }

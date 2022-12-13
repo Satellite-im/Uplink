@@ -5,7 +5,7 @@ UI-Kit for Rust based satellite apps, specifically Dioxus.
 ## Todo
 
 - [x] File Component
-- [ ] Vertical Nav
+- [x] Vertical Nav
 - [ ] User with Controls
 - [x] Chatbar
 - [x] Message Reply

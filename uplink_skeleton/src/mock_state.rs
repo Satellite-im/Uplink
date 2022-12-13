@@ -78,7 +78,7 @@ pub mod mock_state {
         let benny_chat = fake_chat( vec![thisis_yeu.clone(), benny_fredrick.clone()], benny_conversation_id);
 
         let group_conversation_id = Uuid::new_v4();
-        let group_chat = fake_chat( vec![thisis_yeu.clone(), benny_fredrick.clone(), albert_ford.clone()], group_conversation_id);
+        let group_chat = fake_chat( vec![thisis_yeu.clone(), benny_fredrick.clone(), albert_ford.clone(), henry_otango.clone()], group_conversation_id);
 
         State {
             account: Account {
