@@ -40,9 +40,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let status = &cx.props.status;
     let platform = &cx.props.platform;
     let typing = &cx.props.typing.unwrap_or_default();
-
     let username = &cx.props.with_username.clone().unwrap_or_default();
-
     let pressable = &cx.props.onpress.is_some();
 
     cx.render(rsx! (
@@ -55,7 +53,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "user-image",
                 div {
                     class: "image",
-                    style: "background-image: url('{image_data}');",
+                    style: "background-image: url('{image_data}');"
                 },
                 typing.then(|| rsx!(
                     div {

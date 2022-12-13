@@ -43,7 +43,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = get_text(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-
     let disabled = &cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx!(

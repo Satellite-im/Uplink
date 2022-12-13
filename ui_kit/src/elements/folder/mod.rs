@@ -46,9 +46,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = get_text(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-
     let icon = if *open { Icon::FolderOpen } else { Icon::Folder };
-
     let disabled = &cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx!(

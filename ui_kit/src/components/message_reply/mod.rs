@@ -39,7 +39,6 @@ pub struct Props<'a> {
 pub fn MessageReply<'a>(cx: Scope<'a,Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
     let prefix = cx.props.with_prefix.clone().unwrap_or_default();
-
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let remote_message = cx.props.remote_message.unwrap_or_default();

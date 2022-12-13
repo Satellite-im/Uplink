@@ -105,7 +105,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let badge = get_badge(&cx);
     let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
-
     let small = &cx.props.small.unwrap_or_default();
 
     cx.render(

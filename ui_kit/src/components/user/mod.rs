@@ -45,9 +45,7 @@ pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
 #[allow(non_snake_case)]
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
-
     let badge = get_badge(&cx);
-
     let active = &cx.props.active.unwrap_or_default();
 
     cx.render(rsx! (

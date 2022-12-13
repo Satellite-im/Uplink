@@ -58,12 +58,9 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-
     // Handles the hiding and showing of the context menu
     let script = include_str!("./context.js").replace("UUID", &cx.props.id);
-
     let id = format!("{}-context-menu", &cx.props.id);
-    
     let window = use_window(&cx);
 
     cx.render(rsx! {
