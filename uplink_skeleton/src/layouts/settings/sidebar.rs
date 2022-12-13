@@ -1,15 +1,15 @@
 use std::str::FromStr;
 
 use dioxus::{prelude::*, core::UiEvent};
-use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::nav::Nav, layout::sidebar::Sidebar, components::nav::Route as UIRoute};
+use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::nav::Nav, layout::sidebar::Sidebar as ReusableSidebar, components::nav::Route as UIRoute};
 
 use crate::layouts::chat::RouteInfo;
 
 pub enum Page {
-    General,
     Audio,
     Developer,
     Extensions,
+    General,
     Privacy,
 }
 
@@ -17,11 +17,11 @@ pub enum Page {
 impl FromStr for Page {
     fn from_str(input: &str) -> Result<Page, Self::Err> {
         match input {
+            "audio"         => Ok(Page::Audio),
+            "developer"     => Ok(Page::Developer),
+            "extensions"    => Ok(Page::Extensions),
             "general"       => Ok(Page::General),
             "privacy"       => Ok(Page::Privacy),
-            "developer"     => Ok(Page::Developer),
-            "audio"         => Ok(Page::Audio),
-            "extensions"    => Ok(Page::Extensions),
             _               => Ok(Page::General),
         }
     }
@@ -45,7 +45,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 }
 
 #[allow(non_snake_case)]
-pub fn SettingsSidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let search_placeholder = String::from("Search Settings...");
     let general = UIRoute { to: "general", name: "General", icon: Icon::Cog, ..UIRoute::default() };
     let privacy = UIRoute { to: "privacy", name: "Privacy", icon: Icon::LockClosed, ..UIRoute::default() };
@@ -62,7 +62,7 @@ pub fn SettingsSidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let active_route = routes[0].clone();
     cx.render(rsx!(
-        Sidebar {
+        ReusableSidebar {
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",

@@ -1,7 +1,7 @@
 pub mod settings {
     use dioxus::prelude::*;
 
-    use crate::layouts::{chat::RouteInfo, settings::{sidebar::{SettingsSidebar as Sidebar, Page}, sub_pages::{general::GeneralSettings, audio::AudioSettings, privacy::PrivacySettings, extensions::ExtensionSettings, developer::DeveloperSettings}}};
+    use crate::layouts::{chat::RouteInfo, settings::{sidebar::{Sidebar, Page}, sub_pages::{general::GeneralSettings, audio::AudioSettings, privacy::PrivacySettings, extensions::ExtensionSettings, developer::DeveloperSettings}}};
 
     #[derive(PartialEq, Props)]
     pub struct Props {
