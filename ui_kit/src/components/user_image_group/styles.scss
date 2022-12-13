@@ -1,5 +1,6 @@
 .user-image-group-wrap {
     position: relative;
+    max-height: var(--height-input);
     height: var(--height-input);
     min-width: calc(var(--height-input) + var(--gap));
     max-width: calc(var(--height-input) + var(--gap));
