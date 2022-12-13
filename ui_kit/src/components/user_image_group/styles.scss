@@ -31,9 +31,6 @@
             display: none;
             position: absolute;
 
-            .image {
-                border: 1px solid var(--background);
-            }
             &:nth-child(1) {
                 transform: scale(0.75);
                 left: unset;

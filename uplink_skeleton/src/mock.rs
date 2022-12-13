@@ -33,7 +33,7 @@ pub mod mock_state {
         let message_count = rng.gen_range(0,20);
         for _ in 0..message_count {
             let sender = participants.choose(&mut rand::thread_rng()).unwrap_or(&default_id);
-            let word_count = rng.gen_range(1, 10);
+            let word_count = rng.gen_range(3, 20);
             let mut default_message = Message::default();
             default_message.set_conversation_id(conversation);
             default_message.set_sender(sender.did_key());

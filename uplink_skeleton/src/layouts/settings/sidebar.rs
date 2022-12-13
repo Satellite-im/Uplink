@@ -1,15 +1,51 @@
-use dioxus::prelude::*;
+use std::str::FromStr;
+
+use dioxus::{prelude::*, core::UiEvent};
 use ui_kit::{elements::input::{Input, Options}, icons::Icon, components::nav::Nav, layout::sidebar::Sidebar, components::nav::Route as UIRoute};
 
 use crate::layouts::chat::RouteInfo;
 
-#[derive(PartialEq, Props)]
-pub struct Props {
+pub enum Page {
+    General,
+    Audio,
+    Developer,
+    Extensions,
+    Privacy,
+}
+
+
+impl FromStr for Page {
+    fn from_str(input: &str) -> Result<Page, Self::Err> {
+        match input {
+            "general"       => Ok(Page::General),
+            "privacy"       => Ok(Page::Privacy),
+            "developer"     => Ok(Page::Developer),
+            "audio"         => Ok(Page::Audio),
+            "extensions"    => Ok(Page::Extensions),
+            _               => Ok(Page::General),
+        }
+    }
+
+    type Err = ();
+}
+
+
+#[derive(Props)]
+pub struct Props<'a> {
     route_info: RouteInfo,
+    #[props(optional)]
+    onpress: Option<EventHandler<'a, Page>>,
+}
+
+pub fn emit(cx: &Scope<Props>, e: Page) {
+    match &cx.props.onpress {
+        Some(f) => f.call(e),
+        None => {},
+    }
 }
 
 #[allow(non_snake_case)]
-pub fn SettingsSidebar(cx: Scope<Props>) -> Element {
+pub fn SettingsSidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let search_placeholder = String::from("Search Settings...");
     let general = UIRoute { to: "general", name: "General", icon: Icon::Cog, ..UIRoute::default() };
     let privacy = UIRoute { to: "privacy", name: "Privacy", icon: Icon::LockClosed, ..UIRoute::default() };
@@ -53,7 +89,9 @@ pub fn SettingsSidebar(cx: Scope<Props>) -> Element {
                 routes: routes.clone(),
                 active: active_route,
                 bubble: true,
-                onnavigate: move |_| {}
+                onnavigate: move |r| {
+                    emit(&cx, Page::from_str(r).unwrap());
+                }
             }
         }
     ))
