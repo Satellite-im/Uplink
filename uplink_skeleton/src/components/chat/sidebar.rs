@@ -47,7 +47,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     let sidebar_chats = state.read().chats.in_sidebar.clone();
 
-    let active_chat = state.read().chats.active.clone();
     let favorites = state.read().chats.favorites.clone();
 
     cx.render(rsx!(
@@ -111,7 +110,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: String::from("Chat"),
                                             onpress: move |_| {
-                                                state.write().dispatch(Actions::ChatWith(favorites_chat.clone()));
+                                                state.write().dispatch(Actions::ChatWith(&favorites_chat));
                                             }
                                         }
                                     )),
@@ -120,7 +119,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         participants: build_participants(&participants),
                                         with_username: participants_name,
                                         onpress: move |_| {
-                                            state.write().dispatch(Actions::ChatWith(chat.clone()));
+                                            state.write().dispatch(Actions::ChatWith(&chat));
                                         }
                                     }
                                 }
@@ -158,7 +157,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     
                     let key = chat.id;
 
-                    let active = active_chat.id == chat.id;
+                    let active = state.read().get_active_chat().id == chat.id;
+                    let chat_with = chat.clone();
 
                     let participants = chat.participants.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
@@ -183,6 +183,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 ContextItem {
                                     icon: Icon::XMark,
                                     text: String::from("Hide Chat"),
+                                    onpress: move |_| {
+                                        state.write().dispatch(Actions::RemoveFromSidebar(&chat));
+                                    }
                                 },
                                 ContextItem {
                                     danger: true,
@@ -209,7 +212,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 )),
                                 with_badge: badge,
                                 onpress: move |_| {
-                                    state.write().dispatch(Actions::ChatWith(chat.clone()));
+                                    state.write().dispatch(Actions::ChatWith(&chat_with));
                                 }
                             }
                         }

@@ -122,7 +122,7 @@ pub mod mock_state {
                     henry_chat.clone(),
                     group_chat.clone(),
                 ],
-                active: ary_chat.clone(),
+                active: Some(ary_chat.clone()),
                 in_sidebar: vec![
                     ary_chat.clone(),
                     albert_chat.clone(),

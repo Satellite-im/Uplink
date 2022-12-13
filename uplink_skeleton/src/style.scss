@@ -18,10 +18,42 @@ body,
     width: 100%;
 }
 
+
+.scrollable {
+
+}
 .vertically-scrollable {
     display: inline-flex;
     gap: var(--gap);
     width: 100%;
     overflow-x: scroll;
     height: fit-content;
+    transition: background var(--animation-time);
 }
+
+
+/* width */
+::-webkit-scrollbar {
+    width: 6px;
+    opacity: 1;
+
+    &:hover {
+        width: 10px;
+    }
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}    

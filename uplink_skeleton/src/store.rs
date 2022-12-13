@@ -7,7 +7,7 @@ pub mod actions {
     use super::state::{Chat, To};
 
     /// Actions can be called with data and will internally dispatch nessisary mutations and Warp methods.
-    pub enum Actions {
+    pub enum Actions<'a> {
         // Account
         /// Sets the ID for the user.
         SetId(Identity),
@@ -37,11 +37,11 @@ pub mod actions {
         Favorite(Chat),
         UnFavorite(Chat),
         /// Sets the active chat to a given chat
-        ChatWith(Chat),
+        ChatWith(&'a Chat),
         /// Adds a chat to the sidebar
         AddToSidebar(Chat),
         /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
-        RemoveFromSidebar(Chat),
+        RemoveFromSidebar(&'a Chat),
         /// Adds or removes a chat from the favorites page
         ToggleFavorite(Chat),
 
@@ -104,7 +104,7 @@ pub mod state {
         // All active chats from warp.
         pub all: Vec<Chat>,
         // Chat to display / interact with currently.
-        pub active: Chat,
+        pub active: Option<Chat>,
         // Chats to show in the sidebar
         pub in_sidebar: Vec<Chat>,
         // Favorite Chats
@@ -139,10 +139,14 @@ pub mod state {
     }
 
     impl State {
-        /// Internal mutations should be the only place updating the values in state.
-
+        /// Internal Mutations
+        /// mutations should be the only place updating the values in state.
         fn set_active_chat(&mut self, chat: &Chat) {
-            self.chats.active = chat.clone();
+            self.chats.active = Some(chat.clone());
+        }
+
+        fn clear_active_chat(&mut self) {
+            self.chats.active = None;
         }
 
         fn add_chat_to_sidebar(&mut self, chat: Chat) {
@@ -172,8 +176,12 @@ pub mod state {
             self.chats.all[chat_index].replying_to = Some(message.to_owned());
 
             // Update the active state if it matches the one we're modifying
-            if self.chats.active.clone().id == chat.id {
-                self.chats.active.replying_to = Some(message.to_owned());
+            if self.chats.active.is_some() {
+                let mut active_chat = self.get_active_chat();
+                if active_chat.id == chat.id {
+                    active_chat.replying_to = Some(message.to_owned());
+                    self.chats.active = Some(active_chat);
+                }
             }
         }
 
@@ -182,8 +190,12 @@ pub mod state {
             self.chats.all[chat_index].replying_to = None;
 
             // Update the active state if it matches the one we're modifying
-            if self.chats.active.id == chat.id {
-                self.chats.active.replying_to = None;
+            if self.chats.active.is_some() {
+                let mut active_chat = self.get_active_chat();
+                if active_chat.id == chat.id {
+                    active_chat.replying_to = None;
+                    self.chats.active = Some(active_chat);
+                }
             }
         }
 
@@ -192,8 +204,12 @@ pub mod state {
             self.chats.all[chat_index].unreads = 0;
 
             // Update the active state if it matches the one we're modifying
-            if self.chats.active.id == chat.id {
-                self.chats.active.unreads = 0;
+            if self.chats.active.is_some() {
+                let mut active_chat = self.get_active_chat();
+                if active_chat.id == chat.id {
+                    active_chat.unreads = 0;
+                    self.chats.active = Some(active_chat);
+                }
             }
 
             // Update the sidebar chats if it matches the one we're modifying
@@ -206,12 +222,35 @@ pub mod state {
             }
         }
 
+        fn remove_sidebar_chat(&mut self, chat: &Chat) {
+            if self.chats.in_sidebar.contains(chat) {
+                let index = self
+                    .chats
+                    .in_sidebar
+                    .iter()
+                    .position(|x| x.id == chat.id)
+                    .unwrap();
+                self.chats.in_sidebar.remove(index);
+            }
+
+            if self.chats.active.is_some() {
+                if self.get_active_chat().id == chat.id {
+                    self.clear_active_chat();
+                }
+            }
+        }
+
         /// Getters
         /// Getters are the only public facing methods besides dispatch.
         /// Getters help retrieve data from state in common ways preventing reused code.
 
-        pub fn is_favorite(state: &State, chat: &Chat) -> bool {
-            state.chats.favorites.contains(chat)
+        pub fn is_favorite(&self, chat: &Chat) -> bool {
+            self.chats.favorites.contains(chat)
+        }
+
+        pub fn get_active_chat(&self) -> Chat {
+            let chat = self.chats.active.clone();
+            chat.unwrap_or_default()
         }
 
         /// Actions
@@ -237,7 +276,9 @@ pub mod state {
                 Actions::AddToSidebar(chat) => {
                     self.add_chat_to_sidebar(chat);
                 }
-                Actions::RemoveFromSidebar(_) => todo!(),
+                Actions::RemoveFromSidebar(chat) => {
+                    self.remove_sidebar_chat(chat);
+                }
                 Actions::NewMessage(_, _) => todo!(),
                 Actions::ToggleFavorite(chat) => {
                     self.toggle_favorite(&chat);
@@ -260,14 +301,6 @@ pub mod state {
             }
 
             // TODO: Serialize and save on action
-        }
-    }
-
-    pub mod getters {
-        use super::{Chat, State};
-
-        pub fn is_favorite(state: &State, chat: &Chat) -> bool {
-            state.chats.favorites.contains(chat)
         }
     }
 

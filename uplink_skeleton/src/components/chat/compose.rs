@@ -5,14 +5,14 @@ use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{u
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::{store::{state::{State, getters::is_favorite}, actions::Actions}, components::chat::sidebar::build_participants};
+use crate::{store::{state::State, actions::Actions}, components::chat::sidebar::build_participants};
 
 use super::sidebar::build_participants_names;
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let active_chat = state.read().chats.active.clone();
+    let active_chat = state.read().get_active_chat();
 
     // TODO: Mockup purposes only.
     let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
@@ -26,9 +26,9 @@ pub fn Compose(cx: Scope) -> Element {
 
     let subtext = active_participant.status_message().unwrap_or_default();
 
-    let is_favorite = is_favorite(&state.read().clone(), &active_chat);
+    let is_favorite = state.read().is_favorite(&active_chat);
 
-    let reply_message = match &state.read().chats.active.replying_to {
+    let reply_message = match state.read().get_active_chat().replying_to {
         Some(m) => m.value().join("\n").to_string(),
         None => "".into(),
     };
@@ -167,7 +167,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 text: String::from("Reply"),
                                 onpress: move |_| {
                                     let mut reply = RaygunMessage::default();
-                                    let chat = state.read().chats.active.clone();
+                                    let chat = state.read().get_active_chat();
                                     reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
                                     state.write().dispatch(Actions::StartReplying(chat, reply.clone()));
                                 }
@@ -248,15 +248,15 @@ pub fn Compose(cx: Scope) -> Element {
                     },
                 )),
                 with_replying_to: cx.render(rsx!(
-                    state.read().chats.active.replying_to.is_some().then(|| rsx!(
+                    state.read().get_active_chat().replying_to.is_some().then(|| rsx!(
                         Reply {
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
-                                let their_did = state.read().chats.active.replying_to.clone().unwrap_or_default().sender();
+                                let their_did = state.read().get_active_chat().replying_to.clone().unwrap_or_default().sender();
                                 our_did != their_did
                             },
                             onclose: move |_| {
-                                let new_chat = &state.read().chats.active.clone();
+                                let new_chat = &state.read().get_active_chat();
                                 state.write().dispatch(Actions::CancelReply(new_chat.clone()))
                             },
                             message: reply_message,
