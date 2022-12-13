@@ -159,6 +159,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let active = state.read().get_active_chat().id == chat.id;
                     let chat_with = chat.clone();
+                    let clear_unreads = chat.clone();
 
                     let participants = chat.participants.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
@@ -170,14 +171,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::EyeSlash,
-                                    text: String::from("Mark Seen"),
+                                    text: String::from("Clear Unreads"),
+                                    onpress: move |_| {
+                                        state.write().dispatch(Actions::ClearUnreads(&clear_unreads));
+                                    }
                                 },
                                 hr{ },
                                 ContextItem {
                                     text: String::from("Call"),
-                                },
-                                ContextItem {
-                                    text: String::from("Share File"),
                                 },
                                 hr{ }
                                 ContextItem {

@@ -34,8 +34,8 @@ pub mod actions {
         Block(Identity),
         UnBlock(Identity),
         /// Handles the display of "favorite" chats
-        Favorite(Chat),
-        UnFavorite(Chat),
+        Favorite(&'a Chat),
+        UnFavorite(&'a Chat),
         /// Sets the active chat to a given chat
         ChatWith(&'a Chat),
         /// Adds a chat to the sidebar
@@ -58,7 +58,7 @@ pub mod actions {
         CancelReply(Chat),
         /// Sends a message to the given chat
         Send(Chat, Message),
-        ClearUnreads(Chat),
+        ClearUnreads(&'a Chat),
     }
 }
 
@@ -304,7 +304,7 @@ pub mod state {
         }
     }
 
-    pub fn mock_state() -> State {
+    pub fn mock() -> State {
         generate_mock()
     }
 }

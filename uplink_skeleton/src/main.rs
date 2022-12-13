@@ -2,7 +2,6 @@ use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::prelude::*;
 
-use store::state::mock_state;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -60,7 +59,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let _ = use_context_provider(&cx, || mock_state());
+    let _ = use_context_provider(&cx, || store::state::mock());
 
     let chat_route = UIRoute {
         to: "/",
