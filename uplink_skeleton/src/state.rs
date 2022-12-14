@@ -72,14 +72,16 @@ pub struct Files {
 
 use std::fmt;
 
+use crate::mock::mock_state::generate_mock;
+
 #[derive(Default, Deserialize, Serialize)]
-struct State {
-    account: Account,
-    route: Route,
-    chats: Chats,
-    friends: Friends,
+pub struct State {
+    pub account: Account,
+    pub route: Route,
+    pub chats: Chats,
+    pub friends: Friends,
     #[serde(skip_serializing, skip_deserializing)]
-    hooks: Vec<Box<dyn Fn(&State)>>,
+    pub(crate) hooks: Vec<Box<dyn Fn(&State)>>,
 }
 
 impl fmt::Debug for State {
@@ -107,7 +109,7 @@ impl Clone for State {
 //  These methods are used to update the relevant fields within the State struct in response to user actions or other events within the application.
 impl State {
     /// Constructs a new `State` instance with default values.
-    fn new() -> Self {
+    pub fn new() -> Self {
         State::default()
     }
 
@@ -175,6 +177,11 @@ impl State {
         }
     }
 
+    /// Cancels a reply within a given chat on `State` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat: &Chat) {
         let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
         self.chats.all[chat_index].replying_to = None;
@@ -189,6 +196,11 @@ impl State {
         }
     }
 
+    /// Clear unreads  within a given chat on `State` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `chat` - The chat to clear unreads on.
     fn clear_unreads(&mut self, chat: &Chat) {
         let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
         self.chats.all[chat_index].unreads = 0;
@@ -212,6 +224,11 @@ impl State {
         }
     }
 
+    /// Remove a chat from the sidebar on `State` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `chat` - The chat to remove.
     fn remove_sidebar_chat(&mut self, chat: &Chat) {
         if self.chats.in_sidebar.contains(chat) {
             let index = self
@@ -234,18 +251,24 @@ impl State {
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
 
+    /// Check if given chat is favorite on `State` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `chat` - The chat to check.
     pub fn is_favorite(&self, chat: &Chat) -> bool {
         self.chats.favorites.contains(chat)
     }
 
+    /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Chat {
         let chat = self.chats.active.clone();
         chat.unwrap_or_default()
     }
+}
 
-    // Internal
-
-    fn mutate(&mut self, action: Action) {
+impl State {
+    pub fn mutate(&mut self, action: Action) {
         match action {
             Action::SetId(_) => todo!(),
             Action::SendRequest(_) => todo!(),
@@ -295,18 +318,16 @@ impl State {
             hook(&self);
         }
 
-        self.save();
+        let _ = self.save();
     }
 
-    fn add_hook<F>(&mut self, hook: F)
+    pub fn add_hook<F>(&mut self, hook: F)
     where
         F: Fn(&State) + 'static,
     {
         self.hooks.push(Box::new(hook));
     }
-}
 
-impl State {
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
@@ -316,12 +337,17 @@ impl State {
 
     /// Loads the state from a file on disk, if it exists.
     fn load() -> Result<Self, std::io::Error> {
-        if let Ok(contents) = fs::read_to_string("state.json") {
-            let state: State = serde_json::from_str(&contents)?;
-            Ok(state)
-        } else {
-            Ok(State::default())
+        match fs::read_to_string("state.json") {
+            Ok(contents) => {
+                let state: State = serde_json::from_str(&contents)?;
+                Ok(state)
+            }
+            Err(_) => Ok(State::default()),
         }
+    }
+
+    pub fn mock() -> State {
+        generate_mock()
     }
 }
 
@@ -377,24 +403,4 @@ pub enum Action {
     /// Sends a message to the given chat
     Send(Chat, Message),
     ClearUnreads(Chat),
-}
-
-fn main() {
-    let state = Arc::new(Mutex::new(State::new()));
-
-    // Add a hook to the state
-    {
-        let state = state.clone();
-        let mut state = state.lock().unwrap();
-        state.add_hook(move |s| {
-            println!("State updated: {:?}", s);
-        });
-    }
-
-    // Mutate the state
-    {
-        let state = state.clone();
-        let mut state = state.lock().unwrap();
-        state.mutate(Action::Navigate(String::from("/")));
-    }
 }

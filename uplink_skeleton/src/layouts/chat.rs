@@ -4,7 +4,7 @@ use crate::{
     components::chat::{
         compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
     },
-    store::state::State,
+    state::State,
 };
 
 #[derive(PartialEq, Props)]

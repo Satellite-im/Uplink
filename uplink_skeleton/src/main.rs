@@ -1,7 +1,10 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::prelude::*;
 
+use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -18,7 +21,7 @@ pub mod components;
 pub mod layouts;
 pub mod mock;
 pub mod state;
-pub mod store;
+
 fn main() {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -60,7 +63,9 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let _ = use_context_provider(&cx, || store::state::mock());
+    let state = Arc::new(Mutex::new(State::mock()));
+    // TODO: impl
+    let _ = use_context_provider(&cx, || State::mock());
 
     let chat_route = UIRoute {
         to: "/",

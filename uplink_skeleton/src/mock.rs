@@ -8,7 +8,7 @@ pub mod mock_state {
     use uuid::Uuid;
     use warp::{crypto::rand, multipass::identity::Identity, raygun::Message};
 
-    use crate::store::state::{Account, Chat, Chats, Friends, Route, State};
+    use crate::state::{Account, Chat, Chats, Friends, Route, State};
 
     fn fake_id() -> Identity {
         let mut id = Identity::default();
@@ -137,6 +137,7 @@ pub mod mock_state {
                 incoming_requests: vec![nitt_swetir],
                 outgoing_requests: vec![phutur_phrehnd],
             },
+            hooks: vec![],
         }
     }
 }

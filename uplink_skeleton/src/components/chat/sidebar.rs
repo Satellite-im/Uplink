@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::chat::RouteInfo, store::{state::State, actions::Actions}};
+use crate::{components::chat::RouteInfo, state::{State, Action}};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -103,14 +103,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             icon: Icon::Heart,
                                             text: String::from("Remove Favorite"),
                                             onpress: move |_| {
-                                                state.write().dispatch(Actions::ToggleFavorite(remove_favorite.clone()));
+                                                state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
                                             }
                                         },
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: String::from("Chat"),
                                             onpress: move |_| {
-                                                state.write().dispatch(Actions::ChatWith(&favorites_chat));
+                                                state.write().mutate(Action::ChatWith(favorites_chat.clone()));
                                             }
                                         }
                                     )),
@@ -119,7 +119,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         participants: build_participants(&participants),
                                         with_username: participants_name,
                                         onpress: move |_| {
-                                            state.write().dispatch(Actions::ChatWith(&chat));
+                                            state.write().mutate(Action::ChatWith(chat.clone()));
                                         }
                                     }
                                 }
@@ -173,7 +173,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     icon: Icon::EyeSlash,
                                     text: String::from("Clear Unreads"),
                                     onpress: move |_| {
-                                        state.write().dispatch(Actions::ClearUnreads(&clear_unreads));
+                                        state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
                                     }
                                 },
                                 hr{ },
@@ -185,7 +185,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     icon: Icon::XMark,
                                     text: String::from("Hide Chat"),
                                     onpress: move |_| {
-                                        state.write().dispatch(Actions::RemoveFromSidebar(&chat));
+                                        state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
                                     }
                                 },
                                 ContextItem {
@@ -213,7 +213,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 )),
                                 with_badge: badge,
                                 onpress: move |_| {
-                                    state.write().dispatch(Actions::ChatWith(&chat_with));
+                                    state.write().mutate(Action::ChatWith(chat_with.clone()));
                                     if cx.props.route_info.active.to != "/" {
                                         use_router(&cx).replace_route("/", None, None);
                                     }

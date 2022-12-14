@@ -5,7 +5,7 @@ use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{u
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::{store::{state::State, actions::Actions}, components::chat::sidebar::build_participants};
+use crate::{state::{State, Action}, components::chat::sidebar::build_participants};
 
 use super::sidebar::build_participants_names;
 
@@ -53,7 +53,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 }
                             )),
                             onpress: move |_| {
-                                state.write().dispatch(Actions::ToggleFavorite(active_chat.clone()));
+                                state.write().mutate(Action::ToggleFavorite(active_chat.clone()));
                             }
                         },
                         Button {
@@ -169,7 +169,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     let mut reply = RaygunMessage::default();
                                     let chat = state.read().get_active_chat();
                                     reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
-                                    state.write().dispatch(Actions::StartReplying(chat, reply.clone()));
+                                    state.write().mutate(Action::StartReplying(chat, reply.clone()));
 
                                 }
                             },
@@ -258,7 +258,7 @@ pub fn Compose(cx: Scope) -> Element {
                             },
                             onclose: move |_| {
                                 let new_chat = &state.read().get_active_chat();
-                                state.write().dispatch(Actions::CancelReply(new_chat.clone()))
+                                state.write().mutate(Action::CancelReply(new_chat.clone()))
                             },
                             message: reply_message,
                             UserImage {
