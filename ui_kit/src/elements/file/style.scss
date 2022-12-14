@@ -24,7 +24,7 @@
 	.input {
 		height: auto;
 		font-size: var(--text-size-less);
-		padding: var(--gap-less) var(--gap);
+		padding: var(--padding-less) var(--gap);
 	}
 	&.disabled {
 		.icon {

@@ -2,6 +2,7 @@
 	width: 100%;
 	position: relative;
 	display: inline-flex;
+    margin: var(--gap) 0;
 	hr {
 		border: none;
 		border-top: 1px solid var(--secondary-dark);

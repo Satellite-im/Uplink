@@ -6,11 +6,11 @@
 	align-items: center;
 	width: fit-content;
 	align-self: flex-end;
-	gap: var(--gap);
 	margin-top: calc(var(--gap) * 2);
 	position: relative;
 	.user-image {
 		transform: scale(0.75);
+		opacity: 0.75;
 	}
 	.context-wrap {
 		align-self: flex-end;
@@ -21,12 +21,16 @@
 	.text {
 		color: var(--text-color);
 		background-color: var(--primary);
-		padding: var(--gap-less) var(--padding-less);
+		padding: var(--padding-less) var(--padding);
+		font-size: var(--text-size-less);
 		border-radius: var(--border-radius-more);
 		border-bottom-right-radius: var(--border-radius-less);
+		opacity: 0.5;
+
 	}
 	.content {
 		position: relative;
+		padding: 0;
 	}
 	&.remote {
 		align-self: flex-start;
@@ -37,6 +41,7 @@
 		.prefix {
 			left: 0;
 			right: unset;
+			white-space: nowrap;
 		}
 	}
 	.prefix {
@@ -45,7 +50,7 @@
 		width: fit-content;
 		right: 0;
 		color: var(--text-color-muted);
-		bottom: calc(100% + var(--gap-less));
+		bottom: 100%;
 		font-size: var(--text-size-less);
 	}
 }

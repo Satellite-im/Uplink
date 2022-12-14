@@ -170,6 +170,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     let chat = state.read().get_active_chat();
                                     reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
                                     state.write().dispatch(Actions::StartReplying(chat, reply.clone()));
+
                                 }
                             },
                             ContextItem {

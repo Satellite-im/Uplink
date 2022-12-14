@@ -2,8 +2,8 @@
 	display: inline-flex;
 	gap: var(--gap);
 	position: relative;
-	padding-bottom: var(--gap);
-	padding-top: var(--gap);
+	padding-bottom: var(--padding);
+	padding-top: var(--padding);
     .message-group {
         display: inline-flex;
         width: 100%;
