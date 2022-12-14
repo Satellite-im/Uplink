@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 use uuid::Uuid;
 use warp::{
     constellation::item::Item,
+    crypto::DID,
     multipass::identity::Identity,
     raygun::{Message, Reaction},
 };
@@ -14,6 +15,7 @@ pub type To = String;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Account {
+    #[serde(default)]
     pub identity: Identity,
     // pub settings: Option<CustomSettings>,
     // pub profile: Option<Profile>,
@@ -22,51 +24,67 @@ pub struct Account {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Route {
     // String representation of the current active route.
+    #[serde(default)]
     pub active: To,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
+    #[serde(default)]
     pub id: Uuid,
     // Includes the list of participants within a given chat.
+    #[serde(default)]
     pub participants: Vec<Identity>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
+    #[serde(default)]
     pub messages: Vec<Message>,
     // Unread count for this chat, should be cleared when we view the chat.
+    #[serde(default)]
     pub unreads: u32,
     // If a value exists, we will render the message we're replying to above the chatbar
+    #[serde(default)]
     pub replying_to: Option<Message>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Chats {
     // All active chats from warp.
-    pub all: Vec<Chat>,
+    #[serde(default)]
+    pub all: HashMap<Uuid, Chat>,
     // Chat to display / interact with currently.
+    #[serde(default)]
     pub active: Option<Chat>,
     // Chats to show in the sidebar
+    #[serde(default)]
     pub in_sidebar: Vec<Chat>,
     // Favorite Chats
+    #[serde(default)]
     pub favorites: Vec<Chat>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Friends {
     // All active friends.
-    pub all: Vec<Identity>,
+    #[serde(default)]
+    pub all: HashMap<DID, Identity>,
     // List of friends the user has blocked
+    #[serde(default)]
     pub blocked: Vec<Identity>,
     // Friend requests, incoming and outgoing.
+    #[serde(default)]
     pub incoming_requests: Vec<Identity>,
+    #[serde(default)]
     pub outgoing_requests: Vec<Identity>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Files {
     // All files
+    #[serde(default)]
     pub all: Vec<Item>,
     // Optional, active folder.
+    #[serde(default)]
     pub active_folder: Option<Item>,
 }
 
@@ -76,9 +94,13 @@ use crate::mock::mock_state::generate_mock;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
+    #[serde(default)]
     pub account: Account,
+    #[serde(default)]
     pub route: Route,
+    #[serde(default)]
     pub chats: Chats,
+    #[serde(default)]
     pub friends: Friends,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<Box<dyn Fn(&State)>>,
@@ -98,8 +120,17 @@ impl fmt::Debug for State {
 
 impl Clone for State {
     fn clone(&self) -> Self {
-        let mut cloned = self.clone();
+        let mut cloned = State::default();
+
+        // Copy over the relevant fields from the original State struct.
+        cloned.account = self.account.clone();
+        cloned.route = self.route.clone();
+        cloned.chats = self.chats.clone();
+        cloned.friends = self.friends.clone();
+
+        // The hooks field should not be cloned, so we clear it.
         cloned.hooks.clear();
+
         cloned
     }
 }
@@ -147,6 +178,20 @@ impl State {
         self.route.active = to;
     }
 
+    /// Adds the given chat to the user's favorites.
+    pub fn favorite(&mut self, chat: &Chat) {
+        if !self.chats.favorites.contains(chat) {
+            self.chats.favorites.push(chat.clone());
+        }
+    }
+
+    /// Removes the given chat from the user's favorites.
+    pub fn unfavorite(&mut self, chat: &Chat) {
+        if let Some(index) = self.chats.favorites.iter().position(|c| c == chat) {
+            self.chats.favorites.remove(index);
+        }
+    }
+
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
     /// is already a favorite, it is removed from the favorites list. Otherwise, it
     /// is added to the list.
@@ -164,15 +209,29 @@ impl State {
 
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Chat, message: &Message) {
-        let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
-        self.chats.all[chat_index].replying_to = Some(message.to_owned());
+        let mut c = match self.chats.all.get(&chat.id) {
+            Some(chat) => chat.clone(),
+            None => return,
+        };
+        c.replying_to = Some(message.to_owned());
+
+        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
 
         // Update the active state if it matches the one we're modifying
         if self.chats.active.is_some() {
             let mut active_chat = self.get_active_chat();
             if active_chat.id == chat.id {
                 active_chat.replying_to = Some(message.to_owned());
-                self.chats.active = Some(active_chat);
+                self.chats.active = Some(active_chat.clone());
+            }
+        }
+
+        // Update the favorites chats if it matches the one we're modifying
+        if self.chats.favorites.contains(chat) {
+            for c in self.chats.favorites.iter_mut() {
+                if c.id == chat.id {
+                    c.replying_to = Some(message.to_owned());
+                }
             }
         }
     }
@@ -183,8 +242,13 @@ impl State {
     ///
     /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat: &Chat) {
-        let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
-        self.chats.all[chat_index].replying_to = None;
+        let mut c = match self.chats.all.get(&chat.id) {
+            Some(chat) => chat.clone(),
+            None => return,
+        };
+        c.replying_to = None;
+
+        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
 
         // Update the active state if it matches the one we're modifying
         if self.chats.active.is_some() {
@@ -194,6 +258,15 @@ impl State {
                 self.chats.active = Some(active_chat);
             }
         }
+
+        // Update the favorites chats if it matches the one we're modifying
+        if self.chats.favorites.contains(chat) {
+            for c in self.chats.favorites.iter_mut() {
+                if c.id == chat.id {
+                    c.replying_to = None;
+                }
+            }
+        }
     }
 
     /// Clear unreads  within a given chat on `State` struct.
@@ -201,9 +274,15 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to clear unreads on.
+    ///
     fn clear_unreads(&mut self, chat: &Chat) {
-        let chat_index = self.chats.all.iter().position(|c| c.id == chat.id).unwrap();
-        self.chats.all[chat_index].unreads = 0;
+        let mut c = match self.chats.all.get(&chat.id) {
+            Some(chat) => chat.clone(),
+            None => return,
+        };
+        c.unreads = 0;
+
+        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
 
         // Update the active state if it matches the one we're modifying
         if self.chats.active.is_some() {
@@ -217,6 +296,15 @@ impl State {
         // Update the sidebar chats if it matches the one we're modifying
         if self.chats.in_sidebar.contains(chat) {
             for c in self.chats.in_sidebar.iter_mut() {
+                if c.id == chat.id {
+                    c.unreads = 0;
+                }
+            }
+        }
+
+        // Update the favorites chats if it matches the one we're modifying
+        if self.chats.favorites.contains(chat) {
+            for c in self.chats.favorites.iter_mut() {
                 if c.id == chat.id {
                     c.unreads = 0;
                 }
@@ -247,6 +335,11 @@ impl State {
         }
     }
 
+    /// Sets the user's identity.
+    pub fn set_identity(&mut self, identity: &Identity) {
+        self.account.identity = identity.clone();
+    }
+
     /// Getters
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
@@ -270,7 +363,7 @@ impl State {
 impl State {
     pub fn mutate(&mut self, action: Action) {
         match action {
-            Action::SetId(_) => todo!(),
+            Action::SetId(identity) => self.set_identity(&identity),
             Action::SendRequest(_) => todo!(),
             Action::RequestAccepted(_) => todo!(),
             Action::CancelRequest(_) => todo!(),
@@ -279,8 +372,8 @@ impl State {
             Action::DenyRequest(_) => todo!(),
             Action::Block(_) => todo!(),
             Action::UnBlock(_) => todo!(),
-            Action::Favorite(_) => todo!(),
-            Action::UnFavorite(_) => todo!(),
+            Action::Favorite(chat) => self.favorite(&chat),
+            Action::UnFavorite(chat) => self.unfavorite(&chat),
             Action::ChatWith(chat) => {
                 // TODO: this should create a conversation in warp if one doesn't exist
                 self.set_active_chat(&chat);
@@ -344,6 +437,14 @@ impl State {
             }
             Err(_) => Ok(State::default()),
         }
+    }
+
+    /// Enables logging of all actions applied to the state.
+    pub fn enable_logging(&mut self) {
+        self.hooks.push(Box::new(|state| {
+            // Print the action being applied to the state.
+            println!("Action: {:?}", state);
+        }));
     }
 
     pub fn mock() -> State {

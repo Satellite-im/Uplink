@@ -18,6 +18,7 @@ use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
 pub mod components;
+pub mod config;
 pub mod layouts;
 pub mod mock;
 pub mod state;
@@ -64,8 +65,10 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let state = Arc::new(Mutex::new(State::mock()));
+
+    let app_state = state.lock().unwrap().clone();
     // TODO: impl
-    let _ = use_context_provider(&cx, || State::mock());
+    let _ = use_context_provider(&cx, || app_state);
 
     let chat_route = UIRoute {
         to: "/",
