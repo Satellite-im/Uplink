@@ -30,7 +30,7 @@ pub mod settings {
 
         cx.render(rsx!(
             div {
-                id: "settings-page",
+                id: "settings-layout",
                 Sidebar {
                     route_info: cx.props.route_info.clone(),
                     onpress: move |p| {

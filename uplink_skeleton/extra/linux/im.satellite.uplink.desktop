@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=Uplink
+Comment=Experimental
+Categories=Communications;Chat;
+
+Icon=im.satellite.uplink
+Exec=uplink
+Terminal=false

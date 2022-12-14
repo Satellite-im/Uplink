@@ -214,6 +214,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().dispatch(Actions::ChatWith(&chat_with));
+                                    if cx.props.route_info.active.to != "/" {
+                                        use_router(&cx).replace_route("/", None, None);
+                                    }
                                 }
                             }
                         }

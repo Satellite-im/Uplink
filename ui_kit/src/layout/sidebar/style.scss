@@ -1,7 +1,8 @@
 .sidebar {
 	display: inline-flex;
 	flex-direction: column;
-	max-width: var(--sidebar-width);
+	width: var(--sidebar-width);
+	min-width: var(--sidebar-width);
 	height: 100%;
 	border-right: 1px solid var(--border-color);
 	.search {

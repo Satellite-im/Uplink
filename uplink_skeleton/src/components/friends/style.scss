@@ -1,0 +1,16 @@
+.add-friend {
+    width: 100%;
+    display: inline-flex;
+    gap: var(--gap);
+    align-items: flex-start;
+    padding: var(--padding-less);
+    border-bottom: 1px solid var(--border-color);
+
+    .btn {
+        margin-top: calc(var(--text-size-less) + var(--gap));
+    }
+
+    .input-group {
+        flex: 1;
+    }
+}

@@ -8,6 +8,7 @@ use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
 use ui_kit::STYLE as UIKIT_STYLES;
 
+use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 
@@ -73,6 +74,13 @@ fn app(cx: Scope) -> Element {
         icon: Icon::Cog,
         ..UIRoute::default()
     };
+    let friends_route = UIRoute {
+        to: "/friends",
+        name: "Friends",
+        icon: Icon::Users,
+        with_badge: Some("16".into()),
+        loading: None,
+    };
     let routes = vec![
         chat_route.clone(),
         UIRoute {
@@ -81,13 +89,7 @@ fn app(cx: Scope) -> Element {
             icon: Icon::Folder,
             ..UIRoute::default()
         },
-        UIRoute {
-            to: "/friends",
-            name: "Friends",
-            icon: Icon::Users,
-            with_badge: Some("16".into()),
-            loading: None,
-        },
+        friends_route.clone(),
         settings_route.clone(),
     ];
     cx.render(rsx! (
@@ -106,8 +108,17 @@ fn app(cx: Scope) -> Element {
                 to: "/settings",
                 SettingsLayout {
                     route_info: RouteInfo {
-                        routes: routes,
+                        routes: routes.clone(),
                         active: settings_route.clone(),
+                    }
+                }
+            },
+            Route {
+                to: "/friends",
+                FriendsLayout {
+                    route_info: RouteInfo {
+                        routes: routes,
+                        active: friends_route.clone(),
                     }
                 }
             }

@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 
 use crate::{
-    components::chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, RouteInfo},
+    components::chat::{
+        compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
+    },
     store::state::State,
 };
 
@@ -16,17 +18,15 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
 
     cx.render(rsx!(
         div {
-            id: "chat-page",
+            id: "chat-layout",
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
             state.read().chats.active.is_some().then(|| rsx! (
-                Compose {},
+                Compose {}
             ))
             state.read().chats.active.is_none().then(|| rsx! (
-                div {
-                    "Make the landing page thingy"
-                }
+                Welcome {}
             ))
         }
     ))

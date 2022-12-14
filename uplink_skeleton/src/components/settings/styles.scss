@@ -8,9 +8,12 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
-    
+}
+
+#settings-extensions {
     .btn-wrap:nth-child(1) {
         margin: var(--padding-less);
+        margin-bottom: 0;
     }
 }
 
@@ -19,7 +22,7 @@
     gap: var(--gap);
     border-bottom: 1px solid var(--border-color);
     width: 100%;
-    padding: var(--padding-less) var(--padding);
+    padding: var(--padding-less);
     .settings-info {
         flex: 1;
         min-width: 0;

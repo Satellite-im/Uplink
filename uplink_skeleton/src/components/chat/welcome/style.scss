@@ -1,0 +1,22 @@
+#welcome {
+  display: inline-flex;
+  flex-grow: 1;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  cursor: default;
+  img {
+    max-width: 250px;
+    margin-bottom: 1rem;
+  }
+  .muted {
+    color: var(--secondary);
+    margin: 1rem 0;
+  }
+  .button {
+    pointer-events: all;
+  }
+}

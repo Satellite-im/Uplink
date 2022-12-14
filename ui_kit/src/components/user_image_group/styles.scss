@@ -1,9 +1,10 @@
 .user-image-group-wrap {
     position: relative;
-    max-height: var(--height-input);
     height: var(--height-input);
+    max-height: var(--height-input);
     min-width: calc(var(--height-input) + var(--gap));
     max-width: calc(var(--height-input) + var(--gap));
+    margin-bottom: 2px; // Compensates for the border on user_image
 	&.pressable {
 		cursor: pointer;
 	}
