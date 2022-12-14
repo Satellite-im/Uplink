@@ -91,7 +91,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 Some(u) => u.clone(),
                                 None => Identity::default(),
                             };
-                            let id = parsed_user.did_key();
+                            let id = chat.id;
                             let participants = chat.participants.clone();
                             let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
                             rsx! (
