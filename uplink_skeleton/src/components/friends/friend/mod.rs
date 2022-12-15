@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
 use ui_kit::{
     components::{
+        context_menu::ContextItem,
+        context_menu::ContextMenu,
         indicator::{Platform, Status},
         user_image::UserImage,
     },
@@ -115,21 +117,58 @@ pub fn Friends(cx: Scope) -> Element {
                             let did = friend.did_key().clone();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                             let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
+                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
                             rsx!(
-                                Friend {
+                                ContextMenu {
+                                    id: format!("{}-friend-listing", did),
                                     key: "{did}-friend-listing",
-                                    username: friend.username(),
-                                    suffix: did_suffix,
-                                    user_image: cx.render(rsx! (
-                                        UserImage {
-                                            platform: Platform::Desktop,
-                                            status: Status::Online,
-                                            image: friend.graphics().profile_picture()
-                                        }
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::ChatBubbleBottomCenterText,
+                                            text: String::from("Chat"),
+                                            onpress: move |_| {
+                                                let _ = &state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
+                                                use_router(&cx).replace_route("/", None, None);
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::PhoneArrowUpRight,
+                                            text: String::from("Call"),
+                                            // TODO: Wire this up to state
+                                        },
+                                        ContextItem {
+                                            icon: Icon::Heart,
+                                            text: String::from("Favorite"),
+                                            // TODO: Wire this up to state
+                                        },
+                                        hr{}
+                                        ContextItem {
+                                            danger: true,
+                                            icon: Icon::XMark,
+                                            text: String::from("Remove User"),
+                                            // TODO: Wire this up to state\
+                                        },
+                                        ContextItem {
+                                            danger: true,
+                                            icon: Icon::NoSymbol,
+                                            text: String::from("Block User"),
+                                            // TODO: Wire this up to state
+                                        },
                                     )),
-                                    onchat: move |_| {
-                                        let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                        use_router(&cx).replace_route("/", None, None);
+                                    Friend {
+                                        username: friend.username(),
+                                        suffix: did_suffix,
+                                        user_image: cx.render(rsx! (
+                                            UserImage {
+                                                platform: Platform::Desktop,
+                                                status: Status::Online,
+                                                image: friend.graphics().profile_picture()
+                                            }
+                                        )),
+                                        onchat: move |_| {
+                                            let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
+                                            use_router(&cx).replace_route("/", None, None);
+                                        }
                                     }
                                 }
                             )

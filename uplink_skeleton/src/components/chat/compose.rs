@@ -58,7 +58,7 @@ pub fn Compose(cx: Scope) -> Element {
                             }
                         },
                         Button {
-                            icon: Icon::Phone,
+                            icon: Icon::PhoneArrowUpRight,
                             appearance: Appearance::Secondary,
                             tooltip: cx.render(rsx!(
                                 Tooltip { 
@@ -178,6 +178,7 @@ pub fn Compose(cx: Scope) -> Element {
                             ContextItem {
                                 icon: Icon::FaceSmile,
                                 text: String::from("React"),
+                                //TODO: Wire to state
                             },
                         )),
                         Message {

@@ -230,7 +230,7 @@ fn app(cx: Scope) -> Element {
             name: String::from("Context Menu"),
             desc: String::from("A wrapper component to add a context menu to a component"),
             ContextMenu {
-                id: "mock".into(),
+                id: "{mock}".into(),
                 items: cx.render(rsx!(
                     ContextItem {
                         icon: Icon::EyeSlash,
@@ -569,7 +569,7 @@ fn app(cx: Scope) -> Element {
                 controls: cx.render(
                     rsx! (
                         Button {
-                            icon: Icon::Phone,
+                            icon: Icon::PhoneArrowUpRight,
                             appearance: Appearance::Secondary,
                             tooltip: cx.render(rsx!(
                                 Tooltip { 

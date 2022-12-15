@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -10,6 +11,36 @@ use warp::{
     multipass::identity::Identity,
     raygun::{Message, Reaction},
 };
+
+#[derive(Eq, PartialEq)]
+struct MessageDivider {
+    timestamp: Option<DateTime<Utc>>,
+}
+
+impl Ord for MessageDivider {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.timestamp.cmp(&other.timestamp)
+    }
+}
+
+impl PartialOrd for MessageDivider {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Define a struct to represent a group of messages from the same sender.
+pub struct MessageGroup {
+    pub sender: DID,
+    pub messages: Vec<GroupedMessage>,
+}
+
+// Define a struct to represent a message that has been placed into a group.
+pub struct GroupedMessage {
+    pub message: Message,
+    pub is_first: bool,
+    pub is_last: bool,
+}
 
 // Define a new struct to represent a hook that listens for a specific action type.
 pub struct ActionHook {
@@ -328,6 +359,51 @@ impl State {
             .into_iter()
             .filter(|identity| !set.contains(identity))
             .collect()
+    }
+
+    // Define a method for sorting a vector of messages.
+    fn sort_messages(
+        messages: Vec<Message>,
+        timestamp: Option<DateTime<Utc>>,
+    ) -> Vec<Either<GroupedMessage, MessageDivider>> {
+        let mut grouped_messages: Vec<Either<GroupedMessage, MessageDivider>> = Vec::new();
+
+        let mut sender = None;
+        let mut divider_added = false;
+
+        for message in messages {
+            // Group messages by sender
+            let sender_copy = sender.clone();
+            let message_date = message.date();
+            sender = sender_copy.and_then(|sender_did| {
+                if sender_did != message.sender() {
+                    Some(message.sender())
+                } else {
+                    None
+                }
+            });
+            grouped_messages.push(Either::Left(GroupedMessage {
+                message,
+                is_first: sender.is_some(),
+                is_last: false,
+            }));
+
+            // Add the message divider if the timestamp is provided and the message comes after the timestamp
+            if !divider_added && timestamp.is_some() && message_date > timestamp.unwrap() {
+                grouped_messages.push(either::Right(MessageDivider { timestamp }));
+                divider_added = true;
+            }
+        }
+
+        // Set the last message in each group to is_last = true
+        if let Some(last_message) = grouped_messages.last_mut() {
+            match last_message {
+                Either::Left(ref mut last_grouped_message) => last_grouped_message.is_last = true,
+                Either::Right(_) => (),
+            }
+        }
+
+        grouped_messages
     }
 
     pub fn get_friends_by_first_letter(&self) -> HashMap<char, Vec<Identity>> {

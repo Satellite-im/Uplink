@@ -122,7 +122,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        key: "{chat_id}-favorite",
                                         participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
                                         onpress: move |_| {
@@ -191,7 +190,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                                 hr{ },
                                 ContextItem {
+                                    icon: Icon::PhoneArrowUpRight,
                                     text: String::from("Call"),
+                                    //TODO: Wire to state
+
                                 },
                                 hr{ }
                                 ContextItem {
@@ -205,6 +207,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     danger: true,
                                     icon: Icon::NoSymbol,
                                     text: String::from("Block User"),
+                                    //TODO: Wire to state
                                 },
                             )),
                             User {
