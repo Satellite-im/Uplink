@@ -398,13 +398,13 @@ impl State {
     }
 
     /// Loads the state from a file on disk, if it exists.
-    fn load() -> Result<Self, std::io::Error> {
+    pub fn load() -> Result<Self, std::io::Error> {
         match fs::read_to_string("state.json") {
             Ok(contents) => {
                 let state: State = serde_json::from_str(&contents)?;
                 Ok(state)
             }
-            Err(_) => Ok(State::default()),
+            Err(_) => Ok(generate_mock()),
         }
     }
 

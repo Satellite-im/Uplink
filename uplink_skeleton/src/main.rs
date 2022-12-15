@@ -65,11 +65,11 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let state = Arc::new(Mutex::new(State::mock()));
-
-    let app_state = state.lock().unwrap().clone();
-    // TODO: impl
-    let _ = use_context_provider(&cx, || app_state);
+    let state = match State::load() {
+        Ok(s) => s,
+        Err(_) => State::default(),
+    };
+    let _ = use_context_provider(&cx, || state);
 
     let chat_route = UIRoute {
         to: "/",
