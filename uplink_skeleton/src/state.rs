@@ -13,8 +13,8 @@ use warp::{
 };
 
 #[derive(Eq, PartialEq)]
-struct MessageDivider {
-    timestamp: Option<DateTime<Utc>>,
+pub struct MessageDivider {
+    pub timestamp: Option<DateTime<Utc>>,
 }
 
 impl Ord for MessageDivider {
@@ -362,7 +362,7 @@ impl State {
     }
 
     // Define a method for sorting a vector of messages.
-    fn sort_messages(
+    pub fn sort_messages(
         messages: Vec<Message>,
         timestamp: Option<DateTime<Utc>>,
     ) -> Vec<Either<GroupedMessage, MessageDivider>> {
