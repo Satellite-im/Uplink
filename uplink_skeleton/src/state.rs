@@ -329,6 +329,37 @@ impl State {
             .filter(|identity| !set.contains(identity))
             .collect()
     }
+
+    pub fn get_friends_by_first_letter(&self) -> HashMap<char, Vec<Identity>> {
+        // Create a new empty hash map to store the results
+        let mut friends_by_first_letter = HashMap::new();
+
+        // Iterate over the friends in the state
+        for (_did, friend) in self.friends.all.iter() {
+            // Get the first letter of the friend's name
+            let first_letter = friend.username().chars().next().unwrap();
+
+            // Check if the first letter is in the hash map
+            if !friends_by_first_letter.contains_key(&first_letter) {
+                // If it's not, add an empty vector for this letter
+                friends_by_first_letter.insert(first_letter, Vec::new());
+            }
+
+            // Get the vector for this letter from the hash map and add the friend to it
+            friends_by_first_letter
+                .get_mut(&first_letter)
+                .unwrap()
+                .push(friend.clone());
+        }
+
+        // Iterate over the hash map and sort each vector of friends alphabetically
+        for (_first_letter, friends) in friends_by_first_letter.iter_mut() {
+            friends.sort_by(|a, b| a.username().cmp(&b.username()));
+        }
+
+        // Return the hash map
+        friends_by_first_letter
+    }
 }
 
 impl State {
