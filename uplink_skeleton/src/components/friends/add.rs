@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{
     elements::{
         button::Button,
@@ -7,6 +8,8 @@ use ui_kit::{
     },
     icons::Icon,
 };
+
+use crate::{LOCALES, US_ENGLISH};
 
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
@@ -33,22 +36,35 @@ pub fn AddFriend(cx: Scope) -> Element {
         // Use the default options for the remaining fields
         ..Options::default()
     };
+
+    let find_someone = LOCALES
+        .lookup(&US_ENGLISH, "friends.add")
+        .unwrap_or_default();
+
+    let add = LOCALES
+        .lookup(&US_ENGLISH, "uplink.add")
+        .unwrap_or_default();
+
+    let placeholder = LOCALES
+        .lookup(&US_ENGLISH, "friends.placeholder")
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             class: "add-friend",
             Label {
-                text: "Find Someone".into(),
+                text: find_someone,
             },
             div {
                 class: "body",
                 Input {
-                    placeholder: "Username#0000...".into(),
+                    placeholder: placeholder,
                     icon: Icon::MagnifyingGlass,
                     options: input_options
                 },
                 Button {
                     icon: Icon::Plus,
-                    text: "Add".into(),
+                    text: add,
                 }
             }
         }

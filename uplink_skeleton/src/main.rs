@@ -22,6 +22,21 @@ pub mod layouts;
 pub mod state;
 pub mod testing;
 
+use fluent_templates::{static_loader, Loader};
+use unic_langid::{langid, LanguageIdentifier};
+
+const US_ENGLISH: LanguageIdentifier = langid!("en-US");
+
+static_loader! {
+    static LOCALES = {
+        locales: "./locales",
+        fallback_language: "en-US",
+        // Removes unicode isolating marks around arguments, you typically
+        // should only set to false when testing.
+        customise: |bundle| bundle.set_use_isolating(false),
+    };
+}
+
 fn main() {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -53,8 +68,10 @@ fn main() {
     main_menu.add_submenu("Edit", true, edit_menu);
     main_menu.add_submenu("Window", true, window_menu);
 
+    let title = LOCALES.lookup(&US_ENGLISH, "uplink").unwrap_or_default();
+
     let window = WindowBuilder::new()
-        .with_title("Uplink")
+        .with_title(title)
         .with_resizable(true)
         .with_inner_size(LogicalSize::new(950.0, 600.0))
         .with_min_inner_size(LogicalSize::new(330.0, 500.0));

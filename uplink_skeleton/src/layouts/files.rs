@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{
     elements::{
         button::Button,
@@ -11,7 +12,10 @@ use ui_kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::{
+    components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+    LOCALES, US_ENGLISH,
+};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -20,6 +24,22 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
+    let new_folder_text = LOCALES
+        .lookup(&US_ENGLISH, "files.new-folder")
+        .unwrap_or_default();
+    let upload_text = LOCALES
+        .lookup(&US_ENGLISH, "files.upload")
+        .unwrap_or_default();
+    let home_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.home")
+        .unwrap_or_default();
+    let free_space_text = LOCALES
+        .lookup(&US_ENGLISH, "files.free-space")
+        .unwrap_or_default();
+    let total_space_text = LOCALES
+        .lookup(&US_ENGLISH, "files.total-space")
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             id: "files-layout",
@@ -38,7 +58,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: String::from("New Folder")
+                                        text: new_folder_text
                                     }
                                 )),
                                 onpress: move |_| {
@@ -51,7 +71,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: String::from("Upload")
+                                        text: upload_text
                                     }
                                 ))
                             }
@@ -61,7 +81,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         class: "files-info",
                         p {
                             class: "free-space",
-                            "Free space:",
+                            "{free_space_text}",
                             span {
                                 class: "count",
                                 "0MB"
@@ -69,7 +89,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         },
                         p {
                             class: "total-space",
-                            "Total space:",
+                            "{total_space_text}",
                             span {
                                 class: "count",
                                 "10MB"
@@ -91,7 +111,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             icon: Icon::Home,
                         },
                         p {
-                            "Home",
+                            "{home_text}",
                         }
                     },
                     div {

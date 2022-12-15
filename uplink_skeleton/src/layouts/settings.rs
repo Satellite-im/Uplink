@@ -17,13 +17,6 @@ pub mod settings {
         route_info: RouteInfo,
     }
 
-    pub fn get_page<'a>(cx: &'a Scope<'a, Props>, to: String) -> Element<'a> {
-        match to.as_str() {
-            "general" => cx.render(rsx!(GeneralSettings {})),
-            _ => cx.render(rsx!(GeneralSettings {})),
-        }
-    }
-
     #[allow(non_snake_case)]
     pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         let to = use_state(&cx, || Page::General);

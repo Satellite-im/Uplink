@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{
     components::{
         context_menu::ContextItem,
@@ -15,7 +16,10 @@ use ui_kit::{
     icons::Icon,
 };
 
-use crate::state::{Action, State};
+use crate::{
+    state::{Action, State},
+    LOCALES, US_ENGLISH,
+};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -38,6 +42,16 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let chat_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.chat")
+        .unwrap_or_default();
+    let more_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.more")
+        .unwrap_or_default();
+    let remove_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.remove")
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             class: "friend",
@@ -51,6 +65,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 Label {
+                    // TODO: this is stubbed for now, wire up to the actual request time
                     text: "Requested 4 days ago.".into()
                 }
             },
@@ -58,7 +73,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "request-controls",
                 Button {
                     icon: Icon::ChatBubbleBottomCenterText,
-                    text: "Chat".into(),
+                    text: chat_text,
                     onpress: move |_| match &cx.props.onchat {
                         Some(f) => f.call(()),
                         None    => {},
@@ -74,7 +89,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: String::from("Remove Friend")
+                            text: remove_text
                         }
                     )),
                 },
@@ -85,7 +100,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: String::from("Right click for more")
+                            text: more_text
                         }
                     )),
                 }
@@ -99,11 +114,13 @@ pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
     let friends = state.read().get_friends_by_first_letter();
 
+    let friends_text = LOCALES.lookup(&US_ENGLISH, "friends").unwrap_or_default();
+
     cx.render(rsx! (
         div {
             class: "friends-list",
             Label {
-                text: "Friends".into(),
+                text: friends_text,
             },
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
@@ -118,6 +135,23 @@ pub fn Friends(cx: Scope) -> Element {
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                             let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
                             let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
+
+                            let call_text = LOCALES
+                                .lookup(&US_ENGLISH, "uplink.call")
+                                .unwrap_or_default();
+                            let chat_text = LOCALES
+                                .lookup(&US_ENGLISH, "uplink.chat")
+                                .unwrap_or_default();
+                            let favorite_text = LOCALES
+                                .lookup(&US_ENGLISH, "uplink.favorites")
+                                .unwrap_or_default();
+                            let remove_text = LOCALES
+                                .lookup(&US_ENGLISH, "uplink.remove")
+                                .unwrap_or_default();
+                            let block_test = LOCALES
+                                .lookup(&US_ENGLISH, "friends.block")
+                                .unwrap_or_default();
+
                             rsx!(
                                 ContextMenu {
                                     id: format!("{}-friend-listing", did),
@@ -125,7 +159,7 @@ pub fn Friends(cx: Scope) -> Element {
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
-                                            text: String::from("Chat"),
+                                            text: chat_text,
                                             onpress: move |_| {
                                                 let _ = &state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
                                                 use_router(&cx).replace_route("/", None, None);
@@ -133,25 +167,25 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         ContextItem {
                                             icon: Icon::PhoneArrowUpRight,
-                                            text: String::from("Call"),
+                                            text: call_text,
                                             // TODO: Wire this up to state
                                         },
                                         ContextItem {
                                             icon: Icon::Heart,
-                                            text: String::from("Favorite"),
+                                            text: favorite_text,
                                             // TODO: Wire this up to state
                                         },
                                         hr{}
                                         ContextItem {
                                             danger: true,
                                             icon: Icon::XMark,
-                                            text: String::from("Remove User"),
+                                            text: remove_text,
                                             // TODO: Wire this up to state\
                                         },
                                         ContextItem {
                                             danger: true,
                                             icon: Icon::NoSymbol,
-                                            text: String::from("Block User"),
+                                            text: block_test,
                                             // TODO: Wire this up to state
                                         },
                                     )),
