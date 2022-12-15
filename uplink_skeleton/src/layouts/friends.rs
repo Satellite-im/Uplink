@@ -7,7 +7,7 @@ use ui_kit::{
 use crate::{
     components::{
         chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo},
-        friends::{add::AddFriend, request::FriendRequests},
+        friends::{add::AddFriend, friend::Friends},
     },
     state::State,
 };
@@ -46,8 +46,8 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                         appearance: Appearance::Secondary,
                         text: "Blocked".into(),
                     },
-                }
-                FriendRequests {}
+                },
+                Friends {}
             }
         }
     ))

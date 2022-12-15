@@ -64,7 +64,6 @@ pub mod mock_state {
         all_friends.insert(b.did_key(), b.clone());
         all_friends.insert(c.did_key(), c.clone());
         all_friends.insert(d.did_key(), d.clone());
-        all_friends.insert(e.did_key(), e.clone());
 
         let a_key = &a.did_key();
 

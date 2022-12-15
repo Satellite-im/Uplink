@@ -1,2 +1,2 @@
 pub mod add;
-pub mod request;
+pub mod friend;

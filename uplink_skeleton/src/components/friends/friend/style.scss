@@ -1,4 +1,4 @@
-.friend-request {
+.friend {
     display: inline-flex;
     gap: var(--gap);
     width: 100%;
@@ -19,9 +19,9 @@
     }
 }
 
-.friend-requests {
+.friends-list {
     width: 100%;
-    padding: var(--padding-less);
+    padding: var(--gap);
     gap: var(--gap);
     display: inline-flex;
     flex-direction: column;

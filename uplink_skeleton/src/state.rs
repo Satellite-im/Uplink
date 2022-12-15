@@ -151,6 +151,9 @@ impl State {
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
         self.chats.active = Some(chat.clone());
+        if !self.chats.in_sidebar.contains(&chat) {
+            self.chats.in_sidebar.push(chat.clone());
+        }
     }
 
     /// Clears the active chat in the `State` struct.
@@ -357,6 +360,16 @@ impl State {
     pub fn get_active_chat(&self) -> Chat {
         let chat = self.chats.active.clone();
         chat.unwrap_or_default()
+    }
+
+    pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
+        let chat = self
+            .chats
+            .all
+            .values()
+            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend));
+
+        chat.unwrap_or(&Chat::default()).clone()
     }
 }
 
