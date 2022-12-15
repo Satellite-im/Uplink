@@ -11,10 +11,7 @@ use ui_kit::{
     layout::topbar::Topbar,
 };
 
-use crate::{
-    components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    state::State,
-};
+use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -23,8 +20,6 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-
     cx.render(rsx!(
         div {
             id: "files-layout",

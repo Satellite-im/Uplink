@@ -13,10 +13,7 @@ use ui_kit::{
     icons::Icon,
 };
 
-use crate::{
-    components::chat::RouteInfo,
-    state::{Action, State},
-};
+use crate::state::{Action, State};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -34,7 +31,7 @@ pub struct Props<'a> {
     onremove: Option<EventHandler<'a>>,
     // An optional event handler for the "onblock" event
     #[props(optional)]
-    onblock: Option<EventHandler<'a>>,
+    _onblock: Option<EventHandler<'a>>,
 }
 
 #[allow(non_snake_case)]

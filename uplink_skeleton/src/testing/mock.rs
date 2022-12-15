@@ -5,18 +5,14 @@ use std::{
 
 use base64::encode;
 use chrono::{Duration, Utc};
-use image::{ImageBuffer, ImageFormat, Pixel, Rgb, RgbImage, Rgba};
+use image::{ImageBuffer, Pixel, Rgb, RgbImage};
 use lipsum::lipsum;
 use names::Generator;
-use rand::{
-    seq::{IteratorRandom, SliceRandom},
-    Rng,
-};
+use rand::{seq::SliceRandom, Rng};
 use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
 use warp::{
-    libipld::cbor::encode,
     multipass::identity::{Graphics, Identity},
     raygun::Message,
 };
@@ -139,15 +135,13 @@ fn fake_id() -> Identity {
 }
 
 fn generate_random_identities(count: usize) -> Vec<Identity> {
-    let mut rng = rand::thread_rng();
-
     let mut identities: Vec<Identity> = Vec::new();
 
     for _ in 0..count {
         let mut identity = fake_id();
 
         let mut img: RgbImage = ImageBuffer::from_raw(64, 64, vec![0; 64 * 64 * 3]).unwrap();
-        for (x, y, pixel) in img.enumerate_pixels_mut() {
+        for (_, _, pixel) in img.enumerate_pixels_mut() {
             // Set the pixel to a random color
             let random_color = Rgb::from_channels(
                 rand::thread_rng().gen_range(0..255),
@@ -194,7 +188,7 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> Mess
     let text = binding.substring(start_index, end_index);
 
     // Generate a random number of reactions with a 30% probability.
-    let num_reactions = if rng.gen_bool(0.3) {
+    let _num_reactions = if rng.gen_bool(0.3) {
         rng.gen_range(0..reactions.len())
     } else {
         0

@@ -1,15 +1,12 @@
 use dioxus::prelude::*;
 use ui_kit::{
-    elements::{button::Button, label::Label, Appearance},
-    icons::{Icon, IconElement},
+    elements::{button::Button, Appearance},
+    icons::Icon,
 };
 
-use crate::{
-    components::{
-        chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo},
-        friends::{add::AddFriend, friend::Friends},
-    },
-    state::State,
+use crate::components::{
+    chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+    friends::{add::AddFriend, friend::Friends},
 };
 
 #[derive(PartialEq, Props)]
@@ -19,8 +16,6 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-
     cx.render(rsx!(
         div {
             id: "friends-layout",

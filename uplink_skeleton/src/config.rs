@@ -5,64 +5,64 @@ use std::path::Path;
 
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct Config {
+pub struct Config {
     /// General configuration options.
     #[serde(default)]
-    general: General,
+    pub general: General,
 
     /// Privacy-related configuration options.
     #[serde(default)]
-    privacy: Privacy,
+    pub privacy: Privacy,
 
     /// Audio and video-related configuration options.
     #[serde(default)]
-    audiovideo: AudioVideo,
+    pub audiovideo: AudioVideo,
 
     /// Extension-related configuration options.
     #[serde(default)]
-    extensions: Extensions,
+    pub extensions: Extensions,
 
     /// Developer-related configuration options.
     #[serde(default)]
-    developer: Developer,
+    pub developer: Developer,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct General {
+pub struct General {
     #[serde(default)]
-    theme: String,
+    pub theme: String,
     #[serde(default)]
-    show_splash: bool,
+    pub show_splash: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct Privacy {
+pub struct Privacy {
     #[serde(default)]
-    satellite_sync_nodes: bool,
+    pub satellite_sync_nodes: bool,
     #[serde(default)]
-    safer_file_scanning: bool,
+    pub safer_file_scanning: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct AudioVideo {
+pub struct AudioVideo {
     #[serde(default)]
-    noise_suppression: bool,
+    pub noise_suppression: bool,
     #[serde(default)]
-    call_timer: bool,
+    pub call_timer: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct Extensions {
+pub struct Extensions {
     #[serde(default)]
-    enable: bool,
+    pub enable: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct Developer {
+pub struct Developer {
     #[serde(default)]
-    developer_mode: bool,
+    pub developer_mode: bool,
     #[serde(default)]
-    cache_dir: String,
+    pub cache_dir: String,
 }
 
 const CONF_LOC: &'static str = "./.conf.toml";

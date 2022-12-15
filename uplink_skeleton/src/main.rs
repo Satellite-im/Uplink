@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::prelude::*;
