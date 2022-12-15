@@ -117,6 +117,7 @@ pub fn Friends(cx: Scope) -> Element {
                             UserImage {
                                 platform: Platform::Desktop,
                                 status: Status::Online,
+                                image: friend.graphics().profile_picture()
                             }
                         )),
                         onchat: move |_| {

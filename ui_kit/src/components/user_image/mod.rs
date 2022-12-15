@@ -26,11 +26,7 @@ pub struct Props<'a> {
 }
 
 pub fn get_image(cx: &Scope<Props>) -> String {
-    cx.props
-        .image
-        .as_ref()
-        .map(|image| image.split_whitespace().collect())
-        .unwrap_or_default()
+    cx.props.image.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user_image was interacted with.

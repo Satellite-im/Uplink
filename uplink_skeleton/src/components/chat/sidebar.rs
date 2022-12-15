@@ -217,6 +217,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         UserImage {
                                             platform: Platform::Mobile,
                                             status: Status::Online
+                                            image: parsed_user.graphics().profile_picture(),
                                         }
                                     )} else {rsx! (
                                         UserImageGroup {

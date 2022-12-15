@@ -46,7 +46,8 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             rsx!(
                                 UserImage {
                                     platform: user.platform,
-                                    status: user.status
+                                    status: user.status,
+                                    image: user.photo.clone()
                                 }
                             )
                         }),

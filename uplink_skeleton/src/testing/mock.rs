@@ -1,6 +1,11 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    io::{BufWriter, Write},
+};
 
+use base64::encode;
 use chrono::{Duration, Utc};
+use image::{ImageBuffer, ImageFormat, Pixel, Rgb, RgbImage, Rgba};
 use lipsum::lipsum;
 use names::Generator;
 use rand::{
@@ -10,7 +15,11 @@ use rand::{
 use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
-use warp::{multipass::identity::Identity, raygun::Message};
+use warp::{
+    libipld::cbor::encode,
+    multipass::identity::{Graphics, Identity},
+    raygun::Message,
+};
 
 use crate::state::{Account, Chat, Chats, Friends, Route, State};
 
@@ -129,8 +138,45 @@ fn fake_id() -> Identity {
     id
 }
 
-fn generate_random_identities(num_identities: usize) -> Vec<Identity> {
-    (0..num_identities).map(|_| fake_id()).collect()
+fn generate_random_identities(count: usize) -> Vec<Identity> {
+    let mut rng = rand::thread_rng();
+
+    let mut identities: Vec<Identity> = Vec::new();
+
+    for _ in 0..count {
+        let mut identity = fake_id();
+
+        let mut img: RgbImage = ImageBuffer::from_raw(64, 64, vec![0; 64 * 64 * 3]).unwrap();
+        for (x, y, pixel) in img.enumerate_pixels_mut() {
+            // Set the pixel to a random color
+            let random_color = Rgb::from_channels(
+                rand::thread_rng().gen_range(0..255),
+                rand::thread_rng().gen_range(0..255),
+                rand::thread_rng().gen_range(0..255),
+                255,
+            );
+            *pixel = random_color;
+        }
+        let mut buffer = Vec::new();
+
+        {
+            let mut writer = BufWriter::new(&mut buffer);
+            writer.write_all(&img.into_raw()).unwrap();
+        }
+
+        let base64_url = encode(&buffer);
+        let image_url = format!("data:image/png;base64,{}", base64_url);
+
+        let mut graphics = Graphics::default();
+        graphics.set_profile_picture(&image_url);
+        graphics.set_profile_banner(&image_url);
+
+        identity.set_graphics(graphics);
+
+        identities.push(identity);
+    }
+
+    identities
 }
 
 fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> Message {

@@ -34,6 +34,7 @@ pub fn Compose(cx: Scope) -> Element {
         None => "".into(),
     };
 
+    let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
     cx.render(rsx!(
@@ -83,7 +84,8 @@ pub fn Compose(cx: Scope) -> Element {
                         if without_me.len() < 2 {rsx! (
                             UserImage {
                                 platform: Platform::Mobile,
-                                status: Status::Online
+                                status: Status::Online,
+                                image: first_image
                             }
                         )} else {rsx! (
                             UserImageGroup {
@@ -193,6 +195,7 @@ pub fn Compose(cx: Scope) -> Element {
                             UserImage {
                                 platform: Platform::Mobile,
                                 status: Status::Online
+                                
                             }
                         ))
                     },
