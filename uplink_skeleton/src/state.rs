@@ -331,34 +331,37 @@ impl State {
     }
 
     pub fn get_friends_by_first_letter(&self) -> HashMap<char, Vec<Identity>> {
-        // Create a new empty hash map to store the results
-        let mut friends_by_first_letter = HashMap::new();
+        let friends = self.friends.all.clone();
+        let mut friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
 
-        // Iterate over the friends in the state
-        for (_did, friend) in self.friends.all.iter() {
-            // Get the first letter of the friend's name
-            let first_letter = friend.username().chars().next().unwrap();
-
-            // Check if the first letter is in the hash map
-            if !friends_by_first_letter.contains_key(&first_letter) {
-                // If it's not, add an empty vector for this letter
-                friends_by_first_letter.insert(first_letter, Vec::new());
-            }
-
-            // Get the vector for this letter from the hash map and add the friend to it
-            friends_by_first_letter
-                .get_mut(&first_letter)
+        // Iterate over the friends and add each one to the appropriate Vec in the
+        // friends_by_first_letter HashMap
+        for (_, friend) in friends {
+            let first_letter = friend
+                .username()
+                .chars()
+                .next()
                 .unwrap()
+                .to_ascii_lowercase();
+            friends_by_first_letter
+                .entry(first_letter)
+                .or_insert_with(Vec::new)
                 .push(friend.clone());
         }
 
-        // Iterate over the hash map and sort each vector of friends alphabetically
-        for (_first_letter, friends) in friends_by_first_letter.iter_mut() {
-            friends.sort_by(|a, b| a.username().cmp(&b.username()));
+        // Sort the keys of the HashMap alphabetically
+        let mut sorted_keys: Vec<char> = friends_by_first_letter.keys().cloned().collect();
+        sorted_keys.sort_unstable();
+
+        // Create a new HashMap with the same values as friends_by_first_letter, but with
+        // the keys in alphabetical order
+        let mut sorted_friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
+        for key in sorted_keys {
+            sorted_friends_by_first_letter
+                .insert(key, friends_by_first_letter.get(&key).unwrap().clone());
         }
 
-        // Return the hash map
-        friends_by_first_letter
+        sorted_friends_by_first_letter
     }
 }
 

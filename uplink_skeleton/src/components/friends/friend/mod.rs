@@ -95,7 +95,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let friends = state.read().friends.all.clone();
+    let friends = state.read().get_friends_by_first_letter();
 
     cx.render(rsx! (
         div {
@@ -103,24 +103,37 @@ pub fn Friends(cx: Scope) -> Element {
             Label {
                 text: "Friends".into(),
             },
-            friends.into_iter().map(|(did, friend)| {
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
+            friends.into_iter().map(|(letter, sorted_friends)| {
+                let group_letter = letter.to_string();
                 rsx!(
-                    Friend {
-                        username: friend.username(),
-                        suffix: did_suffix,
-                        user_image: cx.render(rsx! (
-                            UserImage {
-                                platform: Platform::Desktop,
-                                status: Status::Online,
-                                image: friend.graphics().profile_picture()
-                            }
-                        )),
-                        onchat: move |_| {
-                            let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                            use_router(&cx).replace_route("/", None, None);
-                        }
+                    div {
+                        key: "friend-group-{group_letter}",
+                        Label {
+                            text: letter.into(),
+                        },
+                        sorted_friends.into_iter().map(|friend| {
+                            let did = friend.did_key().clone();
+                            let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                            let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
+                            rsx!(
+                                Friend {
+                                    key: "{did}-friend-listing",
+                                    username: friend.username(),
+                                    suffix: did_suffix,
+                                    user_image: cx.render(rsx! (
+                                        UserImage {
+                                            platform: Platform::Desktop,
+                                            status: Status::Online,
+                                            image: friend.graphics().profile_picture()
+                                        }
+                                    )),
+                                    onchat: move |_| {
+                                        let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
+                                        use_router(&cx).replace_route("/", None, None);
+                                    }
+                                }
+                            )
+                        })
                     }
                 )
             })
