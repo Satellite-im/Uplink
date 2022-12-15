@@ -5,7 +5,7 @@ use std::{
 
 use base64::encode;
 use chrono::{Duration, Utc};
-use image::{ImageBuffer, Pixel, Rgb, RgbImage};
+use image::{ImageBuffer, Rgb, RgbImage};
 use lipsum::lipsum;
 use names::Generator;
 use rand::{seq::SliceRandom, Rng};
@@ -143,12 +143,11 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         let mut img: RgbImage = ImageBuffer::from_raw(64, 64, vec![0; 64 * 64 * 3]).unwrap();
         for (_, _, pixel) in img.enumerate_pixels_mut() {
             // Set the pixel to a random color
-            let random_color = Rgb::from_channels(
+            let random_color = Rgb([
                 rand::thread_rng().gen_range(0..255),
                 rand::thread_rng().gen_range(0..255),
                 rand::thread_rng().gen_range(0..255),
-                255,
-            );
+            ]);
             *pixel = random_color;
         }
         let mut buffer = Vec::new();
