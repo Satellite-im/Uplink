@@ -21,8 +21,8 @@ pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
 pub mod layouts;
-pub mod mock;
 pub mod state;
+pub mod testing;
 
 fn main() {
     let mut main_menu = Menu::new();

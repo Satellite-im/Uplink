@@ -17,6 +17,7 @@
 	font-family: 'Space Mono', monospace;
 	font-size: var(--text-size-less);
 	white-space: nowrap;
+	pointer-events: none;
 }
 .tooltip-text {
 	padding: var(--gap);

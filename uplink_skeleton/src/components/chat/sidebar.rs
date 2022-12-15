@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::chat::RouteInfo, state::{State, Action}};
+use crate::{components::chat::RouteInfo, state::{State, Action, Chat}};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -92,21 +92,16 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     },
                     div {
                         class: "vertically-scrollable",
-                        favorites.iter().cloned().map(|chat| {
+                        favorites.iter().cloned().map(|chat_id| {
+                            let chat = state.read().chats.all.get(&chat_id).unwrap().clone();
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
-                            let user = chat.participants.get(1);
-                            let parsed_user = match user {
-                                Some(u) => u.clone(),
-                                None => Identity::default(),
-                            };
-                            let id = parsed_user.did_key();
-                            let participants = chat.participants.clone();
-                            let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+                            let without_me = state.read().get_without_me(chat.participants.clone());
+                            let participants_name = build_participants_names(&without_me);
                             rsx! (
                                 ContextMenu {
-                                    key: "{id}",
-                                    id: id.to_string(),
+                                    key: "{chat_id}-favorite",
+                                    id: chat_id.to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Heart,
@@ -127,8 +122,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        key: "{id}",
-                                        participants: build_participants(&participants),
+                                        key: "{chat_id}-favorite",
+                                        participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
                                         onpress: move |_| {
                                             state.write().mutate(Action::ChatWith(chat.clone()));
@@ -143,13 +138,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 }
             )),
-            Label {
-                text: "Chats".into()
-            },
+            (!sidebar_chats.is_empty()).then(|| rsx!(
+                Label {
+                    text: "Chats".into()
+                }
+            )),
             div {
                 id: "chats",
-                sidebar_chats.iter().cloned().map(|chat| {
-                    let user = chat.participants.get(1);
+                sidebar_chats.iter().cloned().map(|chat_id| {
+                    let chat = state.read().chats.all.get(&chat_id).unwrap().clone();
+                    let without_me = state.read().get_without_me(chat.participants.clone());
+                    let user = without_me.first();
                     let default_message = Message::default();
                     let parsed_user = match user {
                         Some(u) => u.clone(),
@@ -171,17 +170,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     
                     let key = chat.id;
 
-                    let active = state.read().get_active_chat().id == chat.id;
+                    let active = state.read().get_active_chat().unwrap_or_default().id == chat.id;
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    let participants = chat.participants.clone();
+                    let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
 
                     rsx!(
                         ContextMenu {
-                            key: "{key}",
-                            id: key.to_string(),
+                            key: "{key}-chat",
+                            id: format!("{}-chat", key.to_string()),
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::EyeSlash,

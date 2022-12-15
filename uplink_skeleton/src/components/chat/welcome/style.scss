@@ -6,17 +6,18 @@
   min-width: 0;
   justify-content: center;
   align-items: center;
-  pointer-events: none;
   cursor: default;
   img {
     max-width: 250px;
     margin-bottom: 1rem;
+    pointer-events: none;
   }
   .muted {
-    color: var(--secondary);
+    color: var(--text-color-muted);
     margin: 1rem 0;
   }
   .button {
     pointer-events: all;
+    position: absolute;
   }
 }

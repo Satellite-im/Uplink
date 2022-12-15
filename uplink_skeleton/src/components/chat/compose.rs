@@ -12,13 +12,14 @@ use super::sidebar::build_participants_names;
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let active_chat = state.read().get_active_chat();
+    let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     // TODO: Mockup purposes only.
     let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
 
-    // TODO: make this render all participants dynamically if there are more than two users.
-    let active_participant = active_chat.participants.get(1);
+    let without_me = state.read().get_without_me(active_chat.participants.clone());
+    let active_participant = without_me.first();
+
     let active_participant = match active_participant {
         Some(u) => u.clone(),
         None => Identity::default(),
@@ -28,13 +29,12 @@ pub fn Compose(cx: Scope) -> Element {
 
     let is_favorite = state.read().is_favorite(&active_chat);
 
-    let reply_message = match state.read().get_active_chat().replying_to {
+    let reply_message = match state.read().get_active_chat().unwrap_or_default().replying_to {
         Some(m) => m.value().join("\n").to_string(),
         None => "".into(),
     };
 
-    let participants = active_chat.participants.clone();
-    let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { active_participant.username() };
+    let participants_name = build_participants_names(&without_me);
 
     cx.render(rsx!(
         div {
@@ -80,14 +80,14 @@ pub fn Compose(cx: Scope) -> Element {
                 ),
                 cx.render(
                     rsx! (
-                        if participants.len() <= 2 {rsx! (
+                        if without_me.len() < 2 {rsx! (
                             UserImage {
                                 platform: Platform::Mobile,
                                 status: Status::Online
                             }
                         )} else {rsx! (
                             UserImageGroup {
-                                participants: build_participants(&participants)
+                                participants: build_participants(&without_me)
                             }
                         )}
                         div {
@@ -167,7 +167,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 text: String::from("Reply"),
                                 onpress: move |_| {
                                     let mut reply = RaygunMessage::default();
-                                    let chat = state.read().get_active_chat();
+                                    let chat = state.read().get_active_chat().unwrap_or_default();
                                     reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
                                     state.write().mutate(Action::StartReplying(chat, reply.clone()));
 
@@ -249,15 +249,15 @@ pub fn Compose(cx: Scope) -> Element {
                     },
                 )),
                 with_replying_to: cx.render(rsx!(
-                    state.read().get_active_chat().replying_to.is_some().then(|| rsx!(
+                    state.read().get_active_chat().unwrap_or_default().replying_to.is_some().then(|| rsx!(
                         Reply {
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
-                                let their_did = state.read().get_active_chat().replying_to.clone().unwrap_or_default().sender();
+                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.clone().unwrap_or_default().sender();
                                 our_did != their_did
                             },
                             onclose: move |_| {
-                                let new_chat = &state.read().get_active_chat();
+                                let new_chat = &state.read().get_active_chat().unwrap_or_default();
                                 state.write().mutate(Action::CancelReply(new_chat.clone()))
                             },
                             message: reply_message,

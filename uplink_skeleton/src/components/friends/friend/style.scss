@@ -20,9 +20,13 @@
 }
 
 .friends-list {
-    width: 100%;
+    flex: 1;
     padding: var(--gap);
     gap: var(--gap);
     display: inline-flex;
     flex-direction: column;
+    height: fit-content;
+    overflow-y: scroll;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::fs;
 use uuid::Uuid;
 use warp::{
     constellation::item::Item,
@@ -8,7 +9,11 @@ use warp::{
     raygun::{Message, Reaction},
 };
 
-use std::fs;
+// Define a new struct to represent a hook that listens for a specific action type.
+struct ActionHook {
+    action_type: Vec<Action>,
+    callback: Box<dyn Fn(&State, &Action)>,
+}
 
 /// Alias for the type representing a route.
 pub type To = String;
@@ -54,13 +59,13 @@ pub struct Chats {
     pub all: HashMap<Uuid, Chat>,
     // Chat to display / interact with currently.
     #[serde(default)]
-    pub active: Option<Chat>,
+    pub active: Option<Uuid>,
     // Chats to show in the sidebar
     #[serde(default)]
-    pub in_sidebar: Vec<Chat>,
+    pub in_sidebar: Vec<Uuid>,
     // Favorite Chats
     #[serde(default)]
-    pub favorites: Vec<Chat>,
+    pub favorites: Vec<Uuid>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -90,7 +95,7 @@ pub struct Files {
 
 use std::fmt;
 
-use crate::mock::mock_state::generate_mock;
+use crate::testing::mock::generate_mock;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
@@ -150,9 +155,9 @@ impl State {
     ///
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
-        self.chats.active = Some(chat.clone());
-        if !self.chats.in_sidebar.contains(&chat) {
-            self.chats.in_sidebar.push(chat.clone());
+        self.chats.active = Some(chat.id);
+        if !self.chats.in_sidebar.contains(&chat.id) {
+            self.chats.in_sidebar.push(chat.id.clone());
         }
     }
 
@@ -167,8 +172,8 @@ impl State {
     ///
     /// * `chat` - The chat to add to the sidebar.
     fn add_chat_to_sidebar(&mut self, chat: Chat) {
-        if !self.chats.in_sidebar.contains(&chat) {
-            self.chats.in_sidebar.push(chat);
+        if !self.chats.in_sidebar.contains(&chat.id) {
+            self.chats.in_sidebar.push(chat.id);
         }
     }
 
@@ -183,14 +188,19 @@ impl State {
 
     /// Adds the given chat to the user's favorites.
     pub fn favorite(&mut self, chat: &Chat) {
-        if !self.chats.favorites.contains(chat) {
-            self.chats.favorites.push(chat.clone());
+        if !self.chats.favorites.contains(&chat.id) {
+            self.chats.favorites.push(chat.id.clone());
         }
     }
 
     /// Removes the given chat from the user's favorites.
     pub fn unfavorite(&mut self, chat: &Chat) {
-        if let Some(index) = self.chats.favorites.iter().position(|c| c == chat) {
+        if let Some(index) = self
+            .chats
+            .favorites
+            .iter()
+            .position(|uid| uid.to_owned() == chat.id)
+        {
             self.chats.favorites.remove(index);
         }
     }
@@ -201,42 +211,24 @@ impl State {
     fn toggle_favorite(&mut self, chat: &Chat) {
         let faves = &mut self.chats.favorites;
 
-        if faves.contains(chat) {
-            if let Some(index) = faves.iter().position(|c| c.id == chat.id) {
+        if faves.contains(&chat.id) {
+            if let Some(index) = faves.iter().position(|uid| uid.to_owned() == chat.id) {
                 faves.remove(index);
             }
         } else {
-            faves.push(chat.clone());
+            faves.push(chat.id);
         }
     }
 
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Chat, message: &Message) {
-        let mut c = match self.chats.all.get(&chat.id) {
+        let mut c = match self.chats.all.get_mut(&chat.id) {
             Some(chat) => chat.clone(),
             None => return,
         };
         c.replying_to = Some(message.to_owned());
 
         *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
-
-        // Update the active state if it matches the one we're modifying
-        if self.chats.active.is_some() {
-            let mut active_chat = self.get_active_chat();
-            if active_chat.id == chat.id {
-                active_chat.replying_to = Some(message.to_owned());
-                self.chats.active = Some(active_chat.clone());
-            }
-        }
-
-        // Update the favorites chats if it matches the one we're modifying
-        if self.chats.favorites.contains(chat) {
-            for c in self.chats.favorites.iter_mut() {
-                if c.id == chat.id {
-                    c.replying_to = Some(message.to_owned());
-                }
-            }
-        }
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -245,31 +237,13 @@ impl State {
     ///
     /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat: &Chat) {
-        let mut c = match self.chats.all.get(&chat.id) {
+        let mut c = match self.chats.all.get_mut(&chat.id) {
             Some(chat) => chat.clone(),
             None => return,
         };
         c.replying_to = None;
 
         *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
-
-        // Update the active state if it matches the one we're modifying
-        if self.chats.active.is_some() {
-            let mut active_chat = self.get_active_chat();
-            if active_chat.id == chat.id {
-                active_chat.replying_to = None;
-                self.chats.active = Some(active_chat);
-            }
-        }
-
-        // Update the favorites chats if it matches the one we're modifying
-        if self.chats.favorites.contains(chat) {
-            for c in self.chats.favorites.iter_mut() {
-                if c.id == chat.id {
-                    c.replying_to = None;
-                }
-            }
-        }
     }
 
     /// Clear unreads  within a given chat on `State` struct.
@@ -279,40 +253,10 @@ impl State {
     /// * `chat` - The chat to clear unreads on.
     ///
     fn clear_unreads(&mut self, chat: &Chat) {
-        let mut c = match self.chats.all.get(&chat.id) {
-            Some(chat) => chat.clone(),
+        match self.chats.all.get_mut(&chat.id) {
+            Some(chat) => chat.unreads = 0,
             None => return,
         };
-        c.unreads = 0;
-
-        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
-
-        // Update the active state if it matches the one we're modifying
-        if self.chats.active.is_some() {
-            let mut active_chat = self.get_active_chat();
-            if active_chat.id == chat.id {
-                active_chat.unreads = 0;
-                self.chats.active = Some(active_chat);
-            }
-        }
-
-        // Update the sidebar chats if it matches the one we're modifying
-        if self.chats.in_sidebar.contains(chat) {
-            for c in self.chats.in_sidebar.iter_mut() {
-                if c.id == chat.id {
-                    c.unreads = 0;
-                }
-            }
-        }
-
-        // Update the favorites chats if it matches the one we're modifying
-        if self.chats.favorites.contains(chat) {
-            for c in self.chats.favorites.iter_mut() {
-                if c.id == chat.id {
-                    c.unreads = 0;
-                }
-            }
-        }
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -321,18 +265,18 @@ impl State {
     ///
     /// * `chat` - The chat to remove.
     fn remove_sidebar_chat(&mut self, chat: &Chat) {
-        if self.chats.in_sidebar.contains(chat) {
+        if self.chats.in_sidebar.contains(&chat.id) {
             let index = self
                 .chats
                 .in_sidebar
                 .iter()
-                .position(|x| x.id == chat.id)
+                .position(|x| x.to_owned() == chat.id)
                 .unwrap();
             self.chats.in_sidebar.remove(index);
         }
 
         if self.chats.active.is_some() {
-            if self.get_active_chat().id == chat.id {
+            if self.get_active_chat().unwrap_or_default().id == chat.id {
                 self.clear_active_chat();
             }
         }
@@ -353,13 +297,15 @@ impl State {
     ///
     /// * `chat` - The chat to check.
     pub fn is_favorite(&self, chat: &Chat) -> bool {
-        self.chats.favorites.contains(chat)
+        self.chats.favorites.contains(&chat.id)
     }
 
     /// Get the active chat on `State` struct.
-    pub fn get_active_chat(&self) -> Chat {
-        let chat = self.chats.active.clone();
-        chat.unwrap_or_default()
+    pub fn get_active_chat(&self) -> Option<Chat> {
+        match self.chats.active {
+            Some(uuid) => self.chats.all.get(&uuid).cloned(),
+            None => None,
+        }
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
@@ -370,6 +316,16 @@ impl State {
             .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend));
 
         chat.unwrap_or(&Chat::default()).clone()
+    }
+
+    pub fn get_without_me(&self, identities: Vec<Identity>) -> Vec<Identity> {
+        let mut set = HashSet::new();
+        set.insert(&self.account.identity);
+
+        identities
+            .into_iter()
+            .filter(|identity| !set.contains(identity))
+            .collect()
     }
 }
 

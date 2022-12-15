@@ -74,7 +74,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                     tooltip: cx.render(rsx!(
                         Tooltip {
-                            arrow_position: ArrowPosition::Bottom,
+                            arrow_position: ArrowPosition::Right,
                             text: String::from("Remove Friend")
                         }
                     )),
@@ -85,7 +85,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onpress: move |_| {},
                     tooltip: cx.render(rsx!(
                         Tooltip {
-                            arrow_position: ArrowPosition::Bottom,
+                            arrow_position: ArrowPosition::Right,
                             text: String::from("Right click for more")
                         }
                     )),
