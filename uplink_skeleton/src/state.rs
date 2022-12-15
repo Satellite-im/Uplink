@@ -382,21 +382,17 @@ impl State {
         let _ = self.save();
     }
 
-    fn variant_eq<T>(a: &T, b: &T) -> bool {
-        std::mem::discriminant(a) == std::mem::discriminant(b)
-    }
-
     fn call_hooks(&mut self, action: &Action) {
         for hook in self.hooks.iter() {
             match &hook.action_type {
                 Either::Left(a) => {
-                    if Self::variant_eq(a, action) {
+                    if a.compare_discriminant(action) {
                         (hook.callback)(&self, &action);
                     }
                 }
                 Either::Right(actions) => {
-                    for action in actions.iter() {
-                        if Self::variant_eq(action, action) {
+                    for a in actions.iter() {
+                        if a.compare_discriminant(action) {
                             (hook.callback)(&self, &action);
                         }
                     }
@@ -486,4 +482,10 @@ pub enum Action {
     /// Sends a message to the given chat
     Send(Chat, Message),
     ClearUnreads(Chat),
+}
+
+impl Action {
+    fn compare_discriminant(&self, other: &Action) -> bool {
+        std::mem::discriminant(self) == std::mem::discriminant(other)
+    }
 }
