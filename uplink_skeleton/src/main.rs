@@ -11,6 +11,7 @@ use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
 use ui_kit::STYLE as UIKIT_STYLES;
 
+use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
@@ -73,7 +74,7 @@ fn app(cx: Scope) -> Element {
     let chat_route = UIRoute {
         to: "/",
         name: "Chat",
-        icon: Icon::ChatBubbleBottomCenter,
+        icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
@@ -89,14 +90,15 @@ fn app(cx: Scope) -> Element {
         with_badge: Some("16".into()),
         loading: None,
     };
+    let files_route = UIRoute {
+        to: "/files",
+        name: "Files",
+        icon: Icon::Folder,
+        ..UIRoute::default()
+    };
     let routes = vec![
         chat_route.clone(),
-        UIRoute {
-            to: "/files",
-            name: "Files",
-            icon: Icon::Folder,
-            ..UIRoute::default()
-        },
+        files_route.clone(),
         friends_route.clone(),
         settings_route.clone(),
     ];
@@ -125,8 +127,17 @@ fn app(cx: Scope) -> Element {
                 to: "/friends",
                 FriendsLayout {
                     route_info: RouteInfo {
-                        routes: routes,
+                        routes: routes.clone(),
                         active: friends_route.clone(),
+                    }
+                }
+            },
+            Route {
+                to: "/files",
+                FilesLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: files_route.clone(),
                     }
                 }
             }

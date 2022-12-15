@@ -15,13 +15,19 @@ use ui_kit::{
 
 #[derive(Props)]
 pub struct Props<'a> {
+    // The username of the friend request sender
     username: String,
+    // A suffix to the username, typically a unique identifier
     suffix: String,
+    // The user image element to display
     user_image: Element<'a>,
+    // An optional event handler for the "onchat" event
     #[props(optional)]
     onchat: Option<EventHandler<'a>>,
+    // An optional event handler for the "onremove" event
     #[props(optional)]
     onremove: Option<EventHandler<'a>>,
+    // An optional event handler for the "onblock" event
     #[props(optional)]
     onblock: Option<EventHandler<'a>>,
 }
@@ -79,6 +85,28 @@ pub fn FriendRequest<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     )),
                 }
+            }
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn FriendRequests(cx: Scope) -> Element {
+    cx.render(rsx! (
+        div {
+            class: "friend-requests",
+            Label {
+                text: "Friends".into(),
+            },
+            FriendRequest {
+                username: "text".into(),
+                suffix: "1234".into(),
+                user_image: cx.render(rsx! (
+                    UserImage {
+                        platform: Platform::Desktop,
+                        status: Status::Online,
+                    }
+                ))
             }
         }
     ))

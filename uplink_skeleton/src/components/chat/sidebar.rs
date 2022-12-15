@@ -10,9 +10,13 @@ pub struct Props {
 }
 
 pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
+    // Create a vector of UserInfo objects to store the results
     let mut user_info: Vec<UserInfo> = vec![];
 
+    // Iterate over the identities vector
     for identity in identities {
+        // For each identity, create a new UserInfo object and set its fields
+        // to the corresponding values from the identity object
         user_info.push(UserInfo {
             platform: Platform::Mobile,
             status: Status::Online,
@@ -21,23 +25,29 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
         })
     }
 
+    // Return the resulting user_info vector
     user_info
 }
 
 pub fn build_participants_names(identities: &Vec<Identity>) -> String {
     let mut participants_name = String::from("");
 
+    // Iterate over the identities vector
     for identity in identities {
+        // Create a string with the username of the current identity and a comma
         let name = format!("{}, ", identity.username());
+        // Append the name string to the participants_name string
         participants_name.push_str(&name);
     }
 
+    // Remove the last two characters from the participants_name string (the trailing comma and space)
     participants_name.pop();
     participants_name.pop();
 
-
+    // Return the resulting participants_name string
     participants_name
 }
+
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
@@ -85,7 +95,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         favorites.iter().cloned().map(|chat| {
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
-                            // TODO: Make this dynamic for group chats
                             let user = chat.participants.get(1);
                             let parsed_user = match user {
                                 Some(u) => u.clone(),
@@ -111,6 +120,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             text: String::from("Chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
+                                                if cx.props.route_info.active.to != "/" {
+                                                    use_router(&cx).replace_route("/", None, None);
+                                                }
                                             }
                                         }
                                     )),
@@ -120,13 +132,16 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         with_username: participants_name,
                                         onpress: move |_| {
                                             state.write().mutate(Action::ChatWith(chat.clone()));
+                                            if cx.props.route_info.active.to != "/" {
+                                                use_router(&cx).replace_route("/", None, None);
+                                            }
                                         }
                                     }
                                 }
                             )
-                        }),
+                        })
                     }
-                },
+                }
             )),
             Label {
                 text: "Chats".into()
@@ -134,7 +149,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             div {
                 id: "chats",
                 sidebar_chats.iter().cloned().map(|chat| {
-                    // TODO: Make this dynamic for group chats
                     let user = chat.participants.get(1);
                     let default_message = Message::default();
                     let parsed_user = match user {

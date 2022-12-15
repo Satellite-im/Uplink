@@ -5,7 +5,7 @@
 .chatbar {
 	width: 100%;
 	border-top: 1px solid transparent;
-	padding: var(--padding);
+	padding: var(--gap);
 	position: relative;
 	.input-group {
 		flex: 1;
@@ -24,11 +24,12 @@
 	gap: var(--gap-less);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
-	padding: var(--padding-less);
+	padding: var(--gap);
 	border-radius: var(--border-radius);
 	border: 1px solid var(--border-color);
 	.content {
 		display: inline-flex;
+		padding: 0;
 	}
 	.reply-text {
 		color: var(--text-color);

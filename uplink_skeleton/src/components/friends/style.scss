@@ -5,9 +5,15 @@
     align-items: flex-start;
     padding: var(--padding-less);
     border-bottom: 1px solid var(--border-color);
+    flex-direction: column;
 
+    .body {
+        display: inline-flex;
+        gap: var(--gap);
+        width: 100%;
+    }
     .btn {
-        margin-top: calc(var(--text-size-less) + var(--gap));
+        align-self: flex-start;
     }
 
     .input-group {

@@ -5,10 +5,12 @@
 .topbar {
 	width: 100%;
 	border-bottom: 1px solid var(--border-color);
-	padding: var(--padding);
-}
-.children {
-	flex: 1;
-	display: inline-flex;
-	gap: var(--gap);
+	padding: var(--gap);
+	.children {
+		flex: 1;
+		display: inline-flex;
+		gap: var(--gap);
+		overflow: hidden;
+	}
+	
 }

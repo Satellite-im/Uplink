@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 #[derive(Props)]
 pub struct Props<'a> {
+    // Represents the image of the user who is typing
     user_image: Element<'a>,
 }
 

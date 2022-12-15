@@ -455,7 +455,7 @@ fn app(cx: Scope) -> Element {
             },
             Indicator {
                 platform: Platform::Headless,
-                status: Status::DoNotDistrub
+                status: Status::DoNotDisturb
             }
         },
         Item {

@@ -6,13 +6,21 @@ use crate::icons::{Icon, IconElement};
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Platform {
+    // The user is using a desktop computer
     Desktop,
+
+    // The user is using a mobile device
     Mobile,
+
+    // The user is using a television
     Tv,
+
+    // The user is using a headless device (e.g. a server)
     Headless,
 }
 
 impl Platform {
+    // Convert a Platform value to an Icon value
     pub fn to_icon(&self) -> Icon {
         match self {
             Platform::Desktop => Icon::ComputerDesktop,
@@ -25,10 +33,17 @@ impl Platform {
 
 #[derive(Eq, PartialEq, Clone, Copy)]
 pub enum Status {
+    // The user is currently online
     Online,
+
+    // The user is currently offline
     Offline,
+
+    // The user is currently idle
     Idle,
-    DoNotDistrub,
+
+    // The user has enabled do-not-disturb mode
+    DoNotDisturb,
 }
 
 impl fmt::Display for Status {
@@ -37,16 +52,21 @@ impl fmt::Display for Status {
             Status::Online => write!(f, "online"),
             Status::Offline => write!(f, "offline"),
             Status::Idle => write!(f, "idle"),
-            Status::DoNotDistrub => write!(f, "do-not-distrub"),
+            Status::DoNotDisturb => write!(f, "do-not-disturb"),
         }
     }
 }
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
+    // Whether the indicator is in a loading state
     #[props(optional)]
     loading: Option<bool>,
+
+    // The platform the user is using
     platform: Platform,
+
+    // The user's online status
     status: Status,
 }
 

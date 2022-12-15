@@ -38,11 +38,11 @@
 	justify-content: center;
 	gap: var(--gap);
 	max-width: 80px;
-	overflow: hidden;
 	text-overflow: ellipsis;
 	word-break: break-all;
-	min-width: calc(var(--height-input) + var(--gap));
+	max-width: var(--height-input);
 	justify-content: flex-end;
+	align-self: flex-start;
 	&.pressable {
 		cursor: pointer;
 	}

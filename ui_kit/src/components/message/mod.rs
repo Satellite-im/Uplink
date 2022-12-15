@@ -21,14 +21,25 @@ impl fmt::Display for Order {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    // An optional field that, if set to true, will add a CSS class of "loading" to the div element.
     #[props(optional)]
     loading: Option<bool>,
+
+    // An optional field that, if set, will be used as the content of a nested div element with a class of "content".
     #[props(optional)]
     with_content: Option<Element<'a>>,
+
+    // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     #[props(optional)]
     with_text: Option<String>,
+
+    // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     #[props(optional)]
     remote: Option<bool>,
+
+    // An optional field that, if set, will be used to determine the ordering of the div element relative to other Message elements.
+    // The value will be converted to a string using the Order enum's fmt::Display implementation and used as a CSS class of the div element.
+    // If not set, the default value of Order::Last will be used.
     #[props(optional)]
     order: Option<Order>,
 }

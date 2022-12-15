@@ -1,5 +1,28 @@
 .friend-request {
-    display: inline-block;
+    display: inline-flex;
     gap: var(--gap);
+    width: 100%;
+    align-items: center;
+    .request-info {
+        flex: 1;
+        p {
+            color: var(--text-color);
+
+            span {
+                color: var(--text-color-muted);
+            }
+        }
+    }
+    .request-controls {
+        display: inline-flex;
+        gap: var(--gap);
+    }
+}
+
+.friend-requests {
+    width: 100%;
     padding: var(--padding-less);
+    gap: var(--gap);
+    display: inline-flex;
+    flex-direction: column;
 }

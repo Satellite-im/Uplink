@@ -44,7 +44,7 @@
             }
             &:nth-child(2) {
                 transform: scale(0.65);
-                left: -10px;
+                left: -6px;
                 top: -2px;
                 z-index: 2;
                 display: inline-flex;
@@ -52,7 +52,7 @@
             &:nth-child(3) {
                 transform: scale(0.45);
                 top: -10px;
-                right: -7px;
+                right: 2px;
                 z-index: 1;
                 display: inline-flex;
             }
@@ -64,7 +64,6 @@
     display: inline-flex;
 	flex-direction: column;
 	gap: var(--gap);
-	overflow: hidden;
 	text-overflow: ellipsis;
 	word-break: break-all;
     min-width: calc(var(--height-input) + var(--gap));

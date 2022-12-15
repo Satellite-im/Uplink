@@ -9,21 +9,32 @@ use humansize::DECIMAL;
 
 #[derive(PartialEq, Props)]
 pub struct Props {
+    // The filename of the file
     #[props(optional)]
     filename: Option<String>,
+
+    // The size of the file in bytes
     #[props(optional)]
     filesize: Option<u32>,
+
+    // The type of the file (e.g. "PDF", "JPEG")
     #[props(optional)]
     kind: Option<String>,
+
+    // Whether the file is coming from a remote user, or we sent it.
     #[props(optional)]
     remote: Option<bool>,
+
+    // The icon to use to represent the file
     #[props(optional)]
     icon: Option<Icon>,
 }
 
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
+    // If the props include an icon, return it
     match &cx.props.icon {
         Some(icon) => icon.to_owned(),
+        // Otherwise, return a default icon (a question mark inside a circle)
         None => Icon::QuestionMarkCircle,
     }
 }

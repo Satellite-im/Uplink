@@ -1,9 +1,13 @@
 use dioxus::prelude::*;
+use ui_kit::{
+    elements::{button::Button, label::Label, Appearance},
+    icons::{Icon, IconElement},
+};
 
 use crate::{
     components::{
         chat::{compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo},
-        friends::add::AddFriend,
+        friends::{add::AddFriend, request::FriendRequests},
     },
     state::State,
 };
@@ -23,7 +27,28 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
-            AddFriend {}
+            div {
+                class: "friends-body",
+                AddFriend {},
+                div {
+                    class: "friends-controls",
+                    Button {
+                        icon: Icon::User,
+                        text: "All".into(),
+                    },
+                    Button {
+                        icon: Icon::Clock,
+                        appearance: Appearance::Secondary,
+                        text: "Pending".into(),
+                    },
+                    Button {
+                        icon: Icon::NoSymbol,
+                        appearance: Appearance::Secondary,
+                        text: "Blocked".into(),
+                    },
+                }
+                FriendRequests {}
+            }
         }
     ))
 }
