@@ -1,7 +1,9 @@
+use either::Either;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use uuid::Uuid;
+
 use warp::{
     constellation::item::Item,
     crypto::DID,
@@ -10,8 +12,8 @@ use warp::{
 };
 
 // Define a new struct to represent a hook that listens for a specific action type.
-struct ActionHook {
-    action_type: Vec<Action>,
+pub struct ActionHook {
+    action_type: Either<Action, Vec<Action>>,
     callback: Box<dyn Fn(&State, &Action)>,
 }
 
@@ -108,7 +110,7 @@ pub struct State {
     #[serde(default)]
     pub friends: Friends,
     #[serde(skip_serializing, skip_deserializing)]
-    pub(crate) hooks: Vec<Box<dyn Fn(&State)>>,
+    pub(crate) hooks: Vec<ActionHook>,
 }
 
 impl fmt::Debug for State {
@@ -331,6 +333,8 @@ impl State {
 
 impl State {
     pub fn mutate(&mut self, action: Action) {
+        self.call_hooks(&action);
+
         match action {
             Action::SetId(identity) => self.set_identity(&identity),
             Action::SendRequest(_) => todo!(),
@@ -375,19 +379,35 @@ impl State {
             }
         }
 
-        // Call the hooks
-        for hook in &self.hooks {
-            hook(&self);
-        }
-
         let _ = self.save();
     }
 
-    pub fn add_hook<F>(&mut self, hook: F)
-    where
-        F: Fn(&State) + 'static,
-    {
-        self.hooks.push(Box::new(hook));
+    fn variant_eq<T>(a: &T, b: &T) -> bool {
+        std::mem::discriminant(a) == std::mem::discriminant(b)
+    }
+
+    fn call_hooks(&mut self, action: &Action) {
+        for hook in self.hooks.iter() {
+            match &hook.action_type {
+                Either::Left(a) => {
+                    if Self::variant_eq(a, action) {
+                        (hook.callback)(&self, &action);
+                    }
+                }
+                Either::Right(actions) => {
+                    for action in actions.iter() {
+                        if Self::variant_eq(action, action) {
+                            (hook.callback)(&self, &action);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add a hook to be called on state changes.
+    pub fn add_hook(&mut self, hook: ActionHook) {
+        self.hooks.push(hook);
     }
 
     /// Saves the current state to disk.
@@ -408,19 +428,12 @@ impl State {
         }
     }
 
-    /// Enables logging of all actions applied to the state.
-    pub fn enable_logging(&mut self) {
-        self.hooks.push(Box::new(|state| {
-            // Print the action being applied to the state.
-            println!("Action: {:?}", state);
-        }));
-    }
-
     pub fn mock() -> State {
         generate_mock()
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Action {
     // Account
     /// Sets the ID for the user.

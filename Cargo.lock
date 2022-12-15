@@ -4540,6 +4540,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dioxus",
+ "either",
  "glob",
  "image",
  "lipsum",

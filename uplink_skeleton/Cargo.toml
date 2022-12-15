@@ -19,6 +19,7 @@ rand = "0.8.4"
 image = "0.24.5"
 chrono = "0.4.19"
 substring = "1.4.5"
+either = "1.6.1"
 
 [build-dependencies]
 glob = "0.3.0"
