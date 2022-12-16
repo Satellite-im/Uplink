@@ -112,7 +112,8 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let friends = state.read().get_friends_by_first_letter();
+    let friends_list = state.read().friends.all.clone();
+    let friends = State::get_friends_by_first_letter(friends_list);
 
     let friends_text = LOCALES.lookup(&US_ENGLISH, "friends").unwrap_or_default();
 
@@ -135,6 +136,8 @@ pub fn Friends(cx: Scope) -> Element {
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                             let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
                             let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
+                            let remove_friend = friend.clone();
+                            let remove_friend_2 = remove_friend.clone();
 
                             let call_text = LOCALES
                                 .lookup(&US_ENGLISH, "uplink.call")
@@ -180,7 +183,9 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::XMark,
                                             text: remove_text,
-                                            // TODO: Wire this up to state\
+                                            onpress: move |_| {
+                                                let _ = &state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                            }
                                         },
                                         ContextItem {
                                             danger: true,
@@ -202,6 +207,9 @@ pub fn Friends(cx: Scope) -> Element {
                                         onchat: move |_| {
                                             let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
                                             use_router(&cx).replace_route("/", None, None);
+                                        },
+                                        onremove: move |_| {
+                                            let _ = &state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                         }
                                     }
                                 }

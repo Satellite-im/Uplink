@@ -317,8 +317,78 @@ impl State {
     }
 
     /// Sets the user's identity.
-    pub fn set_identity(&mut self, identity: &Identity) {
+    fn set_identity(&mut self, identity: &Identity) {
         self.account.identity = identity.clone();
+    }
+
+    fn remove_friend(&mut self, did: &DID) {
+        // Remove the friend from the all field of the friends struct
+        self.friends.all.remove(did);
+
+        // Remove the friend from the blocked field if they are present
+        self.friends
+            .blocked
+            .retain(|friend| friend.did_key() != *did);
+
+        // Remove the friend from the incoming_requests field if they are present
+        self.friends
+            .incoming_requests
+            .retain(|friend| friend.did_key() != *did);
+
+        // Remove the friend from the outgoing_requests field if they are present
+        self.friends
+            .outgoing_requests
+            .retain(|friend| friend.did_key() != *did);
+
+        // Remove the friend from the favorites if they are present
+        self.chats.favorites.retain(|favorite| {
+            // Get the chat with the favorite UUID
+            match self.chats.all.get(favorite) {
+                Some(c) => {
+                    // Check if the friend is in the participants field
+                    c.participants
+                        .iter()
+                        .any(|participant| participant.did_key() != *did)
+                }
+                None => true,
+            }
+        });
+
+        // Remove the friend from the sidebar if they are present
+        self.chats.in_sidebar.retain(|in_sidebar| {
+            // Get the chat with the UUID in the sidebar
+            match self.chats.all.get(in_sidebar) {
+                Some(c) =>
+                // Check if the friend is in the participants field and there are only 2 participants
+                {
+                    c.participants
+                        .iter()
+                        .any(|participant| participant.did_key() != *did)
+                        && c.participants.len() != 2
+                }
+                None => true,
+            }
+        });
+
+        // Check if there is an active chat
+        if self.chats.active.is_some() {
+            let default_chat = Chat::default();
+            // Look up the active chat in the all field
+            let active_chat = self.get_active_chat().unwrap_or(default_chat);
+
+            // Check if the friend is in the participants field and there are only 2 participants
+            if active_chat
+                .participants
+                .iter()
+                .any(|participant| participant.did_key() == *did)
+                && active_chat.participants.len() == 2
+            {
+                // Remove the chat from the all field
+                self.chats.all.remove(&active_chat.id);
+                // Set the active field to None
+                self.chats.active = None;
+            }
+        }
     }
 
     pub fn is_me(&self, identity: &Identity) -> bool {
@@ -412,8 +482,9 @@ impl State {
         self.friends.all.get(did).cloned().unwrap_or_default()
     }
 
-    pub fn get_friends_by_first_letter(&self) -> HashMap<char, Vec<Identity>> {
-        let friends = self.friends.all.clone();
+    pub fn get_friends_by_first_letter(
+        friends: HashMap<DID, Identity>,
+    ) -> HashMap<char, Vec<Identity>> {
         let mut friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
 
         // Iterate over the friends and add each one to the appropriate Vec in the
@@ -425,6 +496,7 @@ impl State {
                 .next()
                 .unwrap()
                 .to_ascii_lowercase();
+
             friends_by_first_letter
                 .entry(first_letter)
                 .or_insert_with(Vec::new)
@@ -459,6 +531,7 @@ impl State {
             Action::IncomingRequest(_) => todo!(),
             Action::AcceptRequest(_) => todo!(),
             Action::DenyRequest(_) => todo!(),
+            Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
             Action::Block(_) => todo!(),
             Action::UnBlock(_) => todo!(),
             Action::Favorite(chat) => self.favorite(&chat),
@@ -570,6 +643,7 @@ pub enum Action {
     DenyRequest(Identity),
 
     // Friends
+    RemoveFriend(Identity),
     Block(Identity),
     UnBlock(Identity),
     /// Handles the display of "favorite" chats

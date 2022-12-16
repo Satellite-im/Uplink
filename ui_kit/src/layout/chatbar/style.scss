@@ -27,12 +27,25 @@
 	padding: var(--gap);
 	border-radius: var(--border-radius);
 	border: 1px solid var(--border-color);
+	
 	.content {
 		display: inline-flex;
 		padding: 0;
+		padding-right: var(--height-input);
+		gap: var(--gap);
+		.user-image-wrap {
+			align-self: flex-end;
+		}
 	}
 	.reply-text {
 		color: var(--text-color);
+		display: -webkit-box;
+ 		 -webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden; 
+		text-overflow: ellipsis;
+		overflow: hidden;
+		text-align: left;
 	}
 	.btn-wrap {
 		position: absolute;

@@ -124,13 +124,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     id: chat_id.to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
-                                            icon: Icon::Heart,
-                                            text: remove_favorite_text,
-                                            onpress: move |_| {
-                                                state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
-                                            }
-                                        },
-                                        ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: chat_text,
                                             onpress: move |_| {
@@ -138,6 +131,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 if cx.props.route_info.active.to != "/" {
                                                     use_router(&cx).replace_route("/", None, None);
                                                 }
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::Heart,
+                                            text: remove_favorite_text,
+                                            onpress: move |_| {
+                                                state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
                                             }
                                         }
                                     )),
