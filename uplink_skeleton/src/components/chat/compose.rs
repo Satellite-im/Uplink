@@ -1,22 +1,29 @@
-use std::time::SystemTime;
 
+use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use fluent_templates::Loader;
+use timeago::Formatter;
 use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
-use warp::raygun::Message as RaygunMessage;
 
 use crate::{state::{State, Action}, components::chat::sidebar::build_participants, LOCALES, US_ENGLISH};
 
+
 use super::sidebar::build_participants_names;
+
+
+fn format_timestamp(datetime: DateTime<Utc>) -> String {
+    let formatter = Formatter::new();
+    let now = Utc::now();
+    let duration = now.signed_duration_since(datetime).to_std().unwrap();
+    formatter.convert(duration)
+}
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
     let active_chat = state.read().get_active_chat().unwrap_or_default();
-
-    // TODO: Mockup purposes only.
-    let some_time_long_ago = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
+    let message_groups = state.read().get_sort_messages(&active_chat);
 
     let without_me = state.read().get_without_me(active_chat.participants.clone());
     let active_participant = without_me.first();
@@ -57,6 +64,7 @@ pub fn Compose(cx: Scope) -> Element {
     let upload_text = LOCALES
         .lookup(&US_ENGLISH, "files.upload")
         .unwrap_or_default();
+
 
     cx.render(rsx!(
         div {
@@ -129,136 +137,55 @@ pub fn Compose(cx: Scope) -> Element {
             },
             div {
                 id: "messages",
-                MessageGroup {
-                    user_image: cx.render(rsx!(
-                        UserImage {
-                            platform: Platform::Mobile,
-                            status: Status::Online
-                        }
-                    )),
-                    with_sender: "John Doe | Satellite.im".into(),
-                    timestamp: some_time_long_ago,
-                    Message {
-                        order: Order::First,
-                        with_text: "This is a message to reply to.".into()
-                    },
-                    FileEmbed {
-                        filename: "Fake.zip".into(),
-                        filesize: 3821939,
-                        kind: "archive/zip".into(),
-                        icon: Icon::ArchiveBoxArrowDown,
-                    },
-                    Message {
-                        order: Order::Middle,
-                        with_text: "Another one.".into()
-                    },
-                    MessageReply {
-                        with_text: "This is a message to reply to.".into(),
-                        remote: false,
-                        with_prefix: "In reply to yourself.".into(),
-                        user_image: cx.render(rsx!(
-                            UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
-                            }
-                        ))
-                    },
-                    Message {
-                        order: Order::Last
-                        with_text: "It is for these reasons that I regard the decision last year to shift our efforts in space from low to high gear as among the most important decisions that will be made during my incumbency in the office of the Presidency.".into()
-                    }
-                },
-                MessageDivider {
-                    text: new_message_text,
-                    timestamp: some_time_long_ago,
-                },
-                MessageGroup {
-                    user_image: cx.render(rsx!(
-                        UserImage {
-                            platform: Platform::Desktop,
-                            status: Status::Idle
-                        }
-                    )),
-                    remote: true,
-                    with_sender: "Jane Doe | Satellite.im".into(),
-                    timestamp: some_time_long_ago,
-                    ContextMenu {
-                        id: "message-temp".into(),
-                        items: cx.render(rsx!(
-                            ContextItem {
-                                icon: Icon::ArrowLongLeft,
-                                text: String::from("Reply"),
-                                onpress: move |_| {
-                                    let mut reply = RaygunMessage::default();
-                                    let chat = state.read().get_active_chat().unwrap_or_default();
-                                    reply.set_value(vec!["A Message, with a context menu! (right click me)".into()]);
-                                    state.write().mutate(Action::StartReplying(chat, reply.clone()));
-
+                message_groups.iter().map(|group| {
+                    let messages = &group.messages;
+                    let last_message = messages.last().unwrap().message.clone();
+                    let sender = state.read().get_friend_identity(&group.sender);
+                    
+                    rsx!(
+                        MessageGroup {
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online
                                 }
-                            },
-                            ContextItem {
-                                icon: Icon::FaceSmile,
-                                text: String::from("React"),
-                                //TODO: Wire to state
-                            },
-                        )),
-                        Message {
-                            remote: true,
-                            order: Order::First,
-                            with_text: "A Message, with a context menu! (right click me)".into()
-                        },
-                    },
-                    MessageReply {
-                        with_text: "Some random message".into(),
-                        remote: true,
-                        remote_message: true,
-                        with_prefix: "Replied to Jane Doe's message".into(),
-                        user_image: cx.render(rsx!(
-                            UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
-                                
-                            }
-                        ))
-                    },
-                    Message {
-                        remote: true,
-                        order: Order::Middle,
-                        with_text: "That is an interesting fake message. I'll put something random too.".into()
-                    },
-                    MessageReply {
-                        with_text: "This is a message to reply to.".into(),
-                        remote: true,
-                        remote_message: false,
-                        with_prefix: "Replied to you".into(),
-                        user_image: cx.render(rsx!(
-                            UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
-                            }
-                        ))
-                    },
-                    Message {
-                        remote: true,
-                        order: Order::Last
-                        with_text: "It is for these reasons that I regard the decision last year to shift our efforts in space from low to high gear as among the most important decisions that will be made during my incumbency in the office of the Presidency.".into()
-                    }
-                    FileEmbed {
-                        remote: true,
-                        filename: "Fake.zip".into(),
-                        filesize: 3821939,
-                        kind: "archive/zip".into(),
-                        icon: Icon::ArchiveBoxArrowDown,
-                    },
-                },
-                MessageTyping {
-                    user_image: cx.render(rsx!(
-                        UserImage {
-                            platform: Platform::Mobile,
-                            status: Status::Online
+                            )),
+                            timestamp: format_timestamp(last_message.date()),
+                            with_sender: if sender.username().is_empty() { "You".into() } else { sender.username()},
+                            remote: group.remote,
+                            messages.iter().map(|grouped_message| {
+                                let message = grouped_message.message.clone();
+                                let reply_message = grouped_message.message.clone();
+                                rsx! (
+                                    ContextMenu {
+                                        id: format!("message-{}", message.id()),
+                                        items: cx.render(rsx!(
+                                            ContextItem {
+                                                icon: Icon::ArrowLongLeft,
+                                                text: String::from("Reply"),
+                                                onpress: move |_| {
+                                                    // TODO: wire 
+                                                    let chat = state.read().get_active_chat().unwrap_or_default();
+                                                    state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
+                                                }
+                                            },
+                                            ContextItem {
+                                                icon: Icon::FaceSmile,
+                                                text: String::from("React"),
+                                                //TODO: Wire to state
+                                            },
+                                        )),
+                                        Message {
+                                            remote: group.remote,
+                                            with_text: message.value().join("\n"),
+                                            order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                        }
+                                    }
+                                )
+                            })
                         }
-                    ))
-                }
+                    )
+                })
             },
             Chatbar {
                 controls: cx.render(rsx!(

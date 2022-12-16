@@ -26,6 +26,23 @@
     padding: var(--padding-less);
     display: inline-flex;
     flex-direction: column;
+
+    .message-group-wrap {
+        .user-image-wrap {
+            align-self: flex-end;
+        }
+    }
+
+    .message-group {
+        .context-wrap {
+            justify-content: flex-end;
+        }
+        &.remote {
+            .context-wrap {
+                justify-content: flex-start;
+            }
+        }
+    }
 }
 
 #compose .topbar .children .username {

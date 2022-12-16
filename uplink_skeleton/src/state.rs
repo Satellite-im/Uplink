@@ -32,6 +32,7 @@ impl PartialOrd for MessageDivider {
 // Define a struct to represent a group of messages from the same sender.
 pub struct MessageGroup {
     pub sender: DID,
+    pub remote: bool,
     pub messages: Vec<GroupedMessage>,
 }
 
@@ -320,6 +321,10 @@ impl State {
         self.account.identity = identity.clone();
     }
 
+    pub fn is_me(&self, identity: &Identity) -> bool {
+        identity.did_key().to_string() == self.account.identity.did_key().to_string()
+    }
+
     /// Getters
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
@@ -361,49 +366,50 @@ impl State {
             .collect()
     }
 
+    pub fn has_friend_with_did(&self, did: &DID) -> bool {
+        self.friends
+            .all
+            .values()
+            .any(|identity| identity.did_key() == *did)
+    }
+
     // Define a method for sorting a vector of messages.
-    pub fn sort_messages(
-        messages: Vec<Message>,
-        timestamp: Option<DateTime<Utc>>,
-    ) -> Vec<Either<GroupedMessage, MessageDivider>> {
-        let mut grouped_messages: Vec<Either<GroupedMessage, MessageDivider>> = Vec::new();
+    pub fn get_sort_messages(&self, chat: &Chat) -> Vec<MessageGroup> {
+        let mut message_groups = Vec::new();
+        let current_sender = chat.messages[0].sender();
+        let mut current_group = MessageGroup {
+            remote: self.has_friend_with_did(&current_sender),
+            sender: current_sender,
+            messages: Vec::new(),
+        };
 
-        let mut sender = None;
-        let mut divider_added = false;
+        for message in chat.messages.clone() {
+            if message.sender() != current_group.sender {
+                message_groups.push(current_group);
+                current_group = MessageGroup {
+                    remote: self.has_friend_with_did(&message.sender()),
+                    sender: message.sender(),
+                    messages: Vec::new(),
+                };
+            }
 
-        for message in messages {
-            // Group messages by sender
-            let sender_copy = sender.clone();
-            let message_date = message.date();
-            sender = sender_copy.and_then(|sender_did| {
-                if sender_did != message.sender() {
-                    Some(message.sender())
-                } else {
-                    None
-                }
-            });
-            grouped_messages.push(Either::Left(GroupedMessage {
+            current_group.messages.push(GroupedMessage {
                 message,
-                is_first: sender.is_some(),
+                is_first: current_group.messages.is_empty(),
                 is_last: false,
-            }));
-
-            // Add the message divider if the timestamp is provided and the message comes after the timestamp
-            if !divider_added && timestamp.is_some() && message_date > timestamp.unwrap() {
-                grouped_messages.push(either::Right(MessageDivider { timestamp }));
-                divider_added = true;
-            }
+            });
         }
 
-        // Set the last message in each group to is_last = true
-        if let Some(last_message) = grouped_messages.last_mut() {
-            match last_message {
-                Either::Left(ref mut last_grouped_message) => last_grouped_message.is_last = true,
-                Either::Right(_) => (),
-            }
+        if !current_group.messages.is_empty() {
+            current_group.messages.last_mut().unwrap().is_last = true;
+            message_groups.push(current_group);
         }
 
-        grouped_messages
+        message_groups
+    }
+
+    pub fn get_friend_identity(&self, did: &DID) -> Identity {
+        self.friends.all.get(did).cloned().unwrap_or_default()
     }
 
     pub fn get_friends_by_first_letter(&self) -> HashMap<char, Vec<Identity>> {

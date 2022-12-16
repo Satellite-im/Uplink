@@ -9,21 +9,16 @@ pub struct Props<'a> {
     #[props(optional)]
     remote: Option<bool>,
     #[props(optional)]
-    timestamp: Option<Duration>,
+    timestamp: Option<String>,
     #[props(optional)]
     with_sender: Option<String>,
-}
-
-pub fn get_time_ago(cx: &Scope<Props>) -> String {
-    let f = timeago::Formatter::new();
-    cx.props.timestamp.map(|d| f.convert(d)).unwrap_or_default()
 }
 
 #[allow(non_snake_case)]
 pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let remote = cx.props.remote.unwrap_or_default();
     let sender = cx.props.with_sender.clone().unwrap_or_default();
-    let time_ago = get_time_ago(&cx);
+    let time_ago = cx.props.timestamp.clone().unwrap_or_default();
 
     cx.render(rsx! (
         div {
