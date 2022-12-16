@@ -344,12 +344,11 @@ impl State {
         self.chats.favorites.retain(|favorite| {
             // Get the chat with the favorite UUID
             match self.chats.all.get(favorite) {
-                Some(c) => {
-                    // Check if the friend is in the participants field
-                    c.participants
-                        .iter()
-                        .any(|participant| participant.did_key() != *did)
-                }
+                // Check if the friend is in the participants field
+                Some(c) => c
+                    .participants
+                    .iter()
+                    .any(|participant| participant.did_key() != *did),
                 None => true,
             }
         });
@@ -358,9 +357,8 @@ impl State {
         self.chats.in_sidebar.retain(|in_sidebar| {
             // Get the chat with the UUID in the sidebar
             match self.chats.all.get(in_sidebar) {
-                Some(c) =>
                 // Check if the friend is in the participants field and there are only 2 participants
-                {
+                Some(c) => {
                     c.participants
                         .iter()
                         .any(|participant| participant.did_key() != *did)
@@ -383,10 +381,10 @@ impl State {
                 .any(|participant| participant.did_key() == *did)
                 && active_chat.participants.len() == 2
             {
+                // Set the active field to None
+                self.clear_active_chat();
                 // Remove the chat from the all field
                 self.chats.all.remove(&active_chat.id);
-                // Set the active field to None
-                self.chats.active = None;
             }
         }
     }
