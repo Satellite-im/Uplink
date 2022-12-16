@@ -315,7 +315,6 @@ fn app(cx: Scope) -> Element {
                     }
                 )),
                 with_sender: "John Doe | Satellite.im".into(),
-                timestamp: some_time_long_ago,
                 Message {
                     order: Order::First,
                     with_text: "A Message!".into()
@@ -341,7 +340,6 @@ fn app(cx: Scope) -> Element {
                     }
                 )),
                 remote: true,
-                timestamp: some_time_long_ago,
                 Message {
                     remote: true,
                     order: Order::First,

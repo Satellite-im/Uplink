@@ -340,51 +340,34 @@ impl State {
             .outgoing_requests
             .retain(|friend| friend.did_key() != *did);
 
-        // Remove the friend from the favorites if they are present
-        self.chats.favorites.retain(|favorite| {
-            // Get the chat with the favorite UUID
-            match self.chats.all.get(favorite) {
-                // Check if the friend is in the participants field
-                Some(c) => c
+        let all_chats = self.chats.all.clone();
+
+        // Check if there is a direct chat with the friend being removed
+        let direct_chat = all_chats.values().find(|chat| {
+            chat.participants.len() == 2
+                && chat
                     .participants
                     .iter()
-                    .any(|participant| participant.did_key() != *did),
-                None => true,
-            }
+                    .any(|participant| participant.did_key() == *did)
         });
 
-        // Remove the friend from the sidebar if they are present
-        self.chats.in_sidebar.retain(|in_sidebar| {
-            // Get the chat with the UUID in the sidebar
-            match self.chats.all.get(in_sidebar) {
-                // Check if the friend is in the participants field and there are only 2 participants
-                Some(c) => {
-                    c.participants
-                        .iter()
-                        .any(|participant| participant.did_key() != *did)
-                        && c.participants.len() != 2
-                }
-                None => true,
-            }
-        });
+        // Remove the chat from the sidebar
+        if direct_chat.is_some() {
+            let chat = direct_chat.unwrap();
+            self.remove_sidebar_chat(chat);
+        }
 
-        // Check if there is an active chat
+        // If the friend's direct chat is currently the active chat, clear the active chat
         if self.chats.active.is_some() {
-            let default_chat = Chat::default();
-            // Look up the active chat in the all field
-            let active_chat = self.get_active_chat().unwrap_or(default_chat);
-
-            // Check if the friend is in the participants field and there are only 2 participants
-            if active_chat
-                .participants
-                .iter()
-                .any(|participant| participant.did_key() == *did)
-                && active_chat.participants.len() == 2
-            {
-                // Set the active field to None
+            if self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id {
                 self.clear_active_chat();
-                // Remove the chat from the all field
-                self.chats.all.remove(&active_chat.id);
+            }
+        }
+
+        // Remove chat from favorites if it exists
+        if let Some(direct_chat) = direct_chat {
+            if self.chats.favorites.contains(&direct_chat.id) {
+                self.unfavorite(direct_chat);
             }
         }
     }
