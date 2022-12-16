@@ -1,8 +1,9 @@
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::chat::RouteInfo, state::{State, Action}};
+use crate::{components::chat::RouteInfo, state::{State, Action}, LOCALES, US_ENGLISH};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -59,6 +60,16 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     let favorites = state.read().chats.favorites.clone();
 
+
+    let favorites_text = LOCALES
+        .lookup(&US_ENGLISH, "favorites")
+        .unwrap_or_default();
+
+
+    let chats_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.chats")
+        .unwrap_or_default(); 
+
     cx.render(rsx!(
         ReusableSidebar {
             with_search: cx.render(rsx!(
@@ -88,7 +99,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 div {
                     id: "favorites",
                     Label {
-                        text: "Favorites".into()
+                        text: favorites_text
                     },
                     div {
                         class: "vertically-scrollable",
@@ -98,6 +109,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(chat.participants.clone());
                             let participants_name = build_participants_names(&without_me);
+
+                            let remove_favorite_text = LOCALES
+                                .lookup(&US_ENGLISH, "favorites.remove")
+                                .unwrap_or_default();
+                    
+                            let chat_text = LOCALES
+                                .lookup(&US_ENGLISH, "uplink.chat")
+                                .unwrap_or_default(); 
+                            
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -105,14 +125,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Heart,
-                                            text: String::from("Remove Favorite"),
+                                            text: remove_favorite_text,
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
                                             }
                                         },
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
-                                            text: String::from("Chat"),
+                                            text: chat_text,
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
                                                 if cx.props.route_info.active.to != "/" {
@@ -139,7 +159,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             )),
             (!sidebar_chats.is_empty()).then(|| rsx!(
                 Label {
-                    text: "Chats".into()
+                    text: chats_text
                 }
             )),
             div {
@@ -176,6 +196,19 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
 
+                    let clear_unreads_text = LOCALES
+                        .lookup(&US_ENGLISH, "uplink.clear-unreads")
+                        .unwrap_or_default();
+                    let call_text = LOCALES
+                        .lookup(&US_ENGLISH, "uplink.call")
+                        .unwrap_or_default();
+                    let hide_chat_text = LOCALES
+                        .lookup(&US_ENGLISH, "uplink.hide-chat")
+                        .unwrap_or_default();
+                    let block_user_text = LOCALES
+                        .lookup(&US_ENGLISH, "friends.block")
+                        .unwrap_or_default();
+
                     rsx!(
                         ContextMenu {
                             key: "{key}-chat",
@@ -183,7 +216,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::EyeSlash,
-                                    text: String::from("Clear Unreads"),
+                                    text: clear_unreads_text,
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
                                     }
@@ -191,14 +224,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 hr{ },
                                 ContextItem {
                                     icon: Icon::PhoneArrowUpRight,
-                                    text: String::from("Call"),
+                                    text: call_text,
                                     //TODO: Wire to state
 
                                 },
                                 hr{ }
                                 ContextItem {
                                     icon: Icon::XMark,
-                                    text: String::from("Hide Chat"),
+                                    text: hide_chat_text,
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
                                     }
@@ -206,7 +239,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 ContextItem {
                                     danger: true,
                                     icon: Icon::NoSymbol,
-                                    text: String::from("Block User"),
+                                    text: block_user_text,
                                     //TODO: Wire to state
                                 },
                             )),

@@ -80,6 +80,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             &cx.props.with_replying_to,
             &cx.props.with_file_upload,
             Input {
+                // TODO: This should come from props
                 placeholder: "Say something...".into(),
             },
             &cx.props.extensions,

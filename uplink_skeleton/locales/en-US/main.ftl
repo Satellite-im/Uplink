@@ -2,12 +2,27 @@ uplink = Uplink
     .home = Home
     .add = Add
     .call = Call
+    .video-call = Video Call
     .chat = Chat
+    .chats = Chats
+    .send = Send
     .remove = Remove
-    .favorites = Favorites
     .more = More
+    .welcome = Welcome
+    .clear-unreads = Clear Unreads
+    .hide-chat = Hide Chat
+
+
+messages = Messages
+    .new = New Message
+    .replying = Replying to:
+
+favorites = Favorites
+    .add = Add to Favorites
+    .remove = Remove from Favorites
 
 friends = Friends
+    .cta-text = No friends yet. Add some!
     .add = Add Someone
     .placeholder = Username#0000...
     .block = Block

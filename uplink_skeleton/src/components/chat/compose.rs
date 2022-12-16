@@ -1,11 +1,12 @@
 use std::time::SystemTime;
 
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 use warp::raygun::Message as RaygunMessage;
 
-use crate::{state::{State, Action}, components::chat::sidebar::build_participants};
+use crate::{state::{State, Action}, components::chat::sidebar::build_participants, LOCALES, US_ENGLISH};
 
 use super::sidebar::build_participants_names;
 
@@ -37,6 +38,26 @@ pub fn Compose(cx: Scope) -> Element {
     let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
+
+    let add_text = LOCALES
+        .lookup(&US_ENGLISH, "favorites.add")
+        .unwrap_or_default();
+    let send_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.send")
+        .unwrap_or_default();
+    let call_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.call")
+        .unwrap_or_default();
+    let video_call_text = LOCALES
+        .lookup(&US_ENGLISH, "uplink.video-call")
+        .unwrap_or_default();    
+    let new_message_text = LOCALES
+        .lookup(&US_ENGLISH, "messages.new")
+        .unwrap_or_default();
+    let upload_text = LOCALES
+        .lookup(&US_ENGLISH, "files.upload")
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -50,7 +71,7 @@ pub fn Compose(cx: Scope) -> Element {
                             tooltip: cx.render(rsx!(
                                 Tooltip { 
                                     arrow_position: ArrowPosition::Top, 
-                                    text: String::from("Add Favorite")
+                                    text: add_text
                                 }
                             )),
                             onpress: move |_| {
@@ -63,7 +84,7 @@ pub fn Compose(cx: Scope) -> Element {
                             tooltip: cx.render(rsx!(
                                 Tooltip { 
                                     arrow_position: ArrowPosition::Top, 
-                                    text: String::from("Audio Call")
+                                    text: call_text
                                 }
                             )),
                         },
@@ -73,7 +94,7 @@ pub fn Compose(cx: Scope) -> Element {
                             tooltip: cx.render(rsx!(
                                 Tooltip { 
                                     arrow_position: ArrowPosition::Top, 
-                                    text: String::from("Video Call")
+                                    text: video_call_text
                                 }
                             )),
                         },
@@ -148,7 +169,7 @@ pub fn Compose(cx: Scope) -> Element {
                     }
                 },
                 MessageDivider {
-                    text: "New messages".into(),
+                    text: new_message_text,
                     timestamp: some_time_long_ago,
                 },
                 MessageGroup {
@@ -247,7 +268,7 @@ pub fn Compose(cx: Scope) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip { 
                                 arrow_position: ArrowPosition::Bottom, 
-                                text: String::from("Send")
+                                text: send_text
                             }
                         )),
                     },
@@ -279,7 +300,7 @@ pub fn Compose(cx: Scope) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip { 
                                 arrow_position: ArrowPosition::Bottom, 
-                                text: String::from("Upload")
+                                text: upload_text
                             }
                         ))
                     }

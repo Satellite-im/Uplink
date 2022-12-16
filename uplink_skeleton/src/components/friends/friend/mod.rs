@@ -143,7 +143,7 @@ pub fn Friends(cx: Scope) -> Element {
                                 .lookup(&US_ENGLISH, "uplink.chat")
                                 .unwrap_or_default();
                             let favorite_text = LOCALES
-                                .lookup(&US_ENGLISH, "uplink.favorites")
+                                .lookup(&US_ENGLISH, "favorites")
                                 .unwrap_or_default();
                             let remove_text = LOCALES
                                 .lookup(&US_ENGLISH, "uplink.remove")
