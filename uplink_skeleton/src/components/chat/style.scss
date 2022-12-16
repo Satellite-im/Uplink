@@ -25,7 +25,7 @@
     gap: var(--gap);
     padding: var(--padding-less);
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
 
     .message-group-wrap {
         .user-image-wrap {
