@@ -1,3 +1,5 @@
+use std::fs;
+
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::prelude::*;
@@ -38,6 +40,16 @@ static_loader! {
 }
 
 fn main() {
+    // Initalized the cache dir if needed
+    let cache_path = dirs::home_dir()
+        .unwrap_or_default()
+        .join(".uplink/")
+        .into_os_string()
+        .into_string()
+        .unwrap_or_default();
+
+    let _ = fs::create_dir_all(&cache_path);
+
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();

@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
+use dirs::home_dir;
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use uuid::Uuid;
-
 use warp::{
     constellation::item::Item,
     crypto::DID,
@@ -579,13 +579,26 @@ impl State {
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
-        fs::write("state.json", serialized)?;
+        let cache_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".uplink/state.json")
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
+
+        fs::write(cache_path, serialized)?;
         Ok(())
     }
 
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
-        match fs::read_to_string("state.json") {
+        let cache_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".uplink/state.json")
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
+        match fs::read_to_string(cache_path) {
             Ok(contents) => {
                 let state: State = serde_json::from_str(&contents)?;
                 Ok(state)

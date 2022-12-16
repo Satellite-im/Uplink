@@ -22,6 +22,15 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     text: "Open Folder".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
+                    onpress: |_| {
+                        let cache_path = dirs::home_dir()
+                            .unwrap_or_default()
+                            .join(".uplink/")
+                            .into_os_string()
+                            .into_string()
+                            .unwrap_or_default();
+                        let _ = opener::open(&cache_path);
+                    }
                 }
             },
             SettingSection {
