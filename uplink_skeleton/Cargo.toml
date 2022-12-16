@@ -26,7 +26,12 @@ unic-langid = "0.9.1"
 timeago = "0.4.0"
 dirs = "4.0.0"
 opener = "0.5.0"
+soloud = "1.0.2"
 
 [build-dependencies]
 glob = "0.3.0"
 rsass = "0.26.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.24.1"
+objc = "0.2.7"

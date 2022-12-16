@@ -597,6 +597,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.49"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db34956e100b30725f2eb215f90d4871051239535632f84fea3bc92722c66b7c"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "cocoa"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4214,6 +4223,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "soloud"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68b27367e7bceeceb167477f3d0dc633bb822327b44dceb59d5814ee7788f9a3"
+dependencies = [
+ "bitflags",
+ "paste",
+ "soloud-sys",
+]
+
+[[package]]
+name = "soloud-sys"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "507a862f3ce15071b74bc8e8e4c40dfa9f6c44fc3b96e60cb55b5aad08333727"
+dependencies = [
+ "cmake",
+]
+
+[[package]]
 name = "soup2-sys"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4886,6 +4915,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.20.0",
  "chrono",
+ "cocoa",
  "dioxus",
  "dirs",
  "either",
@@ -4894,11 +4924,13 @@ dependencies = [
  "image",
  "lipsum",
  "names",
+ "objc",
  "opener",
  "rand 0.8.5",
  "rsass",
  "serde",
  "serde_json",
+ "soloud",
  "substring",
  "timeago 0.4.0",
  "titlecase",
