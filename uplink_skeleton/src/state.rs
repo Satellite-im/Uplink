@@ -126,6 +126,13 @@ pub struct Files {
     pub active_folder: Option<Item>,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Settings {
+    // Selected Language
+    #[serde(default)]
+    pub language: String,
+}
+
 use std::fmt;
 
 use crate::testing::mock::generate_mock;
@@ -140,6 +147,8 @@ pub struct State {
     pub chats: Chats,
     #[serde(default)]
     pub friends: Friends,
+    #[serde(default)]
+    pub settings: Settings,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<ActionHook>,
 }
@@ -318,6 +327,11 @@ impl State {
     /// Sets the user's identity.
     fn set_identity(&mut self, identity: &Identity) {
         self.account.identity = identity.clone();
+    }
+
+    /// Sets the user's language.
+    fn set_language(&mut self, string: &String) {
+        self.settings.language = string.clone();
     }
 
     fn remove_friend(&mut self, did: &DID) {
@@ -505,6 +519,7 @@ impl State {
 
         match action {
             Action::SetId(identity) => self.set_identity(&identity),
+            Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(_) => todo!(),
             Action::RequestAccepted(_) => todo!(),
             Action::CancelRequest(_) => todo!(),
@@ -616,6 +631,10 @@ pub enum Action {
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
+
+    // Settings
+    /// Sets the selected language.
+    SetLanguage(String),
 
     // Routes
     /// Set the active route

@@ -17,7 +17,7 @@ use warp::{
     raygun::Message,
 };
 
-use crate::state::{Account, Chat, Chats, Friends, Route, State};
+use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State};
 
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
@@ -44,6 +44,9 @@ pub fn generate_mock() -> State {
     State {
         account: Account {
             identity: me.clone(),
+        },
+        settings: Settings {
+            language: "en_US".into(),
         },
         route: Route { active: "/".into() },
         chats: Chats {
