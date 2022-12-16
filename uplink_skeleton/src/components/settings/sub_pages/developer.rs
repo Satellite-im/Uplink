@@ -1,7 +1,10 @@
+use std::{fs, io::{Read, Write}};
+
 use dioxus::prelude::*;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
 use crate::components::settings::SettingSection;
+
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
@@ -40,6 +43,8 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     text: "Compress".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
+                    onpress: |_| {
+                    }
                 }
             },
             SettingSection {
