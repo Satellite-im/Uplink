@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use std::fs;
-use std::path::Path;
 
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -74,9 +73,15 @@ impl Config {
         Self::default()
     }
 
-    pub fn load<P: AsRef<Path>>(path: P) -> Self {
+    pub fn load() -> Self {
+        let config_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".uplink/Config.json")
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
         // Load the config from the specified path
-        match fs::read_to_string(path) {
+        match fs::read_to_string(config_path) {
             Ok(contents) => {
                 // Parse the config from the file contents using serde
                 match serde_json::from_str(&contents) {
@@ -88,9 +93,15 @@ impl Config {
         }
     }
 
-    pub fn load_or_default<P: AsRef<Path>>(path: P) -> Self {
+    pub fn load_or_default() -> Self {
+        let config_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".uplink/Config.json")
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
         // Try to load the config from the specified path
-        match fs::read_to_string(path) {
+        match fs::read_to_string(config_path) {
             Ok(contents) => {
                 // Parse the config from the file contents using serde
                 match serde_json::from_str(&contents) {
@@ -102,9 +113,15 @@ impl Config {
         }
     }
 
-    fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), std::io::Error> {
+    fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
-        fs::write(path, config_json)?;
+        let config_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".uplink/Config.json")
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
+        fs::write(config_path, config_json)?;
         Ok(())
     }
 }
@@ -112,6 +129,6 @@ impl Config {
 impl Config {
     pub fn set_theme(&mut self, theme_name: String) {
         self.general.theme = theme_name;
-        let _ = self.save(CONF_LOC);
+        let _ = self.save();
     }
 }
