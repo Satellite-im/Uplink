@@ -27,9 +27,15 @@ friends = Friends
     .placeholder = Username#0000...
     .block = Block
     .all = All Friends
+    .remove = Unfriend
+    .incoming_requests = Incoming Requests
+    .outgoing_requests = Outgoing Requests
+    .cancel = Cancel Request
     .requests = Requests
     .pending = Pending
     .blocked = Blocked
+    .accept = Accept
+    .deny = Deny Request
 
 files = Files
     .new-folder = New Folder

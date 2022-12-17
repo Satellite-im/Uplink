@@ -8,7 +8,10 @@ use ui_kit::{
 use crate::{
     components::{
         chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-        friends::{add::AddFriend, friend::Friends},
+        friends::{
+            add::AddFriend,
+            friend::{BlockedUsers, Friends, OutgoingRequests, PendingFriends},
+        },
     },
     state::State,
     LOCALES, US_ENGLISH,
@@ -17,6 +20,13 @@ use crate::{
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
+}
+
+#[derive(PartialEq)]
+pub enum FriendRoute {
+    All,
+    Pending,
+    Blocked,
 }
 
 #[allow(non_snake_case)]
@@ -34,6 +44,8 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
+    let route = use_state(&cx, || FriendRoute::All);
+
     cx.render(rsx!(
         div {
             id: "friends-layout",
@@ -48,24 +60,37 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     Button {
                         icon: Icon::User,
                         text: all_text,
+                        appearance: if route.clone() == FriendRoute::All { Appearance::Primary } else { Appearance::Secondary },
+                        onpress: move |_| {
+                            route.set(FriendRoute::All);
+                        }
                     },
                     Button {
                         icon: Icon::Clock,
-                        appearance: Appearance::Secondary,
+                        appearance: if route.clone() == FriendRoute::Pending { Appearance::Primary } else { Appearance::Secondary },
                         text: pending_text,
                         with_badge:  if pending_friends > 0 {
                             pending_friends.to_string()
                         } else {
                             "".into()
                         },
+                        onpress: move |_| {
+                            route.set(FriendRoute::Pending);
+                        }
                     },
                     Button {
                         icon: Icon::NoSymbol,
-                        appearance: Appearance::Secondary,
+                        appearance: if route.clone() == FriendRoute::Blocked { Appearance::Primary } else { Appearance::Secondary },
                         text: blocked_text,
+                        onpress: move |_| {
+                            route.set(FriendRoute::Blocked);
+                        }
                     },
                 },
-                Friends {}
+
+                (route.clone() == FriendRoute::All).then(|| rsx!(Friends {})),
+                (route.clone() == FriendRoute::Pending).then(|| rsx!(PendingFriends {}, OutgoingRequests {})),
+                (route.clone() == FriendRoute::Blocked).then(|| rsx!(BlockedUsers {})),
             }
         }
     ))

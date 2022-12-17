@@ -35,6 +35,8 @@ pub struct Props<'a> {
     // An optional event handler for the "onremove" event
     #[props(optional)]
     onremove: Option<EventHandler<'a>>,
+    #[props(optional)]
+    onaccept: Option<EventHandler<'a>>,
     // An optional event handler for the "onblock" event
     #[props(optional)]
     _onblock: Option<EventHandler<'a>>,
@@ -49,7 +51,13 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .lookup(&US_ENGLISH, "uplink.more")
         .unwrap_or_default();
     let remove_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.remove")
+        .lookup(&US_ENGLISH, "friends.remove")
+        .unwrap_or_default();
+    let deny_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.deny")
+        .unwrap_or_default();
+    let accept_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.accept")
         .unwrap_or_default();
 
     cx.render(rsx!(
@@ -71,14 +79,26 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 class: "request-controls",
-                Button {
-                    icon: Icon::ChatBubbleBottomCenterText,
-                    text: chat_text,
-                    onpress: move |_| match &cx.props.onchat {
-                        Some(f) => f.call(()),
-                        None    => {},
+                cx.props.onaccept.is_some().then(|| rsx!(
+                    Button {
+                        icon: Icon::Check,
+                        text: accept_text,
+                        onpress: move |_| match &cx.props.onaccept {
+                            Some(f) => f.call(()),
+                            None    => {},
+                        }
                     }
-                },
+                )),
+                cx.props.onchat.is_some().then(|| rsx! (
+                    Button {
+                        icon: Icon::ChatBubbleBottomCenterText,
+                        text: chat_text,
+                        onpress: move |_| match &cx.props.onchat {
+                            Some(f) => f.call(()),
+                            None    => {},
+                        }
+                    }
+                )),
                 Button {
                     icon: Icon::XMark,
                     appearance: Appearance::Secondary,
@@ -89,21 +109,23 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: remove_text
+                            text: if cx.props.onaccept.is_none() { remove_text } else { deny_text }
                         }
                     )),
                 },
-                Button {
-                    icon: Icon::EllipsisVertical,
-                    appearance: Appearance::Secondary,
-                    onpress: move |_| {},
-                    tooltip: cx.render(rsx!(
-                        Tooltip {
-                            arrow_position: ArrowPosition::Right,
-                            text: more_text
-                        }
-                    )),
-                }
+                cx.props.onchat.is_some().then(|| rsx!(
+                    Button {
+                        icon: Icon::EllipsisVertical,
+                        appearance: Appearance::Secondary,
+                        onpress: move |_| {},
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Right,
+                                text: more_text
+                            }
+                        )),
+                    }
+                ))
             }
         }
     ))
@@ -215,6 +237,171 @@ pub fn Friends(cx: Scope) -> Element {
                                 }
                             )
                         })
+                    }
+                )
+            })
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn PendingFriends(cx: Scope) -> Element {
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let friends_list = state.read().friends.incoming_requests.clone();
+
+    let requests_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.incoming_requests")
+        .unwrap_or_default();
+
+    cx.render(rsx! (
+            div {
+                class: "friends-list",
+                Label {
+                    text: requests_text,
+                },
+                friends_list.into_iter().map(|friend| {
+                    let did = friend.did_key().clone();
+                    let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+
+                    let deny_text = LOCALES
+                        .lookup(&US_ENGLISH, "friends.deny")
+                        .unwrap_or_default();
+
+                    rsx!(
+                        ContextMenu {
+                            id: format!("{}-friend-listing", did),
+                            key: "{did}-friend-listing",
+                            items: cx.render(rsx!(
+                                ContextItem {
+                                    danger: true,
+                                    icon: Icon::XMark,
+                                    text: deny_text,
+                                    onpress: move |_| {} // TODO:
+                                },
+                            )),
+                            Friend {
+                                username: friend.username(),
+                                suffix: did_suffix,
+                                user_image: cx.render(rsx! (
+                                    UserImage {
+                                        platform: Platform::Desktop,
+                                        status: Status::Online,
+                                        image: friend.graphics().profile_picture()
+                                    }
+                                )),
+                                onaccept: move |_| {
+    // TODO:
+                                },
+                                onremove: move |_| {
+    // TODO::
+                                }
+                            }
+                        }
+                    )
+                })
+            }
+        ))
+}
+
+#[allow(non_snake_case)]
+pub fn OutgoingRequests(cx: Scope) -> Element {
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let friends_list = state.read().friends.outgoing_requests.clone();
+
+    let requests_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.outgoing_requests")
+        .unwrap_or_default();
+
+    cx.render(rsx! (
+        div {
+            class: "friends-list",
+            Label {
+                text: requests_text,
+            },
+            friends_list.into_iter().map(|friend| {
+                let did = friend.did_key().clone();
+                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+
+                let cancel_text = LOCALES
+                    .lookup(&US_ENGLISH, "friends.cancel")
+                    .unwrap_or_default();
+                rsx!(
+                    ContextMenu {
+                        id: format!("{}-friend-listing", did),
+                        key: "{did}-friend-listing",
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                danger: true,
+                                icon: Icon::XMark,
+                                text: cancel_text,
+                                onpress: move |_| {} // TODO:
+                            },
+                        )),
+                        Friend {
+                            username: friend.username(),
+                            suffix: did_suffix,
+                            user_image: cx.render(rsx! (
+                                UserImage {
+                                    platform: Platform::Desktop,
+                                    status: Status::Online,
+                                    image: friend.graphics().profile_picture()
+                                }
+                            )),
+                            onremove: move |_| {} // TODO:
+                        }
+                    }
+                )
+            })
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn BlockedUsers(cx: Scope) -> Element {
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let block_list = state.read().friends.blocked.clone();
+
+    let blocked_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.blocked")
+        .unwrap_or_default();
+
+    cx.render(rsx! (
+        div {
+            class: "friends-list",
+            Label {
+                text: blocked_text,
+            },
+            block_list.into_iter().map(|blocked_user| {
+                let did = blocked_user.did_key().clone();
+                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+
+                let unblock_text = LOCALES
+                    .lookup(&US_ENGLISH, "friends.unblock")
+                    .unwrap_or_default();
+                rsx!(
+                    ContextMenu {
+                        id: format!("{}-friend-listing", did),
+                        key: "{did}-friend-listing",
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                danger: true,
+                                icon: Icon::XMark,
+                                text: unblock_text,
+                                onpress: move |_| {} // TODO:
+                            },
+                        )),
+                        Friend {
+                            username: blocked_user.username(),
+                            suffix: did_suffix,
+                            user_image: cx.render(rsx! (
+                                UserImage {
+                                    platform: Platform::Desktop,
+                                    status: Status::Online,
+                                    image: blocked_user.graphics().profile_picture()
+                                }
+                            )),
+                            onremove: move |_| {} // TODO:
+                        }
                     }
                 )
             })
