@@ -161,9 +161,11 @@ pub fn Friends(cx: Scope) -> Element {
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                             let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
                             let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
+                            let chat_with_friend_context_clone = chat_with_friend_context.clone();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = remove_friend.clone();
                             let block_friend = friend.clone();
+                            let block_friend_clone = friend.clone();
 
                             let call_text = LOCALES
                                 .lookup(&US_ENGLISH, "uplink.call")
@@ -202,7 +204,9 @@ pub fn Friends(cx: Scope) -> Element {
                                         ContextItem {
                                             icon: Icon::Heart,
                                             text: favorite_text,
-                                            // TODO: Wire this up to state
+                                            onpress: move |_| {
+                                                let _ = &state.write().mutate(Action::Favorite(chat_with_friend_context_clone.clone()));
+                                            }
                                         },
                                         hr{}
                                         ContextItem {
@@ -217,7 +221,9 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::NoSymbol,
                                             text: block_test,
-                                            // TODO: Wire this up to state
+                                            onpress: move |_| {
+                                                let _ = &state.write().mutate(Action::Block(block_friend.clone()));
+                                            }
                                         },
                                     )),
                                     Friend {
@@ -238,7 +244,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             let _ = &state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                         },
                                         onblock: move |_| {
-                                            let _ = &state.write().mutate(Action::Block(block_friend.clone()));
+                                            let _ = &state.write().mutate(Action::Block(block_friend_clone.clone()));
                                         }
                                     }
                                 }
@@ -261,53 +267,59 @@ pub fn PendingFriends(cx: Scope) -> Element {
         .unwrap_or_default();
 
     cx.render(rsx! (
-            div {
-                class: "friends-list",
-                Label {
-                    text: requests_text,
-                },
-                friends_list.into_iter().map(|friend| {
-                    let did = friend.did_key().clone();
-                    let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+        div {
+            class: "friends-list",
+            Label {
+                text: requests_text,
+            },
+            friends_list.into_iter().map(|friend| {
+                let did = friend.did_key().clone();
+                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
 
-                    let deny_text = LOCALES
-                        .lookup(&US_ENGLISH, "friends.deny")
-                        .unwrap_or_default();
+                let deny_text = LOCALES
+                    .lookup(&US_ENGLISH, "friends.deny")
+                    .unwrap_or_default();
 
-                    rsx!(
-                        ContextMenu {
-                            id: format!("{}-friend-listing", did),
-                            key: "{did}-friend-listing",
-                            items: cx.render(rsx!(
-                                ContextItem {
-                                    danger: true,
-                                    icon: Icon::XMark,
-                                    text: deny_text,
-                                    onpress: move |_| {} // TODO:
-                                },
-                            )),
-                            Friend {
-                                username: friend.username(),
-                                suffix: did_suffix,
-                                user_image: cx.render(rsx! (
-                                    UserImage {
-                                        platform: Platform::Desktop,
-                                        status: Status::Online,
-                                        image: friend.graphics().profile_picture()
-                                    }
-                                )),
-                                onaccept: move |_| {
-    // TODO:
-                                },
-                                onremove: move |_| {
-    // TODO::
+                let friend_clone = friend.clone();
+                let friend_clone_clone = friend.clone();
+                let friend_clone_clone_clone = friend.clone();
+
+                rsx!(
+                    ContextMenu {
+                        id: format!("{}-friend-listing", did),
+                        key: "{did}-friend-listing",
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                danger: true,
+                                icon: Icon::XMark,
+                                text: deny_text,
+                                onpress: move |_| {
+                                    let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
                                 }
+                            },
+                        )),
+                        Friend {
+                            username: friend.username(),
+                            suffix: did_suffix,
+                            user_image: cx.render(rsx! (
+                                UserImage {
+                                    platform: Platform::Desktop,
+                                    status: Status::Online,
+                                    image: friend.graphics().profile_picture()
+                                }
+                            )),
+                            onaccept: move |_| {
+                                let _ = state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
+                            },
+                            onremove: move |_| {
+                                let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
                             }
                         }
-                    )
-                })
-            }
-        ))
+                    }
+                )
+            })
+        }
+    ))
 }
 
 #[allow(non_snake_case)]
@@ -332,6 +344,10 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let cancel_text = LOCALES
                     .lookup(&US_ENGLISH, "friends.cancel")
                     .unwrap_or_default();
+
+                    let friend_clone = friend.clone();
+                    let friend_clone_clone = friend.clone();
+
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -341,7 +357,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::XMark,
                                 text: cancel_text,
-                                onpress: move |_| {} // TODO:
+                                onpress: move |_| {
+                                    let _ = &state.write().mutate(Action::CancelRequest(friend_clone_clone.clone()));
+                                }
                             },
                         )),
                         Friend {
@@ -354,7 +372,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                     image: friend.graphics().profile_picture()
                                 }
                             )),
-                            onremove: move |_| {} // TODO:
+                            onremove: move |_| {
+                                let _ = &state.write().mutate(Action::CancelRequest(friend_clone.clone()));
+                            }
                         }
                     }
                 )

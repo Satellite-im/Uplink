@@ -165,7 +165,6 @@ pub fn Compose(cx: Scope) -> Element {
                                                     icon: Icon::ArrowLongLeft,
                                                     text: String::from("Reply"),
                                                     onpress: move |_| {
-                                                        // TODO: wire 
                                                         let chat = state.read().get_active_chat().unwrap_or_default();
                                                         state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
                                                     }
