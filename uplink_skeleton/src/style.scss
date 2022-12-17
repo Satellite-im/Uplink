@@ -4,6 +4,7 @@ body,
     height: 100%;
     width: 100%;
     background-color: var(--background);
+    -webkit-app-region: drag;
 }
 
 #main {
@@ -11,6 +12,10 @@ body,
     backdrop-filter: blur(20px);
     position: relative;
     overflow: hidden;
+
+    .sidebar {
+        padding-top: 1.5rem;
+    }
 }
 
 .search-input,

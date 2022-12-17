@@ -2,12 +2,16 @@ use std::fs;
 
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
+use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus::desktop::tao::window::Window;
 use dioxus::prelude::*;
 
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
+
+use cocoa::appkit::{NSWindow, NSWindowStyleMask};
 
 use ui_kit::STYLE as UIKIT_STYLES;
 
@@ -82,11 +86,22 @@ fn main() {
 
     let title = LOCALES.lookup(&US_ENGLISH, "uplink").unwrap_or_default();
 
-    let window = WindowBuilder::new()
+    let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
         .with_inner_size(LogicalSize::new(950.0, 600.0))
         .with_min_inner_size(LogicalSize::new(330.0, 500.0));
+
+    #[cfg(target_os = "macos")]
+    {
+        window = window
+            .with_title_hidden(true)
+            .with_transparent(true)
+            .with_movable_by_window_background(true)
+            .with_fullsize_content_view(true)
+            .with_titlebar_buttons_hidden(false)
+            .with_titlebar_transparent(true)
+    }
 
     dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
 }
