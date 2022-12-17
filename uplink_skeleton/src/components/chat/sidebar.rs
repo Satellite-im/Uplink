@@ -236,12 +236,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
                                     }
                                 },
-                                ContextItem {
-                                    danger: true,
-                                    icon: Icon::NoSymbol,
-                                    text: block_user_text,
-                                    //TODO: Wire to state
-                                },
                             )),
                             User {
                                 username: participants_name,

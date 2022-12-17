@@ -28,6 +28,11 @@ impl PartialOrd for MessageDivider {
     }
 }
 
+pub enum Direction {
+    Incoming,
+    Outgoing,
+}
+
 // Define a struct to represent a group of messages from the same sender.
 pub struct MessageGroup {
     pub sender: DID,
@@ -334,24 +339,77 @@ impl State {
         self.settings.language = string.clone();
     }
 
+    fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
+        match direction {
+            Direction::Outgoing => {
+                self.friends
+                    .outgoing_requests
+                    .retain(|friend| friend.did_key() != identity.did_key());
+            }
+            Direction::Incoming => {
+                self.friends
+                    .incoming_requests
+                    .retain(|friend| friend.did_key() != identity.did_key());
+            }
+        }
+    }
+
+    fn complete_request(&mut self, direction: Direction, identity: &Identity) {
+        match direction {
+            Direction::Outgoing => {
+                self.friends
+                    .outgoing_requests
+                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends
+                    .all
+                    .insert(identity.did_key(), identity.clone());
+            }
+            Direction::Incoming => {
+                self.friends
+                    .incoming_requests
+                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends
+                    .all
+                    .insert(identity.did_key(), identity.clone());
+            }
+        }
+    }
+
+    fn new_incoming_request(&mut self, identity: &Identity) {
+        self.friends.incoming_requests.push(identity.clone());
+    }
+
+    fn new_outgoing_request(&mut self, identity: &Identity) {
+        self.friends.outgoing_requests.push(identity.clone());
+    }
+
+    fn block(&mut self, identity: &Identity) {
+        // If the identity is not already blocked, add it to the blocked list
+        if !self.friends.blocked.contains(&identity) {
+            self.friends.blocked.push(identity.clone());
+        }
+
+        // Remove the identity from the outgoing requests list if they are present
+        self.friends
+            .outgoing_requests
+            .retain(|friend| friend.did_key() != identity.did_key());
+
+        // Remove the identity from the friends list if they are present
+        self.remove_friend(&identity.did_key());
+    }
+
+    fn unblock(&mut self, identity: &Identity) {
+        // Find the index of the identity in the blocked list
+        let index = self.friends.blocked.iter().position(|x| *x == *identity);
+        // If the identity is in the blocked list, remove it
+        if let Some(i) = index {
+            self.friends.blocked.remove(i);
+        }
+    }
+
     fn remove_friend(&mut self, did: &DID) {
         // Remove the friend from the all field of the friends struct
         self.friends.all.remove(did);
-
-        // Remove the friend from the blocked field if they are present
-        self.friends
-            .blocked
-            .retain(|friend| friend.did_key() != *did);
-
-        // Remove the friend from the incoming_requests field if they are present
-        self.friends
-            .incoming_requests
-            .retain(|friend| friend.did_key() != *did);
-
-        // Remove the friend from the outgoing_requests field if they are present
-        self.friends
-            .outgoing_requests
-            .retain(|friend| friend.did_key() != *did);
 
         let all_chats = self.chats.all.clone();
 
@@ -520,15 +578,23 @@ impl State {
         match action {
             Action::SetId(identity) => self.set_identity(&identity),
             Action::SetLanguage(language) => self.set_language(&language),
-            Action::SendRequest(_) => todo!(),
-            Action::RequestAccepted(_) => todo!(),
-            Action::CancelRequest(_) => todo!(),
-            Action::IncomingRequest(_) => todo!(),
-            Action::AcceptRequest(_) => todo!(),
-            Action::DenyRequest(_) => todo!(),
+            Action::SendRequest(identity) => self.new_outgoing_request(&identity),
+            Action::RequestAccepted(identity) => {
+                self.complete_request(Direction::Outgoing, &identity);
+            }
+            Action::CancelRequest(identity) => {
+                self.cancel_request(Direction::Outgoing, &identity);
+            }
+            Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
+            Action::AcceptRequest(identity) => {
+                self.complete_request(Direction::Incoming, &identity);
+            }
+            Action::DenyRequest(identity) => {
+                self.cancel_request(Direction::Incoming, &identity);
+            }
             Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
-            Action::Block(_) => todo!(),
-            Action::UnBlock(_) => todo!(),
+            Action::Block(identity) => self.block(&identity),
+            Action::UnBlock(identity) => self.unblock(&identity),
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat) => self.unfavorite(&chat),
             Action::ChatWith(chat) => {

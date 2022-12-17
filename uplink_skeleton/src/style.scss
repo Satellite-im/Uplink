@@ -26,12 +26,12 @@ body,
     user-select: none;
     cursor: default;
     p {
-        color: var(--warning);
+        color: var(--warning-light);
         font-size: var(--text-size-less);    
     }
     svg {
         fill: transparent;
-        stroke: var(--warning);
+        stroke: var(--warning-light);
         height: var(--text-size-less);
         align-self: center;
         width: var(--text-size-less);

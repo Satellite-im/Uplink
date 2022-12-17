@@ -91,7 +91,7 @@ fn main() {
         .with_title(title)
         .with_resizable(true)
         .with_inner_size(LogicalSize::new(950.0, 600.0))
-        .with_min_inner_size(LogicalSize::new(330.0, 500.0));
+        .with_min_inner_size(LogicalSize::new(300.0, 500.0));
 
     #[cfg(target_os = "macos")]
     {

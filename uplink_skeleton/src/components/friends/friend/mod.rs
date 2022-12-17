@@ -39,7 +39,7 @@ pub struct Props<'a> {
     onaccept: Option<EventHandler<'a>>,
     // An optional event handler for the "onblock" event
     #[props(optional)]
-    _onblock: Option<EventHandler<'a>>,
+    onblock: Option<EventHandler<'a>>,
 }
 
 #[allow(non_snake_case)]
@@ -47,8 +47,8 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let chat_text = LOCALES
         .lookup(&US_ENGLISH, "uplink.chat")
         .unwrap_or_default();
-    let more_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.more")
+    let block_text = LOCALES
+        .lookup(&US_ENGLISH, "friends.block")
         .unwrap_or_default();
     let remove_text = LOCALES
         .lookup(&US_ENGLISH, "friends.remove")
@@ -115,13 +115,16 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 cx.props.onchat.is_some().then(|| rsx!(
                     Button {
-                        icon: Icon::EllipsisVertical,
+                        icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
-                        onpress: move |_| {},
+                        onpress: move |_| match &cx.props.onblock {
+                            Some(f) => f.call(()),
+                            None    => {},
+                        }
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Right,
-                                text: more_text
+                                text: block_text
                             }
                         )),
                     }
@@ -160,6 +163,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
                             let remove_friend = friend.clone();
                             let remove_friend_2 = remove_friend.clone();
+                            let block_friend = friend.clone();
 
                             let call_text = LOCALES
                                 .lookup(&US_ENGLISH, "uplink.call")
@@ -232,6 +236,9 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         onremove: move |_| {
                                             let _ = &state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                        },
+                                        onblock: move |_| {
+                                            let _ = &state.write().mutate(Action::Block(block_friend.clone()));
                                         }
                                     }
                                 }
@@ -374,7 +381,8 @@ pub fn BlockedUsers(cx: Scope) -> Element {
             block_list.into_iter().map(|blocked_user| {
                 let did = blocked_user.did_key().clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-
+                let unblock_user = blocked_user.clone();
+                let unblock_user_clone = unblock_user.clone();
                 let unblock_text = LOCALES
                     .lookup(&US_ENGLISH, "friends.unblock")
                     .unwrap_or_default();
@@ -387,7 +395,9 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::XMark,
                                 text: unblock_text,
-                                onpress: move |_| {} // TODO:
+                                onpress: move |_| {
+                                    state.write().mutate(Action::UnBlock(unblock_user.clone()));
+                                }
                             },
                         )),
                         Friend {
@@ -400,7 +410,9 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),
-                            onremove: move |_| {} // TODO:
+                            onremove: move |_| {
+                                state.write().mutate(Action::UnBlock(unblock_user_clone.clone()));
+                            }
                         }
                     }
                 )

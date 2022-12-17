@@ -5,6 +5,7 @@
     display: inline-flex;
     height: 100%;
     width: 100%;
+    min-width: calc(var(--sidebar-width) * 2);
 }
 
 #files-layout,
