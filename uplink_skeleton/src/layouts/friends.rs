@@ -10,6 +10,7 @@ use crate::{
         chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
         friends::{add::AddFriend, friend::Friends},
     },
+    state::State,
     LOCALES, US_ENGLISH,
 };
 
@@ -29,6 +30,9 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let blocked_text = LOCALES
         .lookup(&US_ENGLISH, "friends.blocked")
         .unwrap_or_default();
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+
+    let pending_friends = state.read().friends.incoming_requests.len();
 
     cx.render(rsx!(
         div {
@@ -49,6 +53,11 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                         icon: Icon::Clock,
                         appearance: Appearance::Secondary,
                         text: pending_text,
+                        with_badge:  if pending_friends > 0 {
+                            pending_friends.to_string()
+                        } else {
+                            "".into()
+                        },
                     },
                     Button {
                         icon: Icon::NoSymbol,

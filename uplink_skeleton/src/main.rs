@@ -98,6 +98,10 @@ fn app(cx: Scope) -> Element {
     };
     let _ = use_context_provider(&cx, || state);
 
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+
+    let pending_friends = state.read().friends.incoming_requests.len();
+
     let chat_route = UIRoute {
         to: "/",
         name: "Chat",
@@ -114,7 +118,11 @@ fn app(cx: Scope) -> Element {
         to: "/friends",
         name: "Friends",
         icon: Icon::Users,
-        with_badge: Some("16".into()),
+        with_badge: if pending_friends > 0 {
+            Some(pending_friends.to_string())
+        } else {
+            None
+        },
         loading: None,
     };
     let files_route = UIRoute {
