@@ -19,6 +19,18 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                section_label: "Open Codebase".into(),
+                section_description: "Opens the codebase in your default web browser.".into(),
+                Button {
+                    text: "Open Codebase".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::CodeBracketSquare,
+                    onpress: |_| {
+                        let _ = open::that("https://github.com/Satellite-im/Uplink-UI_Kit/tree/main/uplink_skeleton");
+                    }
+                }
+            },
+            SettingSection {
                 section_label: "Open Cache".into(),
                 section_description: "Open the cache in your default file browser.".into(),
                 Button {

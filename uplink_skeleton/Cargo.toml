@@ -27,6 +27,7 @@ timeago = "0.4.0"
 dirs = "4.0.0"
 opener = "0.5.0"
 soloud = "1.0.2"
+open = "3.2.0"
 
 [build-dependencies]
 glob = "0.3.0"

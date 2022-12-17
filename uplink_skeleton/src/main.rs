@@ -16,6 +16,7 @@ use cocoa::appkit::{NSWindow, NSWindowStyleMask};
 
 use ui_kit::STYLE as UIKIT_STYLES;
 
+use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
@@ -164,6 +165,7 @@ fn app(cx: Scope) -> Element {
                 "Pre-release"
             }
         },
+        PopoutPlayer {},
         Router {
             Route {
                 to: "/",
