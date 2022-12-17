@@ -9,6 +9,7 @@ use dioxus::prelude::*;
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
+use ui_kit::icons::IconElement;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
 use cocoa::appkit::{NSWindow, NSWindowStyleMask};
@@ -97,10 +98,10 @@ fn main() {
         window = window
             .with_title_hidden(true)
             .with_transparent(true)
-            .with_movable_by_window_background(true)
             .with_fullsize_content_view(true)
             .with_titlebar_buttons_hidden(false)
             .with_titlebar_transparent(true)
+            .with_movable_by_window_background(true)
     }
 
     dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
@@ -154,6 +155,15 @@ fn app(cx: Scope) -> Element {
     ];
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
+        div {
+            id: "pre-release",
+            IconElement {
+                icon: Icon::Beaker,
+            },
+            p {
+                "Pre-release"
+            }
+        },
         Router {
             Route {
                 to: "/",

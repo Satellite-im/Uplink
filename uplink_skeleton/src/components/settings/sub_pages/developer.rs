@@ -1,5 +1,3 @@
-use std::{fs, io::{Read, Write}};
-
 use dioxus::prelude::*;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 

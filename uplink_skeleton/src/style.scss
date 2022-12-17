@@ -3,13 +3,40 @@ body,
 #main {
     height: 100%;
     width: 100%;
-    background-color: var(--background);
+    background-color: transparent;
+    border-radius: var(--border-radius);
+    overflow: hidden;
     -webkit-app-region: drag;
 }
 
+#pre-release {
+    position: fixed;
+    top: var(--gap-less);
+    margin-left: 4rem;
+    left: var(--gap);
+    background-color: var(--secondary-dark);
+    border-radius: var(--border-radius-less);
+    display: inline-flex;
+    gap: var(--gap-less);
+    align-content: center;
+    justify-content: center;
+    width: fit-content;
+    padding: var(--gap-less);
+    p {
+        color: var(--warning);
+        font-size: var(--text-size-less);    
+    }
+    svg {
+        fill: transparent;
+        stroke: var(--warning);
+        height: var(--text-size-less);
+        align-self: center;
+        width: var(--text-size-less);
+    }
+}
+
 #main {
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    background-color: var(--background);
     position: relative;
     overflow: hidden;
 
