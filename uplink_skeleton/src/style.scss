@@ -42,6 +42,8 @@ body,
     background-color: var(--background);
     position: relative;
     overflow: hidden;
+    border: 1px solid var(--border-color);
+
 
     .sidebar {
         padding-top: 1.5rem;

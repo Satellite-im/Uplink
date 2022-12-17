@@ -569,6 +569,13 @@ impl State {
 
         sorted_friends_by_first_letter
     }
+
+    pub fn clear(&mut self) {
+        self.chats = Chats::default();
+        self.friends = Friends::default();
+        self.account = Account::default();
+        self.settings = Settings::default();
+    }
 }
 
 impl State {

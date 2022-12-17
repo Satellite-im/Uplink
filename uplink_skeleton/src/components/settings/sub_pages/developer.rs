@@ -1,11 +1,13 @@
 use dioxus::prelude::*;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
-use crate::components::settings::SettingSection;
+use crate::{components::settings::SettingSection, state::State};
 
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
+    let state = use_context::<State>(&cx).unwrap();
+
     cx.render(rsx!(
         div {
             id: "settings-developer",
@@ -52,6 +54,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     text: "Clear".into(),
                     appearance: Appearance::Danger,
                     icon: Icon::Trash,
+                    onpress: move |_| {
+                        state.write().clear();
+                    }
                 }
             }
         }
