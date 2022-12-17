@@ -12,7 +12,7 @@ body,
 #pre-release {
     position: fixed;
     top: var(--gap-less);
-    margin-left: 4rem;
+    margin-left: 4rem; // TODO: only do this on mac
     left: var(--gap);
     background-color: var(--secondary-dark);
     border-radius: var(--border-radius-less);
@@ -22,6 +22,9 @@ body,
     justify-content: center;
     width: fit-content;
     padding: var(--gap-less);
+    pointer-events: none;
+    user-select: none;
+    cursor: default;
     p {
         color: var(--warning);
         font-size: var(--text-size-less);    

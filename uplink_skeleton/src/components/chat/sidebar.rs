@@ -134,7 +134,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                         ContextItem {
-                                            icon: Icon::Heart,
+                                            icon: Icon::XMark,
                                             text: remove_favorite_text,
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
@@ -230,7 +230,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                                 hr{ }
                                 ContextItem {
-                                    icon: Icon::XMark,
+                                    icon: Icon::EyeSlash,
                                     text: hide_chat_text,
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
