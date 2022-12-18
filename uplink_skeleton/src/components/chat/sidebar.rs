@@ -3,7 +3,7 @@ use fluent_templates::Loader;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::chat::RouteInfo, state::{State, Action, Chat}, LOCALES, US_ENGLISH};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, LOCALES, US_ENGLISH};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -69,6 +69,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let chats_text = LOCALES
         .lookup(&US_ENGLISH, "uplink.chats")
         .unwrap_or_default(); 
+
+    let binding = state.read();
+    let active_media_chat = binding.get_active_media_chat();
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -158,13 +161,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 }
             )),
-            (!sidebar_chats.is_empty()).then(|| rsx!(
-                Label {
-                    text: chats_text
-                }
-            )),
             div {
                 id: "chats",
+                (!sidebar_chats.is_empty()).then(|| rsx!(
+                    Label {
+                        text: chats_text
+                    }
+                )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
                     let chat = state.read().chats.all.get(&chat_id).unwrap().clone();
                     let without_me = state.read().get_without_me(chat.participants.clone());
@@ -268,7 +271,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         }
                     )}
                 )
-            }
+            },
+            active_media_chat.is_some().then(|| rsx!(
+                RemoteControls {}
+            )),
         }
     ))
 }

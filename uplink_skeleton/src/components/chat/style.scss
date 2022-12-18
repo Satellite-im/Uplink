@@ -4,9 +4,16 @@
 }
 
 #chats {
+    flex: 1;
     display: inline-flex;
     flex-direction: column;
     gap: var(--gap);
+    padding: var(--gap-less);
+    overflow-y: scroll;
+
+    label {
+        margin-left: var(--gap);
+    }
 }
 
 #compose {
@@ -44,6 +51,8 @@
         }
     }
 }
+
+
 
 #compose .topbar .children .username {
     color: var(--text-color);

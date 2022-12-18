@@ -257,14 +257,14 @@ impl State {
     }
 
     /// Adds the given chat to the user's favorites.
-    pub fn favorite(&mut self, chat: &Chat) {
+    fn favorite(&mut self, chat: &Chat) {
         if !self.chats.favorites.contains(&chat.id) {
             self.chats.favorites.push(chat.id.clone());
         }
     }
 
     /// Removes the given chat from the user's favorites.
-    pub fn unfavorite(&mut self, chat: &Chat) {
+    fn unfavorite(&mut self, chat: &Chat) {
         if let Some(index) = self
             .chats
             .favorites
@@ -493,6 +493,15 @@ impl State {
             Some(uuid) => self.chats.all.get(&uuid).cloned(),
             None => None,
         }
+    }
+
+    pub fn get_active_media_chat(&self) -> Option<&Chat> {
+        for (_, chat) in self.chats.all.iter() {
+            if chat.active_media {
+                return Some(chat);
+            }
+        }
+        None
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {

@@ -35,7 +35,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
             controls: cx.render(
                 rsx! (
                     Button {
-                        icon: Icon::ArrowsPointingOut,
+                        icon: Icon::Microphone,
                         appearance: Appearance::Secondary,
                         tooltip: cx.render(rsx!(
                             Tooltip {
@@ -85,9 +85,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
                         "loop": "true",
-                        "muted": "true",
                     }
-                
                 ))
             }
         },
