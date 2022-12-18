@@ -20,6 +20,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     cx.render(rsx!(div {
         id: "media-player",
@@ -121,11 +122,15 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         text: String::from("Screenshare")
                     }
                 )),
+                // TODO: https://github.com/quadrupleslap/scrap
             },
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
-                text: "End".into()
+                text: "End".into(),
+                onpress: move |_| {
+                    let _ = state.write().mutate(Action::ToggleMedia(active_chat.clone()));
+                }
             },
         }
     }))

@@ -17,10 +17,7 @@ use warp::{
     raygun::Message,
 };
 
-use crate::{
-    components::media::popout_player,
-    state::{Account, Chat, Chats, Friends, Route, Settings, State, UI},
-};
+use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State, UI};
 
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
@@ -99,6 +96,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         id: conversation,
         participants,
         messages,
+        active_media: false,
         unreads: rng.gen_range(0..2),
         replying_to: None,
     }

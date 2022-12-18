@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use fluent_templates::Loader;
 use timeago::Formatter;
-use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, message_divider::MessageDivider, message_reply::MessageReply, file_embed::FileEmbed, message_typing::MessageTyping, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, US_ENGLISH};
@@ -45,6 +45,9 @@ pub fn Compose(cx: Scope) -> Element {
     let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
+    let active_media = active_chat.active_media;
+    let active_media_chat = active_chat.clone();
+
 
     let add_text = LOCALES
         .lookup(&US_ENGLISH, "favorites.add")
@@ -58,7 +61,8 @@ pub fn Compose(cx: Scope) -> Element {
     let video_call_text = LOCALES
         .lookup(&US_ENGLISH, "uplink.video-call")
         .unwrap_or_default();    
-    let new_message_text = LOCALES
+    // TODO: Pending new message divider implementation
+    let _new_message_text = LOCALES
         .lookup(&US_ENGLISH, "messages.new")
         .unwrap_or_default();
     let upload_text = LOCALES
@@ -95,6 +99,9 @@ pub fn Compose(cx: Scope) -> Element {
                                     text: call_text
                                 }
                             )),
+                            onpress: move |_| {
+                                let _ = state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                            }
                         },
                         Button {
                             icon: Icon::VideoCamera,
@@ -135,7 +142,9 @@ pub fn Compose(cx: Scope) -> Element {
                     )
                 ),
             },
-            MediaPlayer {},
+            active_media.then(|| rsx!(
+                MediaPlayer {},
+            )),
             div {
                 id: "messages",
                 div {

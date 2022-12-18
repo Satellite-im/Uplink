@@ -64,8 +64,6 @@ pub struct Developer {
     pub cache_dir: String,
 }
 
-const CONF_LOC: &'static str = "./.conf.toml";
-
 impl Config {
     pub fn new() -> Self {
         // Create a default configuration here

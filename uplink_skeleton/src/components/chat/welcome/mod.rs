@@ -22,7 +22,7 @@ pub fn Welcome(cx: Scope) -> Element {
         div {
             id: "welcome",
             img {
-                src: "extra/assets/img/uplink_muted.png"
+                src: "../../../../extra/assets/img/uplink_muted.png"
             },
             p {
                 class: "muted",

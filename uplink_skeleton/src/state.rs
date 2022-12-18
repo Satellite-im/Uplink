@@ -76,6 +76,9 @@ pub struct Chat {
     // Warp generated UUID of the chat
     #[serde(default)]
     pub id: Uuid,
+    // Warp generated UUID of the chat
+    #[serde(default)]
+    pub active_media: bool, // TODO: in the future, this should probably be a vec of media streams or something
     // Includes the list of participants within a given chat.
     #[serde(default)]
     pub participants: Vec<Identity>,
@@ -220,6 +223,17 @@ impl State {
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
+    }
+
+    /// Toggles the display of media on the provided chat in the `State` struct.
+    fn toggle_media(&mut self, chat: &Chat) {
+        if let Some(c) = self.chats.all.get_mut(&chat.id) {
+            c.active_media = !c.active_media;
+            // When we "close" active media, we should hide the popout player.
+            if !c.active_media {
+                self.ui.popout_player = false;
+            }
+        }
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -599,6 +613,7 @@ impl State {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
             Action::SetId(identity) => self.set_identity(&identity),
+            Action::ToggleMedia(chat) => self.toggle_media(&chat),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => {
@@ -722,6 +737,7 @@ impl State {
 pub enum Action {
     // UI
     TogglePopout,
+    ToggleMedia(Chat),
     // Account
     /// Sets the ID for the user.
     SetId(Identity),

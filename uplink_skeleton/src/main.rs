@@ -11,8 +11,6 @@ use tao::window::WindowBuilder;
 use ui_kit::icons::IconElement;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
-use cocoa::appkit::{NSWindow, NSWindowStyleMask};
-
 use ui_kit::STYLE as UIKIT_STYLES;
 
 use crate::components::media::popout_player::PopoutPlayer;
@@ -101,7 +99,7 @@ fn main() {
             .with_transparent(true)
             .with_fullsize_content_view(true)
             .with_titlebar_transparent(true)
-            .with_movable_by_window_background(true)
+        // .with_movable_by_window_background(true)
     }
 
     dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
@@ -153,6 +151,7 @@ fn app(cx: Scope) -> Element {
         friends_route.clone(),
         settings_route.clone(),
     ];
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {

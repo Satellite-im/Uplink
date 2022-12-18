@@ -3,7 +3,7 @@ use fluent_templates::Loader;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::chat::RouteInfo, state::{State, Action}, LOCALES, US_ENGLISH};
+use crate::{components::chat::RouteInfo, state::{State, Action, Chat}, LOCALES, US_ENGLISH};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -104,7 +104,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat_id| {
-                            let chat = state.read().chats.all.get(&chat_id).unwrap().clone();
+                            let default_chat = Chat::default();
+                            let chat = state.read().chats.all.get(&chat_id).unwrap_or(&default_chat).clone();
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(chat.participants.clone());
@@ -205,7 +206,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let hide_chat_text = LOCALES
                         .lookup(&US_ENGLISH, "uplink.hide-chat")
                         .unwrap_or_default();
-                    let block_user_text = LOCALES
+                    // TODO:
+                    let _block_user_text = LOCALES
                         .lookup(&US_ENGLISH, "friends.block")
                         .unwrap_or_default();
 
