@@ -3,7 +3,6 @@ use std::fs;
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus::desktop::tao::window::Window;
 use dioxus::prelude::*;
 
 use state::State;
@@ -97,10 +96,10 @@ fn main() {
     #[cfg(target_os = "macos")]
     {
         window = window
+            .with_has_shadow(true)
             .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
-            .with_titlebar_buttons_hidden(false)
             .with_titlebar_transparent(true)
             .with_movable_by_window_background(true)
     }
@@ -157,49 +156,54 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
-            id: "pre-release",
-            IconElement {
-                icon: Icon::Beaker,
-            },
-            p {
-                "Pre-release"
-            }
-        },
-        PopoutPlayer {},
-        Router {
-            Route {
-                to: "/",
-                ChatLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: chat_route.clone(),
-                    }
+            id: "app-wrap",
+            div {
+                id: "pre-release",
+                IconElement {
+                    icon: Icon::Beaker,
+                },
+                p {
+                    "Pre-release"
                 }
             },
-            Route {
-                to: "/settings",
-                SettingsLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: settings_route.clone(),
+            state.read().ui.popout_player.then(|| rsx!(
+                PopoutPlayer {}
+            )),
+            Router {
+                Route {
+                    to: "/",
+                    ChatLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: chat_route.clone(),
+                        }
                     }
-                }
-            },
-            Route {
-                to: "/friends",
-                FriendsLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: friends_route.clone(),
+                },
+                Route {
+                    to: "/settings",
+                    SettingsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: settings_route.clone(),
+                        }
                     }
-                }
-            },
-            Route {
-                to: "/files",
-                FilesLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: files_route.clone(),
+                },
+                Route {
+                    to: "/friends",
+                    FriendsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: friends_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: "/files",
+                    FilesLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: files_route.clone(),
+                        }
                     }
                 }
             }

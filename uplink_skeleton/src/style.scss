@@ -1,12 +1,16 @@
-html,
-body, 
-#main {
+html, body {
+    background-color: var(--background);
     height: 100%;
-    width: 100%;
-    background-color: transparent;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    -webkit-app-region: drag;
+    margin: 0;
+    overscroll-behavior-y: none;
+    overscroll-behavior-x: none;
+    overflow: hidden;;
+}
+#main, #app-wrap {
+    height: 100%;
+    margin: 0;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
 }
 
 #pre-release {

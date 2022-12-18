@@ -20,7 +20,7 @@
 }
 
 .friends-list {
-    flex: 1;
+    height: fit-content;
     padding: var(--gap);
     gap: var(--gap);
     display: inline-flex;

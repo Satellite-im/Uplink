@@ -17,7 +17,10 @@ use warp::{
     raygun::Message,
 };
 
-use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State};
+use crate::{
+    components::media::popout_player,
+    state::{Account, Chat, Chats, Friends, Route, Settings, State, UI},
+};
 
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
@@ -42,6 +45,9 @@ pub fn generate_mock() -> State {
     // in_sidebar.push(group_chat_sidebar.id);
 
     State {
+        ui: UI {
+            popout_player: false,
+        },
         account: Account {
             identity: me.clone(),
         },

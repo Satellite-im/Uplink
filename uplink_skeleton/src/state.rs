@@ -138,6 +138,13 @@ pub struct Settings {
     pub language: String,
 }
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct UI {
+    // Should the active video play in popout?
+    #[serde(default)]
+    pub popout_player: bool,
+}
+
 use std::fmt;
 
 use crate::testing::mock::generate_mock;
@@ -154,6 +161,8 @@ pub struct State {
     pub friends: Friends,
     #[serde(default)]
     pub settings: Settings,
+    #[serde(default)]
+    pub ui: UI,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<ActionHook>,
 }
@@ -379,6 +388,10 @@ impl State {
         self.friends.incoming_requests.push(identity.clone());
     }
 
+    fn toggle_popout(&mut self) {
+        self.ui.popout_player = !self.ui.popout_player;
+    }
+
     fn new_outgoing_request(&mut self, identity: &Identity) {
         self.friends.outgoing_requests.push(identity.clone());
     }
@@ -498,7 +511,7 @@ impl State {
     // Define a method for sorting a vector of messages.
     pub fn get_sort_messages(&self, chat: &Chat) -> Vec<MessageGroup> {
         let mut message_groups = Vec::new();
-        let current_sender = chat.messages[0].sender();
+        let current_sender = chat.messages[0].sender(); // TODO: This could error in runtime
         let mut current_group = MessageGroup {
             remote: self.has_friend_with_did(&current_sender),
             sender: current_sender,
@@ -583,6 +596,8 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            // Action::Call(_) => todo!(),
+            // Action::Hangup(_) => todo!(),
             Action::SetId(identity) => self.set_identity(&identity),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
@@ -633,6 +648,10 @@ impl State {
             Action::Send(_, _) => todo!(),
             Action::Navigate(to) => {
                 self.set_active_route(to);
+            }
+            // UI
+            Action::TogglePopout => {
+                self.toggle_popout();
             }
         }
 
@@ -701,6 +720,8 @@ impl State {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Action {
+    // UI
+    TogglePopout,
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
