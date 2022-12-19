@@ -44,7 +44,9 @@ files = Files
     .total-space = Espaço Total:
 
 settings = Settings
-    .general = Geral
+    .general = Geral 
+    .general-app-language = Idioma do aplicativo
+    .general-change-language = Mude o idioma
     .privacy = Privacidade
     .audio = Audio
     .extensions = Extensões
