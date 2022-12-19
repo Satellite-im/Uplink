@@ -548,7 +548,9 @@ fn app(cx: Scope) -> Element {
             name: String::from("Select Box"),
             desc: String::from("Generic select box"),
             Select {
-                options: vec!["Nothing".into(), "Something".into()]
+                initial_value: "Nothing".to_owned(),
+                options: vec!["Nothing".into(), "Something".into()],
+                
             }
         },
         Item {
