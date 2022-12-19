@@ -15,8 +15,8 @@ pub static APP_LANG: Lazy<RwLock<LanguageIdentifier>> =
 pub fn change_language( cx: Scope, new_language: String) {
     let state = use_context::<State>(&cx).unwrap();
     let app_languages = HashMap::from([
-        ("en-US", US_ENGLISH),
-        ("pt-BR", BR_PORTUGUESE),
+        (US_ENGLISH.to_string(), US_ENGLISH),
+        (BR_PORTUGUESE.to_string(), BR_PORTUGUESE),
      ]);
      let new_language_identifier = 
                 app_languages.get(new_language.as_str()); 
@@ -28,7 +28,7 @@ pub fn change_language( cx: Scope, new_language: String) {
         }
         None =>  {
             *APP_LANG.write() = US_ENGLISH; 
-            state.write().mutate(Action::SetLanguage("en-US".to_owned()));
+            state.write().mutate(Action::SetLanguage(US_ENGLISH.to_string()));
         }
     }
 }
