@@ -489,13 +489,13 @@ impl State {
         self.ui.silenced = !self.ui.silenced;
     }
 
-    pub fn is_me(&self, identity: &Identity) -> bool {
-        identity.did_key().to_string() == self.account.identity.did_key().to_string()
-    }
-
     /// Getters
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
+
+    pub fn is_me(&self, identity: &Identity) -> bool {
+        identity.did_key().to_string() == self.account.identity.did_key().to_string()
+    }
 
     /// Check if given chat is favorite on `State` struct.
     ///

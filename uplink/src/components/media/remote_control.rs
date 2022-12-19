@@ -6,7 +6,7 @@ use ui_kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::{Icon, IconElement},
+    icons::Icon,
 };
 
 use crate::state::{Action, State};
