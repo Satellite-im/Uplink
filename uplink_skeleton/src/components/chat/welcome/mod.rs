@@ -5,17 +5,17 @@ use ui_kit::{
     icons::Icon,
 };
 
-use crate::{LOCALES, US_ENGLISH};
+use crate::{LOCALES, APP_LANG};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
     let router = use_router(&cx).clone();
     let add_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.add")
+        .lookup(&*APP_LANG.read(), "friends.add")
         .unwrap_or_default();
 
     let cta_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.add")
+        .lookup(&*APP_LANG.read(), "friends.add")
         .unwrap_or_default();
 
     cx.render(rsx! {

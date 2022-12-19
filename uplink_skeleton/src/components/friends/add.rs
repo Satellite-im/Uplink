@@ -9,7 +9,7 @@ use ui_kit::{
     icons::Icon,
 };
 
-use crate::{LOCALES, US_ENGLISH};
+use crate::{LOCALES, APP_LANG};
 
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
@@ -38,15 +38,15 @@ pub fn AddFriend(cx: Scope) -> Element {
     };
 
     let find_someone = LOCALES
-        .lookup(&US_ENGLISH, "friends.add")
+        .lookup(&*APP_LANG.read(), "friends.add")
         .unwrap_or_default();
 
     let add = LOCALES
-        .lookup(&US_ENGLISH, "uplink.add")
+        .lookup(&*APP_LANG.read(), "uplink.add")
         .unwrap_or_default();
 
     let placeholder = LOCALES
-        .lookup(&US_ENGLISH, "friends.placeholder")
+        .lookup(&*APP_LANG.read(), "friends.placeholder")
         .unwrap_or_default();
 
     cx.render(rsx!(

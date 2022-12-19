@@ -6,7 +6,7 @@ use timeago::Formatter;
 use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, US_ENGLISH};
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, APP_LANG};
 
 
 use super::sidebar::build_participants_names;
@@ -50,23 +50,23 @@ pub fn Compose(cx: Scope) -> Element {
 
 
     let add_text = LOCALES
-        .lookup(&US_ENGLISH, "favorites.add")
+        .lookup(&*APP_LANG.read(), "favorites.add")
         .unwrap_or_default();
     let send_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.send")
+        .lookup(&*APP_LANG.read(), "uplink.send")
         .unwrap_or_default();
     let call_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.call")
+        .lookup(&*APP_LANG.read(), "uplink.call")
         .unwrap_or_default();
     let video_call_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.video-call")
+        .lookup(&*APP_LANG.read(), "uplink.video-call")
         .unwrap_or_default();    
     // TODO: Pending new message divider implementation
     let _new_message_text = LOCALES
-        .lookup(&US_ENGLISH, "messages.new")
+        .lookup(&*APP_LANG.read(), "messages.new")
         .unwrap_or_default();
     let upload_text = LOCALES
-        .lookup(&US_ENGLISH, "files.upload")
+        .lookup(&*APP_LANG.read(), "files.upload")
         .unwrap_or_default();
 
 
