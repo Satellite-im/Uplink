@@ -42,3 +42,10 @@ files = Files
     .upload = Upload
     .free-space = Free Space:
     .total-space = Total Space:
+
+settings = Settings
+    .general = General
+    .privacy = Privacy
+    .audio = Audio
+    .extensions = Extensions
+    .developer = Developer
