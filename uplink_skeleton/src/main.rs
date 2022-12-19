@@ -12,6 +12,7 @@ use ui_kit::icons::IconElement;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
 use ui_kit::STYLE as UIKIT_STYLES;
+use utils::language::APP_LANG;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
@@ -26,11 +27,9 @@ pub mod config;
 pub mod layouts;
 pub mod state;
 pub mod testing;
+pub mod utils;
 
 use fluent_templates::{static_loader, Loader};
-use unic_langid::{langid, LanguageIdentifier};
-
-const US_ENGLISH: LanguageIdentifier = langid!("en-US");
 
 static_loader! {
     static LOCALES = {
@@ -83,7 +82,7 @@ fn main() {
     main_menu.add_submenu("Edit", true, edit_menu);
     main_menu.add_submenu("Window", true, window_menu);
 
-    let title = LOCALES.lookup(&US_ENGLISH, "uplink").unwrap_or_default();
+    let title = LOCALES.lookup(&APP_LANG.read(), "uplink").unwrap_or_default();
 
     let mut window = WindowBuilder::new()
         .with_title(title)
@@ -101,6 +100,7 @@ fn main() {
             .with_titlebar_transparent(true)
         // .with_movable_by_window_background(true)
     }
+    
 
     dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
 }
@@ -114,23 +114,25 @@ fn app(cx: Scope) -> Element {
 
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
 
+    utils::language::load_language_selected_by_user(cx);
+
     let pending_friends = state.read().friends.incoming_requests.len();
 
     let chat_route = UIRoute {
         to: "/",
-        name: "Chat",
+        name: "Chat".to_owned(),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
         to: "/settings",
-        name: "Settings",
+        name: "Settings".to_owned(),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
         to: "/friends",
-        name: "Friends",
+        name: "Friends".to_owned(),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
             Some(pending_friends.to_string())
@@ -141,7 +143,7 @@ fn app(cx: Scope) -> Element {
     };
     let files_route = UIRoute {
         to: "/files",
-        name: "Files",
+        name: "Files".to_owned(),
         icon: Icon::Folder,
         ..UIRoute::default()
     };
