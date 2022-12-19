@@ -14,7 +14,7 @@ use ui_kit::{
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    LOCALES, US_ENGLISH,
+    LOCALES, APP_LANG,
 };
 
 #[derive(PartialEq, Props)]
@@ -25,19 +25,19 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let new_folder_text = LOCALES
-        .lookup(&US_ENGLISH, "files.new-folder")
+        .lookup(&*APP_LANG.read(), "files.new-folder")
         .unwrap_or_default();
     let upload_text = LOCALES
-        .lookup(&US_ENGLISH, "files.upload")
+        .lookup(&*APP_LANG.read(), "files.upload")
         .unwrap_or_default();
     let home_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.home")
+        .lookup(&*APP_LANG.read(), "uplink.home")
         .unwrap_or_default();
     let free_space_text = LOCALES
-        .lookup(&US_ENGLISH, "files.free-space")
+        .lookup(&*APP_LANG.read(), "files.free-space")
         .unwrap_or_default();
     let total_space_text = LOCALES
-        .lookup(&US_ENGLISH, "files.total-space")
+        .lookup(&*APP_LANG.read(), "files.total-space")
         .unwrap_or_default();
 
     cx.render(rsx!(

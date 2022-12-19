@@ -6,7 +6,6 @@ use ui_kit::{
 
 pub mod sidebar;
 pub mod sub_pages;
-
 #[derive(Props)]
 pub struct SectionProps<'a> {
     section_label: String,
