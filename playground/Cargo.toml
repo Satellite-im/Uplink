@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.2.4", features = ["desktop"] }
-ui_kit = { path = "../ui_kit" }
+ui-kit = { path = "../ui_kit" }

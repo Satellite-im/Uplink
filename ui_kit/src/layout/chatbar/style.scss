@@ -5,7 +5,7 @@
 .chatbar {
 	width: 100%;
 	border-top: 1px solid transparent;
-	padding: var(--gap);
+	padding: var(--gap) var(--padding);
 	position: relative;
 	.input-group {
 		flex: 1;

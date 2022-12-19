@@ -146,6 +146,10 @@ pub struct UI {
     // Should the active video play in popout?
     #[serde(default)]
     pub popout_player: bool,
+    #[serde(default)]
+    pub muted: bool,
+    #[serde(default)]
+    pub silenced: bool,
 }
 
 use std::fmt;
@@ -234,6 +238,13 @@ impl State {
                 self.ui.popout_player = false;
             }
         }
+    }
+
+    fn disable_all_active_media(&mut self) {
+        for (_, chat) in self.chats.all.iter_mut() {
+            chat.active_media = false;
+        }
+        self.ui.popout_player = false;
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -470,6 +481,14 @@ impl State {
         }
     }
 
+    fn toggle_mute(&mut self) {
+        self.ui.muted = !self.ui.muted;
+    }
+
+    fn toggle_silence(&mut self) {
+        self.ui.silenced = !self.ui.silenced;
+    }
+
     pub fn is_me(&self, identity: &Identity) -> bool {
         identity.did_key().to_string() == self.account.identity.did_key().to_string()
     }
@@ -621,8 +640,11 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
+            Action::ToggleMute => self.toggle_mute(),
+            Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_identity(&identity),
             Action::ToggleMedia(chat) => self.toggle_media(&chat),
+            Action::EndAll => self.disable_all_active_media(),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => {
@@ -746,6 +768,9 @@ impl State {
 pub enum Action {
     // UI
     TogglePopout,
+    EndAll,
+    ToggleSilence,
+    ToggleMute,
     ToggleMedia(Chat),
     // Account
     /// Sets the ID for the user.

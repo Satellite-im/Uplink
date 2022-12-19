@@ -44,6 +44,8 @@ pub fn generate_mock() -> State {
     State {
         ui: UI {
             popout_player: false,
+            silenced: false,
+            muted: false,
         },
         account: Account {
             identity: me.clone(),
