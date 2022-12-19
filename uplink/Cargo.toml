@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.2.4", features = ["desktop", "router"] }
-ui_kit = { path = "../ui_kit" }
+ui-kit = { path = "../ui_kit" }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
 warp = { git="https://github.com/Satellite-im/Warp.git", ref="master" }

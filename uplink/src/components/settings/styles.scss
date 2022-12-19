@@ -10,6 +10,10 @@
     align-items: flex-end;
 }
 
+.nav.bubble {
+    padding: 0 var(--gap);
+}
+
 #settings-extensions {
     .btn-wrap:nth-child(1) {
         margin: var(--padding-less);

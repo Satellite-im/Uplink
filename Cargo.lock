@@ -3348,7 +3348,7 @@ name = "playground"
 version = "0.1.0"
 dependencies = [
  "dioxus",
- "ui_kit",
+ "ui-kit",
 ]
 
 [[package]]
@@ -4603,7 +4603,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81"
 
 [[package]]
-name = "ui_kit"
+name = "ui-kit"
 version = "0.1.0"
 dependencies = [
  "dioxus",
@@ -4748,7 +4748,7 @@ dependencies = [
  "substring",
  "timeago",
  "titlecase",
- "ui_kit",
+ "ui-kit",
  "unic-langid",
  "uuid",
  "warp",

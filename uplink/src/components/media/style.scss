@@ -169,8 +169,20 @@
     border-top: 1px solid var(--border-color);
     display: inline-flex;
     gap: var(--gap);
-    padding: var(--gap) var(--padding);
-    justify-content: flex-end;
+    padding: var(--gap);
+    justify-content: space-between;
+    background: var(--secondary-dark);
+    margin: 0 var(--gap);
+    border: 1px solid var(--success-light);
+    border-radius: var(--border-radius);
+    .call-info {
+        color: var(--success-light);
+        display: inline-flex;
+        flex-direction: column;
+        p {
+            font-size: var(--text-size-less);
+        }
+    }
     .controls {
         display: inline-flex;
         gap: var(--gap);

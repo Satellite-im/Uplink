@@ -22,6 +22,10 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
     let active_chat = state.read().get_active_chat().unwrap_or_default();
 
+    let silenced = state.read().ui.silenced;
+
+    let silenced_str = silenced.to_string();
+
     cx.render(rsx!(div {
         id: "media-player",
         div {
@@ -35,22 +39,12 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
             controls: cx.render(
                 rsx! (
                     Button {
-                        icon: Icon::Microphone,
+                        icon: Icon::ArrowsPointingOut,
                         appearance: Appearance::Secondary,
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
                                 text: String::from("Fullscreen")
-                            }
-                        )),
-                    },
-                    Button {
-                        icon: Icon::Cog6Tooth,
-                        appearance: Appearance::Secondary,
-                        tooltip: cx.render(rsx!(
-                            Tooltip {
-                                arrow_position: ArrowPosition::Top,
-                                text: String::from("Media Settings")
                             }
                         )),
                     },
@@ -85,6 +79,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
                         "loop": "true",
+                        "muted": "{silenced_str}"
                     }
                 ))
             }
@@ -92,22 +87,12 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
         div {
             class: "media-controls",
             Button {
-                icon: Icon::ArrowsPointingOut,
+                icon: Icon::VideoCamera,
                 appearance: Appearance::Secondary,
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: String::from("Mute")
-                    }
-                )),
-            },
-            Button {
-                icon: Icon::Cog6Tooth,
-                appearance: Appearance::Secondary,
-                tooltip: cx.render(rsx!(
-                    Tooltip {
-                        arrow_position: ArrowPosition::Bottom,
-                        text: String::from("Turn on Camera")
+                        text: String::from("Enable Camera")
                     }
                 )),
             },
@@ -128,6 +113,20 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 text: "End".into(),
                 onpress: move |_| {
                     let _ = state.write().mutate(Action::ToggleMedia(active_chat.clone()));
+                }
+            },
+            Button {
+                icon: Icon::Cog6Tooth,
+                appearance: Appearance::Secondary,
+                tooltip: cx.render(rsx!(
+                    Tooltip {
+                        arrow_position: ArrowPosition::Bottom,
+                        text: String::from("Settings")
+                    }
+                )),
+                // TODO: Navigate to media settings
+                onpress: move |_| {
+                    use_router(&cx).replace_route("/settings", None, None);
                 }
             },
         }
