@@ -18,7 +18,7 @@ use ui_kit::{
 
 use crate::{
     state::{Action, State},
-    LOCALES, US_ENGLISH,
+    LOCALES, APP_LANG,
 };
 
 #[derive(Props)]
@@ -45,19 +45,19 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let chat_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.chat")
+        .lookup(&*APP_LANG.read(), "uplink.chat")
         .unwrap_or_default();
     let block_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.block")
+        .lookup(&*APP_LANG.read(), "friends.block")
         .unwrap_or_default();
     let remove_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.remove")
+        .lookup(&*APP_LANG.read(), "friends.remove")
         .unwrap_or_default();
     let deny_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.deny")
+        .lookup(&*APP_LANG.read(), "friends.deny")
         .unwrap_or_default();
     let accept_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.accept")
+        .lookup(&*APP_LANG.read(), "friends.accept")
         .unwrap_or_default();
 
     cx.render(rsx!(
@@ -140,7 +140,7 @@ pub fn Friends(cx: Scope) -> Element {
     let friends_list = state.read().friends.all.clone();
     let friends = State::get_friends_by_first_letter(friends_list);
 
-    let friends_text = LOCALES.lookup(&US_ENGLISH, "friends").unwrap_or_default();
+    let friends_text = LOCALES.lookup(&*APP_LANG.read(), "friends").unwrap_or_default();
 
     cx.render(rsx! (
         div {
@@ -168,19 +168,19 @@ pub fn Friends(cx: Scope) -> Element {
                             let block_friend_clone = friend.clone();
 
                             let call_text = LOCALES
-                                .lookup(&US_ENGLISH, "uplink.call")
+                                .lookup(&*APP_LANG.read(), "uplink.call")
                                 .unwrap_or_default();
                             let chat_text = LOCALES
-                                .lookup(&US_ENGLISH, "uplink.chat")
+                                .lookup(&*APP_LANG.read(), "uplink.chat")
                                 .unwrap_or_default();
                             let favorite_text = LOCALES
-                                .lookup(&US_ENGLISH, "favorites")
+                                .lookup(&*APP_LANG.read(), "favorites")
                                 .unwrap_or_default();
                             let remove_text = LOCALES
-                                .lookup(&US_ENGLISH, "uplink.remove")
+                                .lookup(&*APP_LANG.read(), "uplink.remove")
                                 .unwrap_or_default();
                             let block_test = LOCALES
-                                .lookup(&US_ENGLISH, "friends.block")
+                                .lookup(&*APP_LANG.read(), "friends.block")
                                 .unwrap_or_default();
 
                             rsx!(
@@ -263,7 +263,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
     let friends_list = state.read().friends.incoming_requests.clone();
 
     let requests_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.incoming_requests")
+        .lookup(&*APP_LANG.read(), "friends.incoming_requests")
         .unwrap_or_default();
 
     cx.render(rsx! (
@@ -277,7 +277,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
 
                 let deny_text = LOCALES
-                    .lookup(&US_ENGLISH, "friends.deny")
+                    .lookup(&*APP_LANG.read(), "friends.deny")
                     .unwrap_or_default();
 
                 let friend_clone = friend.clone();
@@ -328,7 +328,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
     let friends_list = state.read().friends.outgoing_requests.clone();
 
     let requests_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.outgoing_requests")
+        .lookup(&*APP_LANG.read(), "friends.outgoing_requests")
         .unwrap_or_default();
 
     cx.render(rsx! (
@@ -342,7 +342,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
 
                 let cancel_text = LOCALES
-                    .lookup(&US_ENGLISH, "friends.cancel")
+                    .lookup(&*APP_LANG.read(), "friends.cancel")
                     .unwrap_or_default();
 
                     let friend_clone = friend.clone();
@@ -389,7 +389,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
     let block_list = state.read().friends.blocked.clone();
 
     let blocked_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.blocked")
+        .lookup(&*APP_LANG.read(), "friends.blocked")
         .unwrap_or_default();
 
     cx.render(rsx! (
@@ -404,7 +404,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
                 let unblock_text = LOCALES
-                    .lookup(&US_ENGLISH, "friends.unblock")
+                    .lookup(&*APP_LANG.read(), "friends.unblock")
                     .unwrap_or_default();
                 rsx!(
                     ContextMenu {

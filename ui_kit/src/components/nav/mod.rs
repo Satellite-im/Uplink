@@ -15,7 +15,7 @@ pub type To = &'static str;
 pub struct Route {
     pub to: To,
     pub icon: Icon,
-    pub name: &'static str,
+    pub name: String,
     pub with_badge: Option<String>,
     pub loading: Option<bool>,
 }
@@ -25,7 +25,7 @@ impl Default for Route {
         Self {
             to: "",
             icon: Icon::QuestionMarkCircle,
-            name: "Default",
+            name: "Default".to_owned(),
             with_badge: None,
             loading: None,
         }
@@ -74,7 +74,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
         Some(f) => f.to_owned(),
         None => Route {
             to: "!void",
-            name: "!void",
+            name: "!void".to_owned(),
             icon: Icon::ExclamationTriangle,
             with_badge: None,
             loading: None,
@@ -117,8 +117,8 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             cx.props.routes.iter().map(|route| {
                 let badge = get_badge(&route);
-                let key: String = route.name.into();
-                let name: String = route.name.into();
+                let key: String = route.name.clone();
+                let name: String = route.name.clone();
                 rsx!(
                     Button {
                         key: "{key}",
@@ -135,7 +135,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             (!bubble).then(|| rsx!(
                                 Tooltip {
                                     arrow_position: ArrowPosition::Bottom,
-                                    text: route.name.into(),
+                                    text: route.name.clone(),
                                 }
                             ))
                         )),

@@ -3,7 +3,7 @@ use fluent_templates::Loader;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, LOCALES, US_ENGLISH};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, LOCALES, APP_LANG};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -62,12 +62,12 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
 
     let favorites_text = LOCALES
-        .lookup(&US_ENGLISH, "favorites")
+        .lookup(&*APP_LANG.read(), "favorites")
         .unwrap_or_default();
 
 
     let chats_text = LOCALES
-        .lookup(&US_ENGLISH, "uplink.chats")
+        .lookup(&*APP_LANG.read(), "uplink.chats")
         .unwrap_or_default(); 
 
     let binding = state.read();
@@ -115,11 +115,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let participants_name = build_participants_names(&without_me);
 
                             let remove_favorite_text = LOCALES
-                                .lookup(&US_ENGLISH, "favorites.remove")
+                                .lookup(&*APP_LANG.read(), "favorites.remove")
                                 .unwrap_or_default();
                     
                             let chat_text = LOCALES
-                                .lookup(&US_ENGLISH, "uplink.chat")
+                                .lookup(&*APP_LANG.read(), "uplink.chat")
                                 .unwrap_or_default(); 
                             
                             rsx! (
@@ -201,17 +201,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
 
                     let clear_unreads_text = LOCALES
-                        .lookup(&US_ENGLISH, "uplink.clear-unreads")
+                        .lookup(&*APP_LANG.read(), "uplink.clear-unreads")
                         .unwrap_or_default();
                     let call_text = LOCALES
-                        .lookup(&US_ENGLISH, "uplink.call")
+                        .lookup(&*APP_LANG.read(), "uplink.call")
                         .unwrap_or_default();
                     let hide_chat_text = LOCALES
-                        .lookup(&US_ENGLISH, "uplink.hide-chat")
+                        .lookup(&*APP_LANG.read(), "uplink.hide-chat")
                         .unwrap_or_default();
                     // TODO:
                     let _block_user_text = LOCALES
-                        .lookup(&US_ENGLISH, "friends.block")
+                        .lookup(&*APP_LANG.read(), "friends.block")
                         .unwrap_or_default();
 
                     rsx!(

@@ -14,7 +14,7 @@ use crate::{
         },
     },
     state::State,
-    LOCALES, US_ENGLISH,
+    LOCALES, APP_LANG,
 };
 
 #[derive(PartialEq, Props)]
@@ -32,13 +32,13 @@ pub enum FriendRoute {
 #[allow(non_snake_case)]
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let pending_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.pending")
+        .lookup(&*APP_LANG.read(), "friends.pending")
         .unwrap_or_default();
     let all_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.all")
+        .lookup(&*APP_LANG.read(), "friends.all")
         .unwrap_or_default();
     let blocked_text = LOCALES
-        .lookup(&US_ENGLISH, "friends.blocked")
+        .lookup(&*APP_LANG.read(), "friends.blocked")
         .unwrap_or_default();
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
 

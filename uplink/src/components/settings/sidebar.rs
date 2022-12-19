@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use dioxus::prelude::*;
+use fluent_templates::{Loader};
 use ui_kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -9,7 +10,7 @@ use ui_kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-use crate::components::chat::RouteInfo;
+use crate::{components::chat::RouteInfo, LOCALES, APP_LANG, state::State};
 
 pub enum Page {
     Audio,
@@ -50,34 +51,53 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    use_context::<State>(&cx).unwrap();
+
+    let app_lang = &*APP_LANG.read();
     let search_placeholder = String::from("Search Settings...");
+    let general_text = LOCALES
+    .lookup(app_lang, "settings.general")
+    .unwrap_or_default().clone();
+    let privacy_text = LOCALES
+    .lookup(app_lang, "settings.privacy")
+    .unwrap_or_default();
+    let audio_text = LOCALES
+    .lookup(app_lang, "settings.audio")
+    .unwrap_or_default();
+    let extensions_text = LOCALES
+    .lookup(app_lang, "settings.extensions")
+    .unwrap_or_default();
+    let developer_text = LOCALES
+    .lookup(app_lang, "settings.developer")
+    .unwrap_or_default();
+
     let general = UIRoute {
         to: "general",
-        name: "General",
+        name: general_text,
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let privacy = UIRoute {
         to: "privacy",
-        name: "Privacy",
+        name: privacy_text,
         icon: Icon::LockClosed,
         ..UIRoute::default()
     };
     let audio = UIRoute {
         to: "audio",
-        name: "Audio",
+        name: audio_text,
         icon: Icon::MusicalNote,
         ..UIRoute::default()
     };
     let extensions = UIRoute {
         to: "extensions",
-        name: "Extensions",
+        name: extensions_text,
         icon: Icon::Beaker,
         ..UIRoute::default()
     };
     let developer = UIRoute {
         to: "developer",
-        name: "Developer",
+        name: developer_text,
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };

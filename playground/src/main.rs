@@ -42,12 +42,12 @@ pub fn Item<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 fn app(cx: Scope) -> Element {
-    let home = Route { to: "/fake/home", name: "Home", icon: Icon::HomeModern, ..Route::default() };
+    let home = Route { to: "/fake/home", name: "Home".to_owned(), icon: Icon::HomeModern, ..Route::default() };
     let routes = vec![
         home,
-        Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter, ..Route::default() },
-        Route { to: "/fake/friends", name: "Friends", icon: Icon::Users, with_badge: Some("16".into()), loading: None },
-        Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog, ..Route::default() },
+        Route { to: "/fake/chat", name: "Chat".to_owned(), icon: Icon::ChatBubbleBottomCenter, ..Route::default() },
+        Route { to: "/fake/friends", name: "Friends".to_owned(), icon: Icon::Users, with_badge: Some("16".into()), loading: None },
+        Route { to: "/fake/settings", name: "Settings".to_owned(), icon: Icon::Cog, ..Route::default() },
     ];
     let active = routes[0].clone();
 
@@ -548,7 +548,9 @@ fn app(cx: Scope) -> Element {
             name: String::from("Select Box"),
             desc: String::from("Generic select box"),
             Select {
-                options: vec!["Nothing".into(), "Something".into()]
+                initial_value: "Nothing".to_owned(),
+                options: vec!["Nothing".into(), "Something".into()],
+                
             }
         },
         Item {
