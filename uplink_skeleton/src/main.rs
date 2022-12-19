@@ -5,7 +5,7 @@ use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::prelude::*;
 
-use state::State;
+use state::{State};
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use ui_kit::icons::IconElement;
@@ -114,7 +114,8 @@ fn app(cx: Scope) -> Element {
 
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
 
-    utils::language::load_language_selected_by_user(cx);
+    let user_lang_saved = state.read().settings.language.clone();
+    utils::language::change_language(user_lang_saved);
 
     let pending_friends = state.read().friends.incoming_requests.len();
 

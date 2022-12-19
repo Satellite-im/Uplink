@@ -10,7 +10,7 @@ use ui_kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-use crate::{components::chat::RouteInfo, LOCALES, APP_LANG};
+use crate::{components::chat::RouteInfo, LOCALES, APP_LANG, state::State};
 
 pub enum Page {
     Audio,
@@ -51,21 +51,24 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    use_context::<State>(&cx).unwrap();
+
+    let app_lang = &*APP_LANG.read();
     let search_placeholder = String::from("Search Settings...");
     let general_text = LOCALES
-    .lookup(&*APP_LANG.read(), "settings.general")
+    .lookup(app_lang, "settings.general")
     .unwrap_or_default().clone();
     let privacy_text = LOCALES
-    .lookup(&*APP_LANG.read(), "settings.privacy")
+    .lookup(app_lang, "settings.privacy")
     .unwrap_or_default();
     let audio_text = LOCALES
-    .lookup(&*APP_LANG.read(), "settings.audio")
+    .lookup(app_lang, "settings.audio")
     .unwrap_or_default();
     let extensions_text = LOCALES
-    .lookup(&*APP_LANG.read(), "settings.extensions")
+    .lookup(app_lang, "settings.extensions")
     .unwrap_or_default();
     let developer_text = LOCALES
-    .lookup(&*APP_LANG.read(), "settings.developer")
+    .lookup(app_lang, "settings.developer")
     .unwrap_or_default();
 
     let general = UIRoute {

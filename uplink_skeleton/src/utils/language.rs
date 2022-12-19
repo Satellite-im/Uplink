@@ -28,3 +28,7 @@ pub fn change_language(new_language: String) -> String {
         }
     }
 }
+
+pub fn get_available_languages() -> Vec<String> {
+    vec![US_ENGLISH.to_string(), BR_PORTUGUESE.to_string()]
+}
