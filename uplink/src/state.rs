@@ -1,8 +1,11 @@
 use chrono::{DateTime, Utc};
 use either::Either;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::fs;
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+};
+
 use uuid::Uuid;
 use warp::{
     constellation::item::Item,
@@ -32,6 +35,14 @@ pub enum Direction {
     Incoming,
     Outgoing,
 }
+
+// #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+// pub struct ToastNotification {
+//     pub title: String,
+//     pub content: String,
+//     #[serde(skip_serializing, skip_deserializing)]
+//     pub icon: Option<Icon>,
+// }
 
 // Define a struct to represent a group of messages from the same sender.
 pub struct MessageGroup {
@@ -150,6 +161,8 @@ pub struct UI {
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
+    // #[serde(skip_serializing, skip_deserializing)]
+    // pub toast_notifications: VecDeque<ToastNotification>,
 }
 
 use std::fmt;
@@ -285,6 +298,18 @@ impl State {
             self.chats.favorites.remove(index);
         }
     }
+
+    // fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
+    //     self.ui.toast_notifications.push_back(notification);
+
+    //     let closure = || {
+    //         thread::sleep(Duration::from_secs(timeout));
+    //         self.ui.toast_notifications.pop_front();
+    //     };
+
+    //     // Spawn a new thread to remove the notification after the specified timeout.
+    //     thread::spawn(closure);
+    // }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
     /// is already a favorite, it is removed from the favorites list. Otherwise, it
@@ -640,6 +665,12 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
+            // Action::AddToastNotification(notification, timeout) => {
+            //     self.add_toast_notification(notification, timeout);
+            // }
+            // Action::RemoveToastNotification => {
+            //     self.ui.toast_notifications.pop_front();
+            // }
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_identity(&identity),
@@ -771,6 +802,8 @@ pub enum Action {
     EndAll,
     ToggleSilence,
     ToggleMute,
+    // AddToastNotification(ToastNotification, u64),
+    // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account
     /// Sets the ID for the user.

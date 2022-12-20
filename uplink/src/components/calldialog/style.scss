@@ -1,0 +1,17 @@
+.call-dialog {
+    position: fixed;
+    width: var(--sidebar-width);
+    height: var(--sidebar-width);
+    background-color: #6767953f;
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap);
+    padding: var(--gap);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}

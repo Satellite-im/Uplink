@@ -5,15 +5,22 @@ use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::prelude::*;
 
-use state::{State};
+use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
+use ui_kit::components::indicator::{Platform, Status};
+use ui_kit::components::user_image::UserImage;
+// use ui_kit::components::toast::Toast;
+use ui_kit::elements::button::Button;
+use ui_kit::elements::Appearance;
 use ui_kit::icons::IconElement;
 use ui_kit::{components::nav::Route as UIRoute, icons::Icon};
 
 use ui_kit::STYLE as UIKIT_STYLES;
 use utils::language::APP_LANG;
+use warp::multipass::identity::Identity;
 
+use crate::components::calldialog::CallDialog;
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
@@ -82,7 +89,9 @@ fn main() {
     main_menu.add_submenu("Edit", true, edit_menu);
     main_menu.add_submenu("Window", true, window_menu);
 
-    let title = LOCALES.lookup(&APP_LANG.read(), "uplink").unwrap_or_default();
+    let title = LOCALES
+        .lookup(&APP_LANG.read(), "uplink")
+        .unwrap_or_default();
 
     let mut window = WindowBuilder::new()
         .with_title(title)
@@ -100,7 +109,6 @@ fn main() {
             .with_titlebar_transparent(true)
         // .with_movable_by_window_background(true)
     }
-    
 
     dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
 }
@@ -159,6 +167,36 @@ fn app(cx: Scope) -> Element {
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
             id: "app-wrap",
+            // Toast {
+            //     with_title: "Toast Notification".into(),
+            //     with_content: "This is a toast notification".into(),
+            //     icon: Icon::InformationCircle,
+            //     appearance: Appearance::Danger,
+            // },
+            // CallDialog {
+            //     caller: cx.render(rsx!(UserImage {
+            //         platform: Platform::Mobile,
+            //         status: Status::Online
+            //     })),
+            //     callee: cx.render(rsx!(UserImage {
+            //         platform: Platform::Mobile,
+            //         status: Status::Online
+            //     })),
+            //     description: "Call Description".into(),
+            //     // with_accept_btn: cx.render(rsx! (
+            //     //     Button {
+            //     //         icon: Icon::Phone,
+            //     //         appearance: Appearance::Success,
+            //     //     }
+            //     // )),
+            //     with_deny_btn: cx.render(rsx! (
+            //         Button {
+            //             icon: Icon::PhoneXMark,
+            //             appearance: Appearance::Danger,
+            //             text: "End".into(),
+            //         }
+            //     )),
+            // },
             div {
                 id: "pre-release",
                 IconElement {

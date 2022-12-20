@@ -1,3 +1,4 @@
+pub mod calldialog;
 pub mod chat;
 pub mod friends;
 pub mod media;
