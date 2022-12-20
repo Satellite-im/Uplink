@@ -22,6 +22,7 @@ favorites = Favorites
     .remove = Remova dos favoritos
 
 friends = Friends
+    .friends = Amigos
     .cta-text = Sem amigos ainda. Adicione alguém!
     .add = Adicione alguém
     .placeholder = nome_de_usuario#0000...
@@ -38,12 +39,14 @@ friends = Friends
     .deny = Recusar solicitação
 
 files = Files
+    .files = Arquivos
     .new-folder = Nova Pasta
-    .upload = Upload
+    .upload = Carregar
     .free-space = Espaço Livre:
     .total-space = Espaço Total:
 
 settings = Settings
+    .settings = Configurações
     .general = Geral 
     .general-app-language = Idioma do aplicativo
     .general-change-language = Mude o idioma

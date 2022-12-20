@@ -127,21 +127,39 @@ fn app(cx: Scope) -> Element {
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
+    let app_lang = &*APP_LANG.read();
+
+    let chat_text = LOCALES
+        .lookup(app_lang, "uplink.chats")
+        .unwrap_or_default().clone();
+
+    let settings_text = LOCALES
+        .lookup(app_lang, "settings.settings")
+        .unwrap_or_default().clone();
+
+    let friends_text = LOCALES
+        .lookup(app_lang, "friends.friends")
+        .unwrap_or_default().clone();
+
+    let files_text = LOCALES
+        .lookup(app_lang, "files.files")
+        .unwrap_or_default().clone();
+
     let chat_route = UIRoute {
         to: "/",
-        name: "Chat".to_owned(),
+        name: chat_text,
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
         to: "/settings",
-        name: "Settings".to_owned(),
+        name: settings_text,
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
         to: "/friends",
-        name: "Friends".to_owned(),
+        name: friends_text,
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
             Some(pending_friends.to_string())
@@ -152,7 +170,7 @@ fn app(cx: Scope) -> Element {
     };
     let files_route = UIRoute {
         to: "/files",
-        name: "Files".to_owned(),
+        name: files_text,
         icon: Icon::Folder,
         ..UIRoute::default()
     };
