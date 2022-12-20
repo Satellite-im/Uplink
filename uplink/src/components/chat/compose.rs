@@ -7,7 +7,8 @@ use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{u
 use warp::multipass::identity::Identity;
 
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, APP_LANG};
-use dioxus_hooks::{UseSharedState};
+
+
 use super::sidebar::build_participants_names;
 
 
@@ -20,7 +21,7 @@ fn format_timestamp(datetime: DateTime<Utc>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx).unwrap();
     let active_chat = state.read().get_active_chat().unwrap_or_default();
     let message_groups = state.read().get_sort_messages(&active_chat);
 

@@ -7,7 +7,7 @@ const STYLE: &str = include_str!("./style.css");
 use ui_kit::STYLE as UIKIT_STYLES; 
 
 fn main() {
-    dioxus::desktop::launch(app);
+    dioxus_desktop::launch(app);
 }
 
 #[derive(Props)]

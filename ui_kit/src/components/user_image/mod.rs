@@ -1,5 +1,5 @@
 use dioxus::{
-    core::UiEvent,
+    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
@@ -30,7 +30,7 @@ pub fn get_image(cx: &Scope<Props>) -> String {
 }
 
 /// Tells the parent the user_image was interacted with.
-pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
         None => {}

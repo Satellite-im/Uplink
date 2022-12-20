@@ -70,7 +70,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (cx.props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
-                    &cx.props.with_content,
+                    *&cx.props.with_content.as_ref().unwrap(),
                 },
             )),
             (cx.props.with_text.is_some()).then(|| rsx! (

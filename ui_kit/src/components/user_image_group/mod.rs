@@ -1,10 +1,9 @@
+use crate::{components::user_image::UserImage, elements::label::Label, User};
 use dioxus::{
-    core::UiEvent,
+    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
-
-use crate::{components::user_image::UserImage, elements::label::Label, User};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -17,7 +16,7 @@ pub struct Props<'a> {
     with_username: Option<String>,
 }
 
-pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
         None => {}

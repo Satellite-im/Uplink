@@ -44,11 +44,11 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             )),
             div {
                 class: "children",
-                &cx.props.children
+                *&cx.props.children.as_ref().unwrap()
             },
             div {
                 class: "controls",
-                &cx.props.controls
+                *&cx.props.controls.as_ref().unwrap()
             }
         }
     ))

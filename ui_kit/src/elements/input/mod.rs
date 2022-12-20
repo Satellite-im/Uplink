@@ -206,7 +206,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         val.set(current_val.clone());
                         if !validation_result.is_empty() {
                             valid.set(false);
-                            evt.cancel_bubble();
+                            evt.stop_propogation();
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }

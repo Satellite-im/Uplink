@@ -1,4 +1,5 @@
 use std::fs;
+use std::sync::RwLock;
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -119,12 +120,13 @@ fn app(cx: Scope) -> Element {
     };
     let _ = use_context_provider(&cx, || state);
 
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state_ns: State = use_context::<State>(&cx).unwrap().clone();
+    let state = RwLock::new(state_ns);
 
-    let user_lang_saved = state.read().settings.language.clone();
+    let user_lang_saved = state.read().unwrap().settings.language.clone();
     utils::language::change_language(user_lang_saved);
 
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().unwrap().friends.incoming_requests.len();
 
     let chat_route = UIRoute {
         to: "/",
@@ -175,7 +177,7 @@ fn app(cx: Scope) -> Element {
                     "Pre-release"
                 }
             },
-            state.read().ui.popout_player.then(|| rsx!(
+            state.read().unwrap().ui.popout_player.then(|| rsx!(
                 PopoutPlayer {}
             )),
             Router {
