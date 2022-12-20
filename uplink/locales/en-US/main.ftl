@@ -61,3 +61,8 @@ settings = Settings
     .search-placeholder = Search Settings...
     .splash-screen = Splash Screen
     .splash-screen-description = Disabling the splash screen could speed up load times.
+
+settings-privacy = SettingsPrivacy 
+    .backup-recovery-phrase = Backup Recovery Phrase
+    .backup-phrase = Backup Phrase
+    .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.

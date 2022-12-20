@@ -52,7 +52,7 @@ files = Files
 
 settings = Settings
     .settings = Configurações
-    .general = Geral 
+    .general = Geral
     .general-app-language = Idioma do aplicativo
     .general-change-language = Mude o idioma
     .privacy = Privacidade
@@ -62,3 +62,8 @@ settings = Settings
     .search-placeholder = Procurar configuração...
     .splash-screen = Tela de Abertura
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
+
+settings-privacy = SettingsPrivacy 
+    .backup-recovery-phrase = Frase de recuperação de backup
+    .backup-phrase = Frase de backup
+    .backup-phrase-description = Guarde esta frase! Junto com sua senha, ela representa a sua conta. Se você perdê-la, não podemos te ajudar a recuperá-la.
