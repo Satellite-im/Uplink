@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     fs,
 };
 
@@ -13,6 +13,8 @@ use warp::{
     multipass::identity::Identity,
     raygun::{Message, Reaction},
 };
+
+use ui_kit::icons::Icon;
 
 #[derive(Eq, PartialEq)]
 pub struct MessageDivider {
@@ -36,13 +38,13 @@ pub enum Direction {
     Outgoing,
 }
 
-// #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-// pub struct ToastNotification {
-//     pub title: String,
-//     pub content: String,
-//     #[serde(skip_serializing, skip_deserializing)]
-//     pub icon: Option<Icon>,
-// }
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
+pub struct ToastNotification {
+    pub title: String,
+    pub content: String,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub icon: Option<Icon>,
+}
 
 // Define a struct to represent a group of messages from the same sender.
 pub struct MessageGroup {
@@ -161,8 +163,8 @@ pub struct UI {
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
-    // #[serde(skip_serializing, skip_deserializing)]
-    // pub toast_notifications: VecDeque<ToastNotification>,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub toast_notifications: VecDeque<ToastNotification>,
 }
 
 use std::fmt;
@@ -299,17 +301,18 @@ impl State {
         }
     }
 
-    // fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
-    //     self.ui.toast_notifications.push_back(notification);
+    fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
+        self.ui.toast_notifications.push_back(notification);
 
-    //     let closure = || {
-    //         thread::sleep(Duration::from_secs(timeout));
-    //         self.ui.toast_notifications.pop_front();
-    //     };
+        let closure = move || {
+            std::thread::sleep(std::time::Duration::from_secs(timeout));
+            // This would not work because of it not being thread safe.
+            // self.ui.toast_notifications.pop_front();
+        };
 
-    //     // Spawn a new thread to remove the notification after the specified timeout.
-    //     thread::spawn(closure);
-    // }
+        // Spawn a new thread to remove the notification after the specified timeout.
+        std::thread::spawn(closure);
+    }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
     /// is already a favorite, it is removed from the favorites list. Otherwise, it
@@ -665,9 +668,9 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
-            // Action::AddToastNotification(notification, timeout) => {
-            //     self.add_toast_notification(notification, timeout);
-            // }
+            Action::AddToastNotification(notification, timeout) => {
+                self.add_toast_notification(notification, timeout);
+            }
             // Action::RemoveToastNotification => {
             //     self.ui.toast_notifications.pop_front();
             // }
@@ -795,14 +798,14 @@ impl State {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Action {
     // UI
     TogglePopout,
     EndAll,
     ToggleSilence,
     ToggleMute,
-    // AddToastNotification(ToastNotification, u64),
+    AddToastNotification(ToastNotification, u64),
     // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account

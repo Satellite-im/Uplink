@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     io::{BufWriter, Write},
 };
 
@@ -46,6 +46,7 @@ pub fn generate_mock() -> State {
             popout_player: false,
             silenced: false,
             muted: false,
+            toast_notifications: VecDeque::new(),
         },
         account: Account {
             identity: me.clone(),
