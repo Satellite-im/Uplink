@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     io::{BufWriter, Write},
+    sync::Arc,
 };
 
 use base64::encode;
@@ -46,6 +47,7 @@ pub fn generate_mock() -> State {
             popout_player: false,
             silenced: false,
             muted: false,
+            toast_notifications: Arc::default(),
         },
         account: Account {
             identity: me.clone(),

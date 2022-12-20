@@ -2,6 +2,7 @@ use std::fs;
 
 use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
+#[cfg(target_os="macos")]
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::prelude::*;
 
