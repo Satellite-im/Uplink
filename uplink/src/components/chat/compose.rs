@@ -68,7 +68,12 @@ pub fn Compose(cx: Scope) -> Element {
     let upload_text = LOCALES
         .lookup(&*APP_LANG.read(), "files.upload")
         .unwrap_or_default();
-
+    let say_something_placeholder = LOCALES
+        .lookup(&*APP_LANG.read(), "messages.say-something-placeholder")
+        .unwrap_or_default();
+    let replying_to_label_text = LOCALES
+        .lookup(&*APP_LANG.read(), "messages.replying")
+        .unwrap_or_default();
 
     cx.render(rsx!(
         div {
@@ -152,6 +157,9 @@ pub fn Compose(cx: Scope) -> Element {
                         let messages = &group.messages;
                         let last_message = messages.last().unwrap().message.clone();
                         let sender = state.read().get_friend_identity(&group.sender);
+                        let you_text = LOCALES
+                            .lookup(&*APP_LANG.read(), "messages.you")
+                            .unwrap_or_default();
                         
                         rsx!(
                             MessageGroup {
@@ -162,18 +170,25 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 timestamp: format_timestamp(last_message.date()),
-                                with_sender: if sender.username().is_empty() { "You".into() } else { sender.username()},
+                                with_sender: if sender.username().is_empty() { you_text } else { sender.username()},
                                 remote: group.remote,
                                 messages.iter().map(|grouped_message| {
                                     let message = grouped_message.message.clone();
                                     let reply_message = grouped_message.message.clone();
+                                    let react_text = LOCALES
+                                        .lookup(&*APP_LANG.read(), "messages.react")
+                                        .unwrap_or_default();
+                                    let reply_text = LOCALES
+                                        .lookup(&*APP_LANG.read(), "messages.reply")
+                                        .unwrap_or_default();
+                                
                                     rsx! (
                                         ContextMenu {
                                             id: format!("message-{}", message.id()),
                                             items: cx.render(rsx!(
                                                 ContextItem {
                                                     icon: Icon::ArrowLongLeft,
-                                                    text: String::from("Reply"),
+                                                    text: reply_text,
                                                     onpress: move |_| {
                                                         let chat = state.read().get_active_chat().unwrap_or_default();
                                                         state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
@@ -181,7 +196,7 @@ pub fn Compose(cx: Scope) -> Element {
                                                 },
                                                 ContextItem {
                                                     icon: Icon::FaceSmile,
-                                                    text: String::from("React"),
+                                                    text: react_text,
                                                     //TODO: Wire to state
                                                 },
                                             )),
@@ -199,6 +214,7 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             },
             Chatbar {
+                placeholder: say_something_placeholder,
                 controls: cx.render(rsx!(
                     Button {
                         icon: Icon::ChevronDoubleRight,
@@ -214,6 +230,7 @@ pub fn Compose(cx: Scope) -> Element {
                 with_replying_to: cx.render(rsx!(
                     state.read().get_active_chat().unwrap_or_default().replying_to.is_some().then(|| rsx!(
                         Reply {
+                            label: replying_to_label_text,
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
                                 let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.clone().unwrap_or_default().sender();

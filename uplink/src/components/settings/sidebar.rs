@@ -54,10 +54,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     use_context::<State>(&cx).unwrap();
 
     let app_lang = &*APP_LANG.read();
-    let search_placeholder = String::from("Search Settings...");
+    let search_placeholder = LOCALES
+        .lookup(app_lang, "settings.search-placeholder")
+        .unwrap_or_default();
     let general_text = LOCALES
     .lookup(app_lang, "settings.general")
-    .unwrap_or_default().clone();
+    .unwrap_or_default();
     let privacy_text = LOCALES
     .lookup(app_lang, "settings.privacy")
     .unwrap_or_default();

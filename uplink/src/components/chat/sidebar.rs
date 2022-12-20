@@ -54,12 +54,15 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx)?;
 
-    let search_placeholder = String::from("Search...");
+
 
     let sidebar_chats = state.read().chats.in_sidebar.clone();
 
     let favorites = state.read().chats.favorites.clone();
 
+    let search_placeholder = LOCALES
+        .lookup(&*APP_LANG.read(), "uplink.search-placeholder")
+        .unwrap_or_default();
 
     let favorites_text = LOCALES
         .lookup(&*APP_LANG.read(), "favorites")

@@ -11,11 +11,15 @@ uplink = Uplink
     .welcome = Welcome
     .clear-unreads = Clear Unreads
     .hide-chat = Hide Chat
-
+    .search-placeholder = Search...
 
 messages = Messages
     .new = New Message
     .replying = Replying to:
+    .react = React
+    .reply = Reply
+    .you = You
+    .say-something-placeholder = Say Something...
 
 favorites = Favorites
     .add = Add to Favorites
@@ -54,3 +58,6 @@ settings = Settings
     .audio = Audio
     .extensions = Extensions
     .developer = Developer
+    .search-placeholder = Search Settings...
+    .splash-screen = Splash Screen
+    .splash-screen-description = Disabling the splash screen could speed up load times.

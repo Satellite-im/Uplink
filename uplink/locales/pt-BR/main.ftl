@@ -11,11 +11,16 @@ uplink = Uplink
     .welcome = Bem-vindo
     .clear-unreads = Limpar não lidos
     .hide-chat = Esconder Chat
+    .search-placeholder = Procurar...
 
 
 messages = Messages
     .new = Nova Mensagem
     .replying = Respondendo a:
+    .react = Reagir
+    .reply = Responder
+    .you = Você
+    .say-something-placeholder = Diga algo...
 
 favorites = Favorites
     .add = Adicione aos favoritos
@@ -54,3 +59,6 @@ settings = Settings
     .audio = Audio
     .extensions = Extensões
     .developer = Desenvolvedor
+    .search-placeholder = Procurar configuração...
+    .splash-screen = Tela de Abertura
+    .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.

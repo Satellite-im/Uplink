@@ -17,12 +17,20 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     .lookup(app_lang, "settings.general-change-language")
     .unwrap_or_default().clone();
 
+    let splash_screen_text = LOCALES
+        .lookup(app_lang, "settings.splash-screen")
+        .unwrap_or_default().clone();
+    
+    let splash_screen_description_text = LOCALES
+        .lookup(app_lang, "settings.splash-screen-description")
+        .unwrap_or_default().clone();
+
     cx.render(rsx!(
         div {
             id: "settings-general",
             SettingSection {
-                section_label: "Splash Screen".into(),
-                section_description: "Disabling the splash screen could speed up load times.".into(),
+                section_label: splash_screen_text,
+                section_description: splash_screen_description_text,
                 Switch {
           
                 }
