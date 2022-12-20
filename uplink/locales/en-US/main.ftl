@@ -66,3 +66,7 @@ settings-privacy = SettingsPrivacy
     .backup-recovery-phrase = Backup Recovery Phrase
     .backup-phrase = Backup Phrase
     .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.
+
+settings-audio = SettingsAudio 
+    .call-timer = Call Timer
+    .call-timer-description = When enabled a timer will display when you're in a call showing it's duration.

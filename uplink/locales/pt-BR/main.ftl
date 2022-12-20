@@ -67,3 +67,7 @@ settings-privacy = SettingsPrivacy
     .backup-recovery-phrase = Frase de recuperação de backup
     .backup-phrase = Frase de backup
     .backup-phrase-description = Guarde esta frase! Junto com sua senha, ela representa a sua conta. Se você perdê-la, não podemos te ajudar a recuperá-la.
+
+settings-audio = SettingsAudio 
+    .call-timer = Tempo de chamada
+    .call-timer-description = Quando ativado, um cronômetro será exibido mostrando a duração da chamada.
