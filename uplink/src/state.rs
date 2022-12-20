@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
+    sync::Arc,
 };
 
 use uuid::Uuid;
@@ -12,6 +13,7 @@ use warp::{
     crypto::DID,
     multipass::identity::Identity,
     raygun::{Message, Reaction},
+    sync::RwLock,
 };
 
 use ui_kit::icons::Icon;
@@ -164,7 +166,7 @@ pub struct UI {
     #[serde(default)]
     pub silenced: bool,
     #[serde(skip_serializing, skip_deserializing)]
-    pub toast_notifications: VecDeque<ToastNotification>,
+    pub toast_notifications: Arc<RwLock<VecDeque<ToastNotification>>>,
 }
 
 use std::fmt;
@@ -302,12 +304,15 @@ impl State {
     }
 
     fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
-        self.ui.toast_notifications.push_back(notification);
+        self.ui.toast_notifications.write().push_back(notification);
 
-        let closure = move || {
-            std::thread::sleep(std::time::Duration::from_secs(timeout));
-            // This would not work because of it not being thread safe.
-            // self.ui.toast_notifications.pop_front();
+        let closure = {
+            let notification = self.ui.toast_notifications.clone();
+            move || {
+                std::thread::sleep(std::time::Duration::from_secs(timeout));
+                // This would not work because of it not being thread safe.
+                notification.write().pop_front();
+            }
         };
 
         // Spawn a new thread to remove the notification after the specified timeout.
