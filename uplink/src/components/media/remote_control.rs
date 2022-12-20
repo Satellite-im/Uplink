@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 use ui_kit::{
     elements::{
         button::Button,
@@ -10,10 +11,11 @@ use ui_kit::{
 };
 
 use crate::state::{Action, State};
+use crate::STATE;
 
 #[allow(non_snake_case)]
 pub fn RemoteControls(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
 
     cx.render(rsx!(div {
         id: "remote-controls",

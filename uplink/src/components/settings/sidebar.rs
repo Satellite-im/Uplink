@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
-use crate::{components::chat::RouteInfo, state::State, APP_LANG, LOCALES};
+use crate::{components::chat::RouteInfo, state::State, APP_LANG, LOCALES, STATE};
 use dioxus::prelude::*;
 use dioxus_router::*;
+use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use ui_kit::{
     components::nav::Nav,
@@ -51,7 +52,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    use_context::<State>(&cx).unwrap();
+    let _ = use_atom_ref(&cx, STATE);
 
     let app_lang = &*APP_LANG.read();
     let search_placeholder = String::from("Search Settings...");

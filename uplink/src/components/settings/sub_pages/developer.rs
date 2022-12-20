@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
-use crate::{components::settings::SettingSection, state::State};
+use crate::{components::settings::SettingSection, state::State, STATE};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
 
     cx.render(rsx!(
         div {

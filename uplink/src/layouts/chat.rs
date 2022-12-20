@@ -1,10 +1,12 @@
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 
 use crate::{
     components::chat::{
         compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
     },
     state::State,
+    STATE,
 };
 
 #[derive(PartialEq, Props)]
@@ -14,7 +16,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
 
     cx.render(rsx!(
         div {

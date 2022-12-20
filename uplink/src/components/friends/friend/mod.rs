@@ -1,9 +1,11 @@
+use crate::STATE;
 use crate::{
     state::{Action, State},
     APP_LANG, LOCALES,
 };
 use dioxus::prelude::*;
 use dioxus_router::*;
+use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use ui_kit::{
     components::{
@@ -136,7 +138,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
     let friends_list = state.read().friends.all.clone();
     let friends = State::get_friends_by_first_letter(friends_list);
 
@@ -261,7 +263,7 @@ pub fn Friends(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 pub fn PendingFriends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
     let friends_list = state.read().friends.incoming_requests.clone();
 
     let requests_text = LOCALES
@@ -326,7 +328,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
     let friends_list = state.read().friends.outgoing_requests.clone();
 
     let requests_text = LOCALES
@@ -387,7 +389,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
     let block_list = state.read().friends.blocked.clone();
 
     let blocked_text = LOCALES

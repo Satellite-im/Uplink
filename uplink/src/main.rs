@@ -23,7 +23,7 @@ use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-
+use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
@@ -32,6 +32,8 @@ pub mod testing;
 pub mod utils;
 
 use fluent_templates::{static_loader, Loader};
+
+pub static STATE: AtomRef<State> = |_| State::load().unwrap();
 
 static_loader! {
     static LOCALES = {
@@ -114,19 +116,20 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let state = match State::load() {
+    /*let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
-    };
-    let _ = use_context_provider(&cx, || state);
+    };*/
 
-    let state_ns: State = use_context::<State>(&cx).unwrap().clone();
-    let state = RwLock::new(state_ns);
+    //let _ = use_shared_state_provider(&cx, || STATE);
 
-    let user_lang_saved = state.read().unwrap().settings.language.clone();
+    let state = use_atom_ref(&cx, STATE);
+    //let state = RwLock::new(state_ns);
+
+    let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);
 
-    let pending_friends = state.read().unwrap().friends.incoming_requests.len();
+    let pending_friends = state.read().friends.incoming_requests.len();
 
     let chat_route = UIRoute {
         to: "/",
@@ -177,7 +180,7 @@ fn app(cx: Scope) -> Element {
                     "Pre-release"
                 }
             },
-            state.read().unwrap().ui.popout_player.then(|| rsx!(
+            state.read().ui.popout_player.then(|| rsx!(
                 PopoutPlayer {}
             )),
             Router {

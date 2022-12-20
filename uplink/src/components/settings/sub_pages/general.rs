@@ -1,12 +1,13 @@
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use ui_kit::{elements::{switch::Switch, select::Select }};
 
-use crate::{components::settings::SettingSection, utils::language::{change_language, get_available_languages, APP_LANG}, state::{State, Action}, LOCALES};
+use crate::{components::settings::SettingSection, utils::language::{change_language, get_available_languages, APP_LANG}, state::{State, Action}, LOCALES, STATE};
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {    
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
     let initial_lang_value = state.read().settings.language.clone();
     let app_lang = &*APP_LANG.read();
     let app_language_text = LOCALES

@@ -1,11 +1,12 @@
 
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use timeago::Formatter;
 use ui_kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use warp::multipass::identity::Identity;
-
+use crate::STATE;
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, APP_LANG};
 
 
@@ -21,7 +22,7 @@ fn format_timestamp(datetime: DateTime<Utc>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx).unwrap();
+    let state = use_atom_ref(&cx, STATE);
     let active_chat = state.read().get_active_chat().unwrap_or_default();
     let message_groups = state.read().get_sort_messages(&active_chat);
 

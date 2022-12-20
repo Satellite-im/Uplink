@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use fermi::use_atom_ref;
 use fluent_templates::Loader;
 use ui_kit::{
     elements::{button::Button, Appearance},
@@ -14,7 +15,7 @@ use crate::{
         },
     },
     state::State,
-    APP_LANG, LOCALES,
+    APP_LANG, LOCALES, STATE,
 };
 
 #[derive(PartialEq, Props)]
@@ -40,7 +41,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let blocked_text = LOCALES
         .lookup(&*APP_LANG.read(), "friends.blocked")
         .unwrap_or_default();
-    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
+    let state = use_atom_ref(&cx, STATE);
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
