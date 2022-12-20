@@ -3,10 +3,9 @@ use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon
 
 use crate::{components::settings::SettingSection, state::State};
 
-
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    let state = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(&cx)?;
 
     cx.render(rsx!(
         div {

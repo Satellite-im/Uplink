@@ -6,7 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.2.4", features = ["desktop", "router"] }
+dioxus = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
+dioxus-hooks = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
+dioxus-router = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
+dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 ui-kit = { path = "../ui_kit" }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"

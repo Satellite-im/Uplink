@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
+use crate::{components::chat::RouteInfo, state::State, APP_LANG, LOCALES};
 use dioxus::prelude::*;
-use fluent_templates::{Loader};
+use dioxus_router::*;
+use fluent_templates::Loader;
 use ui_kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -9,8 +11,6 @@ use ui_kit::{
     icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-
-use crate::{components::chat::RouteInfo, LOCALES, APP_LANG, state::State};
 
 pub enum Page {
     Audio,
@@ -56,20 +56,21 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let app_lang = &*APP_LANG.read();
     let search_placeholder = String::from("Search Settings...");
     let general_text = LOCALES
-    .lookup(app_lang, "settings.general")
-    .unwrap_or_default().clone();
+        .lookup(app_lang, "settings.general")
+        .unwrap_or_default()
+        .clone();
     let privacy_text = LOCALES
-    .lookup(app_lang, "settings.privacy")
-    .unwrap_or_default();
+        .lookup(app_lang, "settings.privacy")
+        .unwrap_or_default();
     let audio_text = LOCALES
-    .lookup(app_lang, "settings.audio")
-    .unwrap_or_default();
+        .lookup(app_lang, "settings.audio")
+        .unwrap_or_default();
     let extensions_text = LOCALES
-    .lookup(app_lang, "settings.extensions")
-    .unwrap_or_default();
+        .lookup(app_lang, "settings.extensions")
+        .unwrap_or_default();
     let developer_text = LOCALES
-    .lookup(app_lang, "settings.developer")
-    .unwrap_or_default();
+        .lookup(app_lang, "settings.developer")
+        .unwrap_or_default();
 
     let general = UIRoute {
         to: "general",

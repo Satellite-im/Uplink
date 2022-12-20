@@ -2,9 +2,8 @@ use dioxus::prelude::*;
 use fluent_templates::Loader;
 use ui_kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
-
+use dioxus_router::*;
 use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, LOCALES, APP_LANG};
-
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
@@ -52,7 +51,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx)?;
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
 
     let search_placeholder = String::from("Search...");
 

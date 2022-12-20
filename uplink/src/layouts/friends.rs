@@ -14,7 +14,7 @@ use crate::{
         },
     },
     state::State,
-    LOCALES, APP_LANG,
+    APP_LANG, LOCALES,
 };
 
 #[derive(PartialEq, Props)]
@@ -40,7 +40,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let blocked_text = LOCALES
         .lookup(&*APP_LANG.read(), "friends.blocked")
         .unwrap_or_default();
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
 
     let pending_friends = state.read().friends.incoming_requests.len();
 

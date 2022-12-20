@@ -14,7 +14,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
 
     cx.render(rsx!(
         div {

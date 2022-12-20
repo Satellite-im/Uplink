@@ -1,11 +1,12 @@
 use std::fs;
 
-use dioxus::desktop::tao;
-use dioxus::desktop::tao::dpi::LogicalSize;
-use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::prelude::*;
+use dioxus_desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::menu::AboutMetadata;
+use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus_desktop::{tao, Config};
 
-use state::{State};
+use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use ui_kit::icons::IconElement;
@@ -19,7 +20,7 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
-
+use dioxus_router::*;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
 pub mod components;
@@ -58,7 +59,10 @@ fn main() {
     let mut window_menu = Menu::new();
 
     app_menu.add_native_item(MenuItem::Quit);
-    app_menu.add_native_item(MenuItem::About(String::from("Uplink")));
+    app_menu.add_native_item(MenuItem::About(
+        String::from("Uplink"),
+        AboutMetadata::default(),
+    ));
     // add native shortcuts to `edit_menu` menu
     // in macOS native item are required to get keyboard shortcut
     // to works correctly
@@ -82,7 +86,9 @@ fn main() {
     main_menu.add_submenu("Edit", true, edit_menu);
     main_menu.add_submenu("Window", true, window_menu);
 
-    let title = LOCALES.lookup(&APP_LANG.read(), "uplink").unwrap_or_default();
+    let title = LOCALES
+        .lookup(&APP_LANG.read(), "uplink")
+        .unwrap_or_default();
 
     let mut window = WindowBuilder::new()
         .with_title(title)
@@ -100,9 +106,10 @@ fn main() {
             .with_titlebar_transparent(true)
         // .with_movable_by_window_background(true)
     }
-    
 
-    dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
+    let config = Config::default();
+
+    dioxus_desktop::launch_cfg(app, config.with_window(window.with_menu(main_menu)))
 }
 
 fn app(cx: Scope) -> Element {
@@ -112,7 +119,7 @@ fn app(cx: Scope) -> Element {
     };
     let _ = use_context_provider(&cx, || state);
 
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx)?;
 
     let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);
@@ -151,7 +158,7 @@ fn app(cx: Scope) -> Element {
     let routes = vec![
         chat_route.clone(),
         files_route.clone(),
-        friends_route.clone(),
+        //friends_route.clone(),
         settings_route.clone(),
     ];
 

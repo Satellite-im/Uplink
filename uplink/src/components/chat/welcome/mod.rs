@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
+use dioxus_router::use_router;
 use fluent_templates::Loader;
 use ui_kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
 
-use crate::{LOCALES, APP_LANG};
+use crate::{APP_LANG, LOCALES};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {

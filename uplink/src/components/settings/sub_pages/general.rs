@@ -6,7 +6,7 @@ use crate::{components::settings::SettingSection, utils::language::{change_langu
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {    
-    let state = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(&cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let app_lang = &*APP_LANG.read();
     let app_language_text = LOCALES
