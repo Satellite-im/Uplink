@@ -1,9 +1,9 @@
 use std::fs;
 
-use dioxus::desktop::tao;
 use dioxus::desktop::tao::dpi::LogicalSize;
-#[cfg(target_os="macos")]
+#[cfg(target_os = "macos")]
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
 
 use state::State;
@@ -164,6 +164,8 @@ fn app(cx: Scope) -> Element {
         settings_route.clone(),
     ];
 
+    let desktop = use_window(&cx);
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
@@ -200,6 +202,7 @@ fn app(cx: Scope) -> Element {
             // },
             div {
                 id: "pre-release",
+                onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,
                 },

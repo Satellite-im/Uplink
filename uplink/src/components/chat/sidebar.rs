@@ -80,6 +80,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     class: "search-input",
                     Input {
                         placeholder: search_placeholder,
+                        // TODO: Pending implementation
+                        disabled: true,
                         icon: Icon::MagnifyingGlass,
                         options: Options {
                             with_clear_btn: true,
