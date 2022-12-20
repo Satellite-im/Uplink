@@ -11,19 +11,19 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let app_lang = &*APP_LANG.read();
     let app_language_text = LOCALES
     .lookup(app_lang, "settings.general-app-language")
-    .unwrap_or_default().clone();
+    .unwrap_or_default();
 
     let change_language_text = LOCALES
     .lookup(app_lang, "settings.general-change-language")
-    .unwrap_or_default().clone();
+    .unwrap_or_default();
 
     let splash_screen_text = LOCALES
         .lookup(app_lang, "settings.splash-screen")
-        .unwrap_or_default().clone();
+        .unwrap_or_default();
     
     let splash_screen_description_text = LOCALES
         .lookup(app_lang, "settings.splash-screen-description")
-        .unwrap_or_default().clone();
+        .unwrap_or_default();
 
     cx.render(rsx!(
         div {

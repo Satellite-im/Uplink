@@ -1,28 +1,74 @@
 use dioxus::prelude::*;
+use fluent_templates::Loader;
 use ui_kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
-use crate::{components::settings::SettingSection, state::State};
+use crate::{components::settings::SettingSection, state::State, utils::language::APP_LANG, LOCALES};
 
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
     let state = use_context::<State>(&cx).unwrap();
 
+    let app_lang = &*APP_LANG.read();
+    let developer_mode_label = LOCALES
+        .lookup(app_lang, "settings-developer.developer-mode")
+        .unwrap_or_default();
+    let developer_mode_description = LOCALES
+        .lookup(app_lang, "settings-developer.developer-mode-description")
+        .unwrap_or_default();
+
+    let open_codebase_label = LOCALES
+        .lookup(app_lang, "settings-developer.open-codebase")
+        .unwrap_or_default();
+    let open_codebase_description = LOCALES
+        .lookup(app_lang, "settings-developer.open-codebase-description")
+        .unwrap_or_default();
+
+    let open_cache_label = LOCALES
+        .lookup(app_lang, "settings-developer.open-cache")
+        .unwrap_or_default();
+    let open_cache_description = LOCALES
+        .lookup(app_lang, "settings-developer.open-cache-description")
+        .unwrap_or_default();
+    let open_cache_folder = LOCALES
+        .lookup(app_lang, "settings-developer.open-cache-folder")
+        .unwrap_or_default();
+
+    let compress_cache_label = LOCALES
+        .lookup(app_lang, "settings-developer.compress-download-cache")
+        .unwrap_or_default();
+    let compress_cache_description = LOCALES
+        .lookup(app_lang, "settings-developer.compress-download-cache-description")
+        .unwrap_or_default();
+    let compress_button = LOCALES
+        .lookup(app_lang, "settings-developer.compress")
+        .unwrap_or_default();
+
+    let clear_cache_label = LOCALES
+        .lookup(app_lang, "settings-developer.clear-cache")
+        .unwrap_or_default();
+    let clear_cache_description = LOCALES
+        .lookup(app_lang, "settings-developer.clear-cache-description")
+        .unwrap_or_default();
+    let clear_button = LOCALES
+        .lookup(app_lang, "settings-developer.clear")
+        .unwrap_or_default();
+
     cx.render(rsx!(
         div {
             id: "settings-developer",
             SettingSection {
-                section_label: "Developer Mode".into(),
-                section_description: "Enabling developer mode adds logging and displays helpful debug information on the UI.".into(),
+                section_label: developer_mode_label,
+                section_description: developer_mode_description,
                 Switch {
                     
                 }
             },
             SettingSection {
-                section_label: "Open Codebase".into(),
-                section_description: "Opens the codebase in your default web browser.".into(),
+                section_label: open_codebase_label.clone(),
+                section_description: open_codebase_description,
                 Button {
-                    text: "Open Codebase".into(),
+                    text: open_codebase_label,
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
@@ -31,10 +77,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Open Cache".into(),
-                section_description: "Open the cache in your default file browser.".into(),
+                section_label: open_cache_label,
+                section_description: open_cache_description,
                 Button {
-                    text: "Open Folder".into(),
+                    text: open_cache_folder,
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
@@ -49,10 +95,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Compress & Download Cache".into(),
-                section_description: "For debugging with other developers, you can compress your cache to zip and share it. Don't do this if this is a real account you use.".into(),
+                section_label: compress_cache_label,
+                section_description: compress_cache_description,
                 Button {
-                    text: "Compress".into(),
+                    text: compress_button,
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
@@ -60,10 +106,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Clear Cache".into(),
-                section_description: "Reset your account, basically.".into(),
+                section_label: clear_cache_label,
+                section_description: clear_cache_description,
                 Button {
-                    text: "Clear".into(),
+                    text: clear_button,
                     appearance: Appearance::Danger,
                     icon: Icon::Trash,
                     onpress: move |_| {
