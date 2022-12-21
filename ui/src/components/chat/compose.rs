@@ -1,18 +1,22 @@
 
 use chrono::{DateTime, Utc};
 use dioxus::{prelude::*, desktop::use_window};
-use timeago::Formatter;
+use isolang::Language;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use timeago::{languages::boxup, English};
 use warp::multipass::identity::Identity;
 
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::language::get_local_text};
 
-
 use super::sidebar::build_participants_names;
 
-
-fn format_timestamp(datetime: DateTime<Utc>) -> String {
-    let formatter = Formatter::new();
+fn format_timestamp(datetime: DateTime<Utc>, active_language: String) -> String {
+    let language = 
+        isolang::Language::from_locale(&active_language.replace("-", "_")).unwrap_or(Language::Eng);
+    let formatter = match timeago::from_isolang(language) {
+        Some(lang) => timeago::Formatter::with_language(lang), 
+        None => timeago::Formatter::with_language(boxup(English)),
+    };
     let now = Utc::now();
     let duration = now.signed_duration_since(datetime).to_std().unwrap();
     formatter.convert(duration)
@@ -145,7 +149,9 @@ pub fn Compose(cx: Scope) -> Element {
                     message_groups.iter().map(|group| {
                         let messages = &group.messages;
                         let last_message = messages.last().unwrap().message.clone();
-                        let sender = state.read().get_friend_identity(&group.sender);                       
+                        let sender = state.read().get_friend_identity(&group.sender);    
+                        let active_language = state.read().settings.language.clone();
+
                         rsx!(
                             MessageGroup {
                                 user_image: cx.render(rsx!(
@@ -154,7 +160,7 @@ pub fn Compose(cx: Scope) -> Element {
                                         status: Status::Online
                                     }
                                 )),
-                                timestamp: format_timestamp(last_message.date()),
+                                timestamp: format_timestamp(last_message.date(), active_language),
                                 with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
                                 remote: group.remote,
                                 messages.iter().map(|grouped_message| {
