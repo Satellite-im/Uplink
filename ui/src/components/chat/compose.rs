@@ -1,6 +1,6 @@
 
 use chrono::{DateTime, Utc};
-use dioxus::prelude::*;
+use dioxus::{prelude::*, desktop::use_window};
 use fluent_templates::Loader;
 use timeago::Formatter;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
@@ -69,78 +69,82 @@ pub fn Compose(cx: Scope) -> Element {
         .lookup(&*APP_LANG.read(), "files.upload")
         .unwrap_or_default();
 
+    let desktop = use_window(&cx);
 
     cx.render(rsx!(
         div {
             id: "compose",
-            Topbar {
-                with_back_button: false,
-                controls: cx.render(
-                    rsx! (
-                        Button {
-                            icon: Icon::Heart,
-                            appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
-                            tooltip: cx.render(rsx!(
-                                Tooltip { 
-                                    arrow_position: ArrowPosition::Top, 
-                                    text: add_text
+            div {
+                onmousedown: move |_| { desktop.drag(); },
+                Topbar {
+                    with_back_button: false,
+                    controls: cx.render(
+                        rsx! (
+                            Button {
+                                icon: Icon::Heart,
+                                appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
+                                tooltip: cx.render(rsx!(
+                                    Tooltip { 
+                                        arrow_position: ArrowPosition::Top, 
+                                        text: add_text
+                                    }
+                                )),
+                                onpress: move |_| {
+                                    state.write().mutate(Action::ToggleFavorite(active_chat.clone()));
                                 }
-                            )),
-                            onpress: move |_| {
-                                state.write().mutate(Action::ToggleFavorite(active_chat.clone()));
-                            }
-                        },
-                        Button {
-                            icon: Icon::PhoneArrowUpRight,
-                            appearance: Appearance::Secondary,
-                            tooltip: cx.render(rsx!(
-                                Tooltip { 
-                                    arrow_position: ArrowPosition::Top, 
-                                    text: call_text
-                                }
-                            )),
-                            onpress: move |_| {
-                                let _ = state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
-                            }
-                        },
-                        Button {
-                            icon: Icon::VideoCamera,
-                            appearance: Appearance::Secondary,
-                            tooltip: cx.render(rsx!(
-                                Tooltip { 
-                                    arrow_position: ArrowPosition::Top, 
-                                    text: video_call_text
-                                }
-                            )),
-                        },
-                    )
-                ),
-                cx.render(
-                    rsx! (
-                        if without_me.len() < 2 {rsx! (
-                            UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online,
-                                image: first_image
-                            }
-                        )} else {rsx! (
-                            UserImageGroup {
-                                participants: build_participants(&without_me)
-                            }
-                        )}
-                        div {
-                            class: "user-info",
-                            p {
-                                class: "username",
-                                "{participants_name}"
                             },
-                            p {
-                                class: "status",
-                                "{subtext}"
+                            Button {
+                                icon: Icon::PhoneArrowUpRight,
+                                appearance: Appearance::Secondary,
+                                tooltip: cx.render(rsx!(
+                                    Tooltip { 
+                                        arrow_position: ArrowPosition::Top, 
+                                        text: call_text
+                                    }
+                                )),
+                                onpress: move |_| {
+                                    let _ = state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                                }
+                            },
+                            Button {
+                                icon: Icon::VideoCamera,
+                                appearance: Appearance::Secondary,
+                                tooltip: cx.render(rsx!(
+                                    Tooltip { 
+                                        arrow_position: ArrowPosition::Top, 
+                                        text: video_call_text
+                                    }
+                                )),
+                            },
+                        )
+                    ),
+                    cx.render(
+                        rsx! (
+                            if without_me.len() < 2 {rsx! (
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    image: first_image
+                                }
+                            )} else {rsx! (
+                                UserImageGroup {
+                                    participants: build_participants(&without_me)
+                                }
+                            )}
+                            div {
+                                class: "user-info",
+                                p {
+                                    class: "username",
+                                    "{participants_name}"
+                                },
+                                p {
+                                    class: "status",
+                                    "{subtext}"
+                                }
                             }
-                        }
-                    )
-                ),
+                        )
+                    ),
+                },
             },
             active_media.then(|| rsx!(
                 MediaPlayer {},

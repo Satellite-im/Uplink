@@ -80,3 +80,11 @@
     gap: var(--gap);
     padding: 0 var(--gap);
 }
+
+.drag-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 2rem;
+}
