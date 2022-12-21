@@ -121,9 +121,12 @@ fn app(cx: Scope) -> Element {
         Err(_) => State::default(),
     };*/
 
-    //let _ = use_shared_state_provider(&cx, || STATE);
+    use_init_atom_root(cx);
+    //let _ = use_shared_state_provider(&cx, || state);
 
     let state = use_atom_ref(&cx, STATE);
+
+    //let state = use_atom_ref(&cx, STATE);
     //let state = RwLock::new(state_ns);
 
     let user_lang_saved = state.read().settings.language.clone();
@@ -163,7 +166,7 @@ fn app(cx: Scope) -> Element {
     let routes = vec![
         chat_route.clone(),
         files_route.clone(),
-        //friends_route.clone(),
+        friends_route.clone(),
         settings_route.clone(),
     ];
 
