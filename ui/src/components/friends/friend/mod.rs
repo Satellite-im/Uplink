@@ -57,6 +57,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 Label {
                     // TODO: this is stubbed for now, wire up to the actual request time
+                    // TODO: Do this translate later 
                     text: "Requested 4 days ago.".into()
                 }
             },
