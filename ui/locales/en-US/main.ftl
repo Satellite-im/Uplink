@@ -13,6 +13,7 @@ uplink = Uplink
     .hide-chat = Hide Chat
     .search-placeholder = Search...
     .end = End
+    .pre-release = Pre-release
 
 messages = Messages
     .new = New Message
@@ -23,6 +24,7 @@ messages = Messages
     .say-something-placeholder = Say Something...
 
 favorites = Favorites
+    .favorites = Favorites
     .add = Add to Favorites
     .remove = Remove from Favorites
 

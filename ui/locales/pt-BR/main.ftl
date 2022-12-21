@@ -13,6 +13,7 @@ uplink = Uplink
     .hide-chat = Esconder Chat
     .search-placeholder = Procurar...
     .end = Finalizar
+    .pre-release = Pré-lançamento
 
 
 messages = Messages
@@ -24,6 +25,7 @@ messages = Messages
     .say-something-placeholder = Diga algo...
 
 favorites = Favorites
+    .favorites = Favoritos
     .add = Adicione aos favoritos
     .remove = Remova dos favoritos
 

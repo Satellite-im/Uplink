@@ -169,7 +169,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         ContextItem {
                                             icon: Icon::Heart,
-                                            text: get_local_text("favorites"),
+                                            text: get_local_text("favorites.favorites"),
                                             onpress: move |_| {
                                                 let _ = &state.write().mutate(Action::Favorite(chat_with_friend_context_clone.clone()));
                                             }

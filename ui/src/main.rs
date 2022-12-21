@@ -19,7 +19,7 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::{get_local_text};
+use utils::language::get_local_text;
 
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
@@ -30,7 +30,7 @@ pub mod state;
 pub mod testing;
 pub mod utils;
 
-use fluent_templates::{static_loader};
+use fluent_templates::static_loader;
 
 static_loader! {
     static LOCALES = {
@@ -155,6 +155,8 @@ fn app(cx: Scope) -> Element {
         settings_route.clone(),
     ];
 
+    let pre_release_text = get_local_text("uplink.pre-release");
+
     let desktop = use_window(&cx);
 
     cx.render(rsx! (
@@ -198,7 +200,7 @@ fn app(cx: Scope) -> Element {
                     icon: Icon::Beaker,
                 },
                 p {
-                    "Pre-release"
+                    "{pre_release_text}",
                 }
             },
             state.read().ui.popout_player.then(|| rsx!(
