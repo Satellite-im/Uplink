@@ -1,0 +1,18 @@
+[general]
+theme = "default"
+show_splash = false
+
+[privacy]
+satellite_sync_nodes = true
+safer_file_scanning = true
+
+[audiovideo]
+noise_suppression = false
+call_timer = false
+
+[extensions]
+enable = false
+
+[developer]
+developer_mode = false
+cache_dir = ".warp"

@@ -7,6 +7,19 @@ use std::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    #[cfg(windows)]
+    {
+        let mut res = winres::WindowsResource::new();
+        res.set("ProductName", "uplink");
+        res.set("FileDescription", "uplink");
+        res.set(
+            "LegalCopyright",
+            "Creative Commons Attribution-NonCommercial 1.0",
+        );
+        res.set_icon("./extra/windows/uplink.ico");
+        res.compile()
+            .expect("Failed to run the Windows resource compiler (rc.exe)");
+    }
     // Create the file that will hold the compiled CSS.
     let scss_output = "./src/compiled_styles.css";
     let mut scss = File::create(scss_output)?;
