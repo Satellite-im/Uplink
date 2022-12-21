@@ -20,6 +20,7 @@ pub struct Props {
     fullscreen_text: String,
     popout_player_text: String,
     screenshare_text: String,
+    end_text: String,
 }
 
 #[allow(non_snake_case)]
@@ -49,7 +50,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Top,
-                                text: String::from("Fullscreen")
+                                text: cx.props.fullscreen_text.clone(),
                             }
                         )),
                     },
@@ -66,7 +67,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: String::from("Popout Player")
+                            text: cx.props.popout_player_text.clone(),
                         }
                     )),
                     onpress: move |_| {
@@ -97,7 +98,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: String::from("Enable Camera")
+                        text: cx.props.enable_camera_text.clone(),
                     }
                 )),
             },
@@ -107,7 +108,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: String::from("Screenshare")
+                        text: cx.props.screenshare_text.clone(),
                     }
                 )),
                 // TODO: https://github.com/quadrupleslap/scrap
@@ -115,7 +116,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
-                text: "End".into(),
+                text: cx.props.end_text.clone(),
                 onpress: move |_| {
                     let _ = state.write().mutate(Action::ToggleMedia(active_chat.clone()));
                 }
@@ -126,7 +127,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: String::from("Settings")
+                        text: cx.props.settings_text.clone(),
                     }
                 )),
                 // TODO: Navigate to media settings

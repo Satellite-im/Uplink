@@ -11,8 +11,18 @@ use kit::{
 
 use crate::state::{Action, State};
 
+#[derive(Eq, PartialEq, Props)]
+pub struct Props {
+    in_call_text: String,
+    mute_text: String, 
+    unmute_text: String,
+    listen_text: String,
+    silence_text: String,
+    end_text: String,
+}
+
 #[allow(non_snake_case)]
-pub fn RemoteControls(cx: Scope) -> Element {
+pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
 
     cx.render(rsx!(div {
@@ -20,7 +30,7 @@ pub fn RemoteControls(cx: Scope) -> Element {
         div {
             class: "call-info",
             Label {
-                text: "In Call".into(),
+                text: cx.props.in_call_text.clone(),
             },
             p {
                 "1h 34m",
@@ -35,7 +45,7 @@ pub fn RemoteControls(cx: Scope) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if state.read().ui.muted { String::from("Unmute") } else { String::from("Mute") }
+                        text: if state.read().ui.muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -48,7 +58,7 @@ pub fn RemoteControls(cx: Scope) -> Element {
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if state.read().ui.silenced { String::from("Listen") } else { String::from("Silence") }
+                        text: if state.read().ui.silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -58,7 +68,7 @@ pub fn RemoteControls(cx: Scope) -> Element {
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
-                text: "End".into(),
+                text: cx.props.end_text.clone(),
                 onpress: move |_| {
                     state.write().mutate(Action::EndAll);
                 },

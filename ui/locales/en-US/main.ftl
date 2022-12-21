@@ -12,6 +12,7 @@ uplink = Uplink
     .clear-unreads = Clear Unreads
     .hide-chat = Hide Chat
     .search-placeholder = Search...
+    .end = End
 
 messages = Messages
     .new = New Message
@@ -85,3 +86,17 @@ settings-developer = SettingsDeveloper
     .clear-cache = Clear Cache
     .clear-cache-description = Reset your account, basically.
     .clear = Clear
+
+media-player = MediaPlayer 
+    .enable-camera = Enable Camera 
+    .fullscreen = Fullscreen
+    .popout-player = Popout Player 
+    .screenshare = Screenshare
+    
+remote-controls = RemoteControls 
+    .in-call = In Call
+    .mute = Mute
+    .unmute = Unmute 
+    .listen = Listen
+    .silence = Silence 
+    .end = End

@@ -129,9 +129,16 @@ pub fn Compose(cx: Scope) -> Element {
                     ),
                 },
             },
-            // active_media.then(|| rsx!(
-            //     MediaPlayer {},
-            // )),
+            active_media.then(|| rsx!(
+                MediaPlayer {
+                    settings_text: get_local_text("settings.settings"), 
+                    enable_camera_text: get_local_text("media-player.enable-camera"),
+                    fullscreen_text: get_local_text("media-player.fullscreen"),
+                    popout_player_text: get_local_text("media-player.popout-player"),
+                    screenshare_text: get_local_text("media-player.screenshare"),
+                    end_text: get_local_text("uplink.end"),
+                },
+            )),
             div {
                 id: "messages",
                 div {

@@ -251,7 +251,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 )
             },
             active_media_chat.is_some().then(|| rsx!(
-                RemoteControls {}
+                RemoteControls {
+                    in_call_text: get_local_text("remote-controls.in-call"),
+                    mute_text: get_local_text("remote-controls.mute"),
+                    unmute_text: get_local_text("remote-controls.unmute"),
+                    listen_text: get_local_text("remote-controls.listen"),
+                    silence_text: get_local_text("remote-controls.silence"),
+                   end_text: get_local_text("remote-controls.end"),
+                }
             )),
         }
     ))
