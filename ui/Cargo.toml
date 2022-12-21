@@ -28,6 +28,7 @@ dirs = "4.0.0"
 opener = "0.5.0"
 soloud = "1.0.2"
 open = "3.2.0"
+notify-rust = "4.5.10"
 
 [build-dependencies]
 glob = "0.3.0"

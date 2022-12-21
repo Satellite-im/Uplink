@@ -19,7 +19,7 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::APP_LANG;
+use utils::{language::APP_LANG, notifications::PushNotification};
 
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
