@@ -239,9 +239,9 @@ impl State {
     ///
     /// # Arguments
     fn set_active_theme(&mut self, theme: String) {
-        if self.settings.theme.is_empty() {
+        if !self.settings.theme.is_empty() {
             // TODO: Do we have an initial state somewhere we can set this?
-            self.settings.theme.push('1')
+            self.settings.theme.push_str(&theme)
         }
     }
 
