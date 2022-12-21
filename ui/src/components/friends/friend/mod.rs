@@ -100,7 +100,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )),
                 Button {
-                    icon: Icon::XMark,
+                    icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
                     onpress: move |_| match &cx.props.onremove {
                         Some(f) => f.call(()),
@@ -213,7 +213,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         hr{}
                                         ContextItem {
                                             danger: true,
-                                            icon: Icon::XMark,
+                                            icon: Icon::UserMinus,
                                             text: remove_text,
                                             onpress: move |_| {
                                                 let _ = &state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
