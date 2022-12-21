@@ -139,6 +139,12 @@ pub struct Settings {
     // Selected Language
     #[serde(default)]
     pub language: String,
+    // All Themes
+    #[serde(default)]
+    pub all_themes: Vec<String>,
+    // Selected Theme
+    #[serde(default)]
+    pub theme: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -227,6 +233,16 @@ impl State {
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
+    }
+
+    /// Sets the active theme in the `State` struct.
+    ///
+    /// # Arguments
+    fn set_active_theme(&mut self, theme: String) {
+        if self.settings.theme.is_empty() {
+            // TODO: Do we have an initial state somewhere we can set this?
+            self.settings.theme.push('1')
+        }
     }
 
     /// Toggles the display of media on the provided chat in the `State` struct.
@@ -645,6 +661,8 @@ impl State {
             Action::SetId(identity) => self.set_identity(&identity),
             Action::ToggleMedia(chat) => self.toggle_media(&chat),
             Action::EndAll => self.disable_all_active_media(),
+            // Settings
+            Action::SetTheme(theme) => self.set_active_theme(theme),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => {
@@ -779,6 +797,8 @@ pub enum Action {
     // Settings
     /// Sets the selected language.
     SetLanguage(String),
+    // Set a theme for the user
+    SetTheme(String),
 
     // Routes
     /// Set the active route
