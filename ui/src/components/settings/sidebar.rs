@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use dioxus::prelude::*;
-use fluent_templates::Loader;
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -10,7 +9,7 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-use crate::{components::chat::RouteInfo, state::State, APP_LANG, LOCALES};
+use crate::{components::chat::RouteInfo, state::State, utils::language::get_local_text};
 
 pub enum Page {
     Audio,
@@ -53,53 +52,33 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     use_context::<State>(&cx).unwrap();
 
-    let app_lang = &*APP_LANG.read();
-    let search_placeholder = LOCALES
-        .lookup(app_lang, "settings.search-placeholder")
-        .unwrap_or_default();
-    let general_text = LOCALES
-        .lookup(app_lang, "settings.general")
-        .unwrap_or_default();
-    let privacy_text = LOCALES
-        .lookup(app_lang, "settings.privacy")
-        .unwrap_or_default();
-    let audio_text = LOCALES
-        .lookup(app_lang, "settings.audio")
-        .unwrap_or_default();
-    let extensions_text = LOCALES
-        .lookup(app_lang, "settings.extensions")
-        .unwrap_or_default();
-    let developer_text = LOCALES
-        .lookup(app_lang, "settings.developer")
-        .unwrap_or_default();
-
     let general = UIRoute {
         to: "general",
-        name: general_text,
+        name: get_local_text("settings.general"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let privacy = UIRoute {
         to: "privacy",
-        name: privacy_text,
+        name: get_local_text("settings.privacy"),
         icon: Icon::LockClosed,
         ..UIRoute::default()
     };
     let audio = UIRoute {
         to: "audio",
-        name: audio_text,
+        name: get_local_text("settings.audio"),
         icon: Icon::MusicalNote,
         ..UIRoute::default()
     };
     let extensions = UIRoute {
         to: "extensions",
-        name: extensions_text,
+        name: get_local_text("settings.extensions"),
         icon: Icon::Beaker,
         ..UIRoute::default()
     };
     let developer = UIRoute {
         to: "developer",
-        name: developer_text,
+        name: get_local_text("settings.developer"),
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
@@ -118,7 +97,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "search-input",
                     Input {
-                        placeholder: search_placeholder,
+                        placeholder: get_local_text("settings.search-placeholder"),
                         icon: Icon::MagnifyingGlass,
                         disabled: true,
                         options: Options {

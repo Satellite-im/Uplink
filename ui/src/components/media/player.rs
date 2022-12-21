@@ -15,6 +15,11 @@ use crate::state::{Action, State};
 pub struct Props {
     #[props(optional)]
     larger: Option<bool>,
+    settings_text: String, 
+    enable_camera_text: String,
+    fullscreen_text: String,
+    popout_player_text: String,
+    screenshare_text: String,
 }
 
 #[allow(non_snake_case)]

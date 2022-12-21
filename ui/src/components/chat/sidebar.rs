@@ -1,9 +1,8 @@
 use dioxus::{prelude::*, desktop::use_window};
-use fluent_templates::Loader;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 use warp::{multipass::identity::Identity, raygun::Message};
 
-use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, LOCALES, APP_LANG};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, utils::language::get_local_text};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -54,24 +53,9 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     let state: UseSharedState<State> = use_context::<State>(&cx)?;
 
-
-
     let sidebar_chats = state.read().chats.in_sidebar.clone();
 
     let favorites = state.read().chats.favorites.clone();
-
-    let search_placeholder = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.search-placeholder")
-        .unwrap_or_default();
-
-    let favorites_text = LOCALES
-        .lookup(&*APP_LANG.read(), "favorites")
-        .unwrap_or_default();
-
-
-    let chats_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.chats")
-        .unwrap_or_default(); 
 
     let binding = state.read();
     let active_media_chat = binding.get_active_media_chat();
@@ -84,7 +68,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 div {
                     class: "search-input",
                     Input {
-                        placeholder: search_placeholder,
+                        placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: true,
                         icon: Icon::MagnifyingGlass,
@@ -113,7 +97,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 div {
                     id: "favorites",
                     Label {
-                        text: favorites_text
+                        text: get_local_text("favorites"),
                     },
                     div {
                         class: "vertically-scrollable",
@@ -124,14 +108,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(chat.participants.clone());
                             let participants_name = build_participants_names(&without_me);
-
-                            let remove_favorite_text = LOCALES
-                                .lookup(&*APP_LANG.read(), "favorites.remove")
-                                .unwrap_or_default();
-                    
-                            let chat_text = LOCALES
-                                .lookup(&*APP_LANG.read(), "uplink.chat")
-                                .unwrap_or_default(); 
                             
                             rsx! (
                                 ContextMenu {
@@ -140,7 +116,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
-                                            text: chat_text,
+                                            text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
                                                 if cx.props.route_info.active.to != "/" {
@@ -150,7 +126,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         },
                                         ContextItem {
                                             icon: Icon::XMark,
-                                            text: remove_favorite_text,
+                                            text: get_local_text("favorites.remove"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));
                                             }
@@ -176,7 +152,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 id: "chats",
                 (!sidebar_chats.is_empty()).then(|| rsx!(
                     Label {
-                        text: chats_text
+                        text: get_local_text("uplink.chats"),
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
@@ -211,19 +187,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
 
-                    let clear_unreads_text = LOCALES
-                        .lookup(&*APP_LANG.read(), "uplink.clear-unreads")
-                        .unwrap_or_default();
-                    let call_text = LOCALES
-                        .lookup(&*APP_LANG.read(), "uplink.call")
-                        .unwrap_or_default();
-                    let hide_chat_text = LOCALES
-                        .lookup(&*APP_LANG.read(), "uplink.hide-chat")
-                        .unwrap_or_default();
                     // TODO:
-                    let _block_user_text = LOCALES
-                        .lookup(&*APP_LANG.read(), "friends.block")
-                        .unwrap_or_default();
+                    // let _block_user_text = LOCALES
+                    //     .lookup(&*APP_LANG.read(), "friends.block")
+                    //     .unwrap_or_default();
 
                     rsx!(
                         ContextMenu {
@@ -232,7 +199,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::EyeSlash,
-                                    text: clear_unreads_text,
+                                    text: get_local_text("uplink.clear-unreads"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
                                     }
@@ -240,14 +207,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 hr{ },
                                 ContextItem {
                                     icon: Icon::PhoneArrowUpRight,
-                                    text: call_text,
+                                    text: get_local_text("uplink.call"),
                                     //TODO: Wire to state
 
                                 },
                                 hr{ }
                                 ContextItem {
                                     icon: Icon::EyeSlash,
-                                    text: hide_chat_text,
+                                    text: get_local_text("uplink.hide-chat"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
                                     }

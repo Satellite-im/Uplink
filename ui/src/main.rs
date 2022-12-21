@@ -19,7 +19,7 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::APP_LANG;
+use utils::language::{get_local_text};
 
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
@@ -30,7 +30,7 @@ pub mod state;
 pub mod testing;
 pub mod utils;
 
-use fluent_templates::{static_loader, Loader};
+use fluent_templates::{static_loader};
 
 static_loader! {
     static LOCALES = {
@@ -83,9 +83,7 @@ fn main() {
     main_menu.add_submenu("Edit", true, edit_menu);
     main_menu.add_submenu("Window", true, window_menu);
 
-    let title = LOCALES
-        .lookup(&APP_LANG.read(), "uplink")
-        .unwrap_or_default();
+    let title = get_local_text("uplink");
 
     let mut window = WindowBuilder::new()
         .with_title(title)
@@ -121,39 +119,21 @@ fn app(cx: Scope) -> Element {
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
-    let app_lang = &*APP_LANG.read();
-
-    let chat_text = LOCALES
-        .lookup(app_lang, "uplink.chats")
-        .unwrap_or_default().clone();
-
-    let settings_text = LOCALES
-        .lookup(app_lang, "settings.settings")
-        .unwrap_or_default().clone();
-
-    let friends_text = LOCALES
-        .lookup(app_lang, "friends.friends")
-        .unwrap_or_default().clone();
-
-    let files_text = LOCALES
-        .lookup(app_lang, "files.files")
-        .unwrap_or_default().clone();
-
     let chat_route = UIRoute {
         to: "/",
-        name: chat_text,
+        name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
         to: "/settings",
-        name: settings_text,
+        name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
         to: "/friends",
-        name: friends_text,
+        name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
             Some(pending_friends.to_string())
@@ -164,7 +144,7 @@ fn app(cx: Scope) -> Element {
     };
     let files_route = UIRoute {
         to: "/files",
-        name: files_text,
+        name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
     };
