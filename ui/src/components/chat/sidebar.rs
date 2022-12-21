@@ -198,7 +198,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             id: format!("{}-chat", key.to_string()),
                             items: cx.render(rsx!(
                                 ContextItem {
-                                    icon: Icon::EyeSlash,
+                                    icon: Icon::BellSlash,
                                     text: get_local_text("uplink.clear-unreads"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
