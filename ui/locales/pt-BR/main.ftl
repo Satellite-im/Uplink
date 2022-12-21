@@ -95,7 +95,7 @@ settings-developer = SettingsDeveloper
 media-player = MediaPlayer 
     .enable-camera = Habilitar Câmera
     .fullscreen = Tela cheia
-    .popout-player = Popout Reprodutor 
+    .popout-player = Popout Player 
     .screenshare = Compartilhar tela
     
 remote-controls = RemoteControls 

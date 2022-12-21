@@ -128,7 +128,7 @@ pub fn Friends(cx: Scope) -> Element {
         div {
             class: "friends-list",
             Label {
-                text: get_local_text("friends"),
+                text: get_local_text("friends.friends"),
             },
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
