@@ -64,6 +64,10 @@ settings = Settings
     .splash-screen = Tela de Abertura
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
 
+settings-extensions = SettingsExtensions 
+    .placeholder = Espaço reservado
+    .open-extensions-folder = Abrir pasta de extensões 
+
 settings-privacy = SettingsPrivacy 
     .backup-recovery-phrase = Frase de recuperação de backup
     .backup-phrase = Frase de backup

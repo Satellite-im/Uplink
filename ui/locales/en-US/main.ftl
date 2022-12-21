@@ -63,6 +63,10 @@ settings = Settings
     .splash-screen = Splash Screen
     .splash-screen-description = Disabling the splash screen could speed up load times.
 
+settings-extensions = SettingsExtensions 
+    .placeholder = Placeholder
+    .open-extensions-folder = Open Extensions Folder
+
 settings-privacy = SettingsPrivacy 
     .backup-recovery-phrase = Backup Recovery Phrase
     .backup-phrase = Backup Phrase
