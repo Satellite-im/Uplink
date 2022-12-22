@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{desktop::use_window, prelude::*};
 use fluent_templates::Loader;
 use kit::{
     elements::{button::Button, Appearance},
@@ -46,6 +46,8 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
 
     let route = use_state(&cx, || FriendRoute::All);
 
+    let desktop = use_window(&cx);
+
     cx.render(rsx!(
         div {
             id: "friends-layout",
@@ -53,6 +55,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 route_info: cx.props.route_info.clone()
             },
             div {
+                onmousedown: move |_| { desktop.drag(); },
                 class: "friends-body",
                 AddFriend {},
                 div {

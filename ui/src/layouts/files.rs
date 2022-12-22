@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{desktop::use_window, prelude::*};
 use fluent_templates::Loader;
 use kit::{
     elements::{
@@ -40,6 +40,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         .lookup(&*APP_LANG.read(), "files.total-space")
         .unwrap_or_default();
 
+    let desktop = use_window(&cx);
+
     cx.render(rsx!(
         div {
             id: "files-layout",
@@ -48,51 +50,54 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             },
             div {
                 class: "files-body",
-                Topbar {
-                    with_back_button: false,
-                    controls: cx.render(
-                        rsx! (
-                            Button {
-                                icon: Icon::FolderPlus,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: new_folder_text
+                div {
+                    onmousedown: move |_| { desktop.drag(); },
+                    Topbar {
+                        with_back_button: false,
+                        controls: cx.render(
+                            rsx! (
+                                Button {
+                                    icon: Icon::FolderPlus,
+                                    appearance: Appearance::Secondary,
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: new_folder_text
+                                        }
+                                    )),
+                                    onpress: move |_| {
+                                        // ...
                                     }
-                                )),
-                                onpress: move |_| {
-                                    // ...
+                                },
+                                Button {
+                                    icon: Icon::Plus,
+                                    appearance: Appearance::Secondary,
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: upload_text
+                                        }
+                                    ))
+                                }
+                            )
+                        ),
+                        div {
+                            class: "files-info",
+                            p {
+                                class: "free-space",
+                                "{free_space_text}",
+                                span {
+                                    class: "count",
+                                    "0MB"
                                 }
                             },
-                            Button {
-                                icon: Icon::Plus,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: upload_text
-                                    }
-                                ))
-                            }
-                        )
-                    ),
-                    div {
-                        class: "files-info",
-                        p {
-                            class: "free-space",
-                            "{free_space_text}",
-                            span {
-                                class: "count",
-                                "0MB"
-                            }
-                        },
-                        p {
-                            class: "total-space",
-                            "{total_space_text}",
-                            span {
-                                class: "count",
-                                "10MB"
+                            p {
+                                class: "total-space",
+                                "{total_space_text}",
+                                span {
+                                    class: "count",
+                                    "10MB"
+                                }
                             }
                         }
                     }
