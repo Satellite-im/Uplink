@@ -1,26 +1,11 @@
 
-use chrono::{DateTime, Utc};
 use dioxus::{prelude::*, desktop::use_window};
-use isolang::Language;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
-use timeago::{languages::boxup, English};
 use warp::multipass::identity::Identity;
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::language::get_local_text};
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};
 
 use super::sidebar::build_participants_names;
-
-fn format_timestamp(datetime: DateTime<Utc>, active_language: String) -> String {
-    let language = 
-        isolang::Language::from_locale(&active_language.replace("-", "_")).unwrap_or(Language::Eng);
-    let formatter = match timeago::from_isolang(language) {
-        Some(lang) => timeago::Formatter::with_language(lang), 
-        None => timeago::Formatter::with_language(boxup(English)),
-    };
-    let now = Utc::now();
-    let duration = now.signed_duration_since(datetime).to_std().unwrap();
-    formatter.convert(duration)
-}
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -41,7 +26,7 @@ pub fn Compose(cx: Scope) -> Element {
     let is_favorite = state.read().is_favorite(&active_chat);
 
     let reply_message = match state.read().get_active_chat().unwrap_or_default().replying_to {
-        Some(m) => m.value().join("\n").to_string(),
+        Some(m) => m.value().join("\n"),
         None => "".into(),
     };
 
@@ -90,7 +75,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    let _ = state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                                    state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
                                 }
                             },
                             Button {
@@ -160,7 +145,7 @@ pub fn Compose(cx: Scope) -> Element {
                                         status: Status::Online
                                     }
                                 )),
-                                timestamp: format_timestamp(last_message.date(), active_language),
+                                timestamp: format_timestamp_timeago(last_message.date(), active_language),
                                 with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
                                 remote: group.remote,
                                 messages.iter().map(|grouped_message| {
@@ -218,7 +203,7 @@ pub fn Compose(cx: Scope) -> Element {
                             label: get_local_text("messages.replying"),
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
-                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.clone().unwrap_or_default().sender();
+                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.unwrap_or_default().sender();
                                 our_did != their_did
                             },
                             onclose: move |_| {

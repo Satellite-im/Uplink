@@ -8,8 +8,7 @@ use crate::{
     components::{
         chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
         friends::{
-            add::AddFriend,
-            friend::{BlockedUsers, Friends, OutgoingRequests, PendingFriends},
+            add::AddFriend, friends_list::Friends, incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests, blocked::BlockedUsers,
         },
     },
     state::State,

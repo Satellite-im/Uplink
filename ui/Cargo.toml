@@ -28,6 +28,9 @@ dirs = "4.0.0"
 opener = "0.5.0"
 soloud = "1.0.2"
 open = "3.2.0"
+notify-rust = "4.5.10"
+futures = "0.3"
+tokio = { version = "1.23.0", features = ["full"] }
 isolang = "2.2.0"
 
 [build-dependencies]

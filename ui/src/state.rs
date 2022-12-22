@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
-    sync::Arc,
 };
 
 use uuid::Uuid;
@@ -13,7 +12,6 @@ use warp::{
     crypto::DID,
     multipass::identity::Identity,
     raygun::{Message, Reaction},
-    sync::RwLock,
 };
 
 use kit::icons::Icon;
@@ -46,6 +44,33 @@ pub struct ToastNotification {
     pub content: String,
     #[serde(skip_serializing, skip_deserializing)]
     pub icon: Option<Icon>,
+    initial_time: u32,
+    remaining_time: u32,
+}
+
+impl ToastNotification {
+    pub fn init(title: String, content: String, icon: Option<Icon>, timeout: u32) -> Self {
+        Self {
+            title,
+            content,
+            icon,
+            initial_time: timeout,
+            remaining_time: timeout,
+        }
+    }
+    pub fn remaining_time(&self) -> u32 {
+        self.remaining_time
+    }
+
+    pub fn reset_time(&mut self) {
+        self.remaining_time = self.initial_time
+    }
+
+    pub fn decrement_time(&mut self) {
+        if self.remaining_time > 0 {
+            self.remaining_time -= 1;
+        }
+    }
 }
 
 // Define a struct to represent a group of messages from the same sender.
@@ -62,10 +87,12 @@ pub struct GroupedMessage {
     pub is_last: bool,
 }
 
+pub type Callback = Box<dyn Fn(&State, &Action)>;
+
 // Define a new struct to represent a hook that listens for a specific action type.
 pub struct ActionHook {
     action_type: Either<Action, Vec<Action>>,
-    callback: Box<dyn Fn(&State, &Action)>,
+    callback: Callback,
 }
 
 /// Alias for the type representing a route.
@@ -166,7 +193,7 @@ pub struct UI {
     #[serde(default)]
     pub silenced: bool,
     #[serde(skip_serializing, skip_deserializing)]
-    pub toast_notifications: Arc<RwLock<VecDeque<ToastNotification>>>,
+    pub toast_notifications: HashMap<Uuid, ToastNotification>,
 }
 
 use std::fmt;
@@ -205,18 +232,15 @@ impl fmt::Debug for State {
 
 impl Clone for State {
     fn clone(&self) -> Self {
-        let mut cloned = State::default();
-
-        // Copy over the relevant fields from the original State struct.
-        cloned.account = self.account.clone();
-        cloned.route = self.route.clone();
-        cloned.chats = self.chats.clone();
-        cloned.friends = self.friends.clone();
-
-        // The hooks field should not be cloned, so we clear it.
-        cloned.hooks.clear();
-
-        cloned
+        State {
+            account: self.account.clone(),
+            route: self.route.clone(),
+            chats: self.chats.clone(),
+            friends: self.friends.clone(),
+            hooks: Default::default(),
+            settings: Default::default(),
+            ui: Default::default(),
+        }
     }
 }
 
@@ -237,7 +261,7 @@ impl State {
     fn set_active_chat(&mut self, chat: &Chat) {
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
-            self.chats.in_sidebar.push(chat.id.clone());
+            self.chats.in_sidebar.push(chat.id);
         }
     }
 
@@ -287,36 +311,15 @@ impl State {
     /// Adds the given chat to the user's favorites.
     fn favorite(&mut self, chat: &Chat) {
         if !self.chats.favorites.contains(&chat.id) {
-            self.chats.favorites.push(chat.id.clone());
+            self.chats.favorites.push(chat.id);
         }
     }
 
     /// Removes the given chat from the user's favorites.
     fn unfavorite(&mut self, chat: &Chat) {
-        if let Some(index) = self
-            .chats
-            .favorites
-            .iter()
-            .position(|uid| uid.to_owned() == chat.id)
-        {
+        if let Some(index) = self.chats.favorites.iter().position(|uid| *uid == chat.id) {
             self.chats.favorites.remove(index);
         }
-    }
-
-    fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
-        self.ui.toast_notifications.write().push_back(notification);
-
-        let closure = {
-            let notification = self.ui.toast_notifications.clone();
-            move || {
-                std::thread::sleep(std::time::Duration::from_secs(timeout));
-                // This would not work because of it not being thread safe.
-                notification.write().pop_front();
-            }
-        };
-
-        // Spawn a new thread to remove the notification after the specified timeout.
-        std::thread::spawn(closure);
     }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
@@ -326,7 +329,7 @@ impl State {
         let faves = &mut self.chats.favorites;
 
         if faves.contains(&chat.id) {
-            if let Some(index) = faves.iter().position(|uid| uid.to_owned() == chat.id) {
+            if let Some(index) = faves.iter().position(|uid| *uid == chat.id) {
                 faves.remove(index);
             }
         } else {
@@ -342,7 +345,7 @@ impl State {
         };
         c.replying_to = Some(message.to_owned());
 
-        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
+        *self.chats.all.get_mut(&chat.id).unwrap() = c;
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -357,7 +360,7 @@ impl State {
         };
         c.replying_to = None;
 
-        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
+        *self.chats.all.get_mut(&chat.id).unwrap() = c;
     }
 
     /// Clear unreads  within a given chat on `State` struct.
@@ -367,10 +370,9 @@ impl State {
     /// * `chat` - The chat to clear unreads on.
     ///
     fn clear_unreads(&mut self, chat: &Chat) {
-        match self.chats.all.get_mut(&chat.id) {
-            Some(chat) => chat.unreads = 0,
-            None => return,
-        };
+        if let Some(chat) = self.chats.all.get_mut(&chat.id) {
+            chat.unreads = 0;
+        }
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -384,15 +386,13 @@ impl State {
                 .chats
                 .in_sidebar
                 .iter()
-                .position(|x| x.to_owned() == chat.id)
+                .position(|x| *x == chat.id)
                 .unwrap();
             self.chats.in_sidebar.remove(index);
         }
 
-        if self.chats.active.is_some() {
-            if self.get_active_chat().unwrap_or_default().id == chat.id {
-                self.clear_active_chat();
-            }
+        if self.chats.active.is_some() && self.get_active_chat().unwrap_or_default().id == chat.id {
+            self.clear_active_chat();
         }
     }
 
@@ -402,8 +402,8 @@ impl State {
     }
 
     /// Sets the user's language.
-    fn set_language(&mut self, string: &String) {
-        self.settings.language = string.clone();
+    fn set_language(&mut self, string: &str) {
+        self.settings.language = string.to_string();
     }
 
     fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
@@ -456,7 +456,7 @@ impl State {
 
     fn block(&mut self, identity: &Identity) {
         // If the identity is not already blocked, add it to the blocked list
-        if !self.friends.blocked.contains(&identity) {
+        if !self.friends.blocked.contains(identity) {
             self.friends.blocked.push(identity.clone());
         }
 
@@ -494,16 +494,16 @@ impl State {
         });
 
         // Remove the chat from the sidebar
-        if direct_chat.is_some() {
-            let chat = direct_chat.unwrap();
+        if let Some(chat) = direct_chat {
             self.remove_sidebar_chat(chat);
         }
 
         // If the friend's direct chat is currently the active chat, clear the active chat
-        if self.chats.active.is_some() {
-            if self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id {
-                self.clear_active_chat();
-            }
+        // TODO: Use `if let` statements
+        if self.chats.active.is_some()
+            && self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id
+        {
+            self.clear_active_chat();
         }
 
         // Remove chat from favorites if it exists
@@ -548,12 +548,7 @@ impl State {
     }
 
     pub fn get_active_media_chat(&self) -> Option<&Chat> {
-        for (_, chat) in self.chats.all.iter() {
-            if chat.active_media {
-                return Some(chat);
-            }
-        }
-        None
+        self.chats.all.values().find(|&chat| chat.active_media)
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
@@ -664,6 +659,33 @@ impl State {
         self.account = Account::default();
         self.settings = Settings::default();
     }
+
+    pub fn has_toasts(&self) -> bool {
+        !self.ui.toast_notifications.is_empty()
+    }
+    // returns true if toasts were removed
+    pub fn decrement_toasts(&mut self) -> bool {
+        let mut remaining: HashMap<Uuid, ToastNotification> = HashMap::new();
+        for (id, toast) in self.ui.toast_notifications.iter_mut() {
+            toast.decrement_time();
+            if toast.remaining_time() > 0 {
+                remaining.insert(*id, toast.clone());
+            }
+        }
+
+        if remaining.len() != self.ui.toast_notifications.len() {
+            self.ui.toast_notifications = remaining;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn reset_toast_timer(&mut self, id: &Uuid) {
+        if let Some(toast) = self.ui.toast_notifications.get_mut(id) {
+            toast.reset_time();
+        }
+    }
 }
 
 impl State {
@@ -673,8 +695,10 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
-            Action::AddToastNotification(notification, timeout) => {
-                self.add_toast_notification(notification, timeout);
+            Action::AddToastNotification(notification) => {
+                self.ui
+                    .toast_notifications
+                    .insert(Uuid::new_v4(), notification);
             }
             // Action::RemoveToastNotification => {
             //     self.ui.toast_notifications.pop_front();
@@ -748,13 +772,13 @@ impl State {
             match &hook.action_type {
                 Either::Left(a) => {
                     if a.compare_discriminant(action) {
-                        (hook.callback)(&self, &action);
+                        (hook.callback)(self, action);
                     }
                 }
                 Either::Right(actions) => {
                     for a in actions.iter() {
                         if a.compare_discriminant(action) {
-                            (hook.callback)(&self, &action);
+                            (hook.callback)(self, action);
                         }
                     }
                 }
@@ -810,7 +834,7 @@ pub enum Action {
     EndAll,
     ToggleSilence,
     ToggleMute,
-    AddToastNotification(ToastNotification, u64),
+    AddToastNotification(ToastNotification),
     // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account
