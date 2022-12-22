@@ -205,18 +205,15 @@ impl fmt::Debug for State {
 
 impl Clone for State {
     fn clone(&self) -> Self {
-        let mut cloned = State::default();
-
-        // Copy over the relevant fields from the original State struct.
-        cloned.account = self.account.clone();
-        cloned.route = self.route.clone();
-        cloned.chats = self.chats.clone();
-        cloned.friends = self.friends.clone();
-
-        // The hooks field should not be cloned, so we clear it.
-        cloned.hooks.clear();
-
-        cloned
+        State {
+            account: self.account.clone(),
+            route: self.route.clone(),
+            chats: self.chats.clone(),
+            friends: self.friends.clone(),
+            hooks: Default::default(),
+            settings: Default::default(),
+            ui: Default::default(),
+        }
     }
 }
 
