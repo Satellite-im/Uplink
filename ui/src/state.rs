@@ -62,10 +62,12 @@ pub struct GroupedMessage {
     pub is_last: bool,
 }
 
+pub type Callback = Box<dyn Fn(&State, &Action)>;
+
 // Define a new struct to represent a hook that listens for a specific action type.
 pub struct ActionHook {
     action_type: Either<Action, Vec<Action>>,
-    callback: Box<dyn Fn(&State, &Action)>,
+    callback: Callback,
 }
 
 /// Alias for the type representing a route.
@@ -234,7 +236,7 @@ impl State {
     fn set_active_chat(&mut self, chat: &Chat) {
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
-            self.chats.in_sidebar.push(chat.id.clone());
+            self.chats.in_sidebar.push(chat.id);
         }
     }
 
@@ -284,18 +286,13 @@ impl State {
     /// Adds the given chat to the user's favorites.
     fn favorite(&mut self, chat: &Chat) {
         if !self.chats.favorites.contains(&chat.id) {
-            self.chats.favorites.push(chat.id.clone());
+            self.chats.favorites.push(chat.id);
         }
     }
 
     /// Removes the given chat from the user's favorites.
     fn unfavorite(&mut self, chat: &Chat) {
-        if let Some(index) = self
-            .chats
-            .favorites
-            .iter()
-            .position(|uid| uid.to_owned() == chat.id)
-        {
+        if let Some(index) = self.chats.favorites.iter().position(|uid| *uid == chat.id) {
             self.chats.favorites.remove(index);
         }
     }
@@ -323,7 +320,7 @@ impl State {
         let faves = &mut self.chats.favorites;
 
         if faves.contains(&chat.id) {
-            if let Some(index) = faves.iter().position(|uid| uid.to_owned() == chat.id) {
+            if let Some(index) = faves.iter().position(|uid| *uid == chat.id) {
                 faves.remove(index);
             }
         } else {
@@ -339,7 +336,7 @@ impl State {
         };
         c.replying_to = Some(message.to_owned());
 
-        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
+        *self.chats.all.get_mut(&chat.id).unwrap() = c;
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -354,7 +351,7 @@ impl State {
         };
         c.replying_to = None;
 
-        *self.chats.all.get_mut(&chat.id).unwrap() = c.clone();
+        *self.chats.all.get_mut(&chat.id).unwrap() = c;
     }
 
     /// Clear unreads  within a given chat on `State` struct.
@@ -364,10 +361,9 @@ impl State {
     /// * `chat` - The chat to clear unreads on.
     ///
     fn clear_unreads(&mut self, chat: &Chat) {
-        match self.chats.all.get_mut(&chat.id) {
-            Some(chat) => chat.unreads = 0,
-            None => return,
-        };
+        if let Some(chat) = self.chats.all.get_mut(&chat.id) {
+            chat.unreads = 0;
+        }
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -381,15 +377,13 @@ impl State {
                 .chats
                 .in_sidebar
                 .iter()
-                .position(|x| x.to_owned() == chat.id)
+                .position(|x| *x == chat.id)
                 .unwrap();
             self.chats.in_sidebar.remove(index);
         }
 
-        if self.chats.active.is_some() {
-            if self.get_active_chat().unwrap_or_default().id == chat.id {
-                self.clear_active_chat();
-            }
+        if self.chats.active.is_some() && self.get_active_chat().unwrap_or_default().id == chat.id {
+            self.clear_active_chat();
         }
     }
 
@@ -399,8 +393,8 @@ impl State {
     }
 
     /// Sets the user's language.
-    fn set_language(&mut self, string: &String) {
-        self.settings.language = string.clone();
+    fn set_language(&mut self, string: &str) {
+        self.settings.language = string.to_string();
     }
 
     fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
@@ -453,7 +447,7 @@ impl State {
 
     fn block(&mut self, identity: &Identity) {
         // If the identity is not already blocked, add it to the blocked list
-        if !self.friends.blocked.contains(&identity) {
+        if !self.friends.blocked.contains(identity) {
             self.friends.blocked.push(identity.clone());
         }
 
@@ -491,16 +485,14 @@ impl State {
         });
 
         // Remove the chat from the sidebar
-        if direct_chat.is_some() {
-            let chat = direct_chat.unwrap();
+        if let Some(chat) = direct_chat {
             self.remove_sidebar_chat(chat);
         }
 
         // If the friend's direct chat is currently the active chat, clear the active chat
-        if self.chats.active.is_some() {
-            if self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id {
-                self.clear_active_chat();
-            }
+        // TODO: Use `if let` statements
+        if self.chats.active.is_some() && self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id {
+            self.clear_active_chat();
         }
 
         // Remove chat from favorites if it exists
@@ -545,12 +537,7 @@ impl State {
     }
 
     pub fn get_active_media_chat(&self) -> Option<&Chat> {
-        for (_, chat) in self.chats.all.iter() {
-            if chat.active_media {
-                return Some(chat);
-            }
-        }
-        None
+        self.chats.all.values().find(|&chat| chat.active_media)
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
@@ -745,13 +732,13 @@ impl State {
             match &hook.action_type {
                 Either::Left(a) => {
                     if a.compare_discriminant(action) {
-                        (hook.callback)(&self, &action);
+                        (hook.callback)(self, action);
                     }
                 }
                 Either::Right(actions) => {
                     for a in actions.iter() {
                         if a.compare_discriminant(action) {
-                            (hook.callback)(&self, &action);
+                            (hook.callback)(self, action);
                         }
                     }
                 }
