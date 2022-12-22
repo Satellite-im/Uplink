@@ -1,5 +1,7 @@
+use chrono::{Utc, Duration};
 use dioxus::prelude::*;
 use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
+use rand::Rng;
 
 use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
 
@@ -17,7 +19,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
             friends_list.into_iter().map(|friend| {
                 let did = friend.did_key().clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-
+                let mut rng = rand::thread_rng();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
 
@@ -45,6 +47,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 sent_friend_request: true,
                                 blocked: false,
                             },
+                            request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: Platform::Desktop,
