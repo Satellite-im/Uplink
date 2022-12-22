@@ -15,7 +15,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Friend
 - [ ] Toast Notifications
   - [ ] Ability to push a new toast notification.
-  - [ ] Toast notification automatically dismisses after `n` seconds.
+  - [x] Toast notification automatically dismisses after `n` seconds.
   - [ ] Hovering over toast notification should reset the dismiss timer.
   - [ ] Clicking the `x` on the toast notification should dismiss it immediatly.
 - [ ] Calling Modal
