@@ -16,7 +16,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
-use crate::layouts::settings::settings::SettingsLayout;
+use crate::layouts::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
