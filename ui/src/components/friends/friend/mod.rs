@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use kit::{
     elements::{
@@ -10,7 +11,7 @@ use kit::{
 };
 
 use crate::{
-    utils::language::get_local_text,
+    utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}, state::State,
 };
 
 #[derive(Debug, Clone)]
@@ -29,6 +30,9 @@ pub struct Props<'a> {
     suffix: String,
     // Users relationship 
     relationship: Relationship,
+    // Time when request was sent or received
+    #[props(optional)]
+    request_datetime: Option<DateTime<Utc>>,
     // Status message from friend
     status_message: String,
     // The user image element to display
@@ -49,8 +53,12 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let active_language = state.read().settings.language.clone();
     let relationship = cx.props.relationship.clone();
     let status_message = cx.props.status_message.clone();
+    let request_datetime = cx.props.request_datetime.clone().unwrap_or(Utc::now());
+    let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
 
     cx.render(rsx!(
         div {
@@ -67,20 +75,14 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 if relationship.friends || relationship.blocked {
                    rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
-                        // TODO: Do this translate later 
                         text: status_message,
                     })
-                } else if relationship.sent_friend_request {
+                } else  {
                     rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
-                        // TODO: Do this translate later 
-                        text: "Sent 4 days ago.".into()
-                    })
-                } else {
-                    rsx!(Label {
-                        // TODO: this is stubbed for now, wire up to the actual request time
-                        // TODO: Do this translate later 
-                        text: "Requested 4 days ago.".into()
+                        text: format!("{} {formatted_timeago}", 
+                        if relationship.sent_friend_request { get_local_text("friends.sent") } 
+                        else { get_local_text("friends.requested") })
                     })
                 }
             },
