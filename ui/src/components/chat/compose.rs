@@ -64,7 +64,7 @@ pub fn Compose(cx: Scope) -> Element {
             div {
                 onmousedown: move |_| { desktop.drag(); },
                 Topbar {
-                    with_back_button: false,
+                    with_back_button: true,
                     controls: cx.render(
                         rsx! (
                             Button {
