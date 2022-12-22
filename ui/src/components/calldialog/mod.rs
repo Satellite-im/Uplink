@@ -17,6 +17,14 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let with_accept_btn = match cx.props.with_accept_btn.clone() {
+        Some(w_a_b) => w_a_b,
+        None => None,
+    };
+    let with_deny_btn = match cx.props.with_deny_btn.clone() {
+        Some(w_d_b) => w_d_b,
+        None => None,
+    };
     cx.render(rsx! (
         div {
             class: "call-dialog",
@@ -42,8 +50,8 @@ pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 class: "controls",
-                //&cx.props.with_accept_btn.unwrap(),
-                //&cx.props.with_deny_btn.unwrap(),
+                with_accept_btn,
+                with_deny_btn,
             }
         }
     ))
