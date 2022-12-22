@@ -22,11 +22,11 @@ pub fn change_language(new_language: String) -> String {
     match new_language_identifier {
         Some(new_lang) => {
             *APP_LANG.write() = new_lang.clone();
-            return new_lang.to_string();
+            new_lang.to_string()
         }
         None =>  {
             *APP_LANG.write() = US_ENGLISH;
-            return US_ENGLISH.to_string();
+            US_ENGLISH.to_string()
         }
     }
 }
@@ -37,6 +37,6 @@ pub fn get_available_languages() -> Vec<String> {
 
 pub fn get_local_text(text: &str) -> String {
    LOCALES
-        .lookup(&*APP_LANG.read(), text)
+        .lookup(&APP_LANG.read(), text)
         .unwrap_or_default()
 }
