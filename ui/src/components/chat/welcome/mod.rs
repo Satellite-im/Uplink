@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 
 use dioxus_router::use_router;
-use fluent_templates::Loader;
 use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,

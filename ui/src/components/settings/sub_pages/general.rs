@@ -1,6 +1,4 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
-use fluent_templates::Loader;
 
 use kit::elements::{select::Select, switch::Switch};
 

@@ -1,8 +1,8 @@
 use crate::state::{Action, State};
-use crate::STATE;
+
 use dioxus::prelude::*;
 use dioxus_router::*;
-use fermi::use_atom_ref;
+
 use kit::{
     elements::{
         button::Button,

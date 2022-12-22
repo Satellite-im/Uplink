@@ -1,11 +1,9 @@
 
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
-use fluent_templates::Loader;
-use timeago::Formatter;
+
 use warp::multipass::identity::Identity;
-use crate::STATE;
+
 use dioxus_desktop::use_window;
 
 use isolang::Language;

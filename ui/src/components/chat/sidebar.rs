@@ -1,10 +1,7 @@
 
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
-use fluent_templates::Loader;
 use warp::{multipass::identity::Identity, raygun::Message};
 use dioxus_router::*;
-use crate::STATE;
 use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 

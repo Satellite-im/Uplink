@@ -1,12 +1,10 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 
 use crate::{
     components::chat::{
         compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
     },
     state::State,
-    STATE,
 };
 
 #[derive(PartialEq, Props)]

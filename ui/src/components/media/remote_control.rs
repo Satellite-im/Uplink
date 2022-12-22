@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 
 use kit::{
     elements::{
@@ -12,7 +11,6 @@ use kit::{
 };
 
 use crate::state::{Action, State};
-use crate::STATE;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {

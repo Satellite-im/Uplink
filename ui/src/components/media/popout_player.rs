@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 
 use kit::{
 
@@ -12,7 +11,6 @@ use kit::{
 };
 
 use crate::state::{State, Action};
-use crate::STATE;
 
 pub const SCRIPT: &str = include_str!("./script.js");
 

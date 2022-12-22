@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 
 use kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 

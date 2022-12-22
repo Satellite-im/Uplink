@@ -2,9 +2,6 @@ use std::str::FromStr;
 
 use dioxus::prelude::*;
 use dioxus_router::*;
-use fermi::use_atom_ref;
-use fluent_templates::Loader;
-
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
