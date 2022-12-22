@@ -694,6 +694,12 @@ impl State {
             false
         }
     }
+
+    pub fn reset_toast_timer(&mut self, id: &Uuid) {
+        if let Some(toast) = self.ui.toast_notifications.get_mut(id) {
+            toast.reset_time();
+        }
+    }
 }
 
 impl State {
