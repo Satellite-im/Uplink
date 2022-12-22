@@ -44,7 +44,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             .into_os_string()
                             .into_string()
                             .unwrap_or_default();
-                        let _ = opener::open(&cache_path);
+                        let _ = opener::open(cache_path);
                     }
                 }
             },

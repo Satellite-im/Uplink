@@ -20,7 +20,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
-use crate::layouts::settings::settings::SettingsLayout;
+use crate::layouts::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
@@ -55,7 +55,7 @@ fn main() {
         .into_string()
         .unwrap_or_default();
 
-    let _ = fs::create_dir_all(&cache_path);
+    let _ = fs::create_dir_all(cache_path);
 
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -89,6 +89,7 @@ fn main() {
 
     let title = get_local_text("uplink");
 
+    #[allow(unused_mut)]
     let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
@@ -116,6 +117,7 @@ fn bootstrap(cx: Scope) -> Element {
         Ok(s) => s,
         Err(_) => State::default(),
     };
+
     let _ = use_context_provider(&cx, || state);
     cx.render(rsx!(crate::app {}))
 }

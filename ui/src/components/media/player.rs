@@ -118,7 +118,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    let _ = state.write().mutate(Action::ToggleMedia(active_chat.clone()));
+                    state.write().mutate(Action::ToggleMedia(active_chat.clone()));
                 }
             },
             Button {

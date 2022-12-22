@@ -82,13 +82,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
-    let routes = vec![
-        general.clone(),
-        privacy.clone(),
-        audio.clone(),
-        extensions.clone(),
-        developer.clone(),
-    ];
+    let routes = vec![general, privacy, audio, extensions, developer];
 
     let active_route = routes[0].clone();
     cx.render(rsx!(
