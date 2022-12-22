@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fluent_templates::Loader;
 use kit::{
     elements::{
         button::Button,
@@ -14,7 +13,7 @@ use kit::{
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    APP_LANG, LOCALES,
+    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]
@@ -24,21 +23,9 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
-    let new_folder_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.new-folder")
-        .unwrap_or_default();
-    let upload_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.upload")
-        .unwrap_or_default();
-    let home_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.home")
-        .unwrap_or_default();
-    let free_space_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.free-space")
-        .unwrap_or_default();
-    let total_space_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.total-space")
-        .unwrap_or_default();
+    let home_text = get_local_text("uplink.home");
+    let free_space_text = get_local_text("files.free-space");
+    let total_space_text = get_local_text("files.total-space");
 
     cx.render(rsx!(
         div {
@@ -58,7 +45,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: new_folder_text
+                                        text: get_local_text("files.new-folder"),
                                     }
                                 )),
                                 onpress: move |_| {
@@ -71,7 +58,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip {
                                         arrow_position: ArrowPosition::Top,
-                                        text: upload_text
+                                        text: get_local_text("files.upload"),
                                     }
                                 ))
                             }

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
-use crate::{components::settings::SettingSection, state::State};
+use crate::{components::settings::SettingSection, state::State, utils::language::get_local_text};
 
 
 #[allow(non_snake_case)]
@@ -12,17 +12,17 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
         div {
             id: "settings-developer",
             SettingSection {
-                section_label: "Developer Mode".into(),
-                section_description: "Enabling developer mode adds logging and displays helpful debug information on the UI.".into(),
+                section_label: get_local_text("settings-developer.developer-mode"),
+                section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
                     
                 }
             },
             SettingSection {
-                section_label: "Open Codebase".into(),
-                section_description: "Opens the codebase in your default web browser.".into(),
+                section_label: get_local_text("settings-developer.open-codebase"),
+                section_description: get_local_text("settings-developer.open-codebase-description"),
                 Button {
-                    text: "Open Codebase".into(),
+                    text: get_local_text("settings-developer.open-codebase"),
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
@@ -31,10 +31,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Open Cache".into(),
-                section_description: "Open the cache in your default file browser.".into(),
+                section_label: get_local_text("settings-developer.open-cache"),
+                section_description: get_local_text("settings-developer.open-cache-description"),
                 Button {
-                    text: "Open Folder".into(),
+                    text: get_local_text("settings-developer.open-cache-folder"),
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
@@ -49,10 +49,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Compress & Download Cache".into(),
-                section_description: "For debugging with other developers, you can compress your cache to zip and share it. Don't do this if this is a real account you use.".into(),
+                section_label: get_local_text("settings-developer.compress-download-cache"),
+                section_description: get_local_text("settings-developer.compress-download-cache-description"),
                 Button {
-                    text: "Compress".into(),
+                    text: get_local_text("settings-developer.compress"),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
@@ -60,10 +60,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Clear Cache".into(),
-                section_description: "Reset your account, basically.".into(),
+                section_label: get_local_text("settings-developer.clear-cache"),
+                section_description: get_local_text("settings-developer.clear-cache-description"),
                 Button {
-                    text: "Clear".into(),
+                    text: get_local_text("settings-developer.clear"),
                     appearance: Appearance::Danger,
                     icon: Icon::Trash,
                     onpress: move |_| {

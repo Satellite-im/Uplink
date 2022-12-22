@@ -22,6 +22,7 @@ pub struct ReplyInfo<'a> {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    placeholder: String,
     #[props(optional)]
     with_replying_to: Option<Element<'a>>,
     #[props(optional)]
@@ -34,6 +35,7 @@ pub struct Props<'a> {
 
 #[derive(Props)]
 pub struct ReplyProps<'a> {
+    label: String,
     #[props(optional)]
     remote: Option<bool>,
     message: String,
@@ -49,7 +51,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
         div {
             class: "inline-reply",
             Label {
-                text: "Replying to:".into()
+                text: cx.props.label.clone(),
             },
             Button {
                 small: true,
@@ -81,7 +83,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             &cx.props.with_file_upload,
             Input {
                 // TODO: This should come from props
-                placeholder: "Say something...".into(),
+                placeholder: cx.props.placeholder.clone(),
             },
             &cx.props.extensions,
             div {
