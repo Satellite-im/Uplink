@@ -31,7 +31,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Deleting things should move them to a "trash" folder which will have a different icon. 
   - [ ] Emptying trash will delete everything in the trash.
 - [ ] Language & Translation
-  - [ ] Replace all references to plain text within the app to references to the translated items
+  - [x] Replace all references to plain text within the app to references to the translated items
   - [ ] Ensure that there are no hard coded text within the UIKit that we can't override with props. 
 - [ ] Messaging
   - [ ] Add mock data to generate random replies to messages
