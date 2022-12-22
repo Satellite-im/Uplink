@@ -4620,6 +4620,7 @@ dependencies = [
  "fluent-templates",
  "glob",
  "image",
+ "isolang",
  "kit",
  "lipsum",
  "names",

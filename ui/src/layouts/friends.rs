@@ -1,5 +1,4 @@
-use dioxus::{desktop::use_window, prelude::*};
-use fluent_templates::Loader;
+use dioxus::prelude::*;
 use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
@@ -14,7 +13,7 @@ use crate::{
         },
     },
     state::State,
-    APP_LANG, LOCALES,
+    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]
@@ -31,22 +30,11 @@ pub enum FriendRoute {
 
 #[allow(non_snake_case)]
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
-    let pending_text = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.pending")
-        .unwrap_or_default();
-    let all_text = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.all")
-        .unwrap_or_default();
-    let blocked_text = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.blocked")
-        .unwrap_or_default();
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
     let route = use_state(&cx, || FriendRoute::All);
-
-    let desktop = use_window(&cx);
 
     cx.render(rsx!(
         div {
@@ -55,14 +43,13 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 route_info: cx.props.route_info.clone()
             },
             div {
-                onmousedown: move |_| { desktop.drag(); },
                 class: "friends-body",
                 AddFriend {},
                 div {
                     class: "friends-controls",
                     Button {
                         icon: Icon::User,
-                        text: all_text,
+                        text: get_local_text("friends.all"),
                         appearance: if route.clone() == FriendRoute::All { Appearance::Primary } else { Appearance::Secondary },
                         onpress: move |_| {
                             route.set(FriendRoute::All);
@@ -71,7 +58,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     Button {
                         icon: Icon::Clock,
                         appearance: if route.clone() == FriendRoute::Pending { Appearance::Primary } else { Appearance::Secondary },
-                        text: pending_text,
+                        text: get_local_text("friends.pending"),
                         with_badge:  if pending_friends > 0 {
                             pending_friends.to_string()
                         } else {
@@ -84,7 +71,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: if route.clone() == FriendRoute::Blocked { Appearance::Primary } else { Appearance::Secondary },
-                        text: blocked_text,
+                        text: get_local_text("friends.blocked"),
                         onpress: move |_| {
                             route.set(FriendRoute::Blocked);
                         }

@@ -1,23 +1,15 @@
 use dioxus::prelude::*;
-use fluent_templates::Loader;
 use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
 
-use crate::{APP_LANG, LOCALES};
+use crate::{utils::language::get_local_text};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
     let router = use_router(&cx).clone();
-    let add_text = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.add")
-        .unwrap_or_default();
-
-    let cta_text = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.add")
-        .unwrap_or_default();
-
+    let cta_text = get_local_text("friends.add");
     cx.render(rsx! {
         div {
             id: "welcome",
@@ -30,7 +22,7 @@ pub fn Welcome(cx: Scope) -> Element {
             },
             Button {
                 icon: Icon::Plus,
-                text: add_text,
+                text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
                     router.replace_route("/friends", None, None);

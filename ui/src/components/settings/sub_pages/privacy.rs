@@ -4,7 +4,7 @@ use kit::{
     icons::Icon,
 };
 
-use crate::components::settings::SettingSection;
+use crate::{components::settings::SettingSection, utils::language::{get_local_text}};
 
 #[allow(non_snake_case)]
 pub fn PrivacySettings(cx: Scope) -> Element {
@@ -12,10 +12,10 @@ pub fn PrivacySettings(cx: Scope) -> Element {
         div {
             id: "settings-privacy",
             SettingSection {
-                section_label: "Backup Recovery Phrase".into(),
-                section_description: "Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.".into(),
+                section_label: get_local_text("settings-privacy.backup-recovery-phrase"),
+                section_description: get_local_text("settings-privacy.backup-phrase-description"),
                 Button {
-                    text: "Backup Phrase".into(),
+                    text: get_local_text("settings-privacy.backup-phrase"),
                     appearance: Appearance::Secondary,
                     icon: Icon::DocumentText,
                 }
