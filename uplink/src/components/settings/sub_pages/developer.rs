@@ -6,7 +6,7 @@ use crate::{components::settings::SettingSection, state::State, STATE};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    let state = use_atom_ref(&cx, STATE);
+    let state = use_shared_state::<State>(&cx)?;
 
     cx.render(rsx!(
         div {

@@ -41,7 +41,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let blocked_text = LOCALES
         .lookup(&*APP_LANG.read(), "friends.blocked")
         .unwrap_or_default();
-    let state = use_atom_ref(&cx, STATE);
+    let state = use_shared_state::<State>(&cx)?;
 
     let pending_friends = state.read().friends.incoming_requests.len();
 

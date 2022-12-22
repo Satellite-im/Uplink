@@ -21,7 +21,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
-    let state = use_atom_ref(&cx, STATE);
+    let state = use_shared_state::<State>(&cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     let silenced = state.read().ui.silenced;

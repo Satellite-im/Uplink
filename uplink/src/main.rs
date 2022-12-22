@@ -116,15 +116,15 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    /*let state = match State::load() {
+    let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
-    };*/
+    };
 
-    use_init_atom_root(cx);
-    //let _ = use_shared_state_provider(&cx, || state);
+    //use_init_atom_root(cx);
+    let _ = use_shared_state_provider(&cx, || state);
 
-    let state = use_atom_ref(&cx, STATE);
+    let state = use_shared_state::<State>(&cx)?;
 
     //let state = use_atom_ref(&cx, STATE);
     //let state = RwLock::new(state_ns);

@@ -53,7 +53,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    let state = use_atom_ref(&cx, STATE);
+    let state = use_shared_state::<State>(&cx)?;
 
     let search_placeholder = String::from("Search...");
 

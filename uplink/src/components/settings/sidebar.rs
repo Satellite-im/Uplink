@@ -52,7 +52,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let _ = use_atom_ref(&cx, STATE);
+    let _ = use_shared_state::<State>(&cx)?;
 
     let app_lang = &*APP_LANG.read();
     let search_placeholder = String::from("Search Settings...");
