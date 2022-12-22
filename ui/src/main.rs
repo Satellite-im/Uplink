@@ -1,16 +1,14 @@
 use std::fs;
 use std::sync::RwLock;
 
-use dioxus::desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
-use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus::desktop::{tao, use_window};
+use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus_desktop::{tao, use_window};
 
 use dioxus::prelude::*;
-use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::menu::AboutMetadata;
-use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus_desktop::{tao, Config};
+use dioxus_desktop::Config;
 
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};

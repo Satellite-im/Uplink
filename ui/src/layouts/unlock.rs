@@ -1,9 +1,7 @@
-use dioxus::{
-    desktop::{
-        tao::dpi::{LogicalSize, Size},
-        use_window,
-    },
-    prelude::*,
+use dioxus::prelude::*;
+use dioxus_desktop::{
+    tao::dpi::{LogicalSize, Size},
+    use_window,
 };
 
 #[allow(non_snake_case)]

@@ -25,7 +25,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn RemoteControls(cx: Scope) -> Element {
+pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(&cx)?;
 
     cx.render(rsx!(div {

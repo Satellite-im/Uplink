@@ -1,17 +1,20 @@
 use dioxus::prelude::*;
-es/general.rs
 use fermi::use_atom_ref;
 use fluent_templates::Loader;
 
-use kit::{elements::{switch::Switch, select::Select }};
+use kit::elements::{select::Select, switch::Switch};
 
-use crate::{components::settings::SettingSection, utils::language::{change_language, get_available_languages, get_local_text}, state::{State, Action}};
+use crate::{
+    components::settings::SettingSection,
+    state::{Action, State},
+    utils::language::{change_language, get_available_languages, get_local_text},
+};
 
 #[allow(non_snake_case)]
-pub fn GeneralSettings(cx: Scope) -> Element {    
+pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(&cx)?;
     let initial_lang_value = state.read().settings.language.clone();
-  
+
     cx.render(rsx!(
         div {
             id: "settings-general",
@@ -19,7 +22,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings.splash-screen"),
                 section_description: get_local_text("settings.splash-screen-description"),
                 Switch {
-          
+
                 }
             },
             SettingSection {

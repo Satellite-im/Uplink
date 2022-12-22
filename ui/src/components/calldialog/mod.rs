@@ -42,8 +42,8 @@ pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             div {
                 class: "controls",
-                &cx.props.with_accept_btn,
-                &cx.props.with_deny_btn,
+                //&cx.props.with_accept_btn.unwrap(),
+                //&cx.props.with_deny_btn.unwrap(),
             }
         }
     ))

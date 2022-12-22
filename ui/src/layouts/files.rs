@@ -1,4 +1,5 @@
-use dioxus::{desktop::use_window, prelude::*};
+use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use kit::{
     elements::{
         button::Button,
