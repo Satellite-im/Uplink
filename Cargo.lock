@@ -4940,6 +4940,7 @@ dependencies = [
  "futures",
  "glob",
  "image",
+ "isolang",
  "kit",
  "lipsum",
  "names",

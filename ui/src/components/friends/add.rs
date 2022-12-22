@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fluent_templates::Loader;
 use kit::{
     elements::{
         button::Button,
@@ -9,7 +8,7 @@ use kit::{
     icons::Icon,
 };
 
-use crate::{APP_LANG, LOCALES};
+use crate::{utils::language::get_local_text};
 
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
@@ -37,34 +36,22 @@ pub fn AddFriend(cx: Scope) -> Element {
         ..Options::default()
     };
 
-    let find_someone = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.add")
-        .unwrap_or_default();
-
-    let add = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.add")
-        .unwrap_or_default();
-
-    let placeholder = LOCALES
-        .lookup(&*APP_LANG.read(), "friends.placeholder")
-        .unwrap_or_default();
-
     cx.render(rsx!(
         div {
             class: "add-friend",
             Label {
-                text: find_someone,
+                text: get_local_text("friends.add"),
             },
             div {
                 class: "body",
                 Input {
-                    placeholder: placeholder,
+                    placeholder: get_local_text("friends.placeholder"),
                     icon: Icon::MagnifyingGlass,
                     options: input_options
                 },
                 Button {
                     icon: Icon::Plus,
-                    text: add,
+                    text: get_local_text("uplink.add"),
                 }
             }
         }

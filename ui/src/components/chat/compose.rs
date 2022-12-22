@@ -1,19 +1,22 @@
 
 use chrono::{DateTime, Utc};
 use dioxus::{prelude::*, desktop::use_window};
-use fluent_templates::Loader;
-use timeago::Formatter;
+use isolang::Language;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use timeago::{languages::boxup, English};
 use warp::multipass::identity::Identity;
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, LOCALES, APP_LANG};
-
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::language::get_local_text};
 
 use super::sidebar::build_participants_names;
 
-
-fn format_timestamp(datetime: DateTime<Utc>) -> String {
-    let formatter = Formatter::new();
+fn format_timestamp(datetime: DateTime<Utc>, active_language: String) -> String {
+    let language = 
+        isolang::Language::from_locale(&active_language.replace("-", "_")).unwrap_or(Language::Eng);
+    let formatter = match timeago::from_isolang(language) {
+        Some(lang) => timeago::Formatter::with_language(lang), 
+        None => timeago::Formatter::with_language(boxup(English)),
+    };
     let now = Utc::now();
     let duration = now.signed_duration_since(datetime).to_std().unwrap();
     formatter.convert(duration)
@@ -47,27 +50,11 @@ pub fn Compose(cx: Scope) -> Element {
 
     let active_media = active_chat.active_media;
     let active_media_chat = active_chat.clone();
-
-
-    let add_text = LOCALES
-        .lookup(&*APP_LANG.read(), "favorites.add")
-        .unwrap_or_default();
-    let send_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.send")
-        .unwrap_or_default();
-    let call_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.call")
-        .unwrap_or_default();
-    let video_call_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.video-call")
-        .unwrap_or_default();    
+ 
     // TODO: Pending new message divider implementation
-    let _new_message_text = LOCALES
-        .lookup(&*APP_LANG.read(), "messages.new")
-        .unwrap_or_default();
-    let upload_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.upload")
-        .unwrap_or_default();
+    // let _new_message_text = LOCALES
+    //     .lookup(&*APP_LANG.read(), "messages.new")
+    //     .unwrap_or_default();
 
     let desktop = use_window(&cx);
 
@@ -86,7 +73,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
                                         arrow_position: ArrowPosition::Top, 
-                                        text: add_text
+                                        text: get_local_text("favorites.add"),
                                     }
                                 )),
                                 onpress: move |_| {
@@ -99,7 +86,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
                                         arrow_position: ArrowPosition::Top, 
-                                        text: call_text
+                                        text: get_local_text("uplink.call"),
                                     }
                                 )),
                                 onpress: move |_| {
@@ -112,7 +99,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
                                         arrow_position: ArrowPosition::Top, 
-                                        text: video_call_text
+                                        text: get_local_text("uplink.video-call"),
                                     }
                                 )),
                             },
@@ -147,7 +134,14 @@ pub fn Compose(cx: Scope) -> Element {
                 },
             },
             active_media.then(|| rsx!(
-                MediaPlayer {},
+                MediaPlayer {
+                    settings_text: get_local_text("settings.settings"), 
+                    enable_camera_text: get_local_text("media-player.enable-camera"),
+                    fullscreen_text: get_local_text("media-player.fullscreen"),
+                    popout_player_text: get_local_text("media-player.popout-player"),
+                    screenshare_text: get_local_text("media-player.screenshare"),
+                    end_text: get_local_text("uplink.end"),
+                },
             )),
             div {
                 id: "messages",
@@ -155,8 +149,9 @@ pub fn Compose(cx: Scope) -> Element {
                     message_groups.iter().map(|group| {
                         let messages = &group.messages;
                         let last_message = messages.last().unwrap().message.clone();
-                        let sender = state.read().get_friend_identity(&group.sender);
-                        
+                        let sender = state.read().get_friend_identity(&group.sender);    
+                        let active_language = state.read().settings.language.clone();
+
                         rsx!(
                             MessageGroup {
                                 user_image: cx.render(rsx!(
@@ -165,19 +160,20 @@ pub fn Compose(cx: Scope) -> Element {
                                         status: Status::Online
                                     }
                                 )),
-                                timestamp: format_timestamp(last_message.date()),
-                                with_sender: if sender.username().is_empty() { "You".into() } else { sender.username()},
+                                timestamp: format_timestamp(last_message.date(), active_language),
+                                with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
                                 remote: group.remote,
                                 messages.iter().map(|grouped_message| {
                                     let message = grouped_message.message.clone();
                                     let reply_message = grouped_message.message.clone();
+                                
                                     rsx! (
                                         ContextMenu {
                                             id: format!("message-{}", message.id()),
                                             items: cx.render(rsx!(
                                                 ContextItem {
                                                     icon: Icon::ArrowLongLeft,
-                                                    text: String::from("Reply"),
+                                                    text: get_local_text("messages.reply"),
                                                     onpress: move |_| {
                                                         let chat = state.read().get_active_chat().unwrap_or_default();
                                                         state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
@@ -185,7 +181,7 @@ pub fn Compose(cx: Scope) -> Element {
                                                 },
                                                 ContextItem {
                                                     icon: Icon::FaceSmile,
-                                                    text: String::from("React"),
+                                                    text: get_local_text("messages.react"),
                                                     //TODO: Wire to state
                                                 },
                                             )),
@@ -203,6 +199,7 @@ pub fn Compose(cx: Scope) -> Element {
                 }
             },
             Chatbar {
+                placeholder: get_local_text("messages.say-something-placeholder"),
                 controls: cx.render(rsx!(
                     Button {
                         icon: Icon::ChevronDoubleRight,
@@ -210,7 +207,7 @@ pub fn Compose(cx: Scope) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip { 
                                 arrow_position: ArrowPosition::Bottom, 
-                                text: send_text
+                                text: get_local_text("uplink.send"),
                             }
                         )),
                     },
@@ -218,6 +215,7 @@ pub fn Compose(cx: Scope) -> Element {
                 with_replying_to: cx.render(rsx!(
                     state.read().get_active_chat().unwrap_or_default().replying_to.is_some().then(|| rsx!(
                         Reply {
+                            label: get_local_text("messages.replying"),
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
                                 let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.clone().unwrap_or_default().sender();
@@ -242,7 +240,7 @@ pub fn Compose(cx: Scope) -> Element {
                         tooltip: cx.render(rsx!(
                             Tooltip { 
                                 arrow_position: ArrowPosition::Bottom, 
-                                text: upload_text
+                                text: get_local_text("files.upload"),
                             }
                         ))
                     }

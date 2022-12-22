@@ -1,5 +1,4 @@
-use dioxus::prelude::*;
-use fluent_templates::Loader;
+use dioxus::{desktop::use_window, prelude::*};
 use kit::{
     elements::{
         button::Button,
@@ -14,7 +13,7 @@ use kit::{
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    APP_LANG, LOCALES,
+    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]
@@ -24,21 +23,11 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
-    let new_folder_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.new-folder")
-        .unwrap_or_default();
-    let upload_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.upload")
-        .unwrap_or_default();
-    let home_text = LOCALES
-        .lookup(&*APP_LANG.read(), "uplink.home")
-        .unwrap_or_default();
-    let free_space_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.free-space")
-        .unwrap_or_default();
-    let total_space_text = LOCALES
-        .lookup(&*APP_LANG.read(), "files.total-space")
-        .unwrap_or_default();
+    let home_text = get_local_text("uplink.home");
+    let free_space_text = get_local_text("files.free-space");
+    let total_space_text = get_local_text("files.total-space");
+
+    let desktop = use_window(&cx);
 
     cx.render(rsx!(
         div {
@@ -48,51 +37,54 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             },
             div {
                 class: "files-body",
-                Topbar {
-                    with_back_button: false,
-                    controls: cx.render(
-                        rsx! (
-                            Button {
-                                icon: Icon::FolderPlus,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: new_folder_text
+                div {
+                    onmousedown: move |_| { desktop.drag(); },
+                    Topbar {
+                        with_back_button: false,
+                        controls: cx.render(
+                            rsx! (
+                                Button {
+                                    icon: Icon::FolderPlus,
+                                    appearance: Appearance::Secondary,
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.new-folder"),
+                                        }
+                                    )),
+                                    onpress: move |_| {
+                                        // ...
                                     }
-                                )),
-                                onpress: move |_| {
-                                    // ...
+                                },
+                                Button {
+                                    icon: Icon::Plus,
+                                    appearance: Appearance::Secondary,
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.upload"),
+                                        }
+                                    ))
+                                }
+                            )
+                        ),
+                        div {
+                            class: "files-info",
+                            p {
+                                class: "free-space",
+                                "{free_space_text}",
+                                span {
+                                    class: "count",
+                                    "0MB"
                                 }
                             },
-                            Button {
-                                icon: Icon::Plus,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: upload_text
-                                    }
-                                ))
-                            }
-                        )
-                    ),
-                    div {
-                        class: "files-info",
-                        p {
-                            class: "free-space",
-                            "{free_space_text}",
-                            span {
-                                class: "count",
-                                "0MB"
-                            }
-                        },
-                        p {
-                            class: "total-space",
-                            "{total_space_text}",
-                            span {
-                                class: "count",
-                                "10MB"
+                            p {
+                                class: "total-space",
+                                "{total_space_text}",
+                                span {
+                                    class: "count",
+                                    "10MB"
+                                }
                             }
                         }
                     }

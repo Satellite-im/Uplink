@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-use fluent_templates::{LanguageIdentifier, once_cell::sync::Lazy};
+use fluent_templates::{LanguageIdentifier, once_cell::sync::Lazy, Loader};
 use unic_langid::langid;
 use warp::sync::RwLock;
 
+use crate::LOCALES;
+
 const US_ENGLISH: LanguageIdentifier = langid!("en-US");
 const BR_PORTUGUESE: LanguageIdentifier = langid!("pt-BR");
-pub static APP_LANG: Lazy<RwLock<LanguageIdentifier>> =
+static APP_LANG: Lazy<RwLock<LanguageIdentifier>> =
     Lazy::new(|| RwLock::new(US_ENGLISH));
     
 pub fn change_language(new_language: String) -> String {
@@ -31,4 +33,10 @@ pub fn change_language(new_language: String) -> String {
 
 pub fn get_available_languages() -> Vec<String> {
     vec![US_ENGLISH.to_string(), BR_PORTUGUESE.to_string()]
+}
+
+pub fn get_local_text(text: &str) -> String {
+   LOCALES
+        .lookup(&*APP_LANG.read(), text)
+        .unwrap_or_default()
 }

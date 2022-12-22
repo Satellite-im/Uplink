@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use kit::elements::switch::Switch;
 
-use crate::components::settings::SettingSection;
+use crate::{components::settings::SettingSection, utils::language::{get_local_text}};
 
 #[allow(non_snake_case)]
 pub fn AudioSettings(cx: Scope) -> Element {
@@ -9,8 +9,8 @@ pub fn AudioSettings(cx: Scope) -> Element {
         div {
             id: "settings-audio",
             SettingSection {
-                section_label: "Call Timer".into(),
-                section_description: "When enabled a timer will display when you're in a call showing it's duration.".into(),
+                section_label: get_local_text("settings-audio.call-timer"),
+                section_description: get_local_text("settings-audio.call-timer-description"),
                 Switch {}
             }
         }
