@@ -4937,6 +4937,7 @@ dependencies = [
  "dirs",
  "either",
  "fluent-templates",
+ "futures",
  "glob",
  "image",
  "kit",

@@ -1,11 +1,17 @@
+//#![deny(elided_lifetimes_in_paths)]
+
+use std::collections::VecDeque;
 use std::fs;
 
+use dioxus::core::to_owned;
 use dioxus::desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
 
+use either::Either;
+use futures::StreamExt;
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -19,7 +25,7 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::settings::SettingsLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
-use utils::{language::APP_LANG, notifications::PushNotification};
+use utils::language::APP_LANG;
 
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 
@@ -113,8 +119,25 @@ fn app(cx: Scope) -> Element {
         Err(_) => State::default(),
     };
     let _ = use_context_provider(&cx, || state);
-
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+
+    let next_tick = use_ref(&cx, || false);
+
+    if *next_tick.read() {
+        *next_tick.write_silent() = false;
+        if state.write_silent().decrement_toasts() {}
+    }
+
+    // todo: use another hook to prevent this from re-rendering when there are no toast notifications
+    use_future(&cx, (), |_| {
+        to_owned![next_tick];
+        async move {
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                *next_tick.write() = true;
+            }
+        }
+    });
 
     let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);

@@ -46,6 +46,33 @@ pub struct ToastNotification {
     pub content: String,
     #[serde(skip_serializing, skip_deserializing)]
     pub icon: Option<Icon>,
+    initial_time: u32,
+    remaining_time: u32,
+}
+
+impl ToastNotification {
+    pub fn init(title: String, content: String, icon: Option<Icon>, timeout: u32) -> Self {
+        Self {
+            title,
+            content,
+            icon,
+            initial_time: timeout,
+            remaining_time: timeout,
+        }
+    }
+    pub fn remaining_time(&self) -> u32 {
+        self.remaining_time
+    }
+
+    pub fn reset_time(&mut self) {
+        self.remaining_time = self.initial_time
+    }
+
+    pub fn decrement_time(&mut self) {
+        if self.remaining_time > 0 {
+            self.remaining_time -= 1;
+        }
+    }
 }
 
 // Define a struct to represent a group of messages from the same sender.
@@ -64,8 +91,8 @@ pub struct GroupedMessage {
 
 // Define a new struct to represent a hook that listens for a specific action type.
 pub struct ActionHook {
-    action_type: Either<Action, Vec<Action>>,
-    callback: Box<dyn Fn(&State, &Action)>,
+    pub action_type: Either<Action, Vec<Action>>,
+    pub callback: Box<dyn Fn(&State, &Action)>,
 }
 
 /// Alias for the type representing a route.
@@ -301,22 +328,6 @@ impl State {
         {
             self.chats.favorites.remove(index);
         }
-    }
-
-    fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
-        self.ui.toast_notifications.write().push_back(notification);
-
-        let closure = {
-            let notification = self.ui.toast_notifications.clone();
-            move || {
-                std::thread::sleep(std::time::Duration::from_secs(timeout));
-                // This would not work because of it not being thread safe.
-                notification.write().pop_front();
-            }
-        };
-
-        // Spawn a new thread to remove the notification after the specified timeout.
-        std::thread::spawn(closure);
     }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
@@ -664,6 +675,26 @@ impl State {
         self.account = Account::default();
         self.settings = Settings::default();
     }
+
+    // returns true if toasts were removed
+    pub fn decrement_toasts(&mut self) -> bool {
+        let mut lock = self.ui.toast_notifications.write();
+        for toast in lock.iter_mut() {
+            toast.decrement_time();
+        }
+
+        let remaining: VecDeque<ToastNotification> = lock
+            .iter()
+            .filter(|toast| toast.remaining_time() > 0)
+            .cloned()
+            .collect();
+        if remaining.len() != lock.len() {
+            *lock = remaining;
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl State {
@@ -673,8 +704,8 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
-            Action::AddToastNotification(notification, timeout) => {
-                self.add_toast_notification(notification, timeout);
+            Action::AddToastNotification(notification) => {
+                self.ui.toast_notifications.write().push_back(notification);
             }
             // Action::RemoveToastNotification => {
             //     self.ui.toast_notifications.pop_front();
@@ -810,7 +841,7 @@ pub enum Action {
     EndAll,
     ToggleSilence,
     ToggleMute,
-    AddToastNotification(ToastNotification, u64),
+    AddToastNotification(ToastNotification),
     // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account
