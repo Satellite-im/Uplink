@@ -15,7 +15,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 text: get_local_text("friends.blocked"),
             },
             block_list.into_iter().map(|blocked_user| {
-                let did = blocked_user.did_key().clone();
+                let did = blocked_user.did_key();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();

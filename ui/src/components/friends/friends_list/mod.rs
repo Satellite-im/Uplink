@@ -24,10 +24,10 @@ pub fn Friends(cx: Scope) -> Element {
                             text: letter.into(),
                         },
                         sorted_friends.into_iter().map(|friend| {
-                            let did = friend.did_key().clone();
+                            let did = friend.did_key();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                            let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
-                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
+                            let chat_with_friend = state.read().get_chat_with_friend(&friend);
+                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend);
                             let chat_with_friend_context_clone = chat_with_friend_context.clone();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = remove_friend.clone();
@@ -49,7 +49,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                let _ = &state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
+                                                state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
                                                 use_router(&cx).replace_route("/", None, None);
                                             }
                                         },
@@ -62,7 +62,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::Heart,
                                             text: get_local_text("favorites.favorites"),
                                             onpress: move |_| {
-                                                let _ = &state.write().mutate(Action::Favorite(chat_with_friend_context_clone.clone()));
+                                                state.write().mutate(Action::Favorite(chat_with_friend_context_clone.clone()));
                                             }
                                         },
                                         hr{}
@@ -71,7 +71,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
-                                                let _ = &state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
                                             }
                                         },
                                         ContextItem {
@@ -79,7 +79,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
-                                                let _ = &state.write().mutate(Action::Block(block_friend.clone()));
+                                                state.write().mutate(Action::Block(block_friend.clone()));
                                             }
                                         },
                                     )),
@@ -96,16 +96,15 @@ pub fn Friends(cx: Scope) -> Element {
                                             }
                                         )),
                                         onchat: move |_| {
-                                            let _ = &state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
+                                            state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
                                             use_router(&cx).replace_route("/", None, None);
                                         },
                                         onremove: move |_| {
-                                            let _ = &state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                            state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                         },
                                         onblock: move |_| {
-                                            let _ = &state.write().mutate(Action::Block(block_friend_clone.clone()));
+                                            state.write().mutate(Action::Block(block_friend_clone.clone()));
                                         }
-                                        
                                     }
                                 }
                             )

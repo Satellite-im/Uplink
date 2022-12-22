@@ -18,7 +18,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
             },
             friends_list.into_iter().map(|friend| {
                 let mut rng = rand::thread_rng();
-                let did = friend.did_key().clone();
+                let did = friend.did_key();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
@@ -34,7 +34,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.deny"),
                                 onpress: move |_| {
-                                    let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
+                                    state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
                                 }
                             },
                         )),
@@ -57,10 +57,10 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 }
                             )),
                             onaccept: move |_| {
-                                let _ = state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
+                                state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
                             },
                             onremove: move |_| {
-                                let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
+                               state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
                             }
                         }
                     }
