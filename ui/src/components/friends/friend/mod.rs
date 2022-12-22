@@ -8,11 +8,18 @@ use kit::{
     },
     icons::Icon,
 };
-use warp::multipass::identity::Relationship;
 
 use crate::{
     utils::language::get_local_text,
 };
+
+#[derive(Debug, Clone)]
+pub struct Relationship {
+    pub friends: bool,
+    pub received_friend_request: bool,
+    pub sent_friend_request: bool,
+    pub blocked: bool,
+}
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -57,11 +64,17 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         "#{cx.props.suffix}"
                     }
                 },
-                if relationship.friends() || relationship.blocked() {
+                if relationship.friends || relationship.blocked {
                    rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
                         // TODO: Do this translate later 
                         text: status_message,
+                    })
+                } else if relationship.sent_friend_request {
+                    rsx!(Label {
+                        // TODO: this is stubbed for now, wire up to the actual request time
+                        // TODO: Do this translate later 
+                        text: "Sent 4 days ago.".into()
                     })
                 } else {
                     rsx!(Label {
