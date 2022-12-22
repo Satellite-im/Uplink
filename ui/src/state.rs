@@ -676,6 +676,10 @@ impl State {
         self.settings = Settings::default();
     }
 
+    pub fn has_toasts(&self) -> bool {
+        let lock = self.ui.toast_notifications.write();
+        !lock.is_empty()
+    }
     // returns true if toasts were removed
     pub fn decrement_toasts(&mut self) -> bool {
         let mut lock = self.ui.toast_notifications.write();

@@ -1,6 +1,5 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use std::collections::VecDeque;
 use std::fs;
 
 use dioxus::core::to_owned;
@@ -9,9 +8,8 @@ use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
+use tokio::time::{sleep, Duration};
 
-use either::Either;
-use futures::StreamExt;
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -110,31 +108,42 @@ fn main() {
         // .with_movable_by_window_background(true)
     }
 
-    dioxus::desktop::launch_cfg(app, |c| c.with_window(|_| window.with_menu(main_menu)))
+    dioxus::desktop::launch_cfg(bootstrap, |c| {
+        c.with_window(|_| window.with_menu(main_menu))
+    })
 }
 
-fn app(cx: Scope) -> Element {
+fn bootstrap(cx: Scope) -> Element {
     let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
     };
     let _ = use_context_provider(&cx, || state);
+    cx.render(rsx!(crate::app {}))
+}
+
+fn app(cx: Scope) -> Element {
+    println!("rendering app");
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let toggle = use_state(&cx, || false);
 
-    let next_tick = use_ref(&cx, || false);
-
-    if *next_tick.read() {
-        *next_tick.write_silent() = false;
-        if state.write_silent().decrement_toasts() {}
-    }
-
-    // todo: use another hook to prevent this from re-rendering when there are no toast notifications
+    let inner = state.inner();
     use_future(&cx, (), |_| {
-        to_owned![next_tick];
+        to_owned![toggle];
         async move {
             loop {
-                std::thread::sleep(std::time::Duration::from_secs(1));
-                *next_tick.write() = true;
+                sleep(Duration::from_secs(1)).await;
+                {
+                    let state = inner.borrow();
+                    if !state.read().has_toasts() {
+                        continue;
+                    }
+                    if state.write().decrement_toasts() {
+                        // todo: verify that this is necessary
+                        let flag = *toggle.current();
+                        toggle.set(!flag);
+                    }
+                }
             }
         }
     });
