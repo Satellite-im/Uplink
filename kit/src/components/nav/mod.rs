@@ -116,7 +116,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 format_args!("nav {}", if *bubble { "bubble" } else { "" })
             },
             cx.props.routes.iter().map(|route| {
-                let badge = get_badge(&route);
+                let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
                 rsx!(
@@ -128,7 +128,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             emit(&cx, &route.to)
                         },
                         text: {
-                            format!("{}", if *bubble { name } else { "".into() })
+                            if *bubble { name } else { "".into() }
                         },
                         with_badge: badge,
                         tooltip: cx.render(rsx!(

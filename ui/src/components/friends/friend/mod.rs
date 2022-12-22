@@ -139,10 +139,10 @@ pub fn Friends(cx: Scope) -> Element {
                             text: letter.into(),
                         },
                         sorted_friends.into_iter().map(|friend| {
-                            let did = friend.did_key().clone();
+                            let did = friend.did_key();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                            let chat_with_friend = state.read().get_chat_with_friend(&friend.clone());
-                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend.clone());
+                            let chat_with_friend = state.read().get_chat_with_friend(&friend);
+                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend);
                             let chat_with_friend_context_clone = chat_with_friend_context.clone();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = remove_friend.clone();
@@ -235,8 +235,8 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 text: get_local_text("friends.incoming_requests"),
             },
             friends_list.into_iter().map(|friend| {
-                let did = friend.did_key().clone();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let did = friend.did_key();
+                let did_suffix = friend.short_id();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
                 let friend_clone_clone_clone = friend.clone();
@@ -251,7 +251,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.deny"),
                                 onpress: move |_| {
-                                    let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
+                                    state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
                                 }
                             },
                         )),
@@ -266,10 +266,10 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 }
                             )),
                             onaccept: move |_| {
-                                let _ = state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
+                                state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
                             },
                             onremove: move |_| {
-                                let _ = state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
+                                state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
                             }
                         }
                     }
@@ -291,8 +291,8 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 text: get_local_text("friends.outgoing_requests"),
             },
             friends_list.into_iter().map(|friend| {
-                let did = friend.did_key().clone();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let did = friend.did_key();
+                let did_suffix = friend.short_id();
 
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
@@ -344,8 +344,8 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 text: get_local_text("friends.blocked"),
             },
             block_list.into_iter().map(|blocked_user| {
-                let did = blocked_user.did_key().clone();
-                let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                let did = blocked_user.did_key();
+                let did_suffix = blocked_user.short_id();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
 

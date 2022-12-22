@@ -67,9 +67,9 @@ pub fn generate_mock() -> State {
                 .into_iter()
                 .map(|id| (id.did_key(), id))
                 .collect(),
-            blocked: blocked_identities.clone(),
-            incoming_requests: incoming_requests.clone(),
-            outgoing_requests: outgoing_requests.clone(),
+            blocked: blocked_identities,
+            incoming_requests,
+            outgoing_requests,
         },
         hooks: Vec::new(),
     }
@@ -92,7 +92,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_sender(sender.did_key());
         default_message.set_reactions(vec![]);
         default_message.set_replied(None);
-        default_message.set_value(vec![lipsum(word_count).into()]);
+        default_message.set_value(vec![lipsum(word_count)]);
         messages.push(default_message);
     }
 
@@ -123,7 +123,7 @@ fn generate_random_chat(me: Identity, identities: &[Identity]) -> Chat {
     let num_messages = rng.gen_range(0..20);
     for _ in 0..num_messages {
         // Generate a random message and add it to the chat
-        let message = generate_fake_message(chat.id, &identities);
+        let message = generate_fake_message(chat.id, identities);
         chat.messages.push(message);
     }
 
@@ -133,12 +133,12 @@ fn generate_random_chat(me: Identity, identities: &[Identity]) -> Chat {
 fn fake_id() -> Identity {
     let mut id = Identity::default();
     let mut generator = Generator::default();
-    let mut username = generator.next().unwrap().replace("-", " ");
+    let mut username = generator.next().unwrap().replace('-', " ");
     username = titlecase(&username);
 
     let mut rng = rand::thread_rng();
     let status_len = rng.gen_range(4..10);
-    let status_msg = lipsum(status_len).to_string();
+    let status_msg = lipsum(status_len);
 
     id.set_username(&username);
     id.set_status_message(Some(status_msg));
