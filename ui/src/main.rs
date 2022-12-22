@@ -123,7 +123,7 @@ fn bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    println!("rendering app");
+    //println!("rendering app");
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
     let toggle = use_state(&cx, || false);
 
@@ -139,7 +139,6 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
-                        // todo: verify that this is necessary
                         let flag = *toggle.current();
                         toggle.set(!flag);
                     }

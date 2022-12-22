@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
-    sync::Arc,
 };
 
 use uuid::Uuid;
@@ -13,7 +12,6 @@ use warp::{
     crypto::DID,
     multipass::identity::Identity,
     raygun::{Message, Reaction},
-    sync::RwLock,
 };
 
 use kit::icons::Icon;
@@ -193,7 +191,7 @@ pub struct UI {
     #[serde(default)]
     pub silenced: bool,
     #[serde(skip_serializing, skip_deserializing)]
-    pub toast_notifications: Arc<RwLock<VecDeque<ToastNotification>>>,
+    pub toast_notifications: HashMap<Uuid, ToastNotification>,
 }
 
 use std::fmt;
@@ -677,23 +675,20 @@ impl State {
     }
 
     pub fn has_toasts(&self) -> bool {
-        let lock = self.ui.toast_notifications.write();
-        !lock.is_empty()
+        !self.ui.toast_notifications.is_empty()
     }
     // returns true if toasts were removed
     pub fn decrement_toasts(&mut self) -> bool {
-        let mut lock = self.ui.toast_notifications.write();
-        for toast in lock.iter_mut() {
+        let mut remaining: HashMap<Uuid, ToastNotification> = HashMap::new();
+        for (id, toast) in self.ui.toast_notifications.iter_mut() {
             toast.decrement_time();
+            if toast.remaining_time() > 0 {
+                remaining.insert(*id, toast.clone());
+            }
         }
 
-        let remaining: VecDeque<ToastNotification> = lock
-            .iter()
-            .filter(|toast| toast.remaining_time() > 0)
-            .cloned()
-            .collect();
-        if remaining.len() != lock.len() {
-            *lock = remaining;
+        if remaining.len() != self.ui.toast_notifications.len() {
+            self.ui.toast_notifications = remaining;
             true
         } else {
             false
@@ -709,7 +704,9 @@ impl State {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
             Action::AddToastNotification(notification) => {
-                self.ui.toast_notifications.write().push_back(notification);
+                self.ui
+                    .toast_notifications
+                    .insert(Uuid::new_v4(), notification);
             }
             // Action::RemoveToastNotification => {
             //     self.ui.toast_notifications.pop_front();

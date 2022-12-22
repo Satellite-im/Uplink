@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     io::{BufWriter, Write},
-    sync::Arc,
 };
 
 use base64::encode;
@@ -18,7 +17,7 @@ use warp::{
     raygun::Message,
 };
 
-use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State, UI};
+use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State, ToastNotification, UI};
 
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
@@ -41,13 +40,22 @@ pub fn generate_mock() -> State {
 
     let in_sidebar = vec![];
     // in_sidebar.push(group_chat_sidebar.id);
+    let mut toast_notifications = HashMap::new();
+    toast_notifications.insert(
+        Uuid::new_v4(),
+        ToastNotification::init("title1".into(), "content1".into(), None, 5),
+    );
+    toast_notifications.insert(
+        Uuid::new_v4(),
+        ToastNotification::init("title2".into(), "content2".into(), None, 10),
+    );
 
     State {
         ui: UI {
             popout_player: false,
             silenced: false,
             muted: false,
-            toast_notifications: Arc::default(),
+            toast_notifications,
         },
         account: Account {
             identity: me.clone(),
