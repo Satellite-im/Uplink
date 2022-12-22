@@ -40,8 +40,8 @@ This document provides a checklist top-to-bottom of every step you should be abl
 **Files**
 - [ ] User should be able to Drag+Drop 1 or more files.
 - [ ] User should be able to Drag+Drop Files into a specific Folder.
-- [ ] User should not be able to have 2 Folders with the same name.
-- [ ] User should not be able to upload 2 files with the same name.
+- [ ] User should not be able to have 2 Folders with the same name inside the same folder.
+- [ ] User should not be able to upload 2 files with the same name inside the same folder.
 - [ ] File Directory should be clickable.
 - [ ] User should be able to rename Files.
 - [ ] User should be able to rename Folders. 
@@ -109,7 +109,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Folder should highlight when User is drag+dropping a file into it.
 - [ ] Folder should also be highlighted when User hovers cursor over it.
 - [ ] Upload % should show when User is uploading Files 
-- [ ] Clicking the _Home_ buttin in Directory should take you to Files Home page.
+- [ ] Clicking the _Home_ button in Directory should take you to Files Home page.
 - [ ] When User clicks New Folder typing indicator should appear and User can start typing without clicking into textbox first. 
 - [ ] Right clicking folder should open Context Menu with option to rename or delete.
 - [ ] Scrollbar should appear when any Files are rendered off screen.
@@ -118,6 +118,6 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Size of file should show underneath preview. 
 - [ ] Amount of items/size of uploaded files should show underneath the Folder. 
 - [ ] Directory should be highlighted when User hovers cursor over it.
-- [ ] Upload modal should show path of saif file when User is drag+dropping a file into Modal. 
+- [ ] Upload modal should show path of said file when User is drag+dropping a file into Modal. 
 - [ ] Clicking the X in right corner of Upload Modal should close said Modal. 
 - [ ] Progress Bar should show actual amount of Files uploaded.
