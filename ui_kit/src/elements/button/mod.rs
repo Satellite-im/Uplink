@@ -142,6 +142,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         IconElement { 
                             icon: get_icon(&cx)
                         }
+                        
                     )),
                     // We only need to include the text if it contains something.
                     (!text.is_empty()).then(|| rsx!( div{}/*"{text}"*/ )),

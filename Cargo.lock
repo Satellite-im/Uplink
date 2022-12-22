@@ -184,7 +184,7 @@ version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
 dependencies = [
- "hermit-abi",
+ "hermit-abi 0.1.19",
  "libc",
  "winapi",
 ]
@@ -1133,13 +1133,42 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+]
+
+[[package]]
+name = "dioxus"
+version = "0.2.4"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+]
+
+[[package]]
+name = "dioxus-core"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "bumpalo",
+ "futures-channel",
+ "futures-util",
+ "indexmap",
+ "log",
+ "longest-increasing-subsequence",
+ "rustc-hash",
+ "serde",
+ "slab",
+ "smallbox",
 ]
 
 [[package]]
@@ -1162,9 +1191,20 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "dioxus-core-macro"
+version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-rsx",
+ "dioxus-rsx 0.0.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "proc-macro2",
  "quote",
  "syn",
@@ -1176,8 +1216,8 @@ version = "0.2.3"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
  "core-foundation",
- "dioxus-core",
- "dioxus-html",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "dioxus-interpreter-js",
  "dunce",
  "futures-channel",
@@ -1198,10 +1238,20 @@ dependencies = [
 [[package]]
 name = "dioxus-heroicons"
 version = "0.1.4"
-source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=latest-dioxus#69563d817a5758274b63decaa34955bc9b3f6403"
+source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=latest-dioxus#04ad4e7c3fdaa9e39e2631d3b4b371d7f3f0c270"
 dependencies = [
- "dioxus",
- "dioxus-html",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+]
+
+[[package]]
+name = "dioxus-hooks"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "futures-channel",
+ "log",
 ]
 
 [[package]]
@@ -1209,9 +1259,24 @@ name = "dioxus-hooks"
 version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "futures-channel",
  "log",
+]
+
+[[package]]
+name = "dioxus-html"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "async-trait",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover)",
+ "enumset",
+ "euclid",
+ "keyboard-types",
+ "serde",
+ "serde-value",
+ "serde_repr",
 ]
 
 [[package]]
@@ -1220,7 +1285,7 @@ version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
  "async-trait",
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -1239,7 +1304,7 @@ name = "dioxus-router"
 version = "0.2.3"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "futures-channel",
  "futures-util",
  "log",
@@ -1248,6 +1313,17 @@ dependencies = [
  "simple_logger",
  "thiserror",
  "url",
+]
+
+[[package]]
+name = "dioxus-rsx"
+version = "0.0.1"
+source = "git+https://github.com/DioxusLabs/dioxus?branch=jk/suspense-rollover#2fa3fe1fc0b54a0ebd3ebc6945de33af6adcd6f7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
 ]
 
 [[package]]
@@ -1459,7 +1535,7 @@ name = "fermi"
 version = "0.2.1"
 source = "git+https://github.com/DioxusLabs/dioxus?branch=master#651ab3e7e393f22f7aee0428bdc63cffcb1e0239"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "im-rc",
  "log",
 ]
@@ -2269,6 +2345,15 @@ name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
+dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "hermit-abi"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee512640fe35acbfb4bb779db6f0d80704c2cacfa2e39b601ef3e3f47d1ae4c7"
 dependencies = [
  "libc",
 ]
@@ -3168,11 +3253,11 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6058e64324c71e02bc2b150e4f3bc8286db6c83092132ffa3f6b1eab0f9def5"
+checksum = "0fac9e2da13b5eb447a6ce3d392f23a29d8694bff781bf03a16cd9ac8697593b"
 dependencies = [
- "hermit-abi",
+ "hermit-abi 0.2.6",
  "libc",
 ]
 
@@ -3532,8 +3617,8 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 name = "playground"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "dioxus-desktop",
  "ui-kit",
 ]
@@ -3636,9 +3721,9 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.11.3"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0b18e655c21ff5ac2084a5ad0611e827b3f92badf79f4910b5a5c58f4d87ff0"
+checksum = "c01db6702aa05baa3f57dec92b8eeeeb4cb19e894e73996b32a4093289e54592"
 dependencies = [
  "bytes",
  "prost-derive",
@@ -3646,9 +3731,9 @@ dependencies = [
 
 [[package]]
 name = "prost-derive"
-version = "0.11.2"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "164ae68b6587001ca506d3bf7f1000bfa248d0e1217b618108fba4ec1d0cc306"
+checksum = "c8842bad1a5419bca14eac663ba798f6bc19c413c2fdceb5f3ba3b0932d96720"
 dependencies = [
  "anyhow",
  "itertools",
@@ -4897,11 +4982,11 @@ checksum = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81"
 name = "ui-kit"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "dioxus-desktop",
  "dioxus-heroicons",
- "dioxus-hooks",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "glob",
  "humansize",
  "rsass",
@@ -5014,9 +5099,9 @@ dependencies = [
  "base64 0.20.0",
  "chrono",
  "cocoa",
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "dioxus-desktop",
- "dioxus-hooks",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus?branch=master)",
  "dioxus-router",
  "dirs",
  "either",
@@ -5127,7 +5212,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp.git#365b06774863ff683b90dd0f00dc38f98d95ba12"
+source = "git+https://github.com/Satellite-im/Warp.git#28de9c079b5792c333a638dc972d8ec71747c670"
 dependencies = [
  "aead 0.4.3",
  "aes-gcm",
@@ -5190,7 +5275,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp.git#365b06774863ff683b90dd0f00dc38f98d95ba12"
+source = "git+https://github.com/Satellite-im/Warp.git#28de9c079b5792c333a638dc972d8ec71747c670"
 dependencies = [
  "paste",
  "quote",
