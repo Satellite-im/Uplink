@@ -85,6 +85,7 @@ fn main() {
 
     let title = get_local_text("uplink");
 
+    #[allow(unused_mut)]
     let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
