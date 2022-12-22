@@ -97,7 +97,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 div {
                     id: "favorites",
                     Label {
-                        text: get_local_text("favorites"),
+                        text: get_local_text("favorites.favorites"),
                     },
                     div {
                         class: "vertically-scrollable",
