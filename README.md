@@ -1,22 +1,97 @@
-# uplink_uikit
-UI-Kit for Rust based satellite apps, specifically Dioxus.
+# Uplink UI
+
+![Uplink UI](https://i.imgur.com/X4AGeLz.png)
+
+Implementation of a UI atop Warp using a standardized State model and UIKit to reinforce reusable component usage.
+
+---
+
+## Quickstart
+
+To get running fast ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
 
 
-## Todo
+**Standard Run:**
+```
+cargo run --bin ui
+```
 
-- [x] File Component
-- [x] Vertical Nav
-- [ ] User with Controls
-- [x] Chatbar
-- [x] Message Reply
-- [x] Message Reply above Chatbar
-- [ ] Reaction Menu
-- [x] Typing Indicator
-- [x] Typing Indicator Message
-- [x] Mini User (Favorites)
-- [ ] All Loading States
-- [x] Switch Disabled
-- [x] Folder Disabled
-- [x] Input Disabled
-- [ ] Generic Error
-- [x] File Embed
+**Rapid Release Testing:**
+This version will run closely to release but without recompiling crates every time.
+```
+cargo run --bin ui --profile=rapid
+```
+
+---
+
+
+## Dependancy List
+
+**MacOS M1+**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Build Tools| xcode-select --install |
+| Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh |
+
+**Windows 10+**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Chocolatey | [Installation Guide](https://chocolatey.org/install) |
+| Rust | choco install rust |
+
+
+---
+
+# Things to fix/implement
+
+We should try to finish this checklist before switching over to using this UI for the primary Uplink UI.
+
+- [ ] Skeletal loaders for all relevant components inside the UIKit
+  - [ ] User Image
+  - [ ] Message
+  - [ ] Button
+  - [ ] Label
+  - [ ] Select
+  - [ ] File
+  - [ ] Folder
+  - [ ] User
+  - [ ] Chat
+  - [ ] Friend
+- [ ] Toast Notifications
+  - [ ] Ability to push a new toast notification.
+  - [ ] Toast notification automatically dismisses after `n` seconds.
+  - [ ] Hovering over the toast notification should reset the dismiss timer.
+  - [ ] Clicking the `x` on the toast notification should dismiss it immediately.
+- [ ] Calling Modal
+  - [ ] Should be wired to state to appear when ui.incoming_call is set to some call.
+  - [ ] We should outline a struct to neatly contain info we need pertaining to an incoming call.
+- [ ] Files
+  - [ ] Files should be able to be dragged and dropped into a folder in order to move the file into the folder.
+  - [ ] We should be able to drag and drop to re-organize the files page
+  - [ ] We should be able to rename folders
+  - [ ] We should be able to drag and drop folders into folders.
+  - [ ] We should be able to navigate using the breadcrumbs.
+  - [ ] we should be able to delete files and folders. Deleting a folder should delete all the items inside a folder.
+  - [ ] Deleting things should move them to a "trash" folder which will have a different icon. 
+  - [ ] Emptying trash will delete everything in the trash.
+- [ ] Language & Translation
+  - [ ] Replace all references to the plain text within the app with references to the translated items
+  - [ ] Ensure that there is no hard-coded text within the UIKit that we can't override with props. 
+- [ ] Messaging
+  - [ ] Add mock data to generate random replies to messages
+  - [ ] Add mock data to generate random reactions to messages 
+  - [ ] Add mock data to include random attachments on messages
+  - [ ] Add the ability to "edit" messages.
+  - [ ] Implement UI for the afformentioned items.
+- [ ] Settings should be wired to a config file and automatically update.
+- [ ] CSS needs to be split up neater within components and layouts in uplink_skeleton.
+- [ ] Unlock page needs porting.
+- [ ] Account creation page needs porting.
+- [ ] Add generic loader component.
+- [ ] Add a config option to enable developer logging
+  - [ ] Developer logging should write developer logs to uplink-debug.log
+  - [ ] Include a way to view the contents of the log-in developer settings.
+    - [ ] Include a copy button to copy the log to the clipboard.
+  - [ ] Debug logging should also log neatly to the rust console.
+- [ ] Profile Page in settings
+- [ ] Profile page popup option for user_image 
