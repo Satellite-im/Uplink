@@ -1,4 +1,4 @@
-use crate::sounds::{Play, Sounds};
+use super::sounds::{Play, Sounds};
 use notify_rust::Notification;
 
 #[cfg(target_os = "macos")]
@@ -6,11 +6,17 @@ use objc::{msg_send, sel, sel_impl};
 
 // Implementation to create and push new notifications
 #[allow(non_snake_case)]
-pub fn PushNotification(title: String, content: String, notification_sound: Sounds) {
+pub fn PushNotification(
+    title: String,
+    content: String,
+    notification_sound: Sounds,
+    timeout: notify_rust::Timeout,
+) {
     let summary = format!("Uplink - {}", title);
     let _n = Notification::new()
         .summary(summary.as_ref())
         .body(&content)
+        .timeout(timeout)
         .show();
     // Play notification sound
     Play(notification_sound);

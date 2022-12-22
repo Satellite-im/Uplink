@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     fs,
-    sync::Arc,
 };
 
 use uuid::Uuid;
@@ -13,7 +12,6 @@ use warp::{
     crypto::DID,
     multipass::identity::Identity,
     raygun::{Message, Reaction},
-    sync::RwLock,
 };
 
 use kit::icons::Icon;
@@ -46,6 +44,33 @@ pub struct ToastNotification {
     pub content: String,
     #[serde(skip_serializing, skip_deserializing)]
     pub icon: Option<Icon>,
+    initial_time: u32,
+    remaining_time: u32,
+}
+
+impl ToastNotification {
+    pub fn init(title: String, content: String, icon: Option<Icon>, timeout: u32) -> Self {
+        Self {
+            title,
+            content,
+            icon,
+            initial_time: timeout,
+            remaining_time: timeout,
+        }
+    }
+    pub fn remaining_time(&self) -> u32 {
+        self.remaining_time
+    }
+
+    pub fn reset_time(&mut self) {
+        self.remaining_time = self.initial_time
+    }
+
+    pub fn decrement_time(&mut self) {
+        if self.remaining_time > 0 {
+            self.remaining_time -= 1;
+        }
+    }
 }
 
 // Define a struct to represent a group of messages from the same sender.
@@ -168,7 +193,7 @@ pub struct UI {
     #[serde(default)]
     pub silenced: bool,
     #[serde(skip_serializing, skip_deserializing)]
-    pub toast_notifications: Arc<RwLock<VecDeque<ToastNotification>>>,
+    pub toast_notifications: HashMap<Uuid, ToastNotification>,
 }
 
 use std::fmt;
@@ -295,22 +320,6 @@ impl State {
         if let Some(index) = self.chats.favorites.iter().position(|uid| *uid == chat.id) {
             self.chats.favorites.remove(index);
         }
-    }
-
-    fn add_toast_notification(&mut self, notification: ToastNotification, timeout: u64) {
-        self.ui.toast_notifications.write().push_back(notification);
-
-        let closure = {
-            let notification = self.ui.toast_notifications.clone();
-            move || {
-                std::thread::sleep(std::time::Duration::from_secs(timeout));
-                // This would not work because of it not being thread safe.
-                notification.write().pop_front();
-            }
-        };
-
-        // Spawn a new thread to remove the notification after the specified timeout.
-        std::thread::spawn(closure);
     }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
@@ -491,7 +500,9 @@ impl State {
 
         // If the friend's direct chat is currently the active chat, clear the active chat
         // TODO: Use `if let` statements
-        if self.chats.active.is_some() && self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id {
+        if self.chats.active.is_some()
+            && self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id
+        {
             self.clear_active_chat();
         }
 
@@ -648,6 +659,33 @@ impl State {
         self.account = Account::default();
         self.settings = Settings::default();
     }
+
+    pub fn has_toasts(&self) -> bool {
+        !self.ui.toast_notifications.is_empty()
+    }
+    // returns true if toasts were removed
+    pub fn decrement_toasts(&mut self) -> bool {
+        let mut remaining: HashMap<Uuid, ToastNotification> = HashMap::new();
+        for (id, toast) in self.ui.toast_notifications.iter_mut() {
+            toast.decrement_time();
+            if toast.remaining_time() > 0 {
+                remaining.insert(*id, toast.clone());
+            }
+        }
+
+        if remaining.len() != self.ui.toast_notifications.len() {
+            self.ui.toast_notifications = remaining;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn reset_toast_timer(&mut self, id: &Uuid) {
+        if let Some(toast) = self.ui.toast_notifications.get_mut(id) {
+            toast.reset_time();
+        }
+    }
 }
 
 impl State {
@@ -657,8 +695,10 @@ impl State {
         match action {
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
-            Action::AddToastNotification(notification, timeout) => {
-                self.add_toast_notification(notification, timeout);
+            Action::AddToastNotification(notification) => {
+                self.ui
+                    .toast_notifications
+                    .insert(Uuid::new_v4(), notification);
             }
             // Action::RemoveToastNotification => {
             //     self.ui.toast_notifications.pop_front();
@@ -794,7 +834,7 @@ pub enum Action {
     EndAll,
     ToggleSilence,
     ToggleMute,
-    AddToastNotification(ToastNotification, u64),
+    AddToastNotification(ToastNotification),
     // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account
