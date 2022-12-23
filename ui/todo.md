@@ -2,17 +2,17 @@
 
 We should try to finish this checklist before switching over to using this UI for the primary Uplink UI.
 
-- [x] Skeletal loaders for all relevant components inside the UIKit
-  - [x] User Image
-  - [x] Message
-  - [x] Button
-  - [x] Label
-  - [x] Select
-  - [x] File
-  - [x] Folder
-  - [x] User
-  - [x] Chat
-  - [x] Friend
+- [ ] Skeletal loaders for all relevant components inside the UIKit
+  - [ ] User Image
+  - [ ] Message
+  - [ ] Button
+  - [ ] Label
+  - [ ] Select
+  - [ ] File
+  - [ ] Folder
+  - [ ] User
+  - [ ] Chat
+  - [ ] Friend
 - [ ] Toast Notifications
   - [ ] Ability to push a new toast notification.
   - [x] Toast notification automatically dismisses after `n` seconds.
