@@ -686,6 +686,10 @@ impl State {
             toast.reset_time();
         }
     }
+
+    pub fn remove_toast(&mut self, id: &Uuid) {
+        let _ = self.ui.toast_notifications.remove(id);
+    }
 }
 
 impl State {
