@@ -39,6 +39,8 @@ friends = Friends
     .incoming_requests = Convites recebidos
     .outgoing_requests = Convites enviadas
     .cancel = Cancelar convite
+    .requested = Recebido
+    .sent = Enviado
     .requests = Convites
     .pending = Pendente
     .blocked = Bloqueado
@@ -61,20 +63,23 @@ settings = Settings
     .audio = Audio
     .extensions = Extensões
     .developer = Programador
-    
     .search-placeholder = Procurar configuração...
     .splash-screen = Tela de Abertura
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
+
 settings-extensions = SettingsExtensions 
     .placeholder = Espaço reservado
     .open-extensions-folder = Abrir pasta de extensões 
+
 settings-privacy = SettingsPrivacy 
     .backup-recovery-phrase = Frase de recuperação de backup
     .backup-phrase = Frase de backup
     .backup-phrase-description = Guarda esta frase! Junto com sua senha, ela representa a sua conta. Se a perder, não podemos ajudar a recuperá-la.
+
 settings-audio = SettingsAudio 
     .call-timer = Tempo de chamada
     .call-timer-description = Quando ativado, o cronómetro será exibido mostrando a duração da chamada.
+
 settings-developer = SettingsDeveloper 
     .developer-mode = Modo de Programador
     .developer-mode-description = Ativar o modo de programador adiciona logs e mostra informações úteis de depuração na interface do utilizador.
@@ -89,6 +94,7 @@ settings-developer = SettingsDeveloper
     .clear-cache = Limpar Cache
     .clear-cache-description = Restaura a tua conta, basicamente.
     .clear = Limpar
+
 media-player = MediaPlayer 
     .enable-camera = Ativar Câmara
     .fullscreen = Tela cheia
