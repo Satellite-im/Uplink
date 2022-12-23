@@ -29,6 +29,8 @@ pub struct Props<'a> {
     #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
+    is_password: Option<bool>,
+    #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
     icon: Option<Icon>,
@@ -150,6 +152,7 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
         error = validate_min_max(val, validation.min_length, validation.max_length);
     }
 
+
     error
 }
 
@@ -171,6 +174,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let label = get_label(&cx);
 
     let disabled = &cx.props.disabled.unwrap_or_default();
+
+    let typ = match cx.props.is_password {
+        Some(b) => if b { "password" } else { "text" },
+        None => "text",
+    };
 
     cx.render(rsx! (
         div {
@@ -198,6 +206,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 input {
                     disabled: "{disabled}",
                     value: "{val}",
+                    "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
