@@ -8,14 +8,15 @@ use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
+use kit::elements::Appearance;
 use tokio::time::{sleep, Duration};
 
-use state::State;
-use tao::menu::{MenuBar as Menu, MenuItem};
-use tao::window::WindowBuilder;
-// use kit::components::toast::Toast;
+use kit::components::toast::Toast;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
+use state::{State, ToastNotification};
+use tao::menu::{MenuBar as Menu, MenuItem};
+use tao::window::WindowBuilder;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::layouts::files::FilesLayout;
@@ -193,16 +194,32 @@ fn app(cx: Scope) -> Element {
 
     let desktop = use_window(&cx);
 
+    let has_toasts = state.read().ui.toast_notifications.len() > 0;
+    let toast = if has_toasts {
+        state
+            .read()
+            .ui
+            .toast_notifications
+            .values()
+            .next()
+            .cloned()
+            .unwrap_or_default()
+    } else {
+        ToastNotification::default()
+    };
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
             id: "app-wrap",
-            // Toast {
-            //     with_title: "Toast Notification".into(),
-            //     with_content: "This is a toast notification".into(),
-            //     icon: Icon::InformationCircle,
-            //     appearance: Appearance::Danger,
-            // },
+            has_toasts.then(|| rsx!(
+                Toast {
+                    with_title: toast.title,
+                    with_content: toast.content,
+                    icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                    appearance: Appearance::Secondary,
+                },
+            ))
             // CallDialog {
             //     caller: cx.render(rsx!(UserImage {
             //         platform: Platform::Mobile,

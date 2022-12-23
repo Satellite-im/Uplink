@@ -2,7 +2,7 @@ pub mod nav;
 
 pub mod indicator;
 
-// pub mod toast;
+pub mod toast;
 
 pub mod user;
 pub mod user_image;
