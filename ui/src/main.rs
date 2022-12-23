@@ -11,14 +11,14 @@ use dioxus::prelude::*;
 use kit::elements::Appearance;
 use tokio::time::{sleep, Duration};
 
-use kit::components::toast::Toast;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
-use state::{State, ToastNotification};
+use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 
 use crate::components::media::popout_player::PopoutPlayer;
+use crate::components::toast::Toast;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -194,32 +194,21 @@ fn app(cx: Scope) -> Element {
 
     let desktop = use_window(&cx);
 
-    let has_toasts = state.read().ui.toast_notifications.len() > 0;
-    let toast = if has_toasts {
-        state
-            .read()
-            .ui
-            .toast_notifications
-            .values()
-            .next()
-            .cloned()
-            .unwrap_or_default()
-    } else {
-        ToastNotification::default()
-    };
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
             id: "app-wrap",
-            has_toasts.then(|| rsx!(
-                Toast {
-                    with_title: toast.title,
-                    with_content: toast.content,
-                    icon: toast.icon.unwrap_or(Icon::InformationCircle),
-                    appearance: Appearance::Secondary,
-                },
-            ))
+            state.read().ui.toast_notifications.iter().map(|(id, toast)| {
+                rsx! (
+                    Toast {
+                        id: *id,
+                        with_title: toast.title.clone(),
+                        with_content: toast.content.clone(),
+                        icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                        appearance: Appearance::Secondary,
+                    },
+                )
+            }),
             // CallDialog {
             //     caller: cx.render(rsx!(UserImage {
             //         platform: Platform::Mobile,
