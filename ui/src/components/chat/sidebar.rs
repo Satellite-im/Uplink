@@ -133,6 +133,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
+                                        // loading: true,
                                         participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
                                         onpress: move |_| {
@@ -221,6 +222,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                             )),
                             User {
+                                // loading: true,
                                 username: participants_name,
                                 subtext: val.join("\n"),
                                 timestamp: timestamp,

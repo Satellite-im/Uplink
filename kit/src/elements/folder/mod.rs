@@ -19,6 +19,8 @@ pub struct Props<'a> {
     onrename: Option<EventHandler<'a, String>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
+    #[props(optional)]
+    loading: Option<bool>,
 }
 
 pub fn get_text(cx: &Scope<Props>) -> String {
@@ -55,30 +57,54 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let disabled = &cx.props.disabled.unwrap_or_default();
 
+    let loading = &cx.props.loading.unwrap_or_default();
+
+    if *loading {
+        cx.render(rsx!(FolderSkeletal {}))
+    } else {
+        cx.render(rsx!(
+            div {
+                class: {
+                    format_args!("folder {}", if *disabled { "disabled" } else { "" })
+                },
+                div {
+                    class: "icon",
+                    onclick: move |_| emit_press(&cx),
+                    IconElement {
+                        icon: icon,
+                    },
+                },
+                with_rename.then(|| rsx! (
+                    Input {
+                        disabled: *disabled,
+                        placeholder: placeholder,
+                        onreturn: move |s| emit(&cx, s)
+                    }
+                )),
+                (!with_rename).then(|| rsx! (
+                    label {
+                        "{text}"
+                    }
+                ))
+            }
+        ))
+    }
+}
+
+#[allow(non_snake_case)]
+pub fn FolderSkeletal(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
-            class: {
-                format_args!("folder {}", if *disabled { "disabled" } else { "" })
-            },
+            class: "folder",
             div {
-                class: "icon",
-                onclick: move |_| emit_press(&cx),
+                class: "icon skeletal-svg",
                 IconElement {
-                    icon: icon,
+                    icon: Icon::FolderArrowDown,
                 },
             },
-            with_rename.then(|| rsx! (
-                Input {
-                    disabled: *disabled,
-                    placeholder: placeholder,
-                    onreturn: move |s| emit(&cx, s)
-                }
-            )),
-            (!with_rename).then(|| rsx! (
-                label {
-                    "{text}"
-                }
-            ))
+            div {
+                class: "skeletal skeletal-bar"
+            }
         }
     ))
 }

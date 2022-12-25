@@ -12,7 +12,7 @@ use crate::{
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
-    _loading: Option<bool>,
+    loading: Option<bool>,
     #[props(optional)]
     image: Option<String>,
     #[props(optional)]
@@ -46,36 +46,49 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let username = &cx.props.with_username.clone().unwrap_or_default();
     let pressable = &cx.props.onpress.is_some();
 
-    cx.render(rsx! (
-        div {
-            class: {
-                format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })
-            },
-            onclick: move |e| emit(&cx, e),
+    let loading = &cx.props.loading.unwrap_or_default();
+
+    cx.render(rsx!(if *loading {
+        rsx!(UserImageLoading {})
+    } else {
+        rsx!(
             div {
-                class: "user-image",
-                div {
-                    class: "image",
-                    style: "background-image: url('{image_data}');"
+                class: {
+                    format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })
                 },
-                typing.then(|| rsx!(
+                onclick: move |e| emit(&cx, e),
+                div {
+                    class: "user-image",
                     div {
-                        class: "profile-typing",
-                        div { class: "dot dot-1" },
-                        div { class: "dot dot-2" },
-                        div { class: "dot dot-3" }
+                        class: "image",
+                        style: "background-image: url('{image_data}');"
+                    },
+                    typing.then(|| rsx!(
+                        div {
+                            class: "profile-typing",
+                            div { class: "dot dot-1" },
+                            div { class: "dot dot-2" },
+                            div { class: "dot dot-3" }
+                        }
+                    ))
+                    Indicator {
+                        status: *status,
+                        platform: *platform,
+                    }
+                },
+                (cx.props.with_username.is_some()).then(|| rsx!(
+                    Label {
+                        text: username.to_string()
                     }
                 ))
-                Indicator {
-                    status: *status,
-                    platform: *platform,
-                }
-            },
-            (cx.props.with_username.is_some()).then(|| rsx!(
-                Label {
-                    text: username.to_string()
-                }
-            ))
-        }
-    ))
+            }
+        )
+    }))
+}
+
+#[allow(non_snake_case)]
+pub fn UserImageLoading(cx: Scope) -> Element {
+    cx.render(rsx!(div {
+        class: "skeletal user-image-loading"
+    }))
 }

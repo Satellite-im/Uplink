@@ -1,7 +1,19 @@
 use dioxus::prelude::*;
-use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
+    elements::label::Label,
+    icons::Icon,
+};
 
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
+use crate::{
+    components::friends::friend::{Friend, Relationship, SkeletalFriend},
+    state::{Action, State},
+    utils::language::get_local_text,
+};
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
@@ -112,6 +124,21 @@ pub fn Friends(cx: Scope) -> Element {
                     }
                 )
             })
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn FriendsSkeletal(cx: Scope) -> Element {
+    cx.render(rsx!(
+        div {
+            class: "friends-list",
+            Label {
+                text: get_local_text("friends.friends"),
+            },
+            SkeletalFriend {},
+            SkeletalFriend {},
+            SkeletalFriend {},
         }
     ))
 }

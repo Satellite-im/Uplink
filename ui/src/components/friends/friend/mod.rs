@@ -1,6 +1,10 @@
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use kit::{
+    components::{
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
     elements::{
         button::Button,
         label::Label,
@@ -11,7 +15,8 @@ use kit::{
 };
 
 use crate::{
-    utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}, state::State,
+    state::State,
+    utils::{format_timestamp::format_timestamp_timeago, language::get_local_text},
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +33,7 @@ pub struct Props<'a> {
     username: String,
     // A suffix to the username, typically a unique identifier
     suffix: String,
-    // Users relationship 
+    // Users relationship
     relationship: Relationship,
     // Time when request was sent or received
     #[props(optional)]
@@ -48,7 +53,6 @@ pub struct Props<'a> {
     // An optional event handler for the "onblock" event
     #[props(optional)]
     onblock: Option<EventHandler<'a>>,
- 
 }
 
 #[allow(non_snake_case)]
@@ -139,6 +143,30 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 ))
             }
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn SkeletalFriend(cx: Scope) -> Element {
+    cx.render(rsx!(
+        div {
+            class: "skeletal-friend",
+            UserImage {
+                loading: true,
+                platform: Platform::Desktop,
+                status: Status::Offline,
+            },
+            div {
+                class: "skeletal-bars",
+                div {
+                    class: "skeletal-bar"
+                },
+                div {
+                    class: "skeletal-bar"
+                }
+            },
+            // TODO: include the disabled controls, should show only controls relevant to parent props.
         }
     ))
 }

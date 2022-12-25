@@ -1,3 +1,13 @@
+.user-image-loading {
+	min-width: var(--height-input);
+	min-height: var(--height-input);
+	width: var(--height-input);
+	height: var(--height-input);
+	border-radius: 50%;
+	background-size: cover;
+	background-color: var(--secondary);
+}
+
 .user-image {
 	width: fit-content;
 	height: var(--height-input);
