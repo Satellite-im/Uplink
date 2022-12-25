@@ -55,3 +55,11 @@
 		border-top-right-radius: var(--border-radius-less);
 	}
 }
+
+
+.skeletal-user {
+	display: inline-flex;
+	gap: var(--gap);
+	width: 100%;
+	padding: var(--gap-less) var(--gap);
+}

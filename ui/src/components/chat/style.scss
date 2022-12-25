@@ -88,3 +88,10 @@
     width: var(--sidebar-width);
     height: 2rem;
 }
+
+.user-info {
+    height: 100%;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+}

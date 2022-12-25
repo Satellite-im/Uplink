@@ -44,3 +44,58 @@
         align-self: flex-end;
     }
 }
+
+.message-group-skeletal {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-end;
+    padding: var(--gap);
+    gap: var(--gap) var(--padding);
+    padding-right: 40%;
+    width: 100%;
+
+    &.alt{
+        transform: scaleX(-1);
+    }
+
+}
+.skeletal-messages {
+    display: inline-flex;
+    flex-direction: column;
+    width: 100%;
+    gap: var(--gap-less);
+
+    .skeletal-timestamp {
+        width: 120px;
+        align-self: flex-end;
+        height: var(--text-size-less);
+        background: #1d1d2179;
+        border-radius: var(--border-radius-less);
+    }
+    .skeletal-message {
+        background: #1d1d2179;
+        border-radius: var(--border-radius-more);
+        border-bottom-left-radius: var(--border-radius);
+        min-height: var(--height-input);
+        display: inline-flex;
+        align-items: center;
+        padding: var(--padding-less) var(--padding);
+        width: 100%;
+        align-self: flex-end;
+
+        .skeletal-message-content {
+            background-color: var(--secondary);
+            height: var(--text-size);
+            border-radius: var(--border-radius-less);
+            width: 100%;
+        }
+
+        &:nth-child(2) {
+            border-top-left-radius: var(--border-radius);
+        }
+
+        &:nth-child(3) {
+            border-top-left-radius: var(--border-radius);
+        }
+    }
+}

@@ -1,3 +1,8 @@
+.user-group-skeletal {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap-less);
+}
 .user-image-group-wrap {
     position: relative;
     height: var(--height-input);

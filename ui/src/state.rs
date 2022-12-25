@@ -116,6 +116,7 @@ pub struct Route {
 #[derive(Clone, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
+    // TODO: This should be wired up to warp conversation id's
     #[serde(default)]
     pub id: Uuid,
     // Warp generated UUID of the chat
@@ -135,6 +136,7 @@ pub struct Chat {
     pub replying_to: Option<Message>,
 }
 
+// TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Chats {
     // All active chats from warp.
@@ -151,6 +153,7 @@ pub struct Chats {
     pub favorites: Vec<Uuid>,
 }
 
+// TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Friends {
     // All active friends.

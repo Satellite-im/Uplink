@@ -241,6 +241,52 @@ body, html {
     background: var(--text-color-bright); /* Gecko Browsers */
 }
 
+.skeletal {
+    background: var(--secondary);
+    animation: skeletal 1s infinite;
+}
+
+.skeletal-inline {
+    width: 100%;
+    display: inline-flex;
+    gap: var(--gap-less);
+}
+
+
+.skeletal-svg {
+    svg {
+        animation: skeletal 1s infinite;
+        stroke: var(--secondary) !important;
+    }
+}
+.skeletal-bars {
+    flex: 1;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--gap-less);
+}
+
+.skeletal-bar {
+    width: 100%;
+    height: var(--text-size);
+    border-radius: var(--border-radius-less);
+
+    &.thick {
+        height: calc(var(--text-size) * 2);
+    }
+
+    &.seventy-five {
+        max-width: 75% !important;
+    }
+
+    &.flex {
+        flex: 1;
+    }
+    
+}
+
+
 .visible {
     opacity: 1;
 }
@@ -271,5 +317,17 @@ p {
     }
     100% {
         background: var(--text-color-bright);
+    }
+}
+
+@keyframes skeletal {
+    0% {
+        opacity: 0.75;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.75;
     }
 }

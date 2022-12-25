@@ -8,7 +8,8 @@ use crate::{
     components::{
         chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
         friends::{
-            add::AddFriend, friends_list::Friends, incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests, blocked::BlockedUsers,
+            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
         },
     },
     state::State,
@@ -77,6 +78,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     },
                 },
 
+                // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 (route.clone() == FriendRoute::All).then(|| rsx!(Friends {})),
                 (route.clone() == FriendRoute::Pending).then(|| rsx!(PendingFriends {}, OutgoingRequests {})),
                 (route.clone() == FriendRoute::Blocked).then(|| rsx!(BlockedUsers {})),

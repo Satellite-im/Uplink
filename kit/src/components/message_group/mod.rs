@@ -1,5 +1,10 @@
 use dioxus::prelude::*;
 
+use crate::components::{
+    indicator::{Platform, Status},
+    user_image::UserImage,
+};
+
 #[derive(Props)]
 pub struct Props<'a> {
     children: Element<'a>,
@@ -43,6 +48,52 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (!remote).then(|| rsx!(
                 &cx.props.user_image
             ))
+        }
+    ))
+}
+
+#[derive(PartialEq, Props)]
+pub struct SkeletalProps {
+    #[props(optional)]
+    alt: Option<bool>,
+}
+
+#[allow(non_snake_case)]
+pub fn MessageGroupSkeletal(cx: Scope<SkeletalProps>) -> Element {
+    let alt = cx.props.alt.unwrap_or_default();
+
+    cx.render(rsx!(
+        div {
+            class: format_args!("message-group-skeletal {}", if alt { "alt" } else { "" }),
+            UserImage {
+                loading: true,
+                status: Status::Offline,
+                platform: Platform::Desktop
+            },
+            div {
+                class: "skeletal-messages",
+                div {
+                    class: "skeletal-message",
+                    div {
+                        class: "skeletal-message-content skeletal",
+                    }
+                },
+                div {
+                    class: "skeletal-message",
+                    div {
+                        class: "skeletal-message-content skeletal",
+                    }
+                },
+                div {
+                    class: "skeletal-message",
+                    div {
+                        class: "skeletal-message-content skeletal",
+                    }
+                },
+                div {
+                    class: "skeletal-timestamp"
+                }
+            }
         }
     ))
 }
