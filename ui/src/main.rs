@@ -1,5 +1,7 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use crate::warp::{WarpCmdRx, WarpEventRx};
+use crate::warp::{WarpCmdTx, WarpEventTx};
 use clap::Parser;
 use dioxus::core::to_owned;
 use dioxus::desktop::tao::dpi::LogicalSize;
@@ -17,7 +19,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 
@@ -54,11 +55,15 @@ static_loader! {
     };
 }
 
+// allows the UI to receive events to Warp
 // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-pub static WARP_CHANNELS: Lazy<(
-    UnboundedSender<warp::WarpEvent>,
-    Arc<Mutex<UnboundedReceiver<warp::WarpEvent>>>,
-)> = Lazy::new(|| {
+pub static WARP_CHANNELS: Lazy<(WarpEventTx, WarpEventRx)> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    (tx, Arc::new(Mutex::new(rx)))
+});
+
+// allows the UI to send commands to Warp
+pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
     (tx, Arc::new(Mutex::new(rx)))
 });
@@ -138,8 +143,8 @@ fn main() {
         // .with_movable_by_window_background(true)
     }
 
-    let mut warp_runner = crate::warp::WarpRunner::init(WARP_CHANNELS.0.clone());
-    warp_runner.run();
+    let mut warp_runner = crate::warp::WarpRunner::init();
+    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
     dioxus::desktop::launch_cfg(bootstrap, |c| {
         c.with_window(|_| window.with_menu(main_menu))

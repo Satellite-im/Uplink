@@ -4,7 +4,10 @@ use std::{
     sync::Arc,
 };
 
-use tokio::sync::{mpsc::UnboundedSender, Notify};
+use tokio::sync::{
+    mpsc::{UnboundedReceiver, UnboundedSender},
+    Mutex, Notify,
+};
 use warp::{
     constellation::Constellation, multipass::MultiPass, raygun::RayGun, tesseract::Tesseract,
 };
@@ -14,13 +17,21 @@ use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::DEFAULT_PATH;
 
+pub type WarpCmdTx = UnboundedSender<WarpCmd>;
+pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
+pub type WarpEventTx = UnboundedSender<WarpEvent>;
+pub type WarpEventRx = Arc<Mutex<UnboundedReceiver<WarpEvent>>>;
+
 pub enum WarpEvent {
+    None,
+}
+
+pub enum WarpCmd {
     None,
 }
 
 pub struct WarpRunner {
     notify: Arc<Notify>,
-    tx: UnboundedSender<WarpEvent>,
     ran_once: bool,
 }
 
@@ -31,17 +42,16 @@ impl std::ops::Drop for WarpRunner {
 }
 
 impl WarpRunner {
-    pub fn init(tx: UnboundedSender<WarpEvent>) -> Self {
+    pub fn init() -> Self {
         Self {
             notify: Arc::new(Notify::new()),
-            tx,
             ran_once: false,
         }
     }
 
     // spawns a thread which will terminate when WarpRunner is dropped
-    pub fn run(&mut self) {
-        if self.ran_once == true {
+    pub fn run(&mut self, tx: UnboundedSender<WarpEvent>, rx: WarpCmdRx) {
+        if self.ran_once {
             panic!("WarpRunner called run() multiple times");
         }
         self.ran_once = true;
@@ -68,11 +78,18 @@ impl WarpRunner {
         tokio::spawn(async move {
             // todo: register for events from warp
 
+            // this was the only way to get a mutable static variable. but this channel should only be read here.
+            let mut rx = rx.lock().await;
+
             loop {
                 tokio::select! {
                     // RayGun events
                     // MultiPass events
                     // ect
+                    opt = rx.recv() => match opt {
+                        Some(cmd) => todo!("handle cmd"),
+                        None => break,
+                    },
                     _ = notify.notified() => break,
                 }
             }
