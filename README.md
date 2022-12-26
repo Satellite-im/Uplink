@@ -46,22 +46,22 @@ cargo run --bin ui --profile=rapid
 
 We should try to finish this checklist before switching over to using this UI for the primary Uplink UI.
 
-- [ ] Skeletal loaders for all relevant components inside the UIKit
-  - [ ] User Image
-  - [ ] Message
+- [x] Skeletal loaders for all relevant components inside the UIKit
+  - [x] User Image
+  - [x] Message
   - [ ] Button
   - [ ] Label
   - [ ] Select
-  - [ ] File
-  - [ ] Folder
-  - [ ] User
-  - [ ] Chat
-  - [ ] Friend
-- [ ] Toast Notifications
-  - [ ] Ability to push a new toast notification.
-  - [ ] Toast notification automatically dismisses after `n` seconds.
+  - [x] File
+  - [x] Folder
+  - [x] User
+  - [x] Chat
+  - [x] Friend
+- [x] Toast Notifications
+  - [x] Ability to push a new toast notification.
+  - [x] Toast notification automatically dismisses after `n` seconds.
   - [ ] Hovering over the toast notification should reset the dismiss timer.
-  - [ ] Clicking the `x` on the toast notification should dismiss it immediately.
+  - [x] Clicking the `x` on the toast notification should dismiss it immediately.
 - [ ] Calling Modal
   - [ ] Should be wired to state to appear when ui.incoming_call is set to some call.
   - [ ] We should outline a struct to neatly contain info we need pertaining to an incoming call.
@@ -74,9 +74,9 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] we should be able to delete files and folders. Deleting a folder should delete all the items inside a folder.
   - [ ] Deleting things should move them to a "trash" folder which will have a different icon. 
   - [ ] Emptying trash will delete everything in the trash.
-- [ ] Language & Translation
-  - [ ] Replace all references to the plain text within the app with references to the translated items
-  - [ ] Ensure that there is no hard-coded text within the UIKit that we can't override with props. 
+- [x] Language & Translation
+  - [x] Replace all references to the plain text within the app with references to the translated items
+  - [x] Ensure that there is no hard-coded text within the UIKit that we can't override with props. 
 - [ ] Messaging
   - [ ] Add mock data to generate random replies to messages
   - [ ] Add mock data to generate random reactions to messages 
@@ -85,9 +85,9 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Implement UI for the afformentioned items.
 - [ ] Settings should be wired to a config file and automatically update.
 - [ ] CSS needs to be split up neater within components and layouts in uplink_skeleton.
-- [ ] Unlock page needs porting.
+- [x] Unlock page needs porting.
 - [ ] Account creation page needs porting.
-- [ ] Add generic loader component.
+- [x] Add generic loader component.
 - [ ] Add a config option to enable developer logging
   - [ ] Developer logging should write developer logs to uplink-debug.log
   - [ ] Include a way to view the contents of the log-in developer settings.
