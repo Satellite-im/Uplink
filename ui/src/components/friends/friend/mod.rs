@@ -77,9 +77,9 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 if relationship.friends || relationship.blocked {
-                   rsx!(Label {
-                        // TODO: this is stubbed for now, wire up to the actual request time
-                        text: status_message,
+                   rsx!(p {
+                        class: "status-message",
+                        "{status_message}"
                     })
                 } else  {
                     rsx!(Label {

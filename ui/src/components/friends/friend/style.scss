@@ -17,4 +17,8 @@
         display: inline-flex;
         gap: var(--gap);
     }
+    .status-message {
+        font-size: var(--text-size-less);
+        color: var(--text-color-muted) !important;
+    }
 }

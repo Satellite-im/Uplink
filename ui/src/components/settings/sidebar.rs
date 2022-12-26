@@ -16,6 +16,7 @@ pub enum Page {
     Developer,
     Extensions,
     General,
+    Files,
     Privacy,
 }
 
@@ -25,6 +26,7 @@ impl FromStr for Page {
             "audio" => Ok(Page::Audio),
             "developer" => Ok(Page::Developer),
             "extensions" => Ok(Page::Extensions),
+            "files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             "privacy" => Ok(Page::Privacy),
             _ => Ok(Page::General),
@@ -70,6 +72,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::MusicalNote,
         ..UIRoute::default()
     };
+    let files = UIRoute {
+        to: "files",
+        name: get_local_text("settings.files"),
+        icon: Icon::Folder,
+        ..UIRoute::default()
+    };
     let extensions = UIRoute {
         to: "extensions",
         name: get_local_text("settings.extensions"),
@@ -82,7 +90,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
-    let routes = vec![general, privacy, audio, extensions, developer];
+    let routes = vec![general, privacy, audio, files, extensions, developer];
 
     let active_route = routes[0].clone();
     cx.render(rsx!(
