@@ -1,4 +1,3 @@
-
 use dioxus::prelude::*;
 
 use crate::components::{
@@ -7,7 +6,7 @@ use crate::components::{
         sidebar::{Page, Sidebar},
         sub_pages::{
             audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-            general::GeneralSettings, privacy::PrivacySettings,
+            files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings,
         },
     },
 };
@@ -39,6 +38,9 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 )),
                 Page::Privacy       => cx.render(rsx! (
                     PrivacySettings {}
+                )),
+                Page::Files         => cx.render(rsx! (
+                    FilesSettings {}
                 )),
                 Page::Extensions    => cx.render(rsx! (
                     ExtensionSettings {}
