@@ -8,6 +8,7 @@ use dioxus::desktop::tao::dpi::LogicalSize;
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
+use fs_extra::dir::*;
 use kit::elements::Appearance;
 use tokio::time::{sleep, Duration};
 
@@ -16,6 +17,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
+use warp::logging::tracing::log;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -48,7 +50,26 @@ static_loader! {
     };
 }
 
+fn copy_assets() {
+    let cache_path = dirs::home_dir().unwrap_or_default().join(".uplink/");
+
+    match create_all(cache_path.join("themes"), false) {
+        Ok(_) => {
+            let mut options = CopyOptions::new();
+            options.skip_exist = true;
+            options.copy_inside = true;
+
+            if let Err(error) = copy("ui/extra/themes", cache_path.join("themes"), &options) {
+                log::error!("Error on copy themes {error}");
+            }
+        }
+        Err(error) => log::error!("Error on create themes folder: {error}"),
+    };
+}
+
 fn main() {
+    copy_assets();
+
     // Initalized the cache dir if needed
     let cache_path = dirs::home_dir()
         .unwrap_or_default()
@@ -194,8 +215,13 @@ fn app(cx: Scope) -> Element {
 
     let desktop = use_window(&cx);
 
+    let theme = match &state.read().ui.theme {
+        Some(theme) => theme.styles.to_owned(),
+        None => String::from(""),
+    };
+
     cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE}" },
+        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
             state.read().ui.toast_notifications.iter().map(|(id, toast)| {

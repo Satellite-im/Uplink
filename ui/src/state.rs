@@ -73,6 +73,13 @@ impl ToastNotification {
     }
 }
 
+#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Theme {
+    pub filename: String,
+    pub name: String,
+    pub styles: String,
+}
+
 // Define a struct to represent a group of messages from the same sender.
 pub struct MessageGroup {
     pub sender: DID,
@@ -197,6 +204,8 @@ pub struct UI {
     pub silenced: bool,
     #[serde(skip_serializing, skip_deserializing)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
+    #[serde(default)]
+    pub theme: Option<Theme>,
 }
 
 use std::fmt;
@@ -254,6 +263,10 @@ impl State {
     /// Constructs a new `State` instance with default values.
     pub fn new() -> Self {
         State::default()
+    }
+
+    pub fn set_theme(&mut self, theme: Option<Theme>) {
+        self.ui.theme = theme;
     }
 
     /// Sets the active chat in the `State` struct.
@@ -769,6 +782,8 @@ impl State {
             Action::TogglePopout => {
                 self.toggle_popout();
             }
+            Action::SetTheme(theme) => self.set_theme(Some(theme)),
+            Action::ClearTheme => self.set_theme(None),
         }
 
         let _ = self.save();
@@ -842,6 +857,8 @@ pub enum Action {
     ToggleSilence,
     ToggleMute,
     AddToastNotification(ToastNotification),
+    SetTheme(Theme),
+    ClearTheme,
     // RemoveToastNotification,
     ToggleMedia(Chat),
     // Account

@@ -56,6 +56,7 @@ pub fn generate_mock() -> State {
             silenced: false,
             muted: false,
             toast_notifications,
+            theme: None,
         },
         account: Account {
             identity: me.clone(),
