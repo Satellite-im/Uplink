@@ -17,6 +17,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
+use warp::logging::tracing::log;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -58,9 +59,11 @@ fn copy_assets() {
             options.skip_exist = true;
             options.copy_inside = true;
 
-            let _ = copy("extra/themes", cache_path.join("themes"), &options);
+            if let Err(error) = copy("ui/extra/themes", cache_path.join("themes"), &options) {
+                log::error!("Error on copy themes {error}");
+            }
         }
-        Err(_) => {}
+        Err(_) => log::error!("Error on create themes folder: {error}"),
     };
 }
 
