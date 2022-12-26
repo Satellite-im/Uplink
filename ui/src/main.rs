@@ -63,7 +63,7 @@ fn copy_assets() {
                 log::error!("Error on copy themes {error}");
             }
         }
-        Err(_) => log::error!("Error on create themes folder: {error}"),
+        Err(error) => log::error!("Error on create themes folder: {error}"),
     };
 }
 
