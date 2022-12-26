@@ -50,7 +50,7 @@ impl WarpRunner {
     }
 
     // spawns a thread which will terminate when WarpRunner is dropped
-    pub fn run(&mut self, tx: UnboundedSender<WarpEvent>, rx: WarpCmdRx) {
+    pub fn run(&mut self, tx: WarpEventTx, rx: WarpCmdRx) {
         if self.ran_once {
             panic!("WarpRunner called run() multiple times");
         }
@@ -86,10 +86,14 @@ impl WarpRunner {
                     // RayGun events
                     // MultiPass events
                     // ect
+
+                    // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
                         Some(cmd) => todo!("handle cmd"),
                         None => break,
                     },
+
+                    // the WarpRunner has been dropped. stop the thread
                     _ = notify.notified() => break,
                 }
             }
