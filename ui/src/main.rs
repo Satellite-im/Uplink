@@ -179,7 +179,7 @@ fn bootstrap(cx: Scope) -> Element {
         Err(_) => State::default(),
     };
 
-    let _ = use_context_provider(&cx, || state);
+    use_context_provider(&cx, || state);
     cx.render(rsx!(crate::app {}))
 }
 
