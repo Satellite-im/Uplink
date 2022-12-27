@@ -52,7 +52,7 @@ impl WarpRunner {
 
     // spawns a thread which will terminate when WarpRunner is dropped
     pub fn run(&mut self, tx: WarpEventTx, rx: WarpCmdRx) {
-        assert!(self.ran_once, "WarpRunner called run() multiple times");
+        assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
         let tesseract = match Tesseract::from_file(DEFAULT_PATH.join(".keystore")) {
@@ -95,6 +95,8 @@ impl WarpRunner {
                     _ = notify.notified() => break,
                 }
             }
+
+            // println!("terminating warp_runner thread");
         });
     }
 }

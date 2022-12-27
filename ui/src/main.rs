@@ -164,15 +164,16 @@ fn main() {
         // .with_movable_by_window_background(true)
     }
 
-    let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
-
     dioxus::desktop::launch_cfg(bootstrap, |c| {
         c.with_window(|_| window.with_menu(main_menu))
     })
 }
 
 fn bootstrap(cx: Scope) -> Element {
+    //println!("rendering bootstrap");
+    let mut warp_runner = warp_runner::WarpRunner::init();
+    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
+
     let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
@@ -192,6 +193,7 @@ fn app(cx: Scope) -> Element {
     use_future(&cx, (), |_| {
         to_owned![toggle];
         async move {
+            //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
                 {
@@ -212,6 +214,7 @@ fn app(cx: Scope) -> Element {
     use_future(&cx, (), |_| {
         to_owned![toggle, warp_rx];
         async move {
+            //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_rx.lock().await;
