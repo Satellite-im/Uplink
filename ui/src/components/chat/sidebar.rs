@@ -17,9 +17,20 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
     for identity in identities {
         // For each identity, create a new UserInfo object and set its fields
         // to the corresponding values from the identity object
+        let platform = match identity.platform() {
+            warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+            warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+            _ => Platform::Headless //TODO: Unknown
+        };
+        let status = match identity.identity_status() {
+            warp::multipass::identity::IdentityStatus::Online => Status::Online,
+            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+        };
         user_info.push(UserInfo {
-            platform: Platform::Mobile,
-            status: Status::Online,
+            platform,
+            status,
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })

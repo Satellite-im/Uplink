@@ -36,7 +36,17 @@ pub fn Compose(cx: Scope) -> Element {
     // let _new_message_text = LOCALES
     //     .lookup(&*APP_LANG.read(), "messages.new")
     //     .unwrap_or_default();
-
+    let platform = match active_participant.platform() {
+        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+        _ => Platform::Headless //TODO: Unknown
+    };
+    let status = match active_participant.identity_status() {
+        warp::multipass::identity::IdentityStatus::Online => Status::Online,
+        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+    };
     let desktop = use_window(&cx);
 
     let loading = use_state(&cx, || false);
@@ -96,8 +106,8 @@ pub fn Compose(cx: Scope) -> Element {
                             if without_me.len() < 2 {rsx! (
                                 UserImage {
                                     loading: **loading,
-                                    platform: Platform::Mobile,
-                                    status: Status::Online,
+                                    platform: platform,
+                                    status: status,
                                     image: first_image
                                 }
                             )} else {rsx! (
@@ -165,13 +175,24 @@ pub fn Compose(cx: Scope) -> Element {
                                 let last_message = messages.last().unwrap().message.clone();
                                 let sender = state.read().get_friend_identity(&group.sender);    
                                 let active_language = state.read().settings.language.clone();
-        
+                                let platform = match sender.platform() {
+                                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                                    _ => Platform::Headless //TODO: Unknown
+                                };
+                                let status = match sender.identity_status() {
+                                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                                };
+
                                 rsx!(
                                     MessageGroup {
                                         user_image: cx.render(rsx!(
                                             UserImage {
-                                                platform: Platform::Mobile,
-                                                status: Status::Online
+                                                platform: platform,
+                                                status: status
                                             }
                                         )),
                                         timestamp: format_timestamp_timeago(last_message.date(), active_language),

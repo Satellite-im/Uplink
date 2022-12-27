@@ -22,7 +22,17 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let mut rng = rand::thread_rng();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
-
+                let platform = match friend.platform() {
+                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                    _ => Platform::Headless //TODO: Unknown
+                };
+                let status = match friend.identity_status() {
+                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -49,8 +59,8 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
-                                    platform: Platform::Desktop,
-                                    status: Status::Online,
+                                    platform: platform,
+                                    status: status,
                                     image: friend.graphics().profile_picture()
                                 }
                             )),
