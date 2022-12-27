@@ -92,7 +92,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
     let message_count = rng.gen_range(0..20);
     for _ in 0..message_count {
         let sender = participants
-            .choose(&mut rand::thread_rng())
+            .choose(&mut rng)
             .unwrap_or(&default_id);
         let word_count = rng.gen_range(3..20);
         let mut default_message = Message::default();
