@@ -4,6 +4,7 @@
 	align-content: center;
 	justify-content: center;
 	max-width: 100px;
+	transition: background-color var(--animation-time);
 
 	.icon {
 		width: var(--icon-size-more);
@@ -13,6 +14,7 @@
 		align-self: center;
 		cursor: pointer;
 		svg {
+			transition: stroke var(--animation-time);
 			fill: transparent;
 			stroke: var(--warning-light);
 			width: 100%;

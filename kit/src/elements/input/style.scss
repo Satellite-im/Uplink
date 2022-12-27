@@ -24,6 +24,7 @@ input {
 	font-size: var(--text-size);
 	border: 1px solid var(--border-color);
 	color: var(--text-color);
+	transition: border-color var(--animation-time);
 	.icon {
 		height: 100%;
 		display: inline-flex;
@@ -34,6 +35,7 @@ input {
 		flex: 1;
 	}
 	svg {
+		transition: stroke var(--animation-time);
 		fill: transparent;
 		stroke: var(--placeholder);
 	}
