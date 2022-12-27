@@ -100,25 +100,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_sender(sender.did_key());
         default_message.set_reactions(vec![]);
         default_message.set_value(vec![lipsum(word_count)]);
-        match rng.gen_range(0..2) {
-            0 => {
-                // Replied
-                if !messages.is_empty() {
-                    let index = rng.gen_range(0..messages.len());
-                    if let Some(message) = messages.get(index) {
-                        default_message.set_replied(Some(message.id()));
-                    }
-                }
-            }
-            1 => {
-                //Attachment
-                let file = warp::constellation::file::File::new("default_file");
-                file.set_size(rng.gen_range(100..5 * 1024));
-                default_message.set_attachment(vec![file])
-            }
-            2 => {} //Reaction
-            _ => {}
-        }
+
         messages.push(default_message);
     }
 
@@ -210,10 +192,9 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
 
         identity.set_identity_status(status);
         
-        let platform = match rng.gen_range(0..1) {
-            0 => Platform::Desktop,
-            1 => Platform::Mobile,
-            _ => Platform::Unknown,
+        let platform = match rng.gen() {
+            true => Platform::Desktop,
+            false => Platform::Mobile,
         };
 
         identity.set_platform(platform);
