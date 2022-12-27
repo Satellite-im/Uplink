@@ -96,7 +96,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 onmousedown: move |_| desktop.drag(),
             },
             // Only display favorites if we have some.
-            (favorites.len() > 0).then(|| rsx!(
+            (!favorites.is_empty()).then(|| rsx!(
                 div {
                     id: "favorites",
                     Label {
@@ -136,6 +136,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
+                                        // loading: true,
                                         participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
                                         onpress: move |_| {
@@ -198,7 +199,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     rsx!(
                         ContextMenu {
                             key: "{key}-chat",
-                            id: format!("{}-chat", key.to_string()),
+                            id: format!("{}-chat", key),
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,
@@ -224,6 +225,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                             )),
                             User {
+                                // loading: true,
                                 username: participants_name,
                                 subtext: val.join("\n"),
                                 timestamp: timestamp,

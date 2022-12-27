@@ -7,25 +7,15 @@ use warp::multipass::identity::Identity;
 use dioxus_desktop::use_window;
 
 use isolang::Language;
-use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::MessageGroup, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 use timeago::{languages::boxup, English};
+use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use warp::multipass::identity::Identity;
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::language::get_local_text};
+
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};
 
 
 use super::sidebar::build_participants_names;
-
-fn format_timestamp(datetime: DateTime<Utc>, active_language: String) -> String {
-    let language = 
-        isolang::Language::from_locale(&active_language.replace("-", "_")).unwrap_or(Language::Eng);
-    let formatter = match timeago::from_isolang(language) {
-        Some(lang) => timeago::Formatter::with_language(lang), 
-        None => timeago::Formatter::with_language(boxup(English)),
-    };
-    let now = Utc::now();
-    let duration = now.signed_duration_since(datetime).to_std().unwrap();
-    formatter.convert(duration)
-}
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
@@ -46,7 +36,7 @@ pub fn Compose(cx: Scope) -> Element {
     let is_favorite = state.read().is_favorite(&active_chat);
 
     let reply_message = match state.read().get_active_chat().unwrap_or_default().replying_to {
-        Some(m) => m.value().join("\n").to_string(),
+        Some(m) => m.value().join("\n"),
         None => "".into(),
     };
 
@@ -63,17 +53,20 @@ pub fn Compose(cx: Scope) -> Element {
 
     let desktop = use_window(&cx);
 
+    let loading = use_state(&cx, || false);
+
     cx.render(rsx!(
         div {
             id: "compose",
             div {
                 onmousedown: move |_| { desktop.drag(); },
                 Topbar {
-                    with_back_button: false,
+                    with_back_button: true,
                     controls: cx.render(
                         rsx! (
                             Button {
                                 icon: Icon::Heart,
+                                // disabled: **loading,
                                 appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
@@ -87,6 +80,7 @@ pub fn Compose(cx: Scope) -> Element {
                             },
                             Button {
                                 icon: Icon::PhoneArrowUpRight,
+                                // disabled: **loading,
                                 appearance: Appearance::Secondary,
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
@@ -95,11 +89,12 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    let _ = state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                                    state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
                                 }
                             },
                             Button {
                                 icon: Icon::VideoCamera,
+                                // disabled: **loading,
                                 appearance: Appearance::Secondary,
                                 tooltip: cx.render(rsx!(
                                     Tooltip { 
@@ -114,24 +109,42 @@ pub fn Compose(cx: Scope) -> Element {
                         rsx! (
                             if without_me.len() < 2 {rsx! (
                                 UserImage {
+                                    loading: **loading,
                                     platform: Platform::Mobile,
                                     status: Status::Online,
                                     image: first_image
                                 }
                             )} else {rsx! (
                                 UserImageGroup {
+                                    loading: **loading,
                                     participants: build_participants(&without_me)
                                 }
                             )}
                             div {
                                 class: "user-info",
-                                p {
-                                    class: "username",
-                                    "{participants_name}"
-                                },
-                                p {
-                                    class: "status",
-                                    "{subtext}"
+                                if **loading {
+                                    rsx!(
+                                        div {
+                                            class: "skeletal-bars",
+                                            div {
+                                                class: "skeletal skeletal-bar",
+                                            },
+                                            div {
+                                                class: "skeletal skeletal-bar",
+                                            },
+                                        }
+                                    )
+                                } else {
+                                    rsx! (
+                                        p {
+                                            class: "username",
+                                            "{participants_name}"
+                                        },
+                                        p {
+                                            class: "status",
+                                            "{subtext}"
+                                        }
+                                    )
                                 }
                             }
                         )
@@ -148,66 +161,80 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             )),
-            div {
-                id: "messages",
-                div {
-                    message_groups.iter().map(|group| {
-                        let messages = &group.messages;
-                        let last_message = messages.last().unwrap().message.clone();
-                        let sender = state.read().get_friend_identity(&group.sender);    
-                        let active_language = state.read().settings.language.clone();
-
-                        rsx!(
-                            MessageGroup {
-                                user_image: cx.render(rsx!(
-                                    UserImage {
-                                        platform: Platform::Mobile,
-                                        status: Status::Online
-                                    }
-                                )),
-                                timestamp: format_timestamp(last_message.date(), active_language),
-                                with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
-                                remote: group.remote,
-                                messages.iter().map(|grouped_message| {
-                                    let message = grouped_message.message.clone();
-                                    let reply_message = grouped_message.message.clone();
-                                
-                                    rsx! (
-                                        ContextMenu {
-                                            id: format!("message-{}", message.id()),
-                                            items: cx.render(rsx!(
-                                                ContextItem {
-                                                    icon: Icon::ArrowLongLeft,
-                                                    text: get_local_text("messages.reply"),
-                                                    onpress: move |_| {
-                                                        let chat = state.read().get_active_chat().unwrap_or_default();
-                                                        state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
-                                                    }
-                                                },
-                                                ContextItem {
-                                                    icon: Icon::FaceSmile,
-                                                    text: get_local_text("messages.react"),
-                                                    //TODO: Wire to state
-                                                },
-                                            )),
-                                            Message {
-                                                remote: group.remote,
-                                                with_text: message.value().join("\n"),
-                                                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+            if **loading {
+                rsx!(
+                    div {
+                        id: "messages",
+                        MessageGroupSkeletal {},
+                        MessageGroupSkeletal { alt: true }
+                    }
+                )
+            } else {
+                rsx! (
+                    div {
+                        id: "messages",
+                        div {
+                            message_groups.iter().map(|group| {
+                                let messages = &group.messages;
+                                let last_message = messages.last().unwrap().message.clone();
+                                let sender = state.read().get_friend_identity(&group.sender);    
+                                let active_language = state.read().settings.language.clone();
+        
+                                rsx!(
+                                    MessageGroup {
+                                        user_image: cx.render(rsx!(
+                                            UserImage {
+                                                platform: Platform::Mobile,
+                                                status: Status::Online
                                             }
-                                        }
-                                    )
-                                })
-                            }
-                        )
-                    })
-                }
+                                        )),
+                                        timestamp: format_timestamp_timeago(last_message.date(), active_language),
+                                        with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
+                                        remote: group.remote,
+                                        messages.iter().map(|grouped_message| {
+                                            let message = grouped_message.message.clone();
+                                            let reply_message = grouped_message.message.clone();
+                                        
+                                            rsx! (
+                                                ContextMenu {
+                                                    id: format!("message-{}", message.id()),
+                                                    items: cx.render(rsx!(
+                                                        ContextItem {
+                                                            icon: Icon::ArrowLongLeft,
+                                                            text: get_local_text("messages.reply"),
+                                                            onpress: move |_| {
+                                                                let chat = state.read().get_active_chat().unwrap_or_default();
+                                                                state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
+                                                            }
+                                                        },
+                                                        ContextItem {
+                                                            icon: Icon::FaceSmile,
+                                                            text: get_local_text("messages.react"),
+                                                            //TODO: Wire to state
+                                                        },
+                                                    )),
+                                                    Message {
+                                                        remote: group.remote,
+                                                        with_text: message.value().join("\n"),
+                                                        order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                                    }
+                                                }
+                                            )
+                                        })
+                                    }
+                                )
+                            })
+                        }
+                    },
+                )
             },
             Chatbar {
+                loading: **loading,
                 placeholder: get_local_text("messages.say-something-placeholder"),
                 controls: cx.render(rsx!(
                     Button {
                         icon: Icon::ChevronDoubleRight,
+                        // disabled: **loading,
                         appearance: Appearance::Secondary,
                         tooltip: cx.render(rsx!(
                             Tooltip { 
@@ -223,7 +250,7 @@ pub fn Compose(cx: Scope) -> Element {
                             label: get_local_text("messages.replying"),
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
-                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.clone().unwrap_or_default().sender();
+                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.unwrap_or_default().sender();
                                 our_did != their_did
                             },
                             onclose: move |_| {
@@ -241,6 +268,7 @@ pub fn Compose(cx: Scope) -> Element {
                 with_file_upload: cx.render(rsx!(
                     Button {
                         icon: Icon::Plus,
+                        // disabled: **loading,
                         appearance: Appearance::Primary,
                         tooltip: cx.render(rsx!(
                             Tooltip { 

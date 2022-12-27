@@ -40,8 +40,8 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
         div {
             class: "controls",
             Button {
-                // TODO: we need to add an icon for this
-                icon: if state.read().ui.silenced { Icon::Microphone } else { Icon::Microphone },
+                // TODO: we need to add an icon for this `if state.read().ui.silenced { Icon::Microphone } else { Icon::Microphone }`
+                icon: Icon::Microphone,
                 appearance: if state.read().ui.muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {

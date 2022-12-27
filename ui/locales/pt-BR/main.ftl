@@ -15,7 +15,6 @@ uplink = Uplink
     .end = Finalizar
     .pre-release = Pré-lançamento
 
-
 messages = Messages
     .new = Nova Mensagem
     .replying = Respondendo a:
@@ -40,6 +39,8 @@ friends = Friends
     .incoming_requests = Solicitações recebidas
     .outgoing_requests = Solicitações enviadas
     .cancel = Cancelar solicitação
+    .requested = Recebida 
+    .sent = Enviada
     .requests = Solicitações
     .pending = Pendente
     .blocked = Bloqueado
@@ -56,30 +57,44 @@ files = Files
 settings = Settings
     .settings = Configurações
     .general = Geral
-    .general-app-language = Idioma do aplicativo
-    .general-change-language = Mude o idioma
     .privacy = Privacidade
+    .files = Arquivos
     .audio = Audio
     .extensions = Extensões
     .developer = Desenvolvedor
     .search-placeholder = Procurar configuração...
-    .splash-screen = Tela de Abertura
-    .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
 
-settings-extensions = SettingsExtensions 
+settings-general = General Settings
+    .splash-screen = Splash Screen
+    .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
+    .app-language = Idioma do aplicativo
+    .change-language = Mude o idioma
+    .theme = Tema
+    .theme-description = Mude o tema do aplicativo.
+    .theme-reset = Restaurar Tema
+    .theme-reset-description = Restaurar tema padrão.
+    .theme-reset-cta = Limpar Tema
+
+settings-extensions = Settings Extensions 
     .placeholder = Espaço reservado
     .open-extensions-folder = Abrir pasta de extensões 
 
-settings-privacy = SettingsPrivacy 
+settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Frase de recuperação de backup
     .backup-phrase = Frase de backup
     .backup-phrase-description = Guarde esta frase! Junto com sua senha, ela representa a sua conta. Se você perdê-la, não podemos te ajudar a recuperá-la.
 
-settings-audio = SettingsAudio 
+settings-audio = Settings Audio 
     .call-timer = Tempo de chamada
     .call-timer-description = Quando ativado, um cronômetro será exibido mostrando a duração da chamada.
 
-settings-developer = SettingsDeveloper 
+settings-files = Files Settings
+    .local-sync = Sincronizar localmente
+    .local-sync-description = Quando ativado, os arquivos serão sincronizados com sua máquina local.
+    .open-sync-folder = Abrir pasta sincronizada
+    .open-sync-folder-description = Abrir a pasta onde seus arquivos estão sincronizados
+
+settings-developer = Settings Developer 
     .developer-mode = Modo de Desenvolvedor
     .developer-mode-description = Habilitar o modo de desenvolvedor adiciona logs e exibe informações úteis de depuração na interface do usuário.
     .open-codebase = Abrir código fonte
@@ -94,13 +109,13 @@ settings-developer = SettingsDeveloper
     .clear-cache-description = Restaura sua conta, basicamente.
     .clear = Limpar
 
-media-player = MediaPlayer 
+media-player = Media Player 
     .enable-camera = Habilitar Câmera
     .fullscreen = Tela cheia
     .popout-player = Popout Player 
     .screenshare = Compartilhar tela
     
-remote-controls = RemoteControls 
+remote-controls = Remote Controls 
     .in-call = Em chamada
     .mute = Silenciar
     .unmute = Dessilenciar 

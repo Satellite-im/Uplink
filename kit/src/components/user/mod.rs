@@ -6,12 +6,19 @@ use dioxus::{
     prelude::*,
 };
 
+use crate::components::{
+    indicator::{Platform, Status},
+    user_image::UserImage,
+};
+
 #[derive(Props)]
 pub struct Props<'a> {
     username: String,
     user_image: Element<'a>,
     subtext: String,
     timestamp: Option<u64>,
+    #[props(optional)]
+    loading: Option<bool>,
     #[props(optional)]
     with_badge: Option<String>,
     #[props(optional)]
@@ -51,36 +58,75 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
     let active = &cx.props.active.unwrap_or_default();
+    let loading = &cx.props.loading.unwrap_or_default();
 
     cx.render(rsx! (
-        div {
-            class: {
-                format_args!("user {} noselect defaultcursor", if *active { "active" } else { "" })
-            },
-            onclick: move |e| emit(&cx, e),
-            (!badge.is_empty()).then(|| rsx!(
-                span {
-                    class: "badge",
-                    span {
-                        class: "badge-prefix",
-                        "{time_ago}"
-                    }
-                    span {
-                        class: "badge-count",
-                        "{badge}"
+        if *loading {
+            rsx!(
+                UserLoading {
+                }
+            )
+        } else {
+            rsx!(
+                div {
+                    class: {
+                        format_args!("user {} noselect defaultcursor", if *active { "active" } else { "" })
+                    },
+                    onclick: move |e| emit(&cx, e),
+                    (!badge.is_empty()).then(|| rsx!(
+                        span {
+                            class: "badge",
+                            span {
+                                class: "badge-prefix",
+                                "{time_ago}"
+                            }
+                            span {
+                                class: "badge-count",
+                                "{badge}"
+                            }
+                        }
+                    )),
+                    &cx.props.user_image,
+                    div {
+                        class: "info",
+                        p {
+                            class: "username",
+                            "{cx.props.username}"
+                        },
+                        p {
+                            class: "subtext",
+                            "{cx.props.subtext}"
+                        }
                     }
                 }
-            )),
-            &cx.props.user_image,
+            )
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+fn UserLoading(cx: Scope) -> Element {
+    cx.render(rsx!(
+        div {
+            class: "skeletal-user",
+            UserImage {
+                loading: true,
+                status: Status::Offline,
+                platform: Platform::Desktop,
+            },
             div {
-                class: "info",
-                p {
-                    class: "username",
-                    "{cx.props.username}"
+                class: "skeletal-bars",
+                div {
+                    class: "skeletal-inline",
+                    div {
+                        class: "skeletal skeletal-bar seventy-five",
+                    },
+                    div {
+                        class: "skeletal skeletal-bar flex",
+                    }
                 },
-                p {
-                    class: "subtext",
-                    "{cx.props.subtext}"
+                div {
+                    class: "skeletal skeletal-bar thick",
                 }
             }
         }

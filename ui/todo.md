@@ -15,7 +15,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Friend
 - [ ] Toast Notifications
   - [ ] Ability to push a new toast notification.
-  - [ ] Toast notification automatically dismisses after `n` seconds.
+  - [x] Toast notification automatically dismisses after `n` seconds.
   - [ ] Hovering over toast notification should reset the dismiss timer.
   - [ ] Clicking the `x` on the toast notification should dismiss it immediatly.
 - [ ] Calling Modal
@@ -31,7 +31,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Deleting things should move them to a "trash" folder which will have a different icon. 
   - [ ] Emptying trash will delete everything in the trash.
 - [ ] Language & Translation
-  - [ ] Replace all references to plain text within the app to references to the translated items
+  - [x] Replace all references to plain text within the app to references to the translated items
   - [ ] Ensure that there are no hard coded text within the UIKit that we can't override with props. 
 - [ ] Messaging
   - [ ] Add mock data to generate random replies to messages

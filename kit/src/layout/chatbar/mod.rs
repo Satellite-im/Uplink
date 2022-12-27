@@ -31,6 +31,8 @@ pub struct Props<'a> {
     extensions: Option<Element<'a>>,
     #[props(optional)]
     controls: Option<Element<'a>>,
+    #[props(optional)]
+    loading: Option<bool>,
 }
 
 #[derive(Props)]
@@ -82,7 +84,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             *&cx.props.with_replying_to.as_ref(),
             *&cx.props.with_file_upload.as_ref(),
             Input {
-                // TODO: This should come from props
+                disabled: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
             },
             *&cx.props.extensions.as_ref(),

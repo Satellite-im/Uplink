@@ -126,13 +126,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         text: "Fake Folder 1".into()
                     },
                     File {
-                        text: "Fake File".into()
-                    },
-                    File {
                         text: "fake_2.png".into()
                     },
                     Folder {
                         text: "New Fake".into(),
+                    },
+                    Folder {
+                        loading: true,
+                        text: "Fake Folder 1".into()
+                    },
+                    File {
+                        loading: true,
+                        text: "Fake File".into()
                     }
                 }
             }

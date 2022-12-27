@@ -73,6 +73,7 @@
             line-clamp: 1; 
     -webkit-box-orient: vertical;
 }
+
 #favorites {
     display: inline-flex;
     flex-direction: column;
@@ -87,4 +88,11 @@
     left: 0;
     width: var(--sidebar-width);
     height: 2rem;
+}
+
+.user-info {
+    height: 100%;
+    flex: 1;
+    display: inline-flex;
+    flex-direction: column;
 }

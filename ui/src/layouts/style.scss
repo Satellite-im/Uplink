@@ -1,6 +1,7 @@
 #chat-layout,
 #settings-layout,
 #files-layout,
+#unlock-layout,
 #friends-layout {
     display: inline-flex;
     height: 100%;
@@ -104,4 +105,22 @@
             }
         }
     }
+}
+
+#unlock-layout {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--padding-more);
+    gap: var(--gap);
+    min-width: 0;
+
+    .info {
+        color: var(--text-color);
+        text-align: center;
+    }
+}
+
+.warning {
+    color: var(--warning-light);
 }

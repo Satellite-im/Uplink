@@ -1,6 +1,9 @@
+//#![deny(elided_lifetimes_in_paths)]
+
 use std::fs;
 
-use dioxus_desktop::tao::dpi::LogicalSize;
+use dioxus::core::to_owned;
+use dioxus::desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
 use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus_desktop::{tao, use_window};
@@ -9,17 +12,23 @@ use dioxus::prelude::*;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 
+use fs_extra::dir::*;
+use kit::elements::Appearance;
+use tokio::time::{sleep, Duration};
+
+use kit::icons::IconElement;
+use kit::{components::nav::Route as UIRoute, icons::Icon};
 use state::State;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
-// use kit::components::toast::Toast;
-use kit::icons::IconElement;
-use kit::{components::nav::Route as UIRoute, icons::Icon};
+use warp::logging::tracing::log;
 
 use crate::components::media::popout_player::PopoutPlayer;
+use crate::components::toast::Toast;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
-use crate::layouts::settings::settings::SettingsLayout;
+use crate::layouts::settings::SettingsLayout;
+use crate::layouts::unlock::UnlockLayout;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
@@ -48,7 +57,26 @@ static_loader! {
     };
 }
 
+fn copy_assets() {
+    let cache_path = dirs::home_dir().unwrap_or_default().join(".uplink/");
+
+    match create_all(cache_path.join("themes"), false) {
+        Ok(_) => {
+            let mut options = CopyOptions::new();
+            options.skip_exist = true;
+            options.copy_inside = true;
+
+            if let Err(error) = copy("ui/extra/themes", cache_path, &options) {
+                log::error!("Error on copy themes {error}");
+            }
+        }
+        Err(error) => log::error!("Error on create themes folder: {error}"),
+    };
+}
+
 fn main() {
+    copy_assets();
+
     // Initalized the cache dir if needed
     let cache_path = dirs::home_dir()
         .unwrap_or_default()
@@ -57,7 +85,7 @@ fn main() {
         .into_string()
         .unwrap_or_default();
 
-    let _ = fs::create_dir_all(&cache_path);
+    let _ = fs::create_dir_all(cache_path);
 
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -94,6 +122,7 @@ fn main() {
 
     let title = get_local_text("uplink");
 
+    #[allow(unused_mut)]
     let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
@@ -110,13 +139,12 @@ fn main() {
             .with_titlebar_transparent(true)
         // .with_movable_by_window_background(true)
     }
-
     let config = Config::default();
 
-    dioxus_desktop::launch_cfg(app, config.with_window(window.with_menu(main_menu)))
+    dioxus_desktop::launch_cfg(bootstrap, config.with_window(window.with_menu(main_menu)))
 }
 
-fn app(cx: Scope) -> Element {
+fn bootstrap(cx: Scope) -> Element {
     let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
@@ -126,9 +154,27 @@ fn app(cx: Scope) -> Element {
     let _ = use_shared_state_provider(&cx, || state);
 
     let state = use_shared_state::<State>(&cx)?;
+    let toggle = use_state(&cx, || false);
 
-    //let state = use_atom_ref(&cx, STATE);
-    //let state = RwLock::new(state_ns);
+    let inner = state.inner();
+    use_future(&cx, (), |_| {
+        to_owned![toggle];
+        async move {
+            loop {
+                sleep(Duration::from_secs(1)).await;
+                {
+                    let state = inner.borrow();
+                    if !state.read().has_toasts() {
+                        continue;
+                    }
+                    if state.write().decrement_toasts() {
+                        let flag = *toggle.current();
+                        toggle.set(!flag);
+                    }
+                }
+            }
+        }
+    });
 
     let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);
@@ -175,16 +221,26 @@ fn app(cx: Scope) -> Element {
 
     let desktop = use_window(&cx);
 
+    let theme = match &state.read().ui.theme {
+        Some(theme) => theme.styles.to_owned(),
+        None => String::from(""),
+    };
+
     cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE}" },
+        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
-            // Toast {
-            //     with_title: "Toast Notification".into(),
-            //     with_content: "This is a toast notification".into(),
-            //     icon: Icon::InformationCircle,
-            //     appearance: Appearance::Danger,
-            // },
+            state.read().ui.toast_notifications.iter().map(|(id, toast)| {
+                rsx! (
+                    Toast {
+                        id: *id,
+                        with_title: toast.title.clone(),
+                        with_content: toast.content.clone(),
+                        icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                        appearance: Appearance::Secondary,
+                    },
+                )
+            }),
             // CallDialog {
             //     caller: cx.render(rsx!(UserImage {
             //         platform: Platform::Mobile,
@@ -257,6 +313,12 @@ fn app(cx: Scope) -> Element {
                             routes: routes.clone(),
                             active: files_route.clone(),
                         }
+                    }
+                },
+                Route {
+                    to: "pre/unlock",
+                    UnlockLayout {
+
                     }
                 }
             }
