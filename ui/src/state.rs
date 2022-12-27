@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs,
     hash::Hash,
 };
@@ -706,8 +706,8 @@ impl State {
 
     pub fn get_friends_by_first_letter(
         friends: HashMap<DID, Identity>,
-    ) -> HashMap<char, Vec<Identity>> {
-        let mut friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
+    ) -> BTreeMap<char, Vec<Identity>> {
+        let mut friends_by_first_letter: BTreeMap<char, Vec<Identity>> = BTreeMap::new();
 
         // Iterate over the friends and add each one to the appropriate Vec in the
         // friends_by_first_letter HashMap
@@ -731,7 +731,7 @@ impl State {
 
         // Create a new HashMap with the same values as friends_by_first_letter, but with
         // the keys in alphabetical order
-        let mut sorted_friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
+        let mut sorted_friends_by_first_letter: BTreeMap<char, Vec<Identity>> = BTreeMap::new();
         for key in sorted_keys {
             sorted_friends_by_first_letter
                 .insert(key, friends_by_first_letter.get(&key).unwrap().clone());
