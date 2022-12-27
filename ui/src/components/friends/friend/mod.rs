@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 
-
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -63,7 +62,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active_language = state.read().settings.language.clone();
     let relationship = cx.props.relationship.clone();
     let status_message = cx.props.status_message.clone();
-    let request_datetime = cx.props.request_datetime.unwrap_or(Utc::now());
+    let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);
     let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
 
     cx.render(rsx!(

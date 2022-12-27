@@ -1,4 +1,5 @@
-use dioxus::{prelude::*, events::KeyCode};
+use dioxus::{prelude::*};
+use dioxus_html::input_data::keyboard_types::Code;
 
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
@@ -222,7 +223,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         emit(&cx, val.to_string());
                     },
                     onkeyup: move |evt| {
-                        if evt.key_code == KeyCode::Enter {
+                        if evt.code() == Code::Enter {
                             emit_return(&cx, val.to_string());
                         }
                     }

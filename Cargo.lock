@@ -3338,6 +3338,7 @@ dependencies = [
  "dioxus-desktop",
  "dioxus-heroicons",
  "dioxus-hooks",
+ "dioxus-html",
  "glob",
  "humansize",
  "rsass",
