@@ -10,7 +10,7 @@ dioxus = { version = "0.2.4", features = ["desktop", "router"] }
 kit = { path = "../kit" }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
-warp = { git="https://github.com/Satellite-im/Warp.git", ref="master" }
+warp = { git = "https://github.com/Satellite-im/Warp.git", branch = "main" }
 names = "0.14.0"
 titlecase = "2.2.1"
 serde = "1.0.150"

@@ -5156,7 +5156,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp.git#ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"
+source = "git+https://github.com/Satellite-im/Warp.git?branch=main#ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"
 dependencies = [
  "aead 0.4.3",
  "aes-gcm",
@@ -5219,7 +5219,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp.git#ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"
+source = "git+https://github.com/Satellite-im/Warp.git?branch=main#ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"
 dependencies = [
  "paste",
  "quote",
