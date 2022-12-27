@@ -142,7 +142,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 ### Adding Friends
 - [ ] Search Bar should display *Username#0000* when user is not clicked into it. 
 - [ ] Error should appear when User has less than 4 chars typed.
-- [ ] Seach Input should display green indicator when User types more than 4 chars.
+- [ ] Search Input should display green indicator when User types more than 4 chars.
 
 **Incoming Request**
 - [ ] Incoming Friend Request should have an *X* or *Checkmark* next it.
@@ -190,7 +190,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Chat Sidebar should not appear when User is in Settings.
 
 ### Sidebar
-- [ ] Sidebar should persist throught Chat, Files, and Friends pages.
+- [ ] Sidebar should persist through Chat, Files, and Friends pages.
 - [ ] Sidebar should be hidden when User enters Settings. 
 - [ ] Sidebar should display Users favorite chats (If user has any).
 - [ ] User should be navigated to chat when they click a friend in their favorites.
