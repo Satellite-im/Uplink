@@ -158,14 +158,14 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let error = use_state(&cx, || String::from(""));
-    let val = use_state(&cx, || get_text(&cx));
+    let error = use_state(cx, || String::from(""));
+    let val = use_state(cx, || get_text(&cx));
     let default_options = Options::default();
     let options = match &cx.props.options {
         Some(opts) => opts,
         None => &default_options,
     };
-    let valid = use_state(&cx, || false);
+    let valid = use_state(cx, || false);
     let min_len = match options.with_validation {
         Some(opts) => opts.min_length.unwrap_or_default(),
         None => 0,

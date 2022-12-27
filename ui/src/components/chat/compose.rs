@@ -1,13 +1,13 @@
 
-use chrono::{DateTime, Utc};
+
 use dioxus::prelude::*;
 
 use warp::multipass::identity::Identity;
 
 use dioxus_desktop::use_window;
 
-use isolang::Language;
-use timeago::{languages::boxup, English};
+
+
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
 
@@ -18,7 +18,7 @@ use super::sidebar::build_participants_names;
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
     let message_groups = state.read().get_sort_messages(&active_chat);
 
@@ -50,9 +50,9 @@ pub fn Compose(cx: Scope) -> Element {
     //     .lookup(&*APP_LANG.read(), "messages.new")
     //     .unwrap_or_default();
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
-    let loading = use_state(&cx, || false);
+    let loading = use_state(cx, || false);
 
     cx.render(rsx!(
         div {

@@ -16,7 +16,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
 

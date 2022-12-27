@@ -31,11 +31,11 @@ pub enum FriendRoute {
 
 #[allow(non_snake_case)]
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
 
     let pending_friends = state.read().friends.incoming_requests.len();
 
-    let route = use_state(&cx, || FriendRoute::All);
+    let route = use_state(cx, || FriendRoute::All);
 
     cx.render(rsx!(
         div {
