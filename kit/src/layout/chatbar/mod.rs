@@ -79,16 +79,16 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "chatbar",
-            *&cx.props.with_replying_to.as_ref().unwrap(),
-            *&cx.props.with_file_upload.as_ref().unwrap(),
+            *&cx.props.with_replying_to.as_ref(),
+            *&cx.props.with_file_upload.as_ref(),
             Input {
                 // TODO: This should come from props
                 placeholder: cx.props.placeholder.clone(),
             },
-            *&cx.props.extensions.as_ref().unwrap(),
+            *&cx.props.extensions.as_ref(),
             div {
                 class: "controls",
-                *&cx.props.controls.as_ref().unwrap()
+                *&cx.props.controls.as_ref()
             }
         }
     ))
