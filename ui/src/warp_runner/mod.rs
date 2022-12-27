@@ -79,7 +79,7 @@ impl WarpRunner {
                 tokio::select! {
                     // RayGun events
                     // MultiPass events
-                    // ect
+                    // etc
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
