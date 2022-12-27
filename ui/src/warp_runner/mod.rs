@@ -19,6 +19,10 @@ pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
 pub type WarpEventTx = UnboundedSender<WarpEvent>;
 pub type WarpEventRx = Arc<Mutex<UnboundedReceiver<WarpEvent>>>;
 
+type Account = Box<dyn MultiPass>;
+type Storage = Box<dyn Constellation>;
+type Messaging = Box<dyn RayGun>;
+
 pub enum WarpEvent {
     None,
 }
@@ -113,14 +117,14 @@ async fn warp_initialization(
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract, None)
         .await
-        .map(|mp| Box::new(mp) as Box<dyn MultiPass>)?;
+        .map(|mp| Box::new(mp) as Account)?;
 
     let storage = warp_fs_ipfs::IpfsFileSystem::<warp_fs_ipfs::Persistent>::new(
         account.clone(),
         Some(FsIpfsConfig::production(&path)),
     )
     .await
-    .map(|ct| Box::new(ct) as Box<dyn Constellation>)?;
+    .map(|ct| Box::new(ct) as Storage)?;
 
     let messaging = warp_rg_ipfs::IpfsMessaging::<Persistent>::new(
         Some(RgIpfsConfig::production(&path)),
@@ -129,11 +133,7 @@ async fn warp_initialization(
         None,
     )
     .await
-    .map(|rg| Box::new(rg) as Box<dyn RayGun>)?;
+    .map(|rg| Box::new(rg) as Messaging)?;
 
     Ok((account, messaging, storage))
 }
-
-type Account = Box<dyn MultiPass>;
-type Storage = Box<dyn Constellation>;
-type Messaging = Box<dyn RayGun>;
