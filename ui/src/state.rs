@@ -137,7 +137,7 @@ impl PartialEq for Identity {
 
 impl Default for Identity {
     fn default() -> Self {
-        Self::from(Default::default())
+        Self::from(WarpIdentity::default())
     }
 }
 
