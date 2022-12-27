@@ -2,8 +2,8 @@ use chrono::{Utc, Duration};
 use dioxus::prelude::*;
 use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
 use rand::Rng;
-
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
+use warp::multipass::identity::Relationship;
+use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend}};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
@@ -41,11 +41,10 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             username: friend.username(),
                             suffix: did_suffix,
                             status_message: friend.status_message().unwrap_or_default(), 
-                            relationship: Relationship {
-                                friends: false,
-                                received_friend_request: false,
-                                sent_friend_request: true,
-                                blocked: false,
+                            relationship: {
+                                let mut relationship = Relationship::default();
+                                relationship.set_sent_friend_request(true);
+                                relationship
                             },
                             request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (

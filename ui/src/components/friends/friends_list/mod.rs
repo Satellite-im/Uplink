@@ -9,8 +9,10 @@ use kit::{
     icons::Icon,
 };
 
+use warp::multipass::identity::Relationship;
+
 use crate::{
-    components::friends::friend::{Friend, Relationship, SkeletalFriend},
+    components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
     utils::language::get_local_text,
 };
@@ -45,12 +47,8 @@ pub fn Friends(cx: Scope) -> Element {
                             let remove_friend_2 = remove_friend.clone();
                             let block_friend = friend.clone();
                             let block_friend_clone = friend.clone();
-                            let relationship = Relationship {
-                                friends: true,
-                                received_friend_request: false,
-                                sent_friend_request: false,
-                                blocked: false,
-                            };
+                            let mut relationship = Relationship::default();
+                            relationship.set_friends(true);
 
                             rsx!(
                                 ContextMenu {

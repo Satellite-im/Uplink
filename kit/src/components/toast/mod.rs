@@ -6,6 +6,8 @@ use crate::{
 use dioxus::prelude::*;
 use uuid::Uuid;
 
+#[allow(dead_code)]
+//TODO: Remove for apperance when it is used
 #[derive(Props)]
 pub struct Props<'a> {
     id: Uuid,
