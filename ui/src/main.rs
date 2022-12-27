@@ -186,14 +186,14 @@ fn bootstrap(cx: Scope) -> Element {
     };
 
     //use_init_atom_root(cx);
-    let _ = use_shared_state_provider(&cx, || state);
+    use_shared_state_provider(cx, || state);
 
-    let state = use_shared_state::<State>(&cx)?;
-    let toggle = use_state(&cx, || false);
-    let warp_rx = use_state(&cx, || WARP_CHANNELS.1.clone());
+    let state = use_shared_state::<State>(cx)?;
+    let toggle = use_state(cx, || false);
+    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle];
         async move {
             //println!("starting toast use_future");
@@ -214,7 +214,7 @@ fn bootstrap(cx: Scope) -> Element {
     });
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle, warp_rx];
         async move {
             //println!("starting warp_runner use_future");
@@ -273,7 +273,7 @@ fn bootstrap(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
