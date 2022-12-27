@@ -70,7 +70,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         "#{cx.props.suffix}"
                     }
                 },
-                if relationship.friends() || relationship.blocked() {
+                if relationship.friends() || !relationship.blocked() {
                    rsx!(p {
                         class: "status-message",
                         "{status_message}"
