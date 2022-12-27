@@ -210,7 +210,7 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
 
         identity.set_identity_status(status);
         
-        let platform = match rng.gen_range(0..2) {
+        let platform = match rng.gen_range(0..1) {
             0 => Platform::Desktop,
             1 => Platform::Mobile,
             _ => Platform::Unknown,
