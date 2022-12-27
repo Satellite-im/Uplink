@@ -1,7 +1,6 @@
 
 use dioxus::{prelude::*, desktop::use_window};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
-use warp::multipass::identity::Identity;
 
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};
 
@@ -14,12 +13,9 @@ pub fn Compose(cx: Scope) -> Element {
     let message_groups = state.read().get_sort_messages(&active_chat);
 
     let without_me = state.read().get_without_me(active_chat.participants.clone());
-    let active_participant = without_me.first();
+    let active_participant = without_me.first().cloned();
 
-    let active_participant = match active_participant {
-        Some(u) => u.clone(),
-        None => Identity::default(),
-    };
+    let active_participant = active_participant.unwrap_or_default();
 
     let subtext = active_participant.status_message().unwrap_or_default();
 

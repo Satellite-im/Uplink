@@ -13,11 +13,11 @@ use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
 use warp::{
-    multipass::identity::{Graphics, Identity},
+    multipass::identity::{Graphics},
     raygun::Message,
 };
 
-use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State, ToastNotification, UI};
+use crate::state::{Account, Chat, Chats, Friends, Route, Settings, State, ToastNotification, UI, Identity};
 
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
