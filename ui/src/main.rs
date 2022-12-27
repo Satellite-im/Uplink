@@ -93,7 +93,7 @@ fn copy_assets() {
             options.skip_exist = true;
             options.copy_inside = true;
 
-            if let Err(error) = copy("ui/extra/themes", cache_path.join("themes"), &options) {
+            if let Err(error) = copy("ui/extra/themes", cache_path, &options) {
                 log::error!("Error on copy themes {error}");
             }
         }

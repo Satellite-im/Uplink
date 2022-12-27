@@ -172,7 +172,7 @@
     padding: var(--gap);
     justify-content: space-between;
     background: var(--secondary-dark);
-    margin: 0 var(--gap);
+    margin: 0 var(--gap) var(--gap) var(--gap);
     border: 1px solid var(--success-light);
     border-radius: var(--border-radius);
     .call-info {

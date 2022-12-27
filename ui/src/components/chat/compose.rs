@@ -224,7 +224,7 @@ pub fn Compose(cx: Scope) -> Element {
                 controls: cx.render(rsx!(
                     Button {
                         icon: Icon::ChevronDoubleRight,
-                        disabled: **loading,
+                        // disabled: **loading,
                         appearance: Appearance::Secondary,
                         tooltip: cx.render(rsx!(
                             Tooltip { 
@@ -258,7 +258,7 @@ pub fn Compose(cx: Scope) -> Element {
                 with_file_upload: cx.render(rsx!(
                     Button {
                         icon: Icon::Plus,
-                        disabled: **loading,
+                        // disabled: **loading,
                         appearance: Appearance::Primary,
                         tooltip: cx.render(rsx!(
                             Tooltip { 

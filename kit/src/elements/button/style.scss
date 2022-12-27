@@ -4,7 +4,7 @@
 	border: none;
 	height: var(--height-input);
 	border-radius: var(--border-radius-more);
-	background: var(--primary);
+	background-color: var(--primary);
 	color: var(--text-color-bright);
 	gap: var(--gap);
 	padding: 0 var(--padding);
@@ -51,17 +51,17 @@
         }
     }
     &.appearance-transparent {
-        background: transparent;
+        background-color: transparent;
         &:hover {
-            background: var(--secondary);
+            background-color: var(--secondary);
         }
     }
     &.appearance-disabled {
         cursor: default;
         opacity: 0.5;
-        background: var(--secondary-dark);
+        background-color: var(--secondary-dark);
         &:hover {
-            background: var(--secondary-dark);
+            background-color: var(--secondary-dark);
         }
     }
     
