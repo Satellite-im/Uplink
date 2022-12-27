@@ -79,7 +79,7 @@ settings-extensions = Extension Settings
     .placeholder = Placeholder
     .open-extensions-folder = Open Extensions Folder
 
-settings-privacy = SettingsPrivacy 
+settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
     .backup-phrase = Backup Phrase
     .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.
@@ -93,8 +93,6 @@ settings-files = Files Settings
     .local-sync-description = When enabled, files will be synced to your local machine.
     .open-sync-folder = Open Sync Folder
     .open-sync-folder-description = Open the folder where your files are synced to.
-    
-    
 
 settings-developer = Developer Settings 
     .developer-mode = Developer Mode
