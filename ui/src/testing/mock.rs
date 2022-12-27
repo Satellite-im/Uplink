@@ -12,7 +12,7 @@ use rand::{seq::SliceRandom, Rng};
 use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
-use warp::{multipass::identity::Graphics, raygun::Message};
+use warp::{multipass::identity::{Graphics, Platform, IdentityStatus}, raygun::Message};
 
 use crate::state::{
     Account, Chat, Chats, Friends, Identity, Route, Settings, State, ToastNotification, UI,
@@ -173,7 +173,7 @@ fn fake_id() -> Identity {
 
 fn generate_random_identities(count: usize) -> Vec<Identity> {
     let mut identities: Vec<Identity> = Vec::new();
-
+    let mut rng = rand::thread_rng();
     for _ in 0..count {
         let mut identity = fake_id();
 
@@ -200,7 +200,23 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         let mut graphics = Graphics::default();
         graphics.set_profile_picture(&image_url);
         graphics.set_profile_banner(&image_url);
+        
+        let status = match rng.gen_range(0..3) {
+            0 => IdentityStatus::Online,
+            1 => IdentityStatus::Away,
+            2 => IdentityStatus::Busy,
+            _ => IdentityStatus::Offline
+        };
 
+        identity.set_identity_status(status);
+        
+        let platform = match rng.gen_range(0..2) {
+            0 => Platform::Desktop,
+            1 => Platform::Mobile,
+            _ => Platform::Unknown,
+        };
+
+        identity.set_platform(platform);
         identity.set_graphics(graphics);
 
         identities.push(identity);
