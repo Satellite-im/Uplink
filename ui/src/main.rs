@@ -1,7 +1,8 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use std::fs;
-
+use crate::warp_runner::{WarpCmdRx, WarpEventRx};
+use crate::warp_runner::{WarpCmdTx, WarpEventTx};
+use clap::Parser;
 use dioxus::core::to_owned;
 use dioxus::desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
@@ -10,13 +11,17 @@ use dioxus::desktop::{tao, use_window};
 use dioxus::prelude::*;
 use fs_extra::dir::*;
 use kit::elements::Appearance;
-use tokio::time::{sleep, Duration};
-
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
+use once_cell::sync::Lazy;
 use state::State;
+use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
+use tokio::sync::Mutex;
+use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::media::popout_player::PopoutPlayer;
@@ -25,6 +30,7 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
+use crate::warp_runner::WarpEvent;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
@@ -37,6 +43,7 @@ pub mod layouts;
 pub mod state;
 pub mod testing;
 pub mod utils;
+mod warp_runner;
 
 use fluent_templates::static_loader;
 
@@ -48,6 +55,33 @@ static_loader! {
         // should only set to false when testing.
         customise: |bundle| bundle.set_use_isolating(false),
     };
+}
+
+// allows the UI to receive events to Warp
+// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
+pub static WARP_CHANNELS: Lazy<(WarpEventTx, WarpEventRx)> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    (tx, Arc::new(Mutex::new(rx)))
+});
+
+// allows the UI to send commands to Warp
+pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    (tx, Arc::new(Mutex::new(rx)))
+});
+
+pub static DEFAULT_PATH: Lazy<PathBuf> = Lazy::new(|| match Opt::parse().path {
+    Some(path) => path,
+    _ => dirs::home_dir().unwrap_or_default().join(".warp"),
+});
+
+#[derive(Debug, Parser)]
+#[clap(name = "")]
+struct Opt {
+    #[clap(long)]
+    path: Option<PathBuf>,
+    #[clap(long)]
+    experimental_node: bool,
 }
 
 fn copy_assets() {
@@ -136,6 +170,10 @@ fn main() {
 }
 
 fn bootstrap(cx: Scope) -> Element {
+    //println!("rendering bootstrap");
+    let mut warp_runner = warp_runner::WarpRunner::init();
+    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
+
     let state = match State::load() {
         Ok(s) => s,
         Err(_) => State::default(),
@@ -149,11 +187,13 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
     let toggle = use_state(&cx, || false);
+    let warp_rx = use_state(&cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
     use_future(&cx, (), |_| {
         to_owned![toggle];
         async move {
+            //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
                 {
@@ -165,6 +205,23 @@ fn app(cx: Scope) -> Element {
                         let flag = *toggle.current();
                         toggle.set(!flag);
                     }
+                }
+            }
+        }
+    });
+
+    let inner = state.inner();
+    use_future(&cx, (), |_| {
+        to_owned![toggle, warp_rx];
+        async move {
+            //println!("starting warp_runner use_future");
+            // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
+            // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
+            let mut ch = warp_rx.lock().await;
+            while let Some(evt) = ch.recv().await {
+                if warp_runner::handle_event(inner.clone(), evt).await {
+                    let flag = *toggle.current();
+                    toggle.set(!flag);
                 }
             }
         }
