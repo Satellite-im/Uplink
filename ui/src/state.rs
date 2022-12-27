@@ -725,19 +725,11 @@ impl State {
                 .push(friend.clone());
         }
 
-        // Sort the keys of the HashMap alphabetically
-        let mut sorted_keys: Vec<char> = friends_by_first_letter.keys().cloned().collect();
-        sorted_keys.sort_unstable();
-
-        // Create a new HashMap with the same values as friends_by_first_letter, but with
-        // the keys in alphabetical order
-        let mut sorted_friends_by_first_letter: BTreeMap<char, Vec<Identity>> = BTreeMap::new();
-        for key in sorted_keys {
-            sorted_friends_by_first_letter
-                .insert(key, friends_by_first_letter.get(&key).unwrap().clone());
+        for (_, list) in friends_by_first_letter.iter_mut() {
+            list.sort_by_key(|a| a.username())
         }
 
-        sorted_friends_by_first_letter
+        friends_by_first_letter
     }
 
     pub fn clear(&mut self) {
