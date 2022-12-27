@@ -1,12 +1,10 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use std::fs;
-
-use dioxus::core::to_owned;
-use dioxus::desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
 use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus_desktop::{tao, use_window};
+use std::fs;
 
 use dioxus::prelude::*;
 use dioxus_desktop::tao::menu::AboutMetadata;

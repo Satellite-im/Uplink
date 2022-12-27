@@ -9,7 +9,6 @@ use dioxus_desktop::use_window;
 use isolang::Language;
 use timeago::{languages::boxup, English};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
-use warp::multipass::identity::Identity;
 
 
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};

@@ -1,11 +1,23 @@
 use dioxus::prelude::*;
-use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
+    elements::label::Label,
+    icons::Icon,
+};
 
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
+use crate::{
+    components::friends::friend::{Friend, Relationship},
+    state::{Action, State},
+    utils::language::get_local_text,
+};
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(&cx).unwrap();
     let block_list = state.read().friends.blocked.clone();
 
     cx.render(rsx! (
@@ -37,7 +49,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                         Friend {
                             username: blocked_user.username(),
                             suffix: did_suffix,
-                            status_message: blocked_user.status_message().unwrap_or_default(), 
+                            status_message: blocked_user.status_message().unwrap_or_default(),
                             relationship: Relationship {
                                 friends: false,
                                 received_friend_request: false,

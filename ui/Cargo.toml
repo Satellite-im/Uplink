@@ -10,6 +10,7 @@ dioxus = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 dioxus-hooks = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 dioxus-router = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
+dioxus-core = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 fermi = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
 kit = { path = "../kit" }
 

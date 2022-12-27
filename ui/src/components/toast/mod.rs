@@ -19,7 +19,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn Toast(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx).unwrap();
     cx.render(rsx!(kit::components::toast::Toast {
         id: cx.props.id,
         on_hover: move |_| state.write_silent().reset_toast_timer(&cx.props.id),

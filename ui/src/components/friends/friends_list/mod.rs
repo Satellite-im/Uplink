@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_router::use_router;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -17,7 +18,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(&cx).unwrap();
     let friends_list = state.read().friends.all.clone();
     let friends = State::get_friends_by_first_letter(friends_list);
 

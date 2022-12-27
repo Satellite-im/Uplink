@@ -1,9 +1,4 @@
 use crate::{components::user_image::UserImage, elements::label::Label, User};
-use crate::{
-    components::user_image::{UserImage, UserImageLoading},
-    elements::label::Label,
-    User,
-};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -44,7 +39,6 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             rsx! (
                 div {
                     class: "user-group-skeletal",
-                    UserImageLoading {},
                     (cx.props.with_username.is_some()).then(|| rsx!(
                         div { class: "skeletal skeletal-bar smaller" }
                     ))
