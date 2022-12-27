@@ -1,9 +1,6 @@
-use std::{
-    ops::{Deref, DerefMut},
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::Arc};
 
+use dioxus::prelude::ProvidedStateInner;
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
@@ -15,7 +12,7 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
-use crate::DEFAULT_PATH;
+use crate::{state::State, DEFAULT_PATH};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -51,9 +48,7 @@ impl WarpRunner {
 
     // spawns a thread which will terminate when WarpRunner is dropped
     pub fn run(&mut self, tx: WarpEventTx, rx: WarpCmdRx) {
-        if self.ran_once {
-            panic!("WarpRunner called run() multiple times");
-        }
+        assert!(self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
         let tesseract = match Tesseract::from_file(DEFAULT_PATH.join(".keystore")) {
@@ -67,16 +62,15 @@ impl WarpRunner {
             }
         };
 
-        let (account, messaging, storage) = match warp::async_block_in_place_uncheck(
-            warp_initialization(DEFAULT_PATH.clone(), tesseract.clone(), false),
-        ) {
-            Ok((i, c, s)) => (Account(i.clone()), Messaging(c.clone()), Storage(s.clone())),
-            Err(_e) => todo!(),
-        };
-
         let notify = self.notify.clone();
         tokio::spawn(async move {
             // todo: register for events from warp
+
+            let (account, messaging, storage) =
+                match warp_initialization(DEFAULT_PATH.clone(), tesseract.clone(), false).await {
+                    Ok((i, c, s)) => (i, c, s),
+                    Err(_e) => todo!(),
+                };
 
             // this was the only way to get a mutable static variable. but this channel should only be read here.
             let mut rx = rx.lock().await;
@@ -101,11 +95,20 @@ impl WarpRunner {
     }
 }
 
+// this is called by `main.rs` from within a `use_future` and used to modify state. returns `true` if stae has been modified
+// this keeps the size of main.rs small.
+pub async fn handle_event(state: Rc<RefCell<ProvidedStateInner<State>>>, event: WarpEvent) -> bool {
+    match event {
+        WarpEvent::None => todo!(),
+    }
+    false
+}
+
 async fn warp_initialization(
     path: PathBuf,
     tesseract: Tesseract,
     experimental: bool,
-) -> Result<(Box<dyn MultiPass>, Box<dyn RayGun>, Box<dyn Constellation>), warp::error::Error> {
+) -> Result<(Account, Messaging, Storage), warp::error::Error> {
     let config = MpIpfsConfig::production(&path, experimental);
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract, None)
@@ -131,68 +134,6 @@ async fn warp_initialization(
     Ok((account, messaging, storage))
 }
 
-#[derive(Clone)]
-pub struct Account(pub Box<dyn MultiPass>);
-
-impl Deref for Account {
-    type Target = Box<dyn MultiPass>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Account {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl PartialEq for Account {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.id() == other.0.id()
-    }
-}
-
-#[derive(Clone)]
-pub struct Storage(pub Box<dyn Constellation>);
-
-impl Deref for Storage {
-    type Target = Box<dyn Constellation>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Storage {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl PartialEq for Storage {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.id() == other.0.id()
-    }
-}
-
-#[derive(Clone)]
-pub struct Messaging(Box<dyn RayGun>);
-
-impl Deref for Messaging {
-    type Target = Box<dyn RayGun>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Messaging {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl PartialEq for Messaging {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.id() == other.0.id()
-    }
-}
+type Account = Box<dyn MultiPass>;
+type Storage = Box<dyn Constellation>;
+type Messaging = Box<dyn RayGun>;

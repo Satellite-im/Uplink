@@ -216,8 +216,9 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                match evt {
-                    WarpEvent::None => todo!(),
+                if warp_runner::handle_event(inner.clone(), evt).await {
+                    let flag = *toggle.current();
+                    toggle.set(!flag);
                 }
             }
         }
