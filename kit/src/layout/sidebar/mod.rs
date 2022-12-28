@@ -17,13 +17,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "sidebar",
             div {
                 class: "search",
-                *&cx.props.with_search.as_ref()
+                cx.props.with_search.as_ref()
             },
             div {
                 class: "children",
-                *&cx.props.children.as_ref()
+                cx.props.children.as_ref()
             },
-            *&cx.props.with_nav.as_ref(),
+            cx.props.with_nav.as_ref(),
         }
     ))
 }

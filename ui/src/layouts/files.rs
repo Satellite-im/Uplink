@@ -28,7 +28,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     cx.render(rsx!(
         div {

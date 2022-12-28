@@ -57,7 +57,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             },
             (cx.props.user_image.is_some() && remote_message).then(|| rsx! (
-                *&cx.props.user_image.as_ref()
+                cx.props.user_image.as_ref()
             )),
             (cx.props.with_text.is_some()).then(|| rsx! (
                 div {
@@ -78,7 +78,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             )),
             (cx.props.user_image.is_some() && !remote_message).then(|| rsx! (
-                *&cx.props.user_image.as_ref()
+                cx.props.user_image.as_ref()
             )),
         }
     ))

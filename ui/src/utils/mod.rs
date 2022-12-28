@@ -6,7 +6,7 @@ use crate::state::Theme;
 
 pub mod format_timestamp;
 pub mod language;
-pub mod notifications;
+//pub mod notifications;
 pub mod sounds;
 
 pub fn get_available_themes() -> Vec<Theme> {
@@ -24,7 +24,7 @@ pub fn get_available_themes() -> Vec<Theme> {
         if file.metadata().unwrap().is_file() {
             let theme = file.path().display().to_string();
 
-            let theme_str = theme.split("/").last().unwrap();
+            let theme_str = theme.split('/').last().unwrap();
             let pretty_theme_str = &theme_str.replace(".scss", "");
             let pretty_theme_str = titlecase(pretty_theme_str);
 

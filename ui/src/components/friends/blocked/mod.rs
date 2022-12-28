@@ -17,7 +17,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx).unwrap();
     let block_list = state.read().friends.blocked.clone();
 
     cx.render(rsx! (

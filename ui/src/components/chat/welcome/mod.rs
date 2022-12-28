@@ -10,7 +10,7 @@ use crate::utils::language::get_local_text;
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
-    let router = use_router(&cx).clone();
+    let router = use_router(cx).clone();
     let cta_text = get_local_text("friends.add");
     cx.render(rsx! {
         div {

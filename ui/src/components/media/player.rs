@@ -27,7 +27,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     let silenced = state.read().ui.silenced;
@@ -134,7 +134,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    use_router(&cx).replace_route("/settings", None, None);
+                    use_router(cx).replace_route("/settings", None, None);
                 }
             },
         }

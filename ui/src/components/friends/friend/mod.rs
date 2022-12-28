@@ -1,6 +1,5 @@
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
-use dioxus_router::*;
 
 use kit::{
     components::{
@@ -59,11 +58,11 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let state = use_shared_state::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
     let active_language = state.read().settings.language.clone();
     let relationship = cx.props.relationship.clone();
     let status_message = cx.props.status_message.clone();
-    let request_datetime = cx.props.request_datetime.clone().unwrap_or(Utc::now());
+    let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);
     let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
 
     cx.render(rsx!(
