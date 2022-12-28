@@ -6,12 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
-dioxus-hooks = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
-dioxus-router = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
-dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
-dioxus-core = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
-fermi = { git="https://github.com/DioxusLabs/dioxus", branch = "master" }
+dioxus = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
+dioxus-hooks = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
+dioxus-router = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
+dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
+dioxus-core = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
+fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "4aac2cdae16faea2a7c24250d1d8465eeda1d26a" }
 kit = { path = "../kit" }
 
 uuid = { version = "1.0", features = ["serde", "v4"] }
