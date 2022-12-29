@@ -4,11 +4,8 @@ use warp::{multipass::identity::Identity, raygun::Message};
 use dioxus_router::*;
 use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
-use dioxus::{prelude::*, desktop::use_window};
-use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
-use warp::raygun::Message;
 
-use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, utils::language::get_local_text};
 
 #[derive(PartialEq, Props)]
 pub struct Props {

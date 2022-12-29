@@ -13,12 +13,6 @@ use kit::{
     elements::label::Label,
     icons::Icon,
 };
-
-use crate::{
-    components::friends::friend::{Friend, Relationship},
-    state::{Action, State},
-    utils::language::get_local_text,
-};
 use warp::multipass::identity::Relationship;
 
 #[allow(non_snake_case)]
