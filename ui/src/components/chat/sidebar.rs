@@ -250,7 +250,48 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             }
                         }
                     )}
-                )
+                ),
+                sidebar_chats.is_empty().then(|| rsx!(
+                    div {
+                        class: "skeletal-steady",
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                    }
+                ))
             },
             active_media_chat.is_some().then(|| rsx!(
                 RemoteControls {

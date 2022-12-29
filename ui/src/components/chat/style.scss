@@ -96,3 +96,20 @@
     display: inline-flex;
     flex-direction: column;
 }
+
+.skeletal-steady {
+    & div:nth-child(1) {
+        opacity: 1;
+    }
+
+    & div:nth-child(2) {
+        opacity: 0.5;
+    }
+
+    & div:nth-child(3) {
+        opacity: 0.35;
+    }
+    .skeletal {
+        animation: none;
+    }
+}
