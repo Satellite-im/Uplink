@@ -56,6 +56,7 @@ files = Files
 
 settings = Settings
     .settings = Settings
+    .profile = Profile
     .general = General 
     .files = Files
     .privacy = Privacy

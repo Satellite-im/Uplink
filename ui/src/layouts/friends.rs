@@ -48,7 +48,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "friends-controls",
                     Button {
-                        icon: Icon::User,
+                        icon: Icon::Users,
                         text: get_local_text("friends.all"),
                         appearance: if route.clone() == FriendRoute::All { Appearance::Primary } else { Appearance::Secondary },
                         onpress: move |_| {
