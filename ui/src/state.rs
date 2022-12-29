@@ -2,15 +2,16 @@ use chrono::{DateTime, Utc};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs,
+    hash::Hash,
 };
 
 use uuid::Uuid;
 use warp::{
     constellation::item::Item,
     crypto::DID,
-    multipass::identity::Identity,
+    multipass::identity::{Identity as WarpIdentity, IdentityStatus, Platform},
     raygun::{Message, Reaction},
 };
 
@@ -111,6 +112,76 @@ pub struct Account {
     pub identity: Identity,
     // pub settings: Option<CustomSettings>,
     // pub profile: Option<Profile>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq)]
+pub struct Identity {
+    identity: WarpIdentity,
+    status: IdentityStatus,
+    platform: Platform,
+}
+
+impl Hash for Identity {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.identity.hash(state)
+    }
+}
+
+impl PartialEq for Identity {
+    fn eq(&self, other: &Self) -> bool {
+        self.identity.eq(&other.identity)
+            && self.status.eq(&other.status)
+            && self.platform.eq(&other.platform)
+    }
+}
+
+impl Default for Identity {
+    fn default() -> Self {
+        Self::from(WarpIdentity::default())
+    }
+}
+
+impl From<WarpIdentity> for Identity {
+    fn from(identity: WarpIdentity) -> Self {
+        Identity {
+            identity,
+            status: IdentityStatus::Offline,
+            platform: Default::default(),
+        }
+    }
+}
+
+impl core::ops::Deref for Identity {
+    type Target = WarpIdentity;
+    fn deref(&self) -> &Self::Target {
+        &self.identity
+    }
+}
+
+impl core::ops::DerefMut for Identity {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.identity
+    }
+}
+
+impl Identity {
+    pub fn identity_status(&self) -> IdentityStatus {
+        self.status
+    }
+
+    pub fn platform(&self) -> Platform {
+        self.platform
+    }
+}
+
+impl Identity {
+    pub fn set_identity_status(&mut self, status: IdentityStatus) {
+        self.status = status;
+    }
+
+    pub fn set_platform(&mut self, platform: Platform) {
+        self.platform = platform;
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -635,8 +706,8 @@ impl State {
 
     pub fn get_friends_by_first_letter(
         friends: HashMap<DID, Identity>,
-    ) -> HashMap<char, Vec<Identity>> {
-        let mut friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
+    ) -> BTreeMap<char, Vec<Identity>> {
+        let mut friends_by_first_letter: BTreeMap<char, Vec<Identity>> = BTreeMap::new();
 
         // Iterate over the friends and add each one to the appropriate Vec in the
         // friends_by_first_letter HashMap
@@ -654,19 +725,11 @@ impl State {
                 .push(friend.clone());
         }
 
-        // Sort the keys of the HashMap alphabetically
-        let mut sorted_keys: Vec<char> = friends_by_first_letter.keys().cloned().collect();
-        sorted_keys.sort_unstable();
-
-        // Create a new HashMap with the same values as friends_by_first_letter, but with
-        // the keys in alphabetical order
-        let mut sorted_friends_by_first_letter: HashMap<char, Vec<Identity>> = HashMap::new();
-        for key in sorted_keys {
-            sorted_friends_by_first_letter
-                .insert(key, friends_by_first_letter.get(&key).unwrap().clone());
+        for (_, list) in friends_by_first_letter.iter_mut() {
+            list.sort_by_key(|a| a.username())
         }
 
-        sorted_friends_by_first_letter
+        friends_by_first_letter
     }
 
     pub fn clear(&mut self) {
