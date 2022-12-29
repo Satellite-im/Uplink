@@ -4,6 +4,8 @@
 	position: relative;
 	height: fit-content;
 	width: 100%;
+	transition: background-color var(--animation-time);
+
 	&.active {
 		background-color: var(--secondary-dark);
 	}
@@ -41,7 +43,7 @@
 	}
 	.badge-prefix {
 		height: 100%;
-		background: var(--secondary-dark);
+		background-color: var(--secondary-dark);
 		padding: var(--gap-less) var(--gap);
 		border-bottom-left-radius: var(--border-radius-less);
 		border-top-left-radius: var(--border-radius-less);
@@ -49,7 +51,7 @@
 	}
 	.badge-count {
 		height: 100%;
-		background: var(--primary);
+		background-color: var(--primary);
 		padding: var(--gap-less) var(--gap);
 		border-bottom-right-radius: var(--border-radius-less);
 		border-top-right-radius: var(--border-radius-less);

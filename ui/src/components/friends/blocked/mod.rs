@@ -1,7 +1,19 @@
+use crate::{
+    components::friends::friend::Friend,
+    state::{Action, State},
+    utils::language::get_local_text,
+};
 use dioxus::prelude::*;
-use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
-
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        indicator::{Platform, Status},
+        user_image::UserImage,
+    },
+    elements::label::Label,
+    icons::Icon,
+};
+use warp::multipass::identity::Relationship;
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
@@ -19,7 +31,17 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
-
+                let platform = match blocked_user.platform() {
+                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                    _ => Platform::Headless //TODO: Unknown
+                };
+                let status = match blocked_user.identity_status() {
+                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -37,17 +59,16 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                         Friend {
                             username: blocked_user.username(),
                             suffix: did_suffix,
-                            status_message: blocked_user.status_message().unwrap_or_default(), 
-                            relationship: Relationship {
-                                friends: false,
-                                received_friend_request: false,
-                                sent_friend_request: false,
-                                blocked: true,
+                            status_message: blocked_user.status_message().unwrap_or_default(),
+                            relationship: {
+                                let mut relationship = Relationship::default();
+                                relationship.set_blocked(true);
+                                relationship   
                             },
                             user_image: cx.render(rsx! (
                                 UserImage {
-                                    platform: Platform::Desktop,
-                                    status: Status::Online,
+                                    platform: platform,
+                                    status: status,
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),

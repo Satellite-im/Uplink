@@ -2,8 +2,8 @@ use chrono::{Utc, Duration};
 use dioxus::prelude::*;
 use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
 use rand::Rng;
-
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend, Relationship}};
+use warp::multipass::identity::Relationship;
+use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend}};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
@@ -22,7 +22,17 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let mut rng = rand::thread_rng();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
-
+                let platform = match friend.platform() {
+                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                    _ => Platform::Headless //TODO: Unknown
+                };
+                let status = match friend.identity_status() {
+                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -41,17 +51,16 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             username: friend.username(),
                             suffix: did_suffix,
                             status_message: friend.status_message().unwrap_or_default(), 
-                            relationship: Relationship {
-                                friends: false,
-                                received_friend_request: false,
-                                sent_friend_request: true,
-                                blocked: false,
+                            relationship: {
+                                let mut relationship = Relationship::default();
+                                relationship.set_sent_friend_request(true);
+                                relationship
                             },
                             request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
-                                    platform: Platform::Desktop,
-                                    status: Status::Online,
+                                    platform: platform,
+                                    status: status,
                                     image: friend.graphics().profile_picture()
                                 }
                             )),

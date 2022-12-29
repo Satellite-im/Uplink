@@ -9,8 +9,10 @@ use kit::{
     icons::Icon,
 };
 
+use warp::multipass::identity::Relationship;
+
 use crate::{
-    components::friends::friend::{Friend, Relationship, SkeletalFriend},
+    components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
     utils::language::get_local_text,
 };
@@ -45,13 +47,19 @@ pub fn Friends(cx: Scope) -> Element {
                             let remove_friend_2 = remove_friend.clone();
                             let block_friend = friend.clone();
                             let block_friend_clone = friend.clone();
-                            let relationship = Relationship {
-                                friends: true,
-                                received_friend_request: false,
-                                sent_friend_request: false,
-                                blocked: false,
+                            let mut relationship = Relationship::default();
+                            relationship.set_friends(true);
+                            let platform = match friend.platform() {
+                                warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                                warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                                _ => Platform::Headless //TODO: Unknown
                             };
-
+                            let status = match friend.identity_status() {
+                                warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                                warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                                warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                                warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                            };
                             rsx!(
                                 ContextMenu {
                                     id: format!("{}-friend-listing", did),
@@ -102,8 +110,8 @@ pub fn Friends(cx: Scope) -> Element {
                                         relationship: relationship,
                                         user_image: cx.render(rsx! (
                                             UserImage {
-                                                platform: Platform::Desktop,
-                                                status: Status::Online,
+                                                platform: platform,
+                                                status: status,
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),
