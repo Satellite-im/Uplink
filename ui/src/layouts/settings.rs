@@ -6,7 +6,7 @@ use crate::components::{
         sidebar::{Page, Sidebar},
         sub_pages::{
             audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-            files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings,
+            files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings, profile::ProfileSettings,
         },
     },
 };
@@ -30,6 +30,9 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 }
             },
             match to.get() {
+                Page::Profile       => cx.render(rsx! (
+                    ProfileSettings {}
+                )),
                 Page::General       => cx.render(rsx! (
                     GeneralSettings {}
                 )),

@@ -4,3 +4,4 @@ pub mod extensions;
 pub mod files;
 pub mod general;
 pub mod privacy;
+pub mod profile;

@@ -1,0 +1,30 @@
+.profile-header {
+    background: var(--theme-text-muted);
+    border-radius: 8px 8px 0 0;
+    height: 140px;
+    margin-bottom: 40px;
+    margin-left: width / 2;
+
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    justify-items: center;
+    
+  }
+  
+  .profile-picture {
+    margin-top: 80px;
+    display:flex;
+   justify-content:center;
+  }
+
+  .profile_photo {
+    border: 2px solid var(--theme-foreground);
+    border-radius: 100px;
+    height: 100px;
+    width: 100px;
+    object-fit: cover;
+    display:flex;
+   justify-content:center;
+  }
