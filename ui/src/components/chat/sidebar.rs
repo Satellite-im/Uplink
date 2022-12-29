@@ -4,8 +4,11 @@ use warp::{multipass::identity::Identity, raygun::Message};
 use dioxus_router::*;
 use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
+use dioxus::{prelude::*, desktop::use_window};
+use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
+use warp::raygun::Message;
 
-use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat}, utils::language::get_local_text};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -20,9 +23,20 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
     for identity in identities {
         // For each identity, create a new UserInfo object and set its fields
         // to the corresponding values from the identity object
+        let platform = match identity.platform() {
+            warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+            warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+            _ => Platform::Headless //TODO: Unknown
+        };
+        let status = match identity.identity_status() {
+            warp::multipass::identity::IdentityStatus::Online => Status::Online,
+            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+        };
         user_info.push(UserInfo {
-            platform: Platform::Mobile,
-            status: Status::Online,
+            platform,
+            status,
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -164,9 +178,18 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let without_me = state.read().get_without_me(chat.participants.clone());
                     let user = without_me.first();
                     let default_message = Message::default();
-                    let parsed_user = match user {
-                        Some(u) => u.clone(),
-                        None => Identity::default(),
+                    let parsed_user = user.cloned().unwrap_or_default();
+
+                    let platform = match parsed_user.platform() {
+                        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
+                        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
+                        _ => Platform::Headless //TODO: Unknown
+                    };
+                    let status = match parsed_user.identity_status() {
+                        warp::multipass::identity::IdentityStatus::Online => Status::Online,
+                        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+                        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+                        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
                     };
 
                     let last_message = chat.messages.last();
@@ -233,8 +256,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 user_image: cx.render(rsx!(
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
-                                            platform: Platform::Mobile,
-                                            status: Status::Online
+                                            platform: platform,
+                                            status: status,
                                             image: parsed_user.graphics().profile_picture(),
                                         }
                                     )} else {rsx! (
@@ -253,7 +276,48 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             }
                         }
                     )}
-                )
+                ),
+                sidebar_chats.is_empty().then(|| rsx!(
+                    div {
+                        class: "skeletal-steady",
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                    }
+                ))
             },
             active_media_chat.is_some().then(|| rsx!(
                 RemoteControls {
@@ -262,7 +326,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     unmute_text: get_local_text("remote-controls.unmute"),
                     listen_text: get_local_text("remote-controls.listen"),
                     silence_text: get_local_text("remote-controls.silence"),
-                   end_text: get_local_text("remote-controls.end"),
+                    end_text: get_local_text("remote-controls.end"),
                 }
             )),
         }
