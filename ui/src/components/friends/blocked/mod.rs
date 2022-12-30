@@ -60,12 +60,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             username: blocked_user.username(),
                             suffix: did_suffix,
                             status_message: blocked_user.status_message().unwrap_or_default(),
-                            relationship: Relationship {
-                                friends: false,
-                                received_friend_request: false,
-                                sent_friend_request: false,
-                                blocked: true,
-                            },
+                            relationship: Relationship::default(),
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
