@@ -65,6 +65,10 @@ settings = Settings
     .developer = Desenvolvedor
     .search-placeholder = Procurar configuração...
 
+settings-profile = Profile Settings
+    .change-banner = Mudar banner
+    .change-avatar = Mudar avatar
+
 settings-general = General Settings
     .splash-screen = Splash Screen
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.

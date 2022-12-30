@@ -26,7 +26,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
 
     let themes = get_available_themes();
-
+    let change_banner_text = get_local_text("settings-profile.change-banner");
+    let change_avatar_text = get_local_text("settings-profile.change-avatar");
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -41,7 +42,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         width: "100%",
                         onclick: move |_| change_profile_image(banner_state),
                     },
-                    p {class: "change-banner-text",  "Change Banner" },
+                    p {class: "change-banner-text", "{change_banner_text}" },
             },
                 div {
                     class: "profile-picture",
@@ -50,7 +51,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         src: "{image_state}",
                         onclick: move |_| change_profile_image(image_state),
                     },
-                    p {class: "change-avatar-text",  "Change Avatar" },
+                    p {class: "change-avatar-text", "{change_avatar_text}" },
                 }
                 div {
                     class: "plus-button", 

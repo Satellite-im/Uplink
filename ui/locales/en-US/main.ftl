@@ -65,6 +65,10 @@ settings = Settings
     .developer = Developer
     .search-placeholder = Search Settings...
 
+settings-profile = Profile Settings
+    .change-banner = Change banner
+    .change-avatar = Change avatar
+
 settings-general = General Settings
     .splash-screen = Splash Screen
     .splash-screen-description = Disabling the splash screen could speed up load times.
