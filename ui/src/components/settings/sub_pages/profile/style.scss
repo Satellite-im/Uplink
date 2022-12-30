@@ -11,10 +11,50 @@
     justify-items: center;
   }
 
+  .profile-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -15%;
+    background-color: #ccc;
+    cursor: pointer;
+  }
+
+  .profile-banner .change-banner-text {
+    display: none;
+  }
+  
+  .profile-banner:hover::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,.5);
+    pointer-events: none;
+  }
+  
+  .profile-banner:hover .change-banner-text {
+    display: block;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 16px;
+    pointer-events: none;
+  }
+
   .profile_photo {
-    border-radius: 100px;
+    border-radius: 100%;
     height: 150px;
     width: 150px;
+    background-color: #ccc;
+    border-color: black;
   }
 
 .profile-picture {
@@ -30,8 +70,6 @@
   display: none;
 }
 
-
-
 .profile-picture:hover::before {
   content: "";
   position: absolute;
@@ -43,6 +81,7 @@
   bottom: 0;
   background: rgba(0,0,0,.5);
   pointer-events: none;
+  border-radius: 100%;
 }
 
 .profile-picture:hover .change-avatar-text {
@@ -64,3 +103,4 @@
   scale: 0.8;
   z-index: 2;
 }
+

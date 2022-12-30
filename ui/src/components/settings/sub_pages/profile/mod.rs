@@ -21,7 +21,9 @@ use crate::{
 pub fn ProfileSettings(cx: Scope) -> Element {
     let state = use_context::<State>(&cx).unwrap();
     let initial_lang_value = state.read().settings.language.clone();
-    let image_state = use_state(&cx, || "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.pinimg.com%2F736x%2F23%2Ffd%2Fbc%2F23fdbc96c0bdae69856c384d9f9f7328.jpg&f=1&nofb=1&ipt=4329959aa2081717ab982055642109e7712d944070af26ecbbf914fb227213b5&ipo=images".to_owned());
+    let image_state = use_state(&cx, String::new);
+    let banner_state = use_state(&cx, String::new);
+
 
     let themes = get_available_themes();
 
@@ -30,13 +32,22 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             id: "settings-profile",
             div {
                 class: "profile-header",
+                div { 
+                    class: "profile-banner", 
+                    img {
+                        class: "profile-banner-photo",
+                        src: "{banner_state}",
+                        height: "100%",
+                        width: "100%",
+                        onclick: move |_| change_profile_image(banner_state),
+                    },
+                    p {class: "change-banner-text",  "Change Banner" },
+            },
                 div {
                     class: "profile-picture",
                     img {
                         class: "profile_photo",
                         src: "{image_state}",
-                        height: "100",
-                        width: "100",
                         onclick: move |_| change_profile_image(image_state),
                     },
                     p {class: "change-avatar-text",  "Change Avatar" },
