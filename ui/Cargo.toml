@@ -14,6 +14,8 @@ warp = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d
 warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
 warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
 warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
+rfd = {version = "0.10.0", default-features = false, features = ["xdg-portal"] }
+mime = "0.3.16"
 names = "0.14.0"
 titlecase = "2.2.1"
 serde = "1.0.150"
