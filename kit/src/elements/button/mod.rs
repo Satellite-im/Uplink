@@ -106,7 +106,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
     let small = &cx.props.small.unwrap_or_default();
-
+    let text2 = text.clone();
     cx.render(
         rsx!(
             div {
@@ -145,7 +145,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         
                     )),
                     // We only need to include the text if it contains something.
-                    (!text.is_empty()).then(|| rsx!( div{}/*"{text}"*/ )),
+                    (!text.is_empty()).then(|| rsx!( "{text2}" )),
                 }
             },
             script{ "{script}" },
