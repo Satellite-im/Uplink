@@ -1,15 +1,9 @@
+use crate::{components::user_image::UserImage, elements::label::Label, User};
 use dioxus::{
-    core::UiEvent,
+    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
-
-use crate::{
-    components::user_image::{UserImage, UserImageLoading},
-    elements::label::Label,
-    User,
-};
-
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -23,7 +17,7 @@ pub struct Props<'a> {
     with_username: Option<String>,
 }
 
-pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
         None => {}
@@ -45,7 +39,6 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             rsx! (
                 div {
                     class: "user-group-skeletal",
-                    UserImageLoading {},
                     (cx.props.with_username.is_some()).then(|| rsx!(
                         div { class: "skeletal skeletal-bar smaller" }
                     ))

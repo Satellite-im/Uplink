@@ -1,14 +1,15 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use crate::warp_runner::{WarpCmdRx, WarpEventRx};
-use crate::warp_runner::{WarpCmdTx, WarpEventTx};
 use clap::Parser;
-use dioxus::core::to_owned;
-use dioxus::desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
-use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus::desktop::{tao, use_window};
+use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus_desktop::{tao, use_window};
+
 use dioxus::prelude::*;
+use dioxus_desktop::tao::menu::AboutMetadata;
+use dioxus_desktop::Config;
+
 use fs_extra::dir::*;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
@@ -30,13 +31,14 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::WarpEvent;
+use crate::warp_runner::{WarpCmdRx, WarpEventRx, WarpCmdTx, WarpEventTx};
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
+use dioxus_router::*;
+
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
-
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-
+use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
@@ -46,6 +48,8 @@ pub mod utils;
 mod warp_runner;
 
 use fluent_templates::static_loader;
+
+pub static STATE: AtomRef<State> = |_| State::load().unwrap();
 
 static_loader! {
     static LOCALES = {
@@ -120,7 +124,10 @@ fn main() {
     let mut window_menu = Menu::new();
 
     app_menu.add_native_item(MenuItem::Quit);
-    app_menu.add_native_item(MenuItem::About(String::from("Uplink")));
+    app_menu.add_native_item(MenuItem::About(
+        String::from("Uplink"),
+        AboutMetadata::default(),
+    ));
     // add native shortcuts to `edit_menu` menu
     // in macOS native item are required to get keyboard shortcut
     // to works correctly
@@ -163,10 +170,9 @@ fn main() {
             .with_titlebar_transparent(true)
         // .with_movable_by_window_background(true)
     }
+    let config = Config::default();
 
-    dioxus::desktop::launch_cfg(bootstrap, |c| {
-        c.with_window(|_| window.with_menu(main_menu))
-    })
+    dioxus_desktop::launch_cfg(bootstrap, config.with_window(window.with_menu(main_menu)))
 }
 
 fn bootstrap(cx: Scope) -> Element {
@@ -179,18 +185,15 @@ fn bootstrap(cx: Scope) -> Element {
         Err(_) => State::default(),
     };
 
-    use_context_provider(&cx, || state);
-    cx.render(rsx!(crate::app {}))
-}
+    //use_init_atom_root(cx);
+    use_shared_state_provider(cx, || state);
 
-fn app(cx: Scope) -> Element {
-    //println!("rendering app");
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let toggle = use_state(&cx, || false);
-    let warp_rx = use_state(&cx, || WARP_CHANNELS.1.clone());
+    let state = use_shared_state::<State>(cx)?;
+    let toggle = use_state(cx, || false);
+    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle];
         async move {
             //println!("starting toast use_future");
@@ -211,7 +214,7 @@ fn app(cx: Scope) -> Element {
     });
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle, warp_rx];
         async move {
             //println!("starting warp_runner use_future");
@@ -270,7 +273,7 @@ fn app(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),

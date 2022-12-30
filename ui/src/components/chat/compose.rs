@@ -1,14 +1,18 @@
+use dioxus::prelude::*;
 
-use dioxus::{prelude::*, desktop::use_window};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
+use dioxus_desktop::use_window;
+
+
 use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};
+
 
 use super::sidebar::build_participants_names;
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
     let message_groups = state.read().get_sort_messages(&active_chat);
 
@@ -36,6 +40,7 @@ pub fn Compose(cx: Scope) -> Element {
     // let _new_message_text = LOCALES
     //     .lookup(&*APP_LANG.read(), "messages.new")
     //     .unwrap_or_default();
+
     let platform = match active_participant.platform() {
         warp::multipass::identity::Platform::Desktop => Platform::Desktop,
         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
@@ -49,7 +54,7 @@ pub fn Compose(cx: Scope) -> Element {
     };
     let desktop = use_window(&cx);
 
-    let loading = use_state(&cx, || false);
+    let loading = use_state(cx, || false);
 
     cx.render(rsx!(
         div {

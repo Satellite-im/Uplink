@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use dioxus::prelude::*;
+use dioxus_router::*;
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -52,7 +53,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    use_context::<State>(&cx).unwrap();
+    let _ = use_shared_state::<State>(cx)?;
 
     let general = UIRoute {
         to: "general",
@@ -114,7 +115,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |route| {
-                        use_router(&cx).replace_route(route, None, None);
+                        use_router(cx).replace_route(route, None, None);
                     }
                 },
             )),
