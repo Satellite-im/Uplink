@@ -22,11 +22,15 @@
   position: relative;
   display: inline-block;
   justify-content:center;
+  z-index: 1;
+  cursor: pointer;
 }
 
 .profile-picture .change-avatar-text {
   display: none;
 }
+
+
 
 .profile-picture:hover::before {
   content: "";
@@ -38,6 +42,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0,0,0,.5);
+  pointer-events: none;
 }
 
 .profile-picture:hover .change-avatar-text {
@@ -48,6 +53,7 @@
   transform: translate(-50%, -50%);
   color: white;
   font-size: 12px;
+  pointer-events: none;
 }
 
 .plus-button {
@@ -56,4 +62,5 @@
   top: 144%;
   left: 53%;
   scale: 0.8;
+  z-index: 2;
 }
