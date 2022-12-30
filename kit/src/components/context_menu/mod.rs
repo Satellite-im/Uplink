@@ -1,12 +1,11 @@
+use crate::icons::{Icon, IconElement};
 use dioxus::{
-    core::UiEvent,
-    desktop::use_window,
+    core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
+use dioxus_desktop::use_window;
 use dioxus_heroicons::outline::Shape;
-
-use crate::icons::{Icon, IconElement};
 
 #[derive(Props)]
 pub struct ItemProps<'a> {
@@ -20,7 +19,7 @@ pub struct ItemProps<'a> {
 }
 
 /// Tells the parent the menu was interacted with.
-pub fn emit(cx: &Scope<ItemProps>, e: UiEvent<MouseData>) {
+pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
         None => {}
@@ -66,7 +65,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // Handles the hiding and showing of the context menu
     let script = include_str!("./context.js").replace("UUID", &cx.props.id);
     let id = format!("{}-context-menu", &cx.props.id);
-    let window = use_window(&cx);
+    let window = use_window(cx);
 
     cx.render(rsx! {
         div {

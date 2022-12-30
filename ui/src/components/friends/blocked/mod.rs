@@ -17,7 +17,7 @@ use warp::multipass::identity::Relationship;
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx).unwrap();
     let block_list = state.read().friends.blocked.clone();
 
     cx.render(rsx! (
@@ -60,10 +60,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             username: blocked_user.username(),
                             suffix: did_suffix,
                             status_message: blocked_user.status_message().unwrap_or_default(),
-                            relationship: {
-                                let mut relationship = Relationship::default();
-                                relationship.set_blocked(true);
-                                relationship   
+                            relationship: Relationship {
+                                friends: false,
+                                received_friend_request: false,
+                                sent_friend_request: false,
+                                blocked: true,
                             },
                             user_image: cx.render(rsx! (
                                 UserImage {

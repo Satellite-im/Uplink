@@ -75,12 +75,10 @@ pub fn Indicator(cx: Scope<Props>) -> Element {
     let icon = cx.props.platform.to_icon();
     let status = cx.props.status.to_string();
 
-    cx.render(rsx! (
-        div {
-            class: "indicator indicator-{status}",
-            IconElement {
-                icon: icon
-            }
+    cx.render(rsx!(div {
+        class: "indicator indicator-{status}",
+        IconElement {
+            icon: icon
         }
-    ))
+    }))
 }

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+
 use kit::{
     elements::{
         button::Button,
@@ -14,7 +15,7 @@ use crate::state::{Action, State};
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
     in_call_text: String,
-    mute_text: String, 
+    mute_text: String,
     unmute_text: String,
     listen_text: String,
     silence_text: String,
@@ -23,7 +24,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(div {
         id: "remote-controls",

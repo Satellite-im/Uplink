@@ -7,7 +7,7 @@ use crate::{state::{State, Action}, utils::language::get_local_text, components:
 
 #[allow(non_snake_case)]
 pub fn PendingFriends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
     let friends_list = state.read().friends.incoming_requests.clone();
 
     cx.render(rsx! (

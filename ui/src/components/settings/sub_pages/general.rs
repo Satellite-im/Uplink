@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+
 use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
@@ -15,9 +16,8 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
-    let state = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
-
     let themes = get_available_themes();
 
     cx.render(rsx!(
@@ -27,7 +27,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.splash-screen"),
                 section_description: get_local_text("settings-general.splash-screen-description"),
                 Switch {
-
                 }
             },
             SettingSection {

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_router::use_router;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -19,7 +20,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
     let friends_list = state.read().friends.all.clone();
     let friends = State::get_friends_by_first_letter(friends_list);
 
@@ -70,7 +71,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
-                                                use_router(&cx).replace_route("/", None, None);
+                                                use_router(cx).replace_route("/", None, None);
                                             }
                                         },
                                         ContextItem {
@@ -117,7 +118,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         )),
                                         onchat: move |_| {
                                             state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                            use_router(&cx).replace_route("/", None, None);
+                                            use_router(cx).replace_route("/", None, None);
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));

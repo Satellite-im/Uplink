@@ -6,7 +6,7 @@ use crate::state::Theme;
 
 pub mod format_timestamp;
 pub mod language;
-pub mod notifications;
+//pub mod notifications;
 pub mod sounds;
 
 pub fn get_available_themes() -> Vec<Theme> {
