@@ -91,7 +91,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Timestamps should update in chat, and sidebar. (now, then goes by minutes-hours-days)
 - [ ] Clicking *Phone* icon should open call modal.
 - [ ] Chat should close if User blocks friend they are in current chat with. 
-- [ ] Typing indicator appears (if user has that extention toggled on).
+- [ ] Typing indicator appears (if user has that extension toggled on).
 - [ ] Usernames are both displayed in call modal.
 - [ ] Friends Username/Profile Pic/Status should be displayed at top of active chat. 
 - [ ] Tooltip should appear for *Call* button.
