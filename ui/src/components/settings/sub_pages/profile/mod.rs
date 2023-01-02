@@ -1,6 +1,6 @@
-use dioxus::{prelude::*};
+use dioxus::{prelude::*, html::input_data::keyboard_types::Code};
 use kit::{
-    elements::{button::Button},
+    elements::{button::Button, input::{Options, Input}},
 };
 use rfd::FileDialog;
 use mime::*;
@@ -15,9 +15,16 @@ use crate::{
 pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(&cx, String::new);
     let banner_state = use_state(&cx, String::new);
+    let edit_mode = use_state(&cx, || false);
+    let username = use_state(&cx, || "username".to_owned());
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
+
+    let show_texts = !**edit_mode;
+    let show_edit_fields = **edit_mode;
+    let button_text = if **edit_mode {"Save".to_owned()} else {"Edit".to_owned()};
+
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -50,20 +57,51 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         onpress: move |_| change_profile_image(image_state),
                     },
                 },
-                p { 
-                    class: "username",
-                    "Username"
+                div {
+                    class: "edit-button", 
+                    Button {
+                        text: button_text,
+                        onpress: move |_| edit_mode.set(!edit_mode),
+                    },
                 },
-                p { 
-                    class: "status-message",
-                    "Status message"
-                },
-
+                show_edit_fields.then(|| rsx!(
+                    div {
+                        class: "username", 
+                        Input {
+                            placeholder: format!("{}", username),
+                            disabled: false,
+                            options: Options {
+                                with_clear_btn: true,
+                                ..Options::default()
+                            },
+                        },
+                    },
+                  div {
+                        class: "status-message-edit", 
+                        Input {
+                            placeholder: "Type new status message".to_owned(),
+                            disabled: false,
+                            options: Options {
+                                with_clear_btn: true,
+                                ..Options::default()
+                            }
+                        }
+                    },
+                )),
+                show_texts.then(|| rsx!(
+                    p { 
+                        class: "username",
+                        "{username}"
+                    },
+                    p { 
+                        class: "status-message",
+                        "Status message"
+                    }
+                ))
             },
         }
     ))
 }
-
 
 fn change_profile_image(image_state: &UseState<String>) {
     let path = match FileDialog::new().add_filter("image", &["jpg", "png", "jpeg", "svg"]).set_directory(".").pick_file() {

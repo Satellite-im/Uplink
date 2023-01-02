@@ -104,11 +104,11 @@
   z-index: 2;
 }
 
-.text-fields {
-  position: relative;
-  margin-top: 15%;
-  margin-right: 15%;
-  gap: 50px;
+.edit-button {
+  display: block;
+  position: absolute;
+  top: 120%;
+  left:85%;
 }
 
 .username {
@@ -121,4 +121,10 @@
   display: block;
   position: absolute;
   top: 275px;
+}
+
+.status-message-edit {
+  display: block;
+  position: absolute;
+  top: 295px;
 }
