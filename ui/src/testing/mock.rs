@@ -61,6 +61,8 @@ pub fn generate_mock() -> State {
             muted: false,
             toast_notifications,
             theme: None,
+            // TODO: Until this is more functional, we should keep it disabled by default.
+            enable_overlay: false,
         },
         account: Account {
             identity: me.clone(),

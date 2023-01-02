@@ -17,6 +17,7 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+// use state::{Action, ActionHook, State};
 use state::State;
 use std::fs;
 use std::path::PathBuf;
@@ -303,13 +304,19 @@ fn bootstrap(cx: Scope) -> Element {
         None => String::from(""),
     };
 
-    // TODO: Wire this to state so that it can be toggled on the fly
     // TODO: We need to make sure when we close the app, we first close the overlay.
     let enable_overlay = Configuration::load_or_default().general.enable_overlay;
     if enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         desktop.new_window(overlay_test, make_config());
     }
+
+    // state.write().add_hook(ActionHook {
+    //     action_type: either::Left(Action::SetOverlay(false)),
+    //     callback: |s: State| {
+    //         // TODO: Update logic here to render or de render the overlay.
+    //     },
+    // });
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },

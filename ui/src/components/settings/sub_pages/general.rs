@@ -33,6 +33,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     active: config.general.enable_overlay,
                     onflipped: move |e| {
                         config.set_overlay(e);
+                        state.write().mutate(Action::SetOverlay(e));
                     }
                 }
             },

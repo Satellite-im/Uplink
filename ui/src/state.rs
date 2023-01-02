@@ -277,6 +277,8 @@ pub struct UI {
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     #[serde(default)]
     pub theme: Option<Theme>,
+    #[serde(default)]
+    pub enable_overlay: bool,
 }
 
 use std::fmt;
@@ -355,6 +357,11 @@ impl State {
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
+    }
+
+    /// Updates the display of the overlay
+    fn toggle_overlay(&mut self, enabled: bool) {
+        self.ui.enable_overlay = enabled;
     }
 
     /// Toggles the display of media on the provided chat in the `State` struct.
@@ -776,6 +783,7 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
             Action::AddToastNotification(notification) => {
@@ -919,6 +927,7 @@ pub enum Action {
     EndAll,
     ToggleSilence,
     ToggleMute,
+    SetOverlay(bool),
     AddToastNotification(ToastNotification),
     SetTheme(Theme),
     ClearTheme,
