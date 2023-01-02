@@ -25,14 +25,14 @@
 .tooltip-arrow-top,
 .tooltip-arrow-top-left,
 .tooltip-arrow-top-right {
-	margin-top: var(--border-radius-less);
+	margin-top: var(--border-radius);
 	top: 100%;
 }
 .tooltip-arrow-bottom,
 .tooltip-arrow-bottom-left,
 .tooltip-arrow-bottom-right {
-	margin-bottom: var(--border-radius-less);
-	bottom: calc(100% + 2px);
+	margin-bottom: var(--border-radius);
+	bottom: calc(100% + 8px);
 }
 .tooltip-arrow-right {
 	right: 100%;
@@ -40,9 +40,9 @@
 	&::after {
 		content: "";
 		position: absolute;
-		bottom: calc(50% - var(--border-radius-less));
+		bottom: calc(50% - var(--border-radius));
 		left: 100%;
-		margin-right: -6px;
+		margin-right: -3px;
 		border-width: var(--border-radius-less);
 		border-style: solid;
 		border-color: transparent transparent transparent var(--secondary);
@@ -54,10 +54,10 @@
 	&::after {
 		content: "";
 		position: absolute;
-		bottom: calc(50% - var(--border-radius-less));
+		bottom: calc(50% - var(--border-radius));
 		right: 100%;
-		margin-left: -6px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: transparent var(--secondary) transparent transparent;
 	}
@@ -68,8 +68,8 @@
 		position: absolute;
 		bottom: 100%;
 		left: 16px;
-		margin-left: -6px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: transparent transparent var(--secondary) transparent;
 	}
@@ -80,8 +80,8 @@
 		position: absolute;
 		bottom: 100%;
 		left: 50%;
-		margin-left: -6px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: transparent transparent var(--secondary) transparent;
 	}
@@ -92,7 +92,7 @@
 		position: absolute;
 		bottom: 100%;
 		right: 16px;
-		margin-left: -6px;
+		margin-left: -3px;
 		border-width: var(--border-radius-less);
 		border-style: solid;
 		border-color: transparent transparent var(--secondary) transparent;
@@ -104,8 +104,8 @@
 		position: absolute;
 		top: 100%;
 		left: 16px;
-		margin-left: -6px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: var(--secondary) transparent transparent transparent;
 	}
@@ -116,8 +116,8 @@
 		position: absolute;
 		top: 100%;
 		left: 50%;
-		margin-left: -2px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: var(--secondary) transparent transparent transparent;
 	}
@@ -128,8 +128,8 @@
 		position: absolute;
 		top: 100%;
 		right: 16px;
-		margin-left: -6px;
-		border-width: var(--border-radius-less);
+		margin-left: -3px;
+		border-width: var(--border-radius);
 		border-style: solid;
 		border-color: var(--secondary) transparent transparent transparent;
 	}

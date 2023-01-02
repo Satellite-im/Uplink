@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
+
 use kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
 
 use crate::{components::settings::SettingSection, state::State, utils::language::get_local_text};
 
-
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    let state = use_context::<State>(&cx).unwrap();
-
+    let state = use_shared_state::<State>(cx)?;
+    
     cx.render(rsx!(
         div {
             id: "settings-developer",

@@ -1,6 +1,9 @@
-use dioxus::{prelude::*, desktop::use_window};
+
+use dioxus::prelude::*;
+use warp::{raygun::Message};
+use dioxus_router::*;
+use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
-use warp::raygun::Message;
 
 use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text};
 
@@ -62,7 +65,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx)?;
+    let state = use_shared_state::<State>(cx)?;
 
     let sidebar_chats = state.read().chats.in_sidebar.clone();
 
@@ -71,7 +74,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let binding = state.read();
     let active_media_chat = binding.get_active_media_chat();
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -95,7 +98,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
-                        use_router(&cx).replace_route(r, None, None);
+                        use_router(cx).replace_route(r, None, None);
                     }
                 },
             )),
@@ -131,7 +134,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
                                                 if cx.props.route_info.active.to != "/" {
-                                                    use_router(&cx).replace_route("/", None, None);
+                                                    use_router(cx).replace_route("/", None, None);
                                                 }
                                             }
                                         },
@@ -150,7 +153,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         onpress: move |_| {
                                             state.write().mutate(Action::ChatWith(chat.clone()));
                                             if cx.props.route_info.active.to != "/" {
-                                                use_router(&cx).replace_route("/", None, None);
+                                                use_router(cx).replace_route("/", None, None);
                                             }
                                         }
                                     }
@@ -264,13 +267,54 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(chat_with.clone()));
                                     if cx.props.route_info.active.to != "/" {
-                                        use_router(&cx).replace_route("/", None, None);
+                                        use_router(cx).replace_route("/", None, None);
                                     }
                                 }
                             }
                         }
                     )}
-                )
+                ),
+                sidebar_chats.is_empty().then(|| rsx!(
+                    div {
+                        class: "skeletal-steady",
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                        User {
+                            loading: true,
+                            username: "Loading".into(),
+                            subtext: "loading".into(),
+                            user_image: cx.render(rsx!(
+                                UserImage {
+                                    platform: Platform::Mobile,
+                                    status: Status::Online,
+                                    loading: true
+                                }
+                            ))
+                        },
+                    }
+                ))
             },
             active_media_chat.is_some().then(|| rsx!(
                 RemoteControls {

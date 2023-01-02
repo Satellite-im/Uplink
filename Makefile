@@ -1,7 +1,7 @@
-TARGET = uplink
+TARGET = ui
 
-SIGNING_KEY = 7KLQJQ3MKD
-ASSETS_DIR = extra
+SIGNING_KEY = F6ZAL7ANAD
+ASSETS_DIR = ui/extra
 RELEASE_DIR = target/release
 
 APP_NAME = Uplink.app

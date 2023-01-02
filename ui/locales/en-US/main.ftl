@@ -70,6 +70,8 @@ settings-profile = Profile Settings
     .change-avatar = Change avatar
 
 settings-general = General Settings
+    .overlay = Uplink Overlay
+    .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.
     .splash-screen = Splash Screen
     .splash-screen-description = Disabling the splash screen could speed up load times.
     .app-language = App Language

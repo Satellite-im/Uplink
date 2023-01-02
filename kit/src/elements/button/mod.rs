@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
+use dioxus::{prelude::*, core::Event, events::{MouseData, MouseEvent}};
 
 use crate::{get_script, elements::Appearance, icons::{Icon, IconElement}};
 
@@ -70,7 +70,7 @@ pub fn get_appearence(cx: &Scope<Props>) -> String {
 }
 
 /// Tells the parent the button was interacted with.
-pub fn emit(cx: &Scope<Props>, e: UiEvent<MouseData>) {
+pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
         None    => {},
@@ -106,7 +106,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
     let small = &cx.props.small.unwrap_or_default();
-
+    let text2 = text.clone();
     cx.render(
         rsx!(
             div {
@@ -114,7 +114,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     format_args!("btn-wrap {} {}", if *disabled { "disabled" } else { "" }, if *small { "small" } else { "" })
                 },
                 (cx.props.tooltip.is_some()).then(|| rsx!(
-                    &cx.props.tooltip
+                    cx.props.tooltip.as_ref()
                 )),
                 (!badge.is_empty()).then(|| rsx!(
                     span { 
@@ -142,9 +142,10 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         IconElement { 
                             icon: get_icon(&cx)
                         }
+                        
                     )),
                     // We only need to include the text if it contains something.
-                    (!text.is_empty()).then(|| rsx!( "{text}" )),
+                    (!text.is_empty()).then(|| rsx!( "{text2}" )),
                 }
             },
             script{ "{script}" },

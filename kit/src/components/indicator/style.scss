@@ -3,7 +3,7 @@
 	height: fit-content;
 	width: fit-content;
 	stroke: transparent;
-	fill: transparent;
+	fill: var(--background);
 	display: inline-flex;
 	justify-content: center;
 	align-items: flex-end;
@@ -14,8 +14,8 @@
 .indicator-offline {
 	stroke: var(--secondary-light);
 }
-.indicator-do-not-distrub {
-	stroke: var(--danger-light);
+.indicator-do-not-disturb {
+	stroke: var(--danger);
 }
 .indicator-idle {
 	stroke: var(--warning-light);

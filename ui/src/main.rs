@@ -1,19 +1,23 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use crate::warp_runner::{WarpCmdRx, WarpEventRx};
-use crate::warp_runner::{WarpCmdTx, WarpEventTx};
 use clap::Parser;
-use dioxus::core::to_owned;
-use dioxus::desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
-use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus::desktop::{tao, use_window};
+use cocoa::appkit::NSWindow;
+use config::Configuration;
 use dioxus::prelude::*;
+use dioxus_desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::menu::AboutMetadata;
+#[cfg(target_os = "macos")]
+use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+use dioxus_desktop::Config;
+use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
+use overlay::{make_config, OverlayDom};
+// use state::{Action, ActionHook, State};
 use state::State;
 use std::fs;
 use std::path::PathBuf;
@@ -23,6 +27,7 @@ use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
+use wry::webview::WebviewExtMacOS;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -30,22 +35,26 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::WarpEvent;
+use crate::warp_runner::{WarpCmdRx, WarpCmdTx, WarpEventRx, WarpEventTx};
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
+use dioxus_router::*;
+
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
-
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-
+use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
+pub mod overlay;
 pub mod state;
 pub mod testing;
 pub mod utils;
 mod warp_runner;
 
 use fluent_templates::static_loader;
+
+pub static STATE: AtomRef<State> = |_| State::load().unwrap();
 
 static_loader! {
     static LOCALES = {
@@ -119,8 +128,11 @@ fn main() {
     let mut edit_menu = Menu::new();
     let mut window_menu = Menu::new();
 
+    app_menu.add_native_item(MenuItem::About(
+        String::from("Uplink"),
+        AboutMetadata::default(),
+    ));
     app_menu.add_native_item(MenuItem::Quit);
-    app_menu.add_native_item(MenuItem::About(String::from("Uplink")));
     // add native shortcuts to `edit_menu` menu
     // in macOS native item are required to get keyboard shortcut
     // to works correctly
@@ -160,13 +172,25 @@ fn main() {
             .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
-            .with_titlebar_transparent(true)
+            .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
     }
 
-    dioxus::desktop::launch_cfg(bootstrap, |c| {
-        c.with_window(|_| window.with_menu(main_menu))
-    })
+    let config = Config::default();
+
+    dioxus_desktop::launch_cfg(
+        bootstrap,
+        config
+            .with_window(window.with_menu(main_menu))
+            .with_custom_index(
+                r#"
+    <!doctype html>
+    <html>
+    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+    </html>"#
+                    .to_string(),
+            ),
+    )
 }
 
 fn bootstrap(cx: Scope) -> Element {
@@ -179,18 +203,15 @@ fn bootstrap(cx: Scope) -> Element {
         Err(_) => State::default(),
     };
 
-    use_context_provider(&cx, || state);
-    cx.render(rsx!(crate::app {}))
-}
+    //use_init_atom_root(cx);
+    use_shared_state_provider(cx, || state);
 
-fn app(cx: Scope) -> Element {
-    //println!("rendering app");
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
-    let toggle = use_state(&cx, || false);
-    let warp_rx = use_state(&cx, || WARP_CHANNELS.1.clone());
+    let state = use_shared_state::<State>(cx)?;
+    let toggle = use_state(cx, || false);
+    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle];
         async move {
             //println!("starting toast use_future");
@@ -211,7 +232,7 @@ fn app(cx: Scope) -> Element {
     });
 
     let inner = state.inner();
-    use_future(&cx, (), |_| {
+    use_future(cx, (), |_| {
         to_owned![toggle, warp_rx];
         async move {
             //println!("starting warp_runner use_future");
@@ -270,12 +291,32 @@ fn app(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
+
+    let wry_webview = &desktop.webview;
+    let c = wry_webview.ns_window();
+    unsafe {
+        c.setOpaque_(false);
+    }
 
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
+
+    // TODO: We need to make sure when we close the app, we first close the overlay.
+    let enable_overlay = Configuration::load_or_default().general.enable_overlay;
+    if enable_overlay {
+        let overlay_test = VirtualDom::new(OverlayDom);
+        desktop.new_window(overlay_test, make_config());
+    }
+
+    // state.write().add_hook(ActionHook {
+    //     action_type: either::Left(Action::SetOverlay(false)),
+    //     callback: |s: State| {
+    //         // TODO: Update logic here to render or de render the overlay.
+    //     },
+    // });
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
@@ -367,7 +408,7 @@ fn app(cx: Scope) -> Element {
                     }
                 },
                 Route {
-                    to: "pre/unlock",
+                    to: "/pre/unlock",
                     UnlockLayout {
 
                     }

@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
+
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -51,7 +52,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let active_language = state.read().settings.language.clone();
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();
@@ -142,6 +143,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
+
 pub fn SkeletalFriend(cx: Scope) -> Element {
     cx.render(rsx!(
         div {

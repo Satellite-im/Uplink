@@ -1,4 +1,8 @@
+use crate::state::{Action, State};
+
 use dioxus::prelude::*;
+use dioxus_router::*;
+
 use kit::{
     elements::{
         button::Button,
@@ -9,13 +13,11 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::state::{Action, State};
-
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
     #[props(optional)]
     larger: Option<bool>,
-    settings_text: String, 
+    settings_text: String,
     enable_camera_text: String,
     fullscreen_text: String,
     popout_player_text: String,
@@ -25,7 +27,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
-    let state: UseSharedState<State> = use_context::<State>(&cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     let silenced = state.read().ui.silenced;
@@ -85,7 +87,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
                         "loop": "true",
-                        "muted": "{silenced_str}"
+                        muted: "{silenced_str}"
                     }
                 ))
             }
@@ -132,7 +134,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    use_router(&cx).replace_route("/settings", None, None);
+                    use_router(cx).replace_route("/settings", None, None);
                 }
             },
         }

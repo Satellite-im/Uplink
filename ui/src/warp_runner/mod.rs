@@ -51,7 +51,7 @@ impl WarpRunner {
     }
 
     // spawns a thread which will terminate when WarpRunner is dropped
-    pub fn run(&mut self, tx: WarpEventTx, rx: WarpCmdRx) {
+    pub fn run(&mut self, _tx: WarpEventTx, rx: WarpCmdRx) {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
@@ -70,7 +70,7 @@ impl WarpRunner {
         tokio::spawn(async move {
             // todo: register for events from warp
 
-            let (account, messaging, storage) =
+            let (_account, _messaging, _storage) =
                 match warp_initialization(DEFAULT_PATH.clone(), tesseract.clone(), false).await {
                     Ok((i, c, s)) => (i, c, s),
                     Err(_e) => todo!(),
@@ -87,7 +87,7 @@ impl WarpRunner {
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
-                        Some(cmd) => todo!("handle cmd"),
+                        Some(_cmd) => todo!("handle cmd"),
                         None => break,
                     },
 
@@ -103,11 +103,13 @@ impl WarpRunner {
 
 // this is called by `main.rs` from within a `use_future` and used to modify state. returns `true` if stae has been modified
 // this keeps the size of main.rs small.
-pub async fn handle_event(state: Rc<RefCell<ProvidedStateInner<State>>>, event: WarpEvent) -> bool {
+pub async fn handle_event(
+    _state: Rc<RefCell<ProvidedStateInner<State>>>,
+    event: WarpEvent,
+) -> bool {
     match event {
         WarpEvent::None => todo!(),
     }
-    false
 }
 
 async fn warp_initialization(

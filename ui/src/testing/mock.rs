@@ -12,15 +12,20 @@ use rand::{seq::SliceRandom, Rng};
 use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
-use warp::{multipass::identity::{Graphics, Platform, IdentityStatus}, raygun::Message};
+use warp::{
+    multipass::identity::{Graphics, IdentityStatus, Platform},
+    raygun::Message,
+};
 
 use crate::state::{
     Account, Chat, Chats, Friends, Identity, Route, Settings, State, ToastNotification, UI,
 };
 
+const FRIEND_COUNT: usize = 20;
+
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
-    let identities = generate_random_identities(10);
+    let identities = generate_random_identities(FRIEND_COUNT);
     let blocked_identities = generate_random_identities(3);
     let incoming_requests = generate_random_identities(2);
     let outgoing_requests = generate_random_identities(1);
@@ -56,6 +61,8 @@ pub fn generate_mock() -> State {
             muted: false,
             toast_notifications,
             theme: None,
+            // TODO: Until this is more functional, we should keep it disabled by default.
+            enable_overlay: false,
         },
         account: Account {
             identity: me.clone(),
@@ -91,9 +98,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
 
     let message_count = rng.gen_range(0..20);
     for _ in 0..message_count {
-        let sender = participants
-            .choose(&mut rng)
-            .unwrap_or(&default_id);
+        let sender = participants.choose(&mut rng).unwrap_or(&default_id);
         let word_count = rng.gen_range(3..20);
         let mut default_message = Message::default();
         default_message.set_conversation_id(conversation);
@@ -182,16 +187,16 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         let mut graphics = Graphics::default();
         graphics.set_profile_picture(&image_url);
         graphics.set_profile_banner(&image_url);
-        
+
         let status = match rng.gen_range(0..3) {
             0 => IdentityStatus::Online,
             1 => IdentityStatus::Away,
             2 => IdentityStatus::Busy,
-            _ => IdentityStatus::Offline
+            _ => IdentityStatus::Offline,
         };
 
         identity.set_identity_status(status);
-        
+
         let platform = match rng.gen() {
             true => Platform::Desktop,
             false => Platform::Mobile,

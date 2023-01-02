@@ -1,11 +1,5 @@
-#[allow(unused_imports)]
-use dioxus::{
-    desktop::{
-        tao::dpi::{LogicalSize, Size},
-        use_window,
-    },
-    prelude::*,
-};
+use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use kit::{
     elements::{
         button::Button,
@@ -17,7 +11,7 @@ use kit::{
 
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
-    let _window = use_window(&cx);
+    let _window = use_window(cx);
     // window.set_inner_size(Size::Logical(LogicalSize {
     //     width: 100.0,
     //     height: 100.0,
@@ -34,11 +28,16 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    let disabled = use_state(&cx, || false);
+    let disabled = use_state(cx, || false);
 
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     // TODO: we should make the window smaller during the inital setup steps.
+
+    desktop.set_inner_size(LogicalSize {
+        width: 500.0,
+        height: 300.0,
+    });
 
     cx.render(rsx!(
         div {
@@ -70,8 +69,9 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 }
             },
             Button {
-                text: "Unlock".into(),
-                appearance: kit::elements::Appearance::Primary
+                text: "Create Account".into(),
+                appearance: kit::elements::Appearance::Primary,
+                icon: Icon::Check,
                 onpress: move |_| {
                     disabled.set(true);
                 }
