@@ -103,11 +103,13 @@ impl WarpRunner {
 
 // this is called by `main.rs` from within a `use_future` and used to modify state. returns `true` if stae has been modified
 // this keeps the size of main.rs small.
-pub async fn handle_event(_state: Rc<RefCell<ProvidedStateInner<State>>>, event: WarpEvent) -> bool {
+pub async fn handle_event(
+    _state: Rc<RefCell<ProvidedStateInner<State>>>,
+    event: WarpEvent,
+) -> bool {
     match event {
         WarpEvent::None => todo!(),
     }
-    false
 }
 
 async fn warp_initialization(

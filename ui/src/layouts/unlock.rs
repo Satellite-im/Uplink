@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{
-    use_window,
-};
+use dioxus_desktop::{use_window, LogicalSize};
 use kit::{
     elements::{
         button::Button,
@@ -36,6 +34,11 @@ pub fn UnlockLayout(cx: Scope) -> Element {
 
     // TODO: we should make the window smaller during the inital setup steps.
 
+    desktop.set_inner_size(LogicalSize {
+        width: 500.0,
+        height: 300.0,
+    });
+
     cx.render(rsx!(
         div {
             id: "unlock-layout",
@@ -66,8 +69,9 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 }
             },
             Button {
-                text: "Unlock".into(),
-                appearance: kit::elements::Appearance::Primary
+                text: "Create Account".into(),
+                appearance: kit::elements::Appearance::Primary,
+                icon: Icon::Check,
                 onpress: move |_| {
                     disabled.set(true);
                 }

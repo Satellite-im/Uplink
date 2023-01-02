@@ -1,5 +1,6 @@
 [general]
 theme = "default"
+enable_overlay = false
 show_splash = false
 
 [privacy]

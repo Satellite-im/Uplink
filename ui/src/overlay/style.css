@@ -1,0 +1,44 @@
+.overlay-user {
+  display: inline-flex;
+  flex-direction: row;
+  gap: var(--gap);
+  /* offset-x | offset-y | blur-radius | color */
+  text-shadow: 0px 0px 4px black, 0 0 1px black;
+}
+
+.overlay-user p {
+  color: var(--text-color);
+}
+
+.overlay-user .is-audible-indication svg {
+  stroke: var(--text-color);
+  fill: transparent !important;
+}
+
+body,
+html,
+#main {
+  background-color: transparent !important;
+  height: 100%;
+  width: 100%;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#main {
+  padding: var(--gap);
+}
+
+#main .user-image-wrap {
+  transform: scale(0.75);
+  margin: -10px 0 0 -10px;
+}
+
+#main .overlay-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: 100%;
+}

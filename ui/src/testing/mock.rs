@@ -21,9 +21,11 @@ use crate::state::{
     Account, Chat, Chats, Friends, Identity, Route, Settings, State, ToastNotification, UI,
 };
 
+const FRIEND_COUNT: usize = 20;
+
 pub fn generate_mock() -> State {
     let me = &generate_random_identities(1)[0];
-    let identities = generate_random_identities(100);
+    let identities = generate_random_identities(FRIEND_COUNT);
     let blocked_identities = generate_random_identities(3);
     let incoming_requests = generate_random_identities(2);
     let outgoing_requests = generate_random_identities(1);
@@ -59,6 +61,8 @@ pub fn generate_mock() -> State {
             muted: false,
             toast_notifications,
             theme: None,
+            // TODO: Until this is more functional, we should keep it disabled by default.
+            enable_overlay: false,
         },
         account: Account {
             identity: me.clone(),

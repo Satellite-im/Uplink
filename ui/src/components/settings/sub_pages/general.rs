@@ -7,6 +7,7 @@ use kit::{
 
 use crate::{
     components::settings::SettingSection,
+    config::Configuration,
     state::{Action, State},
     utils::{
         get_available_themes,
@@ -20,9 +21,22 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
 
+    let mut config = Configuration::load_or_default();
+
     cx.render(rsx!(
         div {
             id: "settings-general",
+            SettingSection {
+                section_label: get_local_text("settings-general.overlay"),
+                section_description: get_local_text("settings-general.overlay-description"),
+                Switch {
+                    active: config.general.enable_overlay,
+                    onflipped: move |e| {
+                        config.set_overlay(e);
+                        state.write().mutate(Action::SetOverlay(e));
+                    }
+                }
+            },
             SettingSection {
                 section_label: get_local_text("settings-general.splash-screen"),
                 section_description: get_local_text("settings-general.splash-screen-description"),

@@ -4,7 +4,7 @@ use std::fs;
 
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Config {
+pub struct Configuration {
     /// General configuration options.
     #[serde(default)]
     pub general: General,
@@ -32,6 +32,8 @@ pub struct General {
     pub theme: String,
     #[serde(default)]
     pub show_splash: bool,
+    #[serde(default)]
+    pub enable_overlay: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -64,7 +66,7 @@ pub struct Developer {
     pub cache_dir: String,
 }
 
-impl Config {
+impl Configuration {
     pub fn new() -> Self {
         // Create a default configuration here
         // For example:
@@ -124,9 +126,14 @@ impl Config {
     }
 }
 
-impl Config {
+impl Configuration {
     pub fn set_theme(&mut self, theme_name: String) {
         self.general.theme = theme_name;
+        let _ = self.save();
+    }
+
+    pub fn set_overlay(&mut self, overlay: bool) {
+        self.general.enable_overlay = overlay;
         let _ = self.save();
     }
 }
