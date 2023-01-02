@@ -17,12 +17,14 @@ use overlay::{make_config, OverlayDom};
 use state::State;
 use std::fs;
 use std::path::PathBuf;
+use std::rc::Weak;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
+use wry::webview::WebView;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -295,17 +297,22 @@ fn bootstrap(cx: Scope) -> Element {
         None => String::from(""),
     };
 
-    // TODO: We need to make sure when we close the app, we first close the overlay.
     let enable_overlay = Configuration::load_or_default().general.enable_overlay;
+    let mut _overlay: Option<Weak<WebView>> = None;
+    // Create a window rendering the overlay.
     if enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
-        desktop.new_window(overlay_test, make_config());
+        _overlay = Some(desktop.new_window(overlay_test, make_config()));
     }
+    // TODO:
+    // Close the overlay when the state changes.
+    // Close the overlay when we close the main window.
 
     // state.write().add_hook(ActionHook {
     //     action_type: either::Left(Action::SetOverlay(false)),
     //     callback: |s: State| {
     //         // TODO: Update logic here to render or de render the overlay.
+    //         // _overlay.close();
     //     },
     // });
 
