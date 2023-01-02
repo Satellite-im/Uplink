@@ -1,31 +1,21 @@
-use std::alloc::Layout;
-
-use dioxus::{prelude::*, desktop::tao::dpi::Position};
+use dioxus::{prelude::*};
 use kit::{
-    elements::{button::Button, select::Select, switch::Switch},
-    icons::Icon, components::{user_image::UserImage, indicator::{Status, Platform}},
+    elements::{button::Button},
 };
 use rfd::FileDialog;
 use mime::*;
 
 use crate::{
-    components::settings::SettingSection,
-    state::{Action, State},
     utils::{
-        get_available_themes,
-        language::{change_language, get_available_languages, get_local_text},
+        language::{get_local_text},
     },
 };
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
-    let state = use_context::<State>(&cx).unwrap();
-    let initial_lang_value = state.read().settings.language.clone();
     let image_state = use_state(&cx, String::new);
     let banner_state = use_state(&cx, String::new);
 
-
-    let themes = get_available_themes();
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
     cx.render(rsx!(
@@ -47,7 +37,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 div {
                     class: "profile-picture",
                     img {
-                        class: "profile_photo",
+                        class: "profile-avatar",
                         src: "{image_state}",
                         onclick: move |_| change_profile_image(image_state),
                     },
@@ -59,6 +49,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         icon: kit::icons::Icon::Plus,
                         onpress: move |_| change_profile_image(image_state),
                     },
+                },
+                p { 
+                    class: "username",
+                    "Username"
+                },
+                p { 
+                    class: "status-message",
+                    "Status message"
                 },
 
             },
@@ -111,11 +109,7 @@ fn change_profile_image(image_state: &UseState<String>) {
         }
     };
 
-    // TODO: Uncomment when add Multipass
-    // if let Err(e) =  account.update_identity(IdentityUpdate::set_graphics_picture(image)) {
-    //     println!("{}", e);
-    // }
-    // let identity = account.get_own_identity().unwrap();
-    // let image = identity.graphics().profile_picture();
+    // TODO: Add upload picture to multipass here
+
     image_state.set(image);
 }

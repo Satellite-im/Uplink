@@ -49,12 +49,12 @@
     pointer-events: none;
   }
 
-  .profile_photo {
+  .profile-avatar {
     border-radius: 100%;
     height: 150px;
     width: 150px;
     background-color: #ccc;
-    border-color: black;
+    border: 0.5px solid #999;
   }
 
 .profile-picture {
@@ -88,7 +88,7 @@
   display: block;
   position: absolute;
   top: 130%;
-  left: 55%;
+  left: 57%;
   transform: translate(-50%, -50%);
   color: white;
   font-size: 12px;
@@ -104,3 +104,21 @@
   z-index: 2;
 }
 
+.text-fields {
+  position: relative;
+  margin-top: 15%;
+  margin-right: 15%;
+  gap: 50px;
+}
+
+.username {
+  display: block;
+  position: absolute;
+  top: 250px;
+}
+
+.status-message {
+  display: block;
+  position: absolute;
+  top: 275px;
+}
