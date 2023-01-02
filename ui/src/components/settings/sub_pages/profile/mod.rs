@@ -17,13 +17,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(&cx, String::new);
     let edit_mode = use_state(&cx, || false);
     let username = use_state(&cx, || "username".to_owned());
+    let status_message = use_state(&cx, || "status message".to_owned());
+
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
 
     let show_texts = !**edit_mode;
     let show_edit_fields = **edit_mode;
-    let button_text = if **edit_mode {"Save".to_owned()} else {"Edit".to_owned()};
 
     cx.render(rsx!(
         div {
@@ -57,19 +58,51 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         onpress: move |_| change_profile_image(image_state),
                     },
                 },
-                div {
-                    class: "edit-button", 
-                    Button {
-                        text: button_text,
-                        onpress: move |_| edit_mode.set(!edit_mode),
+                show_texts.then(|| rsx!(
+                    div {
+                        class: "edit-button", 
+                        Button {
+                            text: "Edit".to_owned(),
+                            onpress: move |_| edit_mode.set(!edit_mode),
+                        },
                     },
-                },
-                show_edit_fields.then(|| rsx!(
+                    p { 
+                        class: "username",
+                        "{username}"
+                    },
+                    p { 
+                        class: "status-message",
+                        "{status_message}"
+                    }
+                ))
+                show_edit_fields.then(|| 
+                    {
+                    let new_username_val = use_ref(&cx, String::new);
+                    let new_status_message_val = use_ref(&cx, || format!("{}", status_message));
+                    rsx!(
+                    div {
+                        class: "edit-button", 
+                        Button {
+                            text: "Save".to_owned(),
+                            onpress: move |_| {
+                                let new_username = new_username_val.with(|i| i.clone());
+                                if !new_username.is_empty() && new_username.len() > 3 {
+                                    username.set(new_username);
+                                }
+                                let new_status_message = new_status_message_val.with(|i| i.clone());
+                                status_message.set(new_status_message);
+                                edit_mode.set(!edit_mode);
+                            },
+                        },
+                    },
                     div {
                         class: "username", 
                         Input {
                             placeholder: format!("{}", username),
                             disabled: false,
+                            onchange: move |value| {
+                                *new_username_val.write_silent() = value;
+                            }, 
                             options: Options {
                                 with_clear_btn: true,
                                 ..Options::default()
@@ -79,25 +112,19 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                   div {
                         class: "status-message-edit", 
                         Input {
-                            placeholder: "Type new status message".to_owned(),
+                            placeholder: format!("{}", status_message),
                             disabled: false,
+                            onchange: move |value| {
+                                *new_status_message_val.write_silent() = value;
+                            }, 
                             options: Options {
                                 with_clear_btn: true,
                                 ..Options::default()
                             }
                         }
                     },
-                )),
-                show_texts.then(|| rsx!(
-                    p { 
-                        class: "username",
-                        "{username}"
-                    },
-                    p { 
-                        class: "status-message",
-                        "Status message"
-                    }
-                ))
+                    )}),
+              
             },
         }
     ))
