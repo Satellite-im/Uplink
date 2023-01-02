@@ -1,12 +1,5 @@
-#[cfg(target_os = "macos")]
-use cocoa::appkit::{NSColor, NSWindow};
 use dioxus::prelude::*;
-use dioxus_desktop::{
-    tao::{dpi::PhysicalPosition, window::Theme},
-    use_window,
-    wry::webview::WebviewExtMacOS,
-    LogicalSize, WindowBuilder,
-};
+use dioxus_desktop::{tao::dpi::PhysicalPosition, use_window, LogicalSize, WindowBuilder};
 use kit::{
     components::{
         indicator::{Platform, Status},
@@ -48,15 +41,7 @@ fn make_window() -> WindowBuilder {
 #[allow(non_snake_case)]
 pub fn OverlayDom(cx: Scope) -> Element {
     let window = use_window(cx);
-    // let _ = window.set_ignore_cursor_events(true);
-    #[cfg(target_os = "macos")]
-    {
-        let wry_webview = &window.webview;
-        let ns_window = wry_webview.ns_window();
-        unsafe {
-            ns_window.setOpaque_(false);
-        }
-    }
+    let _ = window.set_ignore_cursor_events(true);
 
     cx.render(rsx! {
         style { "{UIKIT_STYLES} {APP_STYLE}" },
@@ -72,8 +57,11 @@ pub fn OverlayDom(cx: Scope) -> Element {
                     class: "username",
                     "Username"
                 },
-                IconElement {
-                    icon: Icon::SpeakerWave
+                span {
+                    class: "is-audible-indication",
+                    IconElement {
+                        icon: Icon::SpeakerWave
+                    }
                 }
             },
             div {
@@ -86,9 +74,6 @@ pub fn OverlayDom(cx: Scope) -> Element {
                     class: "username",
                     "Username"
                 },
-                IconElement {
-                    icon: Icon::SpeakerWave
-                }
             },
             div {
                 class: "overlay-user",
@@ -100,8 +85,11 @@ pub fn OverlayDom(cx: Scope) -> Element {
                     class: "username",
                     "Username"
                 },
-                IconElement {
-                    icon: Icon::SpeakerWave
+                span {
+                    class: "is-audible-indication",
+                    IconElement {
+                        icon: Icon::SpeakerXMark
+                    }
                 }
             }
         }

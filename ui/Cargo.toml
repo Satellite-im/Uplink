@@ -9,7 +9,7 @@ edition = "2021"
 dioxus = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 dioxus-hooks = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 dioxus-router = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
-dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
+dioxus-desktop = { git="https://github.com/DioxusLabs/dioxus", features = ["transparent"], rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 dioxus-core = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }

@@ -2,21 +2,21 @@
 
 use clap::Parser;
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSColor, NSWindow};
+use cocoa::appkit::NSWindow;
+use config::Configuration;
+use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::menu::AboutMetadata;
 #[cfg(target_os = "macos")]
 use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
-use dioxus_desktop::{tao, use_window};
-
-use dioxus::prelude::*;
-use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
-
+use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
+use overlay::{make_config, OverlayDom};
 use state::State;
 use std::fs;
 use std::path::PathBuf;
@@ -302,6 +302,14 @@ fn bootstrap(cx: Scope) -> Element {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
+
+    // TODO: Wire this to state so that it can be toggled on the fly
+    // TODO: We need to make sure when we close the app, we first close the overlay.
+    let enable_overlay = Configuration::load_or_default().general.enable_overlay;
+    if enable_overlay {
+        let overlay_test = VirtualDom::new(OverlayDom);
+        desktop.new_window(overlay_test, make_config());
+    }
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
