@@ -1,0 +1,31 @@
+:root {
+    --border-color: #ccc;
+    
+    --placeholder: #999;
+    
+    --text-color: rgb(0, 0, 0);
+    --text-color-muted: #999;
+    --text-color-dark: #333;
+    --text-color-bright: rgb(67, 64, 64);
+    
+    --primary: rgba(113, 113, 235, 0.923);
+    --primary-dark: #44a;
+    --primary-light: #88e;
+    
+    --secondary: rgba(180, 171, 171, 0.909);
+    --secondary-light: rgba(201, 193, 193, 0.806);
+    --secondary-dark: rgba(56, 50, 50, 0.585);
+    
+    --background: rgb(236, 236, 236);
+    --background-light: #eee;
+    --background-dark: #ddd;
+    
+    --success: #0c0;
+    --success-light: #0f0;
+    
+    --warning: rgb(228, 114, 0);
+    --warning-light: rgb(255, 166, 1);
+    
+    --danger: #c00;
+    --danger-light: #f00;
+    }
