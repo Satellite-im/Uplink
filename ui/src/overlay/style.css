@@ -1,0 +1,33 @@
+.overlay-user {
+  display: inline-flex;
+  flex-direction: row;
+  gap: var(--gap);
+}
+
+body,
+html,
+#main {
+  background-color: transparent !important;
+  height: 100%;
+  width: 100%;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#main {
+  padding: var(--gap);
+}
+
+#main .user-image-wrap {
+  transform: scale(0.75);
+  margin: -10px 0 0 -10px;
+}
+
+#main .overlay-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--gap);
+  height: 100%;
+}

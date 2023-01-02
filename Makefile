@@ -1,6 +1,6 @@
 TARGET = ui
 
-SIGNING_KEY = 7KLQJQ3MKD
+SIGNING_KEY = F6ZAL7ANAD
 ASSETS_DIR = ui/extra
 RELEASE_DIR = target/release
 

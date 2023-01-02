@@ -1,6 +1,8 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
+#[cfg(target_os = "macos")]
+use cocoa::appkit::{NSColor, NSWindow};
 use dioxus_desktop::tao::dpi::LogicalSize;
 #[cfg(target_os = "macos")]
 use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
@@ -24,6 +26,7 @@ use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
+use wry::webview::WebviewExtMacOS;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -31,7 +34,7 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::{WarpCmdRx, WarpEventRx, WarpCmdTx, WarpEventTx};
+use crate::warp_runner::{WarpCmdRx, WarpCmdTx, WarpEventRx, WarpEventTx};
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
@@ -42,6 +45,7 @@ use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
+pub mod overlay;
 pub mod state;
 pub mod testing;
 pub mod utils;
@@ -123,11 +127,11 @@ fn main() {
     let mut edit_menu = Menu::new();
     let mut window_menu = Menu::new();
 
-    app_menu.add_native_item(MenuItem::Quit);
     app_menu.add_native_item(MenuItem::About(
         String::from("Uplink"),
         AboutMetadata::default(),
     ));
+    app_menu.add_native_item(MenuItem::Quit);
     // add native shortcuts to `edit_menu` menu
     // in macOS native item are required to get keyboard shortcut
     // to works correctly
@@ -167,12 +171,25 @@ fn main() {
             .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
-            .with_titlebar_transparent(true)
+            .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
     }
+
     let config = Config::default();
 
-    dioxus_desktop::launch_cfg(bootstrap, config.with_window(window.with_menu(main_menu)))
+    dioxus_desktop::launch_cfg(
+        bootstrap,
+        config
+            .with_window(window.with_menu(main_menu))
+            .with_custom_index(
+                r#"
+    <!doctype html>
+    <html>
+    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+    </html>"#
+                    .to_string(),
+            ),
+    )
 }
 
 fn bootstrap(cx: Scope) -> Element {
@@ -275,6 +292,12 @@ fn bootstrap(cx: Scope) -> Element {
 
     let desktop = use_window(cx);
 
+    let wry_webview = &desktop.webview;
+    let c = wry_webview.ns_window();
+    unsafe {
+        c.setOpaque_(false);
+    }
+
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
@@ -370,7 +393,7 @@ fn bootstrap(cx: Scope) -> Element {
                     }
                 },
                 Route {
-                    to: "pre/unlock",
+                    to: "/pre/unlock",
                     UnlockLayout {
 
                     }
