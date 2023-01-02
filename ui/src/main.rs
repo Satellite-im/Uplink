@@ -1,14 +1,10 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
-#[cfg(target_os = "macos")]
-use cocoa::appkit::NSWindow;
 use config::Configuration;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::menu::AboutMetadata;
-#[cfg(target_os = "macos")]
-use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
@@ -27,7 +23,6 @@ use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
-use wry::webview::WebviewExtMacOS;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -167,6 +162,8 @@ fn main() {
 
     #[cfg(target_os = "macos")]
     {
+        use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+
         window = window
             .with_has_shadow(true)
             .with_title_hidden(true)
@@ -292,12 +289,6 @@ fn bootstrap(cx: Scope) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
 
     let desktop = use_window(cx);
-
-    let wry_webview = &desktop.webview;
-    let c = wry_webview.ns_window();
-    unsafe {
-        c.setOpaque_(false);
-    }
 
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
