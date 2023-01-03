@@ -14,17 +14,15 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 // use state::{Action, ActionHook, State};
-use state::State;
+use state::{Action, State};
 use std::fs;
 use std::path::PathBuf;
-use std::rc::Weak;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
-use wry::webview::WebView;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -205,9 +203,14 @@ fn bootstrap(cx: Scope) -> Element {
     //use_init_atom_root(cx);
     use_shared_state_provider(cx, || state);
 
+    cx.render(rsx!(crate::app {}))
+}
+
+fn app(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
     let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
+    let first_render = use_ref(cx, || false);
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -297,13 +300,16 @@ fn bootstrap(cx: Scope) -> Element {
         None => String::from(""),
     };
 
-    let enable_overlay = Configuration::load_or_default().general.enable_overlay;
-    let mut _overlay: Option<Weak<WebView>> = None;
-    // Create a window rendering the overlay.
-    if enable_overlay {
-        let overlay_test = VirtualDom::new(OverlayDom);
-        _overlay = Some(desktop.new_window(overlay_test, make_config()));
+    if !*first_render.read() {
+        *first_render.write_silent() = false;
+        // Create a window rendering the overlay.
+        if Configuration::load_or_default().general.enable_overlay {
+            let overlay_test = VirtualDom::new(OverlayDom);
+            let window = desktop.new_window(overlay_test, make_config());
+            state.write_silent().mutate(Action::AddWindow(window));
+        }
     }
+
     // TODO:
     // Close the overlay when the state changes.
     // Close the overlay when we close the main window.

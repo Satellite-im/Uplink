@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt, fs,
+    rc::Weak,
 };
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
@@ -71,6 +72,18 @@ impl Clone for State {
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),
+        }
+    }
+}
+
+impl Drop for State {
+    fn drop(&mut self) {
+        for window in &self.ui.windows {
+            if let Some(window) = Weak::upgrade(window) {
+                (*window)
+                    .evaluate_script("close()")
+                    .expect("failed to close window when dropping State");
+            }
         }
     }
 }
@@ -529,6 +542,9 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::AddWindow(window) => {
+                self.ui.windows.push(window);
+            }
             Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),

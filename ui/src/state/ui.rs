@@ -1,13 +1,14 @@
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
+use wry::webview::WebView;
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
     // things like the overlay and popout player get created via DesktopContext::new_window. they are stored here so they can be closed later.
-    // #[serde(skip)]
-    //pub windows: Vec<Weak<WebView>>,
+    #[serde(skip)]
+    pub windows: Vec<Weak<WebView>>,
     // Should the active video play in popout?
     #[serde(default)]
     pub popout_player: bool,
