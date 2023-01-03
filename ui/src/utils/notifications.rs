@@ -1,9 +1,6 @@
 use super::sounds::{Play, Sounds};
 use notify_rust::Notification;
 
-#[cfg(target_os = "macos")]
-use objc::{msg_send, sel, sel_impl};
-
 // Implementation to create and push new notifications
 #[allow(non_snake_case)]
 pub fn PushNotification(
@@ -28,6 +25,7 @@ pub fn set_badge(count: u32) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     unsafe {
         use cocoa::{appkit::NSApp, base::nil, foundation::NSString};
+        use objc::{msg_send, sel, sel_impl};
 
         let label = if count == 0 {
             nil
