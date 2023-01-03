@@ -27,6 +27,7 @@ use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
+#[cfg(target_os = "macos")]
 use wry::webview::WebviewExtMacOS;
 
 use crate::components::media::popout_player::PopoutPlayer;
@@ -293,10 +294,13 @@ fn bootstrap(cx: Scope) -> Element {
 
     let desktop = use_window(cx);
 
-    let wry_webview = &desktop.webview;
-    let c = wry_webview.ns_window();
-    unsafe {
-        c.setOpaque_(false);
+    #[cfg(target_os = "macos")]
+    {
+        let wry_webview = &desktop.webview;
+        let c = wry_webview.ns_window();
+        unsafe {
+            c.setOpaque_(false);
+        }
     }
 
     let theme = match &state.read().ui.theme {
