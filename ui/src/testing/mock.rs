@@ -56,6 +56,7 @@ pub fn generate_mock() -> State {
 
     State {
         ui: UI {
+            windows: vec![],
             popout_player: false,
             silenced: false,
             muted: false,

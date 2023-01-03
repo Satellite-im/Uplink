@@ -73,6 +73,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
+                        // todo: open a window but...need one call at a time
                         state.write().mutate(Action::TogglePopout);
                     }
                 },
