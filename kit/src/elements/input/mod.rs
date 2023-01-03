@@ -164,7 +164,7 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
-    let val = use_state(cx, || get_text(&cx));
+    let val = use_ref(cx, || get_text(&cx));
     let default_options = Options::default();
     let options = match &cx.props.options {
         Some(opts) => opts,
@@ -217,33 +217,35 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 input {
                     id: "{input_id}",
                     disabled: "{disabled}",
-                    value: "{val}",
+                    value: format_args!("{}", val.read()),
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         let validation_result = validate(&cx, &current_val).unwrap_or_default();
                         error.set(validation_result.clone());
-                        val.set(current_val.clone());
+                        *val.write_silent() = current_val.to_string();
+
                         if !validation_result.is_empty() {
                             valid.set(false);
                             evt.stop_propogation();
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
-                        emit(&cx, current_val.to_string());
+                        emit(&cx, val.read().to_string());
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.to_string());
+                            emit_return(&cx, val.read().to_string());
                         }
                     }
                 }
-                (options.with_clear_btn && !val.is_empty()).then(|| rsx!(
+                (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
-                            val.set("".into());
+                            *val.write() = "".into();
+                            emit(&cx, val.read().to_string());
                             error.set("".into());
                             valid.set(false);
                         },
