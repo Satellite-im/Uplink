@@ -1,9 +1,7 @@
-use chrono::{DateTime, Utc};
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::Message};
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
