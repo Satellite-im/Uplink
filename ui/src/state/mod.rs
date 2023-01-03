@@ -28,11 +28,7 @@ use warp::{crypto::DID, raygun::Message};
 
 use crate::testing::mock::generate_mock;
 
-use self::{
-    action::ActionHook,
-    chats::Direction,
-    ui::{GroupedMessage, MessageGroup},
-};
+use self::{action::ActionHook, chats::Direction};
 
 // todo: putting the State struct 300 lines into the file makes it hard to find :( state.rs should be turned into its own module and split into multiple files.
 #[derive(Default, Deserialize, Serialize)]
@@ -668,4 +664,18 @@ impl State {
     pub fn mock() -> State {
         generate_mock()
     }
+}
+
+// Define a struct to represent a group of messages from the same sender.
+pub struct MessageGroup {
+    pub sender: DID,
+    pub remote: bool,
+    pub messages: Vec<GroupedMessage>,
+}
+
+// Define a struct to represent a message that has been placed into a group.
+pub struct GroupedMessage {
+    pub message: Message,
+    pub is_first: bool,
+    pub is_last: bool,
 }

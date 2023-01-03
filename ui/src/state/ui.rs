@@ -66,34 +66,3 @@ pub struct Theme {
     pub name: String,
     pub styles: String,
 }
-
-// Define a struct to represent a group of messages from the same sender.
-pub struct MessageGroup {
-    pub sender: DID,
-    pub remote: bool,
-    pub messages: Vec<GroupedMessage>,
-}
-
-// Define a struct to represent a message that has been placed into a group.
-pub struct GroupedMessage {
-    pub message: Message,
-    pub is_first: bool,
-    pub is_last: bool,
-}
-
-#[derive(Eq, PartialEq)]
-pub struct MessageDivider {
-    pub timestamp: Option<DateTime<Utc>>,
-}
-
-impl Ord for MessageDivider {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.timestamp.cmp(&other.timestamp)
-    }
-}
-
-impl PartialOrd for MessageDivider {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
