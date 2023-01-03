@@ -1,4 +1,4 @@
-use dioxus::{prelude::*, html::input_data::keyboard_types::Code};
+use dioxus::{prelude::*};
 use kit::{
     elements::{button::Button, input::{Options, Input}},
 };
@@ -62,7 +62,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "edit-button", 
                         Button {
-                            text: "Edit".to_owned(),
+                            text: get_local_text("settings-profile.edit-button"),
                             onpress: move |_| edit_mode.set(!edit_mode),
                         },
                     },
@@ -83,7 +83,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "edit-button", 
                         Button {
-                            text: "Save".to_owned(),
+                            text: get_local_text("settings-profile.save-button"),
                             onpress: move |_| {
                                 let new_username = new_username_val.with(|i| i.clone());
                                 if !new_username.is_empty() && new_username.len() > 3 {

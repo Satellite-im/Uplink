@@ -220,7 +220,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
-                        emit(&cx, val.to_string());
+                        emit(&cx, current_val.to_string());
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {

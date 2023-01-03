@@ -68,6 +68,8 @@ settings = Settings
 settings-profile = Profile Settings
     .change-banner = Mudar banner
     .change-avatar = Mudar avatar
+    .edit-button = Editar
+    .save-button = Salvar
 
 settings-general = General Settings
     .splash-screen = Splash Screen

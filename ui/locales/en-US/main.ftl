@@ -68,6 +68,8 @@ settings = Settings
 settings-profile = Profile Settings
     .change-banner = Change banner
     .change-avatar = Change avatar
+    .edit-button = Edit
+    .save-button = Save
 
 settings-general = General Settings
     .overlay = Uplink Overlay
