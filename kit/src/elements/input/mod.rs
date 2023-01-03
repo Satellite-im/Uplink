@@ -24,6 +24,10 @@ pub struct Options {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    #[props(default = "".to_owned())]
+    id: String,
+    #[props(default = false)]
+    focus: bool,
     #[props(optional)]
     _loading: Option<bool>,
     placeholder: String,
@@ -181,6 +185,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         None => "text",
     };
 
+    let input_id = cx.props.id.clone();
+    let script = include_str!("./script.js").replace("UUID", &cx.props.id);
+
     cx.render(rsx! (
         div {
             class: {
@@ -204,7 +211,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 )),
+                cx.props.focus.then(|| rsx!(
+                    script { "{script}"},
+                )),
                 input {
+                    id: "{input_id}",
                     disabled: "{disabled}",
                     value: "{val}",
                     "type": "{typ}",

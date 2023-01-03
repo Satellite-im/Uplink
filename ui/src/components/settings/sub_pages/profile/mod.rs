@@ -98,6 +98,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "username", 
                         Input {
+                            id: "username_text_field".to_owned(),
+                            focus: true,
                             placeholder: format!("{}", username),
                             disabled: false,
                             onchange: move |value| {
