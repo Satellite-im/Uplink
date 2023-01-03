@@ -88,9 +88,11 @@
   display: block;
   position: absolute;
   top: 130%;
-  left: 57%;
+  left: 50%;
   transform: translate(-50%, -50%);
   color: white;
+  text-align: center;
+  text-justify: inter-word;
   font-size: 12px;
   pointer-events: none;
 }
