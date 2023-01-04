@@ -93,12 +93,12 @@ pub struct Call {
 
 impl Drop for Call {
     fn drop(&mut self) {
-        self.media_view.as_ref().map(|view| {
-            if let Some(v) = Weak::upgrade(&view) {
+        if let Some(view) = self.media_view.as_ref() {
+            if let Some(v) = Weak::upgrade(view) {
                 v.evaluate_script("close()")
                     .expect("failed to close webview");
             }
-        });
+        };
     }
 }
 
