@@ -5,6 +5,7 @@ use kit::{
 };
 use rfd::FileDialog;
 use mime::*;
+use warp::{error::Error, logging::tracing::log};
 
 use crate::{
     utils::{
@@ -19,9 +20,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let edit_mode = use_state(&cx, || false);
     let username = use_state(&cx, || "username".to_owned());
     let status_message = use_state(&cx, || "status message".to_owned());
-    let warning_message = use_ref(&cx, || get_local_text("settings-profile.greater-than-32"));
-
-
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
@@ -44,7 +42,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         src: "{banner_state}",
                         height: "100%",
                         width: "100%",
-                        onclick: move |_| change_profile_image(banner_state),
+                        onclick: move |_| {
+                            if let Err(error) = change_profile_image(banner_state) {
+                                log::error!("Error to change profile avatar image {error}");
+                            };
+                        }
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
             },
@@ -53,7 +55,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     img {
                         class: "profile-avatar",
                         src: "{image_state}",
-                        onclick: move |_| change_profile_image(image_state),
+                        onclick: move |_| {
+                            if let Err(error) = change_profile_image(image_state) {
+                                log::error!("Error to change profile avatar image {error}");
+                            };
+                        }
                     },
                     p {class: "change-avatar-text", "{change_avatar_text}" },
                 }
@@ -61,7 +67,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     class: "plus-button", 
                     Button {
                         icon: kit::icons::Icon::Plus,
-                        onpress: move |_| change_profile_image(image_state),
+                        onpress: move |_| {
+                            if let Err(error) = change_profile_image(image_state) {
+                                log::error!("Error to change profile avatar image {error}");
+                            };
+                        }
                     },
                 },
                 show_texts.then(|| rsx!(
@@ -93,12 +103,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             onpress: move |_| {
                                 let new_username = new_username_val.with(|i| i.clone());
                                 if new_username_val.read().len() < 4 {
-                                    *warning_message.write_silent() = get_local_text("settings-profile.less-than-4");
-                                    let script = r#"
-                                    document.getElementById("username_warning_2").style.display = 'block'
-                                    document.getElementById("status_message_edit").style.top = "324px";
-                                    "#;
-                                    use_eval(cx)(script.to_owned());
                                     return;
                                 }
                                 if new_username.len() > 3 {
@@ -122,6 +126,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             onchange: move |value| {
                                 let val: String = value;
                                 *new_username_val.write() = val.clone();
+                                if val.len() < 4 {
+                                    let script = r#"
+                                    document.getElementById("username_warning_2").style.display = 'block'
+                                    document.getElementById("status_message_edit").style.top = "324px";
+                                    "#;
+                                    use_eval(cx)(script.to_owned());
+                                }
                                 if val.len() == 32 {
                                     use_eval(cx)(get_limited_to_32_chars_script()[0].clone());
                                 } else if val.len() < 32 && val.len() > 3 {
@@ -168,13 +179,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn change_profile_image(image_state: &UseState<String>) {
-    let path = match FileDialog::new().add_filter("image", &["jpg", "png", "jpeg", "svg"]).set_directory(".").pick_file() {
+fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn std::error::Error>>{
+    let path = match FileDialog::new()
+    .add_filter("image", &["jpg", "png", "jpeg", "svg"])
+    .set_directory(".").pick_file() {
         Some(path) => path,
-        None => return
+        None => return Err(Box::from(Error::InvalidItem)),
     };
 
-    let file = std::fs::read(&path).unwrap_or_default();
+    let file = std::fs::read(&path)?;
 
     let filename = path.file_name().map(|file| file.to_string_lossy().to_string()).unwrap_or_default();
 
@@ -207,6 +220,7 @@ fn change_profile_image(image_state: &UseState<String>) {
     // TODO: Add upload picture to multipass here
 
     image_state.set(image);
+    Ok(())
 }
 
 fn get_limited_to_32_chars_script() -> Vec<String> {
