@@ -33,7 +33,8 @@ pub fn Compose(cx: Scope) -> Element {
     let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
-    let active_media = active_chat.active_media;
+    let active_media = Some(active_chat.id) == state.read().chats.active_media;
+    // used to make this chat the active media chat
     let active_media_chat = active_chat.clone();
  
     // TODO: Pending new message divider implementation
