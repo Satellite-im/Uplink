@@ -20,18 +20,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username = use_state(&cx, || "username".to_owned());
     let status_message = use_state(&cx, || "status message".to_owned());
     let warning_message = use_ref(&cx, || get_local_text("settings-profile.greater-than-32"));
-    let disable_save_button = use_ref(&cx, || false);
 
 
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
-    let status_message_greater_than_128 = get_local_text("settings-profile.greater-than-128");
+    let username_limited_to_32 = get_local_text("settings-profile.limited-to-32");
+    let username_less_than_4 = get_local_text("settings-profile.less-than-4");
+    let status_message_limited_to_128 = get_local_text("settings-profile.limited-to-128");
 
     let show_texts = !**edit_mode;
     let show_edit_fields = **edit_mode;
-
-
 
     cx.render(rsx!(
         div {
@@ -84,34 +83,29 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 ))
                 show_edit_fields.then(|| 
                     {
-                    let new_username_val = use_ref(&cx, String::new);
+                    let new_username_val = use_ref(&cx,  || format!("{}", username));
                     let new_status_message_val = use_ref(&cx, || format!("{}", status_message));
                     rsx!(
                     div {
                         class: "edit-button", 
                         Button {
                             text: get_local_text("settings-profile.save-button"),
-                            disabled: *disable_save_button.read(),
                             onpress: move |_| {
                                 let new_username = new_username_val.with(|i| i.clone());
                                 if new_username_val.read().len() < 4 {
                                     *warning_message.write_silent() = get_local_text("settings-profile.less-than-4");
                                     let script = r#"
-                                    document.getElementById("greater_than_32").style.display = 'block'
-                                    document.getElementById("status_message_edit").style.top = "320px";
+                                    document.getElementById("username_warning_2").style.display = 'block'
+                                    document.getElementById("status_message_edit").style.top = "324px";
                                     "#;
                                     use_eval(cx)(script.to_owned());
                                     return;
                                 }
-                                if !new_username.is_empty() && new_username.len() > 3 && new_username.len() < 33 {
+                                if new_username.len() > 3 {
                                     username.set(new_username.clone());
                                 }
-                             
-                                
                                 let new_status_message = new_status_message_val.with(|i| i.clone());
-                                if new_status_message.len() < 128 {
-                                    status_message.set(new_status_message);
-                                }
+                                status_message.set(new_status_message);
                                 edit_mode.set(!edit_mode);
                             },
                         },
@@ -122,17 +116,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             Input {
                             id: "username_text_field".to_owned(),
                             focus: true,
-                            placeholder: format!("{}", username),
-                            max_lenght: 33,
+                            placeholder: "".to_owned(),
+                            default_text: format!("{}", if !new_username_val.read().is_empty() {username} else {""}),
+                            max_lenght: 32,
                             disabled: false,
                             onchange: move |value| {
                                 let val: String = value;
-                                *new_username_val.write_silent() = val.clone();
-                                if val.len() == 33 {
-                                    *disable_save_button.write() = true;
+                                *new_username_val.write() = val.clone();
+                                if val.len() == 32 {
                                     use_eval(cx)(get_limited_to_32_chars_script()[0].clone());
-                                } else if val.len() < 33 {
-                                    *disable_save_button.write() = false;
+                                } else if val.len() < 32 && val.len() > 3 {
                                     use_eval(cx)(get_limited_to_32_chars_script()[1].clone());
                                 }
                             }, 
@@ -142,22 +135,34 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             },
                         }
                     p {class: "username-len-counter", format!("{}/32", new_username_val.read().len())},
-                    p {id: "username_warning", class: "username-warning", "Username is limited to 32 characters"},
+                    p {id: "username_warning", class: "username-warning", format!("{}", username_limited_to_32)},
+                    p {id: "username_warning_2", class: "username-warning-2", format!("{}", username_less_than_4)},
+
                     },
                   div {
                         id: "status_message_edit",
                         class: "status-message-edit", 
                         Input {
-                            placeholder: format!("{}", status_message),
+                            placeholder: "".to_owned(),
                             disabled: false,
+                            default_text: format!("{}", if !new_status_message_val.read().is_empty() {status_message} else {""}),
+                            max_lenght: 128,
                             onchange: move |value| {
-                                *new_status_message_val.write_silent() = value;
+                                let val: String = value;
+                                *new_status_message_val.write() = val.clone();
+                                if val.len() == 128 {
+                                    use_eval(cx)(get_limited_to_128_chars_script()[0].clone());
+                                } else if val.len() < 128 {
+                                    use_eval(cx)(get_limited_to_128_chars_script()[1].clone());
+                                }
                             }, 
                             options: Options {
                                 with_clear_btn: true,
                                 ..Options::default()
                             }
                         }
+                        p {class: "status-message-len-counter", format!("{}/128", new_status_message_val.read().len())},
+                        p {id: "status_message_warning", class: "status-message-warning", format!("{}", status_message_limited_to_128)},
                     },
                     )}),
               
@@ -219,9 +224,9 @@ fn get_limited_to_32_chars_script() -> Vec<String> {
     let script_forward = r#"
         const element = document.getElementById("status_message_edit");
         let top = parseInt(getComputedStyle(element).top, 10)
-        if (top < 320) {
+        if (top < 324) {
             const interval = setInterval(() => {
-                top += 320 - top;
+                top += 324 - top;
                 element.style.top = `${top}px`;
                 }, 1)
                 
@@ -233,7 +238,18 @@ fn get_limited_to_32_chars_script() -> Vec<String> {
         "#;
     let script_back =  r#"
         document.getElementById("username_warning").style.display = 'none'
-        document.getElementById("status_message_edit").style.top = "300px";
+        document.getElementById("username_warning_2").style.display = 'none'
+        document.getElementById("status_message_edit").style.top = "308px";
+    "#;
+    return vec![script_forward.to_owned(), script_back.to_owned()];
+}
+
+fn get_limited_to_128_chars_script() -> Vec<String> {
+    let script_forward = r#"
+        document.getElementById("status_message_warning").style.display = 'block'
+    "#;
+    let script_back =  r#"
+        document.getElementById("status_message_warning").style.display = 'none'
     "#;
     return vec![script_forward.to_owned(), script_back.to_owned()];
 }

@@ -129,16 +129,36 @@
   display: block;
   position: absolute;
   transition: top 0.5s;
-  top: 300px;
+  top: 308px;
 }
 
 .username-warning {
+  color: var(--warning-light);
+  font-size: 12px;
+  display: none;
+}
+
+.username-warning-2 {
   color: var(--danger-light);
   font-size: 12px;
   display: none;
 }
 
 .username-len-counter {
+  color: var(--text-color-dark);
+  font-size: 10px;
+  position: absolute;
+  top: -16px;
+  left: 90%;
+}
+
+.status-message-warning {
+  color: var(--warning-light);
+  font-size: 12px;
+  display: none;
+}
+
+.status-message-len-counter {
   color: var(--text-color-dark);
   font-size: 10px;
   position: absolute;

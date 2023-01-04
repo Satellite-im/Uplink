@@ -70,8 +70,8 @@ settings-profile = Profile Settings
     .change-avatar = Mudar avatar
     .edit-button = Editar
     .save-button = Salvar
-    .greater-than-32 = Nome de usuário é limitado a 32 caracteres
-    .greater-than-128 = Mensagem de status é limitada a 32 caracteres
+    .limited-to-32 = Nome de usuário é limitado a 32 caracteres
+    .limited-to-128 = Mensagem de status é limitada a 128 caracteres
     .less-than-4 = Minimo caracteres para nome de usuário é 4
 
 settings-general = General Settings
