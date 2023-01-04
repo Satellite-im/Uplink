@@ -173,16 +173,38 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Total Space should appear at the top of Files Page.
 
 ### Settings
+**Profile Page**
+- [ ] *Change Avatar* should appear when user hovers cursor over Profile Pic.
+- [ ] *Change Banner* should appear when user hovers cursor over Banner area.
+- [ ] Clicking the Banner should open Users local files browser.
+- [ ] Clicking the Profile Picutre should open Users local files browser.
+- [ ] Clicking *Edit* should display input fields for Username and Status.
+- [ ] Error message should appear when User tries to type a username or stauts message longer than 32 characters. 
+- [ ] Error message should appear when user attempts to save a username or status with less than 4 characters.
+
+**General** 
 - [ ] User should land in General tab when entering Settings. 
 - [ ] User should be able to toggle *Splash Screen*.
 - [ ] Clicking Theme should open the Themes Dropdown.
 - [ ] Clicking *Clear Themes* should set the theme back to default. 
 - [ ] UI should change accordingly when User sets a new theme.
 - [ ] User should be able to change the language by selecting from the Language Dropdown menu.
+  
+**Privacy**
 - [ ] Clicking *Backup Phrase* in the *Privacy* tab should backup Users account phrase.
+
+**Audio**
 - [ ] User should be able to toggle *Call Timer* on and off.
+
+**Files**
 - [ ] User should be able to toggle *Local Sync* on and off.
 - [ ] Clicking *Open Sync Folder* should open the folder where Users local files are synced to. 
+
+**Extensions**
+- [ ] User should be able to toggle Placeholder on and off.
+- [ ] Clicking "Open Extensions Folder" should open Users extension folder.
+
+**Developer**
 - [ ] Clicking *Open Codebase* should take the User to Github.
 - [ ] Clicking *Open Cache* should open the .Cache folder within Uplink.
 - [ ] Clicking *Compress* should compress the Users .Cache into a zip file.
