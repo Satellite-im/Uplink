@@ -20,6 +20,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username = use_state(&cx, || "username".to_owned());
     let status_message = use_state(&cx, || "status message".to_owned());
     let warning_message = use_ref(&cx, || get_local_text("settings-profile.greater-than-32"));
+    let disable_save_button = use_ref(&cx, || false);
+
 
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
@@ -89,6 +91,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         class: "edit-button", 
                         Button {
                             text: get_local_text("settings-profile.save-button"),
+                            disabled: *disable_save_button.read(),
                             onpress: move |_| {
                                 let new_username = new_username_val.with(|i| i.clone());
                                 if new_username_val.read().len() < 4 {
@@ -116,17 +119,21 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     div {
                         class: "username", 
-                        Input {
+                        {
+                        rsx!(Input {
                             id: "username_text_field".to_owned(),
                             focus: true,
                             placeholder: format!("{}", username),
+                            max_lenght: 33,
                             disabled: false,
                             onchange: move |value| {
-                                *new_username_val.write_silent() = value;
-
-                                if new_username_val.read().len() == 33 {
+                                let val: String = value;
+                                *new_username_val.write_silent() = val.clone();
+                                if val.len() == 33 {
+                                    *disable_save_button.write() = true;
                                     use_eval(cx)(get_limited_to_32_chars_script()[0].clone());
-                                } else if new_username_val.read().len() <= 32 {
+                                } else if val.len() < 33 {
+                                    *disable_save_button.write() = false;
                                     use_eval(cx)(get_limited_to_32_chars_script()[1].clone());
                                 }
                             }, 
@@ -134,7 +141,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 with_clear_btn: true,
                                 ..Options::default()
                             },
-                        },
+                        })
+                    }
                         p {id: "username_warning", class: "username-warning", "Username is limited to 32 characters"},
                     },
                   div {
@@ -214,7 +222,7 @@ fn get_limited_to_32_chars_script() -> Vec<String> {
         let top = parseInt(getComputedStyle(element).top, 10)
         if (top < 320) {
             const interval = setInterval(() => {
-                top += 20;
+                top += 320 - top;
                 element.style.top = `${top}px`;
                 }, 1)
                 

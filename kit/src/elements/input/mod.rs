@@ -32,6 +32,8 @@ pub struct Props<'a> {
     _loading: Option<bool>,
     placeholder: String,
     #[props(optional)]
+    max_lenght: Option<i32>,
+    #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
     is_password: Option<bool>,
@@ -166,6 +168,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
     let default_options = Options::default();
+    let max_length = cx.props.max_lenght.unwrap_or(std::i32::MAX);
     let options = match &cx.props.options {
         Some(opts) => opts,
         None => &default_options,
@@ -218,6 +221,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{input_id}",
                     disabled: "{disabled}",
                     value: format_args!("{}", val.read()),
+                    maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
