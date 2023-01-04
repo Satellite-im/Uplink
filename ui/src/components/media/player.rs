@@ -33,7 +33,6 @@ pub struct Props {
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let window = use_window(cx);
-    let active_chat = state.read().get_active_chat().unwrap_or_default();
 
     let silenced = state
         .read()
@@ -137,7 +136,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write().mutate(Action::SetActiveMedia(active_chat.id));
+                    state.write().mutate(Action::DisableMedia);
                 }
             },
             Button {
