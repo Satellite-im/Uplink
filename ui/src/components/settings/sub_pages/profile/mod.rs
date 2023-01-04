@@ -128,7 +128,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 *new_username_val.write() = val.clone();
                                 if val.len() < 4 {
                                     let script = r#"
-                                    document.getElementById("username_warning_2").style.display = 'block'
+                                    document.getElementById("username_warning_2").style.opacity = 1
                                     document.getElementById("status_message_edit").style.top = "324px";
                                     "#;
                                     use_eval(cx)(script.to_owned());
@@ -225,34 +225,23 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
 
 fn get_limited_to_32_chars_script() -> Vec<String> {
     let script_forward = r#"
-        const element = document.getElementById("status_message_edit");
-        let top = parseInt(getComputedStyle(element).top, 10)
-        if (top < 324) {
-            const interval = setInterval(() => {
-                top += 324 - top;
-                element.style.top = `${top}px`;
-                }, 1)
-                
-                setTimeout(() => {
-                clearInterval(interval);
-                }, 1)
-            }
-            document.getElementById("username_warning").style.display = 'block'
+            document.getElementById("status_message_edit").style.top = "324px";
+            document.getElementById("username_warning").style.opacity = 1
         "#;
     let script_back =  r#"
-        document.getElementById("username_warning").style.display = 'none'
-        document.getElementById("username_warning_2").style.display = 'none'
-        document.getElementById("status_message_edit").style.top = "308px";
+            document.getElementById("username_warning").style.opacity = 0
+            document.getElementById("username_warning_2").style.opacity = 0
+            document.getElementById("status_message_edit").style.top = "308px";
     "#;
     return vec![script_forward.to_owned(), script_back.to_owned()];
 }
 
 fn get_limited_to_128_chars_script() -> Vec<String> {
     let script_forward = r#"
-        document.getElementById("status_message_warning").style.display = 'block'
+        document.getElementById("status_message_warning").style.opacity = 1
     "#;
     let script_back =  r#"
-        document.getElementById("status_message_warning").style.display = 'none'
+        document.getElementById("status_message_warning").style.opacity = 0
     "#;
     return vec![script_forward.to_owned(), script_back.to_owned()];
 }

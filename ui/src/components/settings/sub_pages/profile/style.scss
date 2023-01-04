@@ -135,14 +135,20 @@
 
 .username-warning {
   color: var(--warning-light);
+  transition: opacity 0.5s;
+  opacity: 0;
   font-size: 12px;
-  display: none;
+  display: block;
 }
 
 .username-warning-2 {
   color: var(--warning-light);
   font-size: 12px;
-  display: none;
+  transition: opacity 0.5s;
+  opacity: 0;
+  top: 70%;
+  display: block;
+  position: absolute;
 }
 
 .username-len-counter {
@@ -155,8 +161,10 @@
 
 .status-message-warning {
   color: var(--warning-light);
+  transition: opacity 0.5s;
+  opacity: 0;
   font-size: 12px;
-  display: none;
+  display: block;
 }
 
 .status-message-len-counter {
@@ -166,4 +174,3 @@
   top: -16px;
   left: 90%;
 }
-
