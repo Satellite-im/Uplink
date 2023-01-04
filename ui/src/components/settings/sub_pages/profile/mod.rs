@@ -1,4 +1,5 @@
 use dioxus::{prelude::*};
+use dioxus_desktop::use_eval;
 use kit::{
     elements::{button::Button, input::{Options, Input}},
 };
@@ -18,13 +19,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let edit_mode = use_state(&cx, || false);
     let username = use_state(&cx, || "username".to_owned());
     let status_message = use_state(&cx, || "status message".to_owned());
+    let warning_message = use_ref(&cx, || get_local_text("settings-profile.greater-than-32"));
 
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     let change_avatar_text = get_local_text("settings-profile.change-avatar");
+    let status_message_greater_than_128 = get_local_text("settings-profile.greater-than-128");
 
     let show_texts = !**edit_mode;
     let show_edit_fields = **edit_mode;
+
+
 
     cx.render(rsx!(
         div {
@@ -86,14 +91,28 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("settings-profile.save-button"),
                             onpress: move |_| {
                                 let new_username = new_username_val.with(|i| i.clone());
-                                if !new_username.is_empty() && new_username.len() > 3 {
-                                    username.set(new_username);
+                                if new_username_val.read().len() < 4 {
+                                    *warning_message.write_silent() = get_local_text("settings-profile.less-than-4");
+                                    let script = r#"
+                                    document.getElementById("greater_than_32").style.display = 'block'
+                                    document.getElementById("status_message_edit").style.top = "320px";
+                                    "#;
+                                    use_eval(cx)(script.to_owned());
+                                    return;
                                 }
+                                if !new_username.is_empty() && new_username.len() > 3 && new_username.len() < 33 {
+                                    username.set(new_username.clone());
+                                }
+                             
+                                
                                 let new_status_message = new_status_message_val.with(|i| i.clone());
-                                status_message.set(new_status_message);
+                                if new_status_message.len() < 128 {
+                                    status_message.set(new_status_message);
+                                }
                                 edit_mode.set(!edit_mode);
                             },
                         },
+                        
                     },
                     div {
                         class: "username", 
@@ -104,14 +123,41 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             disabled: false,
                             onchange: move |value| {
                                 *new_username_val.write_silent() = value;
+
+                                if new_username_val.read().len() > 33 {
+                                    let script = r#"
+                                            const element = document.getElementById("status_message_edit");
+                                            let top = parseInt(getComputedStyle(element).top, 10)
+                                            if (top === 300) {
+                                                const interval = setInterval(() => {
+                                                    top += 20;
+                                                    element.style.top = `${top}px`;
+                                                  }, 1)
+                                                  
+                                                  setTimeout(() => {
+                                                    clearInterval(interval);
+                                                  }, 1)
+                                              }
+                                                document.getElementById("username_warning").style.display = 'block'
+                                            "#;
+                                    use_eval(cx)(script.to_owned());
+                                } else {
+                                    let script = r#"
+                                            document.getElementById("username_warning").style.display = 'none'
+                                            document.getElementById("status_message_edit").style.top = "300px";
+                                        "#;
+                                    use_eval(cx)(script.to_owned());
+                                }
                             }, 
                             options: Options {
                                 with_clear_btn: true,
                                 ..Options::default()
                             },
                         },
+                        p {id: "username_warning", class: "username-warning", "Username is limited to 32 characters"},
                     },
                   div {
+                        id: "status_message_edit",
                         class: "status-message-edit", 
                         Input {
                             placeholder: format!("{}", status_message),

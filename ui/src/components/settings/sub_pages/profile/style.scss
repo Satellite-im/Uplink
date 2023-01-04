@@ -128,5 +128,12 @@
 .status-message-edit {
   display: block;
   position: absolute;
-  top: 295px;
+  transition: top 0.5s;
+  top: 300px;
+}
+
+.username-warning {
+  color: var(--danger-light);
+  font-size: 12px;
+  display: none;
 }
