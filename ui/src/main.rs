@@ -371,9 +371,9 @@ fn app(cx: Scope) -> Element {
                     "{pre_release_text}",
                 }
             },
-            state.read().ui.popout_player.then(|| rsx!(
-                PopoutPlayer {}
-            )),
+            //state.read().ui.popout_player.then(|| rsx!(
+           //     PopoutPlayer {}
+           // )),
             Router {
                 Route {
                     to: "/",

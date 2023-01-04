@@ -1,3 +1,4 @@
+use dioxus_desktop::tao::window::WindowId;
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Weak};
@@ -6,22 +7,82 @@ use wry::webview::WebView;
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
-    // things like the overlay and popout player get created via DesktopContext::new_window. they are stored here so they can be closed later.
+    // stores information related to the current call
     #[serde(skip)]
-    pub windows: Vec<Weak<WebView>>,
-    // Should the active video play in popout?
-    #[serde(default)]
+    pub current_call: Option<Call>,
+    // false: the media player is anchored in place
+    // true: the media player can move around
     pub popout_player: bool,
+    #[serde(skip)]
+    pub toast_notifications: HashMap<Uuid, ToastNotification>,
+    pub theme: Option<Theme>,
+    pub enable_overlay: bool,
+    // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
+    #[serde(skip)]
+    pub overlays: Vec<Weak<WebView>>,
+}
+
+impl Drop for UI {
+    fn drop(&mut self) {
+        for window in &self.overlays {
+            if let Some(window) = Weak::upgrade(window) {
+                window
+                    .evaluate_script("close()")
+                    .expect("failed to close window when dropping State");
+            }
+        }
+    }
+}
+
+impl UI {
+    pub fn remove_window(&mut self, id: WindowId) {
+        let to_keep: Vec<Weak<WebView>> = self
+            .overlays
+            .iter()
+            .filter(|x| match Weak::upgrade(x) {
+                None => false,
+                Some(window) => {
+                    if window.window().id() == id {
+                        window
+                            .evaluate_script("close()")
+                            .expect("failed to close webview");
+                        false
+                    } else {
+                        true
+                    }
+                }
+            })
+            .cloned()
+            .collect();
+        self.overlays = to_keep;
+    }
+
+    pub fn toggle_muted(&mut self) {
+        self.current_call = self.current_call.clone().map(|mut x| {
+            x.muted = !x.muted;
+            x
+        });
+    }
+
+    pub fn toggle_silenced(&mut self) {
+        self.current_call = self.current_call.clone().map(|mut x| {
+            x.silenced = !x.silenced;
+            x
+        });
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct Call {
+    // displays the current  video stream
+    // may need changing later to accommodate video streams from multiple participants
+    #[serde(skip)]
+    pub media_view: Option<Weak<WebView>>,
     #[serde(default)]
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
-    #[serde(skip)]
-    pub toast_notifications: HashMap<Uuid, ToastNotification>,
-    #[serde(default)]
-    pub theme: Option<Theme>,
-    #[serde(default)]
-    pub enable_overlay: bool,
+    pub chat_id: Uuid,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]

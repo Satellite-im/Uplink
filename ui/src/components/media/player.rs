@@ -1,6 +1,10 @@
-use crate::state::{Action, State};
+use crate::{
+    components::media::popout_player::PopoutPlayer,
+    state::{Action, State},
+};
 
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 
 use kit::{
@@ -28,9 +32,16 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let window = use_window(cx);
     let active_chat = state.read().get_active_chat().unwrap_or_default();
 
-    let silenced = state.read().ui.silenced;
+    let silenced = state
+        .read()
+        .ui
+        .current_call
+        .clone()
+        .map(|x| x.silenced)
+        .unwrap_or(false);
 
     let silenced_str = silenced.to_string();
 
@@ -73,16 +84,20 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        // todo: open a window but...need one call at a time
-                        state.write().mutate(Action::TogglePopout);
+                        // check id of current media player
+                        // if changed, close the old one
+                        // if the same, do nothing
+                       let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                       let window = window.new_window(popout, Default::default());
+                       state.write_silent().mutate(Action::AddWindow(window));
                     }
                 },
-                state.read().ui.popout_player.then(|| rsx!(
+                /*state.read().ui.popout_player.then(|| rsx!(
                     span {
                         class: "popped-out",
                         video {}
                     }
-                )),
+                )),*/
                 (!state.read().ui.popout_player).then(|| rsx!(
                     video {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",

@@ -20,8 +20,10 @@ pub struct ActionHook {
     pub callback: Callback,
 }
 
+/// used exclusively by State::mutate
 pub enum Action {
     // UI
+    /// change ui::UI::popout_player, which determines if the media_view is anchored in place or moves around
     TogglePopout,
     EndAll,
     ToggleSilence,
@@ -31,6 +33,7 @@ pub enum Action {
     SetTheme(Theme),
     ClearTheme,
     // RemoveToastNotification,
+    /// Toggles the display of media on the provided chat in the `State` struct.
     ToggleMedia(Chat),
     // Account
     /// Sets the ID for the user.

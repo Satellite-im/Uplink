@@ -11,23 +11,22 @@ pub mod ui;
 pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
+use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
+use crate::testing::mock::generate_mock;
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt, fs,
-    rc::Weak,
 };
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
-
-use crate::testing::mock::generate_mock;
 
 use self::{action::ActionHook, chats::Direction};
 
@@ -76,18 +75,6 @@ impl Clone for State {
     }
 }
 
-impl Drop for State {
-    fn drop(&mut self) {
-        for window in &self.ui.windows {
-            if let Some(window) = Weak::upgrade(window) {
-                (*window)
-                    .evaluate_script("close()")
-                    .expect("failed to close window when dropping State");
-            }
-        }
-    }
-}
-
 // This code defines a number of methods for the State struct, which are used to mutate the state in a controlled manner.
 // For example, the set_active_chat method sets the active chat in the State struct, and the toggle_favorite method adds or removes a chat from the user's favorites.
 //  These methods are used to update the relevant fields within the State struct in response to user actions or other events within the application.
@@ -125,20 +112,22 @@ impl State {
 
     /// Toggles the display of media on the provided chat in the `State` struct.
     fn toggle_media(&mut self, chat: &Chat) {
-        if let Some(c) = self.chats.all.get_mut(&chat.id) {
+        todo!()
+        /*if let Some(c) = self.chats.all.get_mut(&chat.id) {
             c.active_media = !c.active_media;
             // When we "close" active media, we should hide the popout player.
             if !c.active_media {
                 self.ui.popout_player = false;
             }
-        }
+        }*/
     }
 
     fn disable_all_active_media(&mut self) {
-        for (_, chat) in self.chats.all.iter_mut() {
+        todo!()
+        /*for (_, chat) in self.chats.all.iter_mut() {
             chat.active_media = false;
         }
-        self.ui.popout_player = false;
+        self.ui.popout_player = false;*/
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -368,11 +357,11 @@ impl State {
     }
 
     fn toggle_mute(&mut self) {
-        self.ui.muted = !self.ui.muted;
+        self.ui.toggle_muted();
     }
 
     fn toggle_silence(&mut self) {
-        self.ui.silenced = !self.ui.silenced;
+        self.ui.toggle_silenced();
     }
 
     /// Getters
@@ -401,7 +390,9 @@ impl State {
     }
 
     pub fn get_active_media_chat(&self) -> Option<&Chat> {
-        self.chats.all.values().find(|&chat| chat.active_media)
+        self.chats
+            .active_media
+            .and_then(|uuid| self.chats.all.get(&uuid))
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
@@ -535,6 +526,10 @@ impl State {
     pub fn remove_toast(&mut self, id: &Uuid) {
         let _ = self.ui.toast_notifications.remove(id);
     }
+
+    pub fn remove_window(&mut self, id: WindowId) {
+        self.ui.remove_window(id);
+    }
 }
 
 impl State {
@@ -543,7 +538,7 @@ impl State {
 
         match action {
             Action::AddWindow(window) => {
-                self.ui.windows.push(window);
+                self.ui.overlays.push(window);
             }
             Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
             // Action::Call(_) => todo!(),
