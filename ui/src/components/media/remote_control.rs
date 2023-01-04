@@ -10,7 +10,7 @@ use kit::{
     icons::Icon,
 };
 
-use crate::state::{ui::Call, Action, State};
+use crate::state::{Action, State};
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {

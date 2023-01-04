@@ -24,7 +24,7 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
-use crate::components::media::popout_player::PopoutPlayer;
+
 use crate::components::toast::Toast;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
