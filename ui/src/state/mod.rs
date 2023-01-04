@@ -24,7 +24,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt, fs,
-    path::Path,
 };
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};

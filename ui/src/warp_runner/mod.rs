@@ -29,8 +29,8 @@ type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
 
 pub enum WarpEvent {
-    RayGun(RayGunEventKind),
-    MultiPass(MultiPassEventKind),
+    RayGun(Box<RayGunEventKind>),
+    MultiPass(Box<MultiPassEventKind>),
 }
 
 pub enum WarpCmd {
@@ -76,7 +76,7 @@ impl WarpRunner {
         tokio::spawn(async move {
             // todo: register for events from warp
 
-            let (mut account, mut messaging, storage) =
+            let (mut account, mut messaging, _storage) =
                 match warp_initialization(WARP_PATH.clone(), tesseract.clone(), false).await {
                     Ok((i, c, s)) => (i, c, s),
                     Err(_e) => todo!(),
@@ -106,14 +106,14 @@ impl WarpRunner {
                 tokio::select! {
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::RayGun(evt)).is_err() {
+                            if tx.send(WarpEvent::RayGun(Box::new(evt))).is_err() {
                                 break;
                             }
                         }
                     }
                     opt = multipass_stream.next() => {
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                            if tx.send(WarpEvent::MultiPass(Box::new(evt))).is_err() {
                                 break;
                             }
                         }
@@ -141,7 +141,7 @@ impl WarpRunner {
 // might just want to add functions to State to handle each type of event and not need this at all.
 pub async fn handle_event(
     _state: Rc<RefCell<ProvidedStateInner<State>>>,
-    event: WarpEvent,
+    _event: WarpEvent,
 ) -> bool {
     todo!()
 }

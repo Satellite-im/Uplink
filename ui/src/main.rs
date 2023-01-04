@@ -15,7 +15,7 @@ use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 // use state::{Action, ActionHook, State};
 use state::{Action, State};
-use std::fs;
+
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -36,7 +36,6 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
