@@ -85,12 +85,13 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        // check id of current media player
-                        // if changed, close the old one
-                        // if the same, do nothing
-                       let popout = VirtualDom::new_with_props(PopoutPlayer, ());
-                       let window = window.new_window(popout, Default::default());
-                       state.write_silent().mutate(Action::SetMediaWebview(Weak::upgrade(&window).unwrap()));
+                        if state.read().ui.popout_player {
+                            state.write().mutate(Action::ClearPopout);
+                        } else {
+                             let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                            let window = window.new_window(popout, Default::default());
+                            state.write().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
+                        }
                     }
                 },
                 // don't render MediadPlayer if the video is popped out
