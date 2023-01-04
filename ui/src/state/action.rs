@@ -40,7 +40,10 @@ pub enum Action {
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
+    /// adds an overlay. currently only used for demonstration purposes
     AddOverlay(Weak<WebView>),
+    /// used for the popout player or media player
+    SetMediaWebview(Weak<WebView>),
 
     // Settings
     /// Sets the selected language.

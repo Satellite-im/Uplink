@@ -24,17 +24,14 @@ pub struct UI {
 
 impl Drop for UI {
     fn drop(&mut self) {
-        for window in &self.overlays {
-            if let Some(window) = Weak::upgrade(window) {
-                window
-                    .evaluate_script("close()")
-                    .expect("failed to close window when dropping State");
-            }
-        }
+        self.clear_overlays();
     }
 }
 
 impl UI {
+    pub fn set_media_webview(&mut self, view: Weak<WebView>) {
+        self.current_call = Some(Call::new(Some(view)));
+    }
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
             if let Some(window) = Weak::upgrade(overlay) {
@@ -92,7 +89,6 @@ pub struct Call {
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
-    pub chat_id: Uuid,
 }
 
 impl Drop for Call {
@@ -103,6 +99,16 @@ impl Drop for Call {
                     .expect("failed to close webview");
             }
         });
+    }
+}
+
+impl Call {
+    pub fn new(media_view: Option<Weak<WebView>>) -> Self {
+        Self {
+            media_view,
+            muted: false,
+            silenced: false,
+        }
     }
 }
 

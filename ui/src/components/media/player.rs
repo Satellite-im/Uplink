@@ -88,7 +88,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         // if the same, do nothing
                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
                        let window = window.new_window(popout, Default::default());
-                       state.write_silent().mutate(Action::AddOverlay(window));
+                       state.write_silent().mutate(Action::SetMediaWebview(window));
                     }
                 },
                 // don't render MediadPlayer if the video is popped out

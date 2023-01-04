@@ -117,12 +117,7 @@ impl State {
     /// Sets the active media to the specified conversation id
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
-        self.ui.current_call = Some(Call {
-            media_view: None,
-            muted: false,
-            silenced: false,
-            chat_id: id,
-        });
+        self.ui.current_call = Some(Call::new(None));
     }
 
     /// Analogous to Hang Up
@@ -539,6 +534,9 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::SetMediaWebview(webview) => {
+                self.ui.set_media_webview(webview);
+            }
             Action::AddOverlay(window) => {
                 self.ui.overlays.push(window);
             }
