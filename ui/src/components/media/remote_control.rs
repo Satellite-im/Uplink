@@ -80,7 +80,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write().mutate(Action::EndAll);
+                    state.write().mutate(Action::DisableMedia);
                 },
             }
         }

@@ -110,24 +110,15 @@ impl State {
         self.ui.enable_overlay = enabled;
     }
 
-    /// Toggles the display of media on the provided chat in the `State` struct.
-    fn toggle_media(&mut self, chat: &Chat) {
-        todo!()
-        /*if let Some(c) = self.chats.all.get_mut(&chat.id) {
-            c.active_media = !c.active_media;
-            // When we "close" active media, we should hide the popout player.
-            if !c.active_media {
-                self.ui.popout_player = false;
-            }
-        }*/
+    /// Sets the active media to the specified conversation id
+    fn set_active_media(&mut self, id: Uuid) {
+        self.chats.active_media = Some(id);
     }
 
-    fn disable_all_active_media(&mut self) {
-        todo!()
-        /*for (_, chat) in self.chats.all.iter_mut() {
-            chat.active_media = false;
-        }
-        self.ui.popout_player = false;*/
+    /// Analogous to Hang Up
+    fn disable_media(&mut self) {
+        self.chats.active_media = None;
+        self.ui.popout_player = false;
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -554,8 +545,8 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_identity(&identity),
-            Action::ToggleMedia(chat) => self.toggle_media(&chat),
-            Action::EndAll => self.disable_all_active_media(),
+            Action::SetActiveMedia(id) => self.set_active_media(id),
+            Action::DisableMedia => self.disable_media(),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => {

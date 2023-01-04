@@ -1,6 +1,7 @@
 use std::rc::Weak;
 
 use either::Either;
+use uuid::Uuid;
 use warp::raygun::{Message, Reaction};
 use wry::webview::WebView;
 
@@ -25,7 +26,8 @@ pub enum Action {
     // UI
     /// change ui::UI::popout_player, which determines if the media_view is anchored in place or moves around
     TogglePopout,
-    EndAll,
+    // hang up for the active media stream
+    DisableMedia,
     ToggleSilence,
     ToggleMute,
     SetOverlay(bool),
@@ -33,8 +35,8 @@ pub enum Action {
     SetTheme(Theme),
     ClearTheme,
     // RemoveToastNotification,
-    /// Toggles the display of media on the provided chat in the `State` struct.
-    ToggleMedia(Chat),
+    /// sets the active media to the corresponding conversation uuid
+    SetActiveMedia(Uuid),
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
