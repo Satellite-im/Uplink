@@ -14,6 +14,7 @@ use super::sidebar::build_participants_names;
 pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
+    let active_chat_id = active_chat.id;
     let message_groups = state.read().get_sort_messages(&active_chat);
 
     let without_me = state.read().get_without_me(active_chat.participants.clone());
@@ -33,8 +34,7 @@ pub fn Compose(cx: Scope) -> Element {
     let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
-    let active_media = active_chat.active_media;
-    let active_media_chat = active_chat.clone();
+    let active_media = Some(active_chat.id) == state.read().chats.active_media;
  
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
@@ -90,7 +90,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                                    state.write().mutate(Action::SetActiveMedia(active_chat_id));
                                 }
                             },
                             Button {

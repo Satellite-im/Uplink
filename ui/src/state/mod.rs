@@ -11,12 +11,14 @@ pub mod ui;
 pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
+use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
+use crate::testing::mock::generate_mock;
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -26,9 +28,7 @@ use std::{
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
 
-use crate::testing::mock::generate_mock;
-
-use self::{action::ActionHook, chats::Direction};
+use self::{action::ActionHook, chats::Direction, ui::Call};
 
 // todo: putting the State struct 300 lines into the file makes it hard to find :( state.rs should be turned into its own module and split into multiple files.
 #[derive(Default, Deserialize, Serialize)]
@@ -108,24 +108,22 @@ impl State {
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {
         self.ui.enable_overlay = enabled;
-    }
-
-    /// Toggles the display of media on the provided chat in the `State` struct.
-    fn toggle_media(&mut self, chat: &Chat) {
-        if let Some(c) = self.chats.all.get_mut(&chat.id) {
-            c.active_media = !c.active_media;
-            // When we "close" active media, we should hide the popout player.
-            if !c.active_media {
-                self.ui.popout_player = false;
-            }
+        if !enabled {
+            self.ui.clear_overlays();
         }
     }
 
-    fn disable_all_active_media(&mut self) {
-        for (_, chat) in self.chats.all.iter_mut() {
-            chat.active_media = false;
-        }
+    /// Sets the active media to the specified conversation id
+    fn set_active_media(&mut self, id: Uuid) {
+        self.chats.active_media = Some(id);
+        self.ui.current_call = Some(Call::new(None));
+    }
+
+    /// Analogous to Hang Up
+    fn disable_media(&mut self) {
+        self.chats.active_media = None;
         self.ui.popout_player = false;
+        self.ui.current_call = None;
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -286,10 +284,6 @@ impl State {
         self.friends.incoming_requests.push(identity.clone());
     }
 
-    fn toggle_popout(&mut self) {
-        self.ui.popout_player = !self.ui.popout_player;
-    }
-
     fn new_outgoing_request(&mut self, identity: &Identity) {
         self.friends.outgoing_requests.push(identity.clone());
     }
@@ -355,11 +349,11 @@ impl State {
     }
 
     fn toggle_mute(&mut self) {
-        self.ui.muted = !self.ui.muted;
+        self.ui.toggle_muted();
     }
 
     fn toggle_silence(&mut self) {
-        self.ui.silenced = !self.ui.silenced;
+        self.ui.toggle_silenced();
     }
 
     /// Getters
@@ -388,7 +382,9 @@ impl State {
     }
 
     pub fn get_active_media_chat(&self) -> Option<&Chat> {
-        self.chats.all.values().find(|&chat| chat.active_media)
+        self.chats
+            .active_media
+            .and_then(|uuid| self.chats.all.get(&uuid))
     }
 
     pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
@@ -522,6 +518,10 @@ impl State {
     pub fn remove_toast(&mut self, id: &Uuid) {
         let _ = self.ui.toast_notifications.remove(id);
     }
+
+    pub fn remove_window(&mut self, id: WindowId) {
+        self.ui.remove_overlay(id);
+    }
 }
 
 impl State {
@@ -529,6 +529,15 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::ClearPopout => {
+                self.ui.clear_popout();
+            }
+            Action::SetPopout(webview) => {
+                self.ui.set_popout(webview);
+            }
+            Action::AddOverlay(window) => {
+                self.ui.overlays.push(window);
+            }
             Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
             // Action::Call(_) => todo!(),
             // Action::Hangup(_) => todo!(),
@@ -543,8 +552,8 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_identity(&identity),
-            Action::ToggleMedia(chat) => self.toggle_media(&chat),
-            Action::EndAll => self.disable_all_active_media(),
+            Action::SetActiveMedia(id) => self.set_active_media(id),
+            Action::DisableMedia => self.disable_media(),
             Action::SetLanguage(language) => self.set_language(&language),
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => {
@@ -596,9 +605,6 @@ impl State {
                 self.set_active_route(to);
             }
             // UI
-            Action::TogglePopout => {
-                self.toggle_popout();
-            }
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),
         }

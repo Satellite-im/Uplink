@@ -56,10 +56,9 @@ pub fn generate_mock() -> State {
 
     State {
         ui: UI {
-            //windows: vec![],
+            current_call: None,
+            overlays: vec![],
             popout_player: false,
-            silenced: false,
-            muted: false,
             toast_notifications,
             theme: None,
             // TODO: Until this is more functional, we should keep it disabled by default.
@@ -75,6 +74,7 @@ pub fn generate_mock() -> State {
         chats: Chats {
             all: all_chats.clone(),
             active: None,
+            active_media: None,
             in_sidebar,
             favorites: vec![],
         },
@@ -114,7 +114,6 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         id: conversation,
         participants,
         messages,
-        active_media: false,
         unreads: rng.gen_range(0..2),
         replying_to: None,
     }

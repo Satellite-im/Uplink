@@ -11,9 +11,6 @@ pub struct Chat {
     // TODO: This should be wired up to warp conversation id's
     #[serde(default)]
     pub id: Uuid,
-    // Warp generated UUID of the chat
-    #[serde(default)]
-    pub active_media: bool, // TODO: in the future, this should probably be a vec of media streams or something
     // Includes the list of participants within a given chat.
     #[serde(default)]
     pub participants: Vec<Identity>,
@@ -37,6 +34,10 @@ pub struct Chats {
     // Chat to display / interact with currently.
     #[serde(default)]
     pub active: Option<Uuid>,
+    // don't persist a call across restarts
+    // the Uuid is the chat associated with the current call
+    #[serde(skip)]
+    pub active_media: Option<Uuid>, // TODO: in the future, this should probably be a vec of media streams or something
     // Chats to show in the sidebar
     #[serde(default)]
     pub in_sidebar: Vec<Uuid>,

@@ -1,26 +1,127 @@
+use dioxus_desktop::tao::window::WindowId;
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    rc::{Rc, Weak},
+};
 use uuid::Uuid;
+use wry::webview::WebView;
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
-    // things like the overlay and popout player get created via DesktopContext::new_window. they are stored here so they can be closed later.
-    // #[serde(skip)]
-    //pub windows: Vec<Weak<WebView>>,
-    // Should the active video play in popout?
-    #[serde(default)]
+    // stores information related to the current call
+    #[serde(skip)]
+    pub current_call: Option<Call>,
+    // false: the media player is anchored in place
+    // true: the media player can move around
+    #[serde(skip)]
     pub popout_player: bool,
+    #[serde(skip)]
+    pub toast_notifications: HashMap<Uuid, ToastNotification>,
+    pub theme: Option<Theme>,
+    pub enable_overlay: bool,
+    // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
+    #[serde(skip)]
+    pub overlays: Vec<Weak<WebView>>,
+}
+
+impl Drop for UI {
+    fn drop(&mut self) {
+        self.clear_overlays();
+    }
+}
+
+impl UI {
+    pub fn clear_popout(&mut self) {
+        self.popout_player = false;
+        let mut call = match &self.current_call {
+            Some(c) => c.clone(),
+            None => return,
+        };
+        call.popout_view = None;
+        self.current_call = Some(call);
+    }
+    pub fn set_popout(&mut self, view: Rc<WebView>) {
+        self.current_call = Some(Call::new(Some(view)));
+        self.popout_player = true;
+    }
+    pub fn clear_overlays(&mut self) {
+        for overlay in &self.overlays {
+            if let Some(window) = Weak::upgrade(overlay) {
+                window
+                    .evaluate_script("close()")
+                    .expect("failed to close webview");
+            }
+        }
+        self.overlays.clear();
+    }
+    pub fn remove_overlay(&mut self, id: WindowId) {
+        let to_keep: Vec<Weak<WebView>> = self
+            .overlays
+            .iter()
+            .filter(|x| match Weak::upgrade(x) {
+                None => false,
+                Some(window) => {
+                    if window.window().id() == id {
+                        window
+                            .evaluate_script("close()")
+                            .expect("failed to close webview");
+                        false
+                    } else {
+                        true
+                    }
+                }
+            })
+            .cloned()
+            .collect();
+        self.overlays = to_keep;
+    }
+
+    pub fn toggle_muted(&mut self) {
+        self.current_call = self.current_call.clone().map(|mut x| {
+            x.muted = !x.muted;
+            x
+        });
+    }
+
+    pub fn toggle_silenced(&mut self) {
+        self.current_call = self.current_call.clone().map(|mut x| {
+            x.silenced = !x.silenced;
+            x
+        });
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct Call {
+    // displays the current  video stream
+    // may need changing later to accommodate video streams from multiple participants
+    #[serde(skip)]
+    pub popout_view: Option<Rc<WebView>>,
     #[serde(default)]
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
-    #[serde(skip)]
-    pub toast_notifications: HashMap<Uuid, ToastNotification>,
-    #[serde(default)]
-    pub theme: Option<Theme>,
-    #[serde(default)]
-    pub enable_overlay: bool,
+}
+
+impl Drop for Call {
+    fn drop(&mut self) {
+        if let Some(view) = self.popout_view.as_ref() {
+            view.evaluate_script("close()")
+                .expect("failed to close webview");
+        };
+    }
+}
+
+impl Call {
+    pub fn new(popout_view: Option<Rc<WebView>>) -> Self {
+        Self {
+            popout_view,
+            muted: false,
+            silenced: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]

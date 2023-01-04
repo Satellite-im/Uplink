@@ -1,6 +1,12 @@
-use crate::state::{Action, State};
+use std::rc::Weak;
+
+use crate::{
+    components::media::popout_player::PopoutPlayer,
+    state::{Action, State},
+};
 
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 
 use kit::{
@@ -28,9 +34,15 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let active_chat = state.read().get_active_chat().unwrap_or_default();
+    let window = use_window(cx);
 
-    let silenced = state.read().ui.silenced;
+    let silenced = state
+        .read()
+        .ui
+        .current_call
+        .clone()
+        .map(|x| x.silenced)
+        .unwrap_or(false);
 
     let silenced_str = silenced.to_string();
 
@@ -73,10 +85,17 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        // todo: open a window but...need one call at a time
-                        state.write().mutate(Action::TogglePopout);
+                        if state.read().ui.popout_player {
+                            state.write().mutate(Action::ClearPopout);
+                        } else {
+                             let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                            let window = window.new_window(popout, Default::default());
+                            // for some reason using write() prevents the video from loading but using write_silent() works
+                            state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
+                        }
                     }
                 },
+                // don't render MediadPlayer if the video is popped out
                 state.read().ui.popout_player.then(|| rsx!(
                     span {
                         class: "popped-out",
@@ -121,7 +140,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write().mutate(Action::ToggleMedia(active_chat.clone()));
+                    state.write().mutate(Action::DisableMedia);
                 }
             },
             Button {

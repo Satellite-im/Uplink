@@ -1,6 +1,9 @@
+use std::rc::{Rc, Weak};
+
 use either::Either;
-use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use warp::raygun::{Message, Reaction};
+use wry::webview::WebView;
 
 use super::{
     chats::Chat,
@@ -18,11 +21,11 @@ pub struct ActionHook {
     pub callback: Callback,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+/// used exclusively by State::mutate
 pub enum Action {
     // UI
-    TogglePopout,
-    EndAll,
+    // hang up for the active media stream
+    DisableMedia,
     ToggleSilence,
     ToggleMute,
     SetOverlay(bool),
@@ -30,10 +33,16 @@ pub enum Action {
     SetTheme(Theme),
     ClearTheme,
     // RemoveToastNotification,
-    ToggleMedia(Chat),
+    /// sets the active media to the corresponding conversation uuid
+    SetActiveMedia(Uuid),
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
+    /// adds an overlay. currently only used for demonstration purposes
+    AddOverlay(Weak<WebView>),
+    /// used for the popout player or media player
+    SetPopout(Rc<WebView>),
+    ClearPopout,
 
     // Settings
     /// Sets the selected language.
