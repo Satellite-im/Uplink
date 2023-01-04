@@ -55,6 +55,7 @@ pub fn PopoutPlayer(cx: Scope<Props>) -> Element {
                             }
                         )),
                         onpress: move |_| {
+                            // todo: close the window
                             state.write().mutate(Action::TogglePopout);
                         }
                     },

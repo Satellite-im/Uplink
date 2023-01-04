@@ -1,14 +1,10 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
-#[cfg(target_os = "macos")]
-use cocoa::appkit::NSWindow;
 use config::Configuration;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::menu::AboutMetadata;
-#[cfg(target_os = "macos")]
-use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
@@ -21,13 +17,14 @@ use overlay::{make_config, OverlayDom};
 use state::State;
 use std::fs;
 use std::path::PathBuf;
+use std::rc::Weak;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
-use wry::webview::WebviewExtMacOS;
+use wry::webview::WebView;
 
 use crate::components::media::popout_player::PopoutPlayer;
 use crate::components::toast::Toast;
@@ -167,6 +164,8 @@ fn main() {
 
     #[cfg(target_os = "macos")]
     {
+        use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
+
         window = window
             .with_has_shadow(true)
             .with_title_hidden(true)
@@ -293,28 +292,27 @@ fn bootstrap(cx: Scope) -> Element {
 
     let desktop = use_window(cx);
 
-    let wry_webview = &desktop.webview;
-    let c = wry_webview.ns_window();
-    unsafe {
-        c.setOpaque_(false);
-    }
-
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
 
-    // TODO: We need to make sure when we close the app, we first close the overlay.
     let enable_overlay = Configuration::load_or_default().general.enable_overlay;
+    let mut _overlay: Option<Weak<WebView>> = None;
+    // Create a window rendering the overlay.
     if enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
-        desktop.new_window(overlay_test, make_config());
+        _overlay = Some(desktop.new_window(overlay_test, make_config()));
     }
+    // TODO:
+    // Close the overlay when the state changes.
+    // Close the overlay when we close the main window.
 
     // state.write().add_hook(ActionHook {
     //     action_type: either::Left(Action::SetOverlay(false)),
     //     callback: |s: State| {
     //         // TODO: Update logic here to render or de render the overlay.
+    //         // _overlay.close();
     //     },
     // });
 

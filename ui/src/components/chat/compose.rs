@@ -52,7 +52,7 @@ pub fn Compose(cx: Scope) -> Element {
         warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
         warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
     };
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     let loading = use_state(cx, || false);
 
