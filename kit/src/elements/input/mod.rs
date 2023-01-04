@@ -32,7 +32,7 @@ pub struct Props<'a> {
     _loading: Option<bool>,
     placeholder: String,
     #[props(optional)]
-    max_lenght: Option<i32>,
+    max_length: Option<i32>,
     #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
@@ -168,7 +168,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
     let default_options = Options::default();
-    let max_length = cx.props.max_lenght.unwrap_or(std::i32::MAX);
+    let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = match &cx.props.options {
         Some(opts) => opts,
         None => &default_options,

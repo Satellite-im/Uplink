@@ -117,7 +117,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             focus: true,
                             placeholder: "".to_owned(),
                             default_text: format!("{}", if !new_username_val.read().is_empty() {username} else {""}),
-                            max_lenght: 32,
+                            max_length: 32,
                             disabled: false,
                             onchange: move |value| {
                                 let val: String = value;
@@ -144,7 +144,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             placeholder: "".to_owned(),
                             disabled: false,
                             default_text: format!("{}", if !new_status_message_val.read().is_empty() {status_message} else {""}),
-                            max_lenght: 128,
+                            max_length: 128,
                             onchange: move |value| {
                                 let val: String = value;
                                 *new_status_message_val.write() = val.clone();
