@@ -299,6 +299,7 @@ fn app(cx: Scope) -> Element {
         None => String::from(""),
     };
 
+    // todo: get rid of this. it makes zero sense to add an overlay every time the app is rendered
     if !*first_render.read() {
         *first_render.write_silent() = false;
         // Create a window rendering the overlay.
