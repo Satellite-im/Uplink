@@ -137,3 +137,12 @@
   font-size: 12px;
   display: none;
 }
+
+.username-len-counter {
+  color: var(--text-color-dark);
+  font-size: 10px;
+  position: absolute;
+  top: -16px;
+  left: 90%;
+}
+

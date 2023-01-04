@@ -119,8 +119,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     div {
                         class: "username", 
-                        {
-                        rsx!(Input {
+                            Input {
                             id: "username_text_field".to_owned(),
                             focus: true,
                             placeholder: format!("{}", username),
@@ -141,9 +140,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 with_clear_btn: true,
                                 ..Options::default()
                             },
-                        })
-                    }
-                        p {id: "username_warning", class: "username-warning", "Username is limited to 32 characters"},
+                        }
+                    p {class: "username-len-counter", format!("{}/32", new_username_val.read().len())},
+                    p {id: "username_warning", class: "username-warning", "Username is limited to 32 characters"},
                     },
                   div {
                         id: "status_message_edit",
