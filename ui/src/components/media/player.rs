@@ -92,12 +92,13 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                        state.write_silent().mutate(Action::AddWindow(window));
                     }
                 },
-                /*state.read().ui.popout_player.then(|| rsx!(
+                // don't render MediadPlayer if the video is popped out
+                state.read().ui.popout_player.then(|| rsx!(
                     span {
                         class: "popped-out",
                         video {}
                     }
-                )),*/
+                )),
                 (!state.read().ui.popout_player).then(|| rsx!(
                     video {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
