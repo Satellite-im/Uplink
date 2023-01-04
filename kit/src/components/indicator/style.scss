@@ -20,3 +20,16 @@
 .indicator-idle {
 	stroke: var(--warning-light);
 }
+
+.online-circle {
+	color: var(--success-light);
+}
+.offline-circle {
+	color: var(--secondary-light);
+}
+.do-not-disturb-circle {
+	color: var(--danger);
+}
+.idle-circle {
+	color: var(--warning-light);
+}

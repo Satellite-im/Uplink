@@ -23,7 +23,7 @@ impl Platform {
     // Convert a Platform value to an Icon value
     pub fn to_icon(&self) -> Icon {
         match self {
-            Platform::Desktop => Icon::ComputerDesktop,
+            Platform::Desktop => Icon::Circle,
             Platform::Mobile => Icon::DevicePhoneMobile,
             Platform::Tv => Icon::Tv,
             Platform::Headless => Icon::WrenchScrewdriver,
@@ -74,11 +74,18 @@ pub struct Props {
 pub fn Indicator(cx: Scope<Props>) -> Element {
     let icon = cx.props.platform.to_icon();
     let status = cx.props.status.to_string();
+    let mut circle_icon_class = "".to_owned();
+    let mut size: u32 = 20;
+    if icon == Icon::Circle {
+        circle_icon_class = format!("{}-circle", status);
+        size = 14;
+    }
 
     cx.render(rsx!(div {
-        class: "indicator indicator-{status}",
+        class: "indicator indicator-{status} {circle_icon_class}",
         IconElement {
-            icon: icon
+            size: size,
+            icon: icon,
         }
     }))
 }
