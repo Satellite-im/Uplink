@@ -34,8 +34,9 @@ pub struct Chats {
     // Chat to display / interact with currently.
     #[serde(default)]
     pub active: Option<Uuid>,
-    // Chat associated with the current call
-    #[serde(default)]
+    // don't persist a call across restarts
+    // the Uuid is the chat associated with the current call
+    #[serde(skip)]
     pub active_media: Option<Uuid>, // TODO: in the future, this should probably be a vec of media streams or something
     // Chats to show in the sidebar
     #[serde(default)]

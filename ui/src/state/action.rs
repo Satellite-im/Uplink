@@ -1,4 +1,4 @@
-use std::rc::Weak;
+use std::rc::{Rc, Weak};
 
 use either::Either;
 use uuid::Uuid;
@@ -43,7 +43,7 @@ pub enum Action {
     /// adds an overlay. currently only used for demonstration purposes
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
-    SetMediaWebview(Weak<WebView>),
+    SetMediaWebview(Rc<WebView>),
 
     // Settings
     /// Sets the selected language.

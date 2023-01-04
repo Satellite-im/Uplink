@@ -1,7 +1,10 @@
 use dioxus_desktop::tao::window::WindowId;
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, rc::Weak};
+use std::{
+    collections::HashMap,
+    rc::{Rc, Weak},
+};
 use uuid::Uuid;
 use wry::webview::WebView;
 
@@ -29,7 +32,7 @@ impl Drop for UI {
 }
 
 impl UI {
-    pub fn set_media_webview(&mut self, view: Weak<WebView>) {
+    pub fn set_media_webview(&mut self, view: Rc<WebView>) {
         self.current_call = Some(Call::new(Some(view)));
     }
     pub fn clear_overlays(&mut self) {
@@ -84,7 +87,7 @@ pub struct Call {
     // displays the current  video stream
     // may need changing later to accommodate video streams from multiple participants
     #[serde(skip)]
-    pub media_view: Option<Weak<WebView>>,
+    pub media_view: Option<Rc<WebView>>,
     #[serde(default)]
     pub muted: bool,
     #[serde(default)]
@@ -94,16 +97,14 @@ pub struct Call {
 impl Drop for Call {
     fn drop(&mut self) {
         if let Some(view) = self.media_view.as_ref() {
-            if let Some(v) = Weak::upgrade(view) {
-                v.evaluate_script("close()")
-                    .expect("failed to close webview");
-            }
+            view.evaluate_script("close()")
+                .expect("failed to close webview");
         };
     }
 }
 
 impl Call {
-    pub fn new(media_view: Option<Weak<WebView>>) -> Self {
+    pub fn new(media_view: Option<Rc<WebView>>) -> Self {
         Self {
             media_view,
             muted: false,
