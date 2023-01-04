@@ -124,29 +124,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             onchange: move |value| {
                                 *new_username_val.write_silent() = value;
 
-                                if new_username_val.read().len() > 33 {
-                                    let script = r#"
-                                            const element = document.getElementById("status_message_edit");
-                                            let top = parseInt(getComputedStyle(element).top, 10)
-                                            if (top === 300) {
-                                                const interval = setInterval(() => {
-                                                    top += 20;
-                                                    element.style.top = `${top}px`;
-                                                  }, 1)
-                                                  
-                                                  setTimeout(() => {
-                                                    clearInterval(interval);
-                                                  }, 1)
-                                              }
-                                                document.getElementById("username_warning").style.display = 'block'
-                                            "#;
-                                    use_eval(cx)(script.to_owned());
-                                } else {
-                                    let script = r#"
-                                            document.getElementById("username_warning").style.display = 'none'
-                                            document.getElementById("status_message_edit").style.top = "300px";
-                                        "#;
-                                    use_eval(cx)(script.to_owned());
+                                if new_username_val.read().len() == 33 {
+                                    use_eval(cx)(get_limited_to_32_chars_script()[0].clone());
+                                } else if new_username_val.read().len() <= 32 {
+                                    use_eval(cx)(get_limited_to_32_chars_script()[1].clone());
                                 }
                             }, 
                             options: Options {
@@ -225,4 +206,27 @@ fn change_profile_image(image_state: &UseState<String>) {
     // TODO: Add upload picture to multipass here
 
     image_state.set(image);
+}
+
+fn get_limited_to_32_chars_script() -> Vec<String> {
+    let script_forward = r#"
+        const element = document.getElementById("status_message_edit");
+        let top = parseInt(getComputedStyle(element).top, 10)
+        if (top < 320) {
+            const interval = setInterval(() => {
+                top += 20;
+                element.style.top = `${top}px`;
+                }, 1)
+                
+                setTimeout(() => {
+                clearInterval(interval);
+                }, 1)
+            }
+            document.getElementById("username_warning").style.display = 'block'
+        "#;
+    let script_back =  r#"
+        document.getElementById("username_warning").style.display = 'none'
+        document.getElementById("status_message_edit").style.top = "300px";
+    "#;
+    return vec![script_forward.to_owned(), script_back.to_owned()];
 }
