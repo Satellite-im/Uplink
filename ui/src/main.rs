@@ -47,8 +47,6 @@ mod warp_runner;
 
 use fluent_templates::static_loader;
 
-//pub static STATE: AtomRef<State> = |_| State::load().unwrap();
-
 static_loader! {
     static LOCALES = {
         locales: "./locales",
