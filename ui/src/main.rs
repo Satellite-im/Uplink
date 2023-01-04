@@ -24,7 +24,6 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
-
 use crate::components::toast::Toast;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
@@ -306,7 +305,7 @@ fn app(cx: Scope) -> Element {
         if Configuration::load_or_default().general.enable_overlay {
             let overlay_test = VirtualDom::new(OverlayDom);
             let window = desktop.new_window(overlay_test, make_config());
-            state.write_silent().mutate(Action::AddWindow(window));
+            state.write_silent().mutate(Action::AddOverlay(window));
         }
     }
 

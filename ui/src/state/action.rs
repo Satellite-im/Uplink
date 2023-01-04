@@ -40,7 +40,7 @@ pub enum Action {
     // Account
     /// Sets the ID for the user.
     SetId(Identity),
-    AddWindow(Weak<WebView>),
+    AddOverlay(Weak<WebView>),
 
     // Settings
     /// Sets the selected language.

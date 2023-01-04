@@ -24,11 +24,12 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt, fs,
+    rc::Weak,
 };
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
 
-use self::{action::ActionHook, chats::Direction};
+use self::{action::ActionHook, chats::Direction, ui::Call};
 
 // todo: putting the State struct 300 lines into the file makes it hard to find :( state.rs should be turned into its own module and split into multiple files.
 #[derive(Default, Deserialize, Serialize)]
@@ -108,17 +109,27 @@ impl State {
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {
         self.ui.enable_overlay = enabled;
+        if !enabled {
+            self.ui.clear_overlays();
+        }
     }
 
     /// Sets the active media to the specified conversation id
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
+        self.ui.current_call = Some(Call {
+            media_view: None,
+            muted: false,
+            silenced: false,
+            chat_id: id,
+        });
     }
 
     /// Analogous to Hang Up
     fn disable_media(&mut self) {
         self.chats.active_media = None;
         self.ui.popout_player = false;
+        self.ui.current_call = None;
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
@@ -519,7 +530,7 @@ impl State {
     }
 
     pub fn remove_window(&mut self, id: WindowId) {
-        self.ui.remove_window(id);
+        self.ui.remove_overlay(id);
     }
 }
 
@@ -528,7 +539,7 @@ impl State {
         self.call_hooks(&action);
 
         match action {
-            Action::AddWindow(window) => {
+            Action::AddOverlay(window) => {
                 self.ui.overlays.push(window);
             }
             Action::SetOverlay(enabled) => self.toggle_overlay(enabled),

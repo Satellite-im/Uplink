@@ -35,7 +35,17 @@ impl Drop for UI {
 }
 
 impl UI {
-    pub fn remove_window(&mut self, id: WindowId) {
+    pub fn clear_overlays(&mut self) {
+        for overlay in &self.overlays {
+            if let Some(window) = Weak::upgrade(overlay) {
+                window
+                    .evaluate_script("close()")
+                    .expect("failed to close webview");
+            }
+        }
+        self.overlays.clear();
+    }
+    pub fn remove_overlay(&mut self, id: WindowId) {
         let to_keep: Vec<Weak<WebView>> = self
             .overlays
             .iter()
@@ -83,6 +93,17 @@ pub struct Call {
     #[serde(default)]
     pub silenced: bool,
     pub chat_id: Uuid,
+}
+
+impl Drop for Call {
+    fn drop(&mut self) {
+        self.media_view.as_ref().map(|view| {
+            if let Some(v) = Weak::upgrade(&view) {
+                v.evaluate_script("close()")
+                    .expect("failed to close webview");
+            }
+        });
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
