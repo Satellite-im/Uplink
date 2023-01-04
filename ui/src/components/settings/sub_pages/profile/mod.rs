@@ -109,7 +109,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 edit_mode.set(!edit_mode);
                             },
                         },
-                        
                     },
                     div {
                         class: "username", 
@@ -134,10 +133,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 ..Options::default()
                             },
                         }
-                    p {class: "username-len-counter", format!("{}/32", new_username_val.read().len())},
-                    p {id: "username_warning", class: "username-warning", format!("{}", username_limited_to_32)},
-                    p {id: "username_warning_2", class: "username-warning-2", format!("{}", username_less_than_4)},
-
+                        p {class: "username-len-counter", format!("{}/32", new_username_val.read().len())},
+                        p {id: "username_warning", class: "username-warning", format!("{}", username_limited_to_32)},
+                        p {id: "username_warning_2", class: "username-warning-2", format!("{}", username_less_than_4)},
                     },
                   div {
                         id: "status_message_edit",
@@ -164,8 +162,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         p {class: "status-message-len-counter", format!("{}/128", new_status_message_val.read().len())},
                         p {id: "status_message_warning", class: "status-message-warning", format!("{}", status_message_limited_to_128)},
                     },
-                    )}),
-              
+                )}),
             },
         }
     ))
