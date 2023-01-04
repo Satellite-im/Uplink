@@ -90,7 +90,8 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         } else {
                              let popout = VirtualDom::new_with_props(PopoutPlayer, ());
                             let window = window.new_window(popout, Default::default());
-                            state.write().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
+                            // for some reason using write() prevents the video from loading but using write_silent() works
+                            state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
                         }
                     }
                 },
