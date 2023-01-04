@@ -174,17 +174,9 @@ fn change_profile_image(image_state: &UseState<String>) {
         None => return
     };
 
-    let file = match std::fs::read(&path) {
-        Ok(image_vec) => image_vec,
-        Err(_) => vec![],
-    };
+    let file = std::fs::read(&path).unwrap_or_default();
 
-    let filename = std::path::Path::new(&path)
-    .file_name()
-    .unwrap_or_else(|| std::ffi::OsStr::new(""))
-    .to_str()
-    .unwrap()
-    .to_string();
+    let filename = path.file_name().map(|file| file.to_string_lossy().to_string()).unwrap_or_default();
 
     let parts_of_filename: Vec<&str> = filename.split('.').collect();
 
