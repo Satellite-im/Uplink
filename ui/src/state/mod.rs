@@ -18,12 +18,13 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
-use crate::testing::mock::generate_mock;
+use crate::{testing::mock::generate_mock, UPLINK_PATH};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt, fs,
+    path::Path,
 };
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
@@ -643,12 +644,7 @@ impl State {
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
-        let cache_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/state.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let cache_path = UPLINK_PATH.join("state.json");
 
         fs::write(cache_path, serialized)?;
         Ok(())
@@ -656,19 +652,13 @@ impl State {
 
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
-        let cache_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/state.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
-        match fs::read_to_string(cache_path) {
-            Ok(contents) => {
-                let state: State = serde_json::from_str(&contents)?;
-                Ok(state)
-            }
-            Err(_) => Ok(generate_mock()),
-        }
+        let cache_path = UPLINK_PATH.join("state.json");
+        let contents = fs::read_to_string(cache_path)?;
+        let state: State = match serde_json::from_str(&contents) {
+            Ok(s) => s,
+            Err(_) => State::default(),
+        };
+        Ok(state)
     }
 
     pub fn mock() -> State {

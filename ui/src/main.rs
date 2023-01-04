@@ -16,7 +16,7 @@ use overlay::{make_config, OverlayDom};
 // use state::{Action, ActionHook, State};
 use state::{Action, State};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -48,7 +48,7 @@ mod warp_runner;
 
 use fluent_templates::static_loader;
 
-pub static STATE: AtomRef<State> = |_| State::load().unwrap();
+//pub static STATE: AtomRef<State> = |_| State::load().unwrap();
 
 static_loader! {
     static LOCALES = {
@@ -73,30 +73,41 @@ pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
     (tx, Arc::new(Mutex::new(rx)))
 });
 
-pub static DEFAULT_PATH: Lazy<PathBuf> = Lazy::new(|| match Opt::parse().path {
-    Some(path) => path,
+// for warp only
+pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
+    Some(path) => path.join("warp"),
     _ => dirs::home_dir().unwrap_or_default().join(".warp"),
 });
 
+pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
+    Some(path) => path,
+    _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
+});
+
+pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
+
 #[derive(Debug, Parser)]
 #[clap(name = "")]
-struct Opt {
+struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
+    #[clap(long, default_value_t = false)]
+    mock: bool,
 }
 
 fn copy_assets() {
-    let cache_path = dirs::home_dir().unwrap_or_default().join(".uplink/");
+    let themes_dest = UPLINK_PATH.join("themes");
+    let themes_src = Path::new("ui").join("extra").join("themes");
 
-    match create_all(cache_path.join("themes"), false) {
+    match create_all(themes_dest.clone(), false) {
         Ok(_) => {
             let mut options = CopyOptions::new();
             options.skip_exist = true;
             options.copy_inside = true;
 
-            if let Err(error) = copy("ui/extra/themes", cache_path, &options) {
+            if let Err(error) = copy(themes_src, themes_dest, &options) {
                 log::error!("Error on copy themes {error}");
             }
         }
@@ -105,17 +116,8 @@ fn copy_assets() {
 }
 
 fn main() {
+    // Initalizes the cache dir if needed
     copy_assets();
-
-    // Initalized the cache dir if needed
-    let cache_path = dirs::home_dir()
-        .unwrap_or_default()
-        .join(".uplink/")
-        .into_os_string()
-        .into_string()
-        .unwrap_or_default();
-
-    let _ = fs::create_dir_all(cache_path);
 
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -194,18 +196,18 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
-    let state = match State::load() {
-        Ok(s) => s,
-        Err(_) => State::default(),
+    let state = if *USE_MOCK {
+        State::mock()
+    } else {
+        State::load().expect("failed to load state")
     };
 
-    //use_init_atom_root(cx);
     use_shared_state_provider(cx, || state);
-
     cx.render(rsx!(crate::app {}))
 }
 
 fn app(cx: Scope) -> Element {
+    //println!("rendering app");
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
     let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
