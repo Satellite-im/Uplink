@@ -17,7 +17,6 @@ use crate::{
 pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(&cx, String::new);
     let banner_state = use_state(&cx, String::new);
-    let edit_mode = use_state(&cx, || false);
     let username = use_state(&cx, || "username".to_owned());
     let status_message = use_state(&cx, || "status message".to_owned());
 
@@ -26,9 +25,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username_limited_to_32 = get_local_text("settings-profile.limited-to-32");
     let username_less_than_4 = get_local_text("settings-profile.less-than-4");
     let status_message_limited_to_128 = get_local_text("settings-profile.limited-to-128");
-
-    let show_texts = !**edit_mode;
-    let show_edit_fields = **edit_mode;
 
     cx.render(rsx!(
         div {
@@ -74,30 +70,33 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     },
                 },
-                show_texts.then(|| rsx!(
-                    div {
+                div {
+                        id: "edit_button",
                         class: "edit-button", 
                         Button {
                             text: get_local_text("settings-profile.edit-button"),
-                            onpress: move |_| edit_mode.set(!edit_mode),
+                            onpress: move |_| {
+                                use_eval(cx)(get_edit_mode_scripts()[0].clone());
+                            },
                         },
                     },
                     p { 
+                        id: "p_username",
                         class: "username",
                         "{username}"
                     },
                     p { 
+                        id: "status_message",
                         class: "status-message",
                         "{status_message}"
                     }
-                ))
-                show_edit_fields.then(|| 
-                    {
+                {
                     let new_username_val = use_ref(&cx,  || format!("{}", username));
                     let new_status_message_val = use_ref(&cx, || format!("{}", status_message));
                     rsx!(
                     div {
-                        class: "edit-button", 
+                        id: "save_button",
+                        class: "save-button", 
                         Button {
                             text: get_local_text("settings-profile.save-button"),
                             onpress: move |_| {
@@ -110,12 +109,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 }
                                 let new_status_message = new_status_message_val.with(|i| i.clone());
                                 status_message.set(new_status_message);
-                                edit_mode.set(!edit_mode);
+                                use_eval(cx)(get_edit_mode_scripts()[1].clone());
                             },
                         },
                     },
                     div {
-                        class: "username", 
+                        id: "username_edit",
+                        class: "username-edit", 
                             Input {
                             id: "username_text_field".to_owned(),
                             focus: true,
@@ -127,16 +127,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 let val: String = value;
                                 *new_username_val.write() = val.clone();
                                 if val.len() < 4 {
-                                    let script = r#"
-                                    document.getElementById("username_warning_2").style.opacity = 1
-                                    document.getElementById("status_message_edit").style.top = "324px";
-                                    "#;
-                                    use_eval(cx)(script.to_owned());
+                                    use_eval(cx)(get_username_rules_scripts()[2].clone());
                                 }
                                 if val.len() == 32 {
-                                    use_eval(cx)(get_limited_to_32_chars_script()[0].clone());
+                                    use_eval(cx)(get_username_rules_scripts()[1].clone());
                                 } else if val.len() < 32 && val.len() > 3 {
-                                    use_eval(cx)(get_limited_to_32_chars_script()[1].clone());
+                                    use_eval(cx)(get_username_rules_scripts()[0].clone());
                                 }
                             }, 
                             options: Options {
@@ -160,9 +156,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 let val: String = value;
                                 *new_status_message_val.write() = val.clone();
                                 if val.len() == 128 {
-                                    use_eval(cx)(get_limited_to_128_chars_script()[0].clone());
+                                    use_eval(cx)(get_limited_to_128_chars_scripts()[0].clone());
                                 } else if val.len() < 128 {
-                                    use_eval(cx)(get_limited_to_128_chars_script()[1].clone());
+                                    use_eval(cx)(get_limited_to_128_chars_scripts()[1].clone());
                                 }
                             }, 
                             options: Options {
@@ -173,7 +169,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         p {class: "status-message-len-counter", format!("{}/128", new_status_message_val.read().len())},
                         p {id: "status_message_warning", class: "status-message-warning", format!("{}", status_message_limited_to_128)},
                     },
-                )}),
+                )}
+            // ),
             },
         }
     ))
@@ -223,25 +220,55 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
     Ok(())
 }
 
-fn get_limited_to_32_chars_script() -> Vec<String> {
-    let script_forward = r#"
+fn get_username_rules_scripts() -> Vec<String> {
+    let script_less_than_4_chars = r#"
+        document.getElementById("username_warning_2").style.opacity = 1
+        document.getElementById("status_message_edit").style.top = "324px";
+    "#;
+    let script_32_chars_limit = r#"
             document.getElementById("status_message_edit").style.top = "324px";
             document.getElementById("username_warning").style.opacity = 1
         "#;
-    let script_back =  r#"
+    let script_normal =  r#"
             document.getElementById("username_warning").style.opacity = 0
             document.getElementById("username_warning_2").style.opacity = 0
             document.getElementById("status_message_edit").style.top = "308px";
     "#;
-    return vec![script_forward.to_owned(), script_back.to_owned()];
+    return vec![script_normal.to_owned(), script_32_chars_limit.to_owned(), script_less_than_4_chars.to_owned()];
 }
 
-fn get_limited_to_128_chars_script() -> Vec<String> {
+fn get_limited_to_128_chars_scripts() -> Vec<String> {
     let script_forward = r#"
         document.getElementById("status_message_warning").style.opacity = 1
     "#;
     let script_back =  r#"
         document.getElementById("status_message_warning").style.opacity = 0
+    "#;
+    return vec![script_forward.to_owned(), script_back.to_owned()];
+}
+
+fn get_edit_mode_scripts() -> Vec<String> {
+    let script_forward = r#"
+        document.getElementById("p_username").style.opacity = 0
+        document.getElementById("status_message").style.opacity = 0
+        document.getElementById("status_message_edit").style.opacity = 1
+        document.getElementById("username_edit").style.opacity = 1
+        document.getElementById("edit_button").style.opacity = 0
+        document.getElementById("save_button").style.opacity = 1
+
+        document.getElementById("edit_button").style.zIndex = 1
+        document.getElementById("save_button").style.zIndex = 2
+    "#;
+    let script_back = r#"
+        document.getElementById("p_username").style.opacity = 1
+        document.getElementById("status_message").style.opacity = 1
+        document.getElementById("status_message_edit").style.opacity = 0
+        document.getElementById("username_edit").style.opacity = 0
+        document.getElementById("edit_button").style.opacity = 1
+        document.getElementById("save_button").style.opacity = 0
+
+        document.getElementById("edit_button").style.zIndex = 2
+        document.getElementById("save_button").style.zIndex = 1
     "#;
     return vec![script_forward.to_owned(), script_back.to_owned()];
 }

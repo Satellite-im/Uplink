@@ -109,6 +109,19 @@
 .edit-button {
   display: block;
   position: absolute;
+  transition: opacity 0.25s;
+  z-index: 2;
+  opacity: 1;
+  top: 120%;
+  left:85%;
+}
+
+.save-button {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 0;
+  z-index: 1;
   top: 120%;
   left:85%;
 }
@@ -116,12 +129,24 @@
 .username {
   display: block;
   position: absolute;
+  transition: opacity 0.25s;
+  opacity: 1;
+  top: 250px;
+}
+
+.username-edit {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 0;
   top: 250px;
 }
 
 .status-message {
   display: block;
   position: absolute;
+  transition: opacity 0.25s;
+  opacity: 1;
   max-width: 80%;
   top: 275px;
 }
@@ -129,7 +154,8 @@
 .status-message-edit {
   display: block;
   position: absolute;
-  transition: top 0.5s;
+  transition: opacity 0.25s, top 0.5s;
+  opacity: 0;
   top: 308px;
 }
 
