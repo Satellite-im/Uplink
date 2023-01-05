@@ -258,50 +258,16 @@ fn app(cx: Scope) -> Element {
     let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);
 
-    let pending_friends = state.read().friends.incoming_requests.len();
-
-    let chat_route = UIRoute {
-        to: "/",
-        name: get_local_text("uplink.chats"),
-        icon: Icon::ChatBubbleBottomCenterText,
-        ..UIRoute::default()
-    };
-    let settings_route = UIRoute {
-        to: "/settings",
-        name: get_local_text("settings.settings"),
-        icon: Icon::Cog,
-        ..UIRoute::default()
-    };
-    let friends_route = UIRoute {
-        to: "/friends",
-        name: get_local_text("friends.friends"),
-        icon: Icon::Users,
-        with_badge: if pending_friends > 0 {
-            Some(pending_friends.to_string())
-        } else {
-            None
-        },
-        loading: None,
-    };
-    let files_route = UIRoute {
-        to: "/files",
-        name: get_local_text("files.files"),
-        icon: Icon::Folder,
-        ..UIRoute::default()
-    };
-    let routes = vec![
-        chat_route.clone(),
-        files_route.clone(),
-        friends_route.clone(),
-        settings_route.clone(),
-    ];
-
     let pre_release_text = get_local_text("uplink.pre-release");
 
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
+
+    let pending_friends = state.read().friends.incoming_requests.len();
+    let (chat_route, settings_route, friends_route, files_route, routes) =
+        get_routes(pending_friends);
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
@@ -401,4 +367,50 @@ fn app(cx: Scope) -> Element {
             }
         }
     ))
+}
+
+fn get_routes(pending_friends: usize) -> (UIRoute, UIRoute, UIRoute, UIRoute, Vec<UIRoute>) {
+    let chat_route = UIRoute {
+        to: "/",
+        name: get_local_text("uplink.chats"),
+        icon: Icon::ChatBubbleBottomCenterText,
+        ..UIRoute::default()
+    };
+    let settings_route = UIRoute {
+        to: "/settings",
+        name: get_local_text("settings.settings"),
+        icon: Icon::Cog,
+        ..UIRoute::default()
+    };
+    let friends_route = UIRoute {
+        to: "/friends",
+        name: get_local_text("friends.friends"),
+        icon: Icon::Users,
+        with_badge: if pending_friends > 0 {
+            Some(pending_friends.to_string())
+        } else {
+            None
+        },
+        loading: None,
+    };
+    let files_route = UIRoute {
+        to: "/files",
+        name: get_local_text("files.files"),
+        icon: Icon::Folder,
+        ..UIRoute::default()
+    };
+    let routes = vec![
+        chat_route.clone(),
+        files_route.clone(),
+        friends_route.clone(),
+        settings_route.clone(),
+    ];
+
+    (
+        chat_route,
+        settings_route,
+        friends_route,
+        files_route,
+        routes,
+    )
 }
