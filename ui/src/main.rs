@@ -260,7 +260,7 @@ fn app(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let theme = match &state.read().ui.theme {
+    let theme = state.read().ui.theme.as_ref().map(|theme| theme.styles.clone()).unwrap_or_default();
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
