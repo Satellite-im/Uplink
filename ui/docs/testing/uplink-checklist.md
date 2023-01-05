@@ -1,13 +1,15 @@
-# Uplink Checklist
+# Uplink Testing
 
-This document provides a checklist top-to-bottom of every step you should be able to physically do within the app. If you are commiting a big change, or want to be certain the application meets all requirements before publishing a release, you should go through this checklist.
+The following is a step-by-step list you should follow to ensure functionality when physically or automatically testing Uplink.
+
+Please keep in mind when testing that sometimes things can "work" i.e. meet the guidelines of a requirement but cause undesired visual effects or jarring movements, delay, and disposition of the cursor. We want the application to feel refined, in most cases when the UI looks ugly, it means we should go back to the drawing board on some feature because modern machines are fast enough to not have these bugs. Indications of jumping UI's or the mouse cursor jumping around when editing text with postprocessing like real-time markdown effects means the way we're doing that processing is slow, or un-tidy, not that it's so advanced that a computer or browser can't handle it. Remember we're building for everyone here and the average user wants something easy on the eyes as much as it is functional. Check that even if your physical tests "passed" they also still look nice and don't make sacrifices elsewhere.
+
+Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 
 
+## Functionality Checklist
 
-
-## **Functionality Checklist**
-
-### **Registration / Login**
+### Registration / Login
 **PIN Creation**
 - [ ] Limits PIN to a maximun of 6 characters.
 - [ ] Requires PIN to be a minimum of 4 characters.
@@ -27,7 +29,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Preview of how the profile picture should look appears for user.
 - [ ] User cannot proceed without first entering required account information.
 
-### **Friends**
+### Friends
 **Adding friends**
 - [ ] Clicking Copy Code should copy User's did key
 - [ ] There should be an input field for us to paste a did key or user#short_id.
@@ -39,7 +41,8 @@ This document provides a checklist top-to-bottom of every step you should be abl
 **Blocking friends**
 - [ ] Clicking Blocked displays all accounts that User has blocked.
 
-**Files**
+### Files
+**Basics**
 - [ ] User should be able to Drag+Drop 1 or more files.
 - [ ] User should be able to Drag+Drop Files into a specific Folder.
 - [ ] User should not be able to have 2 Folders with the same name inside the same folder.
@@ -51,12 +54,13 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] User can take file already uploaded and drag it into folder.
 
 ### Calling & Video 
+**Basics**
 - [ ] Clicking *Settings* button should take User to the *Settings* Page.
 - [ ] User should be able to click+drag Pop-out player anywhere on screen.
 
-## **Visual & UX Checklist**
+## Visual & UX Checklist
 
-### **Registration / Login**
+### Registration / Login
 **PIN Creation** 
 - [ ] Displays an error message when the PIN is not at least 4 characters long. 
 - [ ] Anything already typed should change from blue to red when error message appears.
@@ -75,7 +79,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
  **CTA Button**
 - [ ] The register button should use a reusable component and only appear clickable when all of the required information is submitted and there are no errors on the page.
 
-### **Chat Page**
+### Chat Page
 **Landing page for New Accounts**
 - [ ] "No active chats, wanna make one?" with option underneath to start one.
 - [ ] Page indicator in Sidebar should indicate User they are on the Chat page.
@@ -112,7 +116,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Pop-Out player should appear when User enables it. 
 - [ ] While Pop-out is enabled original call should display *Media Detached*.
  
-### **Friends**
+### Friends
 **Friends List** 
 - [ ] Friends are ordered alphabetically.
 - [ ] Profile picture should be present next to Username if friend has one.
@@ -173,16 +177,38 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Total Space should appear at the top of Files Page.
 
 ### Settings
+**Profile**
+- [ ] *Change Avatar* should appear when user hovers cursor over Profile Pic.
+- [ ] *Change Banner* should appear when user hovers cursor over Banner area.
+- [ ] Clicking the Banner should open Users local files browser.
+- [ ] Clicking the Profile Picutre should open Users local files browser.
+- [ ] Clicking *Edit* should display input fields for Username and Status.
+- [ ] Error message should appear when User tries to type a username or stauts message longer than 32 characters. 
+- [ ] Error message should appear when user attempts to save a username or status with less than 4 characters.
+
+**General** 
 - [ ] User should land in General tab when entering Settings. 
 - [ ] User should be able to toggle *Splash Screen*.
 - [ ] Clicking Theme should open the Themes Dropdown.
 - [ ] Clicking *Clear Themes* should set the theme back to default. 
 - [ ] UI should change accordingly when User sets a new theme.
 - [ ] User should be able to change the language by selecting from the Language Dropdown menu.
+  
+**Privacy**
 - [ ] Clicking *Backup Phrase* in the *Privacy* tab should backup Users account phrase.
+
+**Audio**
 - [ ] User should be able to toggle *Call Timer* on and off.
+
+**Files**
 - [ ] User should be able to toggle *Local Sync* on and off.
 - [ ] Clicking *Open Sync Folder* should open the folder where Users local files are synced to. 
+
+**Extensions**
+- [ ] User should be able to toggle Placeholder on and off.
+- [ ] Clicking "Open Extensions Folder" should open Users extension folder.
+
+**Developer**
 - [ ] Clicking *Open Codebase* should take the User to Github.
 - [ ] Clicking *Open Cache* should open the .Cache folder within Uplink.
 - [ ] Clicking *Compress* should compress the Users .Cache into a zip file.
@@ -190,6 +216,7 @@ This document provides a checklist top-to-bottom of every step you should be abl
 - [ ] Chat Sidebar should not appear when User is in Settings.
 
 ### Sidebar
+**Basics**
 - [ ] Sidebar should persist through Chat, Files, and Friends pages.
 - [ ] Sidebar should be hidden when User enters Settings. 
 - [ ] Sidebar should display Users favorite chats (If user has any).

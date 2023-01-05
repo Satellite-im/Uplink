@@ -6,7 +6,7 @@ use crate::components::{
         sidebar::{Page, Sidebar},
         sub_pages::{
             audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-            files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings,
+            files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings, profile::ProfileSettings,
         },
     },
 };
@@ -18,7 +18,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope<Props>) -> Element {
-    let to = use_state(cx, || Page::General);
+    let to = use_state(cx, || Page::Profile);
 
     cx.render(rsx!(
         div {
@@ -30,6 +30,9 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 }
             },
             match to.get() {
+                Page::Profile       => cx.render(rsx! (
+                    ProfileSettings {}
+                )),
                 Page::General       => cx.render(rsx! (
                     GeneralSettings {}
                 )),

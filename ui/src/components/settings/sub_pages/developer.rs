@@ -1,13 +1,20 @@
 use dioxus::prelude::*;
 
-use kit::{elements::{switch::Switch, Appearance, button::Button}, icons::Icon};
+use kit::{
+    elements::{button::Button, switch::Switch, Appearance},
+    icons::Icon,
+};
 
-use crate::{components::settings::SettingSection, state::State, utils::language::get_local_text};
+use crate::{
+    components::settings::SettingSection, config::Configuration, state::State,
+    utils::language::get_local_text,
+};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    
+    let mut config = Configuration::load_or_default();
+
     cx.render(rsx!(
         div {
             id: "settings-developer",
@@ -15,7 +22,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
-                    
+                    active: config.developer.developer_mode,
+                    onflipped: move |value| {
+                        config.set_developer_mode(value);
+                    },
                 }
             },
             SettingSection {

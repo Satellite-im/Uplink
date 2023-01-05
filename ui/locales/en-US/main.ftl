@@ -14,6 +14,8 @@ uplink = Uplink
     .search-placeholder = Search...
     .end = End
     .pre-release = Pre-release
+    .username = Username
+    .status = Status
 
 messages = Messages
     .new = New Message
@@ -56,6 +58,7 @@ files = Files
 
 settings = Settings
     .settings = Settings
+    .profile = Profile
     .general = General 
     .files = Files
     .privacy = Privacy
@@ -63,6 +66,12 @@ settings = Settings
     .extensions = Extensions
     .developer = Developer
     .search-placeholder = Search Settings...
+
+settings-profile = Profile Settings
+    .change-banner = Change banner
+    .change-avatar = Change avatar
+    .edit-button = Edit
+    .save-button = Save
 
 settings-general = General Settings
     .overlay = Uplink Overlay
