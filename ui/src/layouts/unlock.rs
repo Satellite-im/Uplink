@@ -12,7 +12,7 @@ use kit::{
 use tokio::sync::oneshot;
 
 use crate::{
-    warp_runner::{TesseractCmd, WarpCmd},
+    warp_runner::{commands::TesseractCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
@@ -37,10 +37,10 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         async move {
             let (tx, rx) = oneshot::channel::<bool>();
             warp_cmd_tx
-                .send(WarpCmd::Tesseract(Box::new(TesseractCmd::KeyExists {
+                .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
                     key: "keystore".into(),
                     rsp: tx,
-                })))
+                }))
                 .expect("UnlockLayout failed to send warp command");
             rx.blocking_recv()
                 .expect("failed to get response from warp_runner")
@@ -53,10 +53,10 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             while let Some(password) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 warp_cmd_tx
-                    .send(WarpCmd::Tesseract(Box::new(TesseractCmd::Unlock {
+                    .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
                         passphrase: password,
                         rsp: tx,
-                    })))
+                    }))
                     .expect("UnlockLayout failed to send warp command");
 
                 let res = rx

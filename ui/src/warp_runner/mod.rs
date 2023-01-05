@@ -19,8 +19,9 @@ use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{state::State, warp_runner::commands::handle_tesseract_cmd, WARP_PATH};
 
-pub use self::commands::TesseractCmd;
-mod commands;
+use self::commands::TesseractCmd;
+
+pub mod commands;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -39,7 +40,7 @@ pub enum WarpEvent {
 
 #[derive(Debug)]
 pub enum WarpCmd {
-    Tesseract(Box<TesseractCmd>),
+    Tesseract(TesseractCmd),
 }
 
 pub struct WarpRunner {
@@ -89,9 +90,7 @@ impl WarpRunner {
 
             // this was the only way to get a mutable static variable. but this channel should only be read here.
             let mut rx = rx.lock().await;
-
             let mut raygun_stream = get_raygun_stream(&mut messaging).await;
-
             let mut multipass_stream = loop {
                 match account.subscribe().await {
                     Ok(stream) => break stream,
@@ -115,20 +114,19 @@ impl WarpRunner {
                                 break;
                             }
                         }
-                    }
+                    },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
                             if tx.send(WarpEvent::RayGun(evt)).is_err() {
                                 break;
                             }
                         }
-                    }
+                    },
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
                         Some(cmd) => match cmd {
-                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, *cmd),
-                            //_ => todo!()
+                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, cmd)
                         },
                         None => break,
                     },
@@ -140,6 +138,22 @@ impl WarpRunner {
 
             // println!("terminating warp_runner thread");
         });
+    }
+}
+
+async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
+    loop {
+        match rg.subscribe().await {
+            Ok(stream) => break stream,
+            Err(warp::error::Error::MultiPassExtensionUnavailable)
+            | Err(warp::error::Error::RayGunExtensionUnavailable) => {
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+            Err(_e) => {
+                //Should not reach this point but should handle an error if it does
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+        }
     }
 }
 
@@ -181,20 +195,4 @@ async fn warp_initialization(
     .map(|rg| Box::new(rg) as Messaging)?;
 
     Ok((account, messaging, storage))
-}
-
-async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
-    loop {
-        match rg.subscribe().await {
-            Ok(stream) => break stream,
-            Err(warp::error::Error::MultiPassExtensionUnavailable)
-            | Err(warp::error::Error::RayGunExtensionUnavailable) => {
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            }
-            Err(_e) => {
-                //Should not reach this point but should handle an error if it does
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            }
-        }
-    }
 }
