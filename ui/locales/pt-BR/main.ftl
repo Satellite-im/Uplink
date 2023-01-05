@@ -56,6 +56,7 @@ files = Files
 
 settings = Settings
     .settings = Configurações
+    .profile = Perfil
     .general = Geral
     .privacy = Privacidade
     .files = Arquivos
@@ -63,6 +64,15 @@ settings = Settings
     .extensions = Extensões
     .developer = Desenvolvedor
     .search-placeholder = Procurar configuração...
+
+settings-profile = Profile Settings
+    .change-banner = Mudar banner
+    .change-avatar = Mudar avatar
+    .edit-button = Editar
+    .save-button = Salvar
+    .limited-to-32 = Nome de usuário é limitado a 32 caracteres
+    .limited-to-128 = Mensagem de status é limitada a 128 caracteres
+    .less-than-4 = Minimo caracteres para nome de usuário é 4
 
 settings-general = General Settings
     .splash-screen = Splash Screen

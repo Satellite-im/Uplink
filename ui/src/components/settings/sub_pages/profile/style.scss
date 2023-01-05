@@ -1,0 +1,202 @@
+.profile-header {
+    background: var(--theme-text-muted);
+    border-radius: 8px 8px 0 0;
+    height: 140px;
+    margin-bottom: 40px;
+    margin-left: width / 2;
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    justify-items: center;
+  }
+
+  .profile-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -15%;
+    background-color: #ccc;
+    cursor: pointer;
+  }
+
+  .profile-banner .change-banner-text {
+    display: none;
+  }
+  
+  .profile-banner:hover::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,.5);
+    pointer-events: none;
+  }
+  
+  .profile-banner:hover .change-banner-text {
+    display: block;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .profile-avatar {
+    border-radius: 100%;
+    height: 150px;
+    width: 150px;
+    background-color: #ccc;
+    border: 0.5px solid #999;
+  }
+
+.profile-picture {
+  margin-top: 80px;
+  position: relative;
+  display: inline-block;
+  justify-content:center;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.profile-picture .change-avatar-text {
+  display: none;
+}
+
+.profile-picture:hover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 150px;
+  width: 150px;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,.5);
+  pointer-events: none;
+  border-radius: 100%;
+}
+
+.profile-picture:hover .change-avatar-text {
+  display: block;
+  position: absolute;
+  top: 130%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  text-justify: inter-word;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.plus-button {
+  display: block;
+  position: absolute;
+  top: 144%;
+  left: 53%;
+  scale: 0.8;
+  z-index: 2;
+}
+
+.edit-button {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  z-index: 2;
+  opacity: 1;
+  top: 120%;
+  left:85%;
+}
+
+.save-button {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 0;
+  z-index: 1;
+  top: 120%;
+  left:85%;
+}
+
+.username {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 1;
+  top: 250px;
+}
+
+.username-edit {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 0;
+  top: 250px;
+}
+
+.status-message {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s;
+  opacity: 1;
+  max-width: 80%;
+  top: 275px;
+}
+
+.status-message-edit {
+  display: block;
+  position: absolute;
+  transition: opacity 0.25s, top 0.5s;
+  opacity: 0;
+  top: 308px;
+}
+
+.username-warning {
+  color: var(--warning-light);
+  transition: opacity 0.5s;
+  opacity: 0;
+  font-size: 12px;
+  display: block;
+}
+
+.username-warning-2 {
+  color: var(--warning-light);
+  font-size: 12px;
+  transition: opacity 0.5s;
+  opacity: 0;
+  top: 70%;
+  display: block;
+  position: absolute;
+}
+
+.username-len-counter {
+  color: var(--text-color-dark);
+  font-size: 10px;
+  position: absolute;
+  top: -16px;
+  left: 90%;
+}
+
+.status-message-warning {
+  color: var(--warning-light);
+  transition: opacity 0.5s;
+  opacity: 0;
+  font-size: 12px;
+  display: block;
+}
+
+.status-message-len-counter {
+  color: var(--text-color-dark);
+  font-size: 10px;
+  position: absolute;
+  top: -16px;
+  left: 90%;
+}

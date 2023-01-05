@@ -56,6 +56,7 @@ files = Files
 
 settings = Settings
     .settings = Settings
+    .profile = Profile
     .general = General 
     .files = Files
     .privacy = Privacy
@@ -63,6 +64,15 @@ settings = Settings
     .extensions = Extensions
     .developer = Developer
     .search-placeholder = Search Settings...
+
+settings-profile = Profile Settings
+    .change-banner = Change banner
+    .change-avatar = Change avatar
+    .edit-button = Edit
+    .save-button = Save
+    .limited-to-32 = Username is limited to 32 characters
+    .limited-to-128 = Status Message is limited to 128 characters
+    .less-than-4 = Minimum username characters is 4
 
 settings-general = General Settings
     .overlay = Uplink Overlay
