@@ -6,6 +6,8 @@ use super::identity::Identity;
 pub struct Account {
     #[serde(default)]
     pub identity: Identity,
+    /// for warp
+    pub tesseract_initialized: bool,
     // pub settings: Option<CustomSettings>,
     // pub profile: Option<Profile>,
 }

@@ -625,7 +625,10 @@ impl State {
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
         let cache_path = UPLINK_PATH.join("state.json");
-        let contents = fs::read_to_string(cache_path)?;
+        let contents = match fs::read_to_string(cache_path) {
+            Ok(r) => r,
+            Err(_) => return Ok(State::default()),
+        };
         let state: State = match serde_json::from_str(&contents) {
             Ok(s) => s,
             Err(_) => State::default(),

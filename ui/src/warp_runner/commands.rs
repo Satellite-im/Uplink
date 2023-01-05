@@ -21,6 +21,7 @@ pub fn handle_tesseract_cmd(tesseract: &mut Tesseract, cmd: TesseractCmd) {
         }
         TesseractCmd::Unlock { passphrase, rsp } => {
             let res = tesseract.unlock(passphrase.as_bytes());
+            let _ = tesseract.save();
             let _ = rsp.send(res);
         }
     }

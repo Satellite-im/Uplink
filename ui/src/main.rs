@@ -69,11 +69,7 @@ pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
     (tx, Arc::new(Mutex::new(rx)))
 });
 
-// for warp only
-pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
-    Some(path) => path.join("warp"),
-    _ => dirs::home_dir().unwrap_or_default().join(".warp"),
-});
+pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| UPLINK_PATH.join("warp"));
 
 pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
     Some(path) => path,
@@ -119,6 +115,8 @@ fn copy_assets() {
 
 fn main() {
     // Initializes the cache dir if needed
+    std::fs::create_dir_all(UPLINK_PATH.clone()).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(WARP_PATH.clone()).expect("Error creating Warp directory");
     copy_assets();
 
     let mut main_menu = Menu::new();
@@ -196,6 +194,7 @@ fn main() {
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
     let mut warp_runner = warp_runner::WarpRunner::init();
+    let tesseract_initialized = warp_runner.tesseract_initialized();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
     let mut state = if *USE_MOCK {
@@ -203,6 +202,10 @@ fn bootstrap(cx: Scope) -> Element {
     } else {
         State::load().expect("failed to load state")
     };
+
+    if !*USE_MOCK {
+        state.account.tesseract_initialized = tesseract_initialized;
+    }
 
     // todo: delete this. it is just an examle
     let desktop = use_window(cx);

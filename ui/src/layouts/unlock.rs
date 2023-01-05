@@ -13,39 +13,24 @@ use kit::{
 use tokio::sync::oneshot;
 
 use crate::{
+    state::State,
     warp_runner::{commands::TesseractCmd, WarpCmd},
-    WARP_CMD_CH,
+    CHAT_ROUTE, WARP_CMD_CH,
 };
 
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
     let warp_cmd_tx = WARP_CMD_CH.0.clone();
     // true if password succeeded
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
 
-    // todo: fetch this at the start
-    // will be either available, error, or loading
-    let tesseract_available = use_future(cx, (), |_| {
-        to_owned![warp_cmd_tx];
-        async move {
-            println!("fetching tesseract_available");
-            let (tx, rx) = oneshot::channel::<bool>();
-            warp_cmd_tx
-                .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
-                    key: "keystore".into(),
-                    rsp: tx,
-                }))
-                .expect("UnlockLayout failed to send warp command");
-            rx.blocking_recv()
-                .expect("failed to get response from warp_runner")
-        }
-    });
-
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![warp_cmd_tx, password_failed, router];
         async move {
             while let Some(password) = rx.next().await {
+                //println!("got password input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 warp_cmd_tx
                     .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
@@ -58,20 +43,15 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                     .blocking_recv()
                     .expect("failed to get response from warp_runner");
 
-                // todo: update the page if the password fails
+                //println!("got response from warp");
                 match res {
-                    Ok(_) => router.replace_route("/chat", None, None),
-                    Err(_) => router.replace_route("/chat", None, None), //password_failed.set(Some(true)),
+                    Ok(_) => router.replace_route(CHAT_ROUTE, None, None),
+                    Err(_) => password_failed.set(Some(true)),
                 }
             }
         }
     });
 
-    let _window = use_window(cx);
-    // window.set_inner_size(Size::Logical(LogicalSize {
-    //     width: 100.0,
-    //     height: 100.0,
-    // }));
     // Set up validation options for the input field
     let validation_options = Validation {
         // The input should have a maximum length of 32
@@ -85,11 +65,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
     };
 
     let disabled = use_state(cx, || false);
-
     let desktop = use_window(cx);
-
-    // TODO: we should make the window smaller during the inital setup steps.
-
     desktop.set_inner_size(LogicalSize {
         width: 500.0,
         height: 300.0,
@@ -101,7 +77,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             onmousedown: move |_| {
                 desktop.drag();
             },
-            get_prompt(cx, tesseract_available),
+            get_prompt(cx, state.read().account.tesseract_initialized, password_failed.read().unwrap_or(false)),
             p {
                 class: "info",
                 "Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
@@ -138,22 +114,22 @@ pub fn UnlockLayout(cx: Scope) -> Element {
 }
 
 // todo: translate
-fn get_prompt<'a>(cx: Scope<'a>, tesseract_available: &UseFuture<bool>) -> Element<'a> {
-    match tesseract_available.value() {
-        Some(available) => {
-            if *available {
-                cx.render(rsx!(Label {
-                    text: "Enter your password".into()
-                }))
-            } else {
-                cx.render(rsx!(Label {
-                    text: "Create a password".into()
-                }))
-            }
+// todo: better reaction when password failed. perhaps a toast?
+fn get_prompt(cx: Scope, tesseract_available: bool, password_failed: bool) -> Element {
+    if tesseract_available {
+        if password_failed {
+            cx.render(rsx!(Label {
+                text: "Invalid Password".into()
+            }))
+        } else {
+            cx.render(rsx!(Label {
+                text: "Enter your password".into()
+            }))
         }
-        None => cx.render(rsx!(Label {
-            text: "loading".into(),
-            loading: true
-        })),
+    } else {
+        assert!(!password_failed);
+        cx.render(rsx!(Label {
+            text: "Create a password".into()
+        }))
     }
 }

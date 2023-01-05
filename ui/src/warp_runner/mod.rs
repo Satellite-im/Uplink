@@ -46,6 +46,8 @@ pub enum WarpCmd {
 pub struct WarpRunner {
     notify: Arc<Notify>,
     ran_once: bool,
+    // State needs to know if there's a "keystore" field in Tesseract for the unlock page
+    tesseract: Tesseract,
 }
 
 impl std::ops::Drop for WarpRunner {
@@ -56,10 +58,26 @@ impl std::ops::Drop for WarpRunner {
 
 impl WarpRunner {
     pub fn init() -> Self {
+        let tess_path = WARP_PATH.join(".keystore");
+        let tesseract = match Tesseract::from_file(&tess_path) {
+            Ok(tess) => tess,
+            Err(_) => {
+                //doesnt exist so its set
+                let tess = Tesseract::default();
+                tess.set_file(tess_path);
+                tess.set_autosave();
+                tess
+            }
+        };
         Self {
             notify: Arc::new(Notify::new()),
             ran_once: false,
+            tesseract,
         }
+    }
+
+    pub fn tesseract_initialized(&self) -> bool {
+        self.tesseract.exist("keypair")
     }
 
     // spawns a thread which will terminate when WarpRunner is dropped
@@ -67,16 +85,7 @@ impl WarpRunner {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
-        let mut tesseract = match Tesseract::from_file(WARP_PATH.join(".keystore")) {
-            Ok(tess) => tess,
-            Err(_) => {
-                //doesnt exist so its set
-                let tess = Tesseract::default();
-                tess.set_file(WARP_PATH.join(".keystore"));
-                tess.set_autosave();
-                tess
-            }
-        };
+        let mut tesseract = self.tesseract.clone();
 
         let notify = self.notify.clone();
         tokio::spawn(async move {

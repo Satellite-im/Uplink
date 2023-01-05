@@ -65,6 +65,7 @@ pub fn generate_mock() -> State {
             enable_overlay: false,
         },
         account: Account {
+            tesseract_initialized: false,
             identity: me.clone(),
         },
         settings: Settings {
