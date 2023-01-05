@@ -266,8 +266,7 @@ fn app(cx: Scope) -> Element {
     };
 
     let pending_friends = state.read().friends.incoming_requests.len();
-    let (chat_route, settings_route, friends_route, files_route, routes) =
-        get_routes(pending_friends);
+    let router = get_router(cx, pending_friends);
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
@@ -321,55 +320,12 @@ fn app(cx: Scope) -> Element {
             //state.read().ui.popout_player.then(|| rsx!(
            //     PopoutPlayer {}
            // )),
-            Router {
-                Route {
-                    to: "/",
-                    ChatLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: chat_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/settings",
-                    SettingsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: settings_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/friends",
-                    FriendsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: friends_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/files",
-                    FilesLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: files_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/pre/unlock",
-                    UnlockLayout {
-
-                    }
-                }
-            }
+           router
         }
     ))
 }
 
-fn get_routes(pending_friends: usize) -> (UIRoute, UIRoute, UIRoute, UIRoute, Vec<UIRoute>) {
+fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
         to: "/",
         name: get_local_text("uplink.chats"),
@@ -406,11 +362,48 @@ fn get_routes(pending_friends: usize) -> (UIRoute, UIRoute, UIRoute, UIRoute, Ve
         settings_route.clone(),
     ];
 
-    (
-        chat_route,
-        settings_route,
-        friends_route,
-        files_route,
-        routes,
-    )
+    cx.render(rsx!(Router {
+        Route {
+            to: "/",
+            ChatLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: chat_route.clone(),
+                }
+            }
+        },
+        Route {
+            to: "/settings",
+            SettingsLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: settings_route.clone(),
+                }
+            }
+        },
+        Route {
+            to: "/friends",
+            FriendsLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: friends_route.clone(),
+                }
+            }
+        },
+        Route {
+            to: "/files",
+            FilesLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: files_route,
+                }
+            }
+        },
+        Route {
+            to: "/pre/unlock",
+            UnlockLayout {
+
+            }
+        }
+    }))
 }
