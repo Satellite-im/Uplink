@@ -7,16 +7,34 @@
 	display: inline-flex;
 	justify-content: center;
 	align-items: flex-end;
+
+	.circle {
+		transform: scale(0.75);
+		transform-origin: bottom center;
+	}
 }
 .indicator-online {
 	stroke: var(--success-light);
+
+	.circle {
+		fill: var(--success-light);
+	}
 }
 .indicator-offline {
 	stroke: var(--secondary-light);
+	.circle {
+		fill: var(--secondary-light);
+	}
 }
 .indicator-do-not-disturb {
 	stroke: var(--danger);
+	.circle {
+		fill: var(--danger);
+	}
 }
 .indicator-idle {
 	stroke: var(--warning-light);
+	.circle {
+		fill: var(--warning-light);
+	}
 }
