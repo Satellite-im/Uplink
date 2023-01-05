@@ -1,8 +1,6 @@
 <h1 align="center">
-  <a href="https://satellite.im" target="_blank">
   <img src="ui/extra/images/logo.png" width=200 height=200/><br>
   Uplink
-  </a>
 </h1>
 
 <h4 align="center">Privacy First, Modular, P2P messaging client built atop Warp.</h4>
