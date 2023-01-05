@@ -29,14 +29,17 @@ impl Platform {
             Platform::Headless => Icon::WrenchScrewdriver,
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        match self {
+impl fmt::Display for Platform {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
             Platform::Desktop => String::from("circle"),
             Platform::Mobile => String::from("mobile"),
             Platform::Tv => String::from("tv"),
             Platform::Headless => String::from("headless"),
-        }
+        };
+        write!(f, "{}", s)
     }
 }
 

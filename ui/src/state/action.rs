@@ -72,13 +72,13 @@ pub enum Action {
     UnBlock(Identity),
     /// Handles the display of "favorite" chats
     Favorite(Chat),
-    UnFavorite(Chat),
+    UnFavorite(Uuid),
     /// Sets the active chat to a given chat
     ChatWith(Chat),
     /// Adds a chat to the sidebar
     AddToSidebar(Chat),
     /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
-    RemoveFromSidebar(Chat),
+    RemoveFromSidebar(Uuid),
     /// Adds or removes a chat from the favorites page
     ToggleFavorite(Chat),
 
