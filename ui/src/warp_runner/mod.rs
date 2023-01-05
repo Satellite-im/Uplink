@@ -28,9 +28,10 @@ type Account = Box<dyn MultiPass>;
 type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
 
+#[allow(clippy::large_enum_variant)]
 pub enum WarpEvent {
-    RayGun(Box<RayGunEventKind>),
-    MultiPass(Box<MultiPassEventKind>),
+    RayGun(RayGunEventKind),
+    MultiPass(MultiPassEventKind),
 }
 
 pub enum WarpCmd {
@@ -106,14 +107,14 @@ impl WarpRunner {
                 tokio::select! {
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::RayGun(Box::new(evt))).is_err() {
+                            if tx.send(WarpEvent::RayGun(evt)).is_err() {
                                 break;
                             }
                         }
                     }
                     opt = multipass_stream.next() => {
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::MultiPass(Box::new(evt))).is_err() {
+                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
                                 break;
                             }
                         }
