@@ -372,8 +372,8 @@ fn app(cx: Scope) -> Element {
                 }
             },
             //state.read().ui.popout_player.then(|| rsx!(
-           //     PopoutPlayer {}
-           // )),
+            //     PopoutPlayer {}
+            // )),
             Router {
                 Route {
                     to: "/",
