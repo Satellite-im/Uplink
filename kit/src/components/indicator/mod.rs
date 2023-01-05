@@ -33,7 +33,6 @@ impl Platform {
 
 impl fmt::Display for Platform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Use `self.number` to refer to each positional data point.
         let s = match self {
             Platform::Desktop => String::from("circle"),
             Platform::Mobile => String::from("mobile"),

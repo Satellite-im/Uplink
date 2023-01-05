@@ -112,7 +112,7 @@ fn copy_assets() {
 }
 
 fn main() {
-    // Initalizes the cache dir if needed
+    // Initializes the cache dir if needed
     copy_assets();
 
     let mut main_menu = Menu::new();
