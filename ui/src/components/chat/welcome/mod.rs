@@ -16,6 +16,7 @@ pub fn Welcome(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             id: "welcome",
+            aria_label: "welcome-screen",
             svg {
                 class: "logo",
                 "viewBox": "0 0 375.99 313.7",

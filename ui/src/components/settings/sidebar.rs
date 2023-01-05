@@ -107,6 +107,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
+                    aria_label: "settings-search-input",
                     Input {
                         placeholder: get_local_text("settings.search-placeholder"),
                         icon: Icon::MagnifyingGlass,
