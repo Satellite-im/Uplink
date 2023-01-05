@@ -265,17 +265,13 @@ fn app(cx: Scope) -> Element {
         None => String::from(""),
     };
 
-    let toasts = get_toasts(cx, &state.read());
-    let call_dialog = get_call_dialog(cx);
     let pending_friends = state.read().friends.incoming_requests.len();
-    let router = get_router(cx, pending_friends);
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
-            toasts,
-            call_dialog,
+            get_toasts(cx, &state.read()),
+            get_call_dialog(cx),
             div {
                 id: "pre-release",
                 onmousedown: move |_| { desktop.drag(); },
@@ -289,7 +285,7 @@ fn app(cx: Scope) -> Element {
             //state.read().ui.popout_player.then(|| rsx!(
            //     PopoutPlayer {}
            // )),
-           router
+           get_router(cx, pending_friends)
         }
     ))
 }
