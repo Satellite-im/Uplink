@@ -265,6 +265,8 @@ fn app(cx: Scope) -> Element {
         None => String::from(""),
     };
 
+    let toasts = get_toasts(cx, &state.read());
+    let call_dialog = get_call_dialog(cx);
     let pending_friends = state.read().friends.incoming_requests.len();
     let router = get_router(cx, pending_friends);
 
@@ -272,41 +274,8 @@ fn app(cx: Scope) -> Element {
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
-            state.read().ui.toast_notifications.iter().map(|(id, toast)| {
-                rsx! (
-                    Toast {
-                        id: *id,
-                        with_title: toast.title.clone(),
-                        with_content: toast.content.clone(),
-                        icon: toast.icon.unwrap_or(Icon::InformationCircle),
-                        appearance: Appearance::Secondary,
-                    },
-                )
-            }),
-            // CallDialog {
-            //     caller: cx.render(rsx!(UserImage {
-            //         platform: Platform::Mobile,
-            //         status: Status::Online
-            //     })),
-            //     callee: cx.render(rsx!(UserImage {
-            //         platform: Platform::Mobile,
-            //         status: Status::Online
-            //     })),
-            //     description: "Call Description".into(),
-            //     // with_accept_btn: cx.render(rsx! (
-            //     //     Button {
-            //     //         icon: Icon::Phone,
-            //     //         appearance: Appearance::Success,
-            //     //     }
-            //     // )),
-            //     with_deny_btn: cx.render(rsx! (
-            //         Button {
-            //             icon: Icon::PhoneXMark,
-            //             appearance: Appearance::Danger,
-            //             text: "End".into(),
-            //         }
-            //     )),
-            // },
+            toasts,
+            call_dialog,
             div {
                 id: "pre-release",
                 onmousedown: move |_| { desktop.drag(); },
@@ -323,6 +292,48 @@ fn app(cx: Scope) -> Element {
            router
         }
     ))
+}
+
+fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
+    cx.render(rsx!(state.ui.toast_notifications.iter().map(
+        |(id, toast)| {
+            rsx!(Toast {
+                id: *id,
+                with_title: toast.title.clone(),
+                with_content: toast.content.clone(),
+                icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                appearance: Appearance::Secondary,
+            },)
+        }
+    )))
+}
+
+fn get_call_dialog(_cx: Scope) -> Element {
+    // CallDialog {
+    //     caller: cx.render(rsx!(UserImage {
+    //         platform: Platform::Mobile,
+    //         status: Status::Online
+    //     })),
+    //     callee: cx.render(rsx!(UserImage {
+    //         platform: Platform::Mobile,
+    //         status: Status::Online
+    //     })),
+    //     description: "Call Description".into(),
+    //     // with_accept_btn: cx.render(rsx! (
+    //     //     Button {
+    //     //         icon: Icon::Phone,
+    //     //         appearance: Appearance::Success,
+    //     //     }
+    //     // )),
+    //     with_deny_btn: cx.render(rsx! (
+    //         Button {
+    //             icon: Icon::PhoneXMark,
+    //             appearance: Appearance::Danger,
+    //             text: "End".into(),
+    //         }
+    //     )),
+    // }
+    None
 }
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
