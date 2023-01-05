@@ -241,7 +241,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     icon: Icon::EyeSlash,
                                     text: get_local_text("uplink.hide-chat"),
                                     onpress: move |_| {
-                                        state.write().mutate(Action::RemoveFromSidebar(chat.clone()));
+                                        state.write().mutate(Action::RemoveFromSidebar(chat.id));
                                     }
                                 },
                             )),

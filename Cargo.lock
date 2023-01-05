@@ -3479,6 +3479,7 @@ dependencies = [
  "glob",
  "humansize",
  "rsass",
+ "shared",
  "timeago",
  "uuid",
 ]
@@ -6351,6 +6352,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "fluent-templates",
+ "isolang",
+ "unic-langid",
+ "warp",
+]
+
+[[package]]
 name = "signal-hook-registry"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7301,7 +7312,6 @@ dependencies = [
  "dirs",
  "either",
  "fermi",
- "fluent-templates",
  "fs_extra",
  "futures",
  "glob",
@@ -7321,12 +7331,12 @@ dependencies = [
  "rsass",
  "serde",
  "serde_json",
+ "shared",
  "soloud",
  "substring",
  "timeago",
  "titlecase",
  "tokio",
- "unic-langid",
  "uuid",
  "walkdir",
  "warp",

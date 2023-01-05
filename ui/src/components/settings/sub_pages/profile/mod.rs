@@ -34,8 +34,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         no_whitespace: false,
     };
 
-    let image_state = use_state(&cx, String::new);
-    let banner_state = use_state(&cx, String::new);
+    let image_state = use_state(cx, String::new);
+    let banner_state = use_state(cx, String::new);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
 
