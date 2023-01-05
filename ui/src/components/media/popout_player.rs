@@ -27,12 +27,11 @@ pub fn PopoutPlayer(cx: Scope) -> Element {
                         size: 40,
                     },
                 },
-                
                 video {
                     src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                     autoplay: "true",
                     "loop": "true",
-                    "muted": "true",
+                    muted: "false"
                 },
                 div {
                     class: "controls",

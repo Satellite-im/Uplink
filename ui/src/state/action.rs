@@ -24,8 +24,6 @@ pub struct ActionHook {
 /// used exclusively by State::mutate
 pub enum Action {
     // UI
-    /// change ui::UI::popout_player, which determines if the media_view is anchored in place or moves around
-    TogglePopout,
     // hang up for the active media stream
     DisableMedia,
     ToggleSilence,
@@ -43,7 +41,8 @@ pub enum Action {
     /// adds an overlay. currently only used for demonstration purposes
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
-    SetMediaWebview(Rc<WebView>),
+    SetPopout(Rc<WebView>),
+    ClearPopout,
 
     // Settings
     /// Sets the selected language.

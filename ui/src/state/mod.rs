@@ -284,10 +284,6 @@ impl State {
         self.friends.incoming_requests.push(identity.clone());
     }
 
-    fn toggle_popout(&mut self) {
-        self.ui.popout_player = !self.ui.popout_player;
-    }
-
     fn new_outgoing_request(&mut self, identity: &Identity) {
         self.friends.outgoing_requests.push(identity.clone());
     }
@@ -533,8 +529,11 @@ impl State {
         self.call_hooks(&action);
 
         match action {
-            Action::SetMediaWebview(webview) => {
-                self.ui.set_media_webview(webview);
+            Action::ClearPopout => {
+                self.ui.clear_popout();
+            }
+            Action::SetPopout(webview) => {
+                self.ui.set_popout(webview);
             }
             Action::AddOverlay(window) => {
                 self.ui.overlays.push(window);
@@ -606,9 +605,6 @@ impl State {
                 self.set_active_route(to);
             }
             // UI
-            Action::TogglePopout => {
-                self.toggle_popout();
-            }
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),
         }

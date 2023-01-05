@@ -15,6 +15,7 @@ pub struct UI {
     pub current_call: Option<Call>,
     // false: the media player is anchored in place
     // true: the media player can move around
+    #[serde(skip)]
     pub popout_player: bool,
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
@@ -32,8 +33,18 @@ impl Drop for UI {
 }
 
 impl UI {
-    pub fn set_media_webview(&mut self, view: Rc<WebView>) {
+    pub fn clear_popout(&mut self) {
+        self.popout_player = false;
+        let mut call = match &self.current_call {
+            Some(c) => c.clone(),
+            None => return,
+        };
+        call.popout_view = None;
+        self.current_call = Some(call);
+    }
+    pub fn set_popout(&mut self, view: Rc<WebView>) {
         self.current_call = Some(Call::new(Some(view)));
+        self.popout_player = true;
     }
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
@@ -87,7 +98,7 @@ pub struct Call {
     // displays the current  video stream
     // may need changing later to accommodate video streams from multiple participants
     #[serde(skip)]
-    pub media_view: Option<Rc<WebView>>,
+    pub popout_view: Option<Rc<WebView>>,
     #[serde(default)]
     pub muted: bool,
     #[serde(default)]
@@ -96,7 +107,7 @@ pub struct Call {
 
 impl Drop for Call {
     fn drop(&mut self) {
-        if let Some(view) = self.media_view.as_ref() {
+        if let Some(view) = self.popout_view.as_ref() {
             view.evaluate_script("close()")
                 .expect("failed to close webview");
         };
@@ -104,9 +115,9 @@ impl Drop for Call {
 }
 
 impl Call {
-    pub fn new(media_view: Option<Rc<WebView>>) -> Self {
+    pub fn new(popout_view: Option<Rc<WebView>>) -> Self {
         Self {
-            media_view,
+            popout_view,
             muted: false,
             silenced: false,
         }
