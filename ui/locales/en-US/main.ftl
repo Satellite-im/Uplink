@@ -14,6 +14,8 @@ uplink = Uplink
     .search-placeholder = Search...
     .end = End
     .pre-release = Pre-release
+    .username = Username
+    .status = Status
 
 messages = Messages
     .new = New Message
@@ -70,9 +72,6 @@ settings-profile = Profile Settings
     .change-avatar = Change avatar
     .edit-button = Edit
     .save-button = Save
-    .limited-to-32 = Username is limited to 32 characters
-    .limited-to-128 = Status Message is limited to 128 characters
-    .less-than-4 = Minimum username characters is 4
 
 settings-general = General Settings
     .overlay = Uplink Overlay
