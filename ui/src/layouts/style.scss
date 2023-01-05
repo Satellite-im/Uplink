@@ -1,3 +1,7 @@
+#test-words {
+    color: white;
+}
+
 #chat-layout,
 #settings-layout,
 #files-layout,
@@ -6,16 +10,18 @@
     display: inline-flex;
     height: 100%;
     width: 100%;
-    min-width: calc(var(--sidebar-width) * 2);
 }
 
+#test-text {
+    color: white;
+}
 #files-layout,
 #friends-layout {
     .friends-body, .files-body {
         display: inline-flex;
         flex-direction: column;
         width: 100%;
-
+        height: 100%;
         .friends-controls {
             display: inline-flex;
             padding: var(--gap);
@@ -32,6 +38,7 @@
         padding: var(--gap);
         gap: var(--gap);
         flex-wrap: wrap;
+        flex: 1;
     }
 
     .files-info {
