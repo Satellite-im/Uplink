@@ -272,6 +272,10 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
+            class: "drag-handle",
+            onmousedown: move |_| desktop.drag(),
+        },
+        div {
             id: "app-wrap",
             get_toasts(cx, &state.read()),
             get_call_dialog(cx),
