@@ -13,8 +13,7 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-// use state::{Action, ActionHook, State};
-use state::{Action, State};
+use state::State;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -303,18 +302,6 @@ fn app(cx: Scope) -> Element {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
-
-    // TODO:
-    // Close the overlay when the state changes.
-    // Close the overlay when we close the main window.
-
-    // state.write().add_hook(ActionHook {
-    //     action_type: either::Left(Action::SetOverlay(false)),
-    //     callback: |s: State| {
-    //         // TODO: Update logic here to render or de render the overlay.
-    //         // _overlay.close();
-    //     },
-    // });
 
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
