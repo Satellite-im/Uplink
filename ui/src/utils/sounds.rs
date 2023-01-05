@@ -9,17 +9,17 @@ pub enum Sounds {
 #[allow(non_snake_case)]
 pub fn Play(sound: Sounds) {
     // Create a Soloud instance
-    let sl = Soloud::default().unwrap();
+    let sl = Soloud::default().expect("Soloud::default");
     // Create a Wav instance
     let mut wav = audio::Wav::default();
     // Load the appropriate sound file based on the `sound` argument
     match sound {
         Sounds::Notification => wav
             .load_mem(include_bytes!("../../extra/assets/sounds/Ponderous.ogg"))
-            .unwrap(),
+            .expect("Ponderous.ogg"),
         Sounds::FriendReq => wav
             .load_mem(include_bytes!("../../extra/assets/sounds/Success.ogg"))
-            .unwrap(),
+            .expect("Success.ogg"),
         // The `General` case is not handled
         Sounds::General => {}
     };
