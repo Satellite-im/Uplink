@@ -66,17 +66,26 @@ pub struct Developer {
     pub cache_dir: String,
 }
 
+const DEFAULT_CACHE_DIR: &str = ".uplink";
+
 impl Configuration {
     pub fn new() -> Self {
         // Create a default configuration here
         // For example:
-        Self::default()
+        Self {
+            developer: Developer {
+                cache_dir: DEFAULT_CACHE_DIR.into(),
+                ..Developer::default()
+            },
+            ..Self::default()
+        }
     }
 
     pub fn load() -> Self {
         let config_path = dirs::home_dir()
             .unwrap_or_default()
-            .join(".uplink/Config.json")
+            // TODO: We need to make this set to the default cache dir
+            .join(format!("{}/Config.json", DEFAULT_CACHE_DIR))
             .into_os_string()
             .into_string()
             .unwrap_or_default();
@@ -96,7 +105,7 @@ impl Configuration {
     pub fn load_or_default() -> Self {
         let config_path = dirs::home_dir()
             .unwrap_or_default()
-            .join(".uplink/Config.json")
+            .join(format!("{}/Config.json", DEFAULT_CACHE_DIR))
             .into_os_string()
             .into_string()
             .unwrap_or_default();
@@ -117,7 +126,7 @@ impl Configuration {
         let config_json = serde_json::to_string(self)?;
         let config_path = dirs::home_dir()
             .unwrap_or_default()
-            .join(".uplink/Config.json")
+            .join(format!("{}/Config.json", DEFAULT_CACHE_DIR))
             .into_os_string()
             .into_string()
             .unwrap_or_default();
@@ -134,6 +143,11 @@ impl Configuration {
 
     pub fn set_overlay(&mut self, overlay: bool) {
         self.general.enable_overlay = overlay;
+        let _ = self.save();
+    }
+
+    pub fn set_developer_mode(&mut self, developer_mode: bool) {
+        self.developer.developer_mode = developer_mode;
         let _ = self.save();
     }
 }
