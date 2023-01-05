@@ -19,6 +19,7 @@
 
     .change-banner-text {
       position: absolute;
+      z-index: 3;
       pointer-events: none;
       font-size: var(--text-size);
       color: var(--text-color-muted);
