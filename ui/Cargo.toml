@@ -13,6 +13,7 @@ dioxus-desktop = { version = "0.3.0", features = ["transparent"] }
 dioxus-core = "0.3.0"
 fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
+shared = { path = "../shared" }
 
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
@@ -32,8 +33,6 @@ chrono = "0.4.19"
 substring = "1.4.5"
 either = "1.6.1"
 base64 = "0.20.0"
-fluent-templates = "0.8.0"
-unic-langid = "0.9.1"
 timeago = "0.4.0"
 dirs = "4.0.0"
 opener = "0.5.0"

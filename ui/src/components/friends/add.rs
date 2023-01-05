@@ -7,8 +7,7 @@ use kit::{
     },
     icons::Icon,
 };
-
-use crate::{utils::language::get_local_text};
+use shared::language::get_local_text;
 
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {

@@ -6,9 +6,8 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
+use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
-
-use crate::utils::language::get_local_text;
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {

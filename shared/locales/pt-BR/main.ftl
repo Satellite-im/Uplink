@@ -16,6 +16,14 @@ uplink = Uplink
     .pre-release = Pré-lançamento
     .username = Nome de usuário
     .status = Mensagem de Status
+    .characters = caracteres
+    .exceeded = excedido
+
+warning-messages = Warning Messages
+    .please-enter-at-least = Por favor, insira pelo menos
+    .maximum-of = Máximo de
+    .only-alpha-chars = Somente caracteres alfanuméricos são aceitos.
+    .spaces-not-allowed = Espaços não são permitidos.
 
 messages = Messages
     .new = Nova Mensagem

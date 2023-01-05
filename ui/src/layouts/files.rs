@@ -11,10 +11,10 @@ use kit::{
     icons::{Icon, IconElement},
     layout::topbar::Topbar,
 };
+use shared::language::get_local_text;
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]

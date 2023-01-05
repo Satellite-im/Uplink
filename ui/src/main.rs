@@ -13,6 +13,7 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use shared::language::{change_language, get_local_text};
 // use state::{Action, ActionHook, State};
 use state::{Action, State};
 use std::fs;
@@ -34,7 +35,6 @@ use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::get_local_text;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 use fermi::prelude::*;
 pub mod components;
@@ -46,19 +46,7 @@ pub mod testing;
 pub mod utils;
 mod warp_runner;
 
-use fluent_templates::static_loader;
-
 pub static STATE: AtomRef<State> = |_| State::load().unwrap();
-
-static_loader! {
-    static LOCALES = {
-        locales: "./locales",
-        fallback_language: "en-US",
-        // Removes unicode isolating marks around arguments, you typically
-        // should only set to false when testing.
-        customise: |bundle| bundle.set_use_isolating(false),
-    };
-}
 
 // allows the UI to receive events to Warp
 // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
@@ -250,7 +238,7 @@ fn app(cx: Scope) -> Element {
     });
 
     let user_lang_saved = state.read().settings.language.clone();
-    utils::language::change_language(user_lang_saved);
+    change_language(user_lang_saved);
 
     let pending_friends = state.read().friends.incoming_requests.len();
 

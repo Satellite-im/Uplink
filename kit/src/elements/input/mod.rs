@@ -1,5 +1,6 @@
 use dioxus::{prelude::*};
 use dioxus_html::input_data::keyboard_types::Code;
+use shared::language::get_local_text;
 
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
@@ -91,7 +92,8 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     // Ensure the maximum value isn't the default
     // then make sure the value's length is less than or equal to the max
     if max > 0 && val.len() > max {
-        return Some(format!("Maximum of {} characters exceeded.", max));
+        return Some(format!("{} {} {} {}.", get_local_text("warning-messages.maximum-of"),
+         max, get_local_text("uplink.characters"), get_local_text("uplink.exceeded")));
     }
 
     // Ensure the minimum is not the default value

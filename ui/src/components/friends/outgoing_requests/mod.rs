@@ -2,8 +2,9 @@ use chrono::{Utc, Duration};
 use dioxus::prelude::*;
 use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
 use rand::Rng;
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend}};
+use crate::{state::{State, Action}, components::friends::friend::{Friend}};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
