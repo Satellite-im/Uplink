@@ -30,7 +30,6 @@ use warp::{crypto::DID, raygun::Message};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
-// todo: putting the State struct 300 lines into the file makes it hard to find :( state.rs should be turned into its own module and split into multiple files.
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
     #[serde(default)]
