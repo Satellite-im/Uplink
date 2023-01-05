@@ -14,6 +14,8 @@ uplink = Uplink
     .search-placeholder = Procurar...
     .end = Finalizar
     .pre-release = Pré-lançamento
+    .username = Nome de usuário
+    .status = Mensagem de Status
 
 messages = Messages
     .new = Nova Mensagem
