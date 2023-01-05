@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use std::fs;
 
+use crate::UPLINK_PATH;
+
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Configuration {
@@ -74,12 +76,7 @@ impl Configuration {
     }
 
     pub fn load() -> Self {
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
         // Load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -94,12 +91,7 @@ impl Configuration {
     }
 
     pub fn load_or_default() -> Self {
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
         // Try to load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -115,12 +107,7 @@ impl Configuration {
 
     fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
         fs::write(config_path, config_json)?;
         Ok(())
     }
