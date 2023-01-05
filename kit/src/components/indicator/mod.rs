@@ -23,10 +23,19 @@ impl Platform {
     // Convert a Platform value to an Icon value
     pub fn to_icon(&self) -> Icon {
         match self {
-            Platform::Desktop => Icon::ComputerDesktop,
+            Platform::Desktop => Icon::Circle,
             Platform::Mobile => Icon::DevicePhoneMobile,
             Platform::Tv => Icon::Tv,
             Platform::Headless => Icon::WrenchScrewdriver,
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            Platform::Desktop => String::from("circle"),
+            Platform::Mobile => String::from("mobile"),
+            Platform::Tv => String::from("tv"),
+            Platform::Headless => String::from("headless"),
         }
     }
 }
@@ -78,7 +87,8 @@ pub fn Indicator(cx: Scope<Props>) -> Element {
     cx.render(rsx!(div {
         class: "indicator indicator-{status}",
         IconElement {
-            icon: icon
+            icon: icon,
+            class: "{cx.props.platform.to_string()}"
         }
     }))
 }
