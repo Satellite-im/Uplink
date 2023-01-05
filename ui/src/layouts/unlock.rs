@@ -25,6 +25,8 @@ pub fn UnlockLayout(cx: Scope) -> Element {
     // true if password succeeded
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
+    let tesseract_initialized = state.read().account.tesseract_initialized;
+    //println!("tesseract_initialized is: {}", &tesseract_initialized);
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![warp_cmd_tx, password_failed, router];
@@ -32,12 +34,23 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             while let Some(password) = rx.next().await {
                 //println!("got password input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                warp_cmd_tx
-                    .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
-                        passphrase: password,
-                        rsp: tx,
-                    }))
-                    .expect("UnlockLayout failed to send warp command");
+
+                if tesseract_initialized {
+                    warp_cmd_tx
+                        .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
+                            passphrase: password,
+                            rsp: tx,
+                        }))
+                        .expect("UnlockLayout failed to send warp command");
+                } else {
+                    warp_cmd_tx
+                        .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
+                            username: "abcd123".into(),
+                            passphrase: password,
+                            rsp: tx,
+                        }))
+                        .expect("UnlockLayout failed to send warp command");
+                }
 
                 let res = rx
                     .blocking_recv()

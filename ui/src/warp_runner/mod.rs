@@ -135,7 +135,7 @@ impl WarpRunner {
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
                         Some(cmd) => match cmd {
-                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, cmd)
+                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, cmd, &mut account).await
                         },
                         None => break,
                     },
