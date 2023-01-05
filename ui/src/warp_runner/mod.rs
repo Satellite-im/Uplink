@@ -17,7 +17,10 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
-use crate::{state::State, WARP_PATH};
+use crate::{state::State, warp_runner::commands::handle_tesseract_cmd, WARP_PATH};
+
+pub use self::commands::TesseractCmd;
+mod commands;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -33,8 +36,9 @@ pub enum WarpEvent {
     MultiPass(Box<MultiPassEventKind>),
 }
 
+#[derive(Debug)]
 pub enum WarpCmd {
-    None,
+    Tesseract(Box<TesseractCmd>),
 }
 
 pub struct WarpRunner {
@@ -61,7 +65,7 @@ impl WarpRunner {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
-        let tesseract = match Tesseract::from_file(WARP_PATH.join(".keystore")) {
+        let mut tesseract = match Tesseract::from_file(WARP_PATH.join(".keystore")) {
             Ok(tess) => tess,
             Err(_) => {
                 //doesnt exist so its set
@@ -122,7 +126,10 @@ impl WarpRunner {
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
-                        Some(_cmd) => todo!("handle cmd"),
+                        Some(cmd) => match cmd {
+                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, *cmd),
+                            //_ => todo!()
+                        },
                         None => break,
                     },
 

@@ -215,7 +215,7 @@ fn app(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
-    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
+    let warp_event_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -240,12 +240,12 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle, warp_rx];
+        to_owned![toggle, warp_event_rx];
         async move {
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_rx.lock().await;
+            let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
                 if warp_runner::handle_event(inner.clone(), evt).await {
                     let flag = *toggle.current();

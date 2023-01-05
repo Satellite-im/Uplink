@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
+use futures::StreamExt;
 use kit::{
     elements::{
         button::Button,
@@ -8,9 +9,65 @@ use kit::{
     },
     icons::Icon,
 };
+use tokio::sync::oneshot;
+
+use crate::{
+    warp_runner::{TesseractCmd, WarpCmd},
+    WARP_CMD_CH,
+};
 
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
+    let warp_cmd_tx = WARP_CMD_CH.0.clone();
+    // true if password succeeded
+    let password_result: &UseRef<Option<bool>> = use_ref(cx, || None);
+
+    if let Some(r) = *password_result.read() {
+        *password_result.write_silent() = None;
+        if r {
+            todo!("change route to loading page")
+        } else {
+            todo!("display message for invalid password")
+        }
+    }
+
+    // will be either available, error, or loading
+    let tesseract_available = use_future(cx, (), |_| {
+        to_owned![warp_cmd_tx];
+        async move {
+            let (tx, rx) = oneshot::channel::<bool>();
+            warp_cmd_tx
+                .send(WarpCmd::Tesseract(Box::new(TesseractCmd::KeyExists {
+                    key: "keystore".into(),
+                    rsp: tx,
+                })))
+                .expect("UnlockLayout failed to send warp command");
+            rx.blocking_recv()
+                .expect("failed to get response from warp_runner")
+        }
+    });
+
+    let ch = use_coroutine(cx, |mut rx| {
+        to_owned![warp_cmd_tx, password_result];
+        async move {
+            while let Some(password) = rx.next().await {
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::Tesseract(Box::new(TesseractCmd::Unlock {
+                        passphrase: password,
+                        rsp: tx,
+                    })))
+                    .expect("UnlockLayout failed to send warp command");
+
+                let res = rx
+                    .blocking_recv()
+                    .expect("failed to get response from warp_runner");
+
+                *password_result.write() = Some(res.is_ok());
+            }
+        }
+    });
+
     let _window = use_window(cx);
     // window.set_inner_size(Size::Logical(LogicalSize {
     //     width: 100.0,
@@ -45,9 +102,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             onmousedown: move |_| {
                 desktop.drag();
             },
-            Label {
-                text: "Choose your Password".into(),
-            },
+            get_prompt(cx, tesseract_available),
             p {
                 class: "info",
                 "Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
@@ -67,6 +122,9 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                     with_clear_btn: true,
                     ..Default::default()
                 }
+                onreturn: move |val| {
+                    ch.send(val)
+                }
             },
             Button {
                 text: "Create Account".into(),
@@ -78,4 +136,25 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             }
         }
     ))
+}
+
+// todo: translate
+fn get_prompt<'a>(cx: Scope<'a>, tesseract_available: &UseFuture<bool>) -> Element<'a> {
+    match tesseract_available.value() {
+        Some(available) => {
+            if *available {
+                cx.render(rsx!(Label {
+                    text: "Enter your password".into()
+                }))
+            } else {
+                cx.render(rsx!(Label {
+                    text: "Create a password".into()
+                }))
+            }
+        }
+        None => cx.render(rsx!(Label {
+            text: "loading".into(),
+            loading: true
+        })),
+    }
 }
