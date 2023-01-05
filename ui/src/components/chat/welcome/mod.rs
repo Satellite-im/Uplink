@@ -6,7 +6,7 @@ use kit::{
     icons::Icon,
 };
 
-use crate::utils::language::get_local_text;
+use crate::{utils::language::get_local_text, FRIENDS_ROUTE};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
@@ -35,7 +35,7 @@ pub fn Welcome(cx: Scope) -> Element {
                 text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
-                    router.replace_route("/friends", None, None);
+                    router.replace_route(FRIENDS_ROUTE, None, None);
                 }
             },
         }

@@ -5,7 +5,7 @@ use dioxus_router::*;
 use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text};
+use crate::{components::{chat::RouteInfo, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text, CHAT_ROUTE};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -133,8 +133,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
-                                                if cx.props.route_info.active.to != "/" {
-                                                    use_router(cx).replace_route("/", None, None);
+                                                if cx.props.route_info.active.to != CHAT_ROUTE {
+                                                    use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                                 }
                                             }
                                         },
@@ -152,8 +152,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         with_username: participants_name,
                                         onpress: move |_| {
                                             state.write().mutate(Action::ChatWith(chat.clone()));
-                                            if cx.props.route_info.active.to != "/" {
-                                                use_router(cx).replace_route("/", None, None);
+                                            if cx.props.route_info.active.to != CHAT_ROUTE {
+                                                use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                             }
                                         }
                                     }
@@ -266,8 +266,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(chat_with.clone()));
-                                    if cx.props.route_info.active.to != "/" {
-                                        use_router(cx).replace_route("/", None, None);
+                                    if cx.props.route_info.active.to != CHAT_ROUTE {
+                                        use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                     }
                                 }
                             }

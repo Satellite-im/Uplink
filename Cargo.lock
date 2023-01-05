@@ -621,6 +621,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b45ea9b00a7b3f2988e9a65ad3917e62123c38dba709b666506207be96d1790b"
+dependencies = [
+ "memchr",
+ "serde",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2533,12 +2543,12 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "globset"
-version = "0.4.9"
+version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a1e17342619edbc21a964c2afbeb6c820c6a2560032872f397bb97ea127bd0a"
+checksum = "029d74589adefde59de1a0c4f4732695c32805624aec7b68d91503d4dba79afc"
 dependencies = [
  "aho-corasick",
- "bstr",
+ "bstr 1.1.0",
  "fnv",
  "log",
  "regex",
@@ -3157,11 +3167,10 @@ dependencies = [
 
 [[package]]
 name = "ignore"
-version = "0.4.18"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "713f1b139373f96a2e0ce3ac931cd01ee973c3c5dd7c40c0c2efe96ad2b6751d"
+checksum = "a05705bc64e0b66a806c3740bd6578ea66051b157ec42dc219c785cbf185aef3"
 dependencies = [
- "crossbeam-utils",
  "globset",
  "lazy_static",
  "log",
@@ -4871,7 +4880,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ea3ebcd72a54701f56345f16785a6d3ac2df7e986d273eb4395c0b01db17952"
 dependencies = [
- "bstr",
+ "bstr 0.2.17",
  "winapi",
 ]
 
@@ -5297,9 +5306,9 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "prettyplease"
-version = "0.1.22"
+version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c8992a85d8e93a28bdf76137db888d3874e3b230dee5ed8bebac4c9f7617773"
+checksum = "e97e3215779627f01ee256d2fad52f3d95e8e1c11e9fc6fd08f7cd455d5d5c78"
 dependencies = [
  "proc-macro2",
  "syn",
@@ -7033,9 +7042,9 @@ checksum = "c7c4ceeeca15c8384bbc3e011dbd8fccb7f068a440b752b7d9b32ceb0ca0e2e8"
 
 [[package]]
 name = "tokio"
-version = "1.23.1"
+version = "1.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8"
+checksum = "7125661431c26622a80ca5051a2f936c9a678318e0351007b0cc313143024e5c"
 dependencies = [
  "autocfg",
  "bytes",

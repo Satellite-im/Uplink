@@ -82,6 +82,12 @@ pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
 
 pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
 
+pub static CHAT_ROUTE: &str = "/chat";
+pub static FRIENDS_ROUTE: &str = "/friends";
+pub static FILES_ROUTE: &str = "/files";
+pub static SETTINGS_ROUTE: &str = "/settings";
+pub static UNLOCK_ROUTE: &str = "/";
+
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 struct Args {
@@ -337,19 +343,19 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
-        to: "/",
+        to: CHAT_ROUTE,
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
-        to: "/settings",
+        to: SETTINGS_ROUTE,
         name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
-        to: "/friends",
+        to: FRIENDS_ROUTE,
         name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
@@ -360,7 +366,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         loading: None,
     };
     let files_route = UIRoute {
-        to: "/files",
+        to: FILES_ROUTE,
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
@@ -372,48 +378,48 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         settings_route.clone(),
     ];
 
-    cx.render(rsx!(Router {
-        Route {
-            to: "/",
-            ChatLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: chat_route.clone(),
+    cx.render(rsx!(
+            Router {
+                Route {
+                    to: CHAT_ROUTE,
+                    ChatLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: chat_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: SETTINGS_ROUTE,
+                    SettingsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: settings_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FRIENDS_ROUTE,
+                    FriendsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: friends_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FILES_ROUTE,
+                    FilesLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: files_route,
+                        }
+                    }
+                },
+                Route {
+                    to: UNLOCK_ROUTE,
+                    UnlockLayout {}
                 }
-            }
-        },
-        Route {
-            to: "/settings",
-            SettingsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: settings_route.clone(),
-                }
-            }
-        },
-        Route {
-            to: "/friends",
-            FriendsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: friends_route.clone(),
-                }
-            }
-        },
-        Route {
-            to: "/files",
-            FilesLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: files_route,
-                }
-            }
-        },
-        Route {
-            to: "/pre/unlock",
-            UnlockLayout {
-
-            }
         }
-    }))
+    ))
 }

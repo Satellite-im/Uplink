@@ -19,7 +19,7 @@ pub enum Page {
     General,
     Files,
     Privacy,
-    Profile, 
+    Profile,
 }
 
 impl FromStr for Page {
@@ -31,7 +31,7 @@ impl FromStr for Page {
             "files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             "privacy" => Ok(Page::Privacy),
-            "profile"=> Ok(Page::Profile),
+            "profile" => Ok(Page::Profile),
             _ => Ok(Page::Profile),
         }
     }
@@ -99,7 +99,9 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
-    let routes = vec![profile, general, privacy, audio, files, extensions, developer];
+    let routes = vec![
+        profile, general, privacy, audio, files, extensions, developer,
+    ];
 
     let active_route = routes[0].clone();
     cx.render(rsx!(

@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
+use dioxus_router::use_router;
 use futures::StreamExt;
 use kit::{
     elements::{
@@ -20,21 +21,15 @@ use crate::{
 pub fn UnlockLayout(cx: Scope) -> Element {
     let warp_cmd_tx = WARP_CMD_CH.0.clone();
     // true if password succeeded
-    let password_result: &UseRef<Option<bool>> = use_ref(cx, || None);
+    let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
+    let router = use_router(cx);
 
-    if let Some(r) = *password_result.read() {
-        *password_result.write_silent() = None;
-        if r {
-            todo!("change route to loading page")
-        } else {
-            todo!("display message for invalid password")
-        }
-    }
-
+    // todo: fetch this at the start
     // will be either available, error, or loading
     let tesseract_available = use_future(cx, (), |_| {
         to_owned![warp_cmd_tx];
         async move {
+            println!("fetching tesseract_available");
             let (tx, rx) = oneshot::channel::<bool>();
             warp_cmd_tx
                 .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
@@ -48,7 +43,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
     });
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![warp_cmd_tx, password_result];
+        to_owned![warp_cmd_tx, password_failed, router];
         async move {
             while let Some(password) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -63,7 +58,11 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                     .blocking_recv()
                     .expect("failed to get response from warp_runner");
 
-                *password_result.write() = Some(res.is_ok());
+                // todo: update the page if the password fails
+                match res {
+                    Ok(_) => router.replace_route("/chat", None, None),
+                    Err(_) => router.replace_route("/chat", None, None), //password_failed.set(Some(true)),
+                }
             }
         }
     });
