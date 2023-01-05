@@ -73,14 +73,14 @@ pub fn submit(cx: &Scope<Props>, s: String) {
 
 pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
     if val.contains(char::is_whitespace) {
-        return Some("Spaces are not allowed.".into());
+        return Some(get_local_text("warning-messages.spaces-not-allowed"));
     }
     None
 }
 
 pub fn validate_alphanumeric(val: &str) -> Option<ValidationError> {
     if val.chars().all(char::is_alphanumeric) {
-        return Some("Only alphanumeric characters are accepted.".into());
+        return Some(get_local_text("warning-messages.only-alpha-chars"));
     }
     None
 }
@@ -99,7 +99,7 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     // Ensure the minimum is not the default value
     // then make sure the value's length is greater than or equal to the minimum
     if min > 0 && val.len() < min {
-        return Some(format!("Please enter at least {} characters.", min));
+        return Some(format!("{} {} {}.",  get_local_text("warning-messages.please-enter-at-least"), min, get_local_text("uplink.characters")));
     }
 
     None
