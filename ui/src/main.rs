@@ -193,11 +193,19 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
-    let state = if *USE_MOCK {
+    let mut state = if *USE_MOCK {
         State::mock()
     } else {
         State::load().expect("failed to load state")
     };
+
+    // todo: delete this. it is just an examle
+    let desktop = use_window(cx);
+    if Configuration::load_or_default().general.enable_overlay {
+        let overlay_test = VirtualDom::new(OverlayDom);
+        let window = desktop.new_window(overlay_test, make_config());
+        state.ui.overlays.push(window);
+    }
 
     use_shared_state_provider(cx, || state);
     cx.render(rsx!(crate::app {}))
@@ -205,10 +213,10 @@ fn bootstrap(cx: Scope) -> Element {
 
 fn app(cx: Scope) -> Element {
     //println!("rendering app");
+    let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
     let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
-    let first_render = use_ref(cx, || false);
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -291,23 +299,10 @@ fn app(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let desktop = use_window(cx);
-
     let theme = match &state.read().ui.theme {
         Some(theme) => theme.styles.to_owned(),
         None => String::from(""),
     };
-
-    // todo: get rid of this. it makes zero sense to add an overlay every time the app is rendered
-    if !*first_render.read() {
-        *first_render.write_silent() = false;
-        // Create a window rendering the overlay.
-        if Configuration::load_or_default().general.enable_overlay {
-            let overlay_test = VirtualDom::new(OverlayDom);
-            let window = desktop.new_window(overlay_test, make_config());
-            state.write_silent().mutate(Action::AddOverlay(window));
-        }
-    }
 
     // TODO:
     // Close the overlay when the state changes.
