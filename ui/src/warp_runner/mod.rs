@@ -107,8 +107,8 @@ impl WarpRunner {
 
             loop {
                 tokio::select! {
-                    _ = raygun_runner => break,
                     _ = multipass_runner => break,
+                    _ = raygun_runner => break,
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
