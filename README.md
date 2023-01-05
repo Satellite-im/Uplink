@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://satellite.im" target="_blank">
-  <img src="extra/images/logo.png" width=200 height=200/><br>
+  <img src="ui/extra/images/logo.png" width=200 height=200/><br>
   Uplink
   </a>
 </h1>
