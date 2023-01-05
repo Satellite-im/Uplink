@@ -89,6 +89,7 @@ impl Configuration {
             .into_os_string()
             .into_string()
             .unwrap_or_default();
+
         // Load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -109,6 +110,7 @@ impl Configuration {
             .into_os_string()
             .into_string()
             .unwrap_or_default();
+
         // Try to load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -130,6 +132,7 @@ impl Configuration {
             .into_os_string()
             .into_string()
             .unwrap_or_default();
+
         fs::write(config_path, config_json)?;
         Ok(())
     }
