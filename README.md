@@ -15,8 +15,6 @@ The goal should be to build a hyper-customizable application that can run anywhe
 
 ![Uplink UI](https://i.imgur.com/X4AGeLz.png)
 
-Implementation of a UI atop Warp using a standardized State model and UIKit to reinforce reusable component usage.
-
 ---
 
 ## Quickstart
