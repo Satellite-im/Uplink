@@ -260,10 +260,13 @@ fn app(cx: Scope) -> Element {
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
-    let theme = match &state.read().ui.theme {
-        Some(theme) => theme.styles.to_owned(),
-        None => String::from(""),
-    };
+    let theme = state
+        .read()
+        .ui
+        .theme
+        .as_ref()
+        .map(|theme| theme.styles.clone())
+        .unwrap_or_default();
 
     let pending_friends = state.read().friends.incoming_requests.len();
     cx.render(rsx! (
