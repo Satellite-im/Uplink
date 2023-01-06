@@ -370,6 +370,8 @@ p {
         width: 100%;
         height: 100%;
         position: absolute;
+        z-index: 1001;
+        background: var(--background);
     }
 
 	// #settings-layout > #content {
