@@ -1,5 +1,7 @@
 use tokio::sync::oneshot;
-use warp::{multipass::MultiPass, tesseract::Tesseract};
+use warp::tesseract::Tesseract;
+
+use super::Account;
 
 #[derive(Debug)]
 pub enum TesseractCmd {
@@ -11,6 +13,10 @@ pub enum TesseractCmd {
         passphrase: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+}
+
+#[derive(Debug)]
+pub enum MultiPassCmd {
     CreateIdentity {
         username: String,
         passphrase: String,
@@ -18,11 +24,7 @@ pub enum TesseractCmd {
     },
 }
 
-pub async fn handle_tesseract_cmd(
-    tesseract: &mut Tesseract,
-    cmd: TesseractCmd,
-    account: &mut Box<dyn MultiPass>,
-) {
+pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) {
     match cmd {
         TesseractCmd::KeyExists { key, rsp } => {
             let res = tesseract.exist(&key);
@@ -35,7 +37,16 @@ pub async fn handle_tesseract_cmd(
             };
             let _ = rsp.send(r);
         }
-        TesseractCmd::CreateIdentity {
+    }
+}
+
+pub async fn handle_multipass_cmd(
+    cmd: MultiPassCmd,
+    tesseract: &mut Tesseract,
+    account: &mut Account,
+) {
+    match cmd {
+        MultiPassCmd::CreateIdentity {
             username,
             passphrase,
             rsp,

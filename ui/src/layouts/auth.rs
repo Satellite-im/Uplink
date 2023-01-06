@@ -11,7 +11,7 @@ use kit::{
 use tokio::sync::oneshot;
 
 use crate::{
-    warp_runner::{commands::TesseractCmd, WarpCmd},
+    warp_runner::{commands::MultiPassCmd, WarpCmd},
     CHAT_ROUTE, WARP_CMD_CH,
 };
 
@@ -56,7 +56,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
-                    .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
+                    .send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                         username,
                         passphrase,
                         rsp: tx,

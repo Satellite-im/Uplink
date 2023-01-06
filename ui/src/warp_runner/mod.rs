@@ -17,9 +17,13 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
-use crate::{state::State, warp_runner::commands::handle_tesseract_cmd, WARP_PATH};
+use crate::{
+    state::State,
+    warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
+    WARP_PATH,
+};
 
-use self::commands::TesseractCmd;
+use self::commands::{MultiPassCmd, TesseractCmd};
 
 pub mod commands;
 
@@ -41,6 +45,7 @@ pub enum WarpEvent {
 #[derive(Debug)]
 pub enum WarpCmd {
     Tesseract(TesseractCmd),
+    MultiPass(MultiPassCmd),
 }
 
 pub struct WarpRunner {
@@ -135,7 +140,8 @@ impl WarpRunner {
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
                         Some(cmd) => match cmd {
-                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(&mut tesseract, cmd, &mut account).await
+                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
+                            WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
                         },
                         None => break,
                     },
