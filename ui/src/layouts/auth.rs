@@ -51,14 +51,14 @@ pub fn AuthLayout(cx: Scope) -> Element {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
         to_owned![warp_cmd_tx, router];
         async move {
-            while let Some((username, pin)) = rx.next().await {
+            while let Some((username, passphrase)) = rx.next().await {
                 //println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
                     .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
-                        username: username.into(),
-                        passphrase: pin.into(),
+                        username,
+                        passphrase,
                         rsp: tx,
                     }))
                     .expect("UnlockLayout failed to send warp command");
@@ -88,7 +88,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
                 disabled: false,
                 placeholder: "enter username".into(), //get_local_text("auth.enter_username"),
                 options: Options {
-                    with_validation: Some(username_validation.clone()),
+                    with_validation: Some(username_validation),
                     with_clear_btn: true,
                     ..Default::default()
                 }
