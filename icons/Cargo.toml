@@ -3,6 +3,10 @@ name = "icons"
 version = "0.1.0"
 edition = "2021"
 
+[dependencies]
+dioxus = "0.3.1"
+dioxus-html = "0.3.0"
+
 [build-dependencies]
 clap = { version = "~3", features = ["derive"] }
 heck = "~0.4"

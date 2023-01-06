@@ -3101,6 +3101,8 @@ name = "icons"
 version = "0.1.0"
 dependencies = [
  "clap 3.2.23",
+ "dioxus",
+ "dioxus-html",
  "heck 0.4.0",
  "itertools",
  "scraper",
