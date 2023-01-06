@@ -13,6 +13,9 @@ struct Icon {
     fill_rule: Option<String>,
 }
 
+// this script reads the icons from icons/outline and encodes them in the outline.rs file
+// it does the same for icons/solid -> solid.rs
+// to add a new icon, put the .svg file in the folder and re-run the script.
 fn main() {
     let src_dir = PathBuf::from("src").join("icons");
 
