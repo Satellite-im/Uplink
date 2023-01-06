@@ -63,9 +63,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
                     }))
                     .expect("UnlockLayout failed to send warp command");
 
-                let res = rx
-                    .blocking_recv()
-                    .expect("failed to get response from warp_runner");
+                let res = rx.await.expect("failed to get response from warp_runner");
 
                 //println!("got response from warp");
                 match res {
