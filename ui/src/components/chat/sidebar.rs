@@ -183,7 +183,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
                 state.read().chats.active.is_none().then(|| rsx! (
-                    span {
+                    div {
                         class: "hide-on-desktop",
                         Welcome {}
                     }

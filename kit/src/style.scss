@@ -332,6 +332,10 @@ p {
     }
 }
 
+.full-width {
+    width: 100%;
+}
+
 // Do this only on larger screens
 @media only screen and (min-width: 601px) {
 	// hide nav on body of files and friends

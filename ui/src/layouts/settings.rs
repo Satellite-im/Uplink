@@ -24,7 +24,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-layout",
-            span {
+            div {
                 class: "full-width-on-mobile",
                 Sidebar {
                     route_info: cx.props.route_info.clone(),
@@ -33,10 +33,11 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                     },
                 },
             },
-            span {
-                class: "hide-on-mobile",
-                span {
+            div {
+                class: "hide-on-mobile full-width",
+                div {
                     id: "content",
+                    class: "full-width",
                     match to.get() {
                         Page::Profile       => cx.render(rsx! (
                             ProfileSettings {}
