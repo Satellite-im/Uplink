@@ -12,7 +12,7 @@ use warp::{error::Error, logging::tracing::log};
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     // Set up validation options for the input field
-    let validation_options = Validation {
+    let username_validation_options = Validation {
         // The input should have a maximum length of 32
         max_length: Some(32),
         // The input should have a minimum length of 4
@@ -23,7 +23,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    let validation_options_status = Validation {
+    let status_validation_options = Validation {
         // The input should have a maximum length of 128
         max_length: Some(128),
         // The input should have a minimum length of 0
@@ -93,7 +93,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.username"),
                         default_text: "Mock Username".into(),
-                        options: get_input_options(validation_options),
+                        options: get_input_options(username_validation_options),
                     },
                 },
                 div {
@@ -106,7 +106,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         default_text: "Mock status messages are so 2008.".into(),
                         options: Options {
                             with_clear_btn: true,
-                            ..get_input_options(validation_options_status)
+                            ..get_input_options(status_validation_options)
                         }
                     }
                 }
