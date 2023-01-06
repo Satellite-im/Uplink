@@ -12,11 +12,11 @@ use kit::{
 };
 
 use crate::{
-    state::State,
     warp_runner::{commands::TesseractCmd, WarpCmd},
     AUTH_ROUTE, CHAT_ROUTE, WARP_CMD_CH,
 };
 
+// todo: go to the auth page if no account has been created
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
     let desktop = use_window(cx);
@@ -25,14 +25,9 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         height: 300.0,
     });
 
-    let state = use_shared_state::<State>(cx)?;
     let warp_cmd_tx = WARP_CMD_CH.0.clone();
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
-
-    // todo: if tesseract is not initialized, show the auth page.
-    let tesseract_initialized = state.read().account.tesseract_initialized;
-    //println!("tesseract_initialized is: {}", &tesseract_initialized);
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![warp_cmd_tx, password_failed, router];
@@ -82,7 +77,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             Input {
                 is_password: true,
                 icon: Icon::Key,
-                disabled: !tesseract_initialized,
+                disabled: false,
                 placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
                 options: Options {
                     with_validation: Some(pin_validation),

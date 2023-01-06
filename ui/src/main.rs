@@ -196,7 +196,6 @@ fn main() {
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
     let mut warp_runner = warp_runner::WarpRunner::init();
-    let tesseract_initialized = warp_runner.tesseract_initialized();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
     let mut state = if *USE_MOCK {
@@ -204,10 +203,6 @@ fn bootstrap(cx: Scope) -> Element {
     } else {
         State::load().expect("failed to load state")
     };
-
-    if !*USE_MOCK {
-        state.account.tesseract_initialized = tesseract_initialized;
-    }
 
     // todo: delete this. it is just an examle
     let desktop = use_window(cx);

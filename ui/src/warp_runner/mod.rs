@@ -81,10 +81,6 @@ impl WarpRunner {
         }
     }
 
-    pub fn tesseract_initialized(&self) -> bool {
-        self.tesseract.exist("keypair")
-    }
-
     // spawns a thread which will terminate when WarpRunner is dropped
     pub fn run(&mut self, tx: WarpEventTx, rx: WarpCmdRx) {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
