@@ -9,8 +9,9 @@ use kit::{
     icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
+use shared::language::get_local_text;
 
-use crate::{components::chat::RouteInfo, state::State, utils::language::get_local_text};
+use crate::{components::chat::RouteInfo, state::State};
 
 pub enum Page {
     Audio,

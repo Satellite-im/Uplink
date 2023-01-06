@@ -1,5 +1,6 @@
 
 use dioxus::prelude::*;
+use shared::language::get_local_text;
 use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
@@ -15,7 +16,6 @@ use crate::{
     state::{
         State, Action, Chat, Identity
     },
-     utils::language::get_local_text
 };
 
 #[derive(PartialEq, Props)]

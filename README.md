@@ -107,5 +107,5 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Include a way to view the contents of the log-in developer settings.
     - [ ] Include a copy button to copy the log to the clipboard.
   - [ ] Debug logging should also log neatly to the rust console.
-- [ ] Profile Page in settings
+- [x] Profile Page in settings
 - [ ] Profile page popup option for user_image 

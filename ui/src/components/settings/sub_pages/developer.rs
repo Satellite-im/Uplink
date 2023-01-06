@@ -4,10 +4,10 @@ use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
 };
+use shared::language::get_local_text;
 
 use crate::{
     components::settings::SettingSection, config::Configuration, state::State,
-    utils::language::get_local_text,
 };
 
 #[allow(non_snake_case)]

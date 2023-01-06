@@ -5,7 +5,6 @@ use walkdir::WalkDir;
 use crate::state::Theme;
 
 pub mod format_timestamp;
-pub mod language;
 //pub mod notifications;
 pub mod sounds;
 

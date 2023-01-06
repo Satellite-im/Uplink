@@ -1,7 +1,6 @@
 use crate::{
     components::friends::friend::Friend,
     state::{Action, State},
-    utils::language::get_local_text,
 };
 use dioxus::prelude::*;
 use kit::{
@@ -13,6 +12,7 @@ use kit::{
     elements::label::Label,
     icons::Icon,
 };
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
 #[allow(non_snake_case)]
