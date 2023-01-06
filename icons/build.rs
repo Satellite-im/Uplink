@@ -23,7 +23,7 @@ fn main() {
 
         let icons = make_icons(&src_dir);
 
-        let mut to = PathBuf::from("output");
+        let mut to = PathBuf::from("src");
         to.push(&format!("{}.rs", style));
 
         write_icons_file(&icons, &to);
