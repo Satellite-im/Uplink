@@ -1633,15 +1633,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-heroicons"
-version = "0.1.4"
-source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=dioxus-nightly#dec7038a09251c745d5d22aa7b42d2e084598f3a"
-dependencies = [
- "dioxus",
- "dioxus-html",
-]
-
-[[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3501,11 +3492,11 @@ dependencies = [
  "dioxus",
  "dioxus-core 0.3.0",
  "dioxus-desktop",
- "dioxus-heroicons",
  "dioxus-hooks",
  "dioxus-html",
  "glob",
  "humansize",
+ "icons",
  "rsass",
  "timeago",
  "uuid",
