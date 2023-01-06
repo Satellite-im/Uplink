@@ -46,14 +46,7 @@ pub async fn handle_tesseract_cmd(
                 return;
             }
             let _ = match account.create_identity(Some(&username), None).await {
-                Ok(_) => {
-                    // sanity check
-                    account
-                        .get_own_identity()
-                        .await
-                        .expect("failed to get own identity");
-                    rsp.send(Ok(()))
-                }
+                Ok(_) => rsp.send(Ok(())),
                 Err(e) => rsp.send(Err(e)),
             };
         }
