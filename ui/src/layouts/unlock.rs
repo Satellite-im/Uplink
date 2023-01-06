@@ -13,7 +13,6 @@ use tokio::sync::oneshot;
 
 use crate::{
     state::State,
-    utils::language::get_local_text,
     warp_runner::{commands::TesseractCmd, WarpCmd},
     AUTH_ROUTE, CHAT_ROUTE, WARP_CMD_CH,
 };
@@ -39,16 +38,8 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         to_owned![warp_cmd_tx, password_failed, router];
         async move {
             while let Some(password) = rx.next().await {
-                //println!("got password input");
+                //println!("unlock got password input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-
-                //warp_cmd_tx
-                //    .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
-                //        username: "abcd123".into(),
-                //        passphrase: password,
-                //        rsp: tx,
-                //    }))
-                //    .expect("UnlockLayout failed to send warp command");
 
                 warp_cmd_tx
                     .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
@@ -71,7 +62,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
     });
 
     // Set up validation options for the input field
-    let validation_options = Validation {
+    let pin_validation = Validation {
         // The input should have a maximum length of 32
         max_length: Some(32),
         // The input should have a minimum length of 4
@@ -94,18 +85,18 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 is_password: true,
                 icon: Icon::Key,
                 disabled: !tesseract_initialized,
-                placeholder: get_local_text("unlock.enter_pin"),
+                placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
                 options: Options {
-                    with_validation: Some(validation_options),
+                    with_validation: Some(pin_validation),
                     with_clear_btn: true,
                     ..Default::default()
                 }
-                onreturn: move |val| {
+                onreturn: move |(val, _is_valid)| {
                     ch.send(val)
                 }
             },
             Button {
-                text: get_local_text("unlock.create_account"),
+                text: "create account".into(), // get_local_text("unlock.create_account"),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
@@ -120,13 +111,13 @@ fn get_prompt(cx: Scope) -> Element {
     cx.render(rsx!(
         p {
             class: "info",
-            get_local_text("unlock.warning1")
+            "warning: use a good password", //get_local_text("unlock.warning1")
             //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
             br {},
             span {
                 class: "warning",
                 //"If you forget this password we cannot help you retrieve it."
-                get_local_text("unlock.warning2")
+                "warning: no password recovery", //get_local_text("unlock.warning2")
             }
         }
     ))
