@@ -13,10 +13,9 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-// use state::{Action, ActionHook, State};
-use state::{Action, State};
-use std::fs;
-use std::path::PathBuf;
+use state::State;
+
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -36,7 +35,6 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 use utils::language::get_local_text;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-use fermi::prelude::*;
 pub mod components;
 pub mod config;
 pub mod layouts;
@@ -47,8 +45,6 @@ pub mod utils;
 mod warp_runner;
 
 use fluent_templates::static_loader;
-
-pub static STATE: AtomRef<State> = |_| State::load().unwrap();
 
 static_loader! {
     static LOCALES = {
@@ -73,30 +69,41 @@ pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
     (tx, Arc::new(Mutex::new(rx)))
 });
 
-pub static DEFAULT_PATH: Lazy<PathBuf> = Lazy::new(|| match Opt::parse().path {
-    Some(path) => path,
+// for warp only
+pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
+    Some(path) => path.join("warp"),
     _ => dirs::home_dir().unwrap_or_default().join(".warp"),
 });
 
+pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
+    Some(path) => path,
+    _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
+});
+
+pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
+
 #[derive(Debug, Parser)]
 #[clap(name = "")]
-struct Opt {
+struct Args {
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
+    #[clap(long, default_value_t = false)]
+    mock: bool,
 }
 
 fn copy_assets() {
-    let cache_path = dirs::home_dir().unwrap_or_default().join(".uplink/");
+    let themes_dest = UPLINK_PATH.join("themes");
+    let themes_src = Path::new("ui").join("extra").join("themes");
 
-    match create_all(cache_path.join("themes"), false) {
+    match create_all(themes_dest.clone(), false) {
         Ok(_) => {
             let mut options = CopyOptions::new();
             options.skip_exist = true;
             options.copy_inside = true;
 
-            if let Err(error) = copy("ui/extra/themes", cache_path, &options) {
+            if let Err(error) = copy(themes_src, themes_dest, &options) {
                 log::error!("Error on copy themes {error}");
             }
         }
@@ -105,17 +112,8 @@ fn copy_assets() {
 }
 
 fn main() {
+    // Initializes the cache dir if needed
     copy_assets();
-
-    // Initalized the cache dir if needed
-    let cache_path = dirs::home_dir()
-        .unwrap_or_default()
-        .join(".uplink/")
-        .into_os_string()
-        .into_string()
-        .unwrap_or_default();
-
-    let _ = fs::create_dir_all(cache_path);
 
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -194,22 +192,30 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
-    let state = match State::load() {
-        Ok(s) => s,
-        Err(_) => State::default(),
+    let mut state = if *USE_MOCK {
+        State::mock()
+    } else {
+        State::load().expect("failed to load state")
     };
 
-    //use_init_atom_root(cx);
-    use_shared_state_provider(cx, || state);
+    // todo: delete this. it is just an examle
+    let desktop = use_window(cx);
+    if Configuration::load_or_default().general.enable_overlay {
+        let overlay_test = VirtualDom::new(OverlayDom);
+        let window = desktop.new_window(overlay_test, make_config());
+        state.ui.overlays.push(window);
+    }
 
+    use_shared_state_provider(cx, || state);
     cx.render(rsx!(crate::app {}))
 }
 
 fn app(cx: Scope) -> Element {
+    //println!("rendering app");
+    let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
     let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
-    let first_render = use_ref(cx, || false);
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -252,8 +258,84 @@ fn app(cx: Scope) -> Element {
     let user_lang_saved = state.read().settings.language.clone();
     utils::language::change_language(user_lang_saved);
 
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pre_release_text = get_local_text("uplink.pre-release");
 
+    let theme = state
+        .read()
+        .ui
+        .theme
+        .as_ref()
+        .map(|theme| theme.styles.clone())
+        .unwrap_or_default();
+
+    let pending_friends = state.read().friends.incoming_requests.len();
+    cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+        div {
+            id: "app-wrap",
+            get_toasts(cx, &state.read()),
+            get_call_dialog(cx),
+            div {
+                id: "pre-release",
+                onmousedown: move |_| { desktop.drag(); },
+                IconElement {
+                    icon: Icon::Beaker,
+                },
+                p {
+                    "{pre_release_text}",
+                }
+            },
+            //state.read().ui.popout_player.then(|| rsx!(
+           //     PopoutPlayer {}
+           // )),
+           get_router(cx, pending_friends)
+        }
+    ))
+}
+
+fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
+    cx.render(rsx!(state.ui.toast_notifications.iter().map(
+        |(id, toast)| {
+            rsx!(Toast {
+                id: *id,
+                with_title: toast.title.clone(),
+                with_content: toast.content.clone(),
+                icon: toast.icon.unwrap_or(Icon::InformationCircle),
+                appearance: Appearance::Secondary,
+            },)
+        }
+    )))
+}
+
+fn get_call_dialog(_cx: Scope) -> Element {
+    // CallDialog {
+    //     caller: cx.render(rsx!(UserImage {
+    //         platform: Platform::Mobile,
+    //         status: Status::Online
+    //     })),
+    //     callee: cx.render(rsx!(UserImage {
+    //         platform: Platform::Mobile,
+    //         status: Status::Online
+    //     })),
+    //     description: "Call Description".into(),
+    //     // with_accept_btn: cx.render(rsx! (
+    //     //     Button {
+    //     //         icon: Icon::Phone,
+    //     //         appearance: Appearance::Success,
+    //     //     }
+    //     // )),
+    //     with_deny_btn: cx.render(rsx! (
+    //         Button {
+    //             icon: Icon::PhoneXMark,
+    //             appearance: Appearance::Danger,
+    //             text: "End".into(),
+    //         }
+    //     )),
+    // }
+    None
+}
+
+fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
         to: "/",
         name: get_local_text("uplink.chats"),
@@ -290,134 +372,48 @@ fn app(cx: Scope) -> Element {
         settings_route.clone(),
     ];
 
-    let pre_release_text = get_local_text("uplink.pre-release");
-
-    let desktop = use_window(cx);
-
-    let theme = match &state.read().ui.theme {
-        Some(theme) => theme.styles.to_owned(),
-        None => String::from(""),
-    };
-
-    // todo: get rid of this. it makes zero sense to add an overlay every time the app is rendered
-    if !*first_render.read() {
-        *first_render.write_silent() = false;
-        // Create a window rendering the overlay.
-        if Configuration::load_or_default().general.enable_overlay {
-            let overlay_test = VirtualDom::new(OverlayDom);
-            let window = desktop.new_window(overlay_test, make_config());
-            state.write_silent().mutate(Action::AddOverlay(window));
-        }
-    }
-
-    // TODO:
-    // Close the overlay when the state changes.
-    // Close the overlay when we close the main window.
-
-    // state.write().add_hook(ActionHook {
-    //     action_type: either::Left(Action::SetOverlay(false)),
-    //     callback: |s: State| {
-    //         // TODO: Update logic here to render or de render the overlay.
-    //         // _overlay.close();
-    //     },
-    // });
-
-    cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
-        div {
-            id: "app-wrap",
-            state.read().ui.toast_notifications.iter().map(|(id, toast)| {
-                rsx! (
-                    Toast {
-                        id: *id,
-                        with_title: toast.title.clone(),
-                        with_content: toast.content.clone(),
-                        icon: toast.icon.unwrap_or(Icon::InformationCircle),
-                        appearance: Appearance::Secondary,
-                    },
-                )
-            }),
-            // CallDialog {
-            //     caller: cx.render(rsx!(UserImage {
-            //         platform: Platform::Mobile,
-            //         status: Status::Online
-            //     })),
-            //     callee: cx.render(rsx!(UserImage {
-            //         platform: Platform::Mobile,
-            //         status: Status::Online
-            //     })),
-            //     description: "Call Description".into(),
-            //     // with_accept_btn: cx.render(rsx! (
-            //     //     Button {
-            //     //         icon: Icon::Phone,
-            //     //         appearance: Appearance::Success,
-            //     //     }
-            //     // )),
-            //     with_deny_btn: cx.render(rsx! (
-            //         Button {
-            //             icon: Icon::PhoneXMark,
-            //             appearance: Appearance::Danger,
-            //             text: "End".into(),
-            //         }
-            //     )),
-            // },
-            div {
-                id: "pre-release",
-                onmousedown: move |_| { desktop.drag(); },
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
-            },
-            //state.read().ui.popout_player.then(|| rsx!(
-            //     PopoutPlayer {}
-            // )),
-            Router {
-                Route {
-                    to: "/",
-                    ChatLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: chat_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/settings",
-                    SettingsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: settings_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/friends",
-                    FriendsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: friends_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/files",
-                    FilesLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: files_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: "/pre/unlock",
-                    UnlockLayout {
-
-                    }
+    cx.render(rsx!(Router {
+        Route {
+            to: "/",
+            ChatLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: chat_route.clone(),
                 }
             }
+        },
+        Route {
+            to: "/settings",
+            SettingsLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: settings_route.clone(),
+                }
+            }
+        },
+        Route {
+            to: "/friends",
+            FriendsLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: friends_route.clone(),
+                }
+            }
+        },
+        Route {
+            to: "/files",
+            FilesLayout {
+                route_info: RouteInfo {
+                    routes: routes.clone(),
+                    active: files_route,
+                }
+            }
+        },
+        Route {
+            to: "/pre/unlock",
+            UnlockLayout {
+
+            }
         }
-    ))
+    }))
 }

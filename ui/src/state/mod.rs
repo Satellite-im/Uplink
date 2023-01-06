@@ -18,7 +18,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
-use crate::testing::mock::generate_mock;
+use crate::{testing::mock::generate_mock, UPLINK_PATH};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -30,7 +30,6 @@ use warp::{crypto::DID, raygun::Message};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
-// todo: putting the State struct 300 lines into the file makes it hard to find :( state.rs should be turned into its own module and split into multiple files.
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
     #[serde(default)]
@@ -154,10 +153,8 @@ impl State {
     }
 
     /// Removes the given chat from the user's favorites.
-    fn unfavorite(&mut self, chat: &Chat) {
-        if let Some(index) = self.chats.favorites.iter().position(|uid| *uid == chat.id) {
-            self.chats.favorites.remove(index);
-        }
+    fn unfavorite(&mut self, chat_id: Uuid) {
+        self.chats.favorites.retain(|uid| *uid != chat_id);
     }
 
     /// Toggles the specified chat as a favorite in the `State` struct. If the chat
@@ -165,11 +162,8 @@ impl State {
     /// is added to the list.
     fn toggle_favorite(&mut self, chat: &Chat) {
         let faves = &mut self.chats.favorites;
-
-        if faves.contains(&chat.id) {
-            if let Some(index) = faves.iter().position(|uid| *uid == chat.id) {
-                faves.remove(index);
-            }
+        if let Some(index) = faves.iter().position(|uid| *uid == chat.id) {
+            faves.remove(index);
         } else {
             faves.push(chat.id);
         }
@@ -177,13 +171,9 @@ impl State {
 
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Chat, message: &Message) {
-        let mut c = match self.chats.all.get_mut(&chat.id) {
-            Some(chat) => chat.clone(),
-            None => return,
-        };
-        c.replying_to = Some(message.to_owned());
-
-        *self.chats.all.get_mut(&chat.id).unwrap() = c;
+        if let Some(mut c) = self.chats.all.get_mut(&chat.id) {
+            c.replying_to = Some(message.to_owned());
+        }
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -192,13 +182,9 @@ impl State {
     ///
     /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat: &Chat) {
-        let mut c = match self.chats.all.get_mut(&chat.id) {
-            Some(chat) => chat.clone(),
-            None => return,
-        };
-        c.replying_to = None;
-
-        *self.chats.all.get_mut(&chat.id).unwrap() = c;
+        if let Some(mut c) = self.chats.all.get_mut(&chat.id) {
+            c.replying_to = None;
+        }
     }
 
     /// Clear unreads  within a given chat on `State` struct.
@@ -218,19 +204,13 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to remove.
-    fn remove_sidebar_chat(&mut self, chat: &Chat) {
-        if self.chats.in_sidebar.contains(&chat.id) {
-            let index = self
-                .chats
-                .in_sidebar
-                .iter()
-                .position(|x| *x == chat.id)
-                .unwrap();
-            self.chats.in_sidebar.remove(index);
-        }
+    fn remove_sidebar_chat(&mut self, chat_id: Uuid) {
+        self.chats.in_sidebar.retain(|id| *id != chat_id);
 
-        if self.chats.active.is_some() && self.get_active_chat().unwrap_or_default().id == chat.id {
-            self.clear_active_chat();
+        if let Some(id) = self.chats.active {
+            if id == chat_id {
+                self.clear_active_chat();
+            }
         }
     }
 
@@ -327,25 +307,23 @@ impl State {
                     .any(|participant| participant.did_key() == *did)
         });
 
-        // Remove the chat from the sidebar
-        if let Some(chat) = direct_chat {
-            self.remove_sidebar_chat(chat);
-        }
+        // if no direct chat was found then return
+        let direct_chat = match direct_chat {
+            Some(c) => c,
+            None => return,
+        };
+
+        self.remove_sidebar_chat(direct_chat.id);
 
         // If the friend's direct chat is currently the active chat, clear the active chat
-        // TODO: Use `if let` statements
-        if self.chats.active.is_some()
-            && self.get_active_chat().unwrap_or_default().id == direct_chat.unwrap().id
-        {
-            self.clear_active_chat();
+        if let Some(id) = self.chats.active {
+            if id == direct_chat.id {
+                self.clear_active_chat();
+            }
         }
 
         // Remove chat from favorites if it exists
-        if let Some(direct_chat) = direct_chat {
-            if self.chats.favorites.contains(&direct_chat.id) {
-                self.unfavorite(direct_chat);
-            }
-        }
+        self.unfavorite(direct_chat.id);
     }
 
     fn toggle_mute(&mut self) {
@@ -375,10 +353,9 @@ impl State {
 
     /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Option<Chat> {
-        match self.chats.active {
-            Some(uuid) => self.chats.all.get(&uuid).cloned(),
-            None => None,
-        }
+        self.chats
+            .active
+            .and_then(|uuid| self.chats.all.get(&uuid).cloned())
     }
 
     pub fn get_active_media_chat(&self) -> Option<&Chat> {
@@ -465,7 +442,7 @@ impl State {
                 .username()
                 .chars()
                 .next()
-                .unwrap()
+                .expect("all friends should have a username")
                 .to_ascii_lowercase();
 
             friends_by_first_letter
@@ -573,7 +550,7 @@ impl State {
             Action::Block(identity) => self.block(&identity),
             Action::UnBlock(identity) => self.unblock(&identity),
             Action::Favorite(chat) => self.favorite(&chat),
-            Action::UnFavorite(chat) => self.unfavorite(&chat),
+            Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
                 // TODO: this should create a conversation in warp if one doesn't exist
                 self.set_active_chat(&chat);
@@ -582,8 +559,8 @@ impl State {
             Action::AddToSidebar(chat) => {
                 self.add_chat_to_sidebar(chat);
             }
-            Action::RemoveFromSidebar(chat) => {
-                self.remove_sidebar_chat(&chat);
+            Action::RemoveFromSidebar(chat_id) => {
+                self.remove_sidebar_chat(chat_id);
             }
             Action::NewMessage(_, _) => todo!(),
             Action::ToggleFavorite(chat) => {
@@ -639,12 +616,7 @@ impl State {
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
-        let cache_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/state.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let cache_path = UPLINK_PATH.join("state.json");
 
         fs::write(cache_path, serialized)?;
         Ok(())
@@ -652,19 +624,13 @@ impl State {
 
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
-        let cache_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/state.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
-        match fs::read_to_string(cache_path) {
-            Ok(contents) => {
-                let state: State = serde_json::from_str(&contents)?;
-                Ok(state)
-            }
-            Err(_) => Ok(generate_mock()),
-        }
+        let cache_path = UPLINK_PATH.join("state.json");
+        let contents = fs::read_to_string(cache_path)?;
+        let state: State = match serde_json::from_str(&contents) {
+            Ok(s) => s,
+            Err(_) => State::default(),
+        };
+        Ok(state)
     }
 
     pub fn mock() -> State {
