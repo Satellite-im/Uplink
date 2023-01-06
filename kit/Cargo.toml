@@ -11,7 +11,7 @@ dioxus-core = "0.3.0"
 dioxus-desktop = "0.3.0"
 dioxus-hooks = "0.3.0"
 dioxus-html = "0.3.0"
-dioxus-heroicons = { git="https://github.com/Satellite-im/dioxus-heroicons", branch = "dioxus-nightly" }
+icons = { path="../icons" }
 timeago = "0.4.0"
 humansize = "2.0.0"
 shared = { path = "../shared" }

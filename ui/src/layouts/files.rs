@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
+use dioxus_router::*;
 use kit::{
+    components::nav::Nav,
     elements::{
         button::Button,
         file::File,
@@ -33,9 +35,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "files-layout",
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
-            },
+            span {
+                class: "hide-on-mobile",
+                ChatSidebar {
+                    route_info: cx.props.route_info.clone()
+                },
+            }
             div {
                 class: "files-body",
                 div {
@@ -122,22 +127,34 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 div {
                     class: "files-list",
-                    Folder {
-                        text: "Fake Folder 1".into()
-                    },
-                    File {
-                        text: "fake_2.png".into()
-                    },
-                    Folder {
-                        text: "New Fake".into(),
-                    },
-                    Folder {
-                        loading: true,
-                        text: "Fake Folder 1".into()
-                    },
-                    File {
-                        loading: true,
-                        text: "Fake File".into()
+                    span {
+                        Folder {
+                            text: "Fake Folder 1".into()
+                        },
+                        File {
+                            text: "fake_2.png".into()
+                        },
+                        Folder {
+                            text: "New Fake".into(),
+                        },
+                        Folder {
+                            loading: true,
+                            text: "Fake Folder 1".into()
+                        },
+                        File {
+                            loading: true,
+                            text: "Fake File".into()
+                        }
+                    }
+                },
+                span {
+                    class: "hide-on-desktop",
+                    Nav {
+                        routes: cx.props.route_info.routes.clone(),
+                        active: cx.props.route_info.active.clone(),
+                        onnavigate: move |r| {
+                            use_router(&cx).replace_route(r, None, None);
+                        }
                     }
                 }
             }

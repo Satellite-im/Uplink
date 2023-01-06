@@ -5,7 +5,8 @@
 	justify-content: center;
 	max-width: 100px;
 	transition: background-color var(--animation-time);
-
+	align-self: flex-start;
+	margin: 5px;
 	.icon {
 		width: var(--icon-size-more);
 		height: var(--icon-size-more);
