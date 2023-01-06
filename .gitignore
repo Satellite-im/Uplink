@@ -2,3 +2,4 @@
 
 target
 ui/src/compiled_styles.css
+Cargo.lock
