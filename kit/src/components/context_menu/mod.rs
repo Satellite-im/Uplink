@@ -5,7 +5,7 @@ use dioxus::{
     prelude::*,
 };
 use dioxus_desktop::use_window;
-use dioxus_heroicons::outline::Shape;
+use icons::outline::Shape;
 
 #[derive(Props)]
 pub struct ItemProps<'a> {
