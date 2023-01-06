@@ -15,12 +15,15 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "sidebar",
+            aria_label: "sidebar",
             div {
                 class: "search",
+                aria_label: "sidebar-search",
                 cx.props.with_search.as_ref()
             },
             div {
                 class: "children",
+                aria_label: "sidebar-children",
                 cx.props.children.as_ref()
             },
             cx.props.with_nav.as_ref(),

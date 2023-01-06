@@ -112,6 +112,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx!(
         div {
+            aria_label: "button-nav",
             class: {
                 format_args!("nav {}", if *bubble { "bubble" } else { "" })
             },

@@ -270,6 +270,7 @@ fn app(cx: Scope) -> Element {
             get_call_dialog(cx),
             div {
                 id: "pre-release",
+                aria_label: "pre-release",
                 onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,

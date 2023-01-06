@@ -126,6 +126,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 button {
                     id: "{UUID}",
+                    aria_label: "button",
                     title: "{text}",
                     disabled: "{disabled}",
                     class: {
