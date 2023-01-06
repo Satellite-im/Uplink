@@ -8,7 +8,7 @@ const SELECTORS = {
   PRE_RELEASE_INDICATOR_TEXT: "-ios class chain:**/XCUIElementTypeStaticText[`value == \"Pre-release\"`]",
   SIDEBAR: "~sidebar",
   SIDEBAR_CHILDREN: "~sidebar-children",
-  SIDEBAR_SEACH: "~sidebar-search",
+  SIDEBAR_SEARCH: "~sidebar-search",
   SKELETAL_USER: "~skeletal-user",
   WELCOME_SCREEN: "~welcome-screen",
   WINDOW: "-ios class chain:**/XCUIElementTypeWebView",
@@ -68,7 +68,7 @@ class UplinkMainScreen extends AppScreen {
   }
 
   get sidebarSearch() {
-    return $(SELECTORS.SIDEBAR_SEACH)
+    return $(SELECTORS.SIDEBAR_SEARCH)
   }
 
   get skeletalUser() {
