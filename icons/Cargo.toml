@@ -1,0 +1,12 @@
+[package]
+name = "icons"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "~3", features = ["derive"] }
+heck = "~0.4"
+itertools = "~0.10"
+scraper = "~0.12"
+walkdir = "~2"
+
