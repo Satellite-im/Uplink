@@ -1,4 +1,4 @@
-use tokio::sync::oneshot;
+use futures::channel::oneshot;
 use warp::tesseract::Tesseract;
 
 use super::Account;

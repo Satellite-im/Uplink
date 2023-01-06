@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
+use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::{
     elements::{
@@ -8,7 +9,6 @@ use kit::{
     },
     icons::Icon,
 };
-use tokio::sync::oneshot;
 
 use crate::{
     warp_runner::{commands::MultiPassCmd, WarpCmd},
