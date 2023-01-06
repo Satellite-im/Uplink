@@ -2,7 +2,6 @@
 use dioxus::prelude::*;
 use warp::{raygun::Message};
 use dioxus_router::*;
-use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
 use crate::{
@@ -86,8 +85,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let binding = state.read();
     let active_media_chat = binding.get_active_media_chat();
 
-    let desktop = use_window(cx);
-
     cx.render(rsx!(
         ReusableSidebar {
             with_search: cx.render(rsx!(
@@ -114,10 +111,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
-            div {
-                class: "drag-handle",
-                onmousedown: move |_| desktop.drag(),
-            },
             // Only display favorites if we have some.
             (!favorites.is_empty()).then(|| rsx!(
                 div {
