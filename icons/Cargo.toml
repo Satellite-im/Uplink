@@ -3,7 +3,7 @@ name = "icons"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+[build-dependencies]
 clap = { version = "~3", features = ["derive"] }
 heck = "~0.4"
 itertools = "~0.10"

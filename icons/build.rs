@@ -15,7 +15,7 @@ struct Icon {
 }
 
 fn main() {
-    let mut src_dir = PathBuf::from("./src/icons");
+    let src_dir = PathBuf::from("./src/icons");
 
     for style in &["outline", "solid"] {
         let mut src_dir = src_dir.clone();
