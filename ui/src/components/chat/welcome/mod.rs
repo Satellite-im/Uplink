@@ -5,8 +5,9 @@ use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
+use crate::{FRIENDS_ROUTE};
+use shared::language::get_local_text;
 
-use crate::{utils::language::get_local_text, FRIENDS_ROUTE};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
@@ -16,6 +17,7 @@ pub fn Welcome(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             id: "welcome",
+            aria_label: "welcome-screen",
             svg {
                 class: "logo",
                 "viewBox": "0 0 375.99 313.7",

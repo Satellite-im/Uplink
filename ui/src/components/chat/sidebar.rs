@@ -1,11 +1,11 @@
 
 use dioxus::prelude::*;
+use shared::language::get_local_text;
 use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, utils::language::get_local_text, CHAT_ROUTE};
-
+use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -79,6 +79,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
+                    aria_label: "chat-search-input",
                     Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation

@@ -9,8 +9,9 @@ use kit::{
     icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
+use shared::language::get_local_text;
 
-use crate::{components::chat::RouteInfo, state::State, utils::language::get_local_text};
+use crate::{components::chat::RouteInfo, state::State};
 
 pub enum Page {
     Audio,
@@ -109,6 +110,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
+                    aria_label: "settings-search-input",
                     Input {
                         placeholder: get_local_text("settings.search-placeholder"),
                         icon: Icon::MagnifyingGlass,

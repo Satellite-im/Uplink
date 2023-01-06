@@ -13,9 +13,11 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use shared::language::{change_language, get_local_text};
+// use state::{Action, ActionHook, State};
 use state::State;
-
 use std::path::{Path, PathBuf};
+
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -34,7 +36,6 @@ use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::get_local_text;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
@@ -44,18 +45,6 @@ pub mod state;
 pub mod testing;
 pub mod utils;
 mod warp_runner;
-
-use fluent_templates::static_loader;
-
-static_loader! {
-    static LOCALES = {
-        locales: "./locales",
-        fallback_language: "en-US",
-        // Removes unicode isolating marks around arguments, you typically
-        // should only set to false when testing.
-        customise: |bundle| bundle.set_use_isolating(false),
-    };
-}
 
 // allows the UI to receive events to Warp
 // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
@@ -262,7 +251,7 @@ fn app(cx: Scope) -> Element {
     });
 
     let user_lang_saved = state.read().settings.language.clone();
-    utils::language::change_language(user_lang_saved);
+    change_language(user_lang_saved);
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
@@ -287,6 +276,7 @@ fn app(cx: Scope) -> Element {
             get_call_dialog(cx),
             div {
                 id: "pre-release",
+                aria_label: "pre-release",
                 onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,

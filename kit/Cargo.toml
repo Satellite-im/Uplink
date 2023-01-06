@@ -14,6 +14,7 @@ dioxus-html = "0.3.0"
 icons = { path="../icons" }
 timeago = "0.4.0"
 humansize = "2.0.0"
+shared = { path = "../shared" }
 
 [dependencies.uuid]
 version = "1.2.2"

@@ -4,6 +4,7 @@ use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
+use shared::language::{get_local_text, change_language, get_available_languages};
 
 use crate::{
     components::settings::SettingSection,
@@ -11,7 +12,6 @@ use crate::{
     state::{Action, State},
     utils::{
         get_available_themes,
-        language::{change_language, get_available_languages, get_local_text},
     },
 };
 

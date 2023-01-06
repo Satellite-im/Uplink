@@ -5,6 +5,7 @@ use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
+use shared::language::get_local_text;
 
 use crate::{
     components::{
@@ -15,7 +16,6 @@ use crate::{
         },
     },
     state::State,
-    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]

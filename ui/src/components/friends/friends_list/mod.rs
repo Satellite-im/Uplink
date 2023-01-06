@@ -10,12 +10,12 @@ use kit::{
     icons::Icon,
 };
 
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
-    utils::language::get_local_text,
     CHAT_ROUTE,
 };
 
