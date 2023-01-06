@@ -29,12 +29,11 @@ pub async fn handle_tesseract_cmd(
             let _ = rsp.send(res);
         }
         TesseractCmd::Unlock { passphrase, rsp } => {
-            let res = tesseract.unlock(passphrase.as_bytes());
-            account
-                .get_own_identity()
-                .await
-                .expect("failed to get own identity");
-            let _ = rsp.send(res);
+            let r = match tesseract.unlock(passphrase.as_bytes()) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
         }
         TesseractCmd::CreateIdentity {
             username,
@@ -45,10 +44,11 @@ pub async fn handle_tesseract_cmd(
                 let _ = rsp.send(Err(e));
                 return;
             }
-            let _ = match account.create_identity(Some(&username), None).await {
-                Ok(_) => rsp.send(Ok(())),
-                Err(e) => rsp.send(Err(e)),
+            let r = match account.create_identity(Some(&username), None).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
             };
+            let _ = rsp.send(r);
         }
     }
 }
