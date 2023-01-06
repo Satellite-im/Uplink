@@ -91,7 +91,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
-                        use_router(&cx).replace_route(r, None, None);
+                        use_router(cx).replace_route(r, None, None);
                     }
                 },
             }

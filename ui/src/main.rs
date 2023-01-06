@@ -26,6 +26,7 @@ use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::toast::Toast;
+use crate::layouts::auth::AuthLayout;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -58,11 +59,7 @@ pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
     (tx, Arc::new(Mutex::new(rx)))
 });
 
-// for warp only
-pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
-    Some(path) => path.join("warp"),
-    _ => dirs::home_dir().unwrap_or_default().join(".warp"),
-});
+pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| UPLINK_PATH.join("warp"));
 
 pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
     Some(path) => path,
@@ -70,6 +67,13 @@ pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
 });
 
 pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
+
+pub static CHAT_ROUTE: &str = "/chat";
+pub static FRIENDS_ROUTE: &str = "/friends";
+pub static FILES_ROUTE: &str = "/files";
+pub static SETTINGS_ROUTE: &str = "/settings";
+pub static UNLOCK_ROUTE: &str = "/";
+pub static AUTH_ROUTE: &str = "/auth";
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -102,6 +106,8 @@ fn copy_assets() {
 
 fn main() {
     // Initializes the cache dir if needed
+    std::fs::create_dir_all(UPLINK_PATH.clone()).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(WARP_PATH.clone()).expect("Error creating Warp directory");
     copy_assets();
 
     let mut main_menu = Menu::new();
@@ -204,7 +210,7 @@ fn app(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
-    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
+    let warp_event_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -229,12 +235,12 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle, warp_rx];
+        to_owned![toggle, warp_event_rx];
         async move {
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_rx.lock().await;
+            let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
                 if warp_runner::handle_event(inner.clone(), evt).await {
                     let flag = *toggle.current();
@@ -331,19 +337,19 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
-        to: "/",
+        to: CHAT_ROUTE,
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
-        to: "/settings",
+        to: SETTINGS_ROUTE,
         name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
-        to: "/friends",
+        to: FRIENDS_ROUTE,
         name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
@@ -354,7 +360,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         loading: None,
     };
     let files_route = UIRoute {
-        to: "/files",
+        to: FILES_ROUTE,
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
@@ -366,48 +372,52 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         settings_route.clone(),
     ];
 
-    cx.render(rsx!(Router {
-        Route {
-            to: "/",
-            ChatLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: chat_route.clone(),
+    cx.render(rsx!(
+            Router {
+                Route {
+                    to: CHAT_ROUTE,
+                    ChatLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: chat_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: SETTINGS_ROUTE,
+                    SettingsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: settings_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FRIENDS_ROUTE,
+                    FriendsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: friends_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FILES_ROUTE,
+                    FilesLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: files_route,
+                        }
+                    }
+                },
+                Route {
+                    to: UNLOCK_ROUTE,
+                    UnlockLayout {}
                 }
-            }
-        },
-        Route {
-            to: "/settings",
-            SettingsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: settings_route.clone(),
+                Route {
+                    to: AUTH_ROUTE,
+                    AuthLayout {}
                 }
-            }
-        },
-        Route {
-            to: "/friends",
-            FriendsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: friends_route.clone(),
-                }
-            }
-        },
-        Route {
-            to: "/files",
-            FilesLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: files_route,
-                }
-            }
-        },
-        Route {
-            to: "/pre/unlock",
-            UnlockLayout {
-
-            }
         }
-    }))
+    ))
 }

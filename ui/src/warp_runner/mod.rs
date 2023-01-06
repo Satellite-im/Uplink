@@ -8,8 +8,8 @@ use tokio::sync::{
 };
 use warp::{
     constellation::Constellation,
-    multipass::{MultiPass, MultiPassEventStream},
-    raygun::RayGun,
+    multipass::MultiPass,
+    raygun::{RayGun, RayGunEventStream},
     tesseract::Tesseract,
 };
 use warp::{multipass::MultiPassEventKind, raygun::RayGunEventKind};
@@ -17,7 +17,15 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
-use crate::{state::State, WARP_PATH};
+use crate::{
+    state::State,
+    warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
+    WARP_PATH,
+};
+
+use self::commands::{MultiPassCmd, TesseractCmd};
+
+pub mod commands;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -34,13 +42,17 @@ pub enum WarpEvent {
     MultiPass(MultiPassEventKind),
 }
 
+#[derive(Debug)]
 pub enum WarpCmd {
-    None,
+    Tesseract(TesseractCmd),
+    MultiPass(MultiPassCmd),
 }
 
 pub struct WarpRunner {
     notify: Arc<Notify>,
     ran_once: bool,
+    // State needs to know if there's a "keystore" field in Tesseract for the unlock page
+    tesseract: Tesseract,
 }
 
 impl std::ops::Drop for WarpRunner {
@@ -51,9 +63,21 @@ impl std::ops::Drop for WarpRunner {
 
 impl WarpRunner {
     pub fn init() -> Self {
+        let tess_path = WARP_PATH.join(".keystore");
+        let tesseract = match Tesseract::from_file(&tess_path) {
+            Ok(tess) => tess,
+            Err(_) => {
+                //doesnt exist so its set
+                let tess = Tesseract::default();
+                tess.set_file(tess_path);
+                tess.set_autosave();
+                tess
+            }
+        };
         Self {
             notify: Arc::new(Notify::new()),
             ran_once: false,
+            tesseract,
         }
     }
 
@@ -62,16 +86,7 @@ impl WarpRunner {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
 
-        let tesseract = match Tesseract::from_file(WARP_PATH.join(".keystore")) {
-            Ok(tess) => tess,
-            Err(_) => {
-                //doesnt exist so its set
-                let tess = Tesseract::default();
-                tess.set_file(WARP_PATH.join(".keystore"));
-                tess.set_autosave();
-                tess
-            }
-        };
+        let mut tesseract = self.tesseract.clone();
 
         let notify = self.notify.clone();
         tokio::spawn(async move {
@@ -85,8 +100,8 @@ impl WarpRunner {
 
             // this was the only way to get a mutable static variable. but this channel should only be read here.
             let mut rx = rx.lock().await;
-
-            let multipass_stream = loop {
+            let mut raygun_stream = get_raygun_stream(&mut messaging).await;
+            let mut multipass_stream = loop {
                 match account.subscribe().await {
                     Ok(stream) => break stream,
                     Err(e) => match e {
@@ -100,24 +115,35 @@ impl WarpRunner {
                     },
                 };
             };
-            let multipass_runner = Box::pin(multipass_runner(multipass_stream, tx.clone()));
-            let raygun_runner = Box::pin(raygun_runner(&mut messaging, tx.clone()));
-
-            let notified_listener = Box::pin(notify.notified());
 
             loop {
                 tokio::select! {
-                    _ = multipass_runner => break,
-                    _ = raygun_runner => break,
+                    opt = multipass_stream.next() => {
+                        if let Some(evt) = opt {
+                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                                break;
+                            }
+                        }
+                    },
+                    opt = raygun_stream.next() => {
+                        if let Some(evt) = opt {
+                            if tx.send(WarpEvent::RayGun(evt)).is_err() {
+                                break;
+                            }
+                        }
+                    },
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => match opt {
-                        Some(_cmd) => todo!("handle cmd"),
+                        Some(cmd) => match cmd {
+                            WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
+                            WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
+                        },
                         None => break,
                     },
 
                     // the WarpRunner has been dropped. stop the thread
-                    _ = notified_listener => break,
+                    _ = notify.notified() => break,
                 }
             }
 
@@ -126,16 +152,8 @@ impl WarpRunner {
     }
 }
 
-async fn multipass_runner(mut stream: MultiPassEventStream, tx: WarpEventTx) {
-    while let Some(evt) = stream.next().await {
-        if tx.send(WarpEvent::MultiPass(evt)).is_err() {
-            break;
-        }
-    }
-}
-
-async fn raygun_runner(rg: &mut Messaging, tx: WarpEventTx) {
-    let mut stream = loop {
+async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
+    loop {
         match rg.subscribe().await {
             Ok(stream) => break stream,
             Err(warp::error::Error::MultiPassExtensionUnavailable)
@@ -146,12 +164,6 @@ async fn raygun_runner(rg: &mut Messaging, tx: WarpEventTx) {
                 //Should not reach this point but should handle an error if it does
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
             }
-        }
-    };
-
-    while let Some(evt) = stream.next().await {
-        if tx.send(WarpEvent::RayGun(evt)).is_err() {
-            break;
         }
     }
 }

@@ -45,29 +45,27 @@ pub struct Props<'a> {
     #[props(optional)]
     options: Option<Options>,
     #[props(optional)]
-    onchange: Option<EventHandler<'a, String>>,
+    onchange: Option<EventHandler<'a, (String, bool)>>,
     #[props(optional)]
-    onreturn: Option<EventHandler<'a, String>>,
+    onreturn: Option<EventHandler<'a, (String, bool)>>,
 }
 
-pub fn emit(cx: &Scope<Props>, s: String) {
-    match &cx.props.onchange {
-        Some(f) => f.call(s),
-        None    => {},
+pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
+    if let Some(f) =  &cx.props.onchange {
+       f.call((s, is_valid));
     }
 }
 
-pub fn emit_return(cx: &Scope<Props>, s: String) {
-    match &cx.props.onreturn {
-        Some(f) => f.call(s),
-        None    => {},
+pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool) {
+    if let Some(f) =  &cx.props.onreturn {
+        f.call((s, is_valid));
     }
 }
 
+// warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 pub fn submit(cx: &Scope<Props>, s: String) {
-    match &cx.props.onreturn {
-        Some(f) => f.call(s),
-        None    => {},
+    if let Some(f) =  &cx.props.onreturn {
+      f.call((s, true));
     }
 }
 
@@ -175,6 +173,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         Some(opts) => opts,
         None => &default_options,
     };
+
     let valid = use_state(cx, || false);
     let min_len = match options.with_validation {
         Some(opts) => opts.min_length.unwrap_or_default(),
@@ -205,7 +204,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             ))
             div {
                 class: {
-                    format_args!("input {}", if **valid && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
+                    format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
                 // If an icon was provided, render it before the input.
                 (cx.props.icon.is_some()).then(|| rsx!(
@@ -238,11 +237,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
-                        emit(&cx, val.read().to_string());
+                        emit(&cx, val.read().to_string(), *valid.current());
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string());
+                            emit_return(&cx, val.read().to_string(), *valid.current());
                         }
                     }
                 }
@@ -251,7 +250,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: "clear-btn",
                         onclick: move |_| {
                             *val.write() = "".into();
-                            emit(&cx, val.read().to_string());
+                            emit(&cx, val.read().to_string(), false);
                             error.set("".into());
                             valid.set(false);
                         },

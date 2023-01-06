@@ -3,6 +3,7 @@ use std::rc::Weak;
 use crate::{
     components::media::popout_player::PopoutPlayer,
     state::{Action, State},
+    SETTINGS_ROUTE,
 };
 
 use dioxus::prelude::*;
@@ -154,7 +155,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    use_router(cx).replace_route("/settings", None, None);
+                    use_router(cx).replace_route(SETTINGS_ROUTE, None, None);
                 }
             },
         }
