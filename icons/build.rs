@@ -1,4 +1,3 @@
-use clap::Parser;
 use heck::ToUpperCamelCase;
 use itertools::Itertools;
 use scraper::{Html, Selector};
