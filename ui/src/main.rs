@@ -24,6 +24,7 @@ use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::toast::Toast;
+use crate::layouts::auth::AuthLayout;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -83,6 +84,7 @@ pub static FRIENDS_ROUTE: &str = "/friends";
 pub static FILES_ROUTE: &str = "/files";
 pub static SETTINGS_ROUTE: &str = "/settings";
 pub static UNLOCK_ROUTE: &str = "/";
+pub static AUTH_ROUTE: &str = "/auth";
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -422,6 +424,10 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
                 Route {
                     to: UNLOCK_ROUTE,
                     UnlockLayout {}
+                }
+                Route {
+                    to: AUTH_ROUTE,
+                    AuthLayout {}
                 }
         }
     ))

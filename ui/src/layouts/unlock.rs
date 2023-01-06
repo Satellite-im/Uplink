@@ -6,7 +6,6 @@ use kit::{
     elements::{
         button::Button,
         input::{Input, Options, Validation},
-        label::Label,
     },
     icons::Icon,
 };
@@ -14,17 +13,25 @@ use tokio::sync::oneshot;
 
 use crate::{
     state::State,
+    utils::language::get_local_text,
     warp_runner::{commands::TesseractCmd, WarpCmd},
-    CHAT_ROUTE, WARP_CMD_CH,
+    AUTH_ROUTE, CHAT_ROUTE, WARP_CMD_CH,
 };
 
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
+    let desktop = use_window(cx);
+    desktop.set_inner_size(LogicalSize {
+        width: 500.0,
+        height: 300.0,
+    });
+
     let state = use_shared_state::<State>(cx)?;
     let warp_cmd_tx = WARP_CMD_CH.0.clone();
-    // true if password succeeded
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
+
+    // todo: if tesseract is not initialized, show the auth page.
     let tesseract_initialized = state.read().account.tesseract_initialized;
     //println!("tesseract_initialized is: {}", &tesseract_initialized);
 
@@ -35,22 +42,20 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 //println!("got password input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
-                if tesseract_initialized {
-                    warp_cmd_tx
-                        .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
-                            passphrase: password,
-                            rsp: tx,
-                        }))
-                        .expect("UnlockLayout failed to send warp command");
-                } else {
-                    warp_cmd_tx
-                        .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
-                            username: "abcd123".into(),
-                            passphrase: password,
-                            rsp: tx,
-                        }))
-                        .expect("UnlockLayout failed to send warp command");
-                }
+                //warp_cmd_tx
+                //    .send(WarpCmd::Tesseract(TesseractCmd::CreateIdentity {
+                //        username: "abcd123".into(),
+                //        passphrase: password,
+                //        rsp: tx,
+                //    }))
+                //    .expect("UnlockLayout failed to send warp command");
+
+                warp_cmd_tx
+                    .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
+                        passphrase: password,
+                        rsp: tx,
+                    }))
+                    .expect("UnlockLayout failed to send warp command");
 
                 let res = rx
                     .blocking_recv()
@@ -77,34 +82,19 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    let disabled = use_state(cx, || false);
-    let desktop = use_window(cx);
-    desktop.set_inner_size(LogicalSize {
-        width: 500.0,
-        height: 300.0,
-    });
-
+    // todo: use password_failed to display an error message
     cx.render(rsx!(
         div {
             id: "unlock-layout",
             onmousedown: move |_| {
                 desktop.drag();
             },
-            get_prompt(cx, state.read().account.tesseract_initialized, password_failed.read().unwrap_or(false)),
-            p {
-                class: "info",
-                "Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
-                br {},
-                span {
-                    class: "warning",
-                    "If you forget this password we cannot help you retrieve it."
-                }
-            },
+            get_prompt(cx),
             Input {
                 is_password: true,
                 icon: Icon::Key,
-                disabled: **disabled,
-                placeholder: "Enter Password".into(),
+                disabled: !tesseract_initialized,
+                placeholder: get_local_text("unlock.enter_pin"),
                 options: Options {
                     with_validation: Some(validation_options),
                     with_clear_btn: true,
@@ -115,34 +105,29 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 }
             },
             Button {
-                text: "Create Account".into(),
+                text: get_local_text("unlock.create_account"),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
-                    disabled.set(true);
+                    router.replace_route(AUTH_ROUTE, None, None)
                 }
             }
         }
     ))
 }
 
-// todo: translate
-// todo: better reaction when password failed. perhaps a toast?
-fn get_prompt(cx: Scope, tesseract_available: bool, password_failed: bool) -> Element {
-    if tesseract_available {
-        if password_failed {
-            cx.render(rsx!(Label {
-                text: "Invalid Password".into()
-            }))
-        } else {
-            cx.render(rsx!(Label {
-                text: "Enter your password".into()
-            }))
+fn get_prompt(cx: Scope) -> Element {
+    cx.render(rsx!(
+        p {
+            class: "info",
+            get_local_text("unlock.warning1")
+            //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
+            br {},
+            span {
+                class: "warning",
+                //"If you forget this password we cannot help you retrieve it."
+                get_local_text("unlock.warning2")
+            }
         }
-    } else {
-        assert!(!password_failed);
-        cx.render(rsx!(Label {
-            text: "Create a password".into()
-        }))
-    }
+    ))
 }
