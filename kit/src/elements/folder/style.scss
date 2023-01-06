@@ -4,6 +4,8 @@
 	align-content: center;
 	justify-content: center;
 	max-width: 100px;
+	align-self: flex-start;
+	margin: 5px;
 	.icon {
 		width: var(--icon-size-more);
 		height: var(--icon-size-more);

@@ -1643,15 +1643,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-heroicons"
-version = "0.1.4"
-source = "git+https://github.com/Satellite-im/dioxus-heroicons?branch=dioxus-nightly#dec7038a09251c745d5d22aa7b42d2e084598f3a"
-dependencies = [
- "dioxus",
- "dioxus-html",
-]
-
-[[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1846,6 +1837,12 @@ dependencies = [
  "sha2 0.9.9",
  "zeroize",
 ]
+
+[[package]]
+name = "ego-tree"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a68a4904193147e0a8dec3314640e6db742afd5f6e634f428a6af230d9b3591"
 
 [[package]]
 name = "either"
@@ -2404,6 +2401,15 @@ checksum = "bff49e947297f3312447abdca79f45f4738097cc82b06e72054d2223f601f1b9"
 dependencies = [
  "typenum",
  "version_check",
+]
+
+[[package]]
+name = "getopts"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
+dependencies = [
+ "unicode-width",
 ]
 
 [[package]]
@@ -3092,6 +3098,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "icons"
+version = "0.1.0"
+dependencies = [
+ "clap 3.2.23",
+ "dioxus",
+ "dioxus-html",
+ "heck 0.4.0",
+ "itertools",
+ "scraper",
+ "walkdir",
+]
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3482,11 +3501,11 @@ dependencies = [
  "dioxus",
  "dioxus-core 0.3.0",
  "dioxus-desktop",
- "dioxus-heroicons",
  "dioxus-hooks",
  "dioxus-html",
  "glob",
  "humansize",
+ "icons",
  "rsass",
  "timeago",
  "uuid",
@@ -6051,6 +6070,22 @@ name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
+
+[[package]]
+name = "scraper"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48e02aa790c80c2e494130dec6a522033b6a23603ffc06360e9fe6c611ea2c12"
+dependencies = [
+ "cssparser",
+ "ego-tree",
+ "getopts",
+ "html5ever",
+ "matches",
+ "selectors",
+ "smallvec",
+ "tendril",
+]
 
 [[package]]
 name = "scratch"

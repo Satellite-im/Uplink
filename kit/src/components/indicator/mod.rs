@@ -39,7 +39,7 @@ impl fmt::Display for Platform {
             Platform::Tv => String::from("tv"),
             Platform::Headless => String::from("headless"),
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

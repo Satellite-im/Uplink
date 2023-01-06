@@ -23,12 +23,15 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "chat-layout",
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
+            span {
+                class: "full-width-on-mobile",
+                ChatSidebar {
+                    route_info: cx.props.route_info.clone()
+                },
             },
             state.read().chats.active.is_some().then(|| rsx! (
                 Compose {}
-            ))
+            )),
             state.read().chats.active.is_none().then(|| rsx! (
                 Welcome {}
             ))
