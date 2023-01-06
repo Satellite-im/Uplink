@@ -34,7 +34,7 @@ fn make_icons(src_dir: &PathBuf) -> Vec<Icon> {
 
     let svg_sel = Selector::parse("svg").unwrap();
     let path_sel = Selector::parse("path").unwrap();
-    for entry in WalkDir::new(&src_dir)
+    for entry in WalkDir::new(src_dir)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file() && e.file_name().to_string_lossy().ends_with(".svg"))
@@ -132,34 +132,31 @@ fn write_icons_file(icons: &[Icon], to: &PathBuf) {
             .collect::<Vec<_>>()
             .join("\n");
             PATH_TEMPLATE
-                .clone()
                 .replace("{NAME}", &i.name)
-                .replace("{ATTRS}", &attrs)
+                .replace("{ATTRS}", attrs)
         })
         .collect::<Vec<_>>()
         .join("");
 
     let code = TEMPLATE
-        .clone()
         .replace("{VIEWBOX}", &icons[0].viewbox)
         .replace("{NAMES}", &names)
         .replace("{PATHS}", &paths);
 
-    fs::write(to, &code).unwrap();
-    Command::new("rustfmt").arg(&to).output().unwrap();
+    fs::write(to, code).unwrap();
+    Command::new("rustfmt").arg(to).output().unwrap();
 }
 
 // rustfmt gets confused about indentation in rsx! blocks and will indent the
 // first attribute properly, but not the following, so we have to indent all
 // but the first attribute manually.
 fn attr(name: &str, value: Option<&str>, indent: bool) -> Option<String> {
-    match value {
-        Some(v) => Some(format!(
+    value.map(|v| {
+        format!(
             r#"{}{}: "{}","#,
             if indent { "        " } else { "" },
             name,
             v,
-        )),
-        None => None,
-    }
+        )
+    })
 }
