@@ -120,9 +120,11 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let badge = get_badge(route);
                 let key: String = route.name.clone();
                 let name: String = route.name.clone();
+                let aria_label: String = route.name.clone();
                 rsx!(
                     Button {
                         key: "{key}",
+                        aria_label: aria_label.to_lowercase() + "-button",
                         icon: route.icon,
                         onpress: move |_| {
                             active.set(route.to_owned());
