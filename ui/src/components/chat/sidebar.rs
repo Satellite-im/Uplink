@@ -79,11 +79,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
-                    aria_label: "chat-search-input",
                     Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: true,
+                        aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         options: Options {
                             with_clear_btn: true,

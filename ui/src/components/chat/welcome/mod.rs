@@ -34,6 +34,7 @@ pub fn Welcome(cx: Scope) -> Element {
             },
             Button {
                 icon: Icon::Plus,
+                aria_label: "add-friends-button".into(),
                 text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {

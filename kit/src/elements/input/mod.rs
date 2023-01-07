@@ -37,6 +37,8 @@ pub struct Props<'a> {
     #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
+    aria_label: Option<String>,
+    #[props(optional)]
     is_password: Option<bool>,
     #[props(optional)]
     disabled: Option<bool>,
@@ -118,6 +120,13 @@ pub fn get_text(cx: &Scope<Props>) -> String {
     }
 }
 
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    match &cx.props.aria_label {
+        Some(val)   => val.to_owned(),
+        None        => String::from(""),
+    }
+}
+
 pub fn get_label(cx: &Scope<Props>) -> String {
     let default_options = Options::default();
 
@@ -180,6 +189,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         None => 0,
     };
     let apply_validation_class = options.with_validation.is_some();
+    let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
     let disabled = &cx.props.disabled.unwrap_or_default();
@@ -220,6 +230,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
+                    aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: format_args!("{}", val.read()),
                     maxlength: "{max_length}",
@@ -263,6 +274,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (!error.is_empty()).then(|| rsx!( 
                 p {
                     class: "error",
+                    aria_label: "input-error",
                     "{error}"
                 }
             ))

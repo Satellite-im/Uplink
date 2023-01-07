@@ -70,6 +70,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "unlock-layout",
+            aria_label: "unlock-layout",
             onmousedown: move |_| {
                 desktop.drag();
             },
@@ -77,6 +78,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             Input {
                 is_password: true,
                 icon: Icon::Key,
+                aria_label: "pin-input".into(),
                 disabled: false,
                 placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
                 options: Options {
@@ -90,6 +92,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             },
             Button {
                 text: "create account".into(), // get_local_text("unlock.create_account"),
+                aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
@@ -104,10 +107,12 @@ fn get_prompt(cx: Scope) -> Element {
     cx.render(rsx!(
         p {
             class: "info",
+            aria_label: "unlock-warning-paragraph",
             "warning: use a good password", //get_local_text("unlock.warning1")
             //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
             br {},
             span {
+                aria_label: "unlock-warning-span",
                 class: "warning",
                 //"If you forget this password we cannot help you retrieve it."
                 "warning: no password recovery", //get_local_text("unlock.warning2")
