@@ -11,11 +11,23 @@ const VIEW_BOX: &str = "0 0 24 24";
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Shape {
     AcademicCap,
+    Activity,
     AdjustmentsHorizontal,
     AdjustmentsVertical,
+    Airplay,
+    AlertCircle,
+    AlertOctagon,
+    AlertTriangle,
+    AlignCenter,
+    AlignJustify,
+    AlignLeft,
+    AlignRight,
+    Anchor,
+    Aperture,
     ArchiveBoxArrowDown,
     ArchiveBoxXMark,
     ArchiveBox,
+    Archive,
     ArrowDownCircle,
     ArrowDownLeft,
     ArrowDownOnSquareStack,
@@ -57,10 +69,14 @@ pub enum Shape {
     ArrowsPointingOut,
     ArrowsRightLeft,
     ArrowsUpDown,
+    AtSign,
     AtSymbol,
+    Award,
     Backspace,
     Backward,
     Banknotes,
+    BarChart2,
+    BarChart,
     Bars2,
     Bars3BottomLeft,
     Bars3BottomRight,
@@ -72,17 +88,24 @@ pub enum Shape {
     Battery0,
     Battery100,
     Battery50,
+    BatteryCharging,
+    Battery,
     Beaker,
     BellAlert,
+    BellOff,
     BellSlash,
     BellSnooze,
     Bell,
+    Bluetooth,
+    Bold,
     BoltSlash,
     Bolt,
     BookOpen,
+    Book,
     BookmarkSlash,
     BookmarkSquare,
     Bookmark,
+    Box,
     Briefcase,
     BugAnt,
     BuildingLibrary,
@@ -93,7 +116,9 @@ pub enum Shape {
     Calculator,
     CalendarDays,
     Calendar,
+    CameraOff,
     Camera,
+    Cast,
     ChartBarSquare,
     ChartBar,
     ChartPie,
@@ -104,8 +129,11 @@ pub enum Shape {
     ChatBubbleLeft,
     ChatBubbleOvalLeftEllipsis,
     ChatBubbleOvalLeft,
+    ChatPlus,
+    ChatSlash,
     CheckBadge,
     CheckCircle,
+    CheckSquare,
     Check,
     ChevronDoubleDown,
     ChevronDoubleLeft,
@@ -116,6 +144,11 @@ pub enum Shape {
     ChevronRight,
     ChevronUpDown,
     ChevronUp,
+    ChevronsDown,
+    ChevronsLeft,
+    ChevronsRight,
+    ChevronsUp,
+    Chrome,
     CircleStack,
     Circle,
     ClipboardDocumentCheck,
@@ -125,16 +158,40 @@ pub enum Shape {
     Clock,
     CloudArrowDown,
     CloudArrowUp,
+    CloudDrizzle,
+    CloudLightning,
+    CloudOff,
+    CloudRain,
+    CloudSnow,
     Cloud,
     CodeBracketSquare,
     CodeBracket,
+    Code,
+    Codepen,
+    Codesandbox,
+    Coffee,
     Cog6Tooth,
     Cog8Tooth,
     Cog,
+    Columns,
     CommandLine,
+    Command,
+    Compass,
     ComputerDesktop,
+    Copy,
+    CornerDownLeft,
+    CornerDownRight,
+    CornerLeftDown,
+    CornerLeftUp,
+    CornerRightDown,
+    CornerRightUp,
+    CornerUpLeft,
+    CornerUpRight,
     CpuChip,
+    Cpu,
     CreditCard,
+    Crop,
+    Crosshair,
     CubeTransparent,
     Cube,
     CurrencyBangladeshi,
@@ -145,8 +202,14 @@ pub enum Shape {
     CurrencyYen,
     CursorArrowRays,
     CursorArrowRipple,
+    Database,
+    Delete,
     DevicePhoneMobile,
     DeviceTablet,
+    Disc,
+    DivideCircle,
+    DivideSquare,
+    Divide,
     DocumentArrowDown,
     DocumentArrowUp,
     DocumentChartBar,
@@ -157,6 +220,14 @@ pub enum Shape {
     DocumentPlus,
     DocumentText,
     Document,
+    DollarSign,
+    DownloadCloud,
+    Download,
+    Dribbble,
+    Droplet,
+    Edit2,
+    Edit3,
+    Edit,
     EllipsisHorizontalCircle,
     EllipsisHorizontal,
     EllipsisVertical,
@@ -164,12 +235,23 @@ pub enum Shape {
     Envelope,
     ExclamationCircle,
     ExclamationTriangle,
+    ExternalLink,
     EyeDropper,
+    EyeOff,
     EyeSlash,
     Eye,
     FaceFrown,
     FaceSmile,
+    Facebook,
+    FastForward,
+    Feather,
+    Figma,
+    FileMinus,
+    FilePlus,
+    FileText,
+    File,
     Film,
+    Filter,
     FingerPrint,
     Fire,
     Flag,
@@ -179,67 +261,130 @@ pub enum Shape {
     FolderPlus,
     Folder,
     Forward,
+    Framer,
+    Frown,
     Funnel,
     Gif,
     GiftTop,
     Gift,
+    GitBranch,
+    GitCommit,
+    GitMerge,
+    GitPullRequest,
+    Github,
+    Gitlab,
     GlobeAlt,
     GlobeAmericas,
     GlobeAsiaAustralia,
     GlobeEuropeAfrica,
+    Globe,
+    Grid,
     HandRaised,
     HandThumbDown,
     HandThumbUp,
+    HardDrive,
+    Hash,
     Hashtag,
+    Headphones,
     Heart,
+    HelpCircle,
+    Hexagon,
     HomeModern,
     Home,
     Identification,
+    Image,
     InboxArrowDown,
     InboxStack,
     Inbox,
+    Info,
     InformationCircle,
+    Instagram,
+    Italic,
     Key,
     Language,
+    Layers,
+    Layout,
+    LifeBuoy,
     Lifebuoy,
     LightBulb,
+    Link2,
     Link,
+    Linkedin,
     ListBullet,
+    List,
+    Loader,
     LockClosed,
     LockOpen,
+    Lock,
+    LogIn,
+    LogOut,
     MagnifyingGlassCircle,
     MagnifyingGlassMinus,
     MagnifyingGlassPlus,
     MagnifyingGlass,
+    Mail,
     MapPin,
     Map,
+    Maximize2,
+    Maximize,
     Megaphone,
+    Meh,
+    Menu,
+    MessageCircle,
+    MessageSquare,
+    MicOff,
+    Mic,
     Microphone,
+    Minimize2,
+    Minimize,
     MinusCircle,
     MinusSmall,
+    MinusSquare,
     Minus,
+    Monitor,
     Moon,
+    MoreHorizontal,
+    MoreVertical,
+    MousePointer,
+    Move,
+    Music,
     MusicalNote,
+    Navigation2,
+    Navigation,
     Newspaper,
     NoSymbol,
+    Octagon,
+    Package,
     PaintBrush,
     PaperAirplane,
     PaperClip,
+    Paperclip,
     PauseCircle,
     Pause,
+    PenTool,
     PencilSquare,
     Pencil,
+    Percent,
     PhoneArrowDownLeft,
     PhoneArrowUpRight,
+    PhoneCall,
+    PhoneForwarded,
+    PhoneIncoming,
+    PhoneMissed,
+    PhoneOff,
+    PhoneOutgoing,
     PhoneXMark,
     Phone,
     Photo,
+    PieChart,
     PlayCircle,
     PlayPause,
     Play,
     PlusCircle,
     PlusSmall,
+    PlusSquare,
     Plus,
+    Pocket,
     Power,
     PresentationChartBar,
     PresentationChartLine,
@@ -253,57 +398,129 @@ pub enum Shape {
     ReceiptRefund,
     RectangleGroup,
     RectangleStack,
+    RefreshCcw,
+    RefreshCw,
+    Repeat,
+    ReplayOne,
+    Rewind,
     RocketLaunch,
+    RotateCcw,
+    RotateCw,
     Rss,
+    Save,
     Scale,
     Scissors,
+    Search,
+    Send,
     ServerStack,
     Server,
+    Settings,
+    Share2,
     Share,
     ShieldCheck,
     ShieldExclamation,
+    ShieldOff,
+    Shield,
     ShoppingBag,
     ShoppingCart,
+    Shuffle,
+    Sidebar,
     SignalSlash,
     Signal,
+    SkipBack,
+    SkipForward,
+    Slack,
+    Slash,
+    Sliders,
+    Smartphone,
+    Smile,
     Sparkles,
     SpeakerWave,
     SpeakerXMark,
+    Speaker,
     Square2Stack,
     Square3Stack3d,
+    Square,
     Squares2x2,
     SquaresPlus,
     Star,
     StopCircle,
     Stop,
     Sun,
+    Sunrise,
+    Sunset,
     Swatch,
     TableCells,
+    Table,
+    Tablet,
     Tag,
+    Target,
+    Terminal,
+    Thermometer,
+    ThumbsDown,
+    ThumbsUp,
     Ticket,
+    ToggleLeft,
+    ToggleRight,
+    Tool,
+    Trash2,
     Trash,
+    Trello,
+    TrendingDown,
+    TrendingUp,
+    Triangle,
     Trophy,
     Truck,
     Tv,
+    Twitch,
+    Twitter,
+    Type,
+    Umbrella,
+    Underline,
+    Unlock,
+    UploadCloud,
+    Upload,
     UserBlock,
+    UserBlocked,
+    UserCheck,
     UserCircle,
     UserGroup,
     UserMinus,
     UserPlus,
+    UserX,
     User,
     Users,
     Variable,
     VideoCameraSlash,
     VideoCamera,
+    VideoOff,
+    Video,
     ViewColumns,
     ViewfinderCircle,
+    Voicemail,
+    Volume1,
+    Volume2,
+    VolumeX,
+    Volume,
     Wallet,
+    Watch,
+    WifiOff,
     Wifi,
+    Wind,
+    WindowShare,
     Window,
     WrenchScrewdriver,
     Wrench,
     XCircle,
     XMark,
+    XOctagon,
+    XSquare,
+    X,
+    Youtube,
+    ZapOff,
+    Zap,
+    ZoomIn,
+    ZoomOut,
 }
 
 impl crate::IconShape for Shape {
@@ -318,6 +535,11 @@ impl crate::IconShape for Shape {
                     d: "M4.25933 10.1468C3.98688 12.2308 3.82139 14.3485 3.76853 16.4941C6.66451 17.7032 9.41893 19.1836 12 20.9037C14.5811 19.1836 17.3355 17.7032 20.2315 16.4941C20.1786 14.3485 20.0131 12.2308 19.7407 10.1468M4.25933 10.1468C3.38362 9.85242 2.49729 9.5812 1.60107 9.33382C4.84646 7.05899 8.32741 5.09732 12 3.49268C15.6727 5.09732 19.1536 7.059 22.399 9.33383C21.5028 9.58122 20.6164 9.85245 19.7407 10.1468M4.25933 10.1468C6.94656 11.05 9.5338 12.171 12.0001 13.4888C14.4663 12.171 17.0535 11.0501 19.7407 10.1468M6.75 15.0001C7.16421 15.0001 7.5 14.6643 7.5 14.2501C7.5 13.8359 7.16421 13.5001 6.75 13.5001C6.33579 13.5001 6 13.8359 6 14.2501C6 14.6643 6.33579 15.0001 6.75 15.0001ZM6.75 15.0001V11.3246C8.44147 10.2736 10.1936 9.31107 12 8.44342M4.99264 19.9928C6.16421 18.8212 6.75 17.2857 6.75 15.7501V14.2501",
                 },
             },
+            Shape::Activity => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::AdjustmentsHorizontal => rsx! {
                 path {
                     d: "M10.5 6L20.25 6M10.5 6C10.5 6.82843 9.82843 7.5 9 7.5C8.17157 7.5 7.5 6.82843 7.5 6M10.5 6C10.5 5.17157 9.82843 4.5 9 4.5C8.17157 4.5 7.5 5.17157 7.5 6M3.75 6H7.5M10.5 18H20.25M10.5 18C10.5 18.8284 9.82843 19.5 9 19.5C8.17157 19.5 7.5 18.8284 7.5 18M10.5 18C10.5 17.1716 9.82843 16.5 9 16.5C8.17157 16.5 7.5 17.1716 7.5 18M3.75 18L7.5 18M16.5 12L20.25 12M16.5 12C16.5 12.8284 15.8284 13.5 15 13.5C14.1716 13.5 13.5 12.8284 13.5 12M16.5 12C16.5 11.1716 15.8284 10.5 15 10.5C14.1716 10.5 13.5 11.1716 13.5 12M3.75 12H13.5",
@@ -326,6 +548,56 @@ impl crate::IconShape for Shape {
             Shape::AdjustmentsVertical => rsx! {
                 path {
                     d: "M6 13.5L6 3.75M6 13.5C6.82843 13.5 7.5 14.1716 7.5 15C7.5 15.8284 6.82843 16.5 6 16.5M6 13.5C5.17157 13.5 4.5 14.1716 4.5 15C4.5 15.8284 5.17157 16.5 6 16.5M6 20.25L6 16.5M18 13.5V3.75M18 13.5C18.8284 13.5 19.5 14.1716 19.5 15C19.5 15.8284 18.8284 16.5 18 16.5M18 13.5C17.1716 13.5 16.5 14.1716 16.5 15C16.5 15.8284 17.1716 16.5 18 16.5M18 20.25L18 16.5M12 7.5V3.75M12 7.5C12.8284 7.5 13.5 8.17157 13.5 9C13.5 9.82843 12.8284 10.5 12 10.5M12 7.5C11.1716 7.5 10.5 8.17157 10.5 9C10.5 9.82843 11.1716 10.5 12 10.5M12 20.25V10.5",
+                },
+            },
+            Shape::Airplay => rsx! {
+                path {
+                    d: "M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1",
+                },
+            },
+            Shape::AlertCircle => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::AlertOctagon => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::AlertTriangle => rsx! {
+                path {
+                    d: "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
+                },
+            },
+            Shape::AlignCenter => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::AlignJustify => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::AlignLeft => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::AlignRight => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Anchor => rsx! {
+                path {
+                    d: "M5 12H2a10 10 0 0 0 20 0h-3",
+                },
+            },
+            Shape::Aperture => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::ArchiveBoxArrowDown => rsx! {
@@ -343,14 +615,19 @@ impl crate::IconShape for Shape {
                     d: "M20.25 7.5L19.6246 18.1321C19.5546 19.3214 18.5698 20.25 17.3785 20.25H6.62154C5.43022 20.25 4.44538 19.3214 4.37542 18.1321L3.75 7.5M9.99976 11.25H13.9998M3.375 7.5H20.625C21.2463 7.5 21.75 6.99632 21.75 6.375V4.875C21.75 4.25368 21.2463 3.75 20.625 3.75H3.375C2.75368 3.75 2.25 4.25368 2.25 4.875V6.375C2.25 6.99632 2.75368 7.5 3.375 7.5Z",
                 },
             },
+            Shape::Archive => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::ArrowDownCircle => rsx! {
                 path {
-                    d: "M9 12.75L12 15.75M12 15.75L15 12.75M12 15.75L12 8.25M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::ArrowDownLeft => rsx! {
                 path {
-                    d: "M19.5 4.5L4.5 19.5M4.5 19.5L15.75 19.5M4.5 19.5L4.5 8.25",
+                    d: "",
                 },
             },
             Shape::ArrowDownOnSquareStack => rsx! {
@@ -365,7 +642,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowDownRight => rsx! {
                 path {
-                    d: "M4.5 4.5L19.5 19.5M19.5 19.5V8.25M19.5 19.5H8.25",
+                    d: "",
                 },
             },
             Shape::ArrowDownTray => rsx! {
@@ -375,12 +652,12 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowDown => rsx! {
                 path {
-                    d: "M19.5 13.5L12 21M12 21L4.5 13.5M12 21L12 3",
+                    d: "",
                 },
             },
             Shape::ArrowLeftCircle => rsx! {
                 path {
-                    d: "M11.25 9L8.25 12M8.25 12L11.25 15M8.25 12H15.75M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::ArrowLeftOnRectangle => rsx! {
@@ -390,7 +667,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowLeft => rsx! {
                 path {
-                    d: "M10.5 19.5L3 12M3 12L10.5 4.5M3 12H21",
+                    d: "",
                 },
             },
             Shape::ArrowLongDown => rsx! {
@@ -425,7 +702,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowRightCircle => rsx! {
                 path {
-                    d: "M12.75 15L15.75 12M15.75 12L12.75 9M15.75 12L8.25 12M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::ArrowRightOnRectangle => rsx! {
@@ -435,7 +712,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowRight => rsx! {
                 path {
-                    d: "M13.5 4.5L21 12M21 12L13.5 19.5M21 12H3",
+                    d: "",
                 },
             },
             Shape::ArrowSmallDown => rsx! {
@@ -475,12 +752,12 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowUpCircle => rsx! {
                 path {
-                    d: "M15 11.25L12 8.25M12 8.25L9 11.25M12 8.25L12 15.75M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::ArrowUpLeft => rsx! {
                 path {
-                    d: "M19.5 19.5L4.5 4.5M4.5 4.5L4.5 15.75M4.5 4.5L15.75 4.5",
+                    d: "",
                 },
             },
             Shape::ArrowUpOnSquareStack => rsx! {
@@ -495,7 +772,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowUpRight => rsx! {
                 path {
-                    d: "M4.5 19.5L19.5 4.5M19.5 4.5L8.25 4.5M19.5 4.5V15.75",
+                    d: "",
                 },
             },
             Shape::ArrowUpTray => rsx! {
@@ -505,7 +782,7 @@ impl crate::IconShape for Shape {
             },
             Shape::ArrowUp => rsx! {
                 path {
-                    d: "M4.5 10.5L12 3M12 3L19.5 10.5M12 3V21",
+                    d: "",
                 },
             },
             Shape::ArrowUturnDown => rsx! {
@@ -548,9 +825,19 @@ impl crate::IconShape for Shape {
                     d: "M3 7.5L7.5 3M7.5 3L12 7.5M7.5 3V16.5M21 16.5L16.5 21M16.5 21L12 16.5M16.5 21L16.5 7.5",
                 },
             },
+            Shape::AtSign => rsx! {
+                path {
+                    d: "M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94",
+                },
+            },
             Shape::AtSymbol => rsx! {
                 path {
                     d: "M16.5 12C16.5 14.4853 14.4853 16.5 12 16.5C9.51472 16.5 7.5 14.4853 7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12ZM16.5 12C16.5 13.6569 17.5074 15 18.75 15C19.9926 15 21 13.6569 21 12C21 9.69671 20.1213 7.3934 18.364 5.63604C14.8492 2.12132 9.15076 2.12132 5.63604 5.63604C2.12132 9.15076 2.12132 14.8492 5.63604 18.364C9.15076 21.8787 14.8492 21.8787 18.364 18.364M16.5 12V8.25",
+                },
+            },
+            Shape::Award => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Backspace => rsx! {
@@ -566,6 +853,16 @@ impl crate::IconShape for Shape {
             Shape::Banknotes => rsx! {
                 path {
                     d: "M2.25 18.75C7.71719 18.75 13.0136 19.4812 18.0468 20.8512C18.7738 21.0491 19.5 20.5086 19.5 19.7551V18.75M3.75 4.5V5.25C3.75 5.66421 3.41421 6 3 6H2.25M2.25 6V5.625C2.25 5.00368 2.75368 4.5 3.375 4.5H20.25M2.25 6V15M20.25 4.5V5.25C20.25 5.66421 20.5858 6 21 6H21.75M20.25 4.5H20.625C21.2463 4.5 21.75 5.00368 21.75 5.625V15.375C21.75 15.9963 21.2463 16.5 20.625 16.5H20.25M21.75 15H21C20.5858 15 20.25 15.3358 20.25 15.75V16.5M20.25 16.5H3.75M3.75 16.5H3.375C2.75368 16.5 2.25 15.9963 2.25 15.375V15M3.75 16.5V15.75C3.75 15.3358 3.41421 15 3 15H2.25M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5ZM18 10.5H18.0075V10.5075H18V10.5ZM6 10.5H6.0075V10.5075H6V10.5Z",
+                },
+            },
+            Shape::BarChart2 => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::BarChart => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Bars2 => rsx! {
@@ -623,6 +920,16 @@ impl crate::IconShape for Shape {
                     d: "M21 10.5H21.375C21.9963 10.5 22.5 11.0037 22.5 11.625V13.875C22.5 14.4963 21.9963 15 21.375 15H21M4.5 10.5H11.25V15H4.5V10.5ZM3.75 18H18.75C19.9926 18 21 16.9926 21 15.75V9.75C21 8.50736 19.9926 7.5 18.75 7.5H3.75C2.50736 7.5 1.5 8.50736 1.5 9.75V15.75C1.5 16.9926 2.50736 18 3.75 18Z",
                 },
             },
+            Shape::BatteryCharging => rsx! {
+                path {
+                    d: "M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19",
+                },
+            },
+            Shape::Battery => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Beaker => rsx! {
                 path {
                     d: "M9.75001 3.10408V8.81802C9.75001 9.41476 9.51295 9.98705 9.091 10.409L5.00001 14.5M9.75001 3.10408C9.49886 3.12743 9.24884 3.15465 9.00001 3.18568M9.75001 3.10408C10.4908 3.03521 11.2413 3 12 3C12.7587 3 13.5093 3.03521 14.25 3.10408M14.25 3.10408V8.81802C14.25 9.41476 14.4871 9.98705 14.909 10.409L19.8 15.3M14.25 3.10408C14.5011 3.12743 14.7512 3.15465 15 3.18568M19.8 15.3L18.2299 15.6925C16.1457 16.2136 13.9216 15.9608 12 15C10.0784 14.0392 7.85435 13.7864 5.7701 14.3075L5.00001 14.5M19.8 15.3L21.2022 16.7022C22.4341 17.9341 21.8527 20.0202 20.1354 20.3134C17.4911 20.7649 14.773 21 12 21C9.227 21 6.50891 20.7649 3.86459 20.3134C2.14728 20.0202 1.56591 17.9341 2.7978 16.7022L5.00001 14.5",
@@ -631,6 +938,11 @@ impl crate::IconShape for Shape {
             Shape::BellAlert => rsx! {
                 path {
                     d: "M14.8569 17.0817C16.7514 16.857 18.5783 16.4116 20.3111 15.7719C18.8743 14.177 17.9998 12.0656 17.9998 9.75V9.04919C17.9999 9.03281 18 9.01641 18 9C18 5.68629 15.3137 3 12 3C8.6863 3 6.00001 5.68629 6.00001 9L5.99982 9.75C5.99982 12.0656 5.12529 14.177 3.68849 15.7719C5.42142 16.4116 7.24845 16.857 9.14315 17.0818M14.8569 17.0817C13.92 17.1928 12.9666 17.25 11.9998 17.25C11.0332 17.25 10.0799 17.1929 9.14315 17.0818M14.8569 17.0817C14.9498 17.3711 15 17.6797 15 18C15 19.6569 13.6569 21 12 21C10.3432 21 9.00001 19.6569 9.00001 18C9.00001 17.6797 9.0502 17.3712 9.14315 17.0818M3.12445 7.5C3.41173 5.78764 4.18254 4.23924 5.29169 3M18.7083 3C19.8175 4.23924 20.5883 5.78764 20.8756 7.5",
+                },
+            },
+            Shape::BellOff => rsx! {
+                path {
+                    d: "M13.73 21a2 2 0 0 1-3.46 0 M18.63 13A17.89 17.89 0 0 1 18 8 M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14 M18 8a6 6 0 0 0-9.33-5",
                 },
             },
             Shape::BellSlash => rsx! {
@@ -645,7 +957,17 @@ impl crate::IconShape for Shape {
             },
             Shape::Bell => rsx! {
                 path {
-                    d: "M14.8569 17.0817C16.7514 16.857 18.5783 16.4116 20.3111 15.7719C18.8743 14.177 17.9998 12.0656 17.9998 9.75V9.04919C17.9999 9.03281 18 9.01641 18 9C18 5.68629 15.3137 3 12 3C8.68629 3 6 5.68629 6 9L5.9998 9.75C5.9998 12.0656 5.12527 14.177 3.68848 15.7719C5.4214 16.4116 7.24843 16.857 9.14314 17.0818M14.8569 17.0817C13.92 17.1928 12.9666 17.25 11.9998 17.25C11.0332 17.25 10.0799 17.1929 9.14314 17.0818M14.8569 17.0817C14.9498 17.3711 15 17.6797 15 18C15 19.6569 13.6569 21 12 21C10.3431 21 9 19.6569 9 18C9 17.6797 9.05019 17.3712 9.14314 17.0818",
+                    d: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
+                },
+            },
+            Shape::Bluetooth => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Bold => rsx! {
+                path {
+                    d: "M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z",
                 },
             },
             Shape::BoltSlash => rsx! {
@@ -660,7 +982,12 @@ impl crate::IconShape for Shape {
             },
             Shape::BookOpen => rsx! {
                 path {
-                    d: "M12 6.04168C10.4077 4.61656 8.30506 3.75 6 3.75C4.94809 3.75 3.93834 3.93046 3 4.26212V18.5121C3.93834 18.1805 4.94809 18 6 18C8.30506 18 10.4077 18.8666 12 20.2917M12 6.04168C13.5923 4.61656 15.6949 3.75 18 3.75C19.0519 3.75 20.0617 3.93046 21 4.26212V18.5121C20.0617 18.1805 19.0519 18 18 18C15.6949 18 13.5923 18.8666 12 20.2917M12 6.04168V20.2917",
+                    d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
+                },
+            },
+            Shape::Book => rsx! {
+                path {
+                    d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
                 },
             },
             Shape::BookmarkSlash => rsx! {
@@ -675,12 +1002,17 @@ impl crate::IconShape for Shape {
             },
             Shape::Bookmark => rsx! {
                 path {
-                    d: "M17.5933 3.32241C18.6939 3.45014 19.5 4.399 19.5 5.50699V21L12 17.25L4.5 21V5.50699C4.5 4.399 5.30608 3.45014 6.40668 3.32241C8.24156 3.10947 10.108 3 12 3C13.892 3 15.7584 3.10947 17.5933 3.32241Z",
+                    d: "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z",
+                },
+            },
+            Shape::Box => rsx! {
+                path {
+                    d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
                 },
             },
             Shape::Briefcase => rsx! {
                 path {
-                    d: "M20.25 14.1499V18.4C20.25 19.4944 19.4631 20.4359 18.3782 20.58C16.2915 20.857 14.1624 21 12 21C9.83757 21 7.70854 20.857 5.62185 20.58C4.5369 20.4359 3.75 19.4944 3.75 18.4V14.1499M20.25 14.1499C20.7219 13.7476 21 13.1389 21 12.4889V8.70569C21 7.62475 20.2321 6.69082 19.1631 6.53086C18.0377 6.36247 16.8995 6.23315 15.75 6.14432M20.25 14.1499C20.0564 14.315 19.8302 14.4453 19.5771 14.5294C17.1953 15.3212 14.6477 15.75 12 15.75C9.35229 15.75 6.80469 15.3212 4.42289 14.5294C4.16984 14.4452 3.94361 14.3149 3.75 14.1499M3.75 14.1499C3.27808 13.7476 3 13.1389 3 12.4889V8.70569C3 7.62475 3.7679 6.69082 4.83694 6.53086C5.96233 6.36247 7.10049 6.23315 8.25 6.14432M15.75 6.14432V5.25C15.75 4.00736 14.7426 3 13.5 3H10.5C9.25736 3 8.25 4.00736 8.25 5.25V6.14432M15.75 6.14432C14.5126 6.0487 13.262 6 12 6C10.738 6 9.48744 6.0487 8.25 6.14432 M12 12.75H12.0075V12.7575H12V12.75Z",
+                    d: "M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16",
                 },
             },
             Shape::BugAnt => rsx! {
@@ -725,12 +1057,22 @@ impl crate::IconShape for Shape {
             },
             Shape::Calendar => rsx! {
                 path {
-                    d: "M6.75 3V5.25M17.25 3V5.25M3 18.75V7.5C3 6.25736 4.00736 5.25 5.25 5.25H18.75C19.9926 5.25 21 6.25736 21 7.5V18.75M3 18.75C3 19.9926 4.00736 21 5.25 21H18.75C19.9926 21 21 19.9926 21 18.75M3 18.75V11.25C3 10.0074 4.00736 9 5.25 9H18.75C19.9926 9 21 10.0074 21 11.25V18.75",
+                    d: "",
+                },
+            },
+            Shape::CameraOff => rsx! {
+                path {
+                    d: "M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56",
                 },
             },
             Shape::Camera => rsx! {
                 path {
-                    d: "M6.82689 6.1749C6.46581 6.75354 5.86127 7.13398 5.186 7.22994C4.80655 7.28386 4.42853 7.34223 4.05199 7.40497C2.99912 7.58042 2.25 8.50663 2.25 9.57402V18C2.25 19.2426 3.25736 20.25 4.5 20.25H19.5C20.7426 20.25 21.75 19.2426 21.75 18V9.57403C21.75 8.50664 21.0009 7.58043 19.948 7.40498C19.5715 7.34223 19.1934 7.28387 18.814 7.22995C18.1387 7.13398 17.5342 6.75354 17.1731 6.17491L16.3519 4.85889C15.9734 4.25237 15.3294 3.85838 14.6155 3.82005C13.7496 3.77355 12.8775 3.75 12 3.75C11.1225 3.75 10.2504 3.77355 9.3845 3.82005C8.6706 3.85838 8.02658 4.25237 7.64809 4.85889L6.82689 6.1749Z M16.5 12.75C16.5 15.2353 14.4853 17.25 12 17.25C9.51472 17.25 7.5 15.2353 7.5 12.75C7.5 10.2647 9.51472 8.25 12 8.25C14.4853 8.25 16.5 10.2647 16.5 12.75Z M18.75 10.5H18.7575V10.5075H18.75V10.5Z",
+                    d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
+                },
+            },
+            Shape::Cast => rsx! {
+                path {
+                    d: "M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6",
                 },
             },
             Shape::ChartBarSquare => rsx! {
@@ -783,6 +1125,16 @@ impl crate::IconShape for Shape {
                     d: "M12 20.25C16.9706 20.25 21 16.5563 21 12C21 7.44365 16.9706 3.75 12 3.75C7.02944 3.75 3 7.44365 3 12C3 14.1036 3.85891 16.0234 5.2728 17.4806C5.70538 17.9265 6.01357 18.5192 5.85933 19.121C5.68829 19.7883 5.368 20.3959 4.93579 20.906C5.0918 20.9339 5.25 20.9558 5.40967 20.9713C5.60376 20.9903 5.80078 21 6 21C7.28201 21 8.47016 20.5979 9.44517 19.9129C10.2551 20.1323 11.1125 20.25 12 20.25Z",
                 },
             },
+            Shape::ChatPlus => rsx! {
+                path {
+                    d: " M 7.19 8.92 L 16.19 8.92 M 7.19 11.92 L 11.69 11.92 M 15.91 3.85 C 14.51 3.73 13.1 3.67 11.69 3.67 C 9.3 3.67 6.95 3.84 4.65 4.18 C 3.07 4.41 1.94 5.81 1.94 7.41 L 1.94 13.43 L 1.94 13.43 C 1.94 15.03 3.06 16.42 4.65 16.66 C 5.78 16.83 6.92 16.95 8.07 17.04 C 8.42 17.07 8.74 17.25 8.93 17.54 L 11.69 21.67 L 14.45 17.54 C 14.55 17.4 14.67 17.28 14.82 17.19 C 14.97 17.1 15.14 17.05 15.31 17.04 C 16.46 16.95 17.6 16.83 18.73 16.66 C 20.31 16.43 21.44 15.03 21.44 13.43 L 21.44 8.56 M 18.06 2.33 L 18.06 6.33 M 18.06 6.33 L 18.06 10.33 M 18.06 6.33 L 22.06 6.33 M 18.06 6.33 L 14.06 6.33",
+                },
+            },
+            Shape::ChatSlash => rsx! {
+                path {
+                    d: " M 9.11 8.755 L 16.49 8.755 M 7.49 11.755 L 9.11 11.755 M 16.99 16.745 C 17.71 16.675 18.33 16.595 19.04 16.485 C 20.62 16.255 21.75 14.855 21.75 13.255 L 21.75 7.235 C 21.75 5.635 20.63 4.235 19.04 4.005 C 16.71 3.665 14.35 3.495 12 3.495 C 9.61 3.495 7.26 3.665 4.96 4.005 C 4.78 4.035 4.6 4.075 4.43 4.125 M 2.83 5.345 C 2.46 5.885 2.25 6.535 2.25 7.235 L 2.25 13.255 L 2.25 13.255 C 2.25 14.855 3.37 16.245 4.96 16.485 C 6.09 16.655 7.23 16.775 8.38 16.865 C 8.73 16.895 9.05 17.075 9.24 17.365 L 12 21.495 L 14.76 17.365 M 2.74 2.505 L 20.15 19.915",
+                },
+            },
             Shape::CheckBadge => rsx! {
                 path {
                     d: "M9 12.75L11.25 15L15 9.75M21 12C21 13.2683 20.3704 14.3895 19.4067 15.0682C19.6081 16.2294 19.2604 17.4672 18.3637 18.3639C17.467 19.2606 16.2292 19.6083 15.068 19.4069C14.3893 20.3705 13.2682 21 12 21C10.7319 21 9.61072 20.3705 8.93204 19.407C7.77066 19.6086 6.53256 19.261 5.6357 18.3641C4.73886 17.4673 4.39125 16.2292 4.59286 15.0678C3.62941 14.3891 3 13.2681 3 12C3 10.7319 3.62946 9.61077 4.59298 8.93208C4.39147 7.77079 4.7391 6.53284 5.63587 5.63607C6.53265 4.73929 7.77063 4.39166 8.93194 4.59319C9.61061 3.62955 10.7318 3 12 3C13.2682 3 14.3893 3.6295 15.068 4.59307C16.2294 4.39145 17.4674 4.73906 18.3643 5.6359C19.2611 6.53274 19.6087 7.77081 19.4071 8.93218C20.3706 9.61087 21 10.7319 21 12Z",
@@ -790,12 +1142,17 @@ impl crate::IconShape for Shape {
             },
             Shape::CheckCircle => rsx! {
                 path {
-                    d: "M9 12.75L11.25 15L15 9.75M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "M22 11.08V12a10 10 0 1 1-5.93-9.14",
+                },
+            },
+            Shape::CheckSquare => rsx! {
+                path {
+                    d: "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",
                 },
             },
             Shape::Check => rsx! {
                 path {
-                    d: "M4.5 12.75L10.5 18.75L19.5 5.25",
+                    d: "",
                 },
             },
             Shape::ChevronDoubleDown => rsx! {
@@ -820,17 +1177,17 @@ impl crate::IconShape for Shape {
             },
             Shape::ChevronDown => rsx! {
                 path {
-                    d: "M19.5 8.25L12 15.75L4.5 8.25",
+                    d: "",
                 },
             },
             Shape::ChevronLeft => rsx! {
                 path {
-                    d: "M15.75 19.5L8.25 12L15.75 4.5",
+                    d: "",
                 },
             },
             Shape::ChevronRight => rsx! {
                 path {
-                    d: "M8.25 4.5L15.75 12L8.25 19.5",
+                    d: "",
                 },
             },
             Shape::ChevronUpDown => rsx! {
@@ -840,7 +1197,32 @@ impl crate::IconShape for Shape {
             },
             Shape::ChevronUp => rsx! {
                 path {
-                    d: "M4.5 15.75L12 8.25L19.5 15.75",
+                    d: "",
+                },
+            },
+            Shape::ChevronsDown => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ChevronsLeft => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ChevronsRight => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ChevronsUp => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Chrome => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::CircleStack => rsx! {
@@ -850,7 +1232,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Circle => rsx! {
                 path {
-                    d: "m11.67,1.92C6.28,1.92,1.92,6.28,1.92,11.67s4.36,9.75,9.75,9.75,9.75-4.36,9.75-9.75S17.05,1.92,11.67,1.92Z",
+                    d: "",
                 },
             },
             Shape::ClipboardDocumentCheck => rsx! {
@@ -870,12 +1252,12 @@ impl crate::IconShape for Shape {
             },
             Shape::Clipboard => rsx! {
                 path {
-                    d: "M15.6657 3.88789C15.3991 2.94272 14.5305 2.25 13.5 2.25H10.5C9.46954 2.25 8.60087 2.94272 8.33426 3.88789M15.6657 3.88789C15.7206 4.0825 15.75 4.28782 15.75 4.5V4.5C15.75 4.91421 15.4142 5.25 15 5.25H9C8.58579 5.25 8.25 4.91421 8.25 4.5V4.5C8.25 4.28782 8.27937 4.0825 8.33426 3.88789M15.6657 3.88789C16.3119 3.93668 16.9545 3.99828 17.5933 4.07241C18.6939 4.20014 19.5 5.149 19.5 6.25699V19.5C19.5 20.7426 18.4926 21.75 17.25 21.75H6.75C5.50736 21.75 4.5 20.7426 4.5 19.5V6.25699C4.5 5.149 5.30608 4.20014 6.40668 4.07241C7.04547 3.99828 7.68808 3.93668 8.33426 3.88789",
+                    d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",
                 },
             },
             Shape::Clock => rsx! {
                 path {
-                    d: "M12 6V12H16.5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::CloudArrowDown => rsx! {
@@ -888,9 +1270,34 @@ impl crate::IconShape for Shape {
                     d: "M12 16.5L12 9.75M12 9.75L15 12.75M12 9.75L9 12.75M6.75 19.5C4.26472 19.5 2.25 17.4853 2.25 15C2.25 13.0071 3.54555 11.3167 5.3404 10.7252C5.28105 10.4092 5.25 10.0832 5.25 9.75C5.25 6.85051 7.60051 4.5 10.5 4.5C12.9312 4.5 14.9765 6.1526 15.5737 8.39575C15.8654 8.30113 16.1767 8.25 16.5 8.25C18.1569 8.25 19.5 9.59315 19.5 11.25C19.5 11.5981 19.4407 11.9324 19.3316 12.2433C20.7453 12.7805 21.75 14.1479 21.75 15.75C21.75 17.8211 20.0711 19.5 18 19.5H6.75Z",
                 },
             },
+            Shape::CloudDrizzle => rsx! {
+                path {
+                    d: "M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25",
+                },
+            },
+            Shape::CloudLightning => rsx! {
+                path {
+                    d: "M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9",
+                },
+            },
+            Shape::CloudOff => rsx! {
+                path {
+                    d: "M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3",
+                },
+            },
+            Shape::CloudRain => rsx! {
+                path {
+                    d: "M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25",
+                },
+            },
+            Shape::CloudSnow => rsx! {
+                path {
+                    d: "M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25",
+                },
+            },
             Shape::Cloud => rsx! {
                 path {
-                    d: "M2.25 15C2.25 17.4853 4.26472 19.5 6.75 19.5H18C20.0711 19.5 21.75 17.8211 21.75 15.75C21.75 14.1479 20.7453 12.7805 19.3316 12.2433C19.4407 11.9324 19.5 11.5981 19.5 11.25C19.5 9.59315 18.1569 8.25 16.5 8.25C16.1767 8.25 15.8654 8.30113 15.5737 8.39575C14.9765 6.1526 12.9312 4.5 10.5 4.5C7.6005 4.5 5.25 6.85051 5.25 9.75C5.25 10.0832 5.28105 10.4092 5.3404 10.7252C3.54555 11.3167 2.25 13.0071 2.25 15Z",
+                    d: "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z",
                 },
             },
             Shape::CodeBracketSquare => rsx! {
@@ -901,6 +1308,26 @@ impl crate::IconShape for Shape {
             Shape::CodeBracket => rsx! {
                 path {
                     d: "M17.25 6.75L22.5 12L17.25 17.25M6.75 17.25L1.5 12L6.75 6.75M14.25 3.75L9.75 20.25",
+                },
+            },
+            Shape::Code => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Codepen => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Codesandbox => rsx! {
+                path {
+                    d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
+                },
+            },
+            Shape::Coffee => rsx! {
+                path {
+                    d: "M18 8h1a4 4 0 0 1 0 8h-1 M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z",
                 },
             },
             Shape::Cog6Tooth => rsx! {
@@ -918,9 +1345,24 @@ impl crate::IconShape for Shape {
                     d: "M4.50073 11.9993C4.50073 16.1414 7.8586 19.4993 12.0007 19.4993C16.1429 19.4993 19.5007 16.1414 19.5007 11.9993M4.50073 11.9993C4.50073 7.85712 7.8586 4.49925 12.0007 4.49925C16.1429 4.49926 19.5007 7.85712 19.5007 11.9993M4.50073 11.9993L3.00073 11.9993M19.5007 11.9993L21.0007 11.9993M19.5007 11.9993L12.0007 11.9993M3.54329 15.0774L4.95283 14.5644M19.0482 9.43411L20.4578 8.92108M5.1062 17.785L6.25527 16.8208M17.7459 7.17897L18.895 6.21479M7.50064 19.7943L8.25064 18.4952M15.7506 5.50484L16.5006 4.2058M10.4378 20.8633L10.6983 19.386M13.303 4.61393L13.5635 3.13672M13.5635 20.8633L13.303 19.3861M10.6983 4.61397L10.4378 3.13676M16.5007 19.7941L15.7507 18.4951M7.50068 4.20565L12.0007 11.9993M18.8952 17.7843L17.7461 16.8202M6.25542 7.17835L5.10635 6.21417M20.458 15.0776L19.0485 14.5646M4.95308 9.43426L3.54354 8.92123M12.0007 11.9993L8.25073 18.4944",
                 },
             },
+            Shape::Columns => rsx! {
+                path {
+                    d: "M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18",
+                },
+            },
             Shape::CommandLine => rsx! {
                 path {
                     d: "M6.75 7.5L9.75 9.75L6.75 12M11.25 12H14.25M5.25 20.25H18.75C19.9926 20.25 21 19.2426 21 18V6C21 4.75736 19.9926 3.75 18.75 3.75H5.25C4.00736 3.75 3 4.75736 3 6V18C3 19.2426 4.00736 20.25 5.25 20.25Z",
+                },
+            },
+            Shape::Command => rsx! {
+                path {
+                    d: "M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z",
+                },
+            },
+            Shape::Compass => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::ComputerDesktop => rsx! {
@@ -928,14 +1370,74 @@ impl crate::IconShape for Shape {
                     d: "M9 17.25V18.2574C9 19.053 8.68393 19.8161 8.12132 20.3787L7.5 21H16.5L15.8787 20.3787C15.3161 19.8161 15 19.053 15 18.2574V17.25M21 5.25V15C21 16.2426 19.9926 17.25 18.75 17.25H5.25C4.00736 17.25 3 16.2426 3 15V5.25M21 5.25C21 4.00736 19.9926 3 18.75 3H5.25C4.00736 3 3 4.00736 3 5.25M21 5.25V12C21 13.2426 19.9926 14.25 18.75 14.25H5.25C4.00736 14.25 3 13.2426 3 12V5.25",
                 },
             },
+            Shape::Copy => rsx! {
+                path {
+                    d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
+                },
+            },
+            Shape::CornerDownLeft => rsx! {
+                path {
+                    d: "M20 4v7a4 4 0 0 1-4 4H4",
+                },
+            },
+            Shape::CornerDownRight => rsx! {
+                path {
+                    d: "M4 4v7a4 4 0 0 0 4 4h12",
+                },
+            },
+            Shape::CornerLeftDown => rsx! {
+                path {
+                    d: "M20 4h-7a4 4 0 0 0-4 4v12",
+                },
+            },
+            Shape::CornerLeftUp => rsx! {
+                path {
+                    d: "M20 20h-7a4 4 0 0 1-4-4V4",
+                },
+            },
+            Shape::CornerRightDown => rsx! {
+                path {
+                    d: "M4 4h7a4 4 0 0 1 4 4v12",
+                },
+            },
+            Shape::CornerRightUp => rsx! {
+                path {
+                    d: "M4 20h7a4 4 0 0 0 4-4V4",
+                },
+            },
+            Shape::CornerUpLeft => rsx! {
+                path {
+                    d: "M20 20v-7a4 4 0 0 0-4-4H4",
+                },
+            },
+            Shape::CornerUpRight => rsx! {
+                path {
+                    d: "M4 20v-7a4 4 0 0 1 4-4h12",
+                },
+            },
             Shape::CpuChip => rsx! {
                 path {
                     d: "M8.25 3V4.5M4.5 8.25H3M21 8.25H19.5M4.5 12H3M21 12H19.5M4.5 15.75H3M21 15.75H19.5M8.25 19.5V21M12 3V4.5M12 19.5V21M15.75 3V4.5M15.75 19.5V21M6.75 19.5H17.25C18.4926 19.5 19.5 18.4926 19.5 17.25V6.75C19.5 5.50736 18.4926 4.5 17.25 4.5H6.75C5.50736 4.5 4.5 5.50736 4.5 6.75V17.25C4.5 18.4926 5.50736 19.5 6.75 19.5ZM7.5 7.5H16.5V16.5H7.5V7.5Z",
                 },
             },
+            Shape::Cpu => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::CreditCard => rsx! {
                 path {
-                    d: "M2.25 8.25H21.75M2.25 9H21.75M5.25 14.25H11.25M5.25 16.5H8.25M4.5 19.5H19.5C20.7426 19.5 21.75 18.4926 21.75 17.25V6.75C21.75 5.50736 20.7426 4.5 19.5 4.5H4.5C3.25736 4.5 2.25 5.50736 2.25 6.75V17.25C2.25 18.4926 3.25736 19.5 4.5 19.5Z",
+                    d: "",
+                },
+            },
+            Shape::Crop => rsx! {
+                path {
+                    d: "M6.13 1L6 16a2 2 0 0 0 2 2h15 M1 6.13L16 6a2 2 0 0 1 2 2v15",
+                },
+            },
+            Shape::Crosshair => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::CubeTransparent => rsx! {
@@ -988,6 +1490,16 @@ impl crate::IconShape for Shape {
                     d: "M15.0423 21.6718L13.6835 16.6007M13.6835 16.6007L11.1741 18.826L11.7425 9.35623L16.9697 17.2731L13.6835 16.6007ZM6.16637 16.3336C2.94454 13.1118 2.94454 7.88819 6.16637 4.66637C9.38819 1.44454 14.6118 1.44454 17.8336 4.66637C19.4445 6.27724 20.25 8.38854 20.25 10.4999M8.28769 14.2123C6.23744 12.1621 6.23744 8.83794 8.28769 6.78769C10.3379 4.73744 13.6621 4.73744 15.7123 6.78769C16.7374 7.8128 17.25 9.15637 17.25 10.4999",
                 },
             },
+            Shape::Database => rsx! {
+                path {
+                    d: "M21 12c0 1.66-4 3-9 3s-9-1.34-9-3 M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5",
+                },
+            },
+            Shape::Delete => rsx! {
+                path {
+                    d: "M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z",
+                },
+            },
             Shape::DevicePhoneMobile => rsx! {
                 path {
                     d: "M10.5 1.5H8.25C7.00736 1.5 6 2.50736 6 3.75V20.25C6 21.4926 7.00736 22.5 8.25 22.5H15.75C16.9926 22.5 18 21.4926 18 20.25V3.75C18 2.50736 16.9926 1.5 15.75 1.5H13.5M10.5 1.5V3H13.5V1.5M10.5 1.5H13.5M10.5 20.25H13.5",
@@ -996,6 +1508,26 @@ impl crate::IconShape for Shape {
             Shape::DeviceTablet => rsx! {
                 path {
                     d: "M10.5 19.5H13.5M6.75 21.75H17.25C18.4926 21.75 19.5 20.7426 19.5 19.5V4.5C19.5 3.25736 18.4926 2.25 17.25 2.25H6.75C5.50736 2.25 4.5 3.25736 4.5 4.5V19.5C4.5 20.7426 5.50736 21.75 6.75 21.75Z",
+                },
+            },
+            Shape::Disc => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::DivideCircle => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::DivideSquare => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Divide => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::DocumentArrowDown => rsx! {
@@ -1048,6 +1580,46 @@ impl crate::IconShape for Shape {
                     d: "M19.5 14.25V11.625C19.5 9.76104 17.989 8.25 16.125 8.25H14.625C14.0037 8.25 13.5 7.74632 13.5 7.125V5.625C13.5 3.76104 11.989 2.25 10.125 2.25H8.25M10.5 2.25H5.625C5.00368 2.25 4.5 2.75368 4.5 3.375V20.625C4.5 21.2463 5.00368 21.75 5.625 21.75H18.375C18.9963 21.75 19.5 21.2463 19.5 20.625V11.25C19.5 6.27944 15.4706 2.25 10.5 2.25Z",
                 },
             },
+            Shape::DollarSign => rsx! {
+                path {
+                    d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+                },
+            },
+            Shape::DownloadCloud => rsx! {
+                path {
+                    d: "M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29",
+                },
+            },
+            Shape::Download => rsx! {
+                path {
+                    d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+                },
+            },
+            Shape::Dribbble => rsx! {
+                path {
+                    d: "M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32",
+                },
+            },
+            Shape::Droplet => rsx! {
+                path {
+                    d: "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z",
+                },
+            },
+            Shape::Edit2 => rsx! {
+                path {
+                    d: "M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z",
+                },
+            },
+            Shape::Edit3 => rsx! {
+                path {
+                    d: "M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z",
+                },
+            },
+            Shape::Edit => rsx! {
+                path {
+                    d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
+                },
+            },
             Shape::EllipsisHorizontalCircle => rsx! {
                 path {
                     d: "M8.625 12C8.625 12.2071 8.45711 12.375 8.25 12.375C8.04289 12.375 7.875 12.2071 7.875 12C7.875 11.7929 8.04289 11.625 8.25 11.625C8.45711 11.625 8.625 11.7929 8.625 12ZM8.625 12H8.25M12.375 12C12.375 12.2071 12.2071 12.375 12 12.375C11.7929 12.375 11.625 12.2071 11.625 12C11.625 11.7929 11.7929 11.625 12 11.625C12.2071 11.625 12.375 11.7929 12.375 12ZM12.375 12H12M16.125 12C16.125 12.2071 15.9571 12.375 15.75 12.375C15.5429 12.375 15.375 12.2071 15.375 12C15.375 11.7929 15.5429 11.625 15.75 11.625C15.9571 11.625 16.125 11.7929 16.125 12ZM16.125 12H15.75M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
@@ -1083,9 +1655,19 @@ impl crate::IconShape for Shape {
                     d: "M11.9998 9.00006V12.7501M2.69653 16.1257C1.83114 17.6257 2.91371 19.5001 4.64544 19.5001H19.3541C21.0858 19.5001 22.1684 17.6257 21.303 16.1257L13.9487 3.37819C13.0828 1.87736 10.9167 1.87736 10.0509 3.37819L2.69653 16.1257ZM11.9998 15.7501H12.0073V15.7576H11.9998V15.7501Z",
                 },
             },
+            Shape::ExternalLink => rsx! {
+                path {
+                    d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+                },
+            },
             Shape::EyeDropper => rsx! {
                 path {
                     d: "M15 11.25L16.5 12.75L17.25 12V8.75798L19.5264 8.14802C20.019 8.01652 20.4847 7.75778 20.8712 7.37132C22.0428 6.19975 22.0428 4.30025 20.8712 3.12868C19.6996 1.95711 17.8001 1.95711 16.6286 3.12868C16.2421 3.51509 15.9832 3.98069 15.8517 4.47324L15.2416 6.74998H12L11.25 7.49998L12.75 8.99999M15 11.25L6.53033 19.7197C6.19077 20.0592 5.73022 20.25 5.25 20.25C4.76978 20.25 4.30924 20.4408 3.96967 20.7803L3 21.75L2.25 21L3.21967 20.0303C3.55923 19.6908 3.75 19.2302 3.75 18.75C3.75 18.2698 3.94077 17.8092 4.28033 17.4697L12.75 8.99999M15 11.25L12.75 8.99999",
+                },
+            },
+            Shape::EyeOff => rsx! {
+                path {
+                    d: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24",
                 },
             },
             Shape::EyeSlash => rsx! {
@@ -1095,7 +1677,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Eye => rsx! {
                 path {
-                    d: "M2.03556 12.3224C1.96648 12.1151 1.96642 11.8907 2.03538 11.6834C3.42374 7.50972 7.3608 4.5 12.0008 4.5C16.6387 4.5 20.5742 7.50692 21.9643 11.6776C22.0334 11.8849 22.0335 12.1093 21.9645 12.3166C20.5762 16.4903 16.6391 19.5 11.9991 19.5C7.36121 19.5 3.42565 16.4931 2.03556 12.3224Z M15 12C15 13.6569 13.6569 15 12 15C10.3432 15 9.00001 13.6569 9.00001 12C9.00001 10.3431 10.3432 9 12 9C13.6569 9 15 10.3431 15 12Z",
+                    d: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z",
                 },
             },
             Shape::FaceFrown => rsx! {
@@ -1108,9 +1690,54 @@ impl crate::IconShape for Shape {
                     d: "M15.182 15.182C13.4246 16.9393 10.5754 16.9393 8.81802 15.182M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12ZM9.75 9.75C9.75 10.1642 9.58211 10.5 9.375 10.5C9.16789 10.5 9 10.1642 9 9.75C9 9.33579 9.16789 9 9.375 9C9.58211 9 9.75 9.33579 9.75 9.75ZM9.375 9.75H9.3825V9.765H9.375V9.75ZM15 9.75C15 10.1642 14.8321 10.5 14.625 10.5C14.4179 10.5 14.25 10.1642 14.25 9.75C14.25 9.33579 14.4179 9 14.625 9C14.8321 9 15 9.33579 15 9.75ZM14.625 9.75H14.6325V9.765H14.625V9.75Z",
                 },
             },
+            Shape::Facebook => rsx! {
+                path {
+                    d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z",
+                },
+            },
+            Shape::FastForward => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Feather => rsx! {
+                path {
+                    d: "M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z",
+                },
+            },
+            Shape::Figma => rsx! {
+                path {
+                    d: "M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z",
+                },
+            },
+            Shape::FileMinus => rsx! {
+                path {
+                    d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+                },
+            },
+            Shape::FilePlus => rsx! {
+                path {
+                    d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+                },
+            },
+            Shape::FileText => rsx! {
+                path {
+                    d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+                },
+            },
+            Shape::File => rsx! {
+                path {
+                    d: "M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z",
+                },
+            },
             Shape::Film => rsx! {
                 path {
-                    d: "M3.375 19.5H20.625M3.375 19.5C2.75368 19.5 2.25 18.9963 2.25 18.375M3.375 19.5H4.875C5.49632 19.5 6 18.9963 6 18.375M2.25 18.375V5.625M2.25 18.375V16.875C2.25 16.2537 2.75368 15.75 3.375 15.75M21.75 18.375V5.625M21.75 18.375C21.75 18.9963 21.2463 19.5 20.625 19.5M21.75 18.375V16.875C21.75 16.2537 21.2463 15.75 20.625 15.75M20.625 19.5H19.125C18.5037 19.5 18 18.9963 18 18.375M20.625 4.5H3.375M20.625 4.5C21.2463 4.5 21.75 5.00368 21.75 5.625M20.625 4.5H19.125C18.5037 4.5 18 5.00368 18 5.625M21.75 5.625V7.125C21.75 7.74632 21.2463 8.25 20.625 8.25M3.375 4.5C2.75368 4.5 2.25 5.00368 2.25 5.625M3.375 4.5H4.875C5.49632 4.5 6 5.00368 6 5.625M2.25 5.625V7.125C2.25 7.74632 2.75368 8.25 3.375 8.25M3.375 8.25H4.875M3.375 8.25C2.75368 8.25 2.25 8.75368 2.25 9.375V10.875C2.25 11.4963 2.75368 12 3.375 12M4.875 8.25C5.49632 8.25 6 7.74632 6 7.125V5.625M4.875 8.25C5.49632 8.25 6 8.75368 6 9.375V10.875M6 5.625V10.875M6 5.625C6 5.00368 6.50368 4.5 7.125 4.5H16.875C17.4963 4.5 18 5.00368 18 5.625M19.125 8.25H20.625M19.125 8.25C18.5037 8.25 18 7.74632 18 7.125V5.625M19.125 8.25C18.5037 8.25 18 8.75368 18 9.375V10.875M20.625 8.25C21.2463 8.25 21.75 8.75368 21.75 9.375V10.875C21.75 11.4963 21.2463 12 20.625 12M18 5.625V10.875M7.125 12H16.875M7.125 12C6.50368 12 6 11.4963 6 10.875M7.125 12C6.50368 12 6 12.5037 6 13.125M6 10.875C6 11.4963 5.49632 12 4.875 12M18 10.875C18 11.4963 17.4963 12 16.875 12M18 10.875C18 11.4963 18.5037 12 19.125 12M16.875 12C17.4963 12 18 12.5037 18 13.125M6 18.375V13.125M6 18.375C6 18.9963 6.50368 19.5 7.125 19.5H16.875C17.4963 19.5 18 18.9963 18 18.375M6 18.375V16.875C6 16.2537 5.49632 15.75 4.875 15.75M18 18.375V13.125M18 18.375V16.875C18 16.2537 18.5037 15.75 19.125 15.75M18 13.125V14.625C18 15.2463 18.5037 15.75 19.125 15.75M18 13.125C18 12.5037 18.5037 12 19.125 12M6 13.125V14.625C6 15.2463 5.49632 15.75 4.875 15.75M6 13.125C6 12.5037 5.49632 12 4.875 12M3.375 12H4.875M3.375 12C2.75368 12 2.25 12.5037 2.25 13.125V14.625C2.25 15.2463 2.75368 15.75 3.375 15.75M19.125 12H20.625M20.625 12C21.2463 12 21.75 12.5037 21.75 13.125V14.625C21.75 15.2463 21.2463 15.75 20.625 15.75M3.375 15.75H4.875M19.125 15.75H20.625",
+                    d: "",
+                },
+            },
+            Shape::Filter => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::FingerPrint => rsx! {
@@ -1125,7 +1752,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Flag => rsx! {
                 path {
-                    d: "M3 3V4.5M3 21V15M3 15L5.77009 14.3075C7.85435 13.7864 10.0562 14.0281 11.9778 14.9889L12.0856 15.0428C13.9687 15.9844 16.1224 16.2359 18.1718 15.7537L21.2861 15.0209C21.097 13.2899 21 11.5313 21 9.75C21 7.98343 21.0954 6.23914 21.2814 4.52202L18.1718 5.25369C16.1224 5.73591 13.9687 5.48435 12.0856 4.54278L11.9778 4.48892C10.0562 3.52812 7.85435 3.28641 5.77009 3.80748L3 4.5M3 15V4.5",
+                    d: "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z",
                 },
             },
             Shape::FolderArrowDown => rsx! {
@@ -1135,7 +1762,7 @@ impl crate::IconShape for Shape {
             },
             Shape::FolderMinus => rsx! {
                 path {
-                    d: "M15 13.5H9M13.0607 6.31066L10.9393 4.18934C10.658 3.90804 10.2765 3.75 9.87868 3.75H4.5C3.25736 3.75 2.25 4.75736 2.25 6V18C2.25 19.2426 3.25736 20.25 4.5 20.25H19.5C20.7426 20.25 21.75 19.2426 21.75 18V9C21.75 7.75736 20.7426 6.75 19.5 6.75H14.1213C13.7235 6.75 13.342 6.59197 13.0607 6.31066Z",
+                    d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z",
                 },
             },
             Shape::FolderOpen => rsx! {
@@ -1145,17 +1772,27 @@ impl crate::IconShape for Shape {
             },
             Shape::FolderPlus => rsx! {
                 path {
-                    d: "M12 10.5V16.5M15 13.5H9M13.0607 6.31066L10.9393 4.18934C10.658 3.90804 10.2765 3.75 9.87868 3.75H4.5C3.25736 3.75 2.25 4.75736 2.25 6V18C2.25 19.2426 3.25736 20.25 4.5 20.25H19.5C20.7426 20.25 21.75 19.2426 21.75 18V9C21.75 7.75736 20.7426 6.75 19.5 6.75H14.1213C13.7235 6.75 13.342 6.59197 13.0607 6.31066Z",
+                    d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z",
                 },
             },
             Shape::Folder => rsx! {
                 path {
-                    d: "M2.25 12.75V12C2.25 10.7574 3.25736 9.75 4.5 9.75H19.5C20.7426 9.75 21.75 10.7574 21.75 12V12.75M13.0607 6.31066L10.9393 4.18934C10.658 3.90804 10.2765 3.75 9.87868 3.75H4.5C3.25736 3.75 2.25 4.75736 2.25 6V18C2.25 19.2426 3.25736 20.25 4.5 20.25H19.5C20.7426 20.25 21.75 19.2426 21.75 18V9C21.75 7.75736 20.7426 6.75 19.5 6.75H14.1213C13.7235 6.75 13.342 6.59197 13.0607 6.31066Z",
+                    d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z",
                 },
             },
             Shape::Forward => rsx! {
                 path {
                     d: "M3 8.68819C3 7.82439 3.93317 7.28285 4.68316 7.71141L11.7906 11.7728C12.5464 12.2047 12.5464 13.2945 11.7906 13.7264L4.68316 17.7878C3.93317 18.2164 3 17.6748 3 16.811V8.68819Z M12.75 8.68819C12.75 7.82439 13.6832 7.28285 14.4332 7.71141L21.5406 11.7728C22.2964 12.2047 22.2964 13.2945 21.5406 13.7264L14.4332 17.7878C13.6832 18.2164 12.75 17.6748 12.75 16.811V8.68819Z",
+                },
+            },
+            Shape::Framer => rsx! {
+                path {
+                    d: "M5 16V9h14V2H5l14 14h-7m-7 0l7 7v-7m-7 0h7",
+                },
+            },
+            Shape::Frown => rsx! {
+                path {
+                    d: "M16 16s-1.5-2-4-2-4 2-4 2",
                 },
             },
             Shape::Funnel => rsx! {
@@ -1175,7 +1812,37 @@ impl crate::IconShape for Shape {
             },
             Shape::Gift => rsx! {
                 path {
-                    d: "M21 11.25V19.5C21 20.3284 20.3284 21 19.5 21H5.25C4.42157 21 3.75 20.3284 3.75 19.5V11.25M12 4.875C12 3.42525 10.8247 2.25 9.375 2.25C7.92525 2.25 6.75 3.42525 6.75 4.875C6.75 6.32475 7.92525 7.5 9.375 7.5C10.1095 7.5 12 7.5 12 7.5M12 4.875C12 5.59024 12 7.5 12 7.5M12 4.875C12 3.42525 13.1753 2.25 14.625 2.25C16.0747 2.25 17.25 3.42525 17.25 4.875C17.25 6.32475 16.0747 7.5 14.625 7.5C13.8905 7.5 12 7.5 12 7.5M12 7.5V21M3.375 11.25H21.375C21.9963 11.25 22.5 10.7463 22.5 10.125V8.625C22.5 8.00368 21.9963 7.5 21.375 7.5H3.375C2.75368 7.5 2.25 8.00368 2.25 8.625V10.125C2.25 10.7463 2.75368 11.25 3.375 11.25Z",
+                    d: "M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z",
+                },
+            },
+            Shape::GitBranch => rsx! {
+                path {
+                    d: "M18 9a9 9 0 0 1-9 9",
+                },
+            },
+            Shape::GitCommit => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::GitMerge => rsx! {
+                path {
+                    d: "M6 21V9a9 9 0 0 0 9 9",
+                },
+            },
+            Shape::GitPullRequest => rsx! {
+                path {
+                    d: "M13 6h3a2 2 0 0 1 2 2v7",
+                },
+            },
+            Shape::Github => rsx! {
+                path {
+                    d: "M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22",
+                },
+            },
+            Shape::Gitlab => rsx! {
+                path {
+                    d: "M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z",
                 },
             },
             Shape::GlobeAlt => rsx! {
@@ -1198,6 +1865,16 @@ impl crate::IconShape for Shape {
                     d: "M20.8929 13.3929L19.7582 12.2582C19.5872 12.0872 19.4449 11.8897 19.3367 11.6734L18.2567 9.5133C18.1304 9.26078 17.7938 9.20616 17.5942 9.4058C17.3818 9.61824 17.0708 9.69881 16.782 9.61627L15.5091 9.25259C15.0257 9.11447 14.5239 9.40424 14.402 9.892C14.3108 10.2566 14.4587 10.6392 14.7715 10.8476L15.3582 11.2388C15.9489 11.6326 16.0316 12.4684 15.5297 12.9703L15.3295 13.1705C15.1185 13.3815 15 13.6676 15 13.966V14.3768C15 14.7846 14.8892 15.1847 14.6794 15.5344L13.3647 17.7254C12.9834 18.3611 12.2964 18.75 11.5552 18.75C10.9724 18.75 10.5 18.2776 10.5 17.6948V16.5233C10.5 15.6033 9.93986 14.7759 9.08563 14.4343L8.43149 14.1726C7.44975 13.7799 6.8739 12.7566 7.04773 11.7136L7.05477 11.6714C7.10117 11.393 7.19956 11.1257 7.3448 10.8837L7.43421 10.7347C7.92343 9.91928 8.87241 9.49948 9.80483 9.68597L10.9827 9.92153C11.5574 10.0365 12.124 9.69096 12.285 9.12744L12.4935 8.39774C12.6422 7.87721 12.3991 7.32456 11.9149 7.08245L11.25 6.75L11.159 6.84099C10.7371 7.26295 10.1648 7.5 9.56802 7.5H9.38709C9.13924 7.5 8.90095 7.59905 8.7257 7.7743C8.44222 8.05778 8.00814 8.12907 7.64958 7.94979C7.16433 7.70716 6.98833 7.10278 7.26746 6.63757L8.67936 4.2844C8.82024 4.04961 8.91649 3.79207 8.96453 3.52474M20.8929 13.3929C20.9634 12.9389 21 12.4737 21 12C21 7.02944 16.9706 3 12 3C10.9348 3 9.91287 3.18504 8.96453 3.52474M20.8929 13.3929C20.2234 17.702 16.4968 21 12 21C7.02944 21 3 16.9706 3 12C3 8.09461 5.48749 4.77021 8.96453 3.52474",
                 },
             },
+            Shape::Globe => rsx! {
+                path {
+                    d: "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+                },
+            },
+            Shape::Grid => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::HandRaised => rsx! {
                 path {
                     d: "M10.05 4.575C10.05 3.70515 9.34486 3 8.47501 3C7.60516 3 6.90001 3.70515 6.90001 4.575L6.9 7.575M10.05 4.575L10.05 3.075C10.05 2.20515 10.7552 1.5 11.625 1.5C12.4949 1.5 13.2 2.20515 13.2 3.075L13.2 4.575M10.05 4.575L10.125 10.5M13.2 11.25V4.575M13.2 4.575C13.2 3.70515 13.9052 3 14.775 3C15.6449 3 16.35 3.70515 16.35 4.575V15M6.9 7.575C6.9 6.70515 6.19485 6 5.325 6C4.45515 6 3.75 6.70515 3.75 7.575V15.75C3.75 19.4779 6.77208 22.5 10.5 22.5H12.5179C13.9103 22.5 15.2456 21.9469 16.2302 20.9623L17.9623 19.2302C18.9469 18.2456 19.5 16.9103 19.5 15.5179L19.5031 13.494C19.5046 13.3209 19.5701 13.1533 19.7007 13.0227C20.3158 12.4076 20.3158 11.4104 19.7007 10.7953C19.0857 10.1802 18.0884 10.1802 17.4733 10.7953C16.7315 11.5371 16.3578 12.5111 16.3531 13.4815M6.9 7.575V12M13.17 16.318C13.5599 15.9281 14.0035 15.6248 14.477 15.4079C15.0701 15.1362 15.71 15.0003 16.35 15M16.3519 15H16.35",
@@ -1213,14 +1890,39 @@ impl crate::IconShape for Shape {
                     d: "M6.63257 10.5C7.43892 10.5 8.16648 10.0542 8.6641 9.41967C9.43726 8.43384 10.4117 7.6134 11.5255 7.02021C12.2477 6.63563 12.8743 6.06428 13.1781 5.30464C13.3908 4.7731 13.5 4.20587 13.5 3.63338V3C13.5 2.58579 13.8358 2.25 14.25 2.25C15.4926 2.25 16.5 3.25736 16.5 4.5C16.5 5.65163 16.2404 6.74263 15.7766 7.71771C15.511 8.27604 15.8836 9 16.5019 9H19.6277C20.6544 9 21.5733 9.69399 21.682 10.7149C21.7269 11.1371 21.75 11.5658 21.75 12C21.75 14.8476 20.7581 17.4636 19.101 19.5212C18.7134 20.0025 18.1142 20.25 17.4962 20.25H13.4802C12.9966 20.25 12.5161 20.172 12.0572 20.0191L8.94278 18.9809C8.48393 18.828 8.00342 18.75 7.51975 18.75H5.90421M14.25 9H16.5M5.90421 18.75C5.98702 18.9546 6.07713 19.1554 6.17423 19.3522C6.37137 19.7517 6.0962 20.25 5.65067 20.25H4.74289C3.85418 20.25 3.02991 19.732 2.77056 18.882C2.43208 17.7726 2.25 16.5951 2.25 15.375C2.25 13.8225 2.54481 12.3389 3.08149 10.9771C3.38655 10.203 4.16733 9.75 4.99936 9.75H6.05212C6.52404 9.75 6.7973 10.3059 6.5523 10.7093C5.72588 12.0698 5.25 13.6668 5.25 15.375C5.25 16.5685 5.48232 17.7078 5.90421 18.75Z",
                 },
             },
+            Shape::HardDrive => rsx! {
+                path {
+                    d: "M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+                },
+            },
+            Shape::Hash => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Hashtag => rsx! {
                 path {
                     d: "M5.25 8.25H20.25M3.75 15.75H18.75M16.95 2.25L13.05 21.75M10.9503 2.25L7.05029 21.75",
                 },
             },
+            Shape::Headphones => rsx! {
+                path {
+                    d: "M3 18v-6a9 9 0 0 1 18 0v6 M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z",
+                },
+            },
             Shape::Heart => rsx! {
                 path {
-                    d: "M21 8.25C21 5.76472 18.9013 3.75 16.3125 3.75C14.3769 3.75 12.7153 4.87628 12 6.48342C11.2847 4.87628 9.62312 3.75 7.6875 3.75C5.09867 3.75 3 5.76472 3 8.25C3 15.4706 12 20.25 12 20.25C12 20.25 21 15.4706 21 8.25Z",
+                    d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z",
+                },
+            },
+            Shape::HelpCircle => rsx! {
+                path {
+                    d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3",
+                },
+            },
+            Shape::Hexagon => rsx! {
+                path {
+                    d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
                 },
             },
             Shape::HomeModern => rsx! {
@@ -1230,12 +1932,17 @@ impl crate::IconShape for Shape {
             },
             Shape::Home => rsx! {
                 path {
-                    d: "M2.25 11.9998L11.2045 3.04533C11.6438 2.60599 12.3562 2.60599 12.7955 3.04532L21.75 11.9998M4.5 9.74983V19.8748C4.5 20.4961 5.00368 20.9998 5.625 20.9998H9.75V16.1248C9.75 15.5035 10.2537 14.9998 10.875 14.9998H13.125C13.7463 14.9998 14.25 15.5035 14.25 16.1248V20.9998H18.375C18.9963 20.9998 19.5 20.4962 19.5 19.8748V9.74983M8.25 20.9998H16.5",
+                    d: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
                 },
             },
             Shape::Identification => rsx! {
                 path {
                     d: "M15 9H18.75M15 12H18.75M15 15H18.75M4.5 19.5H19.5C20.7426 19.5 21.75 18.4926 21.75 17.25V6.75C21.75 5.50736 20.7426 4.5 19.5 4.5H4.5C3.25736 4.5 2.25 5.50736 2.25 6.75V17.25C2.25 18.4926 3.25736 19.5 4.5 19.5ZM10.5 9.375C10.5 10.4105 9.66053 11.25 8.625 11.25C7.58947 11.25 6.75 10.4105 6.75 9.375C6.75 8.33947 7.58947 7.5 8.625 7.5C9.66053 7.5 10.5 8.33947 10.5 9.375ZM11.7939 15.7114C10.8489 16.2147 9.77021 16.5 8.62484 16.5C7.47948 16.5 6.40074 16.2147 5.45581 15.7114C5.92986 14.4207 7.16983 13.5 8.62484 13.5C10.0799 13.5 11.3198 14.4207 11.7939 15.7114Z",
+                },
+            },
+            Shape::Image => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::InboxArrowDown => rsx! {
@@ -1250,7 +1957,12 @@ impl crate::IconShape for Shape {
             },
             Shape::Inbox => rsx! {
                 path {
-                    d: "M2.25 13.5H6.10942C6.96166 13.5 7.74075 13.9815 8.12188 14.7438L8.37812 15.2562C8.75925 16.0185 9.53834 16.5 10.3906 16.5H13.6094C14.4617 16.5 15.2408 16.0185 15.6219 15.2562L15.8781 14.7438C16.2592 13.9815 17.0383 13.5 17.8906 13.5H21.75M2.25 13.8383V18C2.25 19.2426 3.25736 20.25 4.5 20.25H19.5C20.7426 20.25 21.75 19.2426 21.75 18V13.8383C21.75 13.614 21.7165 13.391 21.6505 13.1766L19.2387 5.33831C18.9482 4.39423 18.076 3.75 17.0882 3.75H6.91179C5.92403 3.75 5.05178 4.39423 4.76129 5.33831L2.3495 13.1766C2.28354 13.391 2.25 13.614 2.25 13.8383Z",
+                    d: "M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+                },
+            },
+            Shape::Info => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::InformationCircle => rsx! {
@@ -1258,14 +1970,39 @@ impl crate::IconShape for Shape {
                     d: "M11.25 11.25L11.2915 11.2293C11.8646 10.9427 12.5099 11.4603 12.3545 12.082L11.6455 14.918C11.4901 15.5397 12.1354 16.0573 12.7085 15.7707L12.75 15.75M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12ZM12 8.25H12.0075V8.2575H12V8.25Z",
                 },
             },
+            Shape::Instagram => rsx! {
+                path {
+                    d: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z",
+                },
+            },
+            Shape::Italic => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Key => rsx! {
                 path {
-                    d: "M15.75 5.25C17.4069 5.25 18.75 6.59315 18.75 8.25M21.75 8.25C21.75 11.5637 19.0637 14.25 15.75 14.25C15.3993 14.25 15.0555 14.2199 14.7213 14.1622C14.1583 14.0649 13.562 14.188 13.158 14.592L10.5 17.25H8.25V19.5H6V21.75H2.25V18.932C2.25 18.3352 2.48705 17.7629 2.90901 17.341L9.408 10.842C9.81202 10.438 9.93512 9.84172 9.83785 9.2787C9.7801 8.94446 9.75 8.60074 9.75 8.25C9.75 4.93629 12.4363 2.25 15.75 2.25C19.0637 2.25 21.75 4.93629 21.75 8.25Z",
+                    d: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
                 },
             },
             Shape::Language => rsx! {
                 path {
                     d: "M10.5 21L15.75 9.75L21 21M12 18H19.5M3 5.62136C4.96557 5.37626 6.96804 5.25 9 5.25M9 5.25C10.1208 5.25 11.2326 5.28841 12.3343 5.364M9 5.25V3M12.3343 5.364C11.1763 10.6578 7.68868 15.0801 3 17.5023M12.3343 5.364C13.2298 5.42545 14.1186 5.51146 15 5.62136M10.4113 14.1162C8.78554 12.4619 7.47704 10.4949 6.58432 8.31366",
+                },
+            },
+            Shape::Layers => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Layout => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::LifeBuoy => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Lifebuoy => rsx! {
@@ -1278,14 +2015,34 @@ impl crate::IconShape for Shape {
                     d: "M12 18V12.75M12 12.75C12.5179 12.75 13.0206 12.6844 13.5 12.561M12 12.75C11.4821 12.75 10.9794 12.6844 10.5 12.561M14.25 20.0394C13.5212 20.1777 12.769 20.25 12 20.25C11.231 20.25 10.4788 20.1777 9.75 20.0394M13.5 22.422C13.007 22.4736 12.5066 22.5 12 22.5C11.4934 22.5 10.993 22.4736 10.5 22.422M14.25 18V17.8083C14.25 16.8254 14.9083 15.985 15.7585 15.4917C17.9955 14.1938 19.5 11.7726 19.5 9C19.5 4.85786 16.1421 1.5 12 1.5C7.85786 1.5 4.5 4.85786 4.5 9C4.5 11.7726 6.00446 14.1938 8.24155 15.4917C9.09173 15.985 9.75 16.8254 9.75 17.8083V18",
                 },
             },
+            Shape::Link2 => rsx! {
+                path {
+                    d: "M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3",
+                },
+            },
             Shape::Link => rsx! {
                 path {
-                    d: "M13.1903 8.68842C13.6393 8.90291 14.0601 9.19611 14.432 9.56802C16.1893 11.3254 16.1893 14.1746 14.432 15.932L9.93198 20.432C8.17462 22.1893 5.32538 22.1893 3.56802 20.432C1.81066 18.6746 1.81066 15.8254 3.56802 14.068L5.32499 12.311M18.675 11.689L20.432 9.93198C22.1893 8.17462 22.1893 5.32538 20.432 3.56802C18.6746 1.81066 15.8254 1.81066 14.068 3.56802L9.56802 8.06802C7.81066 9.82538 7.81066 12.6746 9.56802 14.432C9.93992 14.8039 10.3607 15.0971 10.8097 15.3116",
+                    d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
+                },
+            },
+            Shape::Linkedin => rsx! {
+                path {
+                    d: "M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z",
                 },
             },
             Shape::ListBullet => rsx! {
                 path {
                     d: "M8.25 6.75H20.25M8.25 12H20.25M8.25 17.25H20.25M3.75 6.75H3.7575V6.7575H3.75V6.75ZM4.125 6.75C4.125 6.95711 3.95711 7.125 3.75 7.125C3.54289 7.125 3.375 6.95711 3.375 6.75C3.375 6.54289 3.54289 6.375 3.75 6.375C3.95711 6.375 4.125 6.54289 4.125 6.75ZM3.75 12H3.7575V12.0075H3.75V12ZM4.125 12C4.125 12.2071 3.95711 12.375 3.75 12.375C3.54289 12.375 3.375 12.2071 3.375 12C3.375 11.7929 3.54289 11.625 3.75 11.625C3.95711 11.625 4.125 11.7929 4.125 12ZM3.75 17.25H3.7575V17.2575H3.75V17.25ZM4.125 17.25C4.125 17.4571 3.95711 17.625 3.75 17.625C3.54289 17.625 3.375 17.4571 3.375 17.25C3.375 17.0429 3.54289 16.875 3.75 16.875C3.95711 16.875 4.125 17.0429 4.125 17.25Z",
+                },
+            },
+            Shape::List => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Loader => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::LockClosed => rsx! {
@@ -1296,6 +2053,21 @@ impl crate::IconShape for Shape {
             Shape::LockOpen => rsx! {
                 path {
                     d: "M13.5 10.5V6.75C13.5 4.26472 15.5147 2.25 18 2.25C20.4853 2.25 22.5 4.26472 22.5 6.75V10.5M3.75 21.75H14.25C15.4926 21.75 16.5 20.7426 16.5 19.5V12.75C16.5 11.5074 15.4926 10.5 14.25 10.5H3.75C2.50736 10.5 1.5 11.5074 1.5 12.75V19.5C1.5 20.7426 2.50736 21.75 3.75 21.75Z",
+                },
+            },
+            Shape::Lock => rsx! {
+                path {
+                    d: "M7 11V7a5 5 0 0 1 10 0v4",
+                },
+            },
+            Shape::LogIn => rsx! {
+                path {
+                    d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
+                },
+            },
+            Shape::LogOut => rsx! {
+                path {
+                    d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
                 },
             },
             Shape::MagnifyingGlassCircle => rsx! {
@@ -1318,14 +2090,29 @@ impl crate::IconShape for Shape {
                     d: "M21 21L15.8033 15.8033M15.8033 15.8033C17.1605 14.4461 18 12.5711 18 10.5C18 6.35786 14.6421 3 10.5 3C6.35786 3 3 6.35786 3 10.5C3 14.6421 6.35786 18 10.5 18C12.5711 18 14.4461 17.1605 15.8033 15.8033Z",
                 },
             },
+            Shape::Mail => rsx! {
+                path {
+                    d: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z",
+                },
+            },
             Shape::MapPin => rsx! {
                 path {
-                    d: "M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5Z M19.5 10.5C19.5 17.6421 12 21.75 12 21.75C12 21.75 4.5 17.6421 4.5 10.5C4.5 6.35786 7.85786 3 12 3C16.1421 3 19.5 6.35786 19.5 10.5Z",
+                    d: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z",
                 },
             },
             Shape::Map => rsx! {
                 path {
-                    d: "M9 6.75002V15M15 9.00002V17.25M15.5031 20.7485L20.3781 18.311C20.7592 18.1204 21 17.7309 21 17.3047V4.82031C21 3.98401 20.1199 3.44007 19.3719 3.81408L15.5031 5.74847C15.1864 5.90683 14.8136 5.90683 14.4969 5.74847L9.50312 3.25158C9.1864 3.09322 8.8136 3.09322 8.49688 3.25158L3.62188 5.68908C3.24075 5.87965 3 6.26919 3 6.69531V19.1797C3 20.016 3.8801 20.56 4.62811 20.186L8.49688 18.2516C8.8136 18.0932 9.1864 18.0932 9.50312 18.2516L14.4969 20.7485C14.8136 20.9068 15.1864 20.9068 15.5031 20.7485Z",
+                    d: "",
+                },
+            },
+            Shape::Maximize2 => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Maximize => rsx! {
+                path {
+                    d: "M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3",
                 },
             },
             Shape::Megaphone => rsx! {
@@ -1333,14 +2120,54 @@ impl crate::IconShape for Shape {
                     d: "M10.3404 15.8398C9.65153 15.7803 8.95431 15.75 8.25 15.75H7.5C5.01472 15.75 3 13.7353 3 11.25C3 8.76472 5.01472 6.75 7.5 6.75H8.25C8.95431 6.75 9.65153 6.71966 10.3404 6.66022M10.3404 15.8398C10.5933 16.8015 10.9237 17.7317 11.3246 18.6234C11.5721 19.1738 11.3842 19.8328 10.8616 20.1345L10.2053 20.5134C9.6539 20.8318 8.9456 20.6306 8.67841 20.0527C8.0518 18.6973 7.56541 17.2639 7.23786 15.771M10.3404 15.8398C9.95517 14.3745 9.75 12.8362 9.75 11.25C9.75 9.66379 9.95518 8.1255 10.3404 6.66022M10.3404 15.8398C13.5 16.1124 16.4845 16.9972 19.1747 18.3749M10.3404 6.66022C13.5 6.3876 16.4845 5.50283 19.1747 4.12509M19.1747 4.12509C19.057 3.74595 18.9302 3.37083 18.7944 3M19.1747 4.12509C19.7097 5.84827 20.0557 7.65462 20.1886 9.51991M19.1747 18.3749C19.057 18.7541 18.9302 19.1292 18.7944 19.5M19.1747 18.3749C19.7097 16.6517 20.0557 14.8454 20.1886 12.9801M20.1886 9.51991C20.6844 9.93264 21 10.5545 21 11.25C21 11.9455 20.6844 12.5674 20.1886 12.9801M20.1886 9.51991C20.2293 10.0913 20.25 10.6682 20.25 11.25C20.25 11.8318 20.2293 12.4087 20.1886 12.9801",
                 },
             },
+            Shape::Meh => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Menu => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::MessageCircle => rsx! {
+                path {
+                    d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+                },
+            },
+            Shape::MessageSquare => rsx! {
+                path {
+                    d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+                },
+            },
+            Shape::MicOff => rsx! {
+                path {
+                    d: "M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6 M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23",
+                },
+            },
+            Shape::Mic => rsx! {
+                path {
+                    d: "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z M19 10v2a7 7 0 0 1-14 0v-2",
+                },
+            },
             Shape::Microphone => rsx! {
                 path {
                     d: "M12 18.75C15.3137 18.75 18 16.0637 18 12.75V11.25M12 18.75C8.68629 18.75 6 16.0637 6 12.75V11.25M12 18.75V22.5M8.25 22.5H15.75M12 15.75C10.3431 15.75 9 14.4069 9 12.75V4.5C9 2.84315 10.3431 1.5 12 1.5C13.6569 1.5 15 2.84315 15 4.5V12.75C15 14.4069 13.6569 15.75 12 15.75Z",
                 },
             },
+            Shape::Minimize2 => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Minimize => rsx! {
+                path {
+                    d: "M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3",
+                },
+            },
             Shape::MinusCircle => rsx! {
                 path {
-                    d: "M15 12H9M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::MinusSmall => rsx! {
@@ -1348,19 +2175,64 @@ impl crate::IconShape for Shape {
                     d: "M18 12L6 12",
                 },
             },
+            Shape::MinusSquare => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Minus => rsx! {
                 path {
-                    d: "M19.5 12L4.5 12",
+                    d: "",
+                },
+            },
+            Shape::Monitor => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Moon => rsx! {
                 path {
-                    d: "M21.7519 15.0019C20.597 15.4839 19.3296 15.75 18 15.75C12.6152 15.75 8.25 11.3848 8.25 5.99999C8.25 4.67039 8.51614 3.40296 8.99806 2.24805C5.47566 3.71785 3 7.19481 3 11.25C3 16.6348 7.36522 21 12.75 21C16.8052 21 20.2821 18.5243 21.7519 15.0019Z",
+                    d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z",
+                },
+            },
+            Shape::MoreHorizontal => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::MoreVertical => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::MousePointer => rsx! {
+                path {
+                    d: "M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z M13 13l6 6",
+                },
+            },
+            Shape::Move => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Music => rsx! {
+                path {
+                    d: "M9 18V5l12-2v13",
                 },
             },
             Shape::MusicalNote => rsx! {
                 path {
                     d: "M9 9L19.5 6M19.5 12.5528V16.3028C19.5 17.3074 18.834 18.1903 17.8681 18.4663L16.5481 18.8434C15.3964 19.1724 14.25 18.3077 14.25 17.1099C14.25 16.305 14.7836 15.5975 15.5576 15.3764L17.8681 14.7163C18.834 14.4403 19.5 13.5574 19.5 12.5528ZM19.5 12.5528V2.25L9 5.25V15.5528M9 15.5528V19.3028C9 20.3074 8.33405 21.1903 7.36812 21.4663L6.04814 21.8434C4.89645 22.1724 3.75 21.3077 3.75 20.1099C3.75 19.305 4.2836 18.5975 5.05757 18.3764L7.36812 17.7163C8.33405 17.4403 9 16.5574 9 15.5528Z",
+                },
+            },
+            Shape::Navigation2 => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Navigation => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Newspaper => rsx! {
@@ -1371,6 +2243,16 @@ impl crate::IconShape for Shape {
             Shape::NoSymbol => rsx! {
                 path {
                     d: "M18.364 18.364C21.8787 14.8492 21.8787 9.15076 18.364 5.63604C14.8492 2.12132 9.15076 2.12132 5.63604 5.63604M18.364 18.364C14.8492 21.8787 9.15076 21.8787 5.63604 18.364C2.12132 14.8492 2.12132 9.15076 5.63604 5.63604M18.364 18.364L5.63604 5.63604",
+                },
+            },
+            Shape::Octagon => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Package => rsx! {
+                path {
+                    d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
                 },
             },
             Shape::PaintBrush => rsx! {
@@ -1388,14 +2270,24 @@ impl crate::IconShape for Shape {
                     d: "M18.375 12.739L10.682 20.432C8.92462 22.1893 6.07538 22.1893 4.31802 20.432C2.56066 18.6746 2.56066 15.8254 4.31802 14.068L15.2573 3.12868C16.4289 1.95711 18.3283 1.95711 19.4999 3.12868C20.6715 4.30025 20.6715 6.19975 19.4999 7.37132L8.55158 18.3197M8.56066 18.3107C8.55764 18.3137 8.55462 18.3167 8.55158 18.3197M14.2498 8.37865L6.43934 16.1893C5.85355 16.7751 5.85355 17.7249 6.43934 18.3107C7.02211 18.8934 7.9651 18.8964 8.55158 18.3197",
                 },
             },
+            Shape::Paperclip => rsx! {
+                path {
+                    d: "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48",
+                },
+            },
             Shape::PauseCircle => rsx! {
                 path {
-                    d: "M14.25 9V15M9.75 15V9M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::Pause => rsx! {
                 path {
-                    d: "M15.75 5.25L15.75 18.75M8.25 5.25V18.75",
+                    d: "",
+                },
+            },
+            Shape::PenTool => rsx! {
+                path {
+                    d: "M12 19l7-7 3 3-7 7-3-3z M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z M2 2l7.586 7.586",
                 },
             },
             Shape::PencilSquare => rsx! {
@@ -1408,6 +2300,11 @@ impl crate::IconShape for Shape {
                     d: "M16.8617 4.48667L18.5492 2.79917C19.2814 2.06694 20.4686 2.06694 21.2008 2.79917C21.9331 3.53141 21.9331 4.71859 21.2008 5.45083L6.83218 19.8195C6.30351 20.3481 5.65144 20.7368 4.93489 20.9502L2.25 21.75L3.04978 19.0651C3.26323 18.3486 3.65185 17.6965 4.18052 17.1678L16.8617 4.48667ZM16.8617 4.48667L19.5 7.12499",
                 },
             },
+            Shape::Percent => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::PhoneArrowDownLeft => rsx! {
                 path {
                     d: "M14.25 9.75V5.25M14.25 9.75L18.75 9.75M14.25 9.75L20.25 3.75M17.25 21.75C8.96573 21.75 2.25 15.0343 2.25 6.75V4.5C2.25 3.25736 3.25736 2.25 4.5 2.25H5.87163C6.38785 2.25 6.83783 2.60133 6.96304 3.10215L8.06883 7.52533C8.17861 7.96445 8.01453 8.4266 7.65242 8.69818L6.3588 9.6684C5.98336 9.94998 5.81734 10.437 5.97876 10.8777C7.19015 14.1846 9.81539 16.8098 13.1223 18.0212C13.563 18.1827 14.05 18.0166 14.3316 17.6412L15.3018 16.3476C15.5734 15.9855 16.0355 15.8214 16.4747 15.9312L20.8979 17.037C21.3987 17.1622 21.75 17.6121 21.75 18.1284V19.5C21.75 20.7426 20.7426 21.75 19.5 21.75H17.25Z",
@@ -1418,6 +2315,36 @@ impl crate::IconShape for Shape {
                     d: "M20.25 3.75V8.25M20.25 3.75H15.75M20.25 3.75L14.25 9.75M17.25 21.75C8.96573 21.75 2.25 15.0343 2.25 6.75V4.5C2.25 3.25736 3.25736 2.25 4.5 2.25H5.87163C6.38785 2.25 6.83783 2.60133 6.96304 3.10215L8.06883 7.52533C8.17861 7.96445 8.01453 8.4266 7.65242 8.69818L6.3588 9.6684C5.98336 9.94998 5.81734 10.437 5.97876 10.8777C7.19015 14.1846 9.81539 16.8098 13.1223 18.0212C13.563 18.1827 14.05 18.0166 14.3316 17.6412L15.3018 16.3476C15.5734 15.9855 16.0355 15.8214 16.4747 15.9312L20.8979 17.037C21.3987 17.1622 21.75 17.6121 21.75 18.1284V19.5C21.75 20.7426 20.7426 21.75 19.5 21.75H17.25Z",
                 },
             },
+            Shape::PhoneCall => rsx! {
+                path {
+                    d: "M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                },
+            },
+            Shape::PhoneForwarded => rsx! {
+                path {
+                    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                },
+            },
+            Shape::PhoneIncoming => rsx! {
+                path {
+                    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                },
+            },
+            Shape::PhoneMissed => rsx! {
+                path {
+                    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                },
+            },
+            Shape::PhoneOff => rsx! {
+                path {
+                    d: "M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91",
+                },
+            },
+            Shape::PhoneOutgoing => rsx! {
+                path {
+                    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+                },
+            },
             Shape::PhoneXMark => rsx! {
                 path {
                     d: "M15.75 3.75L18 6M18 6L20.25 8.25M18 6L20.25 3.75M18 6L15.75 8.25M17.25 21.75C8.96573 21.75 2.25 15.0343 2.25 6.75V4.5C2.25 3.25736 3.25736 2.25 4.5 2.25H5.87163C6.38785 2.25 6.83783 2.60133 6.96304 3.10215L8.06883 7.52533C8.17861 7.96445 8.01453 8.4266 7.65242 8.69818L6.3588 9.6684C5.98336 9.94998 5.81734 10.437 5.97876 10.8777C7.19015 14.1846 9.81539 16.8098 13.1223 18.0212C13.563 18.1827 14.05 18.0166 14.3316 17.6412L15.3018 16.3476C15.5734 15.9855 16.0355 15.8214 16.4747 15.9312L20.8979 17.037C21.3987 17.1622 21.75 17.6121 21.75 18.1284V19.5C21.75 20.7426 20.7426 21.75 19.5 21.75H17.25Z",
@@ -1425,7 +2352,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Phone => rsx! {
                 path {
-                    d: "M2.25 6.75C2.25 15.0343 8.96573 21.75 17.25 21.75H19.5C20.7426 21.75 21.75 20.7426 21.75 19.5V18.1284C21.75 17.6121 21.3987 17.1622 20.8979 17.037L16.4747 15.9312C16.0355 15.8214 15.5734 15.9855 15.3018 16.3476L14.3316 17.6412C14.05 18.0166 13.563 18.1827 13.1223 18.0212C9.81539 16.8098 7.19015 14.1846 5.97876 10.8777C5.81734 10.437 5.98336 9.94998 6.3588 9.6684L7.65242 8.69818C8.01453 8.4266 8.17861 7.96445 8.06883 7.52533L6.96304 3.10215C6.83783 2.60133 6.38785 2.25 5.87163 2.25H4.5C3.25736 2.25 2.25 3.25736 2.25 4.5V6.75Z",
+                    d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
                 },
             },
             Shape::Photo => rsx! {
@@ -1433,9 +2360,14 @@ impl crate::IconShape for Shape {
                     d: "M2.25 15.75L7.40901 10.591C8.28769 9.71231 9.71231 9.71231 10.591 10.591L15.75 15.75M14.25 14.25L15.659 12.841C16.5377 11.9623 17.9623 11.9623 18.841 12.841L21.75 15.75M3.75 19.5H20.25C21.0784 19.5 21.75 18.8284 21.75 18V6C21.75 5.17157 21.0784 4.5 20.25 4.5H3.75C2.92157 4.5 2.25 5.17157 2.25 6V18C2.25 18.8284 2.92157 19.5 3.75 19.5ZM14.25 8.25H14.2575V8.2575H14.25V8.25ZM14.625 8.25C14.625 8.45711 14.4571 8.625 14.25 8.625C14.0429 8.625 13.875 8.45711 13.875 8.25C13.875 8.04289 14.0429 7.875 14.25 7.875C14.4571 7.875 14.625 8.04289 14.625 8.25Z",
                 },
             },
+            Shape::PieChart => rsx! {
+                path {
+                    d: "M21.21 15.89A10 10 0 1 1 8 2.83 M22 12A10 10 0 0 0 12 2v10z",
+                },
+            },
             Shape::PlayCircle => rsx! {
                 path {
-                    d: "M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z M15.9099 11.6722C16.1671 11.8151 16.1671 12.1849 15.9099 12.3278L10.3071 15.4405C10.0572 15.5794 9.75 15.3986 9.75 15.1127V8.88732C9.75 8.60139 10.0572 8.42065 10.3071 8.55951L15.9099 11.6722Z",
+                    d: "",
                 },
             },
             Shape::PlayPause => rsx! {
@@ -1445,12 +2377,12 @@ impl crate::IconShape for Shape {
             },
             Shape::Play => rsx! {
                 path {
-                    d: "M5.25 5.65297C5.25 4.79729 6.1674 4.25486 6.91716 4.66723L18.4577 11.0145C19.2349 11.442 19.2349 12.5586 18.4577 12.986L6.91716 19.3334C6.1674 19.7457 5.25 19.2033 5.25 18.3476V5.65297Z",
+                    d: "",
                 },
             },
             Shape::PlusCircle => rsx! {
                 path {
-                    d: "M12 9V15M15 12H9M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::PlusSmall => rsx! {
@@ -1458,14 +2390,24 @@ impl crate::IconShape for Shape {
                     d: "M12 6V18M18 12L6 12",
                 },
             },
+            Shape::PlusSquare => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Plus => rsx! {
                 path {
-                    d: "M12 4.5V19.5M19.5 12L4.5 12",
+                    d: "",
+                },
+            },
+            Shape::Pocket => rsx! {
+                path {
+                    d: "M4 3h16a2 2 0 0 1 2 2v6a10 10 0 0 1-10 10A10 10 0 0 1 2 11V5a2 2 0 0 1 2-2z",
                 },
             },
             Shape::Power => rsx! {
                 path {
-                    d: "M5.63604 5.63604C2.12132 9.15076 2.12132 14.8492 5.63604 18.364C9.15076 21.8787 14.8492 21.8787 18.364 18.364C21.8787 14.8492 21.8787 9.15076 18.364 5.63604M12 3V12",
+                    d: "M18.36 6.64a9 9 0 1 1-12.73 0",
                 },
             },
             Shape::PresentationChartBar => rsx! {
@@ -1480,7 +2422,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Printer => rsx! {
                 path {
-                    d: "M6.72012 13.8287C6.47944 13.8589 6.23939 13.8911 6 13.9253M6.72012 13.8287C8.44957 13.6118 10.2117 13.5 12 13.5C13.7883 13.5 15.5504 13.6118 17.2799 13.8287M6.72012 13.8287L6.34091 18M17.2799 13.8287C17.5206 13.8589 17.7606 13.8911 18 13.9253M17.2799 13.8287L17.6591 18M17.6591 18L17.8885 20.5231C17.9484 21.182 17.4296 21.75 16.7681 21.75H7.23191C6.57038 21.75 6.05164 21.182 6.11153 20.5231L6.34091 18M17.6591 18H18.75C19.9926 18 21 16.9926 21 15.75V9.45569C21 8.37475 20.2321 7.44082 19.1631 7.28086C18.5293 7.18604 17.8916 7.10361 17.25 7.03381M6.34091 18H5.25C4.00736 18 3 16.9926 3 15.75V9.45569C3 8.37475 3.7679 7.44082 4.83694 7.28086C5.47066 7.18604 6.10843 7.10361 6.75 7.03381M17.25 7.03381C15.5258 6.84625 13.7741 6.75 12 6.75C10.2259 6.75 8.47423 6.84625 6.75 7.03381M17.25 7.03381V3.375C17.25 2.75368 16.7463 2.25 16.125 2.25H7.875C7.25368 2.25 6.75 2.75368 6.75 3.375V7.03381M18 10.5H18.0075V10.5075H18V10.5ZM15 10.5H15.0075V10.5075H15V10.5Z",
+                    d: "M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2",
                 },
             },
             Shape::PuzzlePiece => rsx! {
@@ -1505,7 +2447,7 @@ impl crate::IconShape for Shape {
             },
             Shape::Radio => rsx! {
                 path {
-                    d: "M3.75 7.5L20.25 3.375M12 6.75C9.29246 6.75 6.63727 6.97417 4.05199 7.40497C2.99912 7.58042 2.25 8.50663 2.25 9.57402V18.75C2.25 19.9926 3.25736 21 4.5 21H19.5C20.7426 21 21.75 19.9926 21.75 18.75V9.57402C21.75 8.50663 21.0009 7.58042 19.948 7.40497C17.3627 6.97417 14.7075 6.75 12 6.75ZM10.3169 13.1931L10.3116 13.1984L10.3063 13.1931L10.3116 13.1878L10.3169 13.1931ZM10.3118 15.3195L10.3065 15.3142L10.3118 15.3089L10.3171 15.3142L10.3118 15.3195ZM8.1958 15.3144L8.1905 15.3197L8.18519 15.3144L8.1905 15.3091L8.1958 15.3144ZM8.19067 13.1982L8.18537 13.1929L8.19067 13.1876L8.19598 13.1929L8.19067 13.1982ZM9.25488 10.5V10.5075H9.24738V10.5H9.25488ZM12.5039 12.3801L12.4974 12.3839L12.4937 12.3774L12.5002 12.3736L12.5039 12.3801ZM11.1248 17.5063L11.121 17.4999L11.1275 17.4961L11.1313 17.5026L11.1248 17.5063ZM11.1313 11.0048L11.1276 11.0113L11.1211 11.0076L11.1249 11.0011L11.1313 11.0048ZM12.5002 16.1338L12.4937 16.13L12.4975 16.1235L12.504 16.1273L12.5002 16.1338ZM13.0049 14.2573H12.9974V14.2498H13.0049V14.2573ZM9.25488 18V18.0075H9.24738V18H9.25488ZM6.00879 16.1301L6.00229 16.1339L5.99854 16.1274L6.00504 16.1236L6.00879 16.1301ZM7.37476 11.0112L7.37101 11.0047L7.3775 11.001L7.38125 11.0075L7.37476 11.0112ZM7.38135 17.4999L7.3776 17.5064L7.3711 17.5027L7.37485 17.4962L7.38135 17.4999ZM6.00513 12.3838L5.99863 12.38L6.00238 12.3735L6.00888 12.3773L6.00513 12.3838ZM5.50488 14.2573H5.49738V14.2498H5.50488V14.2573ZM17.25 12.75C16.8358 12.75 16.5 12.4142 16.5 12C16.5 11.5858 16.8358 11.25 17.25 11.25C17.6642 11.25 18 11.5858 18 12C18 12.4142 17.6642 12.75 17.25 12.75ZM17.25 17.25C16.8358 17.25 16.5 16.9142 16.5 16.5C16.5 16.0858 16.8358 15.75 17.25 15.75C17.6642 15.75 18 16.0858 18 16.5C18 16.9142 17.6642 17.25 17.25 17.25Z",
+                    d: "M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14",
                 },
             },
             Shape::ReceiptPercent => rsx! {
@@ -1528,14 +2470,54 @@ impl crate::IconShape for Shape {
                     d: "M6 6.87803V6C6 4.75736 7.00736 3.75 8.25 3.75H15.75C16.9926 3.75 18 4.75736 18 6V6.87803M6 6.87803C6.23458 6.79512 6.48702 6.75 6.75 6.75H17.25C17.513 6.75 17.7654 6.79512 18 6.87803M6 6.87803C5.12611 7.18691 4.5 8.02034 4.5 9V9.87803M18 6.87803C18.8739 7.18691 19.5 8.02034 19.5 9V9.87803M19.5 9.87803C19.2654 9.79512 19.013 9.75 18.75 9.75H5.25C4.98702 9.75 4.73458 9.79512 4.5 9.87803M19.5 9.87803C20.3739 10.1869 21 11.0203 21 12V18C21 19.2426 19.9926 20.25 18.75 20.25H5.25C4.00736 20.25 3 19.2426 3 18V12C3 11.0203 3.62611 10.1869 4.5 9.87803",
                 },
             },
+            Shape::RefreshCcw => rsx! {
+                path {
+                    d: "M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15",
+                },
+            },
+            Shape::RefreshCw => rsx! {
+                path {
+                    d: "M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
+                },
+            },
+            Shape::Repeat => rsx! {
+                path {
+                    d: "M3 11V9a4 4 0 0 1 4-4h14 M21 13v2a4 4 0 0 1-4 4H3",
+                },
+            },
+            Shape::ReplayOne => rsx! {
+                path {
+                    d: " M 15 22.74 L 12 19.74 L 15 16.74 M 6.44 5.13 C 4.94 5.63 4.71 7.62 4.64 8.57 C 4.46 11.01 4.46 13.46 4.64 15.89 C 4.71 16.85 5.12 17.75 5.8 18.43 C 6.48 19.11 7.38 19.52 8.34 19.59 C 8.56 19.61 8.78 19.62 9 19.64 M 12 19.73 C 13.23 19.73 14.45 19.68 15.66 19.59 C 16.62 19.52 17.52 19.11 18.2 18.43 C 18.88 17.75 19.29 16.85 19.36 15.89 C 19.54 13.45 19.54 11 19.36 8.57 C 19.29 7.61 18.88 6.71 18.2 6.03 C 17.52 5.35 16.62 4.94 15.66 4.87 L 10.62 4.87 M 8.44 7.62 L 8.44 1.26 L 6.42 3.15 M 10.49 7.76 L 6.53 7.76",
+                },
+            },
+            Shape::Rewind => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::RocketLaunch => rsx! {
                 path {
                     d: "M15.5904 14.3696C15.6948 14.8128 15.75 15.275 15.75 15.75C15.75 19.0637 13.0637 21.75 9.75 21.75V16.9503M15.5904 14.3696C19.3244 11.6411 21.75 7.22874 21.75 2.25C16.7715 2.25021 12.3595 4.67586 9.63122 8.40975M15.5904 14.3696C13.8819 15.6181 11.8994 16.514 9.75 16.9503M9.63122 8.40975C9.18777 8.30528 8.72534 8.25 8.25 8.25C4.93629 8.25 2.25 10.9363 2.25 14.25H7.05072M9.63122 8.40975C8.38285 10.1183 7.48701 12.1007 7.05072 14.25M9.75 16.9503C9.64659 16.9713 9.54279 16.9912 9.43862 17.0101C8.53171 16.291 7.70991 15.4692 6.99079 14.5623C7.00969 14.4578 7.02967 14.3537 7.05072 14.25M4.81191 16.6408C3.71213 17.4612 3 18.7724 3 20.25C3 20.4869 3.0183 20.7195 3.05356 20.9464C3.28054 20.9817 3.51313 21 3.75 21C5.22758 21 6.53883 20.2879 7.35925 19.1881M16.5 9C16.5 9.82843 15.8284 10.5 15 10.5C14.1716 10.5 13.5 9.82843 13.5 9C13.5 8.17157 14.1716 7.5 15 7.5C15.8284 7.5 16.5 8.17157 16.5 9Z",
                 },
             },
+            Shape::RotateCcw => rsx! {
+                path {
+                    d: "M3.51 15a9 9 0 1 0 2.13-9.36L1 10",
+                },
+            },
+            Shape::RotateCw => rsx! {
+                path {
+                    d: "M20.49 15a9 9 0 1 1-2.12-9.36L23 10",
+                },
+            },
             Shape::Rss => rsx! {
                 path {
-                    d: "M12.75 19.5V18.75C12.75 14.6079 9.39214 11.25 5.25 11.25H4.5M4.5 4.5H5.25C13.1201 4.5 19.5 10.8799 19.5 18.75V19.5M6 18.75C6 19.1642 5.66421 19.5 5.25 19.5C4.83579 19.5 4.5 19.1642 4.5 18.75C4.5 18.3358 4.83579 18 5.25 18C5.66421 18 6 18.3358 6 18.75Z",
+                    d: "M4 11a9 9 0 0 1 9 9 M4 4a16 16 0 0 1 16 16",
+                },
+            },
+            Shape::Save => rsx! {
+                path {
+                    d: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z",
                 },
             },
             Shape::Scale => rsx! {
@@ -1545,7 +2527,17 @@ impl crate::IconShape for Shape {
             },
             Shape::Scissors => rsx! {
                 path {
-                    d: "M7.84786 8.25007L9.38443 9.13721M7.84786 8.25007C7.01943 9.68494 5.18501 10.1765 3.75013 9.34809C2.31526 8.51966 1.82363 6.68489 2.65206 5.25001C3.48049 3.81513 5.31526 3.32351 6.75013 4.15194C8.18501 4.98036 8.67629 6.81519 7.84786 8.25007ZM9.38443 9.13721C10.043 9.51742 10.4538 10.2153 10.4666 10.9756C10.4725 11.3272 10.5207 11.6706 10.607 12.0001M9.38443 9.13721L11.4608 10.336M7.84786 15.7501L9.38443 14.863M7.84786 15.7501C8.67629 17.185 8.18501 19.0197 6.75013 19.8481C5.31526 20.6765 3.48049 20.1849 2.65206 18.75C1.82363 17.3151 2.31526 15.4804 3.75013 14.6519C5.18501 13.8235 7.01943 14.3153 7.84786 15.7501ZM9.38443 14.863C10.043 14.4828 10.4538 13.7849 10.4666 13.0246C10.4725 12.673 10.5207 12.3296 10.607 12.0001M9.38443 14.863L11.4608 13.6642M11.4608 10.336C11.9882 9.699 12.6991 9.21096 13.5294 8.95702L18.8541 7.32855C19.6606 7.08189 20.5202 7.06684 21.3348 7.28513L22.1373 7.50014L14.3431 12.0001M11.4608 10.336C11.062 10.8178 10.7681 11.3848 10.607 12.0001M14.3431 12.0001L22.1373 16.5001L21.3348 16.7151C20.5202 16.9334 19.6606 16.9183 18.8541 16.6717L13.5294 15.0432C12.6991 14.7892 11.9882 14.3012 11.4608 13.6642M14.3431 12.0001L11.4608 13.6642",
+                    d: "",
+                },
+            },
+            Shape::Search => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Send => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::ServerStack => rsx! {
@@ -1555,12 +2547,22 @@ impl crate::IconShape for Shape {
             },
             Shape::Server => rsx! {
                 path {
-                    d: "M21.75 17.25V17.0223C21.75 16.6753 21.7099 16.3294 21.6304 15.9916L19.3622 6.35199C19.0035 4.82745 17.6431 3.75 16.077 3.75H7.92305C6.35688 3.75 4.99648 4.82745 4.63777 6.35199L2.36962 15.9916C2.29014 16.3294 2.25 16.6753 2.25 17.0223V17.25M21.75 17.25C21.75 18.9069 20.4069 20.25 18.75 20.25H5.25C3.59315 20.25 2.25 18.9069 2.25 17.25M21.75 17.25C21.75 15.5931 20.4069 14.25 18.75 14.25H5.25C3.59315 14.25 2.25 15.5931 2.25 17.25M18.75 17.25H18.7575V17.2575H18.75V17.25ZM15.75 17.25H15.7575V17.2575H15.75V17.25Z",
+                    d: "",
+                },
+            },
+            Shape::Settings => rsx! {
+                path {
+                    d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z",
+                },
+            },
+            Shape::Share2 => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Share => rsx! {
                 path {
-                    d: "M7.21721 10.9071C6.83295 10.2169 6.096 9.75 5.25 9.75C4.00736 9.75 3 10.7574 3 12C3 13.2426 4.00736 14.25 5.25 14.25C6.096 14.25 6.83295 13.7831 7.21721 13.0929M7.21721 10.9071C7.39737 11.2307 7.5 11.6034 7.5 12C7.5 12.3966 7.39737 12.7693 7.21721 13.0929M7.21721 10.9071L16.7828 5.5929M7.21721 13.0929L16.7828 18.4071M16.7828 18.4071C16.6026 18.7307 16.5 19.1034 16.5 19.5C16.5 20.7426 17.5074 21.75 18.75 21.75C19.9926 21.75 21 20.7426 21 19.5C21 18.2574 19.9926 17.25 18.75 17.25C17.904 17.25 17.1671 17.7169 16.7828 18.4071ZM16.7828 5.5929C17.1671 6.28309 17.904 6.75 18.75 6.75C19.9926 6.75 21 5.74264 21 4.5C21 3.25736 19.9926 2.25 18.75 2.25C17.5074 2.25 16.5 3.25736 16.5 4.5C16.5 4.89664 16.6026 5.26931 16.7828 5.5929Z",
+                    d: "M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8",
                 },
             },
             Shape::ShieldCheck => rsx! {
@@ -1573,14 +2575,34 @@ impl crate::IconShape for Shape {
                     d: "M12 9.00009V12.7501M12 2.71436C9.8495 4.75098 6.94563 6.00011 3.75 6.00011C3.69922 6.00011 3.64852 5.99979 3.59789 5.99916C3.2099 7.17927 3 8.4402 3 9.75015C3 15.3417 6.82432 20.04 12 21.3721C17.1757 20.04 21 15.3417 21 9.75015C21 8.4402 20.7901 7.17927 20.4021 5.99916C20.3515 5.99979 20.3008 6.00011 20.25 6.00011C17.0544 6.00011 14.1505 4.75098 12 2.71436ZM12 15.7501H12.0075V15.7576H12V15.7501Z",
                 },
             },
+            Shape::ShieldOff => rsx! {
+                path {
+                    d: "M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18 M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38",
+                },
+            },
+            Shape::Shield => rsx! {
+                path {
+                    d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+                },
+            },
             Shape::ShoppingBag => rsx! {
                 path {
-                    d: "M15.75 10.5V6C15.75 3.92893 14.0711 2.25 12 2.25C9.92893 2.25 8.25 3.92893 8.25 6V10.5M19.606 8.50723L20.8692 20.5072C20.9391 21.1715 20.4183 21.75 19.7504 21.75H4.24963C3.58172 21.75 3.06089 21.1715 3.13081 20.5072L4.39397 8.50723C4.45424 7.93466 4.93706 7.5 5.51279 7.5H18.4872C19.0629 7.5 19.5458 7.93466 19.606 8.50723ZM8.625 10.5C8.625 10.7071 8.4571 10.875 8.25 10.875C8.04289 10.875 7.875 10.7071 7.875 10.5C7.875 10.2929 8.04289 10.125 8.25 10.125C8.4571 10.125 8.625 10.2929 8.625 10.5ZM16.125 10.5C16.125 10.7071 15.9571 10.875 15.75 10.875C15.5429 10.875 15.375 10.7071 15.375 10.5C15.375 10.2929 15.5429 10.125 15.75 10.125C15.9571 10.125 16.125 10.2929 16.125 10.5Z",
+                    d: "M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z M16 10a4 4 0 0 1-8 0",
                 },
             },
             Shape::ShoppingCart => rsx! {
                 path {
-                    d: "M2.25 3H3.63568C4.14537 3 4.59138 3.34265 4.7227 3.83513L5.1059 5.27209M7.5 14.25C5.84315 14.25 4.5 15.5931 4.5 17.25H20.25M7.5 14.25H18.7183C19.8394 11.9494 20.8177 9.56635 21.6417 7.1125C16.88 5.89646 11.8905 5.25 6.75 5.25C6.20021 5.25 5.65214 5.2574 5.1059 5.27209M7.5 14.25L5.1059 5.27209M6 20.25C6 20.6642 5.66421 21 5.25 21C4.83579 21 4.5 20.6642 4.5 20.25C4.5 19.8358 4.83579 19.5 5.25 19.5C5.66421 19.5 6 19.8358 6 20.25ZM18.75 20.25C18.75 20.6642 18.4142 21 18 21C17.5858 21 17.25 20.6642 17.25 20.25C17.25 19.8358 17.5858 19.5 18 19.5C18.4142 19.5 18.75 19.8358 18.75 20.25Z",
+                    d: "M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6",
+                },
+            },
+            Shape::Shuffle => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Sidebar => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::SignalSlash => rsx! {
@@ -1591,6 +2613,41 @@ impl crate::IconShape for Shape {
             Shape::Signal => rsx! {
                 path {
                     d: "M9.34835 14.6514C7.88388 13.1869 7.88388 10.8126 9.34835 9.34811M14.6517 9.34811C16.1161 10.8126 16.1161 13.1869 14.6517 14.6514M7.22703 16.7727C4.59099 14.1367 4.59099 9.86283 7.22703 7.22679M16.773 7.22679C19.409 9.86283 19.409 14.1367 16.773 16.7727M5.10571 18.8941C1.2981 15.0864 1.2981 8.91308 5.10571 5.10547M18.8943 5.10547C22.7019 8.91308 22.7019 15.0864 18.8943 18.8941M12 11.9998H12.0075V12.0073H12V11.9998ZM12.375 11.9998C12.375 12.2069 12.2071 12.3748 12 12.3748C11.7929 12.3748 11.625 12.2069 11.625 11.9998C11.625 11.7927 11.7929 11.6248 12 11.6248C12.2071 11.6248 12.375 11.7927 12.375 11.9998Z",
+                },
+            },
+            Shape::SkipBack => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::SkipForward => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Slack => rsx! {
+                path {
+                    d: "M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z",
+                },
+            },
+            Shape::Slash => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Sliders => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Smartphone => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Smile => rsx! {
+                path {
+                    d: "M8 14s1.5 2 4 2 4-2 4-2",
                 },
             },
             Shape::Sparkles => rsx! {
@@ -1608,6 +2665,11 @@ impl crate::IconShape for Shape {
                     d: "M17.25 9.75041L19.5 12.0004M19.5 12.0004L21.75 14.2504M19.5 12.0004L21.75 9.75041M19.5 12.0004L17.25 14.2504M6.75 8.25041L11.4697 3.53074C11.9421 3.05827 12.75 3.3929 12.75 4.06107V19.9398C12.75 20.6079 11.9421 20.9426 11.4697 20.4701L6.75 15.7504H4.50905C3.62971 15.7504 2.8059 15.2439 2.57237 14.3962C2.36224 13.6334 2.25 12.83 2.25 12.0004C2.25 11.1708 2.36224 10.3675 2.57237 9.60465C2.8059 8.75689 3.62971 8.25041 4.50905 8.25041H6.75Z",
                 },
             },
+            Shape::Speaker => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Square2Stack => rsx! {
                 path {
                     d: "M16.5 8.25V6C16.5 4.75736 15.4926 3.75 14.25 3.75H6C4.75736 3.75 3.75 4.75736 3.75 6V14.25C3.75 15.4926 4.75736 16.5 6 16.5H8.25M16.5 8.25H18C19.2426 8.25 20.25 9.25736 20.25 10.5V18C20.25 19.2426 19.2426 20.25 18 20.25H10.5C9.25736 20.25 8.25 19.2426 8.25 18V16.5M16.5 8.25H10.5C9.25736 8.25 8.25 9.25736 8.25 10.5V16.5",
@@ -1616,6 +2678,11 @@ impl crate::IconShape for Shape {
             Shape::Square3Stack3d => rsx! {
                 path {
                     d: "M6.42857 9.75L2.25 12L6.42857 14.25M6.42857 9.75L12 12.75L17.5714 9.75M6.42857 9.75L2.25 7.5L12 2.25L21.75 7.5L17.5714 9.75M17.5714 9.75L21.75 12L17.5714 14.25M17.5714 14.25L21.75 16.5L12 21.75L2.25 16.5L6.42857 14.25M17.5714 14.25L12 17.25L6.42857 14.25",
+                },
+            },
+            Shape::Square => rsx! {
+                path {
+                    d: "",
                 },
             },
             Shape::Squares2x2 => rsx! {
@@ -1630,12 +2697,12 @@ impl crate::IconShape for Shape {
             },
             Shape::Star => rsx! {
                 path {
-                    d: "M11.4806 3.49883C11.6728 3.03685 12.3272 3.03685 12.5193 3.49883L14.6453 8.61028C14.7263 8.80504 14.9095 8.93811 15.1197 8.95497L20.638 9.39736C21.1367 9.43735 21.339 10.0598 20.959 10.3853L16.7546 13.9867C16.5945 14.1239 16.5245 14.3392 16.5734 14.5444L17.8579 19.9293C17.974 20.416 17.4446 20.8007 17.0176 20.5398L12.2932 17.6542C12.1132 17.5443 11.8868 17.5443 11.7068 17.6542L6.98238 20.5398C6.55539 20.8007 6.02594 20.416 6.14203 19.9293L7.42652 14.5444C7.47546 14.3392 7.4055 14.1239 7.24531 13.9867L3.04099 10.3853C2.661 10.0598 2.86323 9.43735 3.36197 9.39736L8.88022 8.95497C9.09048 8.93811 9.27363 8.80504 9.35464 8.61028L11.4806 3.49883Z",
+                    d: "",
                 },
             },
             Shape::StopCircle => rsx! {
                 path {
-                    d: "M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z M9 9.5625C9 9.25184 9.25184 9 9.5625 9H14.4375C14.7482 9 15 9.25184 15 9.5625V14.4375C15 14.7482 14.7482 15 14.4375 15H9.5625C9.25184 15 9 14.7482 9 14.4375V9.5625Z",
+                    d: "",
                 },
             },
             Shape::Stop => rsx! {
@@ -1645,7 +2712,17 @@ impl crate::IconShape for Shape {
             },
             Shape::Sun => rsx! {
                 path {
-                    d: "M12 3V5.25M18.364 5.63604L16.773 7.22703M21 12H18.75M18.364 18.364L16.773 16.773M12 18.75V21M7.22703 16.773L5.63604 18.364M5.25 12H3M7.22703 7.22703L5.63604 5.63604M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z",
+                    d: "",
+                },
+            },
+            Shape::Sunrise => rsx! {
+                path {
+                    d: "M17 18a5 5 0 0 0-10 0",
+                },
+            },
+            Shape::Sunset => rsx! {
+                path {
+                    d: "M17 18a5 5 0 0 0-10 0",
                 },
             },
             Shape::Swatch => rsx! {
@@ -1658,9 +2735,44 @@ impl crate::IconShape for Shape {
                     d: "M3.375 19.5H20.625M3.375 19.5C2.75368 19.5 2.25 18.9963 2.25 18.375M3.375 19.5H10.875C11.4963 19.5 12 18.9963 12 18.375M2.25 18.375V5.625M2.25 18.375V16.875C2.25 16.2537 2.75368 15.75 3.375 15.75M21.75 18.375V5.625M21.75 18.375C21.75 18.9963 21.2463 19.5 20.625 19.5M21.75 18.375V16.875C21.75 16.2537 21.2463 15.75 20.625 15.75M20.625 19.5H13.125C12.5037 19.5 12 18.9963 12 18.375M21.75 5.625C21.75 5.00368 21.2463 4.5 20.625 4.5H3.375C2.75368 4.5 2.25 5.00368 2.25 5.625M21.75 5.625V7.125C21.75 7.74632 21.2463 8.25 20.625 8.25M2.25 5.625V7.125C2.25 7.74632 2.75368 8.25 3.375 8.25M3.375 8.25H20.625M3.375 8.25H10.875C11.4963 8.25 12 8.75368 12 9.375M3.375 8.25C2.75368 8.25 2.25 8.75368 2.25 9.375V10.875C2.25 11.4963 2.75368 12 3.375 12M20.625 8.25H13.125C12.5037 8.25 12 8.75368 12 9.375M20.625 8.25C21.2463 8.25 21.75 8.75368 21.75 9.375V10.875C21.75 11.4963 21.2463 12 20.625 12M3.375 12H10.875M3.375 12C2.75368 12 2.25 12.5037 2.25 13.125V14.625C2.25 15.2463 2.75368 15.75 3.375 15.75M12 10.875V9.375M12 10.875C12 11.4963 11.4963 12 10.875 12M12 10.875C12 11.4963 12.5037 12 13.125 12M10.875 12C11.4963 12 12 12.5037 12 13.125M13.125 12H20.625M13.125 12C12.5037 12 12 12.5037 12 13.125M20.625 12C21.2463 12 21.75 12.5037 21.75 13.125V14.625C21.75 15.2463 21.2463 15.75 20.625 15.75M3.375 15.75H10.875M12 14.625V13.125M12 14.625C12 15.2463 11.4963 15.75 10.875 15.75M12 14.625C12 15.2463 12.5037 15.75 13.125 15.75M10.875 15.75C11.4963 15.75 12 16.2537 12 16.875M12 18.375V16.875M12 16.875C12 16.2537 12.5037 15.75 13.125 15.75M13.125 15.75H20.625",
                 },
             },
+            Shape::Table => rsx! {
+                path {
+                    d: "M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18",
+                },
+            },
+            Shape::Tablet => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Tag => rsx! {
                 path {
-                    d: "M9.56802 3H5.25C4.00736 3 3 4.00736 3 5.25V9.56802C3 10.1648 3.23705 10.7371 3.65901 11.159L13.2401 20.7401C13.9388 21.4388 15.0199 21.6117 15.8465 21.0705C17.9271 19.7084 19.7084 17.9271 21.0705 15.8465C21.6117 15.0199 21.4388 13.9388 20.7401 13.2401L11.159 3.65901C10.7371 3.23705 10.1648 3 9.56802 3Z M6 6H6.0075V6.0075H6V6Z",
+                    d: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z",
+                },
+            },
+            Shape::Target => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Terminal => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Thermometer => rsx! {
+                path {
+                    d: "M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z",
+                },
+            },
+            Shape::ThumbsDown => rsx! {
+                path {
+                    d: "M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17",
+                },
+            },
+            Shape::ThumbsUp => rsx! {
+                path {
+                    d: "M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3",
                 },
             },
             Shape::Ticket => rsx! {
@@ -1668,9 +2780,49 @@ impl crate::IconShape for Shape {
                     d: "M16.5 6V6.75M16.5 9.75V10.5M16.5 13.5V14.25M16.5 17.25V18M7.5 12.75H12.75M7.5 15H10.5M3.375 5.25C2.75368 5.25 2.25 5.75368 2.25 6.375V9.40135C3.1467 9.92006 3.75 10.8896 3.75 12C3.75 13.1104 3.1467 14.0799 2.25 14.5987V17.625C2.25 18.2463 2.75368 18.75 3.375 18.75H20.625C21.2463 18.75 21.75 18.2463 21.75 17.625V14.5987C20.8533 14.0799 20.25 13.1104 20.25 12C20.25 10.8896 20.8533 9.92006 21.75 9.40135V6.375C21.75 5.75368 21.2463 5.25 20.625 5.25H3.375Z",
                 },
             },
+            Shape::ToggleLeft => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ToggleRight => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Tool => rsx! {
+                path {
+                    d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
+                },
+            },
+            Shape::Trash2 => rsx! {
+                path {
+                    d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+                },
+            },
             Shape::Trash => rsx! {
                 path {
-                    d: "M14.7404 9L14.3942 18M9.60577 18L9.25962 9M19.2276 5.79057C19.5696 5.84221 19.9104 5.89747 20.25 5.95629M19.2276 5.79057L18.1598 19.6726C18.0696 20.8448 17.0921 21.75 15.9164 21.75H8.08357C6.90786 21.75 5.93037 20.8448 5.8402 19.6726L4.77235 5.79057M19.2276 5.79057C18.0812 5.61744 16.9215 5.48485 15.75 5.39432M3.75 5.95629C4.08957 5.89747 4.43037 5.84221 4.77235 5.79057M4.77235 5.79057C5.91878 5.61744 7.07849 5.48485 8.25 5.39432M15.75 5.39432V4.47819C15.75 3.29882 14.8393 2.31423 13.6606 2.27652C13.1092 2.25889 12.5556 2.25 12 2.25C11.4444 2.25 10.8908 2.25889 10.3394 2.27652C9.16065 2.31423 8.25 3.29882 8.25 4.47819V5.39432M15.75 5.39432C14.5126 5.2987 13.262 5.25 12 5.25C10.738 5.25 9.48744 5.2987 8.25 5.39432",
+                    d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+                },
+            },
+            Shape::Trello => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::TrendingDown => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::TrendingUp => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Triangle => rsx! {
+                path {
+                    d: "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",
                 },
             },
             Shape::Trophy => rsx! {
@@ -1680,17 +2832,67 @@ impl crate::IconShape for Shape {
             },
             Shape::Truck => rsx! {
                 path {
-                    d: "M8.25 18.75C8.25 19.5784 7.57843 20.25 6.75 20.25C5.92157 20.25 5.25 19.5784 5.25 18.75M8.25 18.75C8.25 17.9216 7.57843 17.25 6.75 17.25C5.92157 17.25 5.25 17.9216 5.25 18.75M8.25 18.75H14.25M5.25 18.75H3.375C2.75368 18.75 2.25 18.2463 2.25 17.625V14.2504M19.5 18.75C19.5 19.5784 18.8284 20.25 18 20.25C17.1716 20.25 16.5 19.5784 16.5 18.75M19.5 18.75C19.5 17.9216 18.8284 17.25 18 17.25C17.1716 17.25 16.5 17.9216 16.5 18.75M19.5 18.75L20.625 18.75C21.2463 18.75 21.7537 18.2457 21.7154 17.6256C21.5054 14.218 20.3473 11.0669 18.5016 8.43284C18.1394 7.91592 17.5529 7.60774 16.9227 7.57315H14.25M16.5 18.75H14.25M14.25 7.57315V6.61479C14.25 6.0473 13.8275 5.56721 13.263 5.50863C11.6153 5.33764 9.94291 5.25 8.25 5.25C6.55709 5.25 4.88466 5.33764 3.23698 5.50863C2.67252 5.56721 2.25 6.0473 2.25 6.61479V14.2504M14.25 7.57315V14.2504M14.25 18.75V14.2504M14.25 14.2504H2.25",
+                    d: "",
                 },
             },
             Shape::Tv => rsx! {
                 path {
-                    d: "M6 20.25H18M10.5 17.25V20.25M13.5 17.25V20.25M3.375 17.25H20.625C21.2463 17.25 21.75 16.7463 21.75 16.125V4.875C21.75 4.25368 21.2463 3.75 20.625 3.75H3.375C2.75368 3.75 2.25 4.25368 2.25 4.875V16.125C2.25 16.7463 2.75368 17.25 3.375 17.25Z",
+                    d: "",
+                },
+            },
+            Shape::Twitch => rsx! {
+                path {
+                    d: "M21 2H3v16h5v4l4-4h5l4-4V2zM11 11V7M16 11V7",
+                },
+            },
+            Shape::Twitter => rsx! {
+                path {
+                    d: "M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z",
+                },
+            },
+            Shape::Type => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Umbrella => rsx! {
+                path {
+                    d: "M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7",
+                },
+            },
+            Shape::Underline => rsx! {
+                path {
+                    d: "M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3",
+                },
+            },
+            Shape::Unlock => rsx! {
+                path {
+                    d: "M7 11V7a5 5 0 0 1 9.9-1",
+                },
+            },
+            Shape::UploadCloud => rsx! {
+                path {
+                    d: "M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3",
+                },
+            },
+            Shape::Upload => rsx! {
+                path {
+                    d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
                 },
             },
             Shape::UserBlock => rsx! {
                 path {
                     d: "M 15.295 6.05 C 15.295 6.48 15.205 6.91 15.045 7.31 C 14.875 7.71 14.635 8.07 14.335 8.38 C 14.025 8.69 13.665 8.93 13.265 9.09 C 12.865 9.26 12.435 9.34 12.005 9.34 C 11.575 9.34 11.145 9.25 10.745 9.09 C 10.345 8.92 9.985 8.68 9.675 8.38 C 9.365 8.07 9.125 7.71 8.965 7.31 C 8.795 6.91 8.715 6.48 8.715 6.05 C 8.715 5.18 9.065 4.34 9.685 3.72 C 10.305 3.1 11.145 2.75 12.015 2.75 C 12.885 2.75 13.725 3.1 14.345 3.72 C 14.965 4.34 15.315 5.18 15.315 6.05 L 15.315 6.05 L 15.295 6.05 Z  M 16.575 19.44 C 15.125 20.03 13.575 20.34 12.005 20.34 C 9.725 20.34 7.595 19.71 5.775 18.62 L 5.775 18.62 C 5.775 18.62 5.775 18.51 5.775 18.51 C 5.775 16.86 6.435 15.27 7.595 14.11 C 8.225 13.48 8.975 13 9.785 12.69 M 12.395 12.3 C 13.905 12.4 15.325 13.04 16.395 14.11 C 17.465 15.18 18.105 16.6 18.205 18.1 M 19.715 19.72 C 21.765 17.67 22.915 14.9 22.915 12 C 22.915 9.1 21.765 6.33 19.715 4.28 C 17.665 2.23 14.895 1.08 11.995 1.08 C 9.095 1.08 6.325 2.23 4.285 4.28 M 19.725 19.72 C 17.675 21.77 14.905 22.92 12.005 22.92 C 9.105 22.92 6.335 21.77 4.285 19.72 C 2.235 17.67 1.085 14.9 1.085 12 C 1.085 9.1 2.235 6.32 4.285 4.28 M 19.725 19.72 L 4.285 4.28",
+                },
+            },
+            Shape::UserBlocked => rsx! {
+                path {
+                    d: " M 15.295 6.05 C 15.295 6.48 15.205 6.91 15.045 7.31 C 14.875 7.71 14.635 8.07 14.335 8.38 C 14.025 8.69 13.665 8.93 13.265 9.09 C 12.865 9.26 12.435 9.34 12.005 9.34 C 11.575 9.34 11.145 9.25 10.745 9.09 C 10.345 8.92 9.985 8.68 9.675 8.38 C 9.365 8.07 9.125 7.71 8.965 7.31 C 8.795 6.91 8.715 6.48 8.715 6.05 C 8.715 5.18 9.065 4.34 9.685 3.72 C 10.305 3.1 11.145 2.75 12.015 2.75 C 12.885 2.75 13.725 3.1 14.345 3.72 C 14.965 4.34 15.315 5.18 15.315 6.05 L 15.315 6.05 L 15.295 6.05 Z  M 16.575 19.44 C 15.125 20.03 13.575 20.34 12.005 20.34 C 9.725 20.34 7.595 19.71 5.775 18.62 L 5.775 18.62 C 5.775 18.62 5.775 18.51 5.775 18.51 C 5.775 16.86 6.435 15.27 7.595 14.11 C 8.225 13.48 8.975 13 9.785 12.69 M 12.395 12.3 C 13.905 12.4 15.325 13.04 16.395 14.11 C 17.465 15.18 18.105 16.6 18.205 18.1 M 19.715 19.72 C 21.765 17.67 22.915 14.9 22.915 12 C 22.915 9.1 21.765 6.33 19.715 4.28 C 17.665 2.23 14.895 1.08 11.995 1.08 C 9.095 1.08 6.325 2.23 4.285 4.28 M 19.725 19.72 C 17.675 21.77 14.905 22.92 12.005 22.92 C 9.105 22.92 6.335 21.77 4.285 19.72 C 2.235 17.67 1.085 14.9 1.085 12 C 1.085 9.1 2.235 6.32 4.285 4.28 M 19.725 19.72 L 4.285 4.28",
+                },
+            },
+            Shape::UserCheck => rsx! {
+                path {
+                    d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2",
                 },
             },
             Shape::UserCircle => rsx! {
@@ -1705,22 +2907,27 @@ impl crate::IconShape for Shape {
             },
             Shape::UserMinus => rsx! {
                 path {
-                    d: "M22 10.5H16M13.75 6.375C13.75 8.23896 12.239 9.75 10.375 9.75C8.51104 9.75 7 8.23896 7 6.375C7 4.51104 8.51104 3 10.375 3C12.239 3 13.75 4.51104 13.75 6.375ZM4.00092 19.2343C4.00031 19.198 4 19.1615 4 19.125C4 15.6042 6.85418 12.75 10.375 12.75C13.8958 12.75 16.75 15.6042 16.75 19.125V19.1276C16.75 19.1632 16.7497 19.1988 16.7491 19.2343C14.8874 20.3552 12.7065 21 10.375 21C8.04353 21 5.86264 20.3552 4.00092 19.2343Z",
+                    d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2",
                 },
             },
             Shape::UserPlus => rsx! {
                 path {
-                    d: "M19 7.5V10.5M19 10.5V13.5M19 10.5H22M19 10.5H16M13.75 6.375C13.75 8.23896 12.239 9.75 10.375 9.75C8.51104 9.75 7 8.23896 7 6.375C7 4.51104 8.51104 3 10.375 3C12.239 3 13.75 4.51104 13.75 6.375ZM4.00092 19.2343C4.00031 19.198 4 19.1615 4 19.125C4 15.6042 6.85418 12.75 10.375 12.75C13.8958 12.75 16.75 15.6042 16.75 19.125V19.1276C16.75 19.1632 16.7497 19.1988 16.7491 19.2343C14.8874 20.3552 12.7065 21 10.375 21C8.04353 21 5.86264 20.3552 4.00092 19.2343Z",
+                    d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2",
+                },
+            },
+            Shape::UserX => rsx! {
+                path {
+                    d: "M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2",
                 },
             },
             Shape::User => rsx! {
                 path {
-                    d: "M15.75 6C15.75 8.07107 14.071 9.75 12 9.75C9.9289 9.75 8.24996 8.07107 8.24996 6C8.24996 3.92893 9.9289 2.25 12 2.25C14.071 2.25 15.75 3.92893 15.75 6Z M4.5011 20.1182C4.5714 16.0369 7.90184 12.75 12 12.75C16.0982 12.75 19.4287 16.0371 19.4988 20.1185C17.216 21.166 14.6764 21.75 12.0003 21.75C9.32396 21.75 6.78406 21.1659 4.5011 20.1182Z",
+                    d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2",
                 },
             },
             Shape::Users => rsx! {
                 path {
-                    d: "M15 19.1276C15.8329 19.37 16.7138 19.5 17.625 19.5C19.1037 19.5 20.5025 19.1576 21.7464 18.5478C21.7488 18.4905 21.75 18.4329 21.75 18.375C21.75 16.0968 19.9031 14.25 17.625 14.25C16.2069 14.25 14.956 14.9655 14.2136 16.0552M15 19.1276V19.125C15 18.0121 14.7148 16.9658 14.2136 16.0552M15 19.1276C15 19.1632 14.9997 19.1988 14.9991 19.2343C13.1374 20.3552 10.9565 21 8.625 21C6.29353 21 4.11264 20.3552 2.25092 19.2343C2.25031 19.198 2.25 19.1615 2.25 19.125C2.25 15.6042 5.10418 12.75 8.625 12.75C11.0329 12.75 13.129 14.085 14.2136 16.0552M12 6.375C12 8.23896 10.489 9.75 8.625 9.75C6.76104 9.75 5.25 8.23896 5.25 6.375C5.25 4.51104 6.76104 3 8.625 3C10.489 3 12 4.51104 12 6.375ZM20.25 8.625C20.25 10.0747 19.0747 11.25 17.625 11.25C16.1753 11.25 15 10.0747 15 8.625C15 7.17525 16.1753 6 17.625 6C19.0747 6 20.25 7.17525 20.25 8.625Z",
+                    d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
                 },
             },
             Shape::Variable => rsx! {
@@ -1738,6 +2945,16 @@ impl crate::IconShape for Shape {
                     d: "M15.75 10.5L20.4697 5.78033C20.9421 5.30786 21.75 5.64248 21.75 6.31066V17.6893C21.75 18.3575 20.9421 18.6921 20.4697 18.2197L15.75 13.5M4.5 18.75H13.5C14.7426 18.75 15.75 17.7426 15.75 16.5V7.5C15.75 6.25736 14.7426 5.25 13.5 5.25H4.5C3.25736 5.25 2.25 6.25736 2.25 7.5V16.5C2.25 17.7426 3.25736 18.75 4.5 18.75Z",
                 },
             },
+            Shape::VideoOff => rsx! {
+                path {
+                    d: "M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10",
+                },
+            },
+            Shape::Video => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::ViewColumns => rsx! {
                 path {
                     d: "M9 4.5V19.5M15 4.5V19.5M4.125 19.5H19.875C20.4963 19.5 21 18.9963 21 18.375V5.625C21 5.00368 20.4963 4.5 19.875 4.5H4.125C3.50368 4.5 3 5.00368 3 5.625V18.375C3 18.9963 3.50368 19.5 4.125 19.5Z",
@@ -1748,14 +2965,59 @@ impl crate::IconShape for Shape {
                     d: "M7.5 3.75H6C4.75736 3.75 3.75 4.75736 3.75 6V7.5M16.5 3.75H18C19.2426 3.75 20.25 4.75736 20.25 6V7.5M20.25 16.5V18C20.25 19.2426 19.2426 20.25 18 20.25H16.5M7.5 20.25H6C4.75736 20.25 3.75 19.2426 3.75 18V16.5M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z",
                 },
             },
+            Shape::Voicemail => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Volume1 => rsx! {
+                path {
+                    d: "M15.54 8.46a5 5 0 0 1 0 7.07",
+                },
+            },
+            Shape::Volume2 => rsx! {
+                path {
+                    d: "M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07",
+                },
+            },
+            Shape::VolumeX => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Volume => rsx! {
+                path {
+                    d: "",
+                },
+            },
             Shape::Wallet => rsx! {
                 path {
                     d: "M21 12C21 10.7574 19.9926 9.75 18.75 9.75H15C15 11.4069 13.6569 12.75 12 12.75C10.3431 12.75 9 11.4069 9 9.75H5.25C4.00736 9.75 3 10.7574 3 12M21 12V18C21 19.2426 19.9926 20.25 18.75 20.25H5.25C4.00736 20.25 3 19.2426 3 18V12M21 12V9M3 12V9M21 9C21 7.75736 19.9926 6.75 18.75 6.75H5.25C4.00736 6.75 3 7.75736 3 9M21 9V6C21 4.75736 19.9926 3.75 18.75 3.75H5.25C4.00736 3.75 3 4.75736 3 6V9",
                 },
             },
+            Shape::Watch => rsx! {
+                path {
+                    d: "M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83",
+                },
+            },
+            Shape::WifiOff => rsx! {
+                path {
+                    d: "M16.72 11.06A10.94 10.94 0 0 1 19 12.55 M5 12.55a10.94 10.94 0 0 1 5.17-2.39 M10.71 5.05A16 16 0 0 1 22.58 9 M1.42 9a15.91 15.91 0 0 1 4.7-2.88 M8.53 16.11a6 6 0 0 1 6.95 0",
+                },
+            },
             Shape::Wifi => rsx! {
                 path {
-                    d: "M8.28767 15.0378C10.3379 12.9875 13.662 12.9875 15.7123 15.0378M5.10569 11.8558C8.9133 8.04815 15.0867 8.04815 18.8943 11.8558M1.92371 8.67373C7.48868 3.10876 16.5113 3.10876 22.0762 8.67373M12.5303 18.2197L12 18.7501L11.4696 18.2197C11.7625 17.9268 12.2374 17.9268 12.5303 18.2197Z",
+                    d: "M5 12.55a11 11 0 0 1 14.08 0 M1.42 9a16 16 0 0 1 21.16 0 M8.53 16.11a6 6 0 0 1 6.95 0",
+                },
+            },
+            Shape::Wind => rsx! {
+                path {
+                    d: "M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2",
+                },
+            },
+            Shape::WindowShare => rsx! {
+                path {
+                    d: " M 14.465 10.28 L 21.775 2.98 M 21.775 2.98 L 18.775 2.98 M 21.775 2.98 L 21.775 5.98 M 20.225 9.02 L 20.225 18.77 C 20.225 19.37 19.985 19.94 19.565 20.36 C 19.145 20.78 18.575 21.02 17.975 21.02 L 4.475 21.02 C 3.875 21.02 3.305 20.78 2.885 20.36 C 2.465 19.94 2.225 19.37 2.225 18.77 L 2.225 9.02 M 20.225 7.76 L 20.225 9.02 M 16.925 4.52 L 4.475 4.52 C 3.875 4.52 3.305 4.76 2.885 5.18 C 2.465 5.6 2.225 6.17 2.225 6.77 L 2.225 9.02 M 18.765 9.02 L 20.225 9.02 M 2.225 9.02 L 12.585 9.02 M 4.475 6.78 L 4.475 6.78 C 4.475 6.78 4.475 6.78 4.475 6.78 L 4.475 6.78 Z  M 6.725 6.78 L 6.725 6.78 C 6.725 6.78 6.725 6.78 6.725 6.78 L 6.725 6.78 Z  M 8.975 6.78 L 8.975 6.78 C 8.975 6.78 8.975 6.78 8.975 6.78 L 8.975 6.78 Z ",
                 },
             },
             Shape::Window => rsx! {
@@ -1775,12 +3037,52 @@ impl crate::IconShape for Shape {
             },
             Shape::XCircle => rsx! {
                 path {
-                    d: "M9.75 9.75L14.25 14.25M14.25 9.75L9.75 14.25M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z",
+                    d: "",
                 },
             },
             Shape::XMark => rsx! {
                 path {
                     d: "M6 18L18 6M6 6L18 18",
+                },
+            },
+            Shape::XOctagon => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::XSquare => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::X => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Youtube => rsx! {
+                path {
+                    d: "M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z",
+                },
+            },
+            Shape::ZapOff => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::Zap => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ZoomIn => rsx! {
+                path {
+                    d: "",
+                },
+            },
+            Shape::ZoomOut => rsx! {
+                path {
+                    d: "",
                 },
             },
         }
