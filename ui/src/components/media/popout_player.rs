@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::{use_window};
 use kit::{
-
     elements::{
         button::Button,
         tooltip::{ArrowPosition, Tooltip},
@@ -9,14 +9,16 @@ use kit::{
     },
     icons::{Icon, IconElement},
 };
-
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[allow(non_snake_case)]
 pub fn PopoutPlayer(cx: Scope) -> Element {
-    //let window = use_window(cx);
-    cx.render(rsx! (
+    let window = use_window(cx);
+
+        cx.render(
+        rsx! (
         div {
+            id: "video-poped-out",
             class: "popout-player",
             div {
                 class: "wrap",
@@ -28,9 +30,10 @@ pub fn PopoutPlayer(cx: Scope) -> Element {
                     },
                 },
                 video {
+                  
                     src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                     autoplay: "true",
-                    "loop": "true",
+                    "loop": "false",
                     muted: "false"
                 },
                 div {
@@ -44,8 +47,8 @@ pub fn PopoutPlayer(cx: Scope) -> Element {
                                 text: String::from("Close")
                             }
                         )),
-                        onpress: move |_| {
-                          
+                        onpress: move |_| {        
+                            window.close();
                         }
                     },
                     Button {

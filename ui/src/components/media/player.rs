@@ -1,7 +1,9 @@
 use std::rc::Weak;
 
 use crate::{
-    components::media::popout_player::PopoutPlayer,
+    components::{
+        media::popout_player::{PopoutPlayer},
+    },
     state::{Action, State},
     SETTINGS_ROUTE,
 };
@@ -35,6 +37,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+
     let window = use_window(cx);
 
     let silenced = state
@@ -86,14 +89,15 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        if state.read().ui.popout_player {
-                            state.write().mutate(Action::ClearPopout);
-                        } else {
-                             let popout = VirtualDom::new_with_props(PopoutPlayer, ());
-                            let window = window.new_window(popout, Default::default());
-                            // for some reason using write() prevents the video from loading but using write_silent() works
-                            state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
-                        }
+                        // if state.read().ui.popout_player {
+                        //     state.write().mutate(Action::ClearPopout);
+                        // } 
+
+                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                        window.new_window(popout, Default::default());
+                        // for some reason using write() prevents the video from loading but using write_silent() works
+                        // state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
+                        
                     }
                 },
                 // don't render MediadPlayer if the video is popped out
