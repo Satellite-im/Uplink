@@ -98,7 +98,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            state.write_silent().mutate(Action::SetPopout(id));
+                            state.write().mutate(Action::SetPopout(id));
                         }
                     }
                 },
@@ -113,7 +113,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     video {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
-                        "loop": "true",
+                        "loop": "false",
                         muted: "{silenced_str}"
                     }
                 ))
