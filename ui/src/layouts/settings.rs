@@ -24,6 +24,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-layout",
+            aria_label: "settings-layout",
             div {
                 class: "full-width-on-mobile",
                 Sidebar {

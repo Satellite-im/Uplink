@@ -18,8 +18,10 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "settings-section",
+            aria_label: "settings-section",
             div {
                 class: "settings-info",
+                aria_label: "settings-info",
                 Label {
                     text: cx.props.section_label.clone(),
                 },
@@ -29,6 +31,7 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
             },
             div {
                 class: "settings-control",
+                aria_label: "settings-control",
                 &cx.props.children
             }
         }

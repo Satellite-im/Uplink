@@ -41,6 +41,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "friends-layout",
+            aria_label: "friends-layout",
             span {
                 class: "hide-on-mobile",
                 ChatSidebar {
@@ -49,12 +50,15 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
             },
             div {
                 class: "friends-body",
+                aria_label: "friends-body",
                 AddFriend {},
                 div {
                     class: "friends-controls",
+                    aria_label: "friends-controls",
                     Button {
                         icon: Icon::Users,
                         text: get_local_text("friends.all"),
+                        aria_label: "all-friends-button".into(),
                         appearance: if route.clone() == FriendRoute::All { Appearance::Primary } else { Appearance::Secondary },
                         onpress: move |_| {
                             route.set(FriendRoute::All);
@@ -64,6 +68,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                         icon: Icon::Clock,
                         appearance: if route.clone() == FriendRoute::Pending { Appearance::Primary } else { Appearance::Secondary },
                         text: get_local_text("friends.pending"),
+                        aria_label: "pending-friends-button".into(),
                         with_badge:  if pending_friends > 0 {
                             pending_friends.to_string()
                         } else {
@@ -77,6 +82,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                         icon: Icon::NoSymbol,
                         appearance: if route.clone() == FriendRoute::Blocked { Appearance::Primary } else { Appearance::Secondary },
                         text: get_local_text("friends.blocked"),
+                        aria_label: "blocked-friends-button".into(),
                         onpress: move |_| {
                             route.set(FriendRoute::Blocked);
                         }

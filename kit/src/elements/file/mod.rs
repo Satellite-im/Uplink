@@ -12,6 +12,8 @@ pub struct Props<'a> {
     #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
+    aria_label: Option<String>,
+    #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
     onrename: Option<EventHandler<'a, String>>,
@@ -25,6 +27,13 @@ pub fn get_text(cx: &Scope<Props>) -> String {
     match &cx.props.text {
         Some(val) => val.to_owned(),
         None => String::from(""),
+    }
+}
+
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    match &cx.props.aria_label {
+        Some(val)   => val.to_owned(),
+        None        => String::from(""),
     }
 }
 
@@ -45,6 +54,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = get_text(&cx);
+    let aria_label = get_aria_label(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = &cx.props.disabled.unwrap_or_default();
@@ -59,6 +69,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("file {}", if *disabled { "disabled" } else { "" })
                 },
+                aria_label: "{aria_label}",
                 div {
                     class: "icon",
                     onclick: move |_| emit_press(&cx),
