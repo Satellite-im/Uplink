@@ -110,9 +110,9 @@ pub struct Call {
 }
 
 impl Call {
-    pub fn new(popout_view: Option<WindowId>) -> Self {
+    pub fn new(popout_window_id: Option<WindowId>) -> Self {
         Self {
-            popout_window_id: popout_view,
+            popout_window_id,
             muted: false,
             silenced: false,
         }
