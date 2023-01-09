@@ -1,6 +1,6 @@
 use chrono::{Utc, Duration};
 use dioxus::prelude::*;
-use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
+use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform}}, icons::Icon};
 use rand::Rng;
 use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
