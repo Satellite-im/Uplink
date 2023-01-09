@@ -50,7 +50,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
         to_owned![router];
         async move {
-            let warp_cmd_tx = WARP_CMD_CH.0.clone();
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();

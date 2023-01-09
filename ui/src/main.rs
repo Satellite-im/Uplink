@@ -55,6 +55,16 @@ pub struct StaticArgs {
     pub use_mock: bool,
 }
 
+pub struct WarpCmdChannels {
+    pub tx: WarpCmdTx,
+    pub rx: WarpCmdRx,
+}
+
+pub struct WarpEventChannels {
+    pub tx: WarpEventTx,
+    pub rx: WarpEventRx,
+}
+
 lazy_static! {
     pub static ref STATIC_ARGS: StaticArgs = {
         let args = Args::parse();
@@ -70,16 +80,22 @@ lazy_static! {
     };
 
     // allows the UI to send commands to Warp
-    pub static ref WARP_CMD_CH: (WarpCmdTx, WarpCmdRx) = {
+    pub static ref WARP_CMD_CH: WarpCmdChannels = {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        (tx, Arc::new(Mutex::new(rx)))
+        WarpCmdChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
     };
 
     // allows the UI to receive events to Warp
     // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-    pub static ref WARP_CHANNELS: (WarpEventTx, WarpEventRx) =  {
+    pub static ref WARP_EVENT_CH: WarpEventChannels =  {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        (tx, Arc::new(Mutex::new(rx)))
+        WarpEventChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
     };
 }
 
@@ -203,7 +219,7 @@ fn bootstrap(cx: Scope) -> Element {
 
     // warp_runner must be started from within a tokio reactor
     let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
+    warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
     let mut state = if STATIC_ARGS.use_mock {
         State::mock()
@@ -228,7 +244,6 @@ fn app(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
-    let warp_event_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -253,8 +268,9 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle, warp_event_rx];
+        to_owned![toggle];
         async move {
+            let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
