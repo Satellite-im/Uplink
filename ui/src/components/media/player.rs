@@ -1,13 +1,15 @@
 use std::rc::Weak;
 
 use crate::{
-    components::media::popout_player::PopoutPlayer,
+    components::{
+        media::popout_player::{PopoutPlayer},
+    },
     state::{Action, State},
     SETTINGS_ROUTE,
 };
 
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window};
 use dioxus_router::*;
 
 use kit::{
@@ -35,6 +37,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+
     let window = use_window(cx);
 
     let silenced = state
@@ -86,13 +89,16 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        if state.read().ui.popout_player {
-                            state.write().mutate(Action::ClearPopout);
-                        } else {
-                             let popout = VirtualDom::new_with_props(PopoutPlayer, ());
-                            let window = window.new_window(popout, Default::default());
-                            // for some reason using write() prevents the video from loading but using write_silent() works
-                            state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
+                         if state.read().ui.popout_player {
+                             state.write().mutate(Action::ClearPopout(window.clone()));
+                             return;
+                         } 
+
+                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                        let window = window.new_window(popout, Default::default());
+                        if let Some(wv) = Weak::upgrade(&window) {
+                            let id = wv.window().id();
+                            state.write_silent().mutate(Action::SetPopout(id));
                         }
                     }
                 },
@@ -107,7 +113,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     video {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
-                        "loop": "true",
+                        "loop": "false",
                         muted: "{silenced_str}"
                     }
                 ))
@@ -141,6 +147,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
+                    state.write().mutate(Action::ClearPopout(window.clone()));
                     state.write().mutate(Action::DisableMedia);
                 }
             },

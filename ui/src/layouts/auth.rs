@@ -62,7 +62,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
                         rsp: tx,
                     }))
                     .expect("UnlockLayout failed to send warp command");
-
+                router.replace_route(CHAT_ROUTE, None, None);
                 let res = rx.await.expect("failed to get response from warp_runner");
 
                 //println!("got response from warp");

@@ -506,8 +506,8 @@ impl State {
         self.call_hooks(&action);
 
         match action {
-            Action::ClearPopout => {
-                self.ui.clear_popout();
+            Action::ClearPopout(window) => {
+                self.ui.clear_popout(window);
             }
             Action::SetPopout(webview) => {
                 self.ui.set_popout(webview);
