@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_window;
 use kit::{
     elements::{
         button::Button,
@@ -26,6 +27,7 @@ pub struct Props {
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let call = state.read().ui.current_call.clone();
+    let window = use_window(cx);
 
     let call = match call {
         None => {
@@ -80,6 +82,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
+                    state.write_silent().ui.clear_popout(window);
                     state.write().mutate(Action::DisableMedia);
                 },
             }
