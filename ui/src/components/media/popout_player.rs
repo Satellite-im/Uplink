@@ -11,9 +11,14 @@ use kit::{
 };
 pub const SCRIPT: &str = include_str!("./script.js");
 
+pub struct PopoutPlayerProps {
+    pub popout_player_is_opened: UseRef<bool>,
+}
+
 #[allow(non_snake_case)]
-pub fn PopoutPlayer(cx: Scope) -> Element {
+pub fn PopoutPlayer(cx: Scope<PopoutPlayerProps>) -> Element {
     let window = use_window(cx);
+    let popout_player_is_opened = cx.props.popout_player_is_opened.clone();
 
         cx.render(
         rsx! (
@@ -48,6 +53,7 @@ pub fn PopoutPlayer(cx: Scope) -> Element {
                             }
                         )),
                         onpress: move |_| {
+                            *popout_player_is_opened.write() = false;
                             window.close();
                         }
                     },

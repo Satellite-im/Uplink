@@ -2,7 +2,7 @@ use std::rc::Weak;
 
 use crate::{
     components::{
-        media::popout_player::{PopoutPlayer},
+        media::popout_player::{PopoutPlayer, PopoutPlayerProps},
     },
     state::{Action, State},
     SETTINGS_ROUTE,
@@ -38,6 +38,9 @@ pub struct Props {
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    let popout_player_is_opened = use_ref(cx, || false);
+    state.write_silent().ui.popout_player = *popout_player_is_opened.read();
+
     let window = use_window(cx);
 
     let silenced = state
@@ -49,6 +52,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
         .unwrap_or(false);
 
     let silenced_str = silenced.to_string();
+
 
     cx.render(rsx!(div {
         id: "media-player",
@@ -91,19 +95,24 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     onpress: move |_| {
                          if state.read().ui.popout_player {
                              state.write().mutate(Action::ClearPopout(window.clone()));
+                             *popout_player_is_opened.write_silent() = false;
                              return;
                          } 
 
-                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                        let popout = VirtualDom::new_with_props(PopoutPlayer, 
+                            PopoutPlayerProps {
+                                popout_player_is_opened: popout_player_is_opened.clone(),
+                        });
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            state.write_silent().mutate(Action::SetPopout(id));
+                            *popout_player_is_opened.write_silent() = true;
+                            state.write().mutate(Action::SetPopout(id));
                         }
                     }
                 },
                 // don't render MediadPlayer if the video is popped out
-                state.read().ui.popout_player.then(|| rsx!(
+                (state.read().ui.popout_player).then(|| rsx!(
                     span {
                         class: "popped-out",
                         video {}
