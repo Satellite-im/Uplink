@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use std::fs;
 
-use crate::UPLINK_PATH;
+use crate::STATIC_ARGS;
 
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -79,7 +79,7 @@ impl Configuration {
     }
 
     pub fn load() -> Self {
-        let config_path = UPLINK_PATH.join("Config.json");
+        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
         // Load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -94,7 +94,7 @@ impl Configuration {
     }
 
     pub fn load_or_default() -> Self {
-        let config_path = UPLINK_PATH.join("Config.json");
+        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
 
         // Try to load the config from the specified path
         match fs::read_to_string(config_path) {
@@ -111,7 +111,7 @@ impl Configuration {
 
     fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
-        let config_path = UPLINK_PATH.join("Config.json");
+        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
 
         fs::write(config_path, config_json)?;
         Ok(())

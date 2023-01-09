@@ -51,10 +51,12 @@ pub async fn handle_multipass_cmd(
             passphrase,
             rsp,
         } => {
+            println!("create_identity: unlock tesseract");
             if let Err(e) = tesseract.unlock(passphrase.as_bytes()) {
                 let _ = rsp.send(Err(e));
                 return;
             }
+            println!("create_identity: account.create_identity");
             let r = match account.create_identity(Some(&username), None).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),

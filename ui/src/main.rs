@@ -11,7 +11,6 @@ use fs_extra::dir::*;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
-use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 // use state::{Action, ActionHook, State};
@@ -46,27 +45,43 @@ pub mod testing;
 pub mod utils;
 mod warp_runner;
 
-// allows the UI to receive events to Warp
-// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-pub static WARP_CHANNELS: Lazy<(WarpEventTx, WarpEventRx)> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    (tx, Arc::new(Mutex::new(rx)))
-});
+#[macro_use]
+extern crate lazy_static;
 
-// allows the UI to send commands to Warp
-pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    (tx, Arc::new(Mutex::new(rx)))
-});
+#[derive(Debug)]
+pub struct StaticArgs {
+    pub uplink_path: PathBuf,
+    pub warp_path: PathBuf,
+    pub use_mock: bool,
+}
 
-pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| UPLINK_PATH.join("warp"));
+lazy_static! {
+    pub static ref STATIC_ARGS: StaticArgs = {
+        let args = Args::parse();
+        let uplink_path = match args.path {
+            Some(path) => path,
+            _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
+        };
+        StaticArgs {
+            uplink_path: uplink_path.clone(),
+            warp_path: uplink_path.join("warp"),
+            use_mock: args.mock,
+        }
+    };
 
-pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
-    Some(path) => path,
-    _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
-});
+    // allows the UI to send commands to Warp
+    pub static ref WARP_CMD_CH: (WarpCmdTx, WarpCmdRx) = {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        (tx, Arc::new(Mutex::new(rx)))
+    };
 
-pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
+    // allows the UI to receive events to Warp
+    // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
+    pub static ref WARP_CHANNELS: (WarpEventTx, WarpEventRx) =  {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        (tx, Arc::new(Mutex::new(rx)))
+    };
+}
 
 pub static CHAT_ROUTE: &str = "/chat";
 pub static FRIENDS_ROUTE: &str = "/friends";
@@ -87,7 +102,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = UPLINK_PATH.join("themes");
+    let themes_dest = STATIC_ARGS.uplink_path.join("themes");
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -106,8 +121,9 @@ fn copy_assets() {
 
 fn main() {
     // Initializes the cache dir if needed
-    std::fs::create_dir_all(UPLINK_PATH.clone()).expect("Error creating Uplink directory");
-    std::fs::create_dir_all(WARP_PATH.clone()).expect("Error creating Warp directory");
+    std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
+        .expect("Error creating Uplink directory");
+    std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
     copy_assets();
 
     let mut main_menu = Menu::new();
@@ -187,7 +203,7 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
-    let mut state = if *USE_MOCK {
+    let mut state = if STATIC_ARGS.use_mock {
         State::mock()
     } else {
         State::load().expect("failed to load state")
@@ -225,7 +241,7 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
-                        let flag = *toggle.current();
+                        let flag = *toggle.get();
                         toggle.set(!flag);
                     }
                 }
@@ -242,6 +258,7 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
+                println!("warp_runner got event");
                 if warp_runner::handle_event(inner.clone(), evt).await {
                     let flag = *toggle.current();
                     toggle.set(!flag);
