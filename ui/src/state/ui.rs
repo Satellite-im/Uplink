@@ -41,9 +41,9 @@ impl UI {
             None => None,
         }
     }
-    pub fn clear_popout(&mut self, window: &'_ DesktopContext) {
+    pub fn clear_popout(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_popout_id() {
-            window.close_window(id);
+            desktop_context.close_window(id);
         };
     }
     pub fn set_popout(&mut self, id: WindowId) {

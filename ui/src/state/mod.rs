@@ -506,8 +506,11 @@ impl State {
         self.call_hooks(&action);
 
         match action {
-            Action::SetPopout(window_id) => {
-                self.ui.set_popout(window_id);
+            Action::ClearPopout(window) => {
+                self.ui.clear_popout(window);
+            }
+            Action::SetPopout(webview) => {
+                self.ui.set_popout(webview);
             }
             Action::AddOverlay(window) => {
                 self.ui.overlays.push(window);

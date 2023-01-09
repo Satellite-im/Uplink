@@ -1,6 +1,6 @@
 use std::rc::Weak;
 
-use dioxus_desktop::tao::window::WindowId;
+use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
 use uuid::Uuid;
 use warp::raygun::{Message, Reaction};
@@ -45,6 +45,7 @@ pub enum Action {
     /// use state.ui.clear_popout to close the popout. this function
     /// requires a reference to DesktopContext
     SetPopout(WindowId),
+    ClearPopout(DesktopContext),
 
     // Settings
     /// Sets the selected language.

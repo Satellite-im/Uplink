@@ -9,7 +9,7 @@ use crate::{
 };
 
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window};
 use dioxus_router::*;
 
 use kit::{
@@ -90,7 +90,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     )),
                     onpress: move |_| {
                          if state.read().ui.popout_player {
-                             state.write_silent().ui.clear_popout(window);
+                             state.write().mutate(Action::ClearPopout(window.clone()));
                              return;
                          } 
 
@@ -147,7 +147,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write_silent().ui.clear_popout(window);
+                    state.write().mutate(Action::ClearPopout(window.clone()));
                     state.write().mutate(Action::DisableMedia);
                 }
             },
