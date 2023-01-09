@@ -1,7 +1,7 @@
 use heck::ToUpperCamelCase;
 use itertools::Itertools;
 use scraper::{Html, Selector};
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, path::PathBuf};
 use walkdir::WalkDir;
 
 #[derive(Debug)]
@@ -25,10 +25,7 @@ fn main() {
 
         let icons = make_icons(&src_dir);
 
-        let mut to = PathBuf::from("src");
-        to.push(&format!("{}.rs", style));
-
-        write_icons_file(&icons, &to);
+        write_icons_file(&icons, &format!("{}.rs", style));
     }
 }
 
@@ -115,7 +112,9 @@ Shape::{NAME} => rsx! {
     },
 },"#;
 
-fn write_icons_file(icons: &[Icon], to: &PathBuf) {
+fn write_icons_file(icons: &[Icon], filename: &str) {
+    let to = PathBuf::from(std::env::var_os("OUT_DIR").expect("OUT_DIR is invalid")).join(filename);
+
     let names = icons
         .iter()
         .map(|i| i.name.as_str())
@@ -147,7 +146,6 @@ fn write_icons_file(icons: &[Icon], to: &PathBuf) {
         .replace("{PATHS}", &paths);
 
     fs::write(to, code).unwrap();
-    Command::new("rustfmt").arg(to).output().unwrap();
 }
 
 // rustfmt gets confused about indentation in rsx! blocks and will indent the
