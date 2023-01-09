@@ -42,8 +42,9 @@ pub enum Action {
     /// adds an overlay. currently only used for demonstration purposes
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
+    /// use state.ui.clear_popout to close the popout. this function
+    /// requires a reference to DesktopContext
     SetPopout(WindowId),
-    ClearPopout,
 
     // Settings
     /// Sets the selected language.
