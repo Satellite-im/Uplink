@@ -93,7 +93,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 },
                 div {
                     class: "content-item",
-                    aria_label: "content-item",
                     Label {
                         text: get_local_text("uplink.username"),
                     },

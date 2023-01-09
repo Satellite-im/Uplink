@@ -102,10 +102,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 div {
                     class: "files-bar-track",
-                    aria_label: "files-bar-track",
                     div {
                         class: "files-bar",
-                        aria_label: "files-bar",
                     }
                 },
                 div {
@@ -155,12 +153,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         Folder {
                             loading: true,
                             text: "Fake Folder 1".into(),
-                            aria_label: "fake-folder-3".into(),
                         },
                         File {
                             loading: true,
                             text: "Fake File".into(),
-                            aria_label: "fake-file-1".into(),
                         }
                     }
                 },
