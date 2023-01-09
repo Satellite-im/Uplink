@@ -614,7 +614,7 @@ impl State {
     }
 
     /// Saves the current state to disk.
-    fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
         let cache_path = STATIC_ARGS.uplink_path.join("state.json");
 
