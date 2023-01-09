@@ -25,15 +25,9 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
             warp::multipass::identity::Platform::Mobile => Platform::Mobile,
             _ => Platform::Headless //TODO: Unknown
         };
-        let status = match identity.identity_status() {
-            warp::multipass::identity::IdentityStatus::Online => Status::Online,
-            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-        };
         user_info.push(UserInfo {
             platform,
-            status,
+            status: identity.identity_status().into(),
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -183,12 +177,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                         _ => Platform::Headless //TODO: Unknown
                     };
-                    let status = match parsed_user.identity_status() {
-                        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                    };
 
                     let last_message = chat.messages.last();
                     let unwrapped_message = match last_message {
@@ -255,7 +243,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status: status,
+                                            status:  parsed_user.identity_status().into(),
                                             image: parsed_user.graphics().profile_picture(),
                                         }
                                     )} else {rsx! (

@@ -29,12 +29,6 @@ pub fn PendingFriends(cx: Scope) -> Element {
                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                     _ => Platform::Headless //TODO: Unknown
                 };
-                let status = match friend.identity_status() {
-                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -62,7 +56,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: status,
+                                    status: friend.identity_status().into(),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),

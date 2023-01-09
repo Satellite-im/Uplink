@@ -41,6 +41,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     warp::multipass::identity::IdentityStatus::Away => Status::Idle,
                     warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
                     warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+                    warp::multipass::identity::IdentityStatus::Unknown => Status::Unknown,
                 };
                 rsx!(
                     ContextMenu {

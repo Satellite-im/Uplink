@@ -56,6 +56,20 @@ pub enum Status {
 
     // The user has enabled do-not-disturb mode
     DoNotDisturb,
+
+    Unknown,
+}
+
+impl std::convert::From<warp::multipass::identity::IdentityStatus> for Status {
+    fn from(status: warp::multipass::identity::IdentityStatus) -> Self {
+        match status {
+            warp::multipass::identity::IdentityStatus::Online => Status::Online,
+            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+            warp::multipass::identity::IdentityStatus::Unknown => Status::Unknown,
+        }
+    }
 }
 
 impl fmt::Display for Status {
@@ -65,6 +79,7 @@ impl fmt::Display for Status {
             Status::Offline => write!(f, "offline"),
             Status::Idle => write!(f, "idle"),
             Status::DoNotDisturb => write!(f, "do-not-disturb"),
+            Status::Unknown => write!(f, "unknown"),
         }
     }
 }

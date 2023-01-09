@@ -15,6 +15,7 @@ icons = { path="../icons" }
 timeago = "0.4.0"
 humansize = "2.0.0"
 shared = { path = "../shared" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"}
 
 [dependencies.uuid]
 version = "1.2.2"
