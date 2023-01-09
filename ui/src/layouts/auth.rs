@@ -17,7 +17,6 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn AuthLayout(cx: Scope) -> Element {
-    let warp_cmd_tx = WARP_CMD_CH.0.clone();
     let router = use_router(cx);
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
@@ -49,8 +48,9 @@ pub fn AuthLayout(cx: Scope) -> Element {
     };
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
-        to_owned![warp_cmd_tx, router];
+        to_owned![router];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.0.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();

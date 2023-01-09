@@ -200,6 +200,8 @@ fn main() {
 
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
+
+    // warp_runner must be started from within a tokio reactor
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
@@ -222,7 +224,7 @@ fn bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    //println!("rendering app");
+    println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
