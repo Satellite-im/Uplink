@@ -89,15 +89,17 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                        // if state.read().ui.popout_player {
-                        //     state.write().mutate(Action::ClearPopout);
-                        // } 
+                         if state.read().ui.popout_player {
+                             state.write_silent().ui.clear_popout(window);
+                             return;
+                         } 
 
                         let popout = VirtualDom::new_with_props(PopoutPlayer, ());
-                        window.new_window(popout, Default::default());
-                        // for some reason using write() prevents the video from loading but using write_silent() works
-                        // state.write_silent().mutate(Action::SetPopout(Weak::upgrade(&window).unwrap()));
-                        
+                        let window = window.new_window(popout, Default::default());
+                        if let Some(wv) = Weak::upgrade(&window) {
+                            let id = wv.window().id();
+                            state.write_silent().mutate(Action::SetPopout(id));
+                        }
                     }
                 },
                 // don't render MediadPlayer if the video is popped out
@@ -145,6 +147,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
+                    state.write_silent().ui.clear_popout(window);
                     state.write().mutate(Action::DisableMedia);
                 }
             },

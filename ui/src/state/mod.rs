@@ -507,7 +507,8 @@ impl State {
 
         match action {
             Action::ClearPopout => {
-                self.ui.clear_popout();
+                todo!("don't use this");
+                //self.ui.clear_popout();
             }
             Action::SetPopout(webview) => {
                 self.ui.set_popout(webview);

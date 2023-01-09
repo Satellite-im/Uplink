@@ -1,10 +1,7 @@
-use dioxus_desktop::tao::window::WindowId;
+use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    rc::{Rc, Weak},
-};
+use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
 use wry::webview::WebView;
 
@@ -33,17 +30,24 @@ impl Drop for UI {
 }
 
 impl UI {
-    pub fn clear_popout(&mut self) {
+    fn take_popout_id(&mut self) -> Option<WindowId> {
         self.popout_player = false;
-        let mut call = match &self.current_call {
-            Some(c) => c.clone(),
-            None => return,
-        };
-        call.popout_view = None;
-        self.current_call = Some(call);
+        match self.current_call.take() {
+            Some(mut call) => {
+                let id = call.take_window_id();
+                self.current_call = Some(call);
+                id
+            }
+            None => None,
+        }
     }
-    pub fn set_popout(&mut self, view: Rc<WebView>) {
-        self.current_call = Some(Call::new(Some(view)));
+    pub fn clear_popout(&mut self, window: &'_ DesktopContext) {
+        if let Some(id) = self.take_popout_id() {
+            window.close_window(id);
+        };
+    }
+    pub fn set_popout(&mut self, id: WindowId) {
+        self.current_call = Some(Call::new(Some(id)));
         self.popout_player = true;
     }
     pub fn clear_overlays(&mut self) {
@@ -98,29 +102,24 @@ pub struct Call {
     // displays the current  video stream
     // may need changing later to accommodate video streams from multiple participants
     #[serde(skip)]
-    pub popout_view: Option<Rc<WebView>>,
+    pub popout_window_id: Option<WindowId>,
     #[serde(default)]
     pub muted: bool,
     #[serde(default)]
     pub silenced: bool,
 }
 
-impl Drop for Call {
-    fn drop(&mut self) {
-        if let Some(view) = self.popout_view.as_ref() {
-            view.evaluate_script("close()")
-                .expect("failed to close webview");
-        };
-    }
-}
-
 impl Call {
-    pub fn new(popout_view: Option<Rc<WebView>>) -> Self {
+    pub fn new(popout_view: Option<WindowId>) -> Self {
         Self {
-            popout_view,
+            popout_window_id: popout_view,
             muted: false,
             silenced: false,
         }
+    }
+
+    pub fn take_window_id(&mut self) -> Option<WindowId> {
+        self.popout_window_id.take()
     }
 }
 

@@ -47,7 +47,7 @@ pub fn PopoutPlayer(cx: Scope) -> Element {
                                 text: String::from("Close")
                             }
                         )),
-                        onpress: move |_| {        
+                        onpress: move |_| {
                             window.close();
                         }
                     },
