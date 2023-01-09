@@ -91,6 +91,8 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
+                                    state.write_silent().mutate(Action::ClearPopout(desktop.clone()));
+                                    state.write_silent().mutate(Action::DisableMedia);
                                     state.write().mutate(Action::SetActiveMedia(active_chat_id));
                                 }
                             },

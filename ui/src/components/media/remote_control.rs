@@ -82,7 +82,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write_silent().ui.clear_popout(window);
+                    state.write().mutate(Action::ClearPopout(window.clone()));
                     state.write().mutate(Action::DisableMedia);
                 },
             }
