@@ -636,7 +636,7 @@ impl State {
         Ok(state)
     }
 
-    pub fn mock() -> State {
+    pub fn mock() -> Self {
         generate_mock()
     }
 }
