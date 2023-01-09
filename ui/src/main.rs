@@ -142,12 +142,6 @@ fn main() {
     std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
     copy_assets();
 
-    if STATIC_ARGS.use_mock {
-        let state = State::mock();
-        state.save().expect("failed to save state");
-        return;
-    }
-
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -228,6 +222,9 @@ fn bootstrap(cx: Scope) -> Element {
     warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
     let mut state = State::load().expect("failed to load state");
+    if STATIC_ARGS.use_mock {
+        state = State::mock();
+    }
 
     // todo: delete this. it is just an examle
     let desktop = use_window(cx);
