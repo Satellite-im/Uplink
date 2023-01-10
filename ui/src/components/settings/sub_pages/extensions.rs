@@ -14,9 +14,11 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-extensions",
+            aria_label: "settings-extensions",
             Button {
                 icon: Icon::FolderOpen,
                 text: open_folder,
+                aria_label: "open-extensions-folder-button".into(),
             },
             ExtensionSetting {
                 title: placeholder,

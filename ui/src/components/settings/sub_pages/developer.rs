@@ -18,6 +18,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-developer",
+            aria_label: "settings-developer",
             SettingSection {
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
@@ -33,6 +34,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-developer.open-codebase-description"),
                 Button {
                     text: get_local_text("settings-developer.open-codebase"),
+                    aria_label: "open-codebase-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
@@ -45,6 +47,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-developer.open-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.open-cache-folder"),
+                    aria_label: "open-cache-folder-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
@@ -63,6 +66,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.compress"),
+                    aria_label: "compress-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
@@ -74,6 +78,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-developer.clear-cache-description"),
                 Button {
                     text: get_local_text("settings-developer.clear"),
+                    aria_label: "clear-button".into(),
                     appearance: Appearance::Danger,
                     icon: Icon::Trash,
                     onpress: move |_| {

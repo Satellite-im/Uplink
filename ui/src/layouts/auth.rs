@@ -86,9 +86,11 @@ pub fn AuthLayout(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "unlock-layout",
+            aria_label: "unlock-layout",
             Input {
                 is_password: false,
                 icon: Icon::Identification,
+                aria_label: "username-input".into(),
                 disabled: false,
                 placeholder: "enter username".into(), //get_local_text("auth.enter_username"),
                 options: Options {
@@ -104,6 +106,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
             Input {
                 is_password: true,
                 icon: Icon::Key,
+                aria_label: "pin-input".into(),
                 disabled: false,
                 placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
                 options: Options {
@@ -118,6 +121,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
             },
             Button {
                 text: "create account".into(), // get_local_text("unlock.create_account"),
+                aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
