@@ -121,10 +121,7 @@ pub fn get_text(cx: &Scope<Props>) -> String {
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    match &cx.props.aria_label {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.aria_label.clone().unwrap_or_default()
 }
 
 pub fn get_label(cx: &Scope<Props>) -> String {

@@ -35,6 +35,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "files-layout",
+            aria_label: "files-layout",
             span {
                 class: "hide-on-mobile",
                 ChatSidebar {
@@ -43,6 +44,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
             div {
                 class: "files-body",
+                aria_label: "files-body",
                 div {
                     onmousedown: move |_| { desktop.drag(); },
                     Topbar {
@@ -52,6 +54,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 Button {
                                     icon: Icon::FolderPlus,
                                     appearance: Appearance::Secondary,
+                                    aria_label: "add-folder".into(),
                                     tooltip: cx.render(rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::Top,
@@ -65,6 +68,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 Button {
                                     icon: Icon::Plus,
                                     appearance: Appearance::Secondary,
+                                    aria_label: "upload-file".into(),
                                     tooltip: cx.render(rsx!(
                                         Tooltip {
                                             arrow_position: ArrowPosition::Top,
@@ -76,6 +80,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         ),
                         div {
                             class: "files-info",
+                            aria_label: "files-info",
                             p {
                                 class: "free-space",
                                 "{free_space_text}",
@@ -98,13 +103,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-bar-track",
                     div {
-                        class: "files-bar"
+                        class: "files-bar",
                     }
                 },
                 div {
                     class: "files-breadcrumbs",
+                    aria_label: "files-breadcrumbs",
                     div {
                         class: "crumb",
+                        aria_label: "crumb",
                         IconElement {
                             icon: Icon::Home,
                         },
@@ -114,12 +121,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     },
                     div {
                         class: "crumb",
+                        aria_label: "crumb",
                         p {
                             "Folder 1"
                         }
                     },
                     div {
                         class: "crumb",
+                        aria_label: "crumb",
                         p {
                             "Folder 3"
                         }
@@ -127,23 +136,27 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 div {
                     class: "files-list",
+                    aria_label: "files-list",
                     span {
                         Folder {
-                            text: "Fake Folder 1".into()
+                            text: "Fake Folder 1".into(),
+                            aria_label: "fake-folder-1".into(),
                         },
                         File {
-                            text: "fake_2.png".into()
+                            text: "fake_2.png".into(),
+                            aria_label: "fake-file-1".into(),
                         },
                         Folder {
                             text: "New Fake".into(),
+                            aria_label: "fake-folder-2".into(),
                         },
                         Folder {
                             loading: true,
-                            text: "Fake Folder 1".into()
+                            text: "Fake Folder 1".into(),
                         },
                         File {
                             loading: true,
-                            text: "Fake File".into()
+                            text: "Fake File".into(),
                         }
                     }
                 },

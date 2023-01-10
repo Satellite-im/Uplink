@@ -19,6 +19,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "chat-layout",
+            aria_label: "chat-layout",
             span {
                 class: "full-width-on-mobile",
                 ChatSidebar {
