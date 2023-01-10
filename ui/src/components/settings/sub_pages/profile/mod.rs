@@ -42,10 +42,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-profile",
+            aria_label: "settings-profile",
             div {
                 class: "profile-header",
+                aria_label: "profile-header",
                 div {
                     class: "profile-banner",
+                    aria_label: "profile-banner",
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
@@ -56,6 +59,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 },
                 div {
                     class: "profile-picture",
+                    aria_label: "profile-picture",
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
@@ -64,6 +68,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Button {
                         icon: kit::icons::Icon::Plus,
+                        aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
                                 log::error!("Error to change profile avatar image {error}");
@@ -74,6 +79,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             },
             div{
                 class: "profile-content",
+                aria_label: "profile-content",
                 div {
                     class: "plus-button",
                     Button {
@@ -92,6 +98,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input {
                         placeholder: get_local_text("uplink.username"),
+                        aria_label: "username-input".into(),
                         default_text: "Mock Username".into(),
                         options: get_input_options(username_validation_options),
                     },
@@ -103,6 +110,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input { 
                         placeholder: get_local_text("uplink.status"),
+                        aria_label: "status-input".into(),
                         default_text: "Mock status messages are so 2008.".into(),
                         options: Options {
                             with_clear_btn: true,

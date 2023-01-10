@@ -24,6 +24,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-general",
+            aria_label: "settings-general",
             SettingSection {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
@@ -65,6 +66,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-general.theme-reset-description"),
                 Button {
                     text: get_local_text("settings-general.theme-reset-cta"),
+                    aria_label: "clear-theme-button".into(),
                     icon: Icon::Trash,
                     appearance: kit::elements::Appearance::Secondary,
                     onpress: move |_| {

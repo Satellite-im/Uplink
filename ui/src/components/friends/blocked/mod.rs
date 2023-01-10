@@ -1,12 +1,13 @@
 use crate::{
     components::friends::friend::Friend,
     state::{Action, State},
+    utils::convert_status,
 };
 use dioxus::prelude::*;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::{Platform, Status},
+        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -36,12 +37,6 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                     _ => Platform::Headless //TODO: Unknown
                 };
-                let status = match blocked_user.identity_status() {
-                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -64,7 +59,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: status,
+                                    status: convert_status(&blocked_user.identity_status()),
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),

@@ -1,3 +1,4 @@
+use kit::components::indicator::Status;
 use std::fs;
 use titlecase::titlecase;
 use walkdir::WalkDir;
@@ -40,4 +41,14 @@ pub fn get_available_themes() -> Vec<Theme> {
     }
 
     themes
+}
+
+// converts from Warp IdentityStatus to ui_kit Status
+pub fn convert_status(status: &warp::multipass::identity::IdentityStatus) -> Status {
+    match status {
+        warp::multipass::identity::IdentityStatus::Online => Status::Online,
+        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
+        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
+        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
+    }
 }

@@ -30,97 +30,103 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
             if showSidebar == false {
                 cx.render(rsx!{
                     div {
-                        class: "hide-on-mobile",
-                        Sidebar {
-                            route_info: cx.props.route_info.clone(),
-                            onpress: move |p| {
-                                showSidebar.set(false);
-                                to.set(p);
-                            },
-                        },
-                    },
-                    div {
-                        class: "full-width",
+                        aria_label: "settings-layout",
                         div {
-                            id: "top-bar",
-                            class: "hide-on-desktop",
-                            Topbar {
-                                with_back_button: true,
-                                onback: move |_| {
-                                    showSidebar.set(true);
-                                }
+                            class: "hide-on-mobile",
+                            Sidebar {
+                                route_info: cx.props.route_info.clone(),
+                                onpress: move |p| {
+                                    showSidebar.set(false);
+                                    to.set(p);
+                                },
                             },
                         },
                         div {
-                            id: "content",
                             class: "full-width",
-                            match to.get() {
-                                Page::Profile       => cx.render(rsx! (
-                                    ProfileSettings {}
-                                )),
-                                Page::General       => cx.render(rsx! (
-                                    GeneralSettings {}
-                                )),
-                                Page::Audio         => cx.render(rsx! (
-                                    AudioSettings {}
-                                )),
-                                Page::Privacy       => cx.render(rsx! (
-                                    PrivacySettings {}
-                                )),
-                                Page::Files         => cx.render(rsx! (
-                                    FilesSettings {}
-                                )),
-                                Page::Extensions    => cx.render(rsx! (
-                                    ExtensionSettings {}
-                                )),
-                                Page::Developer     => cx.render(rsx! (
-                                    DeveloperSettings {}
-                                ))
+                            div {
+                                id: "top-bar",
+                                class: "hide-on-desktop",
+                                Topbar {
+                                    with_back_button: true,
+                                    onback: move |_| {
+                                        showSidebar.set(true);
+                                    }
+                                },
+                            },
+                            div {
+                                id: "content",
+                                class: "full-width",
+                                match to.get() {
+                                    Page::Profile       => cx.render(rsx! (
+                                        ProfileSettings {}
+                                    )),
+                                    Page::General       => cx.render(rsx! (
+                                        GeneralSettings {}
+                                    )),
+                                    Page::Audio         => cx.render(rsx! (
+                                        AudioSettings {}
+                                    )),
+                                    Page::Privacy       => cx.render(rsx! (
+                                        PrivacySettings {}
+                                    )),
+                                    Page::Files         => cx.render(rsx! (
+                                        FilesSettings {}
+                                    )),
+                                    Page::Extensions    => cx.render(rsx! (
+                                        ExtensionSettings {}
+                                    )),
+                                    Page::Developer     => cx.render(rsx! (
+                                        DeveloperSettings {}
+                                    ))
+                                }
                             }
-                        }
-                    },
+                        },
+                    }
                 })
             } else {
                 cx.render(rsx!{
                     div {
-                        class: "full-width-on-mobile",
-                        Sidebar {
-                            route_info: cx.props.route_info.clone(),
-                            onpress: move |p| {
-                                showSidebar.set(false);
-                                to.set(p);
+                        aria_label: "settings-layout",
+                        div {
+                            class: "full-width-on-mobile",
+                            Sidebar {
+                                route_info: cx.props.route_info.clone(),
+                                onpress: move |p| {
+                                    showSidebar.set(false);
+                                    to.set(p);
+                                },
                             },
                         },
-                    },
-                    div {
-                        class: "full-width hide-on-mobile",
                         div {
-                            id: "content",
-                            class: "full-width hidden-on-mobile",
-                            match to.get() {
-                                Page::Profile       => cx.render(rsx! (
-                                    ProfileSettings {}
-                                )),
-                                Page::General       => cx.render(rsx! (
-                                    GeneralSettings {}
-                                )),
-                                Page::Audio         => cx.render(rsx! (
-                                    AudioSettings {}
-                                )),
-                                Page::Privacy       => cx.render(rsx! (
-                                    PrivacySettings {}
-                                )),
-                                Page::Files         => cx.render(rsx! (
-                                    FilesSettings {}
-                                )),
-                                Page::Extensions    => cx.render(rsx! (
-                                    ExtensionSettings {}
-                                )),
-                                Page::Developer     => cx.render(rsx! (
-                                    DeveloperSettings {}
-                                ))
+                            class: "full-width hide-on-mobile",
+                            div {
+                                id: "content",
+                                class: "full-width hidden-on-mobile",
+                                match to.get() {
+                                    Page::Profile       => cx.render(rsx! (
+                                        ProfileSettings {}
+                                    )),
+                                    Page::General       => cx.render(rsx! (
+                                        GeneralSettings {}
+                                    )),
+                                    Page::Audio         => cx.render(rsx! (
+                                        AudioSettings {}
+                                    )),
+                                    Page::Privacy       => cx.render(rsx! (
+                                        PrivacySettings {}
+                                    )),
+                                    Page::Files         => cx.render(rsx! (
+                                        FilesSettings {}
+                                    )),
+                                    Page::Extensions    => cx.render(rsx! (
+                                        ExtensionSettings {}
+                                    )),
+                                    Page::Developer     => cx.render(rsx! (
+                                        DeveloperSettings {}
+                                    ))
+                                }
                             }
-                        }
+                        },
                     },
                 })
             }

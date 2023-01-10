@@ -43,10 +43,7 @@ pub fn get_text(cx: &Scope<Props>) -> String {
 /// Generates the optional aria label for the button.
 /// If there is no text provided, we'll return an empty string.
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
-    match &cx.props.aria_label {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.aria_label.clone().unwrap_or_default()
 }
 
 /// Generates the optional badge for the button.

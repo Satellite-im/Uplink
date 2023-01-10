@@ -20,7 +20,7 @@ use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 use crate::{
     state::State,
     warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
-    WARP_PATH,
+    STATIC_ARGS,
 };
 
 use self::commands::{MultiPassCmd, TesseractCmd};
@@ -63,7 +63,7 @@ impl std::ops::Drop for WarpRunner {
 
 impl WarpRunner {
     pub fn init() -> Self {
-        let tess_path = WARP_PATH.join(".keystore");
+        let tess_path = STATIC_ARGS.warp_path.join(".keystore");
         let tesseract = match Tesseract::from_file(&tess_path) {
             Ok(tess) => tess,
             Err(_) => {
@@ -93,7 +93,9 @@ impl WarpRunner {
             // todo: register for events from warp
 
             let (mut account, mut messaging, _storage) =
-                match warp_initialization(WARP_PATH.clone(), tesseract.clone(), false).await {
+                match warp_initialization(STATIC_ARGS.warp_path.clone(), tesseract.clone(), false)
+                    .await
+                {
                     Ok((i, c, s)) => (i, c, s),
                     Err(_e) => todo!(),
                 };
@@ -117,8 +119,10 @@ impl WarpRunner {
             };
 
             loop {
+                //println!("waiting for event");
                 tokio::select! {
                     opt = multipass_stream.next() => {
+                        //println!("got multiPass event");
                         if let Some(evt) = opt {
                             if tx.send(WarpEvent::MultiPass(evt)).is_err() {
                                 break;
@@ -134,13 +138,16 @@ impl WarpRunner {
                     },
 
                     // receive a command from the UI. call the corresponding function
-                    opt = rx.recv() => match opt {
+                    opt = rx.recv() => {
+                        //println!("got warp_runner cmd");
+                        match opt {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
                             WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
                         },
                         None => break,
-                    },
+                    }
+                    } ,
 
                     // the WarpRunner has been dropped. stop the thread
                     _ = notify.notified() => break,

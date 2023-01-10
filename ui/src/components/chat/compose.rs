@@ -6,7 +6,7 @@ use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago}};
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status}};
 
 
 use super::sidebar::build_participants_names;
@@ -47,12 +47,7 @@ pub fn Compose(cx: Scope) -> Element {
         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
         _ => Platform::Headless //TODO: Unknown
     };
-    let status = match active_participant.identity_status() {
-        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-    };
+
     let desktop = use_window(cx);
 
     let loading = use_state(cx, || false);
@@ -115,7 +110,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 UserImage {
                                     loading: **loading,
                                     platform: platform,
-                                    status: status,
+                                    status: convert_status(&active_participant.identity_status()),
                                     image: first_image
                                 }
                             )} else {rsx! (
@@ -188,12 +183,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                                     _ => Platform::Headless //TODO: Unknown
                                 };
-                                let status = match sender.identity_status() {
-                                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                                };
+                                let status = convert_status(&sender.identity_status());
 
                                 rsx!(
                                     MessageGroup {

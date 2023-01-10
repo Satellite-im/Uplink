@@ -18,7 +18,6 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn AuthLayout(cx: Scope) -> Element {
-    let warp_cmd_tx = WARP_CMD_CH.0.clone();
     let router = use_router(cx);
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
@@ -50,11 +49,12 @@ pub fn AuthLayout(cx: Scope) -> Element {
     };
     let desktop = use_window(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
-        to_owned![warp_cmd_tx, router, desktop];
+        to_owned![router, desktop];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 //println!("auth got input");
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, _rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
                     .send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
@@ -86,9 +86,11 @@ pub fn AuthLayout(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "unlock-layout",
+            aria_label: "unlock-layout",
             Input {
                 is_password: false,
                 icon: Icon::Identification,
+                aria_label: "username-input".into(),
                 disabled: false,
                 placeholder: "enter username".into(), //get_local_text("auth.enter_username"),
                 options: Options {
@@ -104,6 +106,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
             Input {
                 is_password: true,
                 icon: Icon::Key,
+                aria_label: "pin-input".into(),
                 disabled: false,
                 placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
                 options: Options {
@@ -118,11 +121,14 @@ pub fn AuthLayout(cx: Scope) -> Element {
             },
             Button {
                 text: "create account".into(), // get_local_text("unlock.create_account"),
+                aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
-                    if *pin_valid.current() && *username_valid.current() {
-                        ch.send((username.current().to_string(), pin.current().to_string()))
+                    //println!("attempt to create account: {}, {}", pin_valid.get(), username_valid.get());
+                    if *pin_valid.get() && *username_valid.get() {
+                        //println!("sending msg");
+                        ch.send((username.get().to_string(), pin.get().to_string()));
                     } else {
                         println!("input not valid");
                     }
