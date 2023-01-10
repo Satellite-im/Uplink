@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -47,9 +48,9 @@ pub fn AuthLayout(cx: Scope) -> Element {
         // The input should not contain any whitespace
         no_whitespace: true,
     };
-
+    let desktop = use_window(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
-        to_owned![warp_cmd_tx, router];
+        to_owned![warp_cmd_tx, router, desktop];
         async move {
             while let Some((username, passphrase)) = rx.next().await {
                 //println!("auth got input");
@@ -62,17 +63,22 @@ pub fn AuthLayout(cx: Scope) -> Element {
                         rsp: tx,
                     }))
                     .expect("UnlockLayout failed to send warp command");
-                router.replace_route(CHAT_ROUTE, None, None);
-                let res = rx.await.expect("failed to get response from warp_runner");
 
-                //println!("got response from warp");
-                match res {
-                    Ok(_) => router.replace_route(CHAT_ROUTE, None, None),
-                    Err(e) => {
-                        eprintln!("auth failed: {}", e);
-                        todo!("handle error response");
-                    }
-                }
+                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                router.replace_route(CHAT_ROUTE, None, None);
+
+                // let res = rx.await.expect("failed to get response from warp_runner");
+
+                // //println!("got response from warp");
+                // match res {
+                //     Ok(_) => {
+                //         router.replace_route(CHAT_ROUTE, None, None);
+                //     }
+                //     Err(e) => {
+                //         eprintln!("auth failed: {}", e);
+                //         todo!("handle error response");
+                //     }
+                // }
             }
         }
     });
