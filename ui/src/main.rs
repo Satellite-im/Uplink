@@ -13,7 +13,6 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
-// use state::{Action, ActionHook, State};
 use state::State;
 use std::path::{Path, PathBuf};
 
@@ -25,7 +24,7 @@ use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::toast::Toast;
-use crate::layouts::auth::AuthLayout;
+use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -109,10 +108,6 @@ pub struct UplinkRoutes<'a> {
     pub files: &'a str,
     pub settings: &'a str,
 }
-pub struct AuthRoutes<'a> {
-    pub create_account: &'a str,
-    pub unlock: &'a str,
-}
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     chat: "/",
@@ -121,10 +116,13 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     settings: "/settings",
 };
 
-pub static AUTH_ROUTES: AuthRoutes = AuthRoutes {
-    unlock: "/",
-    create_account: "/account",
-};
+// serve as a sort of router while the user logs in
+#[derive(PartialEq, Eq)]
+pub enum AuthPages {
+    Unlock,
+    CreateAccount,
+    Success,
+}
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -234,6 +232,7 @@ fn main() {
     )
 }
 
+// start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
 
@@ -241,14 +240,73 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
+    let desktop = use_window(cx);
+    desktop.set_inner_size(LogicalSize {
+        width: 500.0,
+        height: 300.0,
+    });
+    cx.render(rsx!(crate::auth_page_manager {}))
+}
+
+// Uplink's Router depends on State, which can't be loaded until the user logs in.
+// don't see a way to replace the router
+// so instead use a Prop to determine which page to render
+// after the user logs in, app_bootstrap loads Uplink as normal.
+fn auth_page_manager(cx: Scope) -> Element {
+    let page = use_state(cx, || AuthPages::Unlock);
+    cx.render(rsx!(match *page.current() {
+        AuthPages::Success => rsx!(app_bootstrap {}),
+        _ => rsx!(auth_wrapper { page: page.clone() }),
+    }))
+}
+
+#[inline_props]
+fn auth_wrapper(cx: Scope, page: UseState<AuthPages>) -> Element {
+    let desktop = use_window(cx);
+    let theme = "";
+    let pre_release_text = get_local_text("uplink.pre-release");
+    cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+        div {
+            class: "drag-handle",
+            onmousedown: move |_| desktop.drag(),
+        },
+        div {
+            id: "app-wrap",
+            div {
+                id: "pre-release",
+                aria_label: "pre-release",
+                onmousedown: move |_| { desktop.drag(); },
+                IconElement {
+                    icon: Icon::Beaker,
+                },
+                p {
+                    "{pre_release_text}",
+                }
+            },
+            match *page.current() {
+                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone() }),
+                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone() }),
+                _ => panic!("invalid page")
+            }
+        }
+    ))
+}
+
+// called at the end of the auth flow
+#[inline_props]
+pub fn app_bootstrap(cx: Scope) -> Element {
+    //println!("rendering app_bootstrap");
     let mut state = if STATIC_ARGS.use_mock {
         State::mock()
     } else {
         State::load().expect("failed to load state")
     };
 
-    // todo: delete this. it is just an examle
     let desktop = use_window(cx);
+    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+
+    // todo: delete this. it is just an example
     if Configuration::load_or_default().general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
@@ -428,43 +486,43 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
     ];
 
     cx.render(rsx!(
-            Router {
-                Route {
-                    to: UPLINK_ROUTES.chat,
-                    ChatLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: chat_route.clone(),
-                        }
+        Router {
+            Route {
+                to: UPLINK_ROUTES.chat,
+                ChatLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: chat_route.clone(),
                     }
-                },
-                Route {
-                    to: UPLINK_ROUTES.settings,
-                    SettingsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: settings_route.clone(),
-                        }
+                }
+            },
+            Route {
+                to: UPLINK_ROUTES.settings,
+                SettingsLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: settings_route.clone(),
                     }
-                },
-                Route {
-                    to: UPLINK_ROUTES.friends,
-                    FriendsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: friends_route.clone(),
-                        }
+                }
+            },
+            Route {
+                to: UPLINK_ROUTES.friends,
+                FriendsLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: friends_route.clone(),
                     }
-                },
-                Route {
-                    to: UPLINK_ROUTES.files,
-                    FilesLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: files_route,
-                        }
+                }
+            },
+            Route {
+                to: UPLINK_ROUTES.files,
+                FilesLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: files_route,
                     }
-                },
+                }
+            },
         }
     ))
 }

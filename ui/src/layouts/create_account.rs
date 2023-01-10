@@ -1,6 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
-use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::{
@@ -13,12 +11,12 @@ use kit::{
 
 use crate::{
     warp_runner::{commands::MultiPassCmd, WarpCmd},
-    UPLINK_ROUTES, WARP_CMD_CH,
+    AuthPages, WARP_CMD_CH,
 };
 
+#[inline_props]
 #[allow(non_snake_case)]
-pub fn AuthLayout(cx: Scope) -> Element {
-    let router = use_router(cx);
+pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let username_valid = use_state(cx, || false);
@@ -47,14 +45,14 @@ pub fn AuthLayout(cx: Scope) -> Element {
         // The input should not contain any whitespace
         no_whitespace: true,
     };
-    let desktop = use_window(cx);
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
-        to_owned![router, desktop];
+        to_owned![page];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 //println!("auth got input");
-                let (tx, _rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
                     .send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
@@ -64,21 +62,18 @@ pub fn AuthLayout(cx: Scope) -> Element {
                     }))
                     .expect("UnlockLayout failed to send warp command");
 
-                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                router.replace_route(UPLINK_ROUTES.chat, None, None);
+                let res = rx.await.expect("failed to get response from warp_runner");
 
-                // let res = rx.await.expect("failed to get response from warp_runner");
-
-                // //println!("got response from warp");
-                // match res {
-                //     Ok(_) => {
-                //         router.replace_route(UPLINK_ROUTES.chat, None, None);
-                //     }
-                //     Err(e) => {
-                //         eprintln!("auth failed: {}", e);
-                //         todo!("handle error response");
-                //     }
-                // }
+                //println!("got response from warp");
+                match res {
+                    Ok(_) => {
+                        page.set(AuthPages::Success);
+                    }
+                    Err(e) => {
+                        eprintln!("auth failed: {}", e);
+                        todo!("handle error response");
+                    }
+                }
             }
         }
     });

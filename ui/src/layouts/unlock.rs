@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
-use dioxus_router::use_router;
+use dioxus_desktop::use_window;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::{
@@ -13,23 +12,18 @@ use kit::{
 
 use crate::{
     warp_runner::{commands::TesseractCmd, WarpCmd},
-    AUTH_ROUTES, UPLINK_ROUTES, WARP_CMD_CH,
+    AuthPages, WARP_CMD_CH,
 };
 
 // todo: go to the auth page if no account has been created
+#[inline_props]
 #[allow(non_snake_case)]
-pub fn UnlockLayout(cx: Scope) -> Element {
-    let desktop = use_window(cx);
-    desktop.set_inner_size(LogicalSize {
-        width: 500.0,
-        height: 300.0,
-    });
-
+pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
-    let router = use_router(cx);
+    let desktop = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![password_failed, router];
+        to_owned![password_failed, page];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
@@ -47,7 +41,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
 
                 //println!("got response from warp");
                 match res {
-                    Ok(_) => router.replace_route(UPLINK_ROUTES.chat, None, None),
+                    Ok(_) => page.set(AuthPages::Success),
                     Err(_) => password_failed.set(Some(true)),
                 }
             }
@@ -74,7 +68,19 @@ pub fn UnlockLayout(cx: Scope) -> Element {
             onmousedown: move |_| {
                 desktop.drag();
             },
-            get_prompt(cx),
+            p {
+                class: "info",
+                aria_label: "unlock-warning-paragraph",
+                "warning: use a good password", //get_local_text("unlock.warning1")
+                //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
+                br {},
+                span {
+                    aria_label: "unlock-warning-span",
+                    class: "warning",
+                    //"If you forget this password we cannot help you retrieve it."
+                    "warning: no password recovery", //get_local_text("unlock.warning2")
+                }
+            },
             Input {
                 is_password: true,
                 icon: Icon::Key,
@@ -96,26 +102,8 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
-                    router.replace_route(AUTH_ROUTES.create_account, None, None)
+                    page.set(AuthPages::CreateAccount);
                 }
-            }
-        }
-    ))
-}
-
-fn get_prompt(cx: Scope) -> Element {
-    cx.render(rsx!(
-        p {
-            class: "info",
-            aria_label: "unlock-warning-paragraph",
-            "warning: use a good password", //get_local_text("unlock.warning1")
-            //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
-            br {},
-            span {
-                aria_label: "unlock-warning-span",
-                class: "warning",
-                //"If you forget this password we cannot help you retrieve it."
-                "warning: no password recovery", //get_local_text("unlock.warning2")
             }
         }
     ))
