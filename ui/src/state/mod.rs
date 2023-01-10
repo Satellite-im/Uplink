@@ -614,18 +614,15 @@ impl State {
     }
 
     /// Saves the current state to disk.
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
-        let cache_path = STATIC_ARGS.uplink_path.join("state.json");
-
-        fs::write(cache_path, serialized)?;
+        fs::write(&STATIC_ARGS.cache_path, serialized)?;
         Ok(())
     }
 
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
-        let cache_path = STATIC_ARGS.uplink_path.join("state.json");
-        let contents = match fs::read_to_string(cache_path) {
+        let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
             Err(_) => return Ok(State::default()),
         };
