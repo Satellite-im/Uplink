@@ -52,6 +52,7 @@ extern crate lazy_static;
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
     pub cache_path: PathBuf,
+    pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub use_mock: bool,
 }
@@ -76,6 +77,7 @@ lazy_static! {
         StaticArgs {
             uplink_path: uplink_path.clone(),
             cache_path: uplink_path.join("state.json"),
+            config_path: uplink_path.join("Config.json"),
             warp_path: uplink_path.join("warp"),
             use_mock: args.mock,
         }

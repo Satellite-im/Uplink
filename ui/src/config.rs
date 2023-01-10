@@ -79,9 +79,8 @@ impl Configuration {
     }
 
     pub fn load() -> Self {
-        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
         // Load the config from the specified path
-        match fs::read_to_string(config_path) {
+        match fs::read_to_string(&STATIC_ARGS.config_path) {
             Ok(contents) => {
                 // Parse the config from the file contents using serde
                 match serde_json::from_str(&contents) {
@@ -94,10 +93,8 @@ impl Configuration {
     }
 
     pub fn load_or_default() -> Self {
-        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
-
         // Try to load the config from the specified path
-        match fs::read_to_string(config_path) {
+        match fs::read_to_string(&STATIC_ARGS.config_path) {
             Ok(contents) => {
                 // Parse the config from the file contents using serde
                 match serde_json::from_str(&contents) {
@@ -111,9 +108,7 @@ impl Configuration {
 
     fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
-        let config_path = STATIC_ARGS.uplink_path.join("Config.json");
-
-        fs::write(config_path, config_json)?;
+        fs::write(&STATIC_ARGS.config_path, config_json)?;
         Ok(())
     }
 }
