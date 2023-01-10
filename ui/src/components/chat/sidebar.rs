@@ -5,7 +5,7 @@ use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE};
+use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE, utils::convert_status};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -25,15 +25,9 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
             warp::multipass::identity::Platform::Mobile => Platform::Mobile,
             _ => Platform::Headless //TODO: Unknown
         };
-        let status = match identity.identity_status() {
-            warp::multipass::identity::IdentityStatus::Online => Status::Online,
-            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-        };
         user_info.push(UserInfo {
             platform,
-            status,
+            status: convert_status(&identity.identity_status()),
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -183,12 +177,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                         _ => Platform::Headless //TODO: Unknown
                     };
-                    let status = match parsed_user.identity_status() {
-                        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                    };
 
                     let last_message = chat.messages.last();
                     let unwrapped_message = match last_message {
@@ -255,7 +243,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status: status,
+                                            status:  convert_status(&parsed_user.identity_status()),
                                             image: parsed_user.graphics().profile_picture(),
                                         }
                                     )} else {rsx! (

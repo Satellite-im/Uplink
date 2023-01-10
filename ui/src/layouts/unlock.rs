@@ -25,13 +25,13 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         height: 300.0,
     });
 
-    let warp_cmd_tx = WARP_CMD_CH.0.clone();
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![warp_cmd_tx, password_failed, router];
+        to_owned![password_failed, router];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
                 //println!("unlock got password input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
