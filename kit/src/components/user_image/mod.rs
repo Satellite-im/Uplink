@@ -42,19 +42,19 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let image_data: String = get_image(&cx);
     let status = &cx.props.status;
     let platform = &cx.props.platform;
-    let typing = &cx.props.typing.unwrap_or_default();
+    let typing = cx.props.typing.unwrap_or_default();
     let username = &cx.props.with_username.clone().unwrap_or_default();
-    let pressable = &cx.props.onpress.is_some();
+    let pressable = cx.props.onpress.is_some();
 
-    let loading = &cx.props.loading.unwrap_or_default();
+    let loading = cx.props.loading.unwrap_or_default();
 
-    cx.render(rsx!(if *loading {
+    cx.render(rsx!(if loading {
         rsx!(UserImageLoading {})
     } else {
         rsx!(
             div {
                 class: {
-                    format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })
+                    format_args!("user-image-wrap {}", if pressable { "pressable" } else { "" })
                 },
                 onclick: move |e| emit(&cx, e),
                 div {

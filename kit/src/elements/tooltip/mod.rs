@@ -32,11 +32,8 @@ impl fmt::Display for ArrowPosition {
 }
 
 /// Generates the arrow_position for the tooltip.
-pub fn get_arrow_position(cx: &Scope<Props>) -> String {
-    match &cx.props.arrow_position {
-        Some(arrow_position) => arrow_position.to_string(),
-        None => ArrowPosition::Bottom.to_string(),
-    }
+pub fn get_arrow_position(cx: &Scope<Props>) -> ArrowPosition {
+    cx.props.arrow_position.unwrap_or(ArrowPosition::Bottom)
 }
 
 // Remember: owned props must implement PartialEq!

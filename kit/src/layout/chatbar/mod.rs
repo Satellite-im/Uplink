@@ -47,7 +47,7 @@ pub struct ReplyProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
-    let remote = &cx.props.remote.unwrap_or_default();
+    let remote = cx.props.remote.unwrap_or_default();
 
     cx.render(rsx! (
         div {
@@ -66,7 +66,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                 remote.then(|| rsx!(&cx.props.children)),
                 p {
                     class: {
-                        format_args!("reply-text message {}", if *remote { "remote" } else { "" })
+                        format_args!("reply-text message {}", if remote { "remote" } else { "" })
                     },
                     "{cx.props.message}"
                 }

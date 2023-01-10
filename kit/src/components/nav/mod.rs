@@ -108,13 +108,13 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 #[allow(non_snake_case)]
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(cx, || get_active(&cx));
-    let bubble = &cx.props.bubble.unwrap_or_default();
+    let bubble = cx.props.bubble.unwrap_or_default();
 
     cx.render(rsx!(
         div {
             aria_label: "button-nav",
             class: {
-                format_args!("nav {}", if *bubble { "bubble" } else { "" })
+                format_args!("nav {}", if bubble { "bubble" } else { "" })
             },
             cx.props.routes.iter().map(|route| {
                 let badge = get_badge(route);
@@ -131,7 +131,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             emit(&cx, &route.to)
                         },
                         text: {
-                            if *bubble { name } else { "".into() }
+                            if bubble { name } else { "".into() }
                         },
                         with_badge: badge,
                         tooltip: cx.render(rsx!(
