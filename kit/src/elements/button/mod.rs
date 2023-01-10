@@ -66,16 +66,16 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 
 /// Generates the appearance for the button.
 /// This will be overwritten if the button is disabled.
-pub fn get_appearence(cx: &Scope<Props>) -> String {
+pub fn get_appearence(cx: &Scope<Props>) -> Appearance {
     // If the button is disabled, we can short circut this and just provide the disabled appearance.
     if let Some(is_disabled) = cx.props.disabled {
         if is_disabled {
-            return Appearance::Disabled.to_string();
+            return Appearance::Disabled;
         }
     }
     match &cx.props.appearance {
-        Some(appearance)    => appearance.to_string(),
-        None                => Appearance::Default.to_string(),
+        Some(appearance)    => *appearance,
+        None                => Appearance::Default,
     }
 }
 
