@@ -1,6 +1,7 @@
 use crate::{
     components::friends::friend::Friend,
     state::{Action, State},
+    utils::convert_status,
 };
 use dioxus::prelude::*;
 use kit::{
@@ -58,7 +59,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: blocked_user.identity_status().into(),
+                                    status: convert_status(&blocked_user.identity_status()),
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),

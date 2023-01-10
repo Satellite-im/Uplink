@@ -6,7 +6,7 @@ use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago}};
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status}};
 
 
 use super::sidebar::build_participants_names;
@@ -110,7 +110,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 UserImage {
                                     loading: **loading,
                                     platform: platform,
-                                    status: active_participant.identity_status().into(),
+                                    status: convert_status(&active_participant.identity_status()),
                                     image: first_image
                                 }
                             )} else {rsx! (
@@ -183,7 +183,7 @@ pub fn Compose(cx: Scope) -> Element {
                                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                                     _ => Platform::Headless //TODO: Unknown
                                 };
-                                let status = sender.identity_status().into();
+                                let status = convert_status(&sender.identity_status());
 
                                 rsx!(
                                     MessageGroup {
