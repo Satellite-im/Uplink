@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::{Platform, Status},
+        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -36,13 +36,6 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                     _ => Platform::Headless //TODO: Unknown
                 };
-                let status = match blocked_user.identity_status() {
-                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                    warp::multipass::identity::IdentityStatus::Unknown => Status::Unknown,
-                };
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -65,7 +58,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: status,
+                                    status: blocked_user.identity_status().into(),
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),
