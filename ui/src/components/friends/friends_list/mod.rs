@@ -10,12 +10,13 @@ use kit::{
     icons::Icon,
 };
 
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
-    utils::language::get_local_text,
+    CHAT_ROUTE,
 };
 
 #[allow(non_snake_case)]
@@ -71,7 +72,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
-                                                use_router(cx).replace_route("/", None, None);
+                                                use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                             }
                                         },
                                         ContextItem {
@@ -118,7 +119,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         )),
                                         onchat: move |_| {
                                             state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                            use_router(cx).replace_route("/", None, None);
+                                            use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));

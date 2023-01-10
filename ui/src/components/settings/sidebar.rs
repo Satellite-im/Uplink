@@ -9,8 +9,9 @@ use kit::{
     icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
+use shared::language::get_local_text;
 
-use crate::{components::chat::RouteInfo, state::State, utils::language::get_local_text};
+use crate::{components::chat::RouteInfo, state::State};
 
 pub enum Page {
     Audio,
@@ -19,6 +20,7 @@ pub enum Page {
     General,
     Files,
     Privacy,
+    Profile,
 }
 
 impl FromStr for Page {
@@ -30,7 +32,8 @@ impl FromStr for Page {
             "files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             "privacy" => Ok(Page::Privacy),
-            _ => Ok(Page::General),
+            "profile" => Ok(Page::Profile),
+            _ => Ok(Page::Profile),
         }
     }
 
@@ -55,6 +58,12 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _ = use_shared_state::<State>(cx)?;
 
+    let profile = UIRoute {
+        to: "profile",
+        name: get_local_text("settings.profile"),
+        icon: Icon::User,
+        ..UIRoute::default()
+    };
     let general = UIRoute {
         to: "general",
         name: get_local_text("settings.general"),
@@ -91,7 +100,9 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
-    let routes = vec![general, privacy, audio, files, extensions, developer];
+    let routes = vec![
+        profile, general, privacy, audio, files, extensions, developer,
+    ];
 
     let active_route = routes[0].clone();
     cx.render(rsx!(
@@ -101,6 +112,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     class: "search-input",
                     Input {
                         placeholder: get_local_text("settings.search-placeholder"),
+                        aria_label: "settings-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         disabled: true,
                         options: Options {

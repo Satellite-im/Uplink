@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use std::fs;
 
+use crate::UPLINK_PATH;
+
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Configuration {
@@ -62,24 +64,22 @@ pub struct Extensions {
 pub struct Developer {
     #[serde(default)]
     pub developer_mode: bool,
-    #[serde(default)]
-    pub cache_dir: String,
 }
 
 impl Configuration {
     pub fn new() -> Self {
         // Create a default configuration here
         // For example:
-        Self::default()
+        Self {
+            developer: Developer {
+                ..Developer::default()
+            },
+            ..Self::default()
+        }
     }
 
     pub fn load() -> Self {
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
         // Load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -94,12 +94,8 @@ impl Configuration {
     }
 
     pub fn load_or_default() -> Self {
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
+
         // Try to load the config from the specified path
         match fs::read_to_string(config_path) {
             Ok(contents) => {
@@ -115,12 +111,8 @@ impl Configuration {
 
     fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
-        let config_path = dirs::home_dir()
-            .unwrap_or_default()
-            .join(".uplink/Config.json")
-            .into_os_string()
-            .into_string()
-            .unwrap_or_default();
+        let config_path = UPLINK_PATH.join("Config.json");
+
         fs::write(config_path, config_json)?;
         Ok(())
     }
@@ -134,6 +126,11 @@ impl Configuration {
 
     pub fn set_overlay(&mut self, overlay: bool) {
         self.general.enable_overlay = overlay;
+        let _ = self.save();
+    }
+
+    pub fn set_developer_mode(&mut self, developer_mode: bool) {
+        self.developer.developer_mode = developer_mode;
         let _ = self.save();
     }
 }

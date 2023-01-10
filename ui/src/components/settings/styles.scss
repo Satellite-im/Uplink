@@ -2,6 +2,7 @@
 #settings-developer,
 #settings-extensions,
 #settings-general,
+#settings-profile,
 #settings-files,
 #settings-privacy {
     color: var(--text-color);
@@ -9,6 +10,7 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
+    width: 100%;
 }
 
 .nav.bubble {

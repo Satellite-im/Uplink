@@ -3,9 +3,10 @@ use dioxus::prelude::*;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
 use dioxus_desktop::use_window;
+use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{language::get_local_text, format_timestamp::format_timestamp_timeago}};
+use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago}};
 
 
 use super::sidebar::build_participants_names;
@@ -14,6 +15,7 @@ use super::sidebar::build_participants_names;
 pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let active_chat = state.read().get_active_chat().unwrap_or_default();
+    let active_chat_id = active_chat.id;
     let message_groups = state.read().get_sort_messages(&active_chat);
 
     let without_me = state.read().get_without_me(active_chat.participants.clone());
@@ -33,8 +35,7 @@ pub fn Compose(cx: Scope) -> Element {
     let first_image = active_participant.graphics().profile_picture();
     let participants_name = build_participants_names(&without_me);
 
-    let active_media = active_chat.active_media;
-    let active_media_chat = active_chat.clone();
+    let active_media = Some(active_chat.id) == state.read().chats.active_media;
  
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
@@ -52,7 +53,7 @@ pub fn Compose(cx: Scope) -> Element {
         warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
         warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
     };
-    let desktop = use_window(&cx);
+    let desktop = use_window(cx);
 
     let loading = use_state(cx, || false);
 
@@ -90,7 +91,9 @@ pub fn Compose(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    state.write().mutate(Action::ToggleMedia(active_media_chat.clone()));
+                                    state.write_silent().mutate(Action::ClearPopout(desktop.clone()));
+                                    state.write_silent().mutate(Action::DisableMedia);
+                                    state.write().mutate(Action::SetActiveMedia(active_chat_id));
                                 }
                             },
                             Button {

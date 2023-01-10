@@ -3,8 +3,9 @@ use kit::{
     elements::{button::Button, switch::Switch},
     icons::Icon,
 };
+use shared::language::get_local_text;
 
-use crate::{components::settings::ExtensionSetting, utils::language::get_local_text};
+use crate::{components::settings::ExtensionSetting};
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings(cx: Scope) -> Element {

@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_window;
 use kit::{
     elements::{
         button::Button,
@@ -25,6 +26,16 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let call = state.read().ui.current_call.clone();
+    let window = use_window(cx);
+
+    let call = match call {
+        None => {
+            // RemoteControls should only be rendered when there's a call
+            return cx.render(rsx!(""));
+        }
+        Some(c) => c,
+    };
 
     cx.render(rsx!(div {
         id: "remote-controls",
@@ -42,11 +53,11 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
             Button {
                 // TODO: we need to add an icon for this `if state.read().ui.silenced { Icon::Microphone } else { Icon::Microphone }`
                 icon: Icon::Microphone,
-                appearance: if state.read().ui.muted { Appearance::Danger } else { Appearance::Secondary },
+                appearance: if call.muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if state.read().ui.muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
+                        text: if call.muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -54,12 +65,12 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 }
             },
             Button {
-                icon: if state.read().ui.silenced { Icon::SignalSlash } else { Icon::Signal },
-                appearance: if state.read().ui.silenced { Appearance::Danger } else { Appearance::Secondary },
+                icon: if call.silenced { Icon::SignalSlash } else { Icon::Signal },
+                appearance: if call.silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if state.read().ui.silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
+                        text: if call.silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -71,7 +82,8 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write().mutate(Action::EndAll);
+                    state.write().mutate(Action::ClearPopout(window.clone()));
+                    state.write().mutate(Action::DisableMedia);
                 },
             }
         }

@@ -78,7 +78,8 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Input {
                         disabled: *disabled,
                         placeholder: placeholder,
-                        onreturn: move |s| emit(&cx, s)
+                        // todo: use is_valid
+                        onreturn: move |(s, _is_valid)| emit(&cx, s)
                     }
                 )),
                 (!with_rename).then(|| rsx! (

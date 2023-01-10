@@ -1,9 +1,11 @@
 use dioxus::prelude::*;
-
+use dioxus_router::*;
 use kit::{
+    components::nav::Nav,
     elements::{button::Button, Appearance},
     icons::Icon,
 };
+use shared::language::get_local_text;
 
 use crate::{
     components::{
@@ -14,7 +16,6 @@ use crate::{
         },
     },
     state::State,
-    utils::language::get_local_text,
 };
 
 #[derive(PartialEq, Props)]
@@ -40,8 +41,11 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "friends-layout",
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
+            span {
+                class: "hide-on-mobile",
+                ChatSidebar {
+                    route_info: cx.props.route_info.clone()
+                },
             },
             div {
                 class: "friends-body",
@@ -49,7 +53,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "friends-controls",
                     Button {
-                        icon: Icon::User,
+                        icon: Icon::Users,
                         text: get_local_text("friends.all"),
                         appearance: if route.clone() == FriendRoute::All { Appearance::Primary } else { Appearance::Secondary },
                         onpress: move |_| {
@@ -83,6 +87,13 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 (route.clone() == FriendRoute::All).then(|| rsx!(Friends {})),
                 (route.clone() == FriendRoute::Pending).then(|| rsx!(PendingFriends {}, OutgoingRequests {})),
                 (route.clone() == FriendRoute::Blocked).then(|| rsx!(BlockedUsers {})),
+                Nav {
+                    routes: cx.props.route_info.routes.clone(),
+                    active: cx.props.route_info.active.clone(),
+                    onnavigate: move |r| {
+                        use_router(cx).replace_route(r, None, None);
+                    }
+                },
             }
         }
     ))

@@ -4,15 +4,13 @@ use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
+use shared::language::{change_language, get_available_languages, get_local_text};
 
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
     state::{Action, State},
-    utils::{
-        get_available_themes,
-        language::{change_language, get_available_languages, get_local_text},
-    },
+    utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]

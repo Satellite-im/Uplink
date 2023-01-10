@@ -5,8 +5,9 @@ use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
+use crate::{FRIENDS_ROUTE};
+use shared::language::get_local_text;
 
-use crate::utils::language::get_local_text;
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
@@ -16,6 +17,7 @@ pub fn Welcome(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             id: "welcome",
+            aria_label: "welcome-screen",
             svg {
                 class: "logo",
                 "viewBox": "0 0 375.99 313.7",
@@ -32,10 +34,11 @@ pub fn Welcome(cx: Scope) -> Element {
             },
             Button {
                 icon: Icon::Plus,
+                aria_label: "add-friends-button".into(),
                 text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
-                    router.replace_route("/friends", None, None);
+                    router.replace_route(FRIENDS_ROUTE, None, None);
                 }
             },
         }

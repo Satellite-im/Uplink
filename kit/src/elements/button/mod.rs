@@ -18,6 +18,8 @@ pub struct Props<'a> {
     #[props(optional)]
     tooltip: Option<Element<'a>>,
     #[props(optional)]
+    aria_label: Option<String>,
+    #[props(optional)]
     icon: Option<Icon>,
     #[props(optional)]
     disabled: Option<bool>,
@@ -33,6 +35,15 @@ pub struct Props<'a> {
 /// If there is no text provided, we'll return an empty string.
 pub fn get_text(cx: &Scope<Props>) -> String {
     match &cx.props.text {
+        Some(val)   => val.to_owned(),
+        None        => String::from(""),
+    }
+}
+
+/// Generates the optional aria label for the button.
+/// If there is no text provided, we'll return an empty string.
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    match &cx.props.aria_label {
         Some(val)   => val.to_owned(),
         None        => String::from(""),
     }
@@ -60,8 +71,10 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 /// This will be overwritten if the button is disabled.
 pub fn get_appearence(cx: &Scope<Props>) -> String {
     // If the button is disabled, we can short circut this and just provide the disabled appearance.
-    if cx.props.disabled.is_some() {
-        return Appearance::Disabled.to_string();
+    if let Some(is_disabled) = cx.props.disabled {
+        if is_disabled {
+            return Appearance::Disabled.to_string();
+        }
     }
     match &cx.props.appearance {
         Some(appearance)    => appearance.to_string(),
@@ -102,6 +115,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let script = get_script(SCRIPT, &UUID);
 
     let text = get_text(&cx);
+    let aria_label = get_aria_label(&cx);
     let badge = get_badge(&cx);
     let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
@@ -124,6 +138,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 button {
                     id: "{UUID}",
+                    aria_label: "{aria_label}",
                     title: "{text}",
                     disabled: "{disabled}",
                     class: {

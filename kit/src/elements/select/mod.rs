@@ -22,7 +22,7 @@ pub fn emit(cx: &Scope<Props>, s: String) {
 pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let initial_value = cx.props.initial_value.clone();
     let mut options = cx.props.options.clone();
-    options.retain(|value|value != &initial_value);
+    options.retain(|value| value != &initial_value);
     options.insert(0, initial_value);
     let iter = IntoIterator::into_iter(options.clone());
 
@@ -33,8 +33,8 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "select",
             select {
                 onchange: move |e| emit(&cx, e.value.clone()),
-                iter.map(|val| 
-                    rsx!(option { key: "{val}", label: "{val}", value: "{val}"})
+                iter.map(|val|
+                    rsx!(option {key: "{val}", label: "{val}", value: "{val}"})
                 )
             }
         }

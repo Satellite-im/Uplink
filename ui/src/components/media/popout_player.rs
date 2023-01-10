@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::{use_window};
 use kit::{
-
     elements::{
         button::Button,
         tooltip::{ArrowPosition, Tooltip},
@@ -9,23 +9,16 @@ use kit::{
     },
     icons::{Icon, IconElement},
 };
-
-use crate::state::{State, Action};
-
 pub const SCRIPT: &str = include_str!("./script.js");
 
-#[derive(Eq, PartialEq, Props)]
-pub struct Props {
-    #[props(optional)]
-    larger: Option<bool>,
-}
-
 #[allow(non_snake_case)]
-pub fn PopoutPlayer(cx: Scope<Props>) -> Element {
-    let state = use_shared_state::<State>(cx)?;
+pub fn PopoutPlayer(cx: Scope) -> Element {
+    let window = use_window(cx);
 
-    cx.render(rsx! (
+        cx.render(
+        rsx! (
         div {
+            id: "video-poped-out",
             class: "popout-player",
             div {
                 class: "wrap",
@@ -36,12 +29,12 @@ pub fn PopoutPlayer(cx: Scope<Props>) -> Element {
                         size: 40,
                     },
                 },
-                
                 video {
+                  
                     src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                     autoplay: "true",
-                    "loop": "true",
-                    "muted": "true",
+                    "loop": "false",
+                    muted: "false"
                 },
                 div {
                     class: "controls",
@@ -55,7 +48,7 @@ pub fn PopoutPlayer(cx: Scope<Props>) -> Element {
                             }
                         )),
                         onpress: move |_| {
-                            state.write().mutate(Action::TogglePopout);
+                            window.close();
                         }
                     },
                     Button {
