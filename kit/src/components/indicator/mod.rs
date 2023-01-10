@@ -85,7 +85,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn Indicator(cx: Scope<Props>) -> Element {
     let icon = cx.props.platform.to_icon();
-    let status = cx.props.status.to_string();
+    let status = cx.props.status;
 
     cx.render(rsx!(div {
         class: "indicator indicator-{status}",

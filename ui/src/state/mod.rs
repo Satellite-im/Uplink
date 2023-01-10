@@ -626,10 +626,7 @@ impl State {
             Ok(r) => r,
             Err(_) => return Ok(State::default()),
         };
-        let state: State = match serde_json::from_str(&contents) {
-            Ok(s) => s,
-            Err(_) => State::default(),
-        };
+        let state: State = serde_json::from_str(&contents).unwrap_or_default();
         Ok(state)
     }
 

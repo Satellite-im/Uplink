@@ -159,7 +159,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let disabled = cx.props.disabled.unwrap_or_default();
 
-    let typ = cx.props.is_password.map(|b| if b { "password" } else { "text" }).unwrap_or("text");
+    let typ = cx.props.is_password.and_then(|b| b.then_some("password")).unwrap_or("text");
 
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js").replace("UUID", &cx.props.id);

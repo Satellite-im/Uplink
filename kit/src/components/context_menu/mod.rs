@@ -20,9 +20,8 @@ pub struct ItemProps<'a> {
 
 /// Tells the parent the menu was interacted with.
 pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
-    match &cx.props.onpress {
-        Some(f) => f.call(e),
-        None => {}
+    if let Some(f) = cx.props.onpress.as_ref() {
+        f.call(e)
     }
 }
 
@@ -38,10 +37,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             class: "{class}",
             onclick: move |e| emit(&cx, e),
             (cx.props.icon.is_some()).then(|| {
-                let icon = match cx.props.icon {
-                    Some(shape) => shape,
-                    None        => Shape::Cog,
-                };
+                let icon = cx.props.icon.unwrap_or(Shape::Cog);
                 rsx! {
                     IconElement { icon: icon }
                 }
