@@ -4,10 +4,4 @@ target
 ui/src/compiled_styles.css
 Cargo.lock
 
-# UI Tests
-e2e-tests/apps/
-e2e-tests/node_modules/
-e2e-tests/package-lock.json
-e2e-tests/appium.log
-e2e-tests/test-results/
 
