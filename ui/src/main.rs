@@ -11,11 +11,12 @@ use fs_extra::dir::*;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
-use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use shared::language::{change_language, get_local_text};
+// use state::{Action, ActionHook, State};
 use state::State;
-
 use std::path::{Path, PathBuf};
+
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
@@ -24,6 +25,7 @@ use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::toast::Toast;
+use crate::layouts::auth::AuthLayout;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -33,7 +35,6 @@ use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
-use utils::language::get_local_text;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
@@ -44,43 +45,70 @@ pub mod testing;
 pub mod utils;
 mod warp_runner;
 
-use fluent_templates::static_loader;
+#[macro_use]
+extern crate lazy_static;
 
-static_loader! {
-    static LOCALES = {
-        locales: "./locales",
-        fallback_language: "en-US",
-        // Removes unicode isolating marks around arguments, you typically
-        // should only set to false when testing.
-        customise: |bundle| bundle.set_use_isolating(false),
+#[derive(Debug)]
+pub struct StaticArgs {
+    pub uplink_path: PathBuf,
+    pub cache_path: PathBuf,
+    pub config_path: PathBuf,
+    pub warp_path: PathBuf,
+    pub use_mock: bool,
+}
+
+pub struct WarpCmdChannels {
+    pub tx: WarpCmdTx,
+    pub rx: WarpCmdRx,
+}
+
+pub struct WarpEventChannels {
+    pub tx: WarpEventTx,
+    pub rx: WarpEventRx,
+}
+
+lazy_static! {
+    pub static ref STATIC_ARGS: StaticArgs = {
+        let args = Args::parse();
+        let uplink_path = match args.path {
+            Some(path) => path,
+            _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
+        };
+        StaticArgs {
+            uplink_path: uplink_path.clone(),
+            cache_path: uplink_path.join("state.json"),
+            config_path: uplink_path.join("Config.json"),
+            warp_path: uplink_path.join("warp"),
+            use_mock: args.mock,
+        }
+    };
+
+    // allows the UI to send commands to Warp
+    pub static ref WARP_CMD_CH: WarpCmdChannels = {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        WarpCmdChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
+    };
+
+    // allows the UI to receive events to Warp
+    // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
+    pub static ref WARP_EVENT_CH: WarpEventChannels =  {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        WarpEventChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
     };
 }
 
-// allows the UI to receive events to Warp
-// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-pub static WARP_CHANNELS: Lazy<(WarpEventTx, WarpEventRx)> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    (tx, Arc::new(Mutex::new(rx)))
-});
-
-// allows the UI to send commands to Warp
-pub static WARP_CMD_CH: Lazy<(WarpCmdTx, WarpCmdRx)> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    (tx, Arc::new(Mutex::new(rx)))
-});
-
-// for warp only
-pub static WARP_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
-    Some(path) => path.join("warp"),
-    _ => dirs::home_dir().unwrap_or_default().join(".warp"),
-});
-
-pub static UPLINK_PATH: Lazy<PathBuf> = Lazy::new(|| match Args::parse().path {
-    Some(path) => path,
-    _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
-});
-
-pub static USE_MOCK: Lazy<bool> = Lazy::new(|| Args::parse().mock);
+pub static CHAT_ROUTE: &str = "/chat";
+pub static FRIENDS_ROUTE: &str = "/friends";
+pub static FILES_ROUTE: &str = "/files";
+pub static SETTINGS_ROUTE: &str = "/settings";
+pub static UNLOCK_ROUTE: &str = "/";
+pub static AUTH_ROUTE: &str = "/auth";
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -94,7 +122,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = UPLINK_PATH.join("themes");
+    let themes_dest = STATIC_ARGS.uplink_path.join("themes");
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -113,6 +141,9 @@ fn copy_assets() {
 
 fn main() {
     // Initializes the cache dir if needed
+    std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
+        .expect("Error creating Uplink directory");
+    std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
     copy_assets();
 
     let mut main_menu = Menu::new();
@@ -189,10 +220,12 @@ fn main() {
 
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
-    let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_CHANNELS.0.clone(), WARP_CMD_CH.1.clone());
 
-    let mut state = if *USE_MOCK {
+    // warp_runner must be started from within a tokio reactor
+    let mut warp_runner = warp_runner::WarpRunner::init();
+    warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
+
+    let mut state = if STATIC_ARGS.use_mock {
         State::mock()
     } else {
         State::load().expect("failed to load state")
@@ -215,7 +248,6 @@ fn app(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
-    let warp_rx = use_state(cx, || WARP_CHANNELS.1.clone());
 
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -230,7 +262,7 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
-                        let flag = *toggle.current();
+                        let flag = *toggle.get();
                         toggle.set(!flag);
                     }
                 }
@@ -240,13 +272,15 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle, warp_rx];
+        to_owned![toggle];
         async move {
+            let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_rx.lock().await;
+            let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
+                //println!("warp_runner got event");
                 if warp_runner::handle_event(inner.clone(), evt).await {
                     let flag = *toggle.current();
                     toggle.set(!flag);
@@ -256,7 +290,7 @@ fn app(cx: Scope) -> Element {
     });
 
     let user_lang_saved = state.read().settings.language.clone();
-    utils::language::change_language(user_lang_saved);
+    change_language(user_lang_saved);
 
     let pre_release_text = get_local_text("uplink.pre-release");
 
@@ -272,11 +306,16 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
+            class: "drag-handle",
+            onmousedown: move |_| desktop.drag(),
+        },
+        div {
             id: "app-wrap",
             get_toasts(cx, &state.read()),
             get_call_dialog(cx),
             div {
                 id: "pre-release",
+                aria_label: "pre-release",
                 onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,
@@ -337,19 +376,19 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
-        to: "/",
+        to: CHAT_ROUTE,
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
-        to: "/settings",
+        to: SETTINGS_ROUTE,
         name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
-        to: "/friends",
+        to: FRIENDS_ROUTE,
         name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
@@ -360,7 +399,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         loading: None,
     };
     let files_route = UIRoute {
-        to: "/files",
+        to: FILES_ROUTE,
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
@@ -372,48 +411,52 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         settings_route.clone(),
     ];
 
-    cx.render(rsx!(Router {
-        Route {
-            to: "/",
-            ChatLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: chat_route.clone(),
+    cx.render(rsx!(
+            Router {
+                Route {
+                    to: CHAT_ROUTE,
+                    ChatLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: chat_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: SETTINGS_ROUTE,
+                    SettingsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: settings_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FRIENDS_ROUTE,
+                    FriendsLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: friends_route.clone(),
+                        }
+                    }
+                },
+                Route {
+                    to: FILES_ROUTE,
+                    FilesLayout {
+                        route_info: RouteInfo {
+                            routes: routes.clone(),
+                            active: files_route,
+                        }
+                    }
+                },
+                Route {
+                    to: UNLOCK_ROUTE,
+                    UnlockLayout {}
                 }
-            }
-        },
-        Route {
-            to: "/settings",
-            SettingsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: settings_route.clone(),
+                Route {
+                    to: AUTH_ROUTE,
+                    AuthLayout {}
                 }
-            }
-        },
-        Route {
-            to: "/friends",
-            FriendsLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: friends_route.clone(),
-                }
-            }
-        },
-        Route {
-            to: "/files",
-            FilesLayout {
-                route_info: RouteInfo {
-                    routes: routes.clone(),
-                    active: files_route,
-                }
-            }
-        },
-        Route {
-            to: "/pre/unlock",
-            UnlockLayout {
-
-            }
         }
-    }))
+    ))
 }

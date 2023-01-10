@@ -34,7 +34,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             select {
                 onchange: move |e| emit(&cx, e.value.clone()),
                 iter.map(|val|
-                    rsx!(option {label: "{val}", value: "{val}"})
+                    rsx!(option {key: "{val}", label: "{val}", value: "{val}"})
                 )
             }
         }

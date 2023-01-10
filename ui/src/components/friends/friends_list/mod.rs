@@ -3,19 +3,21 @@ use dioxus_router::use_router;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::{Platform, Status},
+        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
     icons::Icon,
 };
 
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
-    utils::language::get_local_text,
+    utils::convert_status,
+    CHAT_ROUTE,
 };
 
 #[allow(non_snake_case)]
@@ -55,12 +57,6 @@ pub fn Friends(cx: Scope) -> Element {
                                 warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                                 _ => Platform::Headless //TODO: Unknown
                             };
-                            let status = match friend.identity_status() {
-                                warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                                warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                                warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                                warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-                            };
                             rsx!(
                                 ContextMenu {
                                     id: format!("{}-friend-listing", did),
@@ -71,7 +67,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
-                                                use_router(cx).replace_route("/", None, None);
+                                                use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                             }
                                         },
                                         ContextItem {
@@ -112,13 +108,13 @@ pub fn Friends(cx: Scope) -> Element {
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: status,
+                                                status: convert_status(&friend.identity_status()),
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),
                                         onchat: move |_| {
                                             state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                            use_router(cx).replace_route("/", None, None);
+                                            use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));

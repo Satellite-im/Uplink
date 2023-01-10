@@ -18,7 +18,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
-use crate::{testing::mock::generate_mock, UPLINK_PATH};
+use crate::{testing::mock::generate_mock, STATIC_ARGS};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -506,8 +506,8 @@ impl State {
         self.call_hooks(&action);
 
         match action {
-            Action::ClearPopout => {
-                self.ui.clear_popout();
+            Action::ClearPopout(window) => {
+                self.ui.clear_popout(window);
             }
             Action::SetPopout(webview) => {
                 self.ui.set_popout(webview);
@@ -616,16 +616,16 @@ impl State {
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string(self)?;
-        let cache_path = UPLINK_PATH.join("state.json");
-
-        fs::write(cache_path, serialized)?;
+        fs::write(&STATIC_ARGS.cache_path, serialized)?;
         Ok(())
     }
 
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Result<Self, std::io::Error> {
-        let cache_path = UPLINK_PATH.join("state.json");
-        let contents = fs::read_to_string(cache_path)?;
+        let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
+            Ok(r) => r,
+            Err(_) => return Ok(State::default()),
+        };
         let state: State = match serde_json::from_str(&contents) {
             Ok(s) => s,
             Err(_) => State::default(),
@@ -633,7 +633,7 @@ impl State {
         Ok(state)
     }
 
-    pub fn mock() -> State {
+    pub fn mock() -> Self {
         generate_mock()
     }
 }

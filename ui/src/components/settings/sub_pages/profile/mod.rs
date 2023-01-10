@@ -6,14 +6,13 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
+use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
-
-use crate::utils::language::get_local_text;
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     // Set up validation options for the input field
-    let validation_options = Validation {
+    let username_validation_options = Validation {
         // The input should have a maximum length of 32
         max_length: Some(32),
         // The input should have a minimum length of 4
@@ -24,16 +23,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    // Set up options for the input field
-    let input_options = Options {
-        // Enable validation for the input field with the specified options
-        with_validation: Some(validation_options),
-        // Do not replace spaces with underscores
-        replace_spaces_underscore: false,
-        // Show a clear button inside the input field
-        with_clear_btn: false,
-        // Use the default options for the remaining fields
-        ..Options::default()
+    let status_validation_options = Validation {
+        // The input should have a maximum length of 128
+        max_length: Some(128),
+        // The input should have a minimum length of 0
+        min_length: Some(0),
+        // The input should only contain alphanumeric characters
+        alpha_numeric_only: false,
+        // The input should not contain any whitespace
+        no_whitespace: false,
     };
 
     let image_state = use_state(cx, String::new);
@@ -44,10 +42,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-profile",
+            aria_label: "settings-profile",
             div {
                 class: "profile-header",
+                aria_label: "profile-header",
                 div {
                     class: "profile-banner",
+                    aria_label: "profile-banner",
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
@@ -58,6 +59,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 },
                 div {
                     class: "profile-picture",
+                    aria_label: "profile-picture",
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
@@ -66,6 +68,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Button {
                         icon: kit::icons::Icon::Plus,
+                        aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
                                 log::error!("Error to change profile avatar image {error}");
@@ -76,6 +79,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             },
             div{
                 class: "profile-content",
+                aria_label: "profile-content",
                 div {
                     class: "plus-button",
                     Button {
@@ -94,8 +98,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input {
                         placeholder: get_local_text("uplink.username"),
+                        aria_label: "username-input".into(),
                         default_text: "Mock Username".into(),
-                        options: input_options,
+                        options: get_input_options(username_validation_options),
                     },
                 },
                 div {
@@ -103,12 +108,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Label {
                         text: get_local_text("uplink.status"),
                     },
-                    Input {
+                    Input { 
                         placeholder: get_local_text("uplink.status"),
+                        aria_label: "status-input".into(),
                         default_text: "Mock status messages are so 2008.".into(),
                         options: Options {
                             with_clear_btn: true,
-                            ..input_options
+                            ..get_input_options(status_validation_options)
                         }
                     }
                 }
@@ -162,4 +168,18 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
 
     image_state.set(image);
     Ok(())
+}
+
+fn get_input_options(validation_options: Validation) -> Options {
+        // Set up options for the input field
+    Options {
+        // Enable validation for the input field with the specified options
+        with_validation: Some(validation_options),
+        // Do not replace spaces with underscores
+        replace_spaces_underscore: false,
+        // Show a clear button inside the input field
+        with_clear_btn: false,
+        // Use the default options for the remaining fields
+        ..Options::default()
+    }
 }

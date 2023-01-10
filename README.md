@@ -85,7 +85,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] We should be able to rename folders
   - [ ] We should be able to drag and drop folders into folders.
   - [ ] We should be able to navigate using the breadcrumbs.
-  - [ ] we should be able to delete files and folders. Deleting a folder should delete all the items inside a folder.
+  - [ ] We should be able to delete files and folders. Deleting a folder should delete all the items inside a folder.
   - [ ] Deleting things should move them to a "trash" folder which will have a different icon. 
   - [ ] Emptying trash will delete everything in the trash.
 - [x] Language & Translation
@@ -96,7 +96,7 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Add mock data to generate random reactions to messages 
   - [ ] Add mock data to include random attachments on messages
   - [ ] Add the ability to "edit" messages.
-  - [ ] Implement UI for the afformentioned items.
+  - [ ] Implement UI for the aforementioned items.
 - [ ] Settings should be wired to a config file and automatically update.
 - [ ] CSS needs to be split up neater within components and layouts in uplink_skeleton.
 - [x] Unlock page needs porting.
@@ -107,5 +107,5 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Include a way to view the contents of the log-in developer settings.
     - [ ] Include a copy button to copy the log to the clipboard.
   - [ ] Debug logging should also log neatly to the rust console.
-- [ ] Profile Page in settings
-- [ ] Profile page popup option for user_image 
+- [x] Profile Page in settings
+- [ ] Profile page popup option for user_image

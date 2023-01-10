@@ -18,6 +18,8 @@ pub struct Props<'a> {
     #[props(optional)]
     tooltip: Option<Element<'a>>,
     #[props(optional)]
+    aria_label: Option<String>,
+    #[props(optional)]
     icon: Option<Icon>,
     #[props(optional)]
     disabled: Option<bool>,
@@ -36,6 +38,12 @@ pub fn get_text(cx: &Scope<Props>) -> String {
         Some(val)   => val.to_owned(),
         None        => String::from(""),
     }
+}
+
+/// Generates the optional aria label for the button.
+/// If there is no text provided, we'll return an empty string.
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    cx.props.aria_label.clone().unwrap_or_default()
 }
 
 /// Generates the optional badge for the button.
@@ -104,6 +112,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let script = get_script(SCRIPT, &UUID);
 
     let text = get_text(&cx);
+    let aria_label = get_aria_label(&cx);
     let badge = get_badge(&cx);
     let disabled = &cx.props.disabled.unwrap_or_default();
     let appearance = get_appearence(&cx);
@@ -126,6 +135,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 button {
                     id: "{UUID}",
+                    aria_label: "{aria_label}",
                     title: "{text}",
                     disabled: "{disabled}",
                     class: {

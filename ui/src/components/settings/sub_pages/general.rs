@@ -4,15 +4,13 @@ use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
+use shared::language::{change_language, get_available_languages, get_local_text};
 
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
     state::{Action, State},
-    utils::{
-        get_available_themes,
-        language::{change_language, get_available_languages, get_local_text},
-    },
+    utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]
@@ -26,6 +24,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-general",
+            aria_label: "settings-general",
             SettingSection {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
@@ -67,6 +66,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-general.theme-reset-description"),
                 Button {
                     text: get_local_text("settings-general.theme-reset-cta"),
+                    aria_label: "clear-theme-button".into(),
                     icon: Icon::Trash,
                     appearance: kit::elements::Appearance::Secondary,
                     onpress: move |_| {

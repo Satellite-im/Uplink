@@ -43,9 +43,13 @@
 //! component code to the clipboard.
 
 /// This module contains all the outline icon shapes.
-pub mod outline;
+pub mod outline {
+    include!(concat!(env!("OUT_DIR"), "/outline.rs"));
+}
 /// This module contains all the solid icon shapes.
-pub mod solid;
+pub mod solid {
+    include!(concat!(env!("OUT_DIR"), "/solid.rs"));
+}
 
 use dioxus::{events::MouseEvent, prelude::*};
 

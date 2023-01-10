@@ -12,6 +12,8 @@ pub struct Props<'a> {
     #[props(optional)]
     text: Option<String>,
     #[props(optional)]
+    aria_label: Option<String>,
+    #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
     with_rename: Option<bool>,
@@ -28,6 +30,10 @@ pub fn get_text(cx: &Scope<Props>) -> String {
         Some(val) => val.to_owned(),
         None => String::from(""),
     }
+}
+
+pub fn get_aria_label(cx: &Scope<Props>) -> String {
+    cx.props.aria_label.clone().unwrap_or_default()
 }
 
 pub fn emit(cx: &Scope<Props>, s: String) {
@@ -48,6 +54,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let open = &cx.props.open.unwrap_or_default();
     let text = get_text(&cx);
+    let aria_label = get_aria_label(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let icon = if *open {
@@ -67,6 +74,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("folder {}", if *disabled { "disabled" } else { "" })
                 },
+                aria_label: "{aria_label}",
                 div {
                     class: "icon",
                     onclick: move |_| emit_press(&cx),
@@ -78,7 +86,8 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Input {
                         disabled: *disabled,
                         placeholder: placeholder,
-                        onreturn: move |s| emit(&cx, s)
+                        // todo: use is_valid
+                        onreturn: move |(s, _is_valid)| emit(&cx, s)
                     }
                 )),
                 (!with_rename).then(|| rsx! (

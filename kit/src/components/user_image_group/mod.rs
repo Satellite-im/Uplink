@@ -30,7 +30,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let count: i64 = cx.props.participants.len() as i64 - 3;
     let group = cx.props.participants.len() > 2;
     let username = &cx.props.with_username.clone().unwrap_or_default();
-    let single_user = &cx.props.participants[1];
+    let single_user = &cx.props.participants[0];
 
     let loading = &cx.props.loading.unwrap_or_default();
 

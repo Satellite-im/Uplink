@@ -1,5 +1,6 @@
-use std::rc::{Rc, Weak};
+use std::rc::Weak;
 
+use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
 use uuid::Uuid;
 use warp::raygun::{Message, Reaction};
@@ -41,8 +42,8 @@ pub enum Action {
     /// adds an overlay. currently only used for demonstration purposes
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
-    SetPopout(Rc<WebView>),
-    ClearPopout,
+    SetPopout(WindowId),
+    ClearPopout(DesktopContext),
 
     // Settings
     /// Sets the selected language.

@@ -109,6 +109,7 @@ fn UserLoading(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             class: "skeletal-user",
+            aria_label: "skeletal-user",
             UserImage {
                 loading: true,
                 status: Status::Offline,

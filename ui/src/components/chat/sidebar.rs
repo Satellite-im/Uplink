@@ -1,23 +1,11 @@
 
 use dioxus::prelude::*;
+use shared::language::get_local_text;
 use warp::{raygun::Message};
 use dioxus_router::*;
-use dioxus_desktop::use_window;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{
-    components::{
-        chat::{
-            RouteInfo,
-            welcome::Welcome
-        }, 
-        media::remote_control::RemoteControls
-    }, 
-    state::{
-        State, Action, Chat, Identity
-    },
-     utils::language::get_local_text
-};
+use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE, utils::convert_status};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -37,15 +25,9 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
             warp::multipass::identity::Platform::Mobile => Platform::Mobile,
             _ => Platform::Headless //TODO: Unknown
         };
-        let status = match identity.identity_status() {
-            warp::multipass::identity::IdentityStatus::Online => Status::Online,
-            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-        };
         user_info.push(UserInfo {
             platform,
-            status,
+            status: convert_status(&identity.identity_status()),
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -86,8 +68,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let binding = state.read();
     let active_media_chat = binding.get_active_media_chat();
 
-    let desktop = use_window(cx);
-
     cx.render(rsx!(
         ReusableSidebar {
             with_search: cx.render(rsx!(
@@ -97,6 +77,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: true,
+                        aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         options: Options {
                             with_clear_btn: true,
@@ -114,10 +95,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
-            div {
-                class: "drag-handle",
-                onmousedown: move |_| desktop.drag(),
-            },
             // Only display favorites if we have some.
             (!favorites.is_empty()).then(|| rsx!(
                 div {
@@ -145,8 +122,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(favorites_chat.clone()));
-                                                if cx.props.route_info.active.to != "/" {
-                                                    use_router(cx).replace_route("/", None, None);
+                                                if cx.props.route_info.active.to != CHAT_ROUTE {
+                                                    use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                                 }
                                             }
                                         },
@@ -164,8 +141,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         with_username: participants_name,
                                         onpress: move |_| {
                                             state.write().mutate(Action::ChatWith(chat.clone()));
-                                            if cx.props.route_info.active.to != "/" {
-                                                use_router(cx).replace_route("/", None, None);
+                                            if cx.props.route_info.active.to != CHAT_ROUTE {
+                                                use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                             }
                                         }
                                     }
@@ -199,12 +176,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         warp::multipass::identity::Platform::Desktop => Platform::Desktop,
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                         _ => Platform::Headless //TODO: Unknown
-                    };
-                    let status = match parsed_user.identity_status() {
-                        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
                     };
 
                     let last_message = chat.messages.last();
@@ -272,7 +243,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status: status,
+                                            status:  convert_status(&parsed_user.identity_status()),
                                             image: parsed_user.graphics().profile_picture(),
                                         }
                                     )} else {rsx! (
@@ -284,8 +255,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(chat_with.clone()));
-                                    if cx.props.route_info.active.to != "/" {
-                                        use_router(cx).replace_route("/", None, None);
+                                    if cx.props.route_info.active.to != CHAT_ROUTE {
+                                        use_router(cx).replace_route(CHAT_ROUTE, None, None);
                                     }
                                 }
                             }

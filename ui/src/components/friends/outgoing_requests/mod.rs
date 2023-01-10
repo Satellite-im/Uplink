@@ -1,9 +1,10 @@
 use chrono::{Utc, Duration};
 use dioxus::prelude::*;
-use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform, Status}}, icons::Icon};
+use kit::{elements::label::Label, components::{context_menu::{ContextMenu, ContextItem}, user_image::UserImage, indicator::{Platform}}, icons::Icon};
 use rand::Rng;
+use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
-use crate::{state::{State, Action}, utils::language::get_local_text, components::friends::friend::{Friend}};
+use crate::{state::{State, Action}, components::friends::friend::{Friend}, utils::convert_status};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
@@ -26,12 +27,6 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                     warp::multipass::identity::Platform::Desktop => Platform::Desktop,
                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                     _ => Platform::Headless //TODO: Unknown
-                };
-                let status = match friend.identity_status() {
-                    warp::multipass::identity::IdentityStatus::Online => Status::Online,
-                    warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-                    warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-                    warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
                 };
                 rsx!(
                     ContextMenu {
@@ -60,7 +55,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: status,
+                                    status: convert_status(&friend.identity_status()),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),
