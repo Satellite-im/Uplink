@@ -13,7 +13,7 @@ use kit::{
 
 use crate::{
     warp_runner::{commands::TesseractCmd, WarpCmd},
-    AUTH_ROUTE, CHAT_ROUTE, WARP_CMD_CH,
+    AUTH_ROUTES, UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 // todo: go to the auth page if no account has been created
@@ -47,7 +47,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
 
                 //println!("got response from warp");
                 match res {
-                    Ok(_) => router.replace_route(CHAT_ROUTE, None, None),
+                    Ok(_) => router.replace_route(UPLINK_ROUTES.chat, None, None),
                     Err(_) => password_failed.set(Some(true)),
                 }
             }
@@ -96,7 +96,7 @@ pub fn UnlockLayout(cx: Scope) -> Element {
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
-                    router.replace_route(AUTH_ROUTE, None, None)
+                    router.replace_route(AUTH_ROUTES.create_account, None, None)
                 }
             }
         }

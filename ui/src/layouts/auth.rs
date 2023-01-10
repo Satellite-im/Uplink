@@ -13,7 +13,7 @@ use kit::{
 
 use crate::{
     warp_runner::{commands::MultiPassCmd, WarpCmd},
-    CHAT_ROUTE, WARP_CMD_CH,
+    UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 #[allow(non_snake_case)]
@@ -65,14 +65,14 @@ pub fn AuthLayout(cx: Scope) -> Element {
                     .expect("UnlockLayout failed to send warp command");
 
                 desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                router.replace_route(CHAT_ROUTE, None, None);
+                router.replace_route(UPLINK_ROUTES.chat, None, None);
 
                 // let res = rx.await.expect("failed to get response from warp_runner");
 
                 // //println!("got response from warp");
                 // match res {
                 //     Ok(_) => {
-                //         router.replace_route(CHAT_ROUTE, None, None);
+                //         router.replace_route(UPLINK_ROUTES.chat, None, None);
                 //     }
                 //     Err(e) => {
                 //         eprintln!("auth failed: {}", e);

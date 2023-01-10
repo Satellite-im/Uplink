@@ -103,12 +103,28 @@ lazy_static! {
     };
 }
 
-pub static CHAT_ROUTE: &str = "/chat";
-pub static FRIENDS_ROUTE: &str = "/friends";
-pub static FILES_ROUTE: &str = "/files";
-pub static SETTINGS_ROUTE: &str = "/settings";
-pub static UNLOCK_ROUTE: &str = "/";
-pub static AUTH_ROUTE: &str = "/auth";
+pub struct UplinkRoutes<'a> {
+    pub chat: &'a str,
+    pub friends: &'a str,
+    pub files: &'a str,
+    pub settings: &'a str,
+}
+pub struct AuthRoutes<'a> {
+    pub create_account: &'a str,
+    pub unlock: &'a str,
+}
+
+pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
+    chat: "/",
+    friends: "/friends",
+    files: "/files",
+    settings: "/settings",
+};
+
+pub static AUTH_ROUTES: AuthRoutes = AuthRoutes {
+    unlock: "/",
+    create_account: "/account",
+};
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -376,19 +392,19 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
-        to: CHAT_ROUTE,
+        to: UPLINK_ROUTES.chat,
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
-        to: SETTINGS_ROUTE,
+        to: UPLINK_ROUTES.settings,
         name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
-        to: FRIENDS_ROUTE,
+        to: UPLINK_ROUTES.friends,
         name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
@@ -399,7 +415,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         loading: None,
     };
     let files_route = UIRoute {
-        to: FILES_ROUTE,
+        to: UPLINK_ROUTES.files,
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
@@ -414,7 +430,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
     cx.render(rsx!(
             Router {
                 Route {
-                    to: CHAT_ROUTE,
+                    to: UPLINK_ROUTES.chat,
                     ChatLayout {
                         route_info: RouteInfo {
                             routes: routes.clone(),
@@ -423,7 +439,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
                     }
                 },
                 Route {
-                    to: SETTINGS_ROUTE,
+                    to: UPLINK_ROUTES.settings,
                     SettingsLayout {
                         route_info: RouteInfo {
                             routes: routes.clone(),
@@ -432,7 +448,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
                     }
                 },
                 Route {
-                    to: FRIENDS_ROUTE,
+                    to: UPLINK_ROUTES.friends,
                     FriendsLayout {
                         route_info: RouteInfo {
                             routes: routes.clone(),
@@ -441,7 +457,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
                     }
                 },
                 Route {
-                    to: FILES_ROUTE,
+                    to: UPLINK_ROUTES.files,
                     FilesLayout {
                         route_info: RouteInfo {
                             routes: routes.clone(),
@@ -449,14 +465,6 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
                         }
                     }
                 },
-                Route {
-                    to: UNLOCK_ROUTE,
-                    UnlockLayout {}
-                }
-                Route {
-                    to: AUTH_ROUTE,
-                    AuthLayout {}
-                }
         }
     ))
 }
