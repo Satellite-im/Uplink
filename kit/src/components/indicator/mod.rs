@@ -1,21 +1,24 @@
-use std::fmt;
-
+use derive_more::Display;
 use dioxus::prelude::*;
 
 use crate::icons::{Icon, IconElement};
 
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Platform {
     // The user is using a desktop computer
+    #[display(fmt = "circle")]
     Desktop,
 
     // The user is using a mobile device
+    #[display(fmt = "mobile")]
     Mobile,
 
     // The user is using a television
+    #[display(fmt = "tv")]
     Tv,
 
     // The user is using a headless device (e.g. a server)
+    #[display(fmt = "headless")]
     Headless,
 }
 
@@ -31,42 +34,23 @@ impl Platform {
     }
 }
 
-impl fmt::Display for Platform {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match self {
-            Platform::Desktop => String::from("circle"),
-            Platform::Mobile => String::from("mobile"),
-            Platform::Tv => String::from("tv"),
-            Platform::Headless => String::from("headless"),
-        };
-        write!(f, "{s}")
-    }
-}
-
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Status {
     // The user is currently online
+    #[display(fmt = "online")]
     Online,
 
     // The user is currently offline
+    #[display(fmt = "offline")]
     Offline,
 
     // The user is currently idle
+    #[display(fmt = "idle")]
     Idle,
 
     // The user has enabled do-not-disturb mode
+    #[display(fmt = "do-not-disturb")]
     DoNotDisturb,
-}
-
-impl fmt::Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Status::Online => write!(f, "online"),
-            Status::Offline => write!(f, "offline"),
-            Status::Idle => write!(f, "idle"),
-            Status::DoNotDisturb => write!(f, "do-not-disturb"),
-        }
-    }
 }
 
 #[derive(Eq, PartialEq, Props)]
