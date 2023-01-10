@@ -4,7 +4,7 @@ use kit::{elements::label::Label, components::{context_menu::{ContextMenu, Conte
 use rand::Rng;
 use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
-use crate::{state::{State, Action}, components::friends::friend::{Friend}};
+use crate::{state::{State, Action}, components::friends::friend::{Friend}, utils::convert_status};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
@@ -55,7 +55,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: friend.identity_status().into(),
+                                    status: convert_status(&friend.identity_status()),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),

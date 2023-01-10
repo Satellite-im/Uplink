@@ -16,6 +16,7 @@ use warp::multipass::identity::Relationship;
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
+    utils::convert_status,
     CHAT_ROUTE,
 };
 
@@ -107,7 +108,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: friend.identity_status().into(),
+                                                status: convert_status(&friend.identity_status()),
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),

@@ -58,17 +58,6 @@ pub enum Status {
     DoNotDisturb,
 }
 
-impl std::convert::From<warp::multipass::identity::IdentityStatus> for Status {
-    fn from(status: warp::multipass::identity::IdentityStatus) -> Self {
-        match status {
-            warp::multipass::identity::IdentityStatus::Online => Status::Online,
-            warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-            warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-            warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-        }
-    }
-}
-
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
