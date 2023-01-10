@@ -34,10 +34,7 @@ pub struct Props<'a> {
 /// Generates the optional text for the button.
 /// If there is no text provided, we'll return an empty string.
 pub fn get_text(cx: &Scope<Props>) -> String {
-    match &cx.props.text {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.text.clone().unwrap_or_default()
 }
 
 /// Generates the optional aria label for the button.
@@ -49,10 +46,7 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 /// Generates the optional badge for the button.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
-    match &cx.props.with_badge {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.with_badge.clone().unwrap_or_default()
 }
 
 /// Generates the optional icon providing a fallback.

@@ -62,10 +62,7 @@ pub fn get_appearance(active_route: &Route, route: &Route) -> Appearance {
 
 /// Generates the an optional badge value
 pub fn get_badge(route: &Route) -> String {
-    match &route.with_badge {
-        Some(val) => val.to_owned(),
-        None => String::from(""),
-    }
+    route.with_badge.clone().unwrap_or_default()
 }
 
 /// Gets the active route, or returns a void one
