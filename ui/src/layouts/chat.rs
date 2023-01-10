@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
 
 use crate::{
     components::chat::{
@@ -16,9 +15,6 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-
-    let desktop = use_window(cx);
-    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     cx.render(rsx!(
         div {
