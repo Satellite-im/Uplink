@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::{
@@ -20,7 +19,6 @@ use crate::{
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
-    let desktop = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, page];
@@ -65,9 +63,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
-            onmousedown: move |_| {
-                desktop.drag();
-            },
             p {
                 class: "info",
                 aria_label: "unlock-warning-paragraph",

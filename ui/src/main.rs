@@ -131,7 +131,8 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    #[clap(long, default_value_t = false)]
+    // todo: when the app is mature, default mock to false
+    #[clap(long, default_value_t = true)]
     mock: bool,
 }
 
@@ -240,6 +241,7 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
+    // make the window smaller while the user authenticates
     let desktop = use_window(cx);
     desktop.set_inner_size(LogicalSize {
         width: 500.0,
@@ -303,6 +305,8 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         State::load().expect("failed to load state")
     };
 
+    // set the window to the normal size.
+    // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
@@ -398,9 +402,6 @@ fn app(cx: Scope) -> Element {
                     "{pre_release_text}",
                 }
             },
-            //state.read().ui.popout_player.then(|| rsx!(
-           //     PopoutPlayer {}
-           // )),
            get_router(cx, pending_friends)
         }
     ))
