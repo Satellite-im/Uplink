@@ -119,10 +119,10 @@ impl WarpRunner {
             };
 
             loop {
-                println!("waiting for event");
+                //println!("waiting for event");
                 tokio::select! {
                     opt = multipass_stream.next() => {
-                        println!("got multiPass event");
+                        //println!("got multiPass event");
                         if let Some(evt) = opt {
                             if tx.send(WarpEvent::MultiPass(evt)).is_err() {
                                 break;
@@ -139,7 +139,7 @@ impl WarpRunner {
 
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => {
-                        println!("got warp_runner cmd");
+                        //println!("got warp_runner cmd");
                         match opt {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,

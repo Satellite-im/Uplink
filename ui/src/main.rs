@@ -223,10 +223,11 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
-    let mut state = State::load().expect("failed to load state");
-    if STATIC_ARGS.use_mock {
-        state = State::mock();
-    }
+    let mut state = if STATIC_ARGS.use_mock {
+        State::mock()
+    } else {
+        State::load().expect("failed to load state")
+    };
 
     // todo: delete this. it is just an examle
     let desktop = use_window(cx);
@@ -241,7 +242,7 @@ fn bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    println!("rendering app");
+    //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let toggle = use_state(cx, || false);
@@ -277,7 +278,7 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                println!("warp_runner got event");
+                //println!("warp_runner got event");
                 if warp_runner::handle_event(inner.clone(), evt).await {
                     let flag = *toggle.current();
                     toggle.set(!flag);

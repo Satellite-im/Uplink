@@ -52,7 +52,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
-                println!("auth got input");
+                //println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
@@ -63,11 +63,11 @@ pub fn AuthLayout(cx: Scope) -> Element {
                     }))
                     .expect("UnlockLayout failed to send warp command");
 
-                println!("sent command");
+                //println!("sent command");
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 
-                println!("got response from warp");
+                //println!("got response from warp");
                 match res {
                     Ok(_) => router.replace_route(CHAT_ROUTE, None, None),
                     Err(e) => {
@@ -117,9 +117,9 @@ pub fn AuthLayout(cx: Scope) -> Element {
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
                 onpress: move |_| {
-                    println!("attempt to create account: {}, {}", pin_valid.get(), username_valid.get());
+                    //println!("attempt to create account: {}, {}", pin_valid.get(), username_valid.get());
                     if *pin_valid.get() && *username_valid.get() {
-                        println!("sending msg");
+                        //println!("sending msg");
                         ch.send((username.get().to_string(), pin.get().to_string()));
                     } else {
                         println!("input not valid");
