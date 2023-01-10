@@ -66,7 +66,7 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 
 /// Generates the appearance for the button.
 /// This will be overwritten if the button is disabled.
-pub fn get_appearence(cx: &Scope<Props>) -> Appearance {
+pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
     // If the button is disabled, we can short circut this and just provide the disabled appearance.
     if let Some(is_disabled) = cx.props.disabled {
         if is_disabled {
@@ -112,7 +112,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let aria_label = get_aria_label(&cx);
     let badge = get_badge(&cx);
     let disabled = cx.props.disabled.unwrap_or_default();
-    let appearance = get_appearence(&cx);
+    let appearance = get_appearance(&cx);
     let small = cx.props.small.unwrap_or_default();
     let text2 = text.clone();
     cx.render(
