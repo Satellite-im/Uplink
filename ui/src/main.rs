@@ -53,7 +53,7 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
-    pub use_mock: bool,
+    pub no_mock: bool,
 }
 
 pub struct WarpCmdChannels {
@@ -78,7 +78,7 @@ lazy_static! {
             cache_path: uplink_path.join("state.json"),
             config_path: uplink_path.join("Config.json"),
             warp_path: uplink_path.join("warp"),
-            use_mock: args.mock,
+            no_mock: args.no_mock,
         }
     };
 
@@ -132,8 +132,9 @@ struct Args {
     #[clap(long)]
     experimental_node: bool,
     // todo: when the app is mature, default mock to false
-    #[clap(long, default_value_t = true)]
-    mock: bool,
+    // there's no way to set --flag=true so for make the flag mean false
+    #[clap(long, default_value_t = false)]
+    no_mock: bool,
 }
 
 fn copy_assets() {
@@ -299,10 +300,10 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>) -> Element {
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
     //println!("rendering app_bootstrap");
-    let mut state = if STATIC_ARGS.use_mock {
-        State::mock()
-    } else {
+    let mut state = if STATIC_ARGS.no_mock {
         State::load().expect("failed to load state")
+    } else {
+        State::mock()
     };
 
     // set the window to the normal size.
