@@ -73,10 +73,7 @@ pub fn get_appearence(cx: &Scope<Props>) -> Appearance {
             return Appearance::Disabled;
         }
     }
-    match &cx.props.appearance {
-        Some(appearance)    => *appearance,
-        None                => Appearance::Default,
-    }
+    cx.props.appearance.unwrap_or(Appearance::Default)
 }
 
 /// Tells the parent the button was interacted with.
