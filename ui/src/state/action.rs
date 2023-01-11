@@ -10,7 +10,7 @@ use super::{
     chats::Chat,
     identity::Identity,
     route::To,
-    ui::{Theme, ToastNotification},
+    ui::{Theme, ToastNotification, WindowMeta},
     State,
 };
 
@@ -25,10 +25,12 @@ pub struct ActionHook {
 /// used exclusively by State::mutate
 pub enum Action {
     // UI
+    SetMeta(WindowMeta),
     // hang up for the active media stream
     DisableMedia,
     ToggleSilence,
     ToggleMute,
+    SidebarHidden(bool),
     SetOverlay(bool),
     AddToastNotification(ToastNotification),
     SetTheme(Theme),

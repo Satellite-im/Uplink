@@ -14,6 +14,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 // use state::{Action, ActionHook, State};
+use state::ui::WindowMeta;
 use state::State;
 use std::path::{Path, PathBuf};
 
@@ -239,7 +240,19 @@ fn bootstrap(cx: Scope) -> Element {
         state.ui.overlays.push(window);
     }
 
+    // Update the window metadata now that we've created a window
+    let window_meta = WindowMeta {
+        focused: desktop.is_focused(),
+        maximized: desktop.is_maximized(),
+        minimized: desktop.is_minimized(),
+        width: desktop.inner_size().width,
+        height: desktop.inner_size().height,
+        minimal_view: desktop.inner_size().width < 600,
+    };
+    state.ui.metadata = window_meta;
+
     use_shared_state_provider(cx, || state);
+
     cx.render(rsx!(crate::app {}))
 }
 

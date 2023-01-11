@@ -20,11 +20,8 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
-            span {
-                class: "full-width-on-mobile",
-                ChatSidebar {
-                    route_info: cx.props.route_info.clone()
-                },
+            ChatSidebar {
+                route_info: cx.props.route_info.clone()
             },
             state.read().chats.active.is_some().then(|| rsx! (
                 Compose {}

@@ -17,6 +17,7 @@ use shared::language::get_local_text;
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+    state::{Action, State},
 };
 
 #[derive(PartialEq, Props)]
@@ -26,6 +27,7 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
     let home_text = get_local_text("uplink.home");
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
@@ -36,19 +38,21 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         div {
             id: "files-layout",
             aria_label: "files-layout",
-            span {
-                class: "hide-on-mobile",
-                ChatSidebar {
-                    route_info: cx.props.route_info.clone()
-                },
-            }
+            ChatSidebar {
+                route_info: cx.props.route_info.clone()
+            },
             div {
                 class: "files-body",
                 aria_label: "files-body",
                 div {
                     onmousedown: move |_| { desktop.drag(); },
                     Topbar {
-                        with_back_button: false,
+                        with_back_button: true,
+                        with_currently_back: state.read().ui.sidebar_hidden,
+                        onback: move |_| {
+                            let current = state.read().ui.sidebar_hidden;
+                            state.write().mutate(Action::SidebarHidden(!current));
+                        },
                         controls: cx.render(
                             rsx! (
                                 Button {
@@ -160,8 +164,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                 },
-                span {
-                    class: "hide-on-desktop",
+                state.read().ui.sidebar_hidden.then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
                         active: cx.props.route_info.active.clone(),
@@ -169,7 +172,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             use_router(cx).replace_route(r, None, None);
                         }
                     }
-                }
+                ))
             }
         }
     ))

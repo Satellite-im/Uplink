@@ -59,6 +59,11 @@ pub fn Compose(cx: Scope) -> Element {
                 onmousedown: move |_| { desktop.drag(); },
                 Topbar {
                     with_back_button: true,
+                    with_currently_back: state.read().ui.sidebar_hidden,
+                    onback: move |_| {
+                        let current = state.read().ui.sidebar_hidden;
+                        state.write().mutate(Action::SidebarHidden(!current));
+                    },
                     controls: cx.render(
                         rsx! (
                             Button {

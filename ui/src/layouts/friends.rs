@@ -4,6 +4,7 @@ use kit::{
     components::nav::Nav,
     elements::{button::Button, Appearance},
     icons::Icon,
+    layout::topbar::Topbar,
 };
 use shared::language::get_local_text;
 
@@ -15,7 +16,7 @@ use crate::{
             incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
         },
     },
-    state::State,
+    state::{Action, State},
 };
 
 #[derive(PartialEq, Props)]
@@ -42,15 +43,19 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
         div {
             id: "friends-layout",
             aria_label: "friends-layout",
-            span {
-                class: "hide-on-mobile",
-                ChatSidebar {
-                    route_info: cx.props.route_info.clone()
-                },
+            ChatSidebar {
+                route_info: cx.props.route_info.clone()
             },
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
+                Topbar {
+                    with_back_button: true,
+                    onback: move |_| {
+                        let current = state.read().ui.sidebar_hidden;
+                        state.write().mutate(Action::SidebarHidden(!current));
+                    },
+                },
                 AddFriend {},
                 div {
                     class: "friends-controls",

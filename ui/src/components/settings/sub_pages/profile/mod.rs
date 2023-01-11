@@ -108,7 +108,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Label {
                         text: get_local_text("uplink.status"),
                     },
-                    Input { 
+                    Input {
                         placeholder: get_local_text("uplink.status"),
                         aria_label: "status-input".into(),
                         default_text: "Mock status messages are so 2008.".into(),
@@ -171,7 +171,7 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
 }
 
 fn get_input_options(validation_options: Validation) -> Options {
-        // Set up options for the input field
+    // Set up options for the input field
     Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(validation_options),

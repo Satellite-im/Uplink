@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
+use dioxus_desktop::use_window;
 use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -64,7 +64,6 @@ pub fn AuthLayout(cx: Scope) -> Element {
                     }))
                     .expect("UnlockLayout failed to send warp command");
 
-                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                 router.replace_route(CHAT_ROUTE, None, None);
 
                 // let res = rx.await.expect("failed to get response from warp_runner");

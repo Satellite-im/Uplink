@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
+use dioxus_desktop::use_window;
 use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -20,10 +20,6 @@ use crate::{
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
     let desktop = use_window(cx);
-    desktop.set_inner_size(LogicalSize {
-        width: 500.0,
-        height: 300.0,
-    });
 
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
