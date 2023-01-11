@@ -103,7 +103,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            state.write_silent().mutate(Action::SetPopout(id));
+                            state.write().mutate(Action::SetPopout(id));
                         }
                     }
                 },

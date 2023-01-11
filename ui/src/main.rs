@@ -327,11 +327,17 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let toggle = use_state(cx, || false);
+    let needs_update = use_state(cx, || false);
+
+    // yes, double render. sry.
+    if *needs_update.get() {
+        needs_update.set(false);
+        state.write();
+    }
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle];
+        to_owned![needs_update];
         async move {
             //println!("starting toast use_future");
             loop {
@@ -342,8 +348,7 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
-                        let flag = *toggle.get();
-                        toggle.set(!flag);
+                        needs_update.set(true);
                     }
                 }
             }
@@ -352,7 +357,7 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle];
+        to_owned![needs_update];
         async move {
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
@@ -362,8 +367,7 @@ fn app(cx: Scope) -> Element {
             while let Some(evt) = ch.recv().await {
                 //println!("warp_runner got event");
                 if warp_runner::handle_event(inner.clone(), evt).await {
-                    let flag = *toggle.current();
-                    toggle.set(!flag);
+                    needs_update.set(true);
                 }
             }
         }
@@ -371,12 +375,13 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![desktop];
+        to_owned![needs_update, desktop];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
+                needs_update.set(true);
             }
         }
     });
