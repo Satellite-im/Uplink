@@ -258,14 +258,18 @@ fn bootstrap(cx: Scope) -> Element {
 // after the user logs in, app_bootstrap loads Uplink as normal.
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
+    let pin = use_ref(cx, String::new);
     cx.render(rsx!(match *page.current() {
         AuthPages::Success => rsx!(app_bootstrap {}),
-        _ => rsx!(auth_wrapper { page: page.clone() }),
+        _ => rsx!(auth_wrapper {
+            page: page.clone(),
+            pin: pin.clone()
+        }),
     }))
 }
 
 #[inline_props]
-fn auth_wrapper(cx: Scope, page: UseState<AuthPages>) -> Element {
+fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     let desktop = use_window(cx);
     let theme = "";
     let pre_release_text = get_local_text("uplink.pre-release");
@@ -289,8 +293,8 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>) -> Element {
                 }
             },
             match *page.current() {
-                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone() }),
-                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone() }),
+                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
                 _ => panic!("invalid page")
             }
         }

@@ -17,12 +17,10 @@ use crate::{
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
+pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
-    let username_valid = use_state(cx, || false);
-    let pin = use_state(cx, String::new);
-    let pin_valid = use_state(cx, || false);
+    let button_disabled = use_state(cx, || true);
 
     let username_validation = Validation {
         // The input should have a maximum length of 32
@@ -31,18 +29,6 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
         min_length: Some(4),
         // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
-        // The input should not contain any whitespace
-        no_whitespace: true,
-    };
-
-    // Set up validation options for the input field
-    let pin_validation = Validation {
-        // The input should have a maximum length of 32
-        max_length: Some(32),
-        // The input should have a minimum length of 4
-        min_length: Some(4),
-        // The input should only contain alphanumeric characters
-        alpha_numeric_only: false,
         // The input should not contain any whitespace
         no_whitespace: true,
     };
@@ -94,25 +80,12 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                     with_clear_btn: true,
                     ..Default::default()
                 }
-                onchange: |(val, is_valid)| {
+                onchange: |(val, is_valid): (String, bool)| {
+                    let should_disable = !is_valid;
+                    if *button_disabled.get() != should_disable {
+                        button_disabled.set(should_disable);
+                    }
                     username.set(val);
-                    username_valid.set(is_valid);
-                }
-            },
-            Input {
-                is_password: true,
-                icon: Icon::Key,
-                aria_label: "pin-input".into(),
-                disabled: false,
-                placeholder: get_local_text("unlock.enter-pin"),
-                options: Options {
-                    with_validation: Some(pin_validation),
-                    with_clear_btn: true,
-                    ..Default::default()
-                }
-                onchange: |(val, is_valid)| {
-                    pin.set(val);
-                    pin_valid.set(is_valid);
                 }
             },
             Button {
@@ -120,14 +93,9 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
+                disabled: *button_disabled.get(),
                 onpress: move |_| {
-                    //println!("attempt to create account: {}, {}", pin_valid.get(), username_valid.get());
-                    if *pin_valid.get() && *username_valid.get() {
-                        //println!("sending msg");
-                        ch.send((username.get().to_string(), pin.get().to_string()));
-                    } else {
-                        println!("input not valid");
-                    }
+                    ch.send((username.get().to_string(), pin.read().to_string()));
                 }
             }
         }
