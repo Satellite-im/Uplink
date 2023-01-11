@@ -16,6 +16,8 @@ timeago = "0.4.0"
 humansize = "2.0.0"
 shared = { path = "../shared" }
 
+derive_more = "0.99"
+
 [dependencies.uuid]
 version = "1.2.2"
 features = [

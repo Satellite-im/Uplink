@@ -38,7 +38,7 @@ pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
 }
 
 pub fn build_participants_names(identities: &Vec<Identity>) -> String {
-    let mut participants_name = String::from("");
+    let mut participants_name = String::new();
 
     // Iterate over the identities vector
     for identity in identities {

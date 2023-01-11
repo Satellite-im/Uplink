@@ -34,10 +34,7 @@ pub struct Props<'a> {
 /// Generates the optional text for the button.
 /// If there is no text provided, we'll return an empty string.
 pub fn get_text(cx: &Scope<Props>) -> String {
-    match &cx.props.text {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.text.clone().unwrap_or_default()
 }
 
 /// Generates the optional aria label for the button.
@@ -49,10 +46,7 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 /// Generates the optional badge for the button.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
-    match &cx.props.with_badge {
-        Some(val)   => val.to_owned(),
-        None        => String::from(""),
-    }
+    cx.props.with_badge.clone().unwrap_or_default()
 }
 
 /// Generates the optional icon providing a fallback.
@@ -66,17 +60,14 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 
 /// Generates the appearance for the button.
 /// This will be overwritten if the button is disabled.
-pub fn get_appearence(cx: &Scope<Props>) -> String {
+pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
     // If the button is disabled, we can short circut this and just provide the disabled appearance.
     if let Some(is_disabled) = cx.props.disabled {
         if is_disabled {
-            return Appearance::Disabled.to_string();
+            return Appearance::Disabled;
         }
     }
-    match &cx.props.appearance {
-        Some(appearance)    => appearance.to_string(),
-        None                => Appearance::Default.to_string(),
-    }
+    cx.props.appearance.unwrap_or(Appearance::Default)
 }
 
 /// Tells the parent the button was interacted with.
@@ -114,15 +105,15 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = get_text(&cx);
     let aria_label = get_aria_label(&cx);
     let badge = get_badge(&cx);
-    let disabled = &cx.props.disabled.unwrap_or_default();
-    let appearance = get_appearence(&cx);
-    let small = &cx.props.small.unwrap_or_default();
+    let disabled = cx.props.disabled.unwrap_or_default();
+    let appearance = get_appearance(&cx);
+    let small = cx.props.small.unwrap_or_default();
     let text2 = text.clone();
     cx.render(
         rsx!(
             div {
                 class: {
-                    format_args!("btn-wrap {} {}", if *disabled { "disabled" } else { "" }, if *small { "small" } else { "" })
+                    format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
                 (cx.props.tooltip.is_some()).then(|| rsx!(
                     cx.props.tooltip.as_ref()
@@ -143,7 +134,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             "btn appearance-{} btn-{} {} {}", 
                             appearance, 
                             UUID,
-                            if *disabled { "btn-disabled" } else { "" }, 
+                            if disabled { "btn-disabled" } else { "" }, 
                             if text.is_empty() { "no-text" } else {""}
                         )
                     },

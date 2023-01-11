@@ -1,42 +1,38 @@
-use std::fmt;
-
 use dioxus::prelude::*;
 use uuid::Uuid;
+use derive_more::Display;
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Display)]
 /// Which direction will the arrow on the popup point?
 pub enum ArrowPosition {
+    #[display(fmt = "arrow-top-left")]
     TopLeft,
+
+    #[display(fmt = "arrow-top")]
     Top,
+
+    #[display(fmt = "arrow-top-right")]
     TopRight,
+
+    #[display(fmt = "arrow-left")]
     Left,
+
+    #[display(fmt = "arrow-right")]
     Right,
+
+    #[display(fmt = "arrow-bottom-left")]
     BottomLeft,
+
+    #[display(fmt = "arrow-bottom")]
     Bottom,
+
+    #[display(fmt = "arrow-bottom-right")]
     BottomRight,
 }
 
-impl fmt::Display for ArrowPosition {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ArrowPosition::TopLeft => write!(f, "arrow-top-left"),
-            ArrowPosition::Top => write!(f, "arrow-top"),
-            ArrowPosition::TopRight => write!(f, "arrow-top-right"),
-            ArrowPosition::Left => write!(f, "arrow-left"),
-            ArrowPosition::Right => write!(f, "arrow-right"),
-            ArrowPosition::BottomLeft => write!(f, "arrow-bottom-left"),
-            ArrowPosition::Bottom => write!(f, "arrow-bottom"),
-            ArrowPosition::BottomRight => write!(f, "arrow-bottom-right"),
-        }
-    }
-}
-
 /// Generates the arrow_position for the tooltip.
-pub fn get_arrow_position(cx: &Scope<Props>) -> String {
-    match &cx.props.arrow_position {
-        Some(arrow_position) => arrow_position.to_string(),
-        None => ArrowPosition::Bottom.to_string(),
-    }
+pub fn get_arrow_position(cx: &Scope<Props>) -> ArrowPosition {
+    cx.props.arrow_position.unwrap_or(ArrowPosition::Bottom)
 }
 
 // Remember: owned props must implement PartialEq!
@@ -56,10 +52,8 @@ pub fn Tooltip(cx: Scope<Props>) -> Element {
     let UUID: String = Uuid::new_v4().to_string();
 
     let arrow_position = get_arrow_position(&cx);
-    let text = match cx.props.text.clone() {
-        Some(t) => t,
-        None => String::from(""),
-    };
+    
+    let text = cx.props.text.clone().unwrap_or_default();
 
     cx.render(rsx! {
         div {

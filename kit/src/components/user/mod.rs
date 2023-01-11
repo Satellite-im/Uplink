@@ -39,17 +39,13 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
 /// Generates the optional badge for the user.
 /// If there is no badge provided, we'll return an empty string.
 pub fn get_badge(cx: &Scope<Props>) -> String {
-    match &cx.props.with_badge {
-        Some(val) => val.to_owned(),
-        None => String::from(""),
-    }
+    cx.props.with_badge.clone().unwrap_or_default()
 }
 
 /// Tells the parent the user was interacted with.
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
-    match &cx.props.onpress {
-        Some(f) => f.call(e),
-        None => {}
+    if let Some(f) = cx.props.onpress.as_ref() {
+        f.call(e)
     }
 }
 
@@ -57,11 +53,11 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let time_ago = get_time_ago(&cx);
     let badge = get_badge(&cx);
-    let active = &cx.props.active.unwrap_or_default();
-    let loading = &cx.props.loading.unwrap_or_default();
+    let active = cx.props.active.unwrap_or_default();
+    let loading = cx.props.loading.unwrap_or_default();
 
     cx.render(rsx! (
-        if *loading {
+        if loading {
             rsx!(
                 UserLoading {
                 }
@@ -70,7 +66,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             rsx!(
                 div {
                     class: {
-                        format_args!("user {} noselect defaultcursor", if *active { "active" } else { "" })
+                        format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
                     },
                     onclick: move |e| emit(&cx, e),
                     (!badge.is_empty()).then(|| rsx!(

@@ -52,7 +52,7 @@ pub fn emit(cx: &Scope<Props>, to: &To) {
 }
 
 /// Gets the appearence for a nav button based on the active route
-pub fn get_appearence(active_route: &Route, route: &Route) -> Appearance {
+pub fn get_appearance(active_route: &Route, route: &Route) -> Appearance {
     if active_route.to == route.to {
         Appearance::Primary
     } else {
@@ -62,10 +62,7 @@ pub fn get_appearence(active_route: &Route, route: &Route) -> Appearance {
 
 /// Generates the an optional badge value
 pub fn get_badge(route: &Route) -> String {
-    match &route.with_badge {
-        Some(val) => val.to_owned(),
-        None => String::from(""),
-    }
+    route.with_badge.clone().unwrap_or_default()
 }
 
 /// Gets the active route, or returns a void one
@@ -108,13 +105,13 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 #[allow(non_snake_case)]
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(cx, || get_active(&cx));
-    let bubble = &cx.props.bubble.unwrap_or_default();
+    let bubble = cx.props.bubble.unwrap_or_default();
 
     cx.render(rsx!(
         div {
             aria_label: "button-nav",
             class: {
-                format_args!("nav {}", if *bubble { "bubble" } else { "" })
+                format_args!("nav {}", if bubble { "bubble" } else { "" })
             },
             cx.props.routes.iter().map(|route| {
                 let badge = get_badge(route);
@@ -131,7 +128,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             emit(&cx, &route.to)
                         },
                         text: {
-                            if *bubble { name } else { "".into() }
+                            if bubble { name } else { "".into() }
                         },
                         with_badge: badge,
                         tooltip: cx.render(rsx!(
@@ -142,7 +139,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             ))
                         )),
-                        appearance: get_appearence(active, route)
+                        appearance: get_appearance(active, route)
                     }
                 )
             })
