@@ -11,7 +11,7 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    warp_runner::{commands::TesseractCmd, WarpCmd},
+    warp_runner::{commands::MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
 
@@ -20,9 +20,10 @@ use crate::{
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
+    let no_account: &UseRef<Option<bool>> = use_ref(cx, || None);
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![password_failed, page];
+        to_owned![password_failed, no_account, page];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
@@ -30,7 +31,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
-                    .send(WarpCmd::Tesseract(TesseractCmd::Unlock {
+                    .send(WarpCmd::MultiPass(MultiPassCmd::TryLogIn {
                         passphrase: password,
                         rsp: tx,
                     }))
@@ -38,10 +39,27 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 
+                // todo: remove the printlns and instead use the hooks to update the UI
                 //println!("got response from warp");
                 match res {
                     Ok(_) => page.set(AuthPages::Success),
-                    Err(_) => password_failed.set(Some(true)),
+                    Err(err) => match err {
+                        warp::error::Error::MultiPassExtensionUnavailable => {
+                            // need to create an account
+                            no_account.set(Some(true));
+                            println!("need to create an account");
+                        }
+                        warp::error::Error::DecryptionError => {
+                            // wrong password
+                            no_account.set(Some(false));
+                            password_failed.set(Some(true));
+                            println!("wrong password");
+                        }
+                        _ => {
+                            // unexpected
+                            println!("LogIn failed: {}", err);
+                        }
+                    },
                 }
             }
         }
@@ -86,7 +104,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                     with_clear_btn: true,
                     ..Default::default()
                 }
-                onreturn: move |(val, _is_valid)| {
+                onchange: move |(val, _is_valid)| {
                     ch.send(val)
                 }
             },
