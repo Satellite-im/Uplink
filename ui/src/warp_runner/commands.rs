@@ -1,5 +1,5 @@
 use futures::channel::oneshot;
-use warp::tesseract::Tesseract;
+use warp::{crypto::DID, tesseract::Tesseract};
 
 use super::Account;
 
@@ -24,6 +24,10 @@ pub enum MultiPassCmd {
     },
     TryLogIn {
         passphrase: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    RequestFriend {
+        did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
 }
@@ -74,6 +78,13 @@ pub async fn handle_multipass_cmd(
                 return;
             }
             let r = match account.get_own_identity().await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::RequestFriend { did, rsp } => {
+            let r = match account.send_request(&did).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             };
