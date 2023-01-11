@@ -29,7 +29,8 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::{WarpCmdRx, WarpCmdTx, WarpEventRx, WarpEventTx};
+use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
+use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
@@ -43,6 +44,7 @@ pub mod state;
 pub mod testing;
 pub mod utils;
 mod warp_runner;
+mod window_manager;
 
 #[macro_use]
 extern crate lazy_static;
@@ -54,16 +56,6 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub no_mock: bool,
-}
-
-pub struct WarpCmdChannels {
-    pub tx: WarpCmdTx,
-    pub rx: WarpCmdRx,
-}
-
-pub struct WarpEventChannels {
-    pub tx: WarpEventTx,
-    pub rx: WarpEventRx,
 }
 
 lazy_static! {
@@ -96,6 +88,15 @@ lazy_static! {
     pub static ref WARP_EVENT_CH: WarpEventChannels =  {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         WarpEventChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
+    };
+
+    // used to close the popout player, among other things
+    pub static ref WINDOW_CMD_CH: WindowManagerCmdChannels = {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        WindowManagerCmdChannels {
             tx,
             rx:  Arc::new(Mutex::new(rx))
         }
@@ -364,6 +365,18 @@ fn app(cx: Scope) -> Element {
                     let flag = *toggle.current();
                     toggle.set(!flag);
                 }
+            }
+        }
+    });
+
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![desktop];
+        async move {
+            let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
+            let mut ch = window_cmd_rx.lock().await;
+            while let Some(cmd) = ch.recv().await {
+                window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
             }
         }
     });
