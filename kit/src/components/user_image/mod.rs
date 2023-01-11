@@ -40,21 +40,21 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 #[allow(non_snake_case)]
 pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let image_data: String = get_image(&cx);
-    let status = &cx.props.status;
-    let platform = &cx.props.platform;
-    let typing = &cx.props.typing.unwrap_or_default();
-    let username = &cx.props.with_username.clone().unwrap_or_default();
-    let pressable = &cx.props.onpress.is_some();
+    let status = cx.props.status;
+    let platform = cx.props.platform;
+    let typing = cx.props.typing.unwrap_or_default();
+    let username = cx.props.with_username.clone().unwrap_or_default();
+    let pressable = cx.props.onpress.is_some();
 
-    let loading = &cx.props.loading.unwrap_or_default();
+    let loading = cx.props.loading.unwrap_or_default();
 
-    cx.render(rsx!(if *loading {
+    cx.render(rsx!(if loading {
         rsx!(UserImageLoading {})
     } else {
         rsx!(
             div {
                 class: {
-                    format_args!("user-image-wrap {}", if *pressable { "pressable" } else { "" })
+                    format_args!("user-image-wrap {}", if pressable { "pressable" } else { "" })
                 },
                 onclick: move |e| emit(&cx, e),
                 div {
@@ -72,13 +72,13 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     ))
                     Indicator {
-                        status: *status,
-                        platform: *platform,
+                        status: status,
+                        platform: platform,
                     }
                 },
                 (cx.props.with_username.is_some()).then(|| rsx!(
                     Label {
-                        text: username.to_string()
+                        text: username
                     }
                 ))
             }

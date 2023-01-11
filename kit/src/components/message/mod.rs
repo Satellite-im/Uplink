@@ -1,22 +1,16 @@
-use std::fmt;
-
 use dioxus::prelude::*;
+use derive_more::Display;
 
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
+    #[display(fmt = "message-first")]
     First,
-    Middle,
-    Last,
-}
 
-impl fmt::Display for Order {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Order::First => write!(f, "message-first"),
-            Order::Middle => write!(f, "message-middle"),
-            Order::Last => write!(f, "message-last"),
-        }
-    }
+    #[display(fmt = "message-middle")]
+    Middle,
+
+    #[display(fmt = "message-last")]
+    Last,
 }
 
 #[derive(Props)]

@@ -32,12 +32,12 @@ pub fn default_state(cx: &Scope<Props>) -> bool {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let checked_state = default_state(&cx);
-    let disabled = &cx.props.disabled.unwrap_or_default();
+    let disabled = cx.props.disabled.unwrap_or_default();
 
     cx.render(rsx! {
         label {
             class: {
-                format_args!("switch {}", if *disabled { "disabled" } else { "" })
+                format_args!("switch {}", if disabled { "disabled" } else { "" })
             },
             input {
                 disabled: "{disabled}",

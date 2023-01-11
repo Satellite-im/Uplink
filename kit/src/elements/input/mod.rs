@@ -106,18 +106,11 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
 }
 
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
-    match &cx.props.icon {
-        Some(icon) => icon.to_owned(),
-        None => Icon::QuestionMarkCircle,
-    }
+    cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
 pub fn get_text(cx: &Scope<Props>) -> String {
-    let default_text = String::from("");
-    match &cx.props.default_text {
-        Some(text) => text.clone(),
-        None => default_text,
-    }
+    cx.props.default_text.clone().unwrap_or_default()
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
@@ -125,33 +118,16 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 }
 
 pub fn get_label(cx: &Scope<Props>) -> String {
-    let default_options = Options::default();
-
-    let options = match cx.props.options {
-        Some(opts) => opts,
-        None => default_options,
-    };
-    let default_text = "";
-    match options.with_label {
-        Some(text) => text.to_string(),
-        None => default_text.to_string(),
-    }
+    let options =  cx.props.options.unwrap_or_default();
+    options.with_label.map(|text| text.to_string()).unwrap_or_default()
 }
-pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
-    let default_validation = Validation::default();
-    let default_options = Options::default();
 
+pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
     let mut error: Option<ValidationError> = None;
 
-    let options = match cx.props.options {
-        Some(opts) => opts,
-        None => default_options,
-    };
+    let options = cx.props.options.unwrap_or_default();
 
-    let validation = match &options.with_validation {
-        Some(v) => v,
-        None => &default_validation,
-    };
+    let validation = options.with_validation.unwrap_or_default();
 
     if validation.alpha_numeric_only {
         error = validate_alphanumeric(val);
@@ -165,7 +141,6 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
         error = validate_min_max(val, validation.min_length, validation.max_length);
     }
 
-
     error
 }
 
@@ -173,28 +148,18 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
-    let default_options = Options::default();
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
-    let options = match &cx.props.options {
-        Some(opts) => opts,
-        None => &default_options,
-    };
+    let options = cx.props.options.unwrap_or_default();
 
     let valid = use_state(cx, || false);
-    let min_len = match options.with_validation {
-        Some(opts) => opts.min_length.unwrap_or_default(),
-        None => 0,
-    };
+    let min_len =  options.with_validation.map(|opt| opt.min_length.unwrap_or_default()).unwrap_or_default();
     let apply_validation_class = options.with_validation.is_some();
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
-    let disabled = &cx.props.disabled.unwrap_or_default();
+    let disabled = cx.props.disabled.unwrap_or_default();
 
-    let typ = match cx.props.is_password {
-        Some(b) => if b { "password" } else { "text" },
-        None => "text",
-    };
+    let typ = cx.props.is_password.and_then(|b| b.then_some("password")).unwrap_or("text");
 
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js").replace("UUID", &cx.props.id);
@@ -202,7 +167,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! (
         div {
             class: {
-                format_args!("input-group {}", if *disabled { "disabled" } else { " "})
+                format_args!("input-group {}", if disabled { "disabled" } else { " "})
             },
             (!label.is_empty()).then(|| rsx! (
                 Label {

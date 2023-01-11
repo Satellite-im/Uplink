@@ -11,11 +11,7 @@ pub struct Props {
 
 pub fn get_time_ago(cx: &Scope<Props>) -> String {
     let f = timeago::Formatter::new();
-
-    match cx.props.timestamp {
-        Some(d) => f.convert(d),
-        None => "".into(),
-    }
+    cx.props.timestamp.map(|d| f.convert(d)).unwrap_or_default()
 }
 
 #[allow(non_snake_case)]

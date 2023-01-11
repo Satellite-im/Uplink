@@ -32,11 +32,8 @@ pub struct Props {
 
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
     // If the props include an icon, return it
-    match &cx.props.icon {
-        Some(icon) => icon.to_owned(),
-        // Otherwise, return a default icon (a question mark inside a circle)
-        None => Icon::QuestionMarkCircle,
-    }
+    // Otherwise, return a default icon (a question mark inside a circle)
+    cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
 #[allow(non_snake_case)]
