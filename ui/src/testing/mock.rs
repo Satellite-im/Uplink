@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     io::{BufWriter, Write},
 };
 
@@ -83,9 +83,9 @@ pub fn generate_mock() -> State {
                 .into_iter()
                 .map(|id| (id.did_key(), id))
                 .collect(),
-            blocked: blocked_identities,
-            incoming_requests,
-            outgoing_requests,
+            blocked: HashSet::from_iter(blocked_identities.iter().cloned()),
+            incoming_requests: HashSet::from_iter(incoming_requests.iter().cloned()),
+            outgoing_requests: HashSet::from_iter(outgoing_requests.iter().cloned()),
         },
         hooks: Vec::new(),
     }

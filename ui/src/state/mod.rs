@@ -18,7 +18,14 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
-use crate::{testing::mock::generate_mock, STATIC_ARGS};
+use crate::{
+    testing::mock::generate_mock,
+    warp_runner::{
+        ui_adapter::{MultiPassEvent, RayGunEvent},
+        WarpEvent,
+    },
+    STATIC_ARGS,
+};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -227,14 +234,10 @@ impl State {
     fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
         match direction {
             Direction::Outgoing => {
-                self.friends
-                    .outgoing_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.outgoing_requests.remove(identity);
             }
             Direction::Incoming => {
-                self.friends
-                    .incoming_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.incoming_requests.remove(identity);
             }
         }
     }
@@ -242,17 +245,13 @@ impl State {
     fn complete_request(&mut self, direction: Direction, identity: &Identity) {
         match direction {
             Direction::Outgoing => {
-                self.friends
-                    .outgoing_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.outgoing_requests.remove(identity);
                 self.friends
                     .all
                     .insert(identity.did_key(), identity.clone());
             }
             Direction::Incoming => {
-                self.friends
-                    .incoming_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.incoming_requests.remove(identity);
                 self.friends
                     .all
                     .insert(identity.did_key(), identity.clone());
@@ -261,35 +260,26 @@ impl State {
     }
 
     fn new_incoming_request(&mut self, identity: &Identity) {
-        self.friends.incoming_requests.push(identity.clone());
+        self.friends.incoming_requests.insert(identity.clone());
     }
 
     fn new_outgoing_request(&mut self, identity: &Identity) {
-        self.friends.outgoing_requests.push(identity.clone());
+        self.friends.outgoing_requests.insert(identity.clone());
     }
 
     fn block(&mut self, identity: &Identity) {
         // If the identity is not already blocked, add it to the blocked list
-        if !self.friends.blocked.contains(identity) {
-            self.friends.blocked.push(identity.clone());
-        }
+        self.friends.blocked.insert(identity.clone());
 
         // Remove the identity from the outgoing requests list if they are present
-        self.friends
-            .outgoing_requests
-            .retain(|friend| friend.did_key() != identity.did_key());
+        self.friends.outgoing_requests.remove(identity);
 
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
     }
 
     fn unblock(&mut self, identity: &Identity) {
-        // Find the index of the identity in the blocked list
-        let index = self.friends.blocked.iter().position(|x| *x == *identity);
-        // If the identity is in the blocked list, remove it
-        if let Some(i) = index {
-            self.friends.blocked.remove(i);
-        }
+        self.friends.blocked.remove(identity);
     }
 
     fn remove_friend(&mut self, did: &DID) {
@@ -632,6 +622,35 @@ impl State {
 
     pub fn mock() -> Self {
         generate_mock()
+    }
+}
+
+impl State {
+    pub fn process_warp_event(&mut self, event: WarpEvent) {
+        // handle any number of events and then save
+        match event {
+            WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
+            WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
+        };
+
+        let _ = self.save();
+    }
+
+    fn process_multipass_event(&mut self, event: MultiPassEvent) {
+        match event {
+            MultiPassEvent::FriendRequestReceived(identity) => {
+                self.friends.incoming_requests.insert(identity);
+            }
+            MultiPassEvent::FriendRequestSent(identity) => {
+                self.friends.outgoing_requests.insert(identity);
+            }
+        }
+    }
+
+    fn process_raygun_event(&mut self, event: RayGunEvent) {
+        match event {
+            _ => todo!(),
+        }
     }
 }
 

@@ -369,9 +369,15 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("warp_runner got event");
-                if warp_runner::handle_event(inner.clone(), evt).await {
-                    needs_update.set(true);
+                //println!("got warp event");
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().process_warp_event(evt);
+                        needs_update.set(true);
+                    }
+                    Err(_e) => {
+                        // todo: log error
+                    }
                 }
             }
         }

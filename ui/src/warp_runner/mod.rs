@@ -1,6 +1,5 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
-use dioxus::prelude::ProvidedStateInner;
 use futures::StreamExt;
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
@@ -12,20 +11,22 @@ use warp::{
     raygun::{RayGun, RayGunEventStream},
     tesseract::Tesseract,
 };
-use warp::{multipass::MultiPassEventKind, raygun::RayGunEventKind};
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{
-    state::State,
     warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
     STATIC_ARGS,
 };
 
-use self::commands::{MultiPassCmd, TesseractCmd};
+use self::{
+    commands::{MultiPassCmd, TesseractCmd},
+    ui_adapter::{MultiPassEvent, RayGunEvent},
+};
 
 pub mod commands;
+pub mod ui_adapter;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -48,8 +49,8 @@ type Messaging = Box<dyn RayGun>;
 
 #[allow(clippy::large_enum_variant)]
 pub enum WarpEvent {
-    RayGun(RayGunEventKind),
-    MultiPass(MultiPassEventKind),
+    RayGun(RayGunEvent),
+    MultiPass(MultiPassEvent),
 }
 
 #[derive(Debug)]
@@ -134,6 +135,7 @@ impl WarpRunner {
                     opt = multipass_stream.next() => {
                         //println!("got multiPass event");
                         if let Some(evt) = opt {
+                            let evt = ui_adapter::convert_multipass_event(evt, &mut account, &mut messaging).await;
                             if tx.send(WarpEvent::MultiPass(evt)).is_err() {
                                 break;
                             }
@@ -141,6 +143,7 @@ impl WarpRunner {
                     },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
+                            let evt = ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await;
                             if tx.send(WarpEvent::RayGun(evt)).is_err() {
                                 break;
                             }
@@ -183,16 +186,6 @@ async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
             }
         }
     }
-}
-
-// this is called by `main.rs` from within a `use_future` and used to modify state. returns `true` if stae has been modified
-// this keeps the size of main.rs small.
-// might just want to add functions to State to handle each type of event and not need this at all.
-pub async fn handle_event(
-    _state: Rc<RefCell<ProvidedStateInner<State>>>,
-    _event: WarpEvent,
-) -> bool {
-    todo!()
 }
 
 async fn warp_initialization(
