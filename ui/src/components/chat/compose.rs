@@ -54,7 +54,7 @@ pub fn Compose(cx: Scope) -> Element {
         warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
     };
     let desktop = use_window(cx);
-
+    let popout_player_is_opened = use_ref(cx, || state.write_silent().ui.popout_player);
     let loading = use_state(cx, || false);
 
     cx.render(rsx!(
@@ -163,6 +163,7 @@ pub fn Compose(cx: Scope) -> Element {
                     popout_player_text: get_local_text("media-player.popout-player"),
                     screenshare_text: get_local_text("media-player.screenshare"),
                     end_text: get_local_text("uplink.end"),
+                    popout_player_is_opened: popout_player_is_opened.clone(),
                 },
             )),
             if **loading {

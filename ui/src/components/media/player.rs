@@ -22,7 +22,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-#[derive(Eq, PartialEq, Props)]
+#[derive(Props, PartialEq)]
 pub struct Props {
     #[props(optional)]
     larger: Option<bool>,
@@ -32,14 +32,13 @@ pub struct Props {
     popout_player_text: String,
     screenshare_text: String,
     end_text: String,
+    popout_player_is_opened: UseRef<bool>
 }
 
 #[allow(non_snake_case)]
 pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-
-    let popout_player_is_opened = use_ref(cx, || false);
-    state.write_silent().ui.popout_player = *popout_player_is_opened.read();
+    state.write_silent().ui.popout_player = *cx.props.popout_player_is_opened.read();
 
     let window = use_window(cx);
 
@@ -95,18 +94,19 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     onpress: move |_| {
                          if state.read().ui.popout_player {
                              state.write().mutate(Action::ClearPopout(window.clone()));
-                             *popout_player_is_opened.write_silent() = false;
+                             *cx.props.popout_player_is_opened.write_silent() = false;
                              return;
                          } 
 
                         let popout = VirtualDom::new_with_props(PopoutPlayer, 
                             PopoutPlayerProps {
-                                popout_player_is_opened: popout_player_is_opened.clone(),
-                        });
+                                popout_player_is_opened: cx.props.popout_player_is_opened.clone(),
+                            }
+                        );
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            *popout_player_is_opened.write_silent() = true;
+                            *cx.props.popout_player_is_opened.write_silent() = true;
                             state.write().mutate(Action::SetPopout(id));
                         }
                     }
