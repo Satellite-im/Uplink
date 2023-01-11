@@ -8,6 +8,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
+use futures::channel::oneshot;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -29,7 +30,9 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
+use crate::state::friends;
+use crate::warp_runner::commands::MultiPassCmd;
+use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -331,6 +334,7 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    let friends_init = use_ref(cx, || false);
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -393,6 +397,45 @@ fn app(cx: Scope) -> Element {
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
+        }
+    });
+
+    // todo: this should be done before the app Element...make the app wait while this loads up
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![friends_init, needs_update];
+        async move {
+            if *friends_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
+                    rsp: tx,
+                }))
+                .expect("main send warp command");
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+
+            //println!("got response from warp");
+            match res {
+                Ok(friends) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().friends = friends;
+                        needs_update.set(true);
+                    }
+                    Err(_e) => {
+                        // todo: log error
+                    }
+                },
+                Err(_e) => {
+                    todo!("handle error response");
+                }
+            }
+
+            *friends_init.write_silent() = true;
+            needs_update.set(true);
         }
     });
 

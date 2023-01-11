@@ -647,10 +647,8 @@ impl State {
         }
     }
 
-    fn process_raygun_event(&mut self, event: RayGunEvent) {
-        match event {
-            _ => todo!(),
-        }
+    fn process_raygun_event(&mut self, _event: RayGunEvent) {
+        todo!()
     }
 }
 

@@ -6,15 +6,18 @@ use super::identity::Identity;
 // TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Friends {
+    // becomes true when the friends fields have been retrieved from Warp
+    #[serde(skip)]
+    pub initialized: bool,
     // All active friends.
-    #[serde(default)]
+    #[serde(skip)]
     pub all: HashMap<DID, Identity>,
     // List of friends the user has blocked
-    #[serde(default)]
+    #[serde(skip)]
     pub blocked: HashSet<Identity>,
     // Friend requests, incoming and outgoing.
-    #[serde(default)]
+    #[serde(skip)]
     pub incoming_requests: HashSet<Identity>,
-    #[serde(default)]
+    #[serde(skip)]
     pub outgoing_requests: HashSet<Identity>,
 }

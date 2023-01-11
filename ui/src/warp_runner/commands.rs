@@ -1,7 +1,14 @@
-use futures::channel::oneshot;
+use std::collections::{HashMap, HashSet};
+
+use futures::{channel::oneshot};
 use warp::{crypto::DID, tesseract::Tesseract};
 
-use super::Account;
+use crate::state::{friends};
+
+use super::{
+    ui_adapter::{did_to_identity, dids_to_identity},
+    Account,
+};
 
 #[derive(Debug)]
 pub enum TesseractCmd {
@@ -29,6 +36,9 @@ pub enum MultiPassCmd {
     RequestFriend {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    InitializeFriends {
+        rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
     },
 }
 
@@ -89,6 +99,63 @@ pub async fn handle_multipass_cmd(
                 Err(e) => Err(e),
             };
             let _ = rsp.send(r);
+        }
+        MultiPassCmd::InitializeFriends { rsp } => {
+            let incoming_requests = match account.list_incoming_request().await {
+                Ok(reqs) => {
+                    let reqs = reqs.iter().map(|r| r.from()).collect();
+                    let idents = dids_to_identity(reqs, account).await;
+                    HashSet::from_iter(idents.iter().cloned())
+                }
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+            let outgoing_requests = match account.list_outgoing_request().await {
+                Ok(r) => {
+                    let incoming = r.iter().map(|r| r.to()).collect();
+                    let idents = dids_to_identity(incoming, account).await;
+                    HashSet::from_iter(idents.iter().cloned())
+                }
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+            let blocked = match account.block_list().await {
+                Ok(ids) => {
+                    let idents = dids_to_identity(ids, account).await;
+                    HashSet::from_iter(idents.iter().cloned())
+                }
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+            let friends = match account.list_friends().await {
+                Ok(ids) => {
+                    let mut res = HashMap::new();
+                    for id in ids {
+                        let ident = did_to_identity(id.clone(), account).await;
+                        res.insert(id, ident);
+                    }
+                    res
+                }
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+
+            let ret = friends::Friends {
+                initialized: true,
+                all: friends,
+                blocked,
+                incoming_requests,
+                outgoing_requests,
+            };
+            let _ = rsp.send(Ok(ret));
         }
     }
 }

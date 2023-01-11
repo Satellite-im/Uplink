@@ -79,6 +79,7 @@ pub fn generate_mock() -> State {
             favorites: vec![],
         },
         friends: Friends {
+            initialized: true,
             all: identities
                 .into_iter()
                 .map(|id| (id.did_key(), id))
