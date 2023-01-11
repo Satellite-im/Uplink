@@ -18,9 +18,10 @@ use crate::{
 // todo: go to the auth page if no account has been created
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
+pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let no_account: &UseRef<Option<bool>> = use_ref(cx, || None);
+    let button_disabled = use_state(cx, || true);
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
@@ -104,7 +105,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                     with_clear_btn: true,
                     ..Default::default()
                 }
-                onchange: move |(val, _is_valid)| {
+                onchange: move |(val, is_valid): (String, bool)| {
+                    *pin.write_silent() = val.clone();
+                    let should_disable = !is_valid;
+                    if *button_disabled.get() != should_disable {
+                        button_disabled.set(should_disable);
+                    }
                     ch.send(val)
                 }
             },
@@ -113,6 +119,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
+                disabled: *button_disabled.get(),
                 onpress: move |_| {
                     page.set(AuthPages::CreateAccount);
                 }
