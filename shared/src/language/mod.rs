@@ -9,6 +9,7 @@ use crate::LOCALES;
 const US_ENGLISH: LanguageIdentifier = langid!("en-US");
 const BR_PORTUGUESE: LanguageIdentifier = langid!("pt-BR");
 const PT_PORTUGUESE: LanguageIdentifier = langid!("pt-PT");
+const MX_SPANISH: LanguageIdentifier = langid!("es-MX");
 static APP_LANG: Lazy<RwLock<LanguageIdentifier>> = Lazy::new(|| RwLock::new(US_ENGLISH));
 
 pub fn change_language(new_language: String) -> String {
@@ -16,6 +17,7 @@ pub fn change_language(new_language: String) -> String {
         (US_ENGLISH.to_string(), US_ENGLISH),
         (BR_PORTUGUESE.to_string(), BR_PORTUGUESE),
         (PT_PORTUGUESE.to_string(), PT_PORTUGUESE),
+        (MX_SPANISH.to_string(), MX_SPANISH),
     ]);
     let new_language_identifier = app_languages.get(new_language.as_str());
 
@@ -36,6 +38,7 @@ pub fn get_available_languages() -> Vec<String> {
         US_ENGLISH.to_string(),
         BR_PORTUGUESE.to_string(),
         PT_PORTUGUESE.to_string(),
+        MX_SPANISH.to_string(),
     ]
 }
 
