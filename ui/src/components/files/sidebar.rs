@@ -51,63 +51,52 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    use_context::<State>(&cx).unwrap();
+    let _ = use_shared_state::<State>(cx)?;
 
-    let app_lang = &*APP_LANG.read();
-    let search_placeholder = String::from("Search Settings...");
-    let general_text = LOCALES
-        .lookup(app_lang, "settings.general")
-        .unwrap_or_default()
-        .clone();
-    let privacy_text = LOCALES
-        .lookup(app_lang, "settings.privacy")
-        .unwrap_or_default();
-    let audio_text = LOCALES
-        .lookup(app_lang, "settings.audio")
-        .unwrap_or_default();
-    let extensions_text = LOCALES
-        .lookup(app_lang, "settings.extensions")
-        .unwrap_or_default();
-    let developer_text = LOCALES
-        .lookup(app_lang, "settings.developer")
-        .unwrap_or_default();
-
+    let profile = UIRoute {
+        to: "profile",
+        name: get_local_text("settings.profile"),
+        icon: Icon::User,
+        ..UIRoute::default()
+    };
     let general = UIRoute {
         to: "general",
-        name: general_text,
+        name: get_local_text("settings.general"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let privacy = UIRoute {
         to: "privacy",
-        name: privacy_text,
+        name: get_local_text("settings.privacy"),
         icon: Icon::LockClosed,
         ..UIRoute::default()
     };
     let audio = UIRoute {
         to: "audio",
-        name: audio_text,
+        name: get_local_text("settings.audio"),
         icon: Icon::MusicalNote,
+        ..UIRoute::default()
+    };
+    let files = UIRoute {
+        to: "files",
+        name: get_local_text("settings.files"),
+        icon: Icon::Folder,
         ..UIRoute::default()
     };
     let extensions = UIRoute {
         to: "extensions",
-        name: extensions_text,
+        name: get_local_text("settings.extensions"),
         icon: Icon::Beaker,
         ..UIRoute::default()
     };
     let developer = UIRoute {
         to: "developer",
-        name: developer_text,
+        name: get_local_text("settings.developer"),
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
     let routes = vec![
-        general.clone(),
-        privacy.clone(),
-        audio.clone(),
-        extensions.clone(),
-        developer.clone(),
+        profile, general, privacy, audio, files, extensions, developer,
     ];
 
     let active_route = routes[0].clone();
