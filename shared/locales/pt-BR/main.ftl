@@ -142,3 +142,12 @@ remote-controls = Remote Controls
     .listen = Ativar áudio
     .silence = Desativar áudio
     .end = Fim
+
+unlock = Unlock
+    .warning1 = Sua senha é usada para criptografar seus dados. Ele nunca é enviado para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
+    .warning2 = Se você esquecer essa senha, não podemos ajudá-lo a recuperá-la.
+    .enter-pin = Digite a senha
+    .create-account = Criar Conta
+
+auth = Create Account 
+    .enter-username = Digite o nome de usuário

@@ -108,3 +108,15 @@ remote-controls = RemoteControls
     .listen = Ativar áudio
     .silence = Desativar áudio
     .end = Fim
+
+unlock = Unlock
+    .warning1 = Su contraseña se utiliza para cifrar sus datos. Nunca se envía a ningún servidor. Debe usar una contraseña segura que no use en ningún otro lugar.
+    .warning2 = Si olvida esta contraseña, no podemos ayudarle a recuperarla.
+    .enter-pin = Introducir contraseña
+    .create-account = Crear cuenta
+
+auth = Create Account 
+    .enter-username = Introduzca el nombre de usuario
+
+    
+    

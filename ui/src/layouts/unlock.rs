@@ -8,6 +8,7 @@ use kit::{
     },
     icons::Icon,
 };
+use shared::language::get_local_text;
 
 use crate::{
     warp_runner::{commands::TesseractCmd, WarpCmd},
@@ -66,14 +67,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
             p {
                 class: "info",
                 aria_label: "unlock-warning-paragraph",
-                "warning: use a good password", //get_local_text("unlock.warning1")
-                //"Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else."
+                get_local_text("unlock.warning1")
                 br {},
                 span {
                     aria_label: "unlock-warning-span",
                     class: "warning",
-                    //"If you forget this password we cannot help you retrieve it."
-                    "warning: no password recovery", //get_local_text("unlock.warning2")
+                    get_local_text("unlock.warning2")
                 }
             },
             Input {
@@ -81,7 +80,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 icon: Icon::Key,
                 aria_label: "pin-input".into(),
                 disabled: false,
-                placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
+                placeholder: get_local_text("unlock.enter-pin"),
                 options: Options {
                     with_validation: Some(pin_validation),
                     with_clear_btn: true,
@@ -92,7 +91,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 }
             },
             Button {
-                text: "create account".into(), // get_local_text("unlock.create_account"),
+                text: get_local_text("unlock.create-account"),
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,

@@ -8,6 +8,7 @@ use kit::{
     },
     icons::Icon,
 };
+use shared::language::get_local_text;
 
 use crate::{
     warp_runner::{commands::MultiPassCmd, WarpCmd},
@@ -87,7 +88,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),
                 disabled: false,
-                placeholder: "enter username".into(), //get_local_text("auth.enter_username"),
+                placeholder: get_local_text("auth.enter-username"),
                 options: Options {
                     with_validation: Some(username_validation),
                     with_clear_btn: true,
@@ -103,7 +104,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 icon: Icon::Key,
                 aria_label: "pin-input".into(),
                 disabled: false,
-                placeholder: "enter pin".into(), //get_local_text("unlock.enter_pin"),
+                placeholder: get_local_text("unlock.enter-pin"),
                 options: Options {
                     with_validation: Some(pin_validation),
                     with_clear_btn: true,
@@ -115,7 +116,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>) -> Element {
                 }
             },
             Button {
-                text: "create account".into(), // get_local_text("unlock.create_account"),
+                text:  get_local_text("unlock.create-account"),
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
