@@ -2,10 +2,10 @@ use std::rc::Weak;
 
 use crate::{
     components::{
-        media::popout_player::{PopoutPlayer},
+        media::popout_player::{PopoutPlayer, PopoutPlayerProps},
     },
     state::{Action, State},
-    UPLINK_ROUTES,
+    UPLINK_ROUTES, window_manager::{WindowManagerCmdTx, WindowManagerCmd}, WINDOW_CMD_CH,
 };
 
 use dioxus::prelude::*;
@@ -94,7 +94,12 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                              return;
                          } 
 
-                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
+                        // close the PopoutPlayer on drop, if not already closed
+                        // pass WindowDropHandler as a prop so that it doesn't get dropped when PopoutPlayer returns an Element
+                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                        let popout = VirtualDom::new_with_props(PopoutPlayer, PopoutPlayerProps{
+                            _drop_handler: drop_handler
+                        });
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
@@ -167,4 +172,29 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
             },
         }
     }))
+}
+
+
+pub struct WindowDropHandler {
+    cmd_tx: WindowManagerCmdTx
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
+        Self { cmd_tx }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::ClosePopout) {
+            // todo: log error
+        }
+    }
 }
