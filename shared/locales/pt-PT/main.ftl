@@ -110,13 +110,13 @@ remote-controls = RemoteControls
     .end = Fim
 
 unlock = Unlock
-    .warning1 = Su contraseña se utiliza para cifrar sus datos. Nunca se envía a ningún servidor. Debe usar una contraseña segura que no use en ningún otro lugar.
-    .warning2 = Si olvida esta contraseña, no podemos ayudarle a recuperarla.
-    .enter-pin = Introducir contraseña
-    .create-account = Crear cuenta
+    .warning1 = A sua palavra-passe é utilizada para cifrar os seus dados. Nunca é enviada para qualquer servidor. Deve utilizar uma palavra-passe segura que não utilize noutro lugar.
+    .warning2 = Se esquecer esta palavra-passe, não podemos ajudá-lo a recuperá-la.
+    .enter-pin = Introduzir palavra-passe
+    .create-account = Criar conta
 
 auth = Create Account 
-    .enter-username = Introduzca el nombre de usuario
+    .enter-username = Insira o nome de utilizador
 
     
     

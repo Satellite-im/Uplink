@@ -144,7 +144,7 @@ remote-controls = Remote Controls
     .end = Fim
 
 unlock = Unlock
-    .warning1 = Sua senha é usada para criptografar seus dados. Ele nunca é enviado para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
+    .warning1 = Sua senha é usada para criptografar seus dados. Ela nunca é enviada para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
     .warning2 = Se você esquecer essa senha, não podemos ajudá-lo a recuperá-la.
     .enter-pin = Digite a senha
     .create-account = Criar Conta
