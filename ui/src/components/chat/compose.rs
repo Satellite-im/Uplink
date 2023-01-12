@@ -55,100 +55,102 @@ pub fn Compose(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "compose",
-            div {
-                onmousedown: move |_| { desktop.drag(); },
-                Topbar {
-                    with_back_button: true,
-                    controls: cx.render(
-                        rsx! (
-                            Button {
-                                icon: Icon::Heart,
-                                // disabled: **loading,
-                                appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
-                                tooltip: cx.render(rsx!(
-                                    Tooltip { 
-                                        arrow_position: ArrowPosition::Top, 
-                                        text: get_local_text("favorites.add"),
-                                    }
-                                )),
-                                onpress: move |_| {
-                                    state.write().mutate(Action::ToggleFavorite(active_chat.clone()));
-                                }
-                            },
-                            Button {
-                                icon: Icon::PhoneArrowUpRight,
-                                // disabled: **loading,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip { 
-                                        arrow_position: ArrowPosition::Top, 
-                                        text: get_local_text("uplink.call"),
-                                    }
-                                )),
-                                onpress: move |_| {
-                                    state.write_silent().mutate(Action::ClearPopout(desktop.clone()));
-                                    state.write_silent().mutate(Action::DisableMedia);
-                                    state.write().mutate(Action::SetActiveMedia(active_chat_id));
-                                }
-                            },
-                            Button {
-                                icon: Icon::VideoCamera,
-                                // disabled: **loading,
-                                appearance: Appearance::Secondary,
-                                tooltip: cx.render(rsx!(
-                                    Tooltip { 
-                                        arrow_position: ArrowPosition::Top, 
-                                        text: get_local_text("uplink.video-call"),
-                                    }
-                                )),
-                            },
-                        )
-                    ),
-                    cx.render(
-                        rsx! (
-                            if without_me.len() < 2 {rsx! (
-                                UserImage {
-                                    loading: **loading,
-                                    platform: platform,
-                                    status: convert_status(&active_participant.identity_status()),
-                                    image: first_image
-                                }
-                            )} else {rsx! (
-                                UserImageGroup {
-                                    loading: **loading,
-                                    participants: build_participants(&without_me)
-                                }
-                            )}
-                            div {
-                                class: "user-info",
-                                if **loading {
-                                    rsx!(
-                                        div {
-                                            class: "skeletal-bars",
-                                            div {
-                                                class: "skeletal skeletal-bar",
-                                            },
-                                            div {
-                                                class: "skeletal skeletal-bar",
-                                            },
-                                        }
-                                    )
-                                } else {
-                                    rsx! (
-                                        p {
-                                            class: "username",
-                                            "{participants_name}"
-                                        },
-                                        p {
-                                            class: "status",
-                                            "{subtext}"
-                                        }
-                                    )
-                                }
-                            }
-                        )
-                    ),
+            Topbar {
+                with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                with_currently_back: state.read().ui.sidebar_hidden,
+                onback: move |_| {
+                    let current = state.read().ui.sidebar_hidden;
+                    state.write().mutate(Action::SidebarHidden(!current));
                 },
+                controls: cx.render(
+                    rsx! (
+                        Button {
+                            icon: Icon::Heart,
+                            // disabled: **loading,
+                            appearance: if is_favorite { Appearance::Primary } else { Appearance::Secondary },
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: get_local_text("favorites.add"),
+                                }
+                            )),
+                            onpress: move |_| {
+                                state.write().mutate(Action::ToggleFavorite(active_chat.clone()));
+                            }
+                        },
+                        Button {
+                            icon: Icon::PhoneArrowUpRight,
+                            // disabled: **loading,
+                            appearance: Appearance::Secondary,
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: get_local_text("uplink.call"),
+                                }
+                            )),
+                            onpress: move |_| {
+                                state.write_silent().mutate(Action::ClearPopout(desktop.clone()));
+                                state.write_silent().mutate(Action::DisableMedia);
+                                state.write().mutate(Action::SetActiveMedia(active_chat_id));
+                            }
+                        },
+                        Button {
+                            icon: Icon::VideoCamera,
+                            // disabled: **loading,
+                            appearance: Appearance::Secondary,
+                            tooltip: cx.render(rsx!(
+                                Tooltip { 
+                                    arrow_position: ArrowPosition::Top, 
+                                    text: get_local_text("uplink.video-call"),
+                                }
+                            )),
+                        },
+                    )
+                ),
+                cx.render(
+                    rsx! (
+                        if without_me.len() < 2 {rsx! (
+                            UserImage {
+                                loading: **loading,
+                                platform: platform,
+                                status: convert_status(&active_participant.identity_status()),
+                                image: first_image
+                            }
+                        )} else {rsx! (
+                            UserImageGroup {
+                                loading: **loading,
+                                participants: build_participants(&without_me)
+                            }
+                        )}
+                        div {
+                            class: "user-info",
+                            if **loading {
+                                rsx!(
+                                    div {
+                                        class: "skeletal-bars",
+                                        div {
+                                            class: "skeletal skeletal-bar",
+                                        },
+                                        div {
+                                            class: "skeletal skeletal-bar",
+                                        },
+                                    }
+                                )
+                            } else {
+                                rsx! (
+                                    p {
+                                        class: "username",
+                                        "{participants_name}"
+                                    },
+                                    p {
+                                        class: "status",
+                                        "{subtext}"
+                                    }
+                                )
+                            }
+                        }
+                    )
+                ),
             },
             active_media.then(|| rsx!(
                 MediaPlayer {

@@ -7,14 +7,20 @@ pub struct Props<'a> {
     #[props(optional)]
     with_nav: Option<Element<'a>>,
     #[props(optional)]
+    hidden: Option<bool>,
+    #[props(optional)]
     children: Option<Element<'a>>,
 }
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let hidden = cx.props.hidden.unwrap_or(false);
+
     cx.render(rsx!(
         div {
-            class: "sidebar",
+            class: {
+                format_args!("sidebar {}", if hidden { "hidden" } else { "" })
+            },
             aria_label: "sidebar",
             div {
                 class: "search",

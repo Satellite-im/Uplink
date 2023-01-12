@@ -13,6 +13,20 @@
     width: 100%;
 }
 
+#settings-layout {
+    .flex {
+        display: inline-flex;
+        flex-direction: column;
+        gap: var(--gap);
+
+        #content {
+            flex: 1;
+            overflow-y: scroll;
+        }
+    }
+}
+
+
 .nav.bubble {
     padding: 0 var(--gap);
 }
@@ -43,6 +57,18 @@
         justify-content: flex-end;
         width: 20%;
         min-width: fit-content;
+    }
+}
+
+// TODO: This should just be included in  dynamically rendered css depending on the screen size
+@media only screen and (max-width: 600px) {
+    .settings-section {
+        flex-direction: column;
+        .settings-control {
+            width: 100%;
+            justify-content: center;
+            padding: var(--gap) 0;
+        }
     }
 }
 

@@ -9,7 +9,7 @@ use kit::{
     icons::{Icon, IconElement},
 };
 
-use crate::{window_manager::{WindowManagerCmd}, WINDOW_CMD_CH};
+use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
 use super::player::WindowDropHandler;
 pub const SCRIPT: &str = include_str!("./script.js");
@@ -19,7 +19,7 @@ pub const SCRIPT: &str = include_str!("./script.js");
 pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     let cmd_tx = WINDOW_CMD_CH.tx.clone();
 
-        cx.render(
+    cx.render(
         rsx! (
         div {
             id: "video-poped-out",
@@ -34,7 +34,6 @@ pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                     },
                 },
                 video {
-                  
                     src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                     autoplay: "true",
                     "loop": "false",

@@ -91,7 +91,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 ///     home,
 ///     Route { to: "/fake/chat", name: "Chat", icon: Icon::ChatBubbleBottomCenter },
 ///     Route { to: "/fake/friends", name: "Friends", icon: Icon::Users },
-///     Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog },
+///     Route { to: "/fake/settings", name: "Settings", icon: Icon::Cog6Tooth },
 /// ];
 /// let active = routes[0].clone();
 ///

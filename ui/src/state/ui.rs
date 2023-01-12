@@ -5,6 +5,16 @@ use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
 use wry::webview::WebView;
 
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct WindowMeta {
+    pub focused: bool,
+    pub maximized: bool,
+    pub minimized: bool,
+    pub width: u32,
+    pub height: u32,
+    pub minimal_view: bool, // We can use this to detect mobile or portrait mode
+}
+
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
     // stores information related to the current call
@@ -18,6 +28,8 @@ pub struct UI {
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
     pub enable_overlay: bool,
+    pub sidebar_hidden: bool,
+    pub metadata: WindowMeta,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
@@ -41,6 +53,15 @@ impl UI {
             None => None,
         }
     }
+
+    pub fn get_meta(&self) -> WindowMeta {
+        self.metadata.clone()
+    }
+
+    pub fn is_minimal_view(&self) -> bool {
+        self.metadata.minimal_view
+    }
+
     pub fn clear_popout(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_popout_id() {
             desktop_context.close_window(id);

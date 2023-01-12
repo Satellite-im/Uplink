@@ -5,7 +5,7 @@ use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, UPLINK_ROUTES, utils::convert_status};
+use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, UPLINK_ROUTES, utils::convert_status};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -70,6 +70,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     cx.render(rsx!(
         ReusableSidebar {
+            hidden: state.read().ui.sidebar_hidden,
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
@@ -157,12 +158,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 (!sidebar_chats.is_empty()).then(|| rsx!(
                     Label {
                         text: get_local_text("uplink.chats"),
-                    }
-                )),
-                state.read().chats.active.is_none().then(|| rsx! (
-                    div {
-                        class: "hide-on-desktop",
-                        Welcome {}
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
@@ -265,7 +260,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 ),
                 sidebar_chats.is_empty().then(|| rsx!(
                     div {
-                        class: "skeletal-steady hide-on-mobile",
+                        class: "skeletal-steady",
                         User {
                             loading: true,
                             username: "Loading".into(),
