@@ -40,7 +40,10 @@ cargo run --bin ui --profile=rapid
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
 | Build Tools| xcode-select --install |
-| Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh |
+| Homebrew | /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" |
+| Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh |
+| cmake | brew install cmake |
+| Protoc | brew install protobuf |
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
