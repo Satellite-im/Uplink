@@ -7,7 +7,7 @@ use warp::{crypto::DID, tesseract::Tesseract};
 use crate::state::{chats, friends};
 
 use super::{
-    ui_adapter::{did_to_identity, dids_to_identity},
+    ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
     Account, Messaging,
 };
 
@@ -67,10 +67,17 @@ pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) 
     }
 }
 
-pub async fn handle_raygun_cmd(cmd: RayGunCmd, messaging: &mut Messaging) {
+pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging: &mut Messaging) {
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
-            Ok(covs) => {}
+            Ok(convs) => {
+                let mut all_chats = HashMap::new();
+                for conv in convs {
+                    let chat = conversation_to_chat(conv, account, messaging).await;
+                    all_chats.insert(chat.id, chat);
+                }
+                let _ = rsp.send(Ok(all_chats));
+            }
             Err(_e) => todo!(),
         },
     }

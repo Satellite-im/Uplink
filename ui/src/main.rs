@@ -16,7 +16,9 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 use state::State;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use uuid::Uuid;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -34,7 +36,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::commands::MultiPassCmd;
+use crate::warp_runner::commands::{MultiPassCmd, RayGunCmd};
 use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
@@ -349,8 +351,9 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    // don't do friends_init when using mock data
+    // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || !STATIC_ARGS.no_mock);
+    let chats_init = use_ref(cx, || !STATIC_ARGS.no_mock);
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -381,10 +384,10 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init];
+        to_owned![needs_update, friends_init, chats_init];
         async move {
             // don't process warp events until friends and chats have been loaded
-            while !*friends_init.read() {
+            while !(*friends_init.read() && *chats_init.read()) {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
@@ -420,7 +423,6 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // todo: this should be done before the app Element...make the app wait while this loads up
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![friends_init, needs_update];
@@ -434,7 +436,7 @@ fn app(cx: Scope) -> Element {
                 .send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
                     rsp: tx,
                 }))
-                .expect("main send warp command");
+                .expect("main failed to send warp command");
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
@@ -455,6 +457,51 @@ fn app(cx: Scope) -> Element {
             }
 
             *friends_init.write_silent() = true;
+            needs_update.set(true);
+        }
+    });
+
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![chats_init, needs_update];
+        async move {
+            if *chats_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) =
+                oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
+                    rsp: tx,
+                }))
+                .expect("main failed to send warp command");
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+
+            //println!("got response from warp");
+            match res {
+                Ok(mut all_chats) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        // for all_chats, fill in participants and messages.
+                        for (k, v) in &state.read().chats.all {
+                            if let Some(chat) = all_chats.get_mut(k) {
+                                chat.unreads = v.unreads;
+                            }
+                        }
+                        state.write().chats.all = all_chats;
+                        needs_update.set(true);
+                    }
+                    Err(_e) => {
+                        // todo: log error
+                    }
+                },
+                Err(_e) => {
+                    todo!("handle error response");
+                }
+            }
+
+            *chats_init.write_silent() = true;
             needs_update.set(true);
         }
     });

@@ -77,6 +77,7 @@ pub fn generate_mock() -> State {
         },
         route: Route { active: "/".into() },
         chats: Chats {
+            initialized: true,
             all: all_chats.clone(),
             active: None,
             active_media: None,

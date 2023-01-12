@@ -16,12 +16,12 @@ use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{
-    warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
+    warp_runner::commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
     STATIC_ARGS,
 };
 
 use self::{
-    commands::{MultiPassCmd, TesseractCmd},
+    commands::{MultiPassCmd, RayGunCmd, TesseractCmd},
     ui_adapter::{MultiPassEvent, RayGunEvent},
 };
 
@@ -57,6 +57,7 @@ pub enum WarpEvent {
 pub enum WarpCmd {
     Tesseract(TesseractCmd),
     MultiPass(MultiPassCmd),
+    RayGun(RayGunCmd),
 }
 
 pub struct WarpRunner {
@@ -157,6 +158,7 @@ impl WarpRunner {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
                             WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
+                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
                         },
                         None => break,
                     }

@@ -30,6 +30,8 @@ pub struct Chat {
 // TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Chats {
+    #[serde(skip)]
+    pub initialized: bool,
     // All active chats from warp.
     #[serde(default)]
     pub all: HashMap<Uuid, Chat>,
