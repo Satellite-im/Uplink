@@ -131,7 +131,7 @@ settings-developer = Developer Settings
 media-player = Media Player 
     .enable-camera = Habilitar Cámara
     .fullscreen = Pantalla Completa
-    .popout-player = Reproductor de Salida
+    .popout-player = Reproductor Emergente
     .screenshare = Compartir Pantalla
     
 remote-controls = Remote Controls 
