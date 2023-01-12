@@ -425,13 +425,15 @@ fn app(cx: Scope) -> Element {
             id: "app-wrap",
             onmousemove: move |_| {
                 let desktop = use_window(cx);
-                if (desktop.outer_size().width < 305 && !state.read().ui.is_minimal_view()) || (desktop.outer_size().width > 305 && state.read().ui.is_minimal_view()) {
-                    desktop.set_inner_size(LogicalSize::new(desktop.outer_size().width, desktop.outer_size().height));
+                let width = desktop.outer_size().width / desktop.scale_factor() as u32;
+                let height = desktop.outer_size().height / desktop.scale_factor() as u32;
+                if (width < 305 && !state.read().ui.is_minimal_view()) || (width > 305 && state.read().ui.is_minimal_view()) {
+                    desktop.set_inner_size(LogicalSize::new(width, height));
                     let meta = state.read().ui.metadata.clone();
                     state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: desktop.outer_size().width,
-                            height: desktop.outer_size().height,
-                            minimal_view: desktop.outer_size().width < 305,
+                            width: width,
+                            height: height,
+                            minimal_view: width < 305,
                             ..meta
                         }));
                 }
