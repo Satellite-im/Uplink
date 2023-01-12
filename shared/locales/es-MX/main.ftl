@@ -30,7 +30,7 @@ messages = Messages
     .replying = Respondiendo a:
     .react = Reaccionar
     .reply = Responder
-    .you = Tu
+    .you = Tú
     .say-something-placeholder = Di algo...
 
 favorites = Favorites
