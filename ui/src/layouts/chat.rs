@@ -17,7 +17,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     //let first_render = use_state(cx, || true);
-    //if *first_render.clone() && state.read().ui.is_minimal_view() {
+    //if *first_render.get() && state.read().ui.is_minimal_view() {
     //    state.write().mutate(Action::SidebarHidden(false));
     //    first_render.set(false);
     //}
