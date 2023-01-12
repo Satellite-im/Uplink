@@ -17,7 +17,7 @@ use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     state::{Action, State},
     utils::convert_status,
-    CHAT_ROUTE,
+    UPLINK_ROUTES,
 };
 
 #[allow(non_snake_case)]
@@ -67,7 +67,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
-                                                use_router(cx).replace_route(CHAT_ROUTE, None, None);
+                                                use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
                                             }
                                         },
                                         ContextItem {
@@ -114,7 +114,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         )),
                                         onchat: move |_| {
                                             state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                            use_router(cx).replace_route(CHAT_ROUTE, None, None);
+                                            use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));

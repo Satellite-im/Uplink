@@ -5,7 +5,7 @@ use kit::{
     elements::{button::Button, Appearance},
     icons::Icon,
 };
-use crate::{FRIENDS_ROUTE};
+use crate::{UPLINK_ROUTES};
 use shared::language::get_local_text;
 
 
@@ -38,7 +38,7 @@ pub fn Welcome(cx: Scope) -> Element {
                 text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
-                    router.replace_route(FRIENDS_ROUTE, None, None);
+                    router.replace_route(UPLINK_ROUTES.friends, None, None);
                 }
             },
         }

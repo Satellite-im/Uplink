@@ -13,7 +13,6 @@ use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
-// use state::{Action, ActionHook, State};
 use state::State;
 use std::path::{Path, PathBuf};
 
@@ -25,12 +24,13 @@ use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log;
 
 use crate::components::toast::Toast;
-use crate::layouts::auth::AuthLayout;
+use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::warp_runner::{WarpCmdRx, WarpCmdTx, WarpEventRx, WarpEventTx};
+use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
+use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
 
@@ -44,6 +44,7 @@ pub mod state;
 pub mod testing;
 pub mod utils;
 mod warp_runner;
+mod window_manager;
 
 #[macro_use]
 extern crate lazy_static;
@@ -54,17 +55,7 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
-    pub use_mock: bool,
-}
-
-pub struct WarpCmdChannels {
-    pub tx: WarpCmdTx,
-    pub rx: WarpCmdRx,
-}
-
-pub struct WarpEventChannels {
-    pub tx: WarpEventTx,
-    pub rx: WarpEventRx,
+    pub no_mock: bool,
 }
 
 lazy_static! {
@@ -79,7 +70,7 @@ lazy_static! {
             cache_path: uplink_path.join("state.json"),
             config_path: uplink_path.join("Config.json"),
             warp_path: uplink_path.join("warp"),
-            use_mock: args.mock,
+            no_mock: args.no_mock,
         }
     };
 
@@ -101,14 +92,38 @@ lazy_static! {
             rx:  Arc::new(Mutex::new(rx))
         }
     };
+
+    // used to close the popout player, among other things
+    pub static ref WINDOW_CMD_CH: WindowManagerCmdChannels = {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        WindowManagerCmdChannels {
+            tx,
+            rx:  Arc::new(Mutex::new(rx))
+        }
+    };
 }
 
-pub static CHAT_ROUTE: &str = "/chat";
-pub static FRIENDS_ROUTE: &str = "/friends";
-pub static FILES_ROUTE: &str = "/files";
-pub static SETTINGS_ROUTE: &str = "/settings";
-pub static UNLOCK_ROUTE: &str = "/";
-pub static AUTH_ROUTE: &str = "/auth";
+pub struct UplinkRoutes<'a> {
+    pub chat: &'a str,
+    pub friends: &'a str,
+    pub files: &'a str,
+    pub settings: &'a str,
+}
+
+pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
+    chat: "/",
+    friends: "/friends",
+    files: "/files",
+    settings: "/settings",
+};
+
+// serve as a sort of router while the user logs in
+#[derive(PartialEq, Eq)]
+pub enum AuthPages {
+    Unlock,
+    CreateAccount,
+    Success,
+}
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
@@ -117,8 +132,10 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
+    // todo: when the app is mature, default mock to false
+    // there's no way to set --flag=true so for make the flag mean false
     #[clap(long, default_value_t = false)]
-    mock: bool,
+    no_mock: bool,
 }
 
 fn copy_assets() {
@@ -218,6 +235,7 @@ fn main() {
     )
 }
 
+// start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
     //println!("rendering bootstrap");
 
@@ -225,14 +243,80 @@ fn bootstrap(cx: Scope) -> Element {
     let mut warp_runner = warp_runner::WarpRunner::init();
     warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
 
-    let mut state = if STATIC_ARGS.use_mock {
-        State::mock()
-    } else {
+    // make the window smaller while the user authenticates
+    let desktop = use_window(cx);
+    desktop.set_inner_size(LogicalSize {
+        width: 500.0,
+        height: 300.0,
+    });
+    cx.render(rsx!(crate::auth_page_manager {}))
+}
+
+// Uplink's Router depends on State, which can't be loaded until the user logs in.
+// don't see a way to replace the router
+// so instead use a Prop to determine which page to render
+// after the user logs in, app_bootstrap loads Uplink as normal.
+fn auth_page_manager(cx: Scope) -> Element {
+    let page = use_state(cx, || AuthPages::Unlock);
+    let pin = use_ref(cx, String::new);
+    cx.render(rsx!(match *page.current() {
+        AuthPages::Success => rsx!(app_bootstrap {}),
+        _ => rsx!(auth_wrapper {
+            page: page.clone(),
+            pin: pin.clone()
+        }),
+    }))
+}
+
+#[inline_props]
+fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    let desktop = use_window(cx);
+    let theme = "";
+    let pre_release_text = get_local_text("uplink.pre-release");
+    cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+        div {
+            class: "drag-handle",
+            onmousedown: move |_| desktop.drag(),
+        },
+        div {
+            id: "app-wrap",
+            div {
+                id: "pre-release",
+                aria_label: "pre-release",
+                onmousedown: move |_| { desktop.drag(); },
+                IconElement {
+                    icon: Icon::Beaker,
+                },
+                p {
+                    "{pre_release_text}",
+                }
+            },
+            match *page.current() {
+                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
+                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
+                _ => panic!("invalid page")
+            }
+        }
+    ))
+}
+
+// called at the end of the auth flow
+#[inline_props]
+pub fn app_bootstrap(cx: Scope) -> Element {
+    //println!("rendering app_bootstrap");
+    let mut state = if STATIC_ARGS.no_mock {
         State::load().expect("failed to load state")
+    } else {
+        State::mock()
     };
 
-    // todo: delete this. it is just an examle
+    // set the window to the normal size.
+    // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
+    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+
+    // todo: delete this. it is just an example
     if Configuration::load_or_default().general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
@@ -247,11 +331,17 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let toggle = use_state(cx, || false);
+    let needs_update = use_state(cx, || false);
+
+    // yes, double render. sry.
+    if *needs_update.get() {
+        needs_update.set(false);
+        state.write();
+    }
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle];
+        to_owned![needs_update];
         async move {
             //println!("starting toast use_future");
             loop {
@@ -262,8 +352,7 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
-                        let flag = *toggle.get();
-                        toggle.set(!flag);
+                        needs_update.set(true);
                     }
                 }
             }
@@ -272,7 +361,7 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![toggle];
+        to_owned![needs_update];
         async move {
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
@@ -282,9 +371,21 @@ fn app(cx: Scope) -> Element {
             while let Some(evt) = ch.recv().await {
                 //println!("warp_runner got event");
                 if warp_runner::handle_event(inner.clone(), evt).await {
-                    let flag = *toggle.current();
-                    toggle.set(!flag);
+                    needs_update.set(true);
                 }
+            }
+        }
+    });
+
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update, desktop];
+        async move {
+            let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
+            let mut ch = window_cmd_rx.lock().await;
+            while let Some(cmd) = ch.recv().await {
+                window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
+                needs_update.set(true);
             }
         }
     });
@@ -324,9 +425,6 @@ fn app(cx: Scope) -> Element {
                     "{pre_release_text}",
                 }
             },
-            //state.read().ui.popout_player.then(|| rsx!(
-           //     PopoutPlayer {}
-           // )),
            get_router(cx, pending_friends)
         }
     ))
@@ -376,19 +474,19 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let chat_route = UIRoute {
-        to: CHAT_ROUTE,
+        to: UPLINK_ROUTES.chat,
         name: get_local_text("uplink.chats"),
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
     let settings_route = UIRoute {
-        to: SETTINGS_ROUTE,
+        to: UPLINK_ROUTES.settings,
         name: get_local_text("settings.settings"),
         icon: Icon::Cog,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
-        to: FRIENDS_ROUTE,
+        to: UPLINK_ROUTES.friends,
         name: get_local_text("friends.friends"),
         icon: Icon::Users,
         with_badge: if pending_friends > 0 {
@@ -399,7 +497,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
         loading: None,
     };
     let files_route = UIRoute {
-        to: FILES_ROUTE,
+        to: UPLINK_ROUTES.files,
         name: get_local_text("files.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
@@ -412,51 +510,43 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
     ];
 
     cx.render(rsx!(
-            Router {
-                Route {
-                    to: CHAT_ROUTE,
-                    ChatLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: chat_route.clone(),
-                        }
+        Router {
+            Route {
+                to: UPLINK_ROUTES.chat,
+                ChatLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: chat_route.clone(),
                     }
-                },
-                Route {
-                    to: SETTINGS_ROUTE,
-                    SettingsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: settings_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: FRIENDS_ROUTE,
-                    FriendsLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: friends_route.clone(),
-                        }
-                    }
-                },
-                Route {
-                    to: FILES_ROUTE,
-                    FilesLayout {
-                        route_info: RouteInfo {
-                            routes: routes.clone(),
-                            active: files_route,
-                        }
-                    }
-                },
-                Route {
-                    to: UNLOCK_ROUTE,
-                    UnlockLayout {}
                 }
-                Route {
-                    to: AUTH_ROUTE,
-                    AuthLayout {}
+            },
+            Route {
+                to: UPLINK_ROUTES.settings,
+                SettingsLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: settings_route.clone(),
+                    }
                 }
+            },
+            Route {
+                to: UPLINK_ROUTES.friends,
+                FriendsLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: friends_route.clone(),
+                    }
+                }
+            },
+            Route {
+                to: UPLINK_ROUTES.files,
+                FilesLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: files_route,
+                    }
+                }
+            },
         }
     ))
 }
