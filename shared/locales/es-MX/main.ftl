@@ -144,7 +144,7 @@ remote-controls = Remote Controls
 
 unlock = Unlock
     .warning1 = Su contraseña se utiliza para cifrar sus datos. Nunca se envía a ningún servidor. Debe usar una contraseña fuerte que no use en ningún otro lugar.
-    .warning2 = Si olvida esta contraseña, no podemos ayudarlo a recuperarla.
+    .warning2 = Si olvida esta contraseña, no podremos ayudar a recuperarla.
     .enter-pin = Ingresar Pin
     .create-account = Crear Cuenta
 
