@@ -70,6 +70,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     cx.render(rsx!(
         ReusableSidebar {
+            hidden: state.read().ui.sidebar_hidden,
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",
@@ -157,12 +158,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 (!sidebar_chats.is_empty()).then(|| rsx!(
                     Label {
                         text: get_local_text("uplink.chats"),
-                    }
-                )),
-                state.read().chats.active.is_none().then(|| rsx! (
-                    div {
-                        class: "hide-on-desktop",
-                        Welcome {}
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
@@ -265,7 +260,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 ),
                 sidebar_chats.is_empty().then(|| rsx!(
                     div {
-                        class: "skeletal-steady hide-on-mobile",
+                        class: "skeletal-steady",
                         User {
                             loading: true,
                             username: "Loading".into(),

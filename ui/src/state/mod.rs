@@ -496,6 +496,10 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::SetMeta(metadata) => {
+                self.ui.metadata = metadata;
+            }
+            Action::SidebarHidden(hidden) => self.ui.sidebar_hidden = hidden,
             Action::ClearPopout(window) => {
                 self.ui.clear_popout(window);
             }

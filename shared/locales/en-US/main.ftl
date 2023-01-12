@@ -25,7 +25,6 @@ warning-messages = Warning Messages
     .only-alpha-chars = Only alphanumeric characters are accepted.
     .spaces-not-allowed = Spaces are not allowed.
 
-
 messages = Messages
     .new = New Message
     .replying = Replying to:

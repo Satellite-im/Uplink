@@ -4,7 +4,7 @@ use crate::{
     components::chat::{
         compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
     },
-    state::State,
+    state::{Action, State},
 };
 
 #[derive(PartialEq, Props)]
@@ -16,21 +16,26 @@ pub struct Props {
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    let first_render = use_state(cx, || true);
+    if *first_render.clone() && state.read().ui.is_minimal_view() {
+        state.write().mutate(Action::SidebarHidden(false));
+        first_render.set(false);
+    }
+
     cx.render(rsx!(
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
-            span {
-                class: "full-width-on-mobile",
-                ChatSidebar {
-                    route_info: cx.props.route_info.clone()
-                },
+            ChatSidebar {
+                route_info: cx.props.route_info.clone()
             },
-            state.read().chats.active.is_some().then(|| rsx! (
-                Compose {}
-            )),
-            state.read().chats.active.is_none().then(|| rsx! (
-                Welcome {}
+            (state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden || !state.read().ui.is_minimal_view()).then(|| rsx!(
+                state.read().chats.active.is_some().then(|| rsx! (
+                    Compose {}
+                )),
+                state.read().chats.active.is_none().then(|| rsx! (
+                    Welcome {}
+                ))
             ))
         }
     ))

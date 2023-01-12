@@ -5,6 +5,8 @@
 	min-width: var(--sidebar-width);
 	height: 100%;
 	border-right: 1px solid var(--border-color);
+	transition: margin-left var(--animation-speed);
+
 	.search {
 		padding: var(--gap);
 		border-bottom: 1px solid transparent;
@@ -15,5 +17,9 @@
 		display: inline-flex;
 		flex-direction: column;
 		gap: var(--gap);
+	}
+
+	&.hidden {
+		margin-left: calc(var(--sidebar-width) * -1 - 1px);
 	}
 }

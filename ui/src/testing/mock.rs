@@ -18,7 +18,8 @@ use warp::{
 };
 
 use crate::state::{
-    Account, Chat, Chats, Friends, Identity, Route, Settings, State, ToastNotification, UI,
+    ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
+    ToastNotification, UI,
 };
 
 const FRIEND_COUNT: usize = 20;
@@ -61,14 +62,16 @@ pub fn generate_mock() -> State {
             popout_player: false,
             toast_notifications,
             theme: None,
+            sidebar_hidden: false,
             // TODO: Until this is more functional, we should keep it disabled by default.
             enable_overlay: false,
+            metadata: WindowMeta::default(),
         },
         account: Account {
             identity: me.clone(),
         },
         settings: Settings {
-            language: "en-US".into(),
+            language: "English (USA)".into(),
         },
         route: Route { active: "/".into() },
         chats: Chats {

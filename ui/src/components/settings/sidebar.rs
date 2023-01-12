@@ -67,7 +67,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let general = UIRoute {
         to: "general",
         name: get_local_text("settings.general"),
-        icon: Icon::Cog,
+        icon: Icon::Cog6Tooth,
         ..UIRoute::default()
     };
     let privacy = UIRoute {
@@ -105,8 +105,11 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ];
 
     let active_route = routes[0].clone();
+    let state = use_shared_state::<State>(cx)?;
+
     cx.render(rsx!(
         ReusableSidebar {
+            hidden: state.read().ui.sidebar_hidden,
             with_search: cx.render(rsx!(
                 div {
                     class: "search-input",

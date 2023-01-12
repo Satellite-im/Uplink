@@ -8,7 +8,11 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
+<<<<<<< HEAD
 use futures::channel::oneshot;
+=======
+use kit::elements::button::Button;
+>>>>>>> dev
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -30,9 +34,15 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
+<<<<<<< HEAD
 use crate::state::friends;
 use crate::warp_runner::commands::MultiPassCmd;
 use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
+=======
+use crate::state::ui::WindowMeta;
+use crate::state::Action;
+use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
+>>>>>>> dev
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -326,7 +336,19 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         state.ui.overlays.push(window);
     }
 
+    // Update the window metadata now that we've created a window
+    let window_meta = WindowMeta {
+        focused: desktop.is_focused(),
+        maximized: desktop.is_maximized(),
+        minimized: desktop.is_minimized(),
+        width: desktop.inner_size().width,
+        height: desktop.inner_size().height,
+        minimal_view: desktop.inner_size().width < 600,
+    };
+    state.ui.metadata = window_meta;
+
     use_shared_state_provider(cx, || state);
+
     cx.render(rsx!(crate::app {}))
 }
 
@@ -334,7 +356,10 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+<<<<<<< HEAD
     let friends_init = use_ref(cx, || false);
+=======
+>>>>>>> dev
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -373,6 +398,7 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
+<<<<<<< HEAD
                 //println!("got warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -382,6 +408,11 @@ fn app(cx: Scope) -> Element {
                     Err(_e) => {
                         // todo: log error
                     }
+=======
+                //println!("warp_runner got event");
+                if warp_runner::handle_event(inner.clone(), evt).await {
+                    needs_update.set(true);
+>>>>>>> dev
                 }
             }
         }
@@ -400,6 +431,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+<<<<<<< HEAD
     // todo: this should be done before the app Element...make the app wait while this loads up
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -439,6 +471,8 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+=======
+>>>>>>> dev
     let user_lang_saved = state.read().settings.language.clone();
     change_language(user_lang_saved);
 
@@ -456,17 +490,66 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
-            class: "drag-handle",
-            onmousedown: move |_| desktop.drag(),
-        },
-        div {
             id: "app-wrap",
+            div {
+                id: "titlebar",
+                onmousedown: move |_| { desktop.drag(); },
+                // TODO: Only display this if developer mode is enabled.
+                Button {
+                    icon: Icon::DevicePhoneMobile,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 300,
+                            height: 534,
+                            minimal_view: true,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::DeviceTablet,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 600,
+                            height: 534,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::ComputerDesktop,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 950,
+                            height: 600,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::CommandLine,
+                    appearance: Appearance::Transparent,
+                    onpress: |_| {
+                        desktop.devtool();
+                    }
+                }
+            },
             get_toasts(cx, &state.read()),
             get_call_dialog(cx),
             div {
                 id: "pre-release",
                 aria_label: "pre-release",
-                onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,
                 },
@@ -531,7 +614,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let settings_route = UIRoute {
         to: UPLINK_ROUTES.settings,
         name: get_local_text("settings.settings"),
-        icon: Icon::Cog,
+        icon: Icon::Cog6Tooth,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {

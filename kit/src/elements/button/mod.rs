@@ -87,7 +87,7 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 /// 
 /// Button {
 ///     appearance: Appearance::Primary,
-///     icon: Icon::Cog,
+///     icon: Icon::Cog6Tooth,
 ///     tooltip: cx.render(rsx!(
 ///         Tooltip { 
 ///             arrow_position: ArrowPosition::Bottom, 
