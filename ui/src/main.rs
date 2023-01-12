@@ -390,7 +390,6 @@ fn app(cx: Scope) -> Element {
             while !(*friends_init.read() && *chats_init.read()) {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
-            println!("initialized warp");
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that

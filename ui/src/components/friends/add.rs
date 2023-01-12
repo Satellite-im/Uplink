@@ -56,7 +56,6 @@ pub fn AddFriend(cx: Scope) -> Element {
     let id_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         while let Some(_) = rx.next().await {
-            println!("requesting own id");
             let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
             warp_cmd_tx
                 .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
@@ -100,7 +99,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                     text: get_local_text("uplink.add"),
                     disabled: !*friend_input_valid.current(),
                     onpress: move |_| {
-                        println!("clicked plus");
                         match DID::from_str(&friend_input.current()) {
                             Ok(did) => ch.send(did),
                             Err(_e) => todo!("failed to convert string to DID")
@@ -111,7 +109,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                 Button {
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
-                        println!("clicked clipboard");
                         id_ch.send(());
                     }
                 }
