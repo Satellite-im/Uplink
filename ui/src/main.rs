@@ -8,11 +8,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
-<<<<<<< HEAD
 use futures::channel::oneshot;
-=======
-use kit::elements::button::Button;
->>>>>>> dev
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -34,15 +30,9 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-<<<<<<< HEAD
 use crate::state::friends;
 use crate::warp_runner::commands::MultiPassCmd;
 use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
-=======
-use crate::state::ui::WindowMeta;
-use crate::state::Action;
-use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
->>>>>>> dev
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -356,10 +346,7 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-<<<<<<< HEAD
     let friends_init = use_ref(cx, || false);
-=======
->>>>>>> dev
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -398,7 +385,6 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-<<<<<<< HEAD
                 //println!("got warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -408,11 +394,6 @@ fn app(cx: Scope) -> Element {
                     Err(_e) => {
                         // todo: log error
                     }
-=======
-                //println!("warp_runner got event");
-                if warp_runner::handle_event(inner.clone(), evt).await {
-                    needs_update.set(true);
->>>>>>> dev
                 }
             }
         }
@@ -431,7 +412,6 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-<<<<<<< HEAD
     // todo: this should be done before the app Element...make the app wait while this loads up
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -471,8 +451,6 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-=======
->>>>>>> dev
     let user_lang_saved = state.read().settings.language.clone();
     change_language(user_lang_saved);
 
