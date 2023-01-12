@@ -48,18 +48,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         warp::error::Error::MultiPassExtensionUnavailable => {
                             // need to create an account
                             no_account.set(Some(true));
-                            //println!("need to create an account");
                         }
                         warp::error::Error::DecryptionError => {
                             // wrong password
                             no_account.set(Some(false));
                             password_failed.set(Some(true));
-                            //println!("wrong password");
                         }
-                        _ => {
-                            // unexpected
-                            //println!("LogIn failed: {}", err);
-                        }
+                        _ => {}
                     },
                 }
             }
