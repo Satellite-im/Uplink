@@ -9,8 +9,8 @@ use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use futures::channel::oneshot;
-use kit::elements::Appearance;
 use kit::elements::button::Button;
+use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
@@ -31,9 +31,9 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::state::Action;
 use crate::state::friends;
 use crate::state::ui::WindowMeta;
+use crate::state::Action;
 use crate::warp_runner::commands::MultiPassCmd;
 use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
@@ -349,7 +349,8 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let friends_init = use_ref(cx, || false);
+    // don't do friends_init when using mock data
+    let friends_init = use_ref(cx, || !STATIC_ARGS.no_mock);
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -380,8 +381,12 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![needs_update, friends_init];
         async move {
+            // don't process warp events until friends and chats have been loaded
+            while !*friends_init.read() {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
