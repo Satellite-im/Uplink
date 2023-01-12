@@ -34,25 +34,38 @@ pub fn AddFriend(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(did) = rx.next().await {
+            let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                    did,
+                    rsp: tx,
+                }))
+                .expect("AddFriendLayout failed to send warp command");
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
-        to_owned![warp_cmd_tx];
-        async move {
-            while let Some(did) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
-                        did,
-                        rsp: tx,
-                    }))
-                    .expect("AddFriendLayout failed to send warp command");
+            let res = rx.await.expect("failed to get response from warp_runner");
+            match res {
+                Ok(_) => todo!("update ui to say request was sent"),
+                Err(_) => todo!("failed to send friend request"),
+            }
+        }
+    });
 
-                let res = rx.await.expect("failed to get response from warp_runner");
-                match res {
-                    Ok(_) => todo!("update ui to say request was sent"),
-                    Err(_) => todo!("failed to send friend request"),
-                }
+    let id_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(_) = rx.next().await {
+            println!("requesting own id");
+            let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
+                .expect("AddFriendLayout failed to send warp command");
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+            match res {
+                Ok(_) => todo!("copy to clipboard and make toast"),
+                Err(_) => todo!("failed to get own identity"),
             }
         }
     });
@@ -87,10 +100,19 @@ pub fn AddFriend(cx: Scope) -> Element {
                     text: get_local_text("uplink.add"),
                     disabled: *friend_input_valid.current(),
                     onpress: |_| {
+                        println!("clicked plus");
                         match DID::from_str(&friend_input.current()) {
                             Ok(did) => ch.send(did),
                             Err(_e) => todo!("failed to convert string to DID")
                         }
+                    }
+                },
+                // todo: verify that this is the desired UI
+                Button {
+                    icon: Icon::ClipboardDocument,
+                    onpress: |_| {
+                        println!("clicked clipboard");
+                        id_ch.send(());
                     }
                 }
             }
