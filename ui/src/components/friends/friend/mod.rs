@@ -18,10 +18,7 @@ use kit::{
 use shared::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
-use crate::{
-    state::State,
-    utils::{format_timestamp::format_timestamp_timeago},
-};
+use crate::{state::State, utils::format_timestamp::format_timestamp_timeago};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -68,14 +65,16 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "request-info",
                 p {
                     "{cx.props.username}",
-                    span {
-                        "#{cx.props.suffix}"
-                    }
+                    (!state.read().ui.is_minimal_view()).then(|| rsx!(
+                        span {
+                            "#{cx.props.suffix}"
+                        }
+                    ))
                 },
                 if relationship.friends() || !relationship.blocked() {
                    rsx!(p {
                         class: "status-message",
-                        "{status_message}"
+                        (!state.read().ui.is_minimal_view()).then(|| rsx!( "{status_message}" ))
                     })
                 } else  {
                     rsx!(Label {
@@ -101,7 +100,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.onchat.is_some().then(|| rsx! (
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
-                        text: get_local_text("uplink.chat"),
+                        text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
                         onpress: move |_| match &cx.props.onchat {
                             Some(f) => f.call(()),
                             None    => {},
@@ -122,7 +121,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     )),
                 },
-                cx.props.onchat.is_some().then(|| rsx!(
+                (cx.props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
