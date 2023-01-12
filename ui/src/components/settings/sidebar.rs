@@ -56,8 +56,6 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let _ = use_shared_state::<State>(cx)?;
-
     let profile = UIRoute {
         to: "profile",
         name: get_local_text("settings.profile"),
