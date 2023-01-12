@@ -15,7 +15,7 @@ uplink = Uplink
     .end = Finalizar
     .pre-release = Pre-lanzamiento
     .username = Usuario
-    .status = Mensaje de estado
+    .status = Estado
     .characters = Caracteres
     .exceeded = Excedido
 
