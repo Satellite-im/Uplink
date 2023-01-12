@@ -71,7 +71,7 @@ pub fn generate_mock() -> State {
             identity: me.clone(),
         },
         settings: Settings {
-            language: "en-US".into(),
+            language: "English (USA)".into(),
         },
         route: Route { active: "/".into() },
         chats: Chats {

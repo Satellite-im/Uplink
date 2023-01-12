@@ -25,7 +25,6 @@ warning-messages = Warning Messages
     .only-alpha-chars = Only alphanumeric characters are accepted.
     .spaces-not-allowed = Spaces are not allowed.
 
-
 messages = Messages
     .new = New Message
     .replying = Replying to:
@@ -142,3 +141,12 @@ remote-controls = Remote Controls
     .listen = Listen
     .silence = Silence 
     .end = End
+
+unlock = Unlock
+    .warning1 = Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else.
+    .warning2 = If you forget this password we cannot help you retrieve it.
+    .enter-pin = Enter Pin
+    .create-account = Create Account
+
+auth = Create Account 
+    .enter-username = Enter Username

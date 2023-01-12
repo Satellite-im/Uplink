@@ -80,11 +80,10 @@ settings-profile = Profile Settings
     .change-avatar = Mudar avatar
     .edit-button = Editar
     .save-button = Salvar
-    .limited-to-32 = Nome de usuário é limitado a 32 caracteres
-    .limited-to-128 = Mensagem de status é limitada a 128 caracteres
-    .less-than-4 = Minimo caracteres para nome de usuário é 4
 
 settings-general = General Settings
+    .overlay = Sobreposição de Uplink
+    .overlay-description = Ative a sobreposição de tela Uplink. Isso mostrará informações de chamadas ativas, bem como permitirá adicionar widgets personalizados à sua tela.
     .splash-screen = Splash Screen
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
     .app-language = Idioma do aplicativo
@@ -142,3 +141,12 @@ remote-controls = Remote Controls
     .listen = Ativar áudio
     .silence = Desativar áudio
     .end = Fim
+
+unlock = Unlock
+    .warning1 = Sua senha é usada para criptografar seus dados. Ela nunca é enviada para nenhum servidor. Você deve usar uma senha forte que você não usa em nenhum outro lugar.
+    .warning2 = Se você esquecer essa senha, não podemos ajudá-lo a recuperá-la.
+    .enter-pin = Digite a senha
+    .create-account = Criar Conta
+
+auth = Create Account 
+    .enter-username = Digite o nome de usuário

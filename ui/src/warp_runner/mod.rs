@@ -32,6 +32,16 @@ pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
 pub type WarpEventTx = UnboundedSender<WarpEvent>;
 pub type WarpEventRx = Arc<Mutex<UnboundedReceiver<WarpEvent>>>;
 
+pub struct WarpCmdChannels {
+    pub tx: WarpCmdTx,
+    pub rx: WarpCmdRx,
+}
+
+pub struct WarpEventChannels {
+    pub tx: WarpEventTx,
+    pub rx: WarpEventRx,
+}
+
 type Account = Box<dyn MultiPass>;
 type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
