@@ -457,8 +457,6 @@ fn app(cx: Scope) -> Element {
     let user_lang_saved = state.read().settings.language.clone();
     change_language(user_lang_saved);
 
-    let pre_release_text = get_local_text("uplink.pre-release");
-
     let theme = state
         .read()
         .ui
@@ -467,84 +465,38 @@ fn app(cx: Scope) -> Element {
         .map(|theme| theme.styles.clone())
         .unwrap_or_default();
 
-    let pending_friends = state.read().friends.incoming_requests.len();
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
-            div {
-                id: "titlebar",
-                onmousedown: move |_| { desktop.drag(); },
-                // TODO: Only display this if developer mode is enabled.
-                Button {
-                    icon: Icon::DevicePhoneMobile,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 300,
-                            height: 534,
-                            minimal_view: true,
-                            ..meta
-                        }));
-                    }
-                },
-                Button {
-                    icon: Icon::DeviceTablet,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 600,
-                            height: 534,
-                            minimal_view: false,
-                            ..meta
-                        }));
-                    }
-                },
-                Button {
-                    icon: Icon::ComputerDesktop,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 950,
-                            height: 600,
-                            minimal_view: false,
-                            ..meta
-                        }));
-                    }
-                },
-                Button {
-                    icon: Icon::CommandLine,
-                    appearance: Appearance::Transparent,
-                    onpress: |_| {
-                        desktop.devtool();
-                    }
-                }
-            },
-            get_toasts(cx, &state.read()),
+            get_titlebar(cx),
+            get_toasts(cx),
             get_call_dialog(cx),
-            div {
-                id: "pre-release",
-                aria_label: "pre-release",
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
-            },
-           get_router(cx, pending_friends)
+            get_pre_release_message(cx),
+            get_router(cx)
         }
     ))
 }
 
-fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
-    cx.render(rsx!(state.ui.toast_notifications.iter().map(
+fn get_pre_release_message(cx: Scope) -> Element {
+    let pre_release_text = get_local_text("uplink.pre-release");
+    cx.render(rsx!(
+        div {
+            id: "pre-release",
+            aria_label: "pre-release",
+            IconElement {
+                icon: Icon::Beaker,
+            },
+            p {
+                "{pre_release_text}",
+            }
+        },
+    ))
+}
+
+fn get_toasts(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
         |(id, toast)| {
             rsx!(Toast {
                 id: *id,
@@ -555,6 +507,68 @@ fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
             },)
         }
     )))
+}
+
+fn get_titlebar(cx: Scope) -> Element {
+    let desktop = use_window(cx);
+    let state = use_shared_state::<State>(cx)?;
+
+    cx.render(rsx!(
+        div {
+            id: "titlebar",
+            onmousedown: move |_| { desktop.drag(); },
+            // TODO: Only display this if developer mode is enabled.
+            Button {
+                icon: Icon::DevicePhoneMobile,
+                appearance: Appearance::Transparent,
+                onpress: move |_| {
+                    desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                    let meta = state.read().ui.metadata.clone();
+                    state.write().mutate(Action::SetMeta(WindowMeta {
+                        width: 300,
+                        height: 534,
+                        minimal_view: true,
+                        ..meta
+                    }));
+                }
+            },
+            Button {
+                icon: Icon::DeviceTablet,
+                appearance: Appearance::Transparent,
+                onpress: move |_| {
+                    desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                    let meta = state.read().ui.metadata.clone();
+                    state.write().mutate(Action::SetMeta(WindowMeta {
+                        width: 600,
+                        height: 534,
+                        minimal_view: false,
+                        ..meta
+                    }));
+                }
+            },
+            Button {
+                icon: Icon::ComputerDesktop,
+                appearance: Appearance::Transparent,
+                onpress: move |_| {
+                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                    let meta = state.read().ui.metadata.clone();
+                    state.write().mutate(Action::SetMeta(WindowMeta {
+                        width: 950,
+                        height: 600,
+                        minimal_view: false,
+                        ..meta
+                    }));
+                }
+            },
+            Button {
+                icon: Icon::CommandLine,
+                appearance: Appearance::Transparent,
+                onpress: |_| {
+                    desktop.devtool();
+                }
+            }
+        },
+    ))
 }
 
 fn get_call_dialog(_cx: Scope) -> Element {
@@ -585,7 +599,10 @@ fn get_call_dialog(_cx: Scope) -> Element {
     None
 }
 
-fn get_router(cx: Scope, pending_friends: usize) -> Element {
+fn get_router(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let pending_friends = state.read().friends.incoming_requests.len();
+
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,
         name: get_local_text("uplink.chats"),

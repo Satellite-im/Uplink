@@ -54,6 +54,8 @@ pub fn generate_mock() -> State {
         Uuid::new_v4(),
         ToastNotification::init("title2".into(), "content2".into(), None, 10),
     );
+    // comment this out to test toast notifications
+    toast_notifications.clear();
 
     State {
         ui: UI {
