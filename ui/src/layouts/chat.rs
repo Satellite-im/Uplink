@@ -16,11 +16,11 @@ pub struct Props {
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    //let first_render = use_state(cx, || true);
-    //if *first_render.get() && state.read().ui.is_minimal_view() {
-    //    state.write().mutate(Action::SidebarHidden(false));
-    //    first_render.set(false);
-    //}
+    let first_render = use_state(cx, || true);
+    if *first_render.get() && state.read().ui.is_minimal_view() {
+        state.write().mutate(Action::SidebarHidden(false));
+        first_render.set(false);
+    }
 
     cx.render(rsx!(
         div {
