@@ -2,9 +2,13 @@
 //! a translation must be performed by WarpRunner.
 //!
 
-use warp::{crypto::DID, multipass::MultiPassEventKind};
+use warp::{
+    crypto::DID,
+    multipass::MultiPassEventKind,
+    raygun::{Conversation, MessageOptions},
+};
 
-use crate::state::{self};
+use crate::state::{self, chats};
 
 pub enum RayGunEvent {
     None,
@@ -38,6 +42,34 @@ pub async fn dids_to_identity(
         ret.push(ident);
     }
     ret
+}
+
+pub async fn conversation_to_chat(
+    conv: Conversation,
+    account: &mut super::Account,
+    messaging: &mut super::Messaging,
+) -> chats::Chat {
+    // todo: should Chat::participants include self?
+    let mut participants = Vec::new();
+    for id in conv.recipients() {
+        let ident = did_to_identity(id, account).await;
+        participants.push(ident);
+    }
+
+    let messages = messaging
+        .get_messages(conv.id(), MessageOptions::default())
+        .await
+        .expect("failed to get messages");
+
+    let unreads = messages.len() as u32;
+
+    chats::Chat {
+        id: conv.id(),
+        participants,
+        messages,
+        unreads,
+        replying_to: None,
+    }
 }
 
 // todo: put account and messaging in a module

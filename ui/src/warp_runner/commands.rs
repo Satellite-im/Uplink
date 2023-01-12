@@ -1,13 +1,14 @@
 use std::collections::{HashMap, HashSet};
 
-use futures::{channel::oneshot};
+use futures::channel::oneshot;
+use uuid::Uuid;
 use warp::{crypto::DID, tesseract::Tesseract};
 
-use crate::state::{friends};
+use crate::state::{chats, friends};
 
 use super::{
     ui_adapter::{did_to_identity, dids_to_identity},
-    Account,
+    Account, Messaging,
 };
 
 #[derive(Debug)]
@@ -42,6 +43,13 @@ pub enum MultiPassCmd {
     },
 }
 
+#[derive(Debug)]
+pub enum RayGunCmd {
+    InitializeConversations {
+        rsp: oneshot::Sender<Result<HashMap<Uuid, chats::Chat>, warp::error::Error>>,
+    },
+}
+
 // currently unused
 pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) {
     match cmd {
@@ -56,6 +64,15 @@ pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) 
             };
             let _ = rsp.send(r);
         }
+    }
+}
+
+pub async fn handle_raygun_cmd(cmd: RayGunCmd, messaging: &mut Messaging) {
+    match cmd {
+        RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
+            Ok(covs) => {}
+            Err(_e) => todo!(),
+        },
     }
 }
 

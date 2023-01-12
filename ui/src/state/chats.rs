@@ -12,16 +12,18 @@ pub struct Chat {
     #[serde(default)]
     pub id: Uuid,
     // Includes the list of participants within a given chat.
-    #[serde(default)]
+    // these don't need to be stored in state either
+    #[serde(skip)]
     pub participants: Vec<Identity>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
-    #[serde(default)]
+    // don't store the actual message in state
+    #[serde(skip)]
     pub messages: Vec<Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
     pub unreads: u32,
     // If a value exists, we will render the message we're replying to above the chatbar
-    #[serde(default)]
+    #[serde(skip)]
     pub replying_to: Option<Message>,
 }
 
