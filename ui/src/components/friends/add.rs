@@ -19,20 +19,19 @@ use crate::{
     warp_runner::{commands::MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
 };
-
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
-    let request_sent = use_ref(cx, || false);
-    let my_id: &UseRef<Option<String>> = use_ref(cx, || None);
+    let request_sent = use_state(cx, || false);
+    let my_id: &UseState<Option<String>> = use_state(cx, || None);
     // Set up validation options for the input field
     let friend_validation = Validation {
         // The input should have a maximum length of 32
-        max_length: Some(32),
+        max_length: Some(56),
         // The input should have a minimum length of 4
-        min_length: Some(4),
+        min_length: Some(56),
         // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
         // The input should not contain any whitespace
@@ -40,7 +39,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     };
 
     // todo: add translations for toasts
-    if *request_sent.read() {
+    if *request_sent.get() {
         state
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
@@ -49,10 +48,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                 None,
                 5,
             )));
-        *request_sent.write_silent() = false;
+        request_sent.set(false);
     }
 
-    if let Some(id) = my_id.read().clone() {
+    if let Some(id) = my_id.get().clone() {
         let mut clipboard = Clipboard::new().unwrap();
         clipboard.set_text(id).unwrap();
         state
@@ -63,7 +62,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 None,
                 5,
             )));
-        *my_id.write_silent() = None;
+        my_id.set(None);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
@@ -100,7 +99,7 @@ pub fn AddFriend(cx: Scope) -> Element {
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
-                    Ok(did) => my_id.set(Some(did.to_string()[8..].to_string())),
+                    Ok(did) => my_id.set(Some(did.to_string())),
                     Err(_) => todo!("failed to get own identity"),
                 }
             }
@@ -135,11 +134,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                 Button {
                     icon: Icon::Plus,
                     text: get_local_text("uplink.add"),
-                    disabled: !*friend_input_valid.current(),
+                    disabled: !friend_input_valid.get(),
                     onpress: move |_| {
-                        match DID::from_str(&friend_input.current()) {
+                        match DID::from_str(friend_input.get()) {
                             Ok(did) => ch.send(did),
-                            Err(_e) => todo!("failed to convert string to DID")
+                            Err(e) => {
+                                println!("error: {}", e);
+                                todo!("failed to convert string to DID");
+                            }
                         }
                     }
                 },

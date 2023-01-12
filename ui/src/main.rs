@@ -507,7 +507,6 @@ fn app(cx: Scope) -> Element {
                     todo!("handle error response");
                 }
             }
-            println!("chats initialized");
             *chats_init.write_silent() = true;
             needs_update.set(true);
         }
