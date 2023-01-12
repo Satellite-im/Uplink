@@ -139,7 +139,7 @@ remote-controls = Remote Controls
     .mute = Silenciar
     .unmute = Desilenciar
     .listen = Activar Audio
-    .silence = Silencio
+    .silence = Desactivar Audio
     .end = Fin
 
 unlock = Unlock
