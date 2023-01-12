@@ -98,8 +98,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                 Button {
                     icon: Icon::Plus,
                     text: get_local_text("uplink.add"),
-                    disabled: *friend_input_valid.current(),
-                    onpress: |_| {
+                    disabled: !*friend_input_valid.current(),
+                    onpress: move |_| {
                         println!("clicked plus");
                         match DID::from_str(&friend_input.current()) {
                             Ok(did) => ch.send(did),
@@ -110,7 +110,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 // todo: verify that this is the desired UI
                 Button {
                     icon: Icon::ClipboardDocument,
-                    onpress: |_| {
+                    onpress: move |_| {
                         println!("clicked clipboard");
                         id_ch.send(());
                     }
