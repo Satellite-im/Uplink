@@ -31,6 +31,7 @@
             position: absolute;
             top: var(--gap);
             right: var(--gap);
+            z-index: 1;
         }
     }
 
@@ -38,7 +39,7 @@
         height: 100%;
         width: fit-content;
         position: relative;
-        background: var(--secondary);
+        background: var(--secondary-dark);
         border-radius: var(--border-radius);
     }
     video {
