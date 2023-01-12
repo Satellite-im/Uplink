@@ -19,8 +19,6 @@ use crate::{
 // todo: go to the auth page if no account has been created
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope) -> Element {
-    let desktop = use_window(cx);
-
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let router = use_router(cx);
 
@@ -67,9 +65,6 @@ pub fn UnlockLayout(cx: Scope) -> Element {
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
-            onmousedown: move |_| {
-                desktop.drag();
-            },
             get_prompt(cx),
             Input {
                 is_password: true,

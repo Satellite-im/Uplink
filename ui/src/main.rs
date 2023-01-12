@@ -8,6 +8,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
+use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
@@ -31,6 +32,7 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
+use crate::state::Action;
 use crate::warp_runner::{WarpCmdRx, WarpCmdTx, WarpEventRx, WarpEventTx};
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -319,17 +321,66 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
-            class: "drag-handle",
-            onmousedown: move |_| desktop.drag(),
-        },
-        div {
             id: "app-wrap",
+            div {
+                id: "titlebar",
+                onmousedown: move |_| { desktop.drag(); },
+                // TODO: Only display this if developer mode is enabled.
+                Button {
+                    icon: Icon::DevicePhoneMobile,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 300,
+                            height: 534,
+                            minimal_view: true,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::DeviceTablet,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 600,
+                            height: 534,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::ComputerDesktop,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 950,
+                            height: 600,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::CommandLine,
+                    appearance: Appearance::Transparent,
+                    onpress: |_| {
+                        desktop.devtool();
+                    }
+                }
+            },
             get_toasts(cx, &state.read()),
             get_call_dialog(cx),
             div {
                 id: "pre-release",
                 aria_label: "pre-release",
-                onmousedown: move |_| { desktop.drag(); },
                 IconElement {
                     icon: Icon::Beaker,
                 },

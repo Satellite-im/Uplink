@@ -28,6 +28,12 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
 
+    let first_render = use_state(cx, || true);
+    if *first_render.clone() && state.read().ui.is_minimal_view() {
+        state.write().mutate(Action::SidebarHidden(false));
+        first_render.set(false);
+    }
+
     cx.render(rsx!(
         div {
             id: "settings-layout",
@@ -35,20 +41,25 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
             Sidebar {
                 route_info: cx.props.route_info.clone(),
                 onpress: move |p| {
-                    // TODO: If on mobile, we should hide the sidebar here.
+                    // If on mobile, we should hide the sidebar here.
+                    if state.read().ui.is_minimal_view() {
+                        state.write().mutate(Action::SidebarHidden(true));
+                    }
                     to.set(p);
                 },
             },
             div {
                 class: "full-width flex",
-                Topbar {
-                    with_back_button: true,
-                    with_currently_back: state.read().ui.sidebar_hidden,
-                    onback: move |_| {
-                        let current = state.read().ui.sidebar_hidden;
-                        state.write().mutate(Action::SidebarHidden(!current));
+                (state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden).then(|| rsx!(
+                    Topbar {
+                        with_back_button: true,
+                        with_currently_back: state.read().ui.sidebar_hidden,
+                        onback: move |_| {
+                            let current = state.read().ui.sidebar_hidden;
+                            state.write().mutate(Action::SidebarHidden(!current));
+                        },
                     },
-                },
+                )),
                 div {
                     id: "content",
                     class: "full-width",
@@ -76,7 +87,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                         ))
                     }
                 },
-                state.read().ui.sidebar_hidden.then(|| rsx!(
+                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
                         active: cx.props.route_info.active.clone(),

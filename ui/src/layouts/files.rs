@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use dioxus_router::*;
 use kit::{
     components::nav::Nav,
@@ -32,7 +31,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
 
-    let desktop = use_window(cx);
+    let first_render = use_state(cx, || true);
+    if *first_render.clone() && state.read().ui.is_minimal_view() {
+        state.write().mutate(Action::SidebarHidden(true));
+        first_render.set(false);
+    }
 
     cx.render(rsx!(
         div {
@@ -44,66 +47,63 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             div {
                 class: "files-body",
                 aria_label: "files-body",
-                div {
-                    onmousedown: move |_| { desktop.drag(); },
-                    Topbar {
-                        with_back_button: true,
-                        with_currently_back: state.read().ui.sidebar_hidden,
-                        onback: move |_| {
-                            let current = state.read().ui.sidebar_hidden;
-                            state.write().mutate(Action::SidebarHidden(!current));
-                        },
-                        controls: cx.render(
-                            rsx! (
-                                Button {
-                                    icon: Icon::FolderPlus,
-                                    appearance: Appearance::Secondary,
-                                    aria_label: "add-folder".into(),
-                                    tooltip: cx.render(rsx!(
-                                        Tooltip {
-                                            arrow_position: ArrowPosition::Top,
-                                            text: get_local_text("files.new-folder"),
-                                        }
-                                    )),
-                                    onpress: move |_| {
-                                        // ...
+                Topbar {
+                    with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                    with_currently_back: state.read().ui.sidebar_hidden,
+                    onback: move |_| {
+                        let current = state.read().ui.sidebar_hidden;
+                        state.write().mutate(Action::SidebarHidden(!current));
+                    },
+                    controls: cx.render(
+                        rsx! (
+                            Button {
+                                icon: Icon::FolderPlus,
+                                appearance: Appearance::Secondary,
+                                aria_label: "add-folder".into(),
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Top,
+                                        text: get_local_text("files.new-folder"),
                                     }
-                                },
-                                Button {
-                                    icon: Icon::Plus,
-                                    appearance: Appearance::Secondary,
-                                    aria_label: "upload-file".into(),
-                                    tooltip: cx.render(rsx!(
-                                        Tooltip {
-                                            arrow_position: ArrowPosition::Top,
-                                            text: get_local_text("files.upload"),
-                                        }
-                                    ))
-                                }
-                            )
-                        ),
-                        div {
-                            class: "files-info",
-                            aria_label: "files-info",
-                            p {
-                                class: "free-space",
-                                "{free_space_text}",
-                                span {
-                                    class: "count",
-                                    "0MB"
+                                )),
+                                onpress: move |_| {
+                                    // ...
                                 }
                             },
-                            p {
-                                class: "total-space",
-                                "{total_space_text}",
-                                span {
-                                    class: "count",
-                                    "10MB"
-                                }
+                            Button {
+                                icon: Icon::Plus,
+                                appearance: Appearance::Secondary,
+                                aria_label: "upload-file".into(),
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Top,
+                                        text: get_local_text("files.upload"),
+                                    }
+                                ))
+                            }
+                        )
+                    ),
+                    div {
+                        class: "files-info",
+                        aria_label: "files-info",
+                        p {
+                            class: "free-space",
+                            "{free_space_text}",
+                            span {
+                                class: "count",
+                                "0MB"
+                            }
+                        },
+                        p {
+                            class: "total-space",
+                            "{total_space_text}",
+                            span {
+                                class: "count",
+                                "10MB"
                             }
                         }
                     }
-                },
+                }
                 div {
                     class: "files-bar-track",
                     div {
@@ -164,7 +164,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                 },
-                state.read().ui.sidebar_hidden.then(|| rsx!(
+                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
                         active: cx.props.route_info.active.clone(),

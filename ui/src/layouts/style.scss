@@ -4,7 +4,7 @@
 #unlock-layout,
 #friends-layout {
     display: inline-flex;
-    height: 100%;
+    height: calc(100% - var(--titlebar-height));
     width: 100%;
 }
 

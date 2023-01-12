@@ -49,7 +49,7 @@ pub fn AuthLayout(cx: Scope) -> Element {
     };
     let desktop = use_window(cx);
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
-        to_owned![router, desktop];
+        to_owned![router];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {

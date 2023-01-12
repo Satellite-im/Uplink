@@ -41,7 +41,7 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "topbar",
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
-                    icon: if currently_back { Icon::Sidebar } else { Icon::SidebarArrowLeft },
+                    icon: if currently_back { Icon::ChevronLeft } else { Icon::SidebarArrowLeft },
                     onpress: move |_| emit(&cx),
                     appearance: Appearance::Secondary
                 }

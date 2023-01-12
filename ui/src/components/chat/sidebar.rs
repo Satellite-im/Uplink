@@ -5,7 +5,7 @@ use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE, utils::convert_status};
+use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, CHAT_ROUTE, utils::convert_status, FILES_ROUTE, FRIENDS_ROUTE};
 
 #[derive(PartialEq, Props)]
 pub struct Props {

@@ -13,9 +13,35 @@ html, body {
     overscroll-behavior-y: none;
 }
 
+:root {
+    --titlebar-height: 1.75rem;
+}
+
+#titlebar {
+    height: calc(var(--titlebar-height) - 1px);
+    width: 100%;
+    background-color: var(--background);
+    border-bottom: 1px solid var(--border-color);
+    display: inline-flex;
+    justify-content: flex-end;
+    user-select: none;
+    cursor: pointer;
+
+    .btn-wrap {
+        height: 100%;
+        padding: unset;
+
+        .btn {
+            font-size: var(--text-size-less);
+            height: 100%;
+            opacity: 0.5;
+        }
+    }
+}
+
 #pre-release {
     position: fixed;
-    top: var(--gap-less);
+    top: 0.14rem;
     margin-left: 4rem; // TODO: only do this on mac
     left: var(--gap);
     background-color: var(--secondary-dark);
@@ -47,11 +73,6 @@ html, body {
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border-color);
-
-
-    .sidebar {
-        padding-top: 1.5rem;
-    }
 }
 
 .search-input,
