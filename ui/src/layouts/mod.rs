@@ -1,5 +1,5 @@
+pub mod auth;
 pub mod chat;
-pub mod create_account;
 pub mod files;
 pub mod friends;
 pub mod settings;

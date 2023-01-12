@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::{use_window};
 use kit::{
     elements::{
         button::Button,
@@ -8,16 +9,11 @@ use kit::{
     },
     icons::{Icon, IconElement},
 };
-
-use crate::{window_manager::{WindowManagerCmd}, WINDOW_CMD_CH};
-
-use super::player::WindowDropHandler;
 pub const SCRIPT: &str = include_str!("./script.js");
 
-#[inline_props]
 #[allow(non_snake_case)]
-pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
-    let cmd_tx = WINDOW_CMD_CH.tx.clone();
+pub fn PopoutPlayer(cx: Scope) -> Element {
+    let window = use_window(cx);
 
         cx.render(
         rsx! (
@@ -52,9 +48,7 @@ pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                             }
                         )),
                         onpress: move |_| {
-                            if let Err(_e) = cmd_tx.send(WindowManagerCmd::ClosePopout) {
-                                //todo: log error
-                            }
+                            window.close();
                         }
                     },
                     Button {

@@ -2,10 +2,10 @@ use std::rc::Weak;
 
 use crate::{
     components::{
-        media::popout_player::{PopoutPlayer, PopoutPlayerProps},
+        media::popout_player::{PopoutPlayer},
     },
     state::{Action, State},
-    UPLINK_ROUTES, window_manager::{WindowManagerCmdTx, WindowManagerCmd}, WINDOW_CMD_CH,
+    SETTINGS_ROUTE,
 };
 
 use dioxus::prelude::*;
@@ -94,16 +94,11 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                              return;
                          } 
 
-                        // close the PopoutPlayer on drop, if not already closed
-                        // pass WindowDropHandler as a prop so that it doesn't get dropped when PopoutPlayer returns an Element
-                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                        let popout = VirtualDom::new_with_props(PopoutPlayer, PopoutPlayerProps{
-                            _drop_handler: drop_handler
-                        });
+                        let popout = VirtualDom::new_with_props(PopoutPlayer, ());
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            state.write().mutate(Action::SetPopout(id));
+                            state.write_silent().mutate(Action::SetPopout(id));
                         }
                     }
                 },
@@ -167,34 +162,9 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    use_router(cx).replace_route(UPLINK_ROUTES.settings, None, None);
+                    use_router(cx).replace_route(SETTINGS_ROUTE, None, None);
                 }
             },
         }
     }))
-}
-
-
-pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx
-}
-
-impl PartialEq for WindowDropHandler {
-    fn eq(&self, _other: &Self) -> bool {
-        false
-    }
-}
-
-impl WindowDropHandler {
-    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
-        Self { cmd_tx }
-    }
-}
-
-impl Drop for WindowDropHandler {
-    fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::ClosePopout) {
-            // todo: log error
-        }
-    }
 }
