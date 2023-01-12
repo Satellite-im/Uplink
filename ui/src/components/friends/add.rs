@@ -1,3 +1,4 @@
+use arboard::Clipboard;
 use std::str::FromStr;
 
 use dioxus::prelude::*;
@@ -14,14 +15,18 @@ use shared::language::get_local_text;
 use warp::crypto::DID;
 
 use crate::{
+    state::{Action, State, ToastNotification},
     warp_runner::{commands::MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
+    let request_sent = use_ref(cx, || false);
+    let my_id: &UseRef<Option<String>> = use_ref(cx, || None);
     // Set up validation options for the input field
     let friend_validation = Validation {
         // The input should have a maximum length of 32
@@ -34,37 +39,70 @@ pub fn AddFriend(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| async move {
-        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        while let Some(did) = rx.next().await {
-            let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-            warp_cmd_tx
-                .send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
-                    did,
-                    rsp: tx,
-                }))
-                .expect("AddFriendLayout failed to send warp command");
+    // todo: add translations for toasts
+    if *request_sent.read() {
+        state
+            .write()
+            .mutate(Action::AddToastNotification(ToastNotification::init(
+                "".into(),
+                "Friend Request Sent!".into(),
+                None,
+                5,
+            )));
+        *request_sent.write_silent() = false;
+    }
 
-            let res = rx.await.expect("failed to get response from warp_runner");
-            match res {
-                Ok(_) => todo!("update ui to say request was sent"),
-                Err(_) => todo!("failed to send friend request"),
+    if let Some(id) = my_id.read().clone() {
+        let mut clipboard = Clipboard::new().unwrap();
+        clipboard.set_text(id).unwrap();
+        state
+            .write()
+            .mutate(Action::AddToastNotification(ToastNotification::init(
+                "".into(),
+                "Copied ID to clipboard!".into(),
+                None,
+                5,
+            )));
+        *my_id.write_silent() = None;
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+        to_owned![request_sent];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(did) = rx.next().await {
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                        did,
+                        rsp: tx,
+                    }))
+                    .expect("AddFriendLayout failed to send warp command");
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(_) => request_sent.set(true),
+                    Err(_) => todo!("failed to send friend request"),
+                }
             }
         }
     });
 
-    let id_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| async move {
-        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        while let Some(_) = rx.next().await {
-            let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
-            warp_cmd_tx
-                .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
-                .expect("AddFriendLayout failed to send warp command");
+    let id_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![my_id];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(_) = rx.next().await {
+                let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
+                    .expect("AddFriendLayout failed to send warp command");
 
-            let res = rx.await.expect("failed to get response from warp_runner");
-            match res {
-                Ok(_) => todo!("copy to clipboard and make toast"),
-                Err(_) => todo!("failed to get own identity"),
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(did) => my_id.set(Some(did.to_string()[8..].to_string())),
+                    Err(_) => todo!("failed to get own identity"),
+                }
             }
         }
     });

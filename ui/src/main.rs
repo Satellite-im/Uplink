@@ -469,15 +469,20 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) =
-                oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
-            warp_cmd_tx
-                .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
-                    rsp: tx,
-                }))
-                .expect("main failed to send warp command");
+            let res = loop {
+                let (tx, rx) =
+                    oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
+                        rsp: tx,
+                    }))
+                    .expect("main failed to send warp command");
 
-            let res = rx.await.expect("failed to get response from warp_runner");
+                match rx.await {
+                    Ok(r) => break r,
+                    Err(_e) => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
+                }
+            };
 
             //println!("got response from warp");
             match res {
@@ -502,7 +507,7 @@ fn app(cx: Scope) -> Element {
                     todo!("handle error response");
                 }
             }
-
+            println!("chats initialized");
             *chats_init.write_silent() = true;
             needs_update.set(true);
         }

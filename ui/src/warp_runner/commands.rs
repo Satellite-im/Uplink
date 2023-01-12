@@ -81,7 +81,9 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 }
                 let _ = rsp.send(Ok(all_chats));
             }
-            Err(_e) => todo!(),
+            Err(_e) => {
+                // do nothing. will cancel the channel
+            }
         },
     }
 }
