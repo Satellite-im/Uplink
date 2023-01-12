@@ -383,8 +383,11 @@ impl State {
 
     // Define a method for sorting a vector of messages.
     pub fn get_sort_messages(&self, chat: &Chat) -> Vec<MessageGroup> {
+        if chat.messages.is_empty() {
+            return vec![];
+        }
         let mut message_groups = Vec::new();
-        let current_sender = chat.messages[0].sender(); // TODO: This could error in runtime
+        let current_sender = chat.messages[0].sender();
         let mut current_group = MessageGroup {
             remote: self.has_friend_with_did(&current_sender),
             sender: current_sender,
