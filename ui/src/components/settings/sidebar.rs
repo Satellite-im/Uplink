@@ -67,7 +67,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let general = UIRoute {
         to: "general",
         name: get_local_text("settings.general"),
-        icon: Icon::Cog,
+        icon: Icon::Cog6Tooth,
         ..UIRoute::default()
     };
     let privacy = UIRoute {

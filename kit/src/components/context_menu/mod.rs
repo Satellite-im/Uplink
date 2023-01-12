@@ -37,7 +37,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             class: "{class}",
             onclick: move |e| emit(&cx, e),
             (cx.props.icon.is_some()).then(|| {
-                let icon = cx.props.icon.unwrap_or(Shape::Cog);
+                let icon = cx.props.icon.unwrap_or(Shape::Cog6Tooth);
                 rsx! {
                     IconElement { icon: icon }
                 }

@@ -546,7 +546,7 @@ fn get_router(cx: Scope, pending_friends: usize) -> Element {
     let settings_route = UIRoute {
         to: UPLINK_ROUTES.settings,
         name: get_local_text("settings.settings"),
-        icon: Icon::Cog,
+        icon: Icon::Cog6Tooth,
         ..UIRoute::default()
     };
     let friends_route = UIRoute {
