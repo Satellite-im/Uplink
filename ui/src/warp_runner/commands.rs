@@ -22,8 +22,13 @@ pub enum MultiPassCmd {
         passphrase: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    TryLogIn {
+        passphrase: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
+// currently unused
 pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) {
     match cmd {
         TesseractCmd::KeyExists { key, rsp } => {
@@ -58,6 +63,17 @@ pub async fn handle_multipass_cmd(
             }
             //println!("create_identity: account.create_identity");
             let r = match account.create_identity(Some(&username), None).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::TryLogIn { passphrase, rsp } => {
+            if let Err(e) = tesseract.unlock(passphrase.as_bytes()) {
+                let _ = rsp.send(Err(e));
+                return;
+            }
+            let r = match account.get_own_identity().await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             };
