@@ -485,6 +485,8 @@ fn app(cx: Scope) -> Element {
                     Ok(state) => {
                         // for all_chats, fill in participants and messages.
                         for (k, v) in &state.read().chats.all {
+                            // the # of unread chats defaults to the length of the conversation. but this number
+                            // is stored in state
                             if let Some(chat) = all_chats.get_mut(k) {
                                 chat.unreads = v.unreads;
                             }
