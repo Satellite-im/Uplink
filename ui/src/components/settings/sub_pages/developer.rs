@@ -7,7 +7,7 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::settings::SettingSection, config::Configuration, state::State,
+    components::settings::SettingSection, config::Configuration, logger::Logger, state::State,
 };
 
 #[allow(non_snake_case)]
@@ -26,6 +26,11 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     active: config.developer.developer_mode,
                     onflipped: move |value| {
                         config.set_developer_mode(value);
+                        if value {
+                            let logger = Logger::get();
+                            logger.debug("Starting logger");
+                            logger.show_log();
+                        }
                     },
                 }
             },
