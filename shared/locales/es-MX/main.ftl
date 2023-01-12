@@ -138,7 +138,7 @@ remote-controls = Remote Controls
     .in-call = En Llamada
     .mute = Silenciar
     .unmute = Desilenciar
-    .listen = Escuchar
+    .listen = Activar Audio
     .silence = Silencio
     .end = Fin
 
