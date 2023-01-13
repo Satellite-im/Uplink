@@ -552,15 +552,11 @@ impl State {
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
                 self.clear_unreads(&chat);
-                if !self.chats.all.contains_key(&chat.id) {
-                    self.chats.all.insert(chat.id.clone(), chat);
-                }
+                self.chats.all.entry(chat.id).or_insert(chat);
             }
             Action::AddToSidebar(chat) => {
                 self.add_chat_to_sidebar(chat.clone());
-                if !self.chats.all.contains_key(&chat.id) {
-                    self.chats.all.insert(chat.id.clone(), chat);
-                }
+                self.chats.all.entry(chat.id).or_insert(chat);
             }
             Action::RemoveFromSidebar(chat_id) => {
                 self.remove_sidebar_chat(chat_id);

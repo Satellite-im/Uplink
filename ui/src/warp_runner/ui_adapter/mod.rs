@@ -11,6 +11,7 @@ use warp::{
 
 use crate::state::{self, chats};
 
+#[allow(clippy::large_enum_variant)]
 pub enum RayGunEvent {
     ConversationCreated(state::Chat),
     ConversationDeleted(Uuid),
