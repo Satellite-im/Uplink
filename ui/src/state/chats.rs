@@ -5,7 +5,8 @@ use uuid::Uuid;
 use warp::raygun::Message;
 
 use super::identity::Identity;
-#[derive(Clone, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's

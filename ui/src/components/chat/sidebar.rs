@@ -5,7 +5,7 @@ use warp::{raygun::Message};
 use dioxus_router::*;
 use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo, welcome::Welcome}, media::remote_control::RemoteControls}, state::{State, Action, Chat, Identity}, UPLINK_ROUTES, utils::convert_status};
+use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::convert_status};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -61,12 +61,12 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    let sidebar_chats = state.read().chats.in_sidebar.clone();
-
-    let favorites = state.read().chats.favorites.clone();
-
-    let binding = state.read();
-    let active_media_chat = binding.get_active_media_chat();
+    // todo: display a loading page if chats is not initialized
+    let (sidebar_chats, favorites, active_media_chat) = if state.read().chats.initialized { 
+        (state.read().chats.in_sidebar.clone(),  state.read().chats.favorites.clone(), state.read().get_active_chat())
+    } else { 
+        (vec![], vec![], None)
+    };
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -106,8 +106,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat_id| {
-                            let default_chat = Chat::default();
-                            let chat = state.read().chats.all.get(&chat_id).unwrap_or(&default_chat).clone();
+                            let chat = state.read().chats.all.get(&chat_id).expect("favorited chat not found").clone();
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(chat.participants.clone());
@@ -167,7 +166,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
-                    let chat = state.read().chats.all.get(&chat_id).unwrap().clone();
+                    let chat = state.read().chats.all.get(&chat_id).expect("chat_id not found in chats").clone();
                     let without_me = state.read().get_without_me(chat.participants.clone());
                     let user = without_me.first();
                     let default_message = Message::default();
@@ -194,7 +193,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     
                     let key = chat.id;
 
-                    let active = state.read().get_active_chat().unwrap_or_default().id == chat.id;
+                    let is_active = state.read().get_active_chat().map(|c| c.id) == Some(chat.id);
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
@@ -239,7 +238,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 username: participants_name,
                                 subtext: val.join("\n"),
                                 timestamp: timestamp,
-                                active: active,
+                                active: is_active,
                                 user_image: cx.render(rsx!(
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {

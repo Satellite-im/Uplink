@@ -493,10 +493,13 @@ fn app(cx: Scope) -> Element {
                             }
                         }
                         state.write().chats.all = all_chats;
+                        state.write().chats.initialized = true;
+                        println!("{:#?}", state.read().chats);
                         needs_update.set(true);
                     }
-                    Err(_e) => {
+                    Err(e) => {
                         // todo: log error
+                        println!("error: {}", e);
                     }
                 },
                 Err(_e) => {

@@ -100,6 +100,7 @@ impl State {
     ///
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
+        println!("set-active-chat: {:#?}", chat);
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
             self.chats.in_sidebar.push(chat.id);
@@ -354,14 +355,12 @@ impl State {
             .and_then(|uuid| self.chats.all.get(&uuid))
     }
 
-    pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
-        let chat = self
-            .chats
+    pub fn get_chat_with_friend(&self, friend: &Identity) -> Option<Chat> {
+        self.chats
             .all
             .values()
-            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend));
-
-        chat.unwrap_or(&Chat::default()).clone()
+            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend))
+            .cloned()
     }
 
     pub fn get_without_me(&self, identities: Vec<Identity>) -> Vec<Identity> {
@@ -549,6 +548,7 @@ impl State {
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
+                // todo: replace this with a warp command
                 // TODO: this should create a conversation in warp if one doesn't exist
                 self.set_active_chat(&chat);
                 self.clear_unreads(&chat);
@@ -660,6 +660,7 @@ impl State {
 }
 
 // Define a struct to represent a group of messages from the same sender.
+#[derive(Clone)]
 pub struct MessageGroup {
     pub sender: DID,
     pub remote: bool,
@@ -667,6 +668,7 @@ pub struct MessageGroup {
 }
 
 // Define a struct to represent a message that has been placed into a group.
+#[derive(Clone)]
 pub struct GroupedMessage {
     pub message: Message,
     pub is_first: bool,

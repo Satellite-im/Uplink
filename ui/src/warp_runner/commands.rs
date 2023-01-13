@@ -46,10 +46,15 @@ pub enum MultiPassCmd {
     },
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum RayGunCmd {
     InitializeConversations {
         rsp: oneshot::Sender<Result<HashMap<Uuid, chats::Chat>, warp::error::Error>>,
+    },
+    CreateConversation {
+        recipient: DID,
+        rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
     },
 }
 
@@ -74,6 +79,7 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
             Ok(convs) => {
+                println!("warp runner got conversations: {:#?}", convs);
                 let mut all_chats = HashMap::new();
                 for conv in convs {
                     let chat = conversation_to_chat(conv, account, messaging).await;
@@ -85,6 +91,17 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 // do nothing. will cancel the channel
             }
         },
+        RayGunCmd::CreateConversation { recipient, rsp } => {
+            match messaging.create_conversation(&recipient).await {
+                Ok(conv) => {
+                    let chat = conversation_to_chat(conv, account, messaging).await;
+                    let _ = rsp.send(Ok(chat));
+                }
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                }
+            }
+        }
     }
 }
 
