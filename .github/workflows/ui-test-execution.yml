@@ -1,0 +1,142 @@
+name: UI Automated Tests on MacOS
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-app 🖥️:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repo 🔖
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache 🛠️
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install Protobuf 💿
+        continue-on-error: true
+        run: |
+          brew update
+          brew install protobuf
+
+      - name: Build executable 🖥️
+        continue-on-error: true
+        run: make dmg
+
+      - name: Create ZIP archive 🗳️
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
+
+      - name: Calculate hashes 🧮
+        run: |
+          shasum -a 256 Uplink-Mac-Universal.zip > Uplink-Mac-Universal.zip.sha256.txt
+
+      - name: Upload Artifact ⬆️
+        uses: actions/upload-artifact@v3
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        with:
+          name: app-macos
+          path: |
+            Uplink-Mac-Universal.zip
+            Uplink-Mac-Universal.zip.sha256.txt
+
+  test 🧪:
+    needs: build-app
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: './appium-tests'
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Enable opening app not codesigned 🖥️
+        run: sudo spctl --master-disable
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v1
+        with:
+          name: app-macos
+          path: ./appium-tests/apps
+
+      - name: Copy DMG to Appium Apps Directory 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          ls -la
+          unzip Uplink-Mac-Universal.zip
+          cp -r ./Uplink.app /Applications/
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
+
+      - name: Install NPM dependencies 📦
+        run: |
+          cd appium-tests && npm install
+
+      - name: Install and Run Appium Server 💻
+        run: |
+          chmod +x ./appium-tests/scripts/run_appium_macos_server.sh
+          ./appium-tests/scripts/run_appium_macos_server.sh
+
+      - name: Validations before starting appium ✅
+        run: |
+          cd appium-tests/apps
+          ls -la
+          cd /Applications/
+          ls -la
+          rm -rf ~/.uplink
+
+      - name: Run WebdriverIO tests on MacOS 🧪
+        working-directory: ./appium-tests
+        run: npm run mac.ci
+
+      - name: Upload Screenshots if tests failed 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log if tests failed 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log
+          path: ./appium-tests/appium.log
+
+      - name: Take screenshot of GH runner if test execution fails 📷
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        if: failure()
+        with:
+          file-name: "desktop.jpg"
