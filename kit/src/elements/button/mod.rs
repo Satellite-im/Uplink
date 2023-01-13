@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use dioxus::{prelude::*, core::Event, events::{MouseData, MouseEvent}};
 
-use crate::{get_script, elements::Appearance, icons::{Icon, IconElement}};
+use crate::{get_script, elements::Appearance, icons::{Icon}};
 
 const SCRIPT: &str = include_str!("./script.js");
 

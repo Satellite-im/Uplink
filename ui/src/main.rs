@@ -284,10 +284,6 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
-            class: "drag-handle",
-            onmousedown: move |_| desktop.drag(),
-        },
-        div {
             id: "app-wrap",
             div {
                 id: "pre-release",
@@ -570,61 +566,64 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    let config = Configuration::load_or_default();
 
     cx.render(rsx!(
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
-            // TODO: Only display this if developer mode is enabled.
-            Button {
-                icon: Icon::DevicePhoneMobile,
-                appearance: Appearance::Transparent,
-                onpress: move |_| {
-                    desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                    let meta = state.read().ui.metadata.clone();
-                    state.write().mutate(Action::SetMeta(WindowMeta {
-                        width: 300,
-                        height: 534,
-                        minimal_view: true,
-                        ..meta
-                    }));
+            // Only display this if developer mode is enabled.
+            (config.developer.developer_mode).then(|| rsx!(
+                Button {
+                    icon: Icon::DevicePhoneMobile,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 300,
+                            height: 534,
+                            minimal_view: true,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::DeviceTablet,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 600,
+                            height: 534,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::ComputerDesktop,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 950,
+                            height: 600,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::CommandLine,
+                    appearance: Appearance::Transparent,
+                    onpress: |_| {
+                        desktop.devtool();
+                    }
                 }
-            },
-            Button {
-                icon: Icon::DeviceTablet,
-                appearance: Appearance::Transparent,
-                onpress: move |_| {
-                    desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                    let meta = state.read().ui.metadata.clone();
-                    state.write().mutate(Action::SetMeta(WindowMeta {
-                        width: 600,
-                        height: 534,
-                        minimal_view: false,
-                        ..meta
-                    }));
-                }
-            },
-            Button {
-                icon: Icon::ComputerDesktop,
-                appearance: Appearance::Transparent,
-                onpress: move |_| {
-                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                    let meta = state.read().ui.metadata.clone();
-                    state.write().mutate(Action::SetMeta(WindowMeta {
-                        width: 950,
-                        height: 600,
-                        minimal_view: false,
-                        ..meta
-                    }));
-                }
-            },
-            Button {
-                icon: Icon::CommandLine,
-                appearance: Appearance::Transparent,
-                onpress: |_| {
-                    desktop.devtool();
-                }
-            }
+            )),
         },
     ))
 }

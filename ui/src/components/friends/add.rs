@@ -91,7 +91,7 @@ pub fn AddFriend(cx: Scope) -> Element {
         to_owned![my_id];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(_) = rx.next().await {
+            while rx.next().await.is_some() {
                 let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
                 warp_cmd_tx
                     .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
