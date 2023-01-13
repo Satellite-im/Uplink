@@ -30,9 +30,11 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let count = cx.props.participants.len() as i64 - 3;
     let group = cx.props.participants.len() > 2;
     let username = cx.props.with_username.clone().unwrap_or_default();
-    let single_user = &cx.props.participants[0];
 
-    let loading = cx.props.loading.unwrap_or_default();
+    let loading = cx
+        .props
+        .loading
+        .unwrap_or_else(|| cx.props.participants.is_empty());
 
     cx.render(rsx! (
         if loading {
@@ -45,6 +47,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             )
         } else {
+            let single_user = &cx.props.participants[0];
             rsx! (
                 div {
                     class: "user-image-group",

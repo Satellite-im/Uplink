@@ -166,7 +166,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat_id| {
-                    let chat = state.read().chats.all.get(&chat_id).expect("chat_id not found in chats").clone();
+                    let chat = match state.read().chats.all.get(&chat_id) {
+                        Some(c) => c.clone(),
+                        None => return rsx!("")
+                    };
                     let without_me = state.read().get_without_me(chat.participants.clone());
                     let user = without_me.first();
                     let default_message = Message::default();

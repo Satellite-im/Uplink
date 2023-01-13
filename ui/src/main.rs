@@ -494,7 +494,7 @@ fn app(cx: Scope) -> Element {
                         }
                         state.write().chats.all = all_chats;
                         state.write().chats.initialized = true;
-                        println!("{:#?}", state.read().chats);
+                        //println!("{:#?}", state.read().chats);
                         needs_update.set(true);
                     }
                     Err(e) => {

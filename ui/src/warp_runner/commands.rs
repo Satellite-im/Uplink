@@ -79,7 +79,7 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
             Ok(convs) => {
-                println!("warp runner got conversations: {:#?}", convs);
+                //println!("warp runner got conversations: {:#?}", convs);
                 let mut all_chats = HashMap::new();
                 for conv in convs {
                     let chat = conversation_to_chat(conv, account, messaging).await;
