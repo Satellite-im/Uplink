@@ -91,7 +91,15 @@ pub fn Friends(cx: Scope) -> Element {
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
                             let chat = state.read().get_chat_with_friend(&friend);
+                            let chat2 = chat.clone();
+                            let chat3 = chat.clone();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                            let remove_friend = friend.clone();
+                            let remove_friend_2 = friend.clone();
+                            let chat_with_friend = friend.clone();
+                            let block_friend = friend.clone();
+                            let block_friend_2 = friend.clone();
+                            let context_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
                             let platform = match friend.platform() {
@@ -99,14 +107,6 @@ pub fn Friends(cx: Scope) -> Element {
                                 warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                                 _ => Platform::Headless //TODO: Unknown
                             };
-                            let friend2 = friend.clone();
-                            let friend3 = friend.clone();
-                            let friend4 = friend.clone();
-                            let friend5 = friend.clone();
-                            let friend6 = friend.clone();
-                            let friend7 = friend.clone();
-                            let chat2 = chat.clone();
-                            let chat3 = chat.clone();
                             rsx!(
                                 ContextMenu {
                                     id: format!("{}-friend-listing", did),
@@ -116,7 +116,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                ch.send((friend.clone(), chat2.clone()));
+                                                ch.send((context_friend.clone(), chat2.clone()));
                                             }
                                         },
                                         ContextItem {
@@ -141,7 +141,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::RemoveFriend(friend2.clone()));
+                                                state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
                                             }
                                         },
                                         ContextItem {
@@ -149,30 +149,30 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::Block(friend3.clone()));
+                                                state.write().mutate(Action::Block(block_friend.clone()));
                                             }
                                         },
                                     )),
                                     Friend {
-                                        username: friend4.username(),
+                                        username: friend.username(),
                                         suffix: did_suffix,
-                                        status_message: friend4.status_message().unwrap_or_default(),
+                                        status_message: friend.status_message().unwrap_or_default(),
                                         relationship: relationship,
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: convert_status(&friend4.identity_status()),
-                                                image: friend4.graphics().profile_picture()
+                                                status: convert_status(&friend.identity_status()),
+                                                image: friend.graphics().profile_picture()
                                             }
                                         )),
                                         onchat: move |_| {
-                                           ch.send((friend5.clone(), chat3.clone()));
+                                           ch.send((chat_with_friend.clone(), chat3.clone()));
                                         },
                                         onremove: move |_| {
-                                            state.write().mutate(Action::RemoveFriend(friend6.clone()));
+                                            state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                         },
                                         onblock: move |_| {
-                                            state.write().mutate(Action::Block(friend7.clone()));
+                                            state.write().mutate(Action::Block(block_friend_2.clone()));
                                         }
                                     }
                                 }
