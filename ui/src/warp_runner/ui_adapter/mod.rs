@@ -2,21 +2,29 @@
 //! a translation must be performed by WarpRunner.
 //!
 
+use uuid::Uuid;
 use warp::{
     crypto::DID,
     multipass::MultiPassEventKind,
-    raygun::{Conversation, MessageOptions},
+    raygun::{Conversation, MessageOptions, RayGunEventKind},
 };
 
 use crate::state::{self, chats};
 
 pub enum RayGunEvent {
-    None,
+    ConversationCreated(state::Chat),
+    ConversationDeleted(Uuid),
 }
 
 pub enum MultiPassEvent {
+    None,
     FriendRequestReceived(state::Identity),
     FriendRequestSent(state::Identity),
+    FriendAdded(state::Identity),
+    FriendRemoved(state::Identity),
+    FriendRequestCancelled(state::Identity),
+    FriendOnline(state::Identity),
+    FriendOffline(state::Identity),
 }
 
 pub async fn did_to_identity(did: DID, account: &mut super::Account) -> state::Identity {
@@ -56,10 +64,19 @@ pub async fn conversation_to_chat(
         participants.push(ident);
     }
 
-    let messages = messaging
+    let messages = match messaging
         .get_messages(conv.id(), MessageOptions::default())
         .await
-        .expect("failed to get messages");
+    {
+        Ok(m) => m,
+        Err(e) => match e {
+            warp::error::Error::EmptyMessage => vec![],
+            _ => {
+                println!("error: {}", e);
+                todo!("failed to get messages");
+            }
+        },
+    };
 
     let unreads = messages.len() as u32;
 
@@ -88,14 +105,51 @@ pub async fn convert_multipass_event(
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
-        _ => todo!(),
+        MultiPassEventKind::IncomingFriendRequestClosed { .. }
+        | MultiPassEventKind::IncomingFriendRequestRejected { .. } => {
+            // can probably ignore this
+            MultiPassEvent::None
+        }
+        MultiPassEventKind::OutgoingFriendRequestClosed { did }
+        | MultiPassEventKind::OutgoingFriendRequestRejected { did } => {
+            let identity = did_to_identity(did, account).await;
+            MultiPassEvent::FriendRequestCancelled(identity)
+        }
+        MultiPassEventKind::FriendAdded { did } => {
+            let identity = did_to_identity(did, account).await;
+            MultiPassEvent::FriendAdded(identity)
+        }
+        MultiPassEventKind::FriendRemoved { did } => {
+            let identity = did_to_identity(did, account).await;
+            MultiPassEvent::FriendRemoved(identity)
+        }
+        MultiPassEventKind::IdentityOnline { did } => {
+            let identity = did_to_identity(did, account).await;
+            MultiPassEvent::FriendOnline(identity)
+        }
+        MultiPassEventKind::IdentityOffline { did } => {
+            let identity = did_to_identity(did, account).await;
+            MultiPassEvent::FriendOffline(identity)
+        }
     }
 }
 
 pub async fn convert_raygun_event(
-    _event: warp::raygun::RayGunEventKind,
-    _account: &mut super::Account,
-    _messaging: &mut super::Messaging,
+    event: warp::raygun::RayGunEventKind,
+    account: &mut super::Account,
+    messaging: &mut super::Messaging,
 ) -> RayGunEvent {
-    todo!()
+    match event {
+        RayGunEventKind::ConversationCreated { conversation_id } => {
+            let conv = messaging
+                .get_conversation(conversation_id)
+                .await
+                .expect("conversation should exist");
+            let chat = conversation_to_chat(conv, account, messaging).await;
+            RayGunEvent::ConversationCreated(chat)
+        }
+        RayGunEventKind::ConversationDeleted { conversation_id } => {
+            RayGunEvent::ConversationDeleted(conversation_id)
+        }
+    }
 }

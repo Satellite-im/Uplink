@@ -33,7 +33,7 @@ use std::{
     fmt, fs,
 };
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::Message};
+use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun::Message};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
@@ -100,7 +100,7 @@ impl State {
     ///
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
-        println!("set-active-chat: {:#?}", chat);
+        //println!("set-active-chat: {:#?}", chat);
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
             self.chats.in_sidebar.push(chat.id);
@@ -548,13 +548,19 @@ impl State {
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
-                // todo: replace this with a warp command
-                // TODO: this should create a conversation in warp if one doesn't exist
+                // warning: ensure that warp is used to get/create the chat which is passed in here
+                //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
                 self.clear_unreads(&chat);
+                if !self.chats.all.contains_key(&chat.id) {
+                    self.chats.all.insert(chat.id.clone(), chat);
+                }
             }
             Action::AddToSidebar(chat) => {
-                self.add_chat_to_sidebar(chat);
+                self.add_chat_to_sidebar(chat.clone());
+                if !self.chats.all.contains_key(&chat.id) {
+                    self.chats.all.insert(chat.id.clone(), chat);
+                }
             }
             Action::RemoveFromSidebar(chat_id) => {
                 self.remove_sidebar_chat(chat_id);
@@ -645,17 +651,51 @@ impl State {
 
     fn process_multipass_event(&mut self, event: MultiPassEvent) {
         match event {
+            MultiPassEvent::None => {}
             MultiPassEvent::FriendRequestReceived(identity) => {
                 self.friends.incoming_requests.insert(identity);
             }
             MultiPassEvent::FriendRequestSent(identity) => {
                 self.friends.outgoing_requests.insert(identity);
             }
+            MultiPassEvent::FriendAdded(identity) => {
+                self.friends.incoming_requests.remove(&identity);
+                self.friends.outgoing_requests.remove(&identity);
+                self.friends.all.insert(identity.did_key(), identity);
+            }
+            MultiPassEvent::FriendRemoved(identity) => {
+                self.friends.all.remove(&identity.did_key());
+            }
+            MultiPassEvent::FriendRequestCancelled(identity) => {
+                self.friends.incoming_requests.remove(&identity);
+                self.friends.outgoing_requests.remove(&identity);
+            }
+            MultiPassEvent::FriendOnline(identity) => {
+                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                    ident.set_identity_status(IdentityStatus::Online);
+                }
+            }
+            MultiPassEvent::FriendOffline(identity) => {
+                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                    ident.set_identity_status(IdentityStatus::Offline);
+                }
+            }
         }
     }
 
-    fn process_raygun_event(&mut self, _event: RayGunEvent) {
-        todo!()
+    fn process_raygun_event(&mut self, event: RayGunEvent) {
+        match event {
+            RayGunEvent::ConversationCreated(chat) => {
+                if !self.chats.in_sidebar.contains(&chat.id) {
+                    self.chats.in_sidebar.insert(0, chat.id);
+                }
+                self.chats.all.insert(chat.id, chat);
+            }
+            RayGunEvent::ConversationDeleted(id) => {
+                self.chats.in_sidebar.retain(|x| *x != id);
+                self.chats.all.remove(&id);
+            }
+        }
     }
 }
 
