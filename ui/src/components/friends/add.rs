@@ -13,6 +13,7 @@ use kit::{
 };
 use shared::language::get_local_text;
 use warp::crypto::DID;
+use warp::error::Error;
 
 use crate::{
     state::{Action, State, ToastNotification},
@@ -81,7 +82,15 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(_) => request_sent.set(true),
-                    Err(_) => todo!("failed to send friend request"),
+                    Err(e) => match e {
+                        Error::CannotSendSelfFriendRequest
+                        | Error::IdentityDoesntExist
+                        | Error::BlockedByUser
+                        | Error::InvalidIdentifierCondition => {
+                            // todo: show an error message
+                        }
+                        _ => todo!("failed to send friend request"),
+                    },
                 }
             }
         }
