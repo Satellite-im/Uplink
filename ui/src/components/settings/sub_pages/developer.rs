@@ -1,5 +1,8 @@
+use std::rc::Weak;
+
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_window;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
@@ -7,13 +10,16 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::settings::SettingSection, config::Configuration, logger::Logger, state::State,
+    components::settings::{sub_pages::logger_debug::LoggerDebug, SettingSection},
+    config::Configuration,
+    state::{Action, State},
 };
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mut config = Configuration::load_or_default();
+    let window = use_window(cx);
 
     cx.render(rsx!(
         div {
@@ -27,9 +33,18 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     onflipped: move |value| {
                         config.set_developer_mode(value);
                         if value {
-                            let logger = Logger::get();
-                            logger.debug("Starting logger");
-                            logger.show_log();
+                            if state.read().ui.popout_player {
+                                state.write().mutate(Action::ClearPopout(window.clone()));
+                                return;
+                            }
+
+                           let logger_debug = VirtualDom::new_with_props(LoggerDebug, ());
+
+                           let window = window.new_window(logger_debug, Default::default());
+                           if let Some(wv) = Weak::upgrade(&window) {
+                               let id = wv.window().id();
+                               state.write().mutate(Action::SetPopout(id));
+                           }
                         }
                     },
                 }

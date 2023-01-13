@@ -3,5 +3,6 @@ pub mod developer;
 pub mod extensions;
 pub mod files;
 pub mod general;
+pub mod logger_debug;
 pub mod privacy;
 pub mod profile;
