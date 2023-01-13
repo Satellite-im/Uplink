@@ -1,4 +1,4 @@
-name: UI Automated Tests on MacOS
+name: UI Automated Tests on MacOS 🧪
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-app 🖥️:
+  build-app:
     runs-on: macos-latest
 
     steps:
@@ -64,7 +64,7 @@ jobs:
             Uplink-Mac-Universal.zip
             Uplink-Mac-Universal.zip.sha256.txt
 
-  test 🧪:
+  test:
     needs: build-app
     runs-on: macos-latest
 
