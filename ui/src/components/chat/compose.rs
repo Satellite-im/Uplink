@@ -6,37 +6,39 @@ use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status}};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{chat::sidebar::build_participants, media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status}};
 
 
 use super::sidebar::build_participants_names;
 
+struct ComposeData {
+    active_chat: Chat,
+    message_groups: Vec<state::MessageGroup>,
+    other_participants: Vec<Identity>,
+    active_participant: Identity,
+    subtext: String,
+    is_favorite: bool,
+    reply_message: Option<String>,
+    first_image: String,
+    other_participants_names: String,
+    active_media: bool,
+    platform: Platform
+}
+
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let active_chat = state.read().get_active_chat().unwrap_or_default();
-    let active_chat_id = active_chat.id;
-    let message_groups = state.read().get_sort_messages(&active_chat);
-
-    let without_me = state.read().get_without_me(active_chat.participants.clone());
-    let active_participant = without_me.first().cloned();
-
-    let active_participant = active_participant.unwrap_or_default();
-
+    let s = state.read();
+    let active_chat = s.get_active_chat().expect("compose page called without an active chat");
+    let message_groups = s.get_sort_messages(&active_chat);
+    let other_participants = s.get_without_me(active_chat.participants.clone());
+    let active_participant = other_participants.first().cloned().expect("chat should have at least 2 participants");
     let subtext = active_participant.status_message().unwrap_or_default();
-
-    let is_favorite = state.read().is_favorite(&active_chat);
-
-    let reply_message = match state.read().get_active_chat().unwrap_or_default().replying_to {
-        Some(m) => m.value().join("\n"),
-        None => "".into(),
-    };
-
+    let is_favorite = s.is_favorite(&active_chat);
     let first_image = active_participant.graphics().profile_picture();
-    let participants_name = build_participants_names(&without_me);
+    let other_participants_names = build_participants_names(&other_participants);
+    let active_media = Some(active_chat.id) == s.chats.active_media;
 
-    let active_media = Some(active_chat.id) == state.read().chats.active_media;
- 
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
     //     .lookup(&*APP_LANG.read(), "messages.new")
@@ -48,8 +50,8 @@ pub fn Compose(cx: Scope) -> Element {
         _ => Platform::Headless //TODO: Unknown
     };
 
-    let desktop = use_window(cx);
 
+    let desktop = use_window(cx);
     let loading = use_state(cx, || false);
 
     cx.render(rsx!(
@@ -91,7 +93,7 @@ pub fn Compose(cx: Scope) -> Element {
                             onpress: move |_| {
                                 state.write_silent().mutate(Action::ClearPopout(desktop.clone()));
                                 state.write_silent().mutate(Action::DisableMedia);
-                                state.write().mutate(Action::SetActiveMedia(active_chat_id));
+                                state.write().mutate(Action::SetActiveMedia(active_chat.id));
                             }
                         },
                         (!state.read().ui.is_minimal_view()).then(|| rsx!(
@@ -111,7 +113,7 @@ pub fn Compose(cx: Scope) -> Element {
                 ),
                 cx.render(
                     rsx! (
-                        if without_me.len() < 2 {rsx! (
+                        if other_participants.len() < 2 {rsx! (
                             UserImage {
                                 loading: **loading,
                                 platform: platform,
@@ -121,7 +123,7 @@ pub fn Compose(cx: Scope) -> Element {
                         )} else {rsx! (
                             UserImageGroup {
                                 loading: **loading,
-                                participants: build_participants(&without_me)
+                                participants: build_participants(&other_participants)
                             }
                         )}
                         div {
@@ -142,7 +144,7 @@ pub fn Compose(cx: Scope) -> Element {
                                 rsx! (
                                     p {
                                         class: "username",
-                                        "{participants_name}"
+                                        "{other_participants_names}"
                                     },
                                     p {
                                         class: "status",
@@ -212,8 +214,7 @@ pub fn Compose(cx: Scope) -> Element {
                                                             icon: Icon::ArrowLongLeft,
                                                             text: get_local_text("messages.reply"),
                                                             onpress: move |_| {
-                                                                let chat = state.read().get_active_chat().unwrap_or_default();
-                                                                state.write().mutate(Action::StartReplying(chat, reply_message.clone()));
+                                                                state.write().mutate(Action::StartReplying(active_chat, reply_message.clone()));
                                                             }
                                                         },
                                                         ContextItem {
@@ -254,19 +255,18 @@ pub fn Compose(cx: Scope) -> Element {
                     },
                 )),
                 with_replying_to: cx.render(rsx!(
-                    state.read().get_active_chat().unwrap_or_default().replying_to.is_some().then(|| rsx!(
+                    active_chat.replying_to.map(|msg| rsx!(
                         Reply {
                             label: get_local_text("messages.replying"),
                             remote: {
                                 let our_did = state.read().account.identity.did_key();
-                                let their_did = state.read().get_active_chat().unwrap_or_default().replying_to.unwrap_or_default().sender();
+                                let their_did = msg.sender();
                                 our_did != their_did
                             },
                             onclose: move |_| {
-                                let new_chat = &state.read().get_active_chat().unwrap_or_default();
-                                state.write().mutate(Action::CancelReply(new_chat.clone()))
+                                state.write().mutate(Action::CancelReply(active_chat))
                             },
-                            message: reply_message,
+                            message: msg.value().join("\n"),
                             UserImage {
                                 platform: Platform::Mobile,
                                 status: Status::Online
