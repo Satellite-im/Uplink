@@ -14,6 +14,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             class: "friends-list",
+            aria_label: "Incoming Requests List",
             Label {
                 text: get_local_text("friends.incoming_requests"),
             },

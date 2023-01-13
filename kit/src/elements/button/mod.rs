@@ -119,7 +119,8 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     cx.props.tooltip.as_ref()
                 )),
                 (!badge.is_empty()).then(|| rsx!(
-                    span { 
+                    span {
+                        aria_label: "Button Badge",
                         class: "badge",
                         "{badge}" 
                     }

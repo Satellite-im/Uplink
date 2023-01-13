@@ -39,6 +39,7 @@ pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             class: {
                 format_args!("switch {}", if disabled { "disabled" } else { "" })
             },
+            aria_label: "Switch Slider",
             input {
                 disabled: "{disabled}",
                 "type": "checkbox",

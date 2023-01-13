@@ -21,6 +21,8 @@ pub struct Props<'a> {
     with_content: Option<String>,
     #[props(!optional)]
     appearance: Option<Appearance>,
+    #[props(optional)]
+    aria_label: Option<String>,
 }
 
 /// Generates the optional icon providing a fallback.
@@ -40,6 +42,7 @@ pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "toast",
+            aria_label: "Toast Notification",
             onmouseover: move |_| cx.props.on_hover.call(cx.props.id),
             (cx.props.icon.is_some()).then(|| rsx!(
                 span {
