@@ -37,10 +37,7 @@ jobs:
           override: true
 
       - name: Install Protobuf 💿
-        continue-on-error: true
-        run: |
-          brew update
-          brew install protobuf
+        uses: arduino/setup-protoc@v1
 
       - name: Build executable 🖥️
         continue-on-error: true
