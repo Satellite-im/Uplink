@@ -103,7 +103,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             while rx.next().await.is_some() {
                 let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
                 warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnIdentity { rsp: tx }))
+                    .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnDID { rsp: tx }))
                     .expect("AddFriendLayout failed to send warp command");
 
                 let res = rx.await.expect("failed to get response from warp_runner");

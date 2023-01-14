@@ -58,7 +58,7 @@ pub fn Friends(cx: Scope) -> Element {
                             }))
                             .expect("failed to send cmd");
 
-                        let rsp = rx.await.expect("command cancelled");
+                        let rsp = rx.await.expect("command canceled");
 
                         match rsp {
                             Ok(c) => c,

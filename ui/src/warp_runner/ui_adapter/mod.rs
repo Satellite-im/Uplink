@@ -1,4 +1,4 @@
-//! an event from Warp isn't necessarily what the UI needs to display. and the UI doesn't have access to RayGun, MultiPass, ect. As a result,
+//! an event from Warp isn't necessarily what the UI needs to display. and the UI doesn't have access to RayGun, MultiPass, etc. As a result,
 //! a translation must be performed by WarpRunner.
 //!
 

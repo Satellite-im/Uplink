@@ -41,7 +41,7 @@ pub enum MultiPassCmd {
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
     },
-    GetOwnIdentity {
+    GetOwnDID {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
 }
@@ -122,10 +122,10 @@ pub async fn handle_multipass_cmd(
                 return;
             }
             //println!("create_identity: account.create_identity");
-            let r = match account.create_identity(Some(&username), None).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            };
+            let r = account
+                .create_identity(Some(&username), None)
+                .await
+                .map(|_| ());
             let _ = rsp.send(r);
         }
         MultiPassCmd::TryLogIn { passphrase, rsp } => {
@@ -133,24 +133,15 @@ pub async fn handle_multipass_cmd(
                 let _ = rsp.send(Err(e));
                 return;
             }
-            let r = match account.get_own_identity().await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            };
+            let r = account.get_own_identity().await.map(|_| ());
             let _ = rsp.send(r);
         }
         MultiPassCmd::RequestFriend { did, rsp } => {
-            let r = match account.send_request(&did).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            };
+            let r = account.send_request(&did).await;
             let _ = rsp.send(r);
         }
-        MultiPassCmd::GetOwnIdentity { rsp } => {
-            let r = match account.get_own_identity().await {
-                Ok(id) => Ok(id.did_key()),
-                Err(e) => Err(e),
-            };
+        MultiPassCmd::GetOwnDID { rsp } => {
+            let r = account.get_own_identity().await.map(|id| id.did_key());
             let _ = rsp.send(r);
         }
         MultiPassCmd::InitializeFriends { rsp } => {
