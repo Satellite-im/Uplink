@@ -26,6 +26,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
     let request_sent = use_state(cx, || false);
+    // used when copying the user's id to the clipboard
     let my_id: &UseState<Option<String>> = use_state(cx, || None);
     // Set up validation options for the input field
     let friend_validation = Validation {

@@ -136,17 +136,29 @@ impl WarpRunner {
                     opt = multipass_stream.next() => {
                         //println!("got multiPass event");
                         if let Some(evt) = opt {
-                            let evt = ui_adapter::convert_multipass_event(evt, &mut account, &mut messaging).await;
-                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
-                                break;
+                            match ui_adapter::convert_multipass_event(evt, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                    if tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                                        break;
+                                    }
+                                }
+                                Err(_e) => {
+                                    // todo: log error
+                                }
                             }
                         }
                     },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            let evt = ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await;
-                            if tx.send(WarpEvent::RayGun(evt)).is_err() {
-                                break;
+                            match ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                      if tx.send(WarpEvent::RayGun(evt)).is_err() {
+                                        break;
+                                      }
+                                }
+                                Err(_e) => {
+                                    // todo: log error
+                                }
                             }
                         }
                     },

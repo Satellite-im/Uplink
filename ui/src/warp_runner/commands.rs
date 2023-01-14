@@ -4,7 +4,7 @@ use futures::channel::oneshot;
 use uuid::Uuid;
 use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
-use crate::state::{chats, friends};
+use crate::state::{self, chats, friends};
 
 use super::{
     ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
@@ -41,6 +41,7 @@ pub enum MultiPassCmd {
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
     },
+    // may later want this to return the Identity rather than the DID.
     GetOwnDid {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
@@ -79,25 +80,28 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 //println!("warp runner got conversations: {:#?}", convs);
                 let mut all_chats = HashMap::new();
                 for conv in convs {
-                    let chat = conversation_to_chat(conv, account, messaging).await;
-                    all_chats.insert(chat.id, chat);
+                    match conversation_to_chat(conv, account, messaging).await {
+                        Ok(chat) => {
+                            let _ = all_chats.insert(chat.id, chat);
+                        }
+                        Err(_e) => todo!("log error"),
+                    };
                 }
                 let _ = rsp.send(Ok(all_chats));
             }
             Err(_e) => {
                 // do nothing. will cancel the channel
+                // could happen if warp isn't available yet
             }
         },
         RayGunCmd::CreateConversation { recipient, rsp } => {
-            match messaging.create_conversation(&recipient).await {
+            let r = match messaging.create_conversation(&recipient).await {
                 Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    let chat = conversation_to_chat(conv, account, messaging).await;
-                    let _ = rsp.send(Ok(chat));
+                    conversation_to_chat(conv, account, messaging).await
                 }
-                Err(e) => {
-                    let _ = rsp.send(Err(e));
-                }
-            }
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
         }
     }
 }
@@ -114,15 +118,7 @@ pub async fn handle_multipass_cmd(
             rsp,
         } => {
             //println!("create_identity: unlock tesseract");
-            if let Err(e) = tesseract.unlock(passphrase.as_bytes()) {
-                let _ = rsp.send(Err(e));
-                return;
-            }
-            //println!("create_identity: account.create_identity");
-            let r = account
-                .create_identity(Some(&username), None)
-                .await
-                .map(|_| ());
+            let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::TryLogIn { passphrase, rsp } => {
@@ -142,61 +138,54 @@ pub async fn handle_multipass_cmd(
             let _ = rsp.send(r);
         }
         MultiPassCmd::InitializeFriends { rsp } => {
-            let incoming_requests = match account.list_incoming_request().await {
-                Ok(reqs) => {
-                    let reqs = reqs.iter().map(|r| r.from()).collect();
-                    let idents = dids_to_identity(reqs, account).await;
-                    HashSet::from_iter(idents.iter().cloned())
-                }
-                Err(e) => {
-                    let _ = rsp.send(Err(e));
-                    return;
-                }
-            };
-            let outgoing_requests = match account.list_outgoing_request().await {
-                Ok(r) => {
-                    let incoming = r.iter().map(|r| r.to()).collect();
-                    let idents = dids_to_identity(incoming, account).await;
-                    HashSet::from_iter(idents.iter().cloned())
-                }
-                Err(e) => {
-                    let _ = rsp.send(Err(e));
-                    return;
-                }
-            };
-            let blocked = match account.block_list().await {
-                Ok(ids) => {
-                    let idents = dids_to_identity(ids, account).await;
-                    HashSet::from_iter(idents.iter().cloned())
-                }
-                Err(e) => {
-                    let _ = rsp.send(Err(e));
-                    return;
-                }
-            };
-            let friends = match account.list_friends().await {
-                Ok(ids) => {
-                    let mut res = HashMap::new();
-                    for id in ids {
-                        let ident = did_to_identity(id.clone(), account).await;
-                        res.insert(id, ident);
-                    }
-                    res
-                }
-                Err(e) => {
-                    let _ = rsp.send(Err(e));
-                    return;
-                }
-            };
-
-            let ret = friends::Friends {
-                initialized: true,
-                all: friends,
-                blocked,
-                incoming_requests,
-                outgoing_requests,
-            };
-            let _ = rsp.send(Ok(ret));
+            let r = multipass_initialize_friends(account).await;
+            let _ = rsp.send(r);
         }
     }
+}
+
+async fn multipass_create_identity(
+    username: &str,
+    passphrase: &str,
+    tesseract: &mut Tesseract,
+    account: &mut Account,
+) -> Result<(), Error> {
+    tesseract.unlock(passphrase.as_bytes())?;
+    //println!("create_identity: account.create_identity");
+    let _ = account.create_identity(Some(username), None).await?;
+    Ok(())
+}
+
+async fn multipass_initialize_friends(
+    account: &mut Account,
+) -> Result<state::friends::Friends, Error> {
+    let reqs = account.list_incoming_request().await?;
+    let reqs = reqs.iter().map(|r| r.from()).collect();
+    let idents = dids_to_identity(reqs, account).await?;
+    let incoming_requests = HashSet::from_iter(idents.iter().cloned());
+
+    let outgoing = account.list_outgoing_request().await?;
+    let outgoing = outgoing.iter().map(|r| r.to()).collect();
+    let idents = dids_to_identity(outgoing, account).await?;
+    let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
+
+    let ids = account.block_list().await?;
+    let idents = dids_to_identity(ids, account).await?;
+    let blocked = HashSet::from_iter(idents.iter().cloned());
+
+    let ids = account.list_friends().await?;
+    let mut friends = HashMap::new();
+    for id in ids {
+        let ident = did_to_identity(id.clone(), account).await?;
+        friends.insert(id, ident);
+    }
+
+    let ret = friends::Friends {
+        initialized: true,
+        all: friends,
+        blocked,
+        incoming_requests,
+        outgoing_requests,
+    };
+    Ok(ret)
 }
