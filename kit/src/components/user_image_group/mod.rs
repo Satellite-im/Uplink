@@ -34,7 +34,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let loading = cx
         .props
         .loading
-        .unwrap_or_else(|| cx.props.participants.is_empty());
+        .unwrap_or(cx.props.participants.is_empty());
 
     cx.render(rsx! (
         if loading {
