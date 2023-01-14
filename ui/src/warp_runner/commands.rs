@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
 use uuid::Uuid;
-use warp::{crypto::DID, tesseract::Tesseract};
+use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
 use crate::state::{chats, friends};
 
@@ -66,10 +66,7 @@ pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) 
             let _ = rsp.send(res);
         }
         TesseractCmd::Unlock { passphrase, rsp } => {
-            let r = match tesseract.unlock(passphrase.as_bytes()) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            };
+            let r = tesseract.unlock(passphrase.as_bytes());
             let _ = rsp.send(r);
         }
     }
@@ -93,7 +90,7 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
         },
         RayGunCmd::CreateConversation { recipient, rsp } => {
             match messaging.create_conversation(&recipient).await {
-                Ok(conv) => {
+                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
                     let chat = conversation_to_chat(conv, account, messaging).await;
                     let _ = rsp.send(Ok(chat));
                 }
