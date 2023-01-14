@@ -31,10 +31,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let group = cx.props.participants.len() > 2;
     let username = cx.props.with_username.clone().unwrap_or_default();
 
-    let loading = cx
-        .props
-        .loading
-        .unwrap_or_else(|| cx.props.participants.is_empty());
+    let loading = cx.props.loading.unwrap_or(cx.props.participants.is_empty());
 
     cx.render(rsx! (
         if loading {

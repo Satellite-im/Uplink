@@ -41,7 +41,7 @@ pub enum MultiPassCmd {
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
     },
-    GetOwnDID {
+    GetOwnDid {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
 }
@@ -140,7 +140,7 @@ pub async fn handle_multipass_cmd(
             let r = account.send_request(&did).await;
             let _ = rsp.send(r);
         }
-        MultiPassCmd::GetOwnDID { rsp } => {
+        MultiPassCmd::GetOwnDid { rsp } => {
             let r = account.get_own_identity().await.map(|id| id.did_key());
             let _ = rsp.send(r);
         }
