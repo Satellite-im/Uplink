@@ -12,6 +12,11 @@
 	display: inline-flex;
 	align-items: center;
 	transition: background-color var(--animation-time);
+
+	button {
+		display: inline-flex;
+	}
+	
 	svg {
 		stroke: var(--text-color-bright);
 		fill: transparent;
