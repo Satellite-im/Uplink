@@ -20,6 +20,13 @@
 	}
 
 	&.hidden {
-		margin-left: calc(var(--sidebar-width) * -1 - 1px);
+		margin-left: calc(var(--sidebar-width) * -1);
+		border-right: none;
+	}
+}
+
+@media only screen and (max-width: 300px) {
+	.sidebar {
+		border-right: none;
 	}
 }
