@@ -10,8 +10,9 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::settings::{sub_pages::logger_debug::LoggerDebug, SettingSection},
+    components::settings::SettingSection,
     config::Configuration,
+    logger::logger_debug::LoggerDebug,
     state::{Action, State},
 };
 

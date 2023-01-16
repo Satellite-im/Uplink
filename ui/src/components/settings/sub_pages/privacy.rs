@@ -5,10 +5,11 @@ use kit::{
 };
 use shared::language::get_local_text;
 
-use crate::{components::settings::SettingSection};
+use crate::{components::settings::SettingSection, logger::logger::Logger};
 
 #[allow(non_snake_case)]
 pub fn PrivacySettings(cx: Scope) -> Element {
+    Logger::load().info("Privacy settings opened");
     cx.render(rsx!(
         div {
             id: "settings-privacy",

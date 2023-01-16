@@ -6,3 +6,4 @@ ui/src/compiled_styles.css
 Cargo.lock
 
 
+.uplink/debug.log

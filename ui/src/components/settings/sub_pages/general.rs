@@ -9,6 +9,7 @@ use shared::language::{change_language, get_available_languages, get_local_text}
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
+    logger::logger::Logger,
     state::{Action, State},
     utils::get_available_themes,
 };
@@ -20,7 +21,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let themes = get_available_themes();
 
     let mut config = Configuration::load_or_default();
-
+    Logger::load().debug("General settings opened");
     cx.render(rsx!(
         div {
             id: "settings-general",
