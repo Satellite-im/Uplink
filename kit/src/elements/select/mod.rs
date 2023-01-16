@@ -31,10 +31,11 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "select",
+            aria_label: "Selector",
             select {
                 onchange: move |e| emit(&cx, e.value.clone()),
                 iter.map(|val|
-                    rsx!(option {key: "{val}", label: "{val}", value: "{val}"})
+                    rsx!(option {key: "{val}", label: "{val}", value: "{val}", aria_label: "Selector Option"})
                 )
             }
         }
