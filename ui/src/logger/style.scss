@@ -1,13 +1,25 @@
-.logger-body {
+html, body {
     background-color: black;
-    height: 100%;
     margin: 0;
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
+}
+
+.debug-logger {
+    height: fit-content;
+    max-width: 100%;
+    scroll-behavior: smooth;
+    overflow-y: scroll;
     overflow: hidden;
+    overflow-x: hidden;
+
+}
+
+.initial-label {
+    color: white;
+    margin-left: 4px;
+    font-size: 14px;
 }
 
 .log-text {
     font-size: 12px;
-    margin-left: 16px;
+    margin: 4px;
 }

@@ -14,6 +14,7 @@ dioxus-core = "0.3.0"
 fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
 shared = { path = "../shared" }
+regex = "1"
 
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"

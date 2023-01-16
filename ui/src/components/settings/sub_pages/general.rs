@@ -21,7 +21,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let themes = get_available_themes();
 
     let mut config = Configuration::load_or_default();
-    Logger::load().debug("General settings opened");
+    Logger::debug("General settings opened");
     cx.render(rsx!(
         div {
             id: "settings-general",

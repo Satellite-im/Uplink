@@ -2,7 +2,7 @@ use std::rc::Weak;
 
 use dioxus::prelude::*;
 
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window, Config};
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
@@ -41,7 +41,16 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
 
                            let logger_debug = VirtualDom::new_with_props(LoggerDebug, ());
 
-                           let window = window.new_window(logger_debug, Default::default());
+                           let config = Config::default().with_custom_index(
+                             r#"
+                                    <!doctype html>
+                                    <html>
+                                    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+                                    </html>"#
+                                    .to_string()
+                           );
+
+                           let window = window.new_window(logger_debug, config);
                            if let Some(wv) = Weak::upgrade(&window) {
                                let id = wv.window().id();
                                state.write().mutate(Action::SetPopout(id));
