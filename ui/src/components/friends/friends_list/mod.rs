@@ -68,6 +68,10 @@ pub fn Friends(cx: Scope) -> Element {
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
                                                 use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                                                // TODO: This doesn't actually work for some reason.
+                                                if state.read().ui.is_minimal_view() {
+                                                    state.write().mutate(Action::SidebarHidden(true));
+                                                }
                                             }
                                         },
                                         ContextItem {
@@ -115,6 +119,10 @@ pub fn Friends(cx: Scope) -> Element {
                                         onchat: move |_| {
                                             state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
                                             use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                                            // TODO: This doesn't actually work for some reason.
+                                            if state.read().ui.is_minimal_view() {
+                                                state.write().mutate(Action::SidebarHidden(true));
+                                            }
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));

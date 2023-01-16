@@ -45,6 +45,15 @@
     }
 }
 
+@media only screen and (max-width: 600px) {
+    .message-group-wrap {
+        .message-group, .message-group.remote {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+}
+
 .message-group-skeletal {
     display: inline-flex;
     flex-direction: row;

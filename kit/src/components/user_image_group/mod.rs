@@ -60,7 +60,8 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         UserImage {
                                             platform: user.platform,
                                             status: user.status,
-                                            image: user.photo.clone()
+                                            image: user.photo.clone(),
+                                            onpress: move |e| emit(&cx, e),
                                         }
                                     )
                                 }),
@@ -87,7 +88,8 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             rsx!(
                                 UserImage {
                                     platform: single_user.platform,
-                                    status: single_user.status
+                                    status: single_user.status,
+                                    onpress: move |e| emit(&cx, e),
                                 }
                             )
                         }
