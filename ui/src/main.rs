@@ -334,7 +334,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimized: desktop.is_minimized(),
         width: desktop.inner_size().width,
         height: desktop.inner_size().height,
-        minimal_view: desktop.inner_size().width < 600,
+        minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
 
