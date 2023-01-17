@@ -21,6 +21,10 @@ pub fn LoggerDebug(cx: Scope) -> Element {
 
     let logs_on_screen_len = use_ref(cx, || 0);
 
+    let now = Local::now();
+    let formatted_datetime = now.format("%a %b %d %H:%M:%S").to_string();
+    let debug_logger_started_time = use_ref(cx, || formatted_datetime.clone());
+
     let window = use_window(cx);
     let script = include_str!("./script.js");
 
@@ -39,9 +43,6 @@ pub fn LoggerDebug(cx: Scope) -> Element {
         }
     });
 
-    let now = Local::now();
-    let formatted_datetime = now.format("%a %b %d %H:%M:%S").to_string();
-
     cx.render(rsx!(
         style { STYLE }
         div {
@@ -50,7 +51,7 @@ pub fn LoggerDebug(cx: Scope) -> Element {
             div {
                 class: "initial-label",
                 Label {
-                    text: format!("{}: {}", "Starting Logger Debug".to_owned(), formatted_datetime)},
+                    text: format!("{}: {}", "Logger Debug opened on".to_owned(), *debug_logger_started_time.read())},
             },
             logs_to_show.iter().map(|log| {
                 let log_level = log.level.to_str();
@@ -62,7 +63,7 @@ pub fn LoggerDebug(cx: Scope) -> Element {
                         display: "flex",
                         p {
                             class: "log-text",
-                            color: "orange",
+                            color: "rgb(199, 136, 19)",
                             "{log_datetime}"
                             },
                         p {
