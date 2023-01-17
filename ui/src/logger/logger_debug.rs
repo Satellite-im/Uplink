@@ -19,11 +19,6 @@ pub fn LoggerDebug(cx: Scope) -> Element {
 
     let logs_to_show = use_state(cx, || logs.clone());
 
-    // let script = r#"
-    //     var objDiv = document.getElementById("debug_logger");
-    //     objDiv.scrollTop = objDiv.scrollHeight;
-    // "#;
-
     let logs_on_screen_len = use_ref(cx, || 0);
 
     let window = use_window(cx);
@@ -58,14 +53,31 @@ pub fn LoggerDebug(cx: Scope) -> Element {
                     text: format!("{}: {}", "Starting Logger Debug".to_owned(), formatted_datetime)},
             },
             logs_to_show.iter().map(|log| {
-                let log_string = format!("{} -> {:?}: {}", log.datetime, log.level, log.message);
+                let log_level = log.level.to_str();
+                let log_message = log.message.clone();
+                let log_datetime = format!("[{}]",log.datetime);
                 let log_color = log.level.color();
-                rsx!(p {
-                    id: "log_text",
-                    class: "log-text",
-                    color: "{log_color}",
-                    "{log_string}"
-                })
+                rsx!(
+                    div {
+                        display: "flex",
+                        p {
+                            class: "log-text",
+                            color: "orange",
+                            "{log_datetime}"
+                            },
+                        p {
+                            class: "log-text",
+                            color: "{log_color}",
+                            "{log_level}:"
+                            }
+                        p {
+                            id: "log_text",
+                            class: "log-text",
+                            color: "white",
+                            "{log_message}"
+                        }
+                    }
+                )
             })
         }
     ))

@@ -5,9 +5,11 @@ use std::io::{prelude::*, BufReader};
 use std::sync::Mutex;
 use warp::sync::RwLock;
 
-use chrono::{Local, NaiveTime};
+use chrono::Local;
 
 static LOG_ACTIVE: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
+
+static DEBUG_LOG_PATH: &str = ".uplink/debug.log";
 
 pub static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 
@@ -36,9 +38,19 @@ impl LogLevel {
             _ => LogLevel::Debug,
         }
     }
+
+    pub fn to_str(&self) -> &str {
+        match self {
+            LogLevel::Debug => "DEBUG",
+            LogLevel::Warn => "WARN",
+            LogLevel::Info => "INFO",
+            LogLevel::Error => "ERROR",
+        }
+    }
+
     pub fn color(&self) -> &'static str {
         match self {
-            LogLevel::Debug => "white",
+            LogLevel::Debug => "rgb(0, 255, 0)",
             LogLevel::Info => "rgb(0, 195, 255)",
             LogLevel::Warn => "yellow",
             LogLevel::Error => "red",
@@ -57,7 +69,7 @@ impl Logger {
     }
 
     fn load() -> Logger {
-        let log_file = ".uplink/debug.log".to_string();
+        let log_file = DEBUG_LOG_PATH.to_string();
         let _ = OpenOptions::new().create(true).append(true).open(&log_file);
         let log_entries = Mutex::new(Vec::new());
         Logger {
@@ -83,8 +95,8 @@ impl Logger {
                 .open(&self.log_file)
                 .unwrap();
 
-            if let Err(e) = writeln!(file, "{:?}", new_log.clone()) {
-                eprintln!("Couldn't write to file: {}", e);
+            if let Err(error) = writeln!(file, "{:?}", new_log.clone()) {
+                Logger::error(format!("Couldn't write to debug.log file. {error}").as_str());
             }
         }
     }
@@ -106,7 +118,14 @@ impl Logger {
     }
 
     pub fn show_log(&self) -> Vec<Log> {
-        let file = File::open(".uplink/debug.log").expect("Unable to open debug.log");
+        let file = match File::open(DEBUG_LOG_PATH) {
+            Ok(log) => log,
+            Err(error) => {
+                Logger::error(format!("Unable to read debug.log file. {error}").as_str());
+                return Vec::new();
+            }
+        };
+
         let reader = BufReader::new(file);
         let mut logs: Vec<Log> = vec![];
 
@@ -115,16 +134,23 @@ impl Logger {
         let re_datetime = Regex::new(r#"datetime: "(.*?)""#).unwrap();
 
         for line in reader.lines() {
-            let log = line.expect("Unable to read line");
+            let log = match line {
+                Ok(log) => log,
+                Err(error) => {
+                    Logger::error(format!("Unable to read a line from log file. {error}").as_str());
+                    continue;
+                }
+            };
+
             let level_string = re_level.captures(&log).unwrap()[1].to_string();
             let message = re_message.captures(&log).unwrap()[1].to_string();
             let datetime = re_datetime.captures(&log).unwrap()[1].to_string();
-            let datetime_time = NaiveTime::parse_from_str(&datetime[11..19], "%H:%M:%S").unwrap();
+
             let level = LogLevel::from_str(&level_string);
             let log = Log {
                 level,
                 message,
-                datetime: datetime_time.to_string(),
+                datetime: datetime[0..19].to_string(),
             };
             logs.push(log);
         }
