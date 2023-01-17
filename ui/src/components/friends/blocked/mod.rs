@@ -24,6 +24,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             class: "friends-list",
+            aria_label: "Blocked List",
             Label {
                 text: get_local_text("friends.blocked"),
             },

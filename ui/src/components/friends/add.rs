@@ -135,7 +135,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
                         friend_input_valid.set(is_valid);
-                    }
+                    },
+                    aria_label: "Add Someone Input".into()
                 },
                 Button {
                     icon: Icon::Plus,
@@ -149,7 +150,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 todo!("failed to convert string to DID");
                             }
                         }
-                    }
+                    },
+                    aria_label: "Add Someone Button".into()
                 },
                 // todo: verify that this is the desired UI
                 Button {

@@ -77,6 +77,7 @@ pub fn Friends(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             class: "friends-list",
+            aria_label: "Friends List",
             Label {
                 text: get_local_text("friends.friends"),
             },
