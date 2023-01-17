@@ -78,7 +78,7 @@ pub fn AddFriend(cx: Scope) -> Element {
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
-                    Ok(_) => request_sent.set(true),
+                    Ok(_) | Err(Error::CannotSendFriendRequest) => request_sent.set(true),
                     Err(e) => match e {
                         Error::CannotSendSelfFriendRequest
                         | Error::IdentityDoesntExist
@@ -86,7 +86,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                         | Error::InvalidIdentifierCondition => {
                             // todo: show an error message
                         }
-                        _ => todo!("failed to send friend request"),
+                        _ => {
+                            println!("error: {}", e);
+                            todo!("failed to send friend request");
+                        }
                     },
                 }
             }
@@ -154,12 +157,12 @@ pub fn AddFriend(cx: Scope) -> Element {
                     aria_label: "Add Someone Button".into()
                 },
                 // todo: verify that this is the desired UI
-                /*Button {
+                Button {
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
                         id_ch.send(());
                     }
-                }*/
+                }
             }
         }
     ))
