@@ -87,6 +87,11 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                     }
                     username.set(val);
                 }
+                onreturn: move |_| {
+                    if !*button_disabled.get() {
+                        ch.send((username.get().to_string(), pin.read().to_string()));
+                    }
+                }
             },
             Button {
                 text:  get_local_text("unlock.create-account"),
@@ -97,6 +102,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 onpress: move |_| {
                     ch.send((username.get().to_string(), pin.read().to_string()));
                 }
+
             }
         }
     ))

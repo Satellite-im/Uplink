@@ -1,6 +1,5 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
-use dioxus::prelude::ProvidedStateInner;
 use futures::StreamExt;
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
@@ -12,20 +11,22 @@ use warp::{
     raygun::{RayGun, RayGunEventStream},
     tesseract::Tesseract,
 };
-use warp::{multipass::MultiPassEventKind, raygun::RayGunEventKind};
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{
-    state::State,
-    warp_runner::commands::{handle_multipass_cmd, handle_tesseract_cmd},
+    warp_runner::commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
     STATIC_ARGS,
 };
 
-use self::commands::{MultiPassCmd, TesseractCmd};
+use self::{
+    commands::{MultiPassCmd, RayGunCmd, TesseractCmd},
+    ui_adapter::{MultiPassEvent, RayGunEvent},
+};
 
 pub mod commands;
+pub mod ui_adapter;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -48,14 +49,15 @@ type Messaging = Box<dyn RayGun>;
 
 #[allow(clippy::large_enum_variant)]
 pub enum WarpEvent {
-    RayGun(RayGunEventKind),
-    MultiPass(MultiPassEventKind),
+    RayGun(RayGunEvent),
+    MultiPass(MultiPassEvent),
 }
 
 #[derive(Debug)]
 pub enum WarpCmd {
     Tesseract(TesseractCmd),
     MultiPass(MultiPassCmd),
+    RayGun(RayGunCmd),
 }
 
 pub struct WarpRunner {
@@ -129,20 +131,34 @@ impl WarpRunner {
             };
 
             loop {
-                //println!("waiting for event");
+                // println!("warp runner waiting for event");
                 tokio::select! {
                     opt = multipass_stream.next() => {
                         //println!("got multiPass event");
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
-                                break;
+                            match ui_adapter::convert_multipass_event(evt, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                    if tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                                        break;
+                                    }
+                                }
+                                Err(_e) => {
+                                    // todo: log error
+                                }
                             }
                         }
                     },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            if tx.send(WarpEvent::RayGun(evt)).is_err() {
-                                break;
+                            match ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                      if tx.send(WarpEvent::RayGun(evt)).is_err() {
+                                        break;
+                                      }
+                                }
+                                Err(_e) => {
+                                    // todo: log error
+                                }
                             }
                         }
                     },
@@ -154,6 +170,7 @@ impl WarpRunner {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
                             WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
+                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
                         },
                         None => break,
                     }
@@ -183,16 +200,6 @@ async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
             }
         }
     }
-}
-
-// this is called by `main.rs` from within a `use_future` and used to modify state. returns `true` if stae has been modified
-// this keeps the size of main.rs small.
-// might just want to add functions to State to handle each type of event and not need this at all.
-pub async fn handle_event(
-    _state: Rc<RefCell<ProvidedStateInner<State>>>,
-    _event: WarpEvent,
-) -> bool {
-    todo!()
 }
 
 async fn warp_initialization(

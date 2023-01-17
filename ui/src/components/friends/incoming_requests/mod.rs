@@ -40,6 +40,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.deny"),
                                 onpress: move |_| {
+                                    // todo: use warp_runner for this. don't mutate state until the correct warp event is received
                                     state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
                                 }
                             },
@@ -62,9 +63,11 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 }
                             )),
                             onaccept: move |_| {
+                                // todo: use warp_runner for this. don't mutate state until the correct warp event is received
                                 state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
                             },
                             onremove: move |_| {
+                                // todo: use warp_runner for this. don't mutate state until the correct warp event is received
                                state.write().mutate(Action::DenyRequest(friend_clone_clone.clone()));
                             }
                         }

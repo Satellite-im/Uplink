@@ -1,9 +1,10 @@
-use kit::components::indicator::Status;
+use kit::components::indicator::{self, Status};
 use std::fs;
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
-use crate::state::Theme;
+use crate::state::{self, Theme};
+use kit::User as UserInfo;
 
 pub mod format_timestamp;
 //pub mod notifications;
@@ -51,4 +52,29 @@ pub fn convert_status(status: &warp::multipass::identity::IdentityStatus) -> Sta
         warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
         warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
     }
+}
+
+pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
+    // Create a vector of UserInfo objects to store the results
+    let mut user_info: Vec<UserInfo> = vec![];
+
+    // Iterate over the identities vector
+    for identity in identities {
+        // For each identity, create a new UserInfo object and set its fields
+        // to the corresponding values from the identity object
+        let platform = match identity.platform() {
+            warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
+            warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
+            _ => indicator::Platform::Headless, //TODO: Unknown
+        };
+        user_info.push(UserInfo {
+            platform,
+            status: convert_status(&identity.identity_status()),
+            username: identity.username(),
+            photo: identity.graphics().profile_picture(),
+        })
+    }
+
+    // Return the resulting user_info vector
+    user_info
 }

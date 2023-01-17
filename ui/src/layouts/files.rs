@@ -32,7 +32,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let total_space_text = get_local_text("files.total-space");
 
     let first_render = use_state(cx, || true);
-    if *first_render.clone() && state.read().ui.is_minimal_view() {
+    if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
