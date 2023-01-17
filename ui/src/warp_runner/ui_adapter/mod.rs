@@ -48,6 +48,7 @@ pub async fn dids_to_identity(
     account: &mut super::Account,
 ) -> Result<Vec<state::Identity>, Error> {
     let mut ret = Vec::new();
+    ret.reserve(dids.len());
     for id in dids {
         let ident = did_to_identity(id, account).await?;
         ret.push(ident);

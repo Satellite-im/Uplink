@@ -30,13 +30,9 @@ pub fn AddFriend(cx: Scope) -> Element {
     let my_id: &UseState<Option<String>> = use_state(cx, || None);
     // Set up validation options for the input field
     let friend_validation = Validation {
-        // The input should have a maximum length of 32
         max_length: Some(56),
-        // The input should have a minimum length of 4
         min_length: Some(56),
-        // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
-        // The input should not contain any whitespace
         no_whitespace: true,
     };
 
@@ -46,7 +42,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
                 "".into(),
-                "Friend Request Sent!".into(),
+                get_local_text("friends.request-sent"),
                 None,
                 5,
             )));
@@ -60,7 +56,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(
                 "".into(),
-                "Copied ID to clipboard!".into(),
+                get_local_text("friends.copied-did"),
                 None,
                 5,
             )));

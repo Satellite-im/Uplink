@@ -8,7 +8,7 @@ use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status}};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}};
 
 
 use super::sidebar::build_participants_names;
@@ -75,6 +75,11 @@ pub fn Compose(cx: Scope) -> Element {
 fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     let state = use_shared_state::<State>(cx)?;
 
+    // the Compose page shouldn't be called before chats is initialized. but check here anyway. 
+    if !state.read().chats.initialized {
+        return None;
+    }
+    
     let s = state.read();
     let active_chat = match s.get_active_chat() {
         Some(c) => c,
@@ -180,20 +185,20 @@ fn get_topbar_children(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
         if let Some(data) = data {
             if data.other_participants.len() < 2 {rsx! (
                 UserImage {
-                    loading: is_loading,
+                    loading: false,
                     platform: data.platform,
                     status: convert_status(&data.active_participant.identity_status()),
-                    image: data.first_image.clone()
+                    image: data.first_image.clone(),
                 }
             )} else {rsx! (
                 UserImageGroup {
-                    loading: is_loading,
-                    participants: vec![]
+                    loading: false,
+                    participants: build_participants(&data.other_participants),
                 }
             )}
         } else {rsx! (
             UserImageGroup {
-                loading: is_loading,
+                loading: true,
                 participants: vec![]
             }
         )}

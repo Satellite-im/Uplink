@@ -56,6 +56,10 @@ friends = Friends
     .blocked = Bloqueado
     .accept = Aceitar
     .deny = Recusar solicitação
+    .request-sent = Pedido de Amizade Enviado!
+    .copied-did = Copiado para a área de transferência!
+    .request-sent = ¡Solicitud de amistad enviada!
+    .copied-did = ¡Copiado al portapapeles!
 
 files = Files
     .files = Arquivos

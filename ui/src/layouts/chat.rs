@@ -29,6 +29,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
+            // todo: figure out why this isn't working, fix, and  uncomment. need a special view for mobile devices.
             //(state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden || !state.read().ui.is_minimal_view()).then(|| rsx!(
                 state.read().chats.active.is_some().then(|| rsx! (
                     Compose {}

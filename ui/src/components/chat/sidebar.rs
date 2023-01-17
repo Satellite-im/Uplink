@@ -3,38 +3,13 @@ use dioxus::prelude::*;
 use shared::language::get_local_text;
 use warp::{raygun::Message};
 use dioxus_router::*;
-use kit::{User as UserInfo, elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
+use kit::{elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::convert_status};
+use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::{convert_status, build_participants}};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
-}
-
-pub fn build_participants(identities: &Vec<Identity>) -> Vec<UserInfo> {
-    // Create a vector of UserInfo objects to store the results
-    let mut user_info: Vec<UserInfo> = vec![];
-
-    // Iterate over the identities vector
-    for identity in identities {
-        // For each identity, create a new UserInfo object and set its fields
-        // to the corresponding values from the identity object
-        let platform = match identity.platform() {
-            warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-            warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-            _ => Platform::Headless //TODO: Unknown
-        };
-        user_info.push(UserInfo {
-            platform,
-            status: convert_status(&identity.identity_status()),
-            username: identity.username(),
-            photo: identity.graphics().profile_picture(),
-        })
-    }
-
-    // Return the resulting user_info vector
-    user_info
 }
 
 pub fn build_participants_names(identities: &Vec<Identity>) -> String {
@@ -106,7 +81,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat_id| {
-                            let chat = state.read().chats.all.get(&chat_id).expect("favorited chat not found").clone();
+                            let chat = match state.read().chats.all.get(&chat_id) {
+                                Some(c) => c.clone(),
+                                None => return rsx!("") // should never happen but may if a friend request doesn't go through
+                            };
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(chat.participants.clone());
@@ -139,7 +117,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        // loading: true,
                                         participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
                                         onpress: move |_| {
@@ -237,7 +214,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 },
                             )),
                             User {
-                                // loading: true,
                                 username: participants_name,
                                 subtext: val.join("\n"),
                                 timestamp: timestamp,
