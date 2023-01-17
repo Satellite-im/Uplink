@@ -27,7 +27,9 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 #[allow(non_snake_case)]
 pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let pressable = cx.props.onpress.is_some();
-    let count = cx.props.participants.len() as i64 - 3; // todo: why is this  - 3?
+    // this is "participants.len() - 3" because:
+    // UserImageGroup is supposed to render at most 3 participants. the rest are supposed to be added as a "+n" later
+    let count = cx.props.participants.len() as i64 - 3;
     let group = cx.props.participants.len() > 2;
     let username = cx.props.with_username.clone().unwrap_or_default();
 
