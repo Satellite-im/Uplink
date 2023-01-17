@@ -11,17 +11,17 @@ dioxus-hooks = "0.3.0"
 dioxus-router = "0.3.0"
 dioxus-desktop = { version = "0.3.0", features = ["transparent"] }
 dioxus-core = "0.3.0"
-fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
+fermi = { git = "https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
 shared = { path = "../shared" }
 
 arboard = "3.1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"}
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "f36197f0fe96eab9c9bcf3da87d6bd242f06bca2" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "f36197f0fe96eab9c9bcf3da87d6bd242f06bca2" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "f36197f0fe96eab9c9bcf3da87d6bd242f06bca2" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "f36197f0fe96eab9c9bcf3da87d6bd242f06bca2" }
 rfd = "0.10.0"
 mime = "0.3.16"
 names = "0.14.0"
