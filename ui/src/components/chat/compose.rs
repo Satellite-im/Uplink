@@ -2,13 +2,14 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
+use futures::{StreamExt, channel::oneshot};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
 use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}};
 
 
 use super::sidebar::build_participants_names;
@@ -307,15 +308,56 @@ fn get_messages(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
 fn get_chatbar(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let loading = data.is_none();
+    let input = use_state(cx, Vec::<String>::new);
+    let chat_id = use_state(cx, || None);
+    let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+    if active_chat_id != *chat_id.get() {
+        chat_id.set(active_chat_id);
+    }
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![input, chat_id];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                let conv_id = match chat_id.get() {
+                    Some(c) => c.clone(),
+                    None => {
+                        // todo: log
+                        continue;
+                    }
+                };
+                let msg = input.get().clone();
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::RayGun(RayGunCmd::SendMessage {
+                        conv_id,
+                        msg,
+                        rsp: tx,
+                    }))
+                    .expect("failed to send cmd");
+
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    println!("failed to send message: {}", e);
+                    todo!()
+                }
+            }
+        }
+    });
     cx.render(rsx!(
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
+            onchange: move |v: String| {
+                input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
+            },
+            onreturn: move |_| ch.send(()),
             controls: cx.render(rsx!(
                 Button {
                     icon: Icon::ChevronDoubleRight,
-                    // disabled: **loading,
+                    disabled: loading,
                     appearance: Appearance::Secondary,
+                    onpress: move |_| ch.send(()),
                     tooltip: cx.render(rsx!(
                         Tooltip { 
                             arrow_position: ArrowPosition::Bottom, 
@@ -350,7 +392,7 @@ fn get_chatbar(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
             with_file_upload: cx.render(rsx!(
                 Button {
                     icon: Icon::Plus,
-                    // disabled: loading,
+                    disabled: loading,
                     appearance: Appearance::Primary,
                     tooltip: cx.render(rsx!(
                         Tooltip { 

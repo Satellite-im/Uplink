@@ -82,6 +82,11 @@ pub enum RayGunCmd {
         recipient: DID,
         rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
     },
+    SendMessage {
+        conv_id: Uuid,
+        msg: Vec<String>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 // currently unused
@@ -126,6 +131,10 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 }
                 Err(e) => Err(e),
             };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::SendMessage { conv_id, msg, rsp } => {
+            let r = messaging.send(conv_id, None, msg).await;
             let _ = rsp.send(r);
         }
     }
