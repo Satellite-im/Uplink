@@ -46,11 +46,13 @@ pub fn AddFriend(cx: Scope) -> Element {
                 Input {
                     placeholder: get_local_text("friends.placeholder"),
                     icon: Icon::MagnifyingGlass,
-                    options: input_options
+                    options: input_options,
+                    aria_label: "Add Someone Input".into()
                 },
                 Button {
                     icon: Icon::Plus,
                     text: get_local_text("uplink.add"),
+                    aria_label: "Add Someone Button".into()
                 }
             }
         }

@@ -14,6 +14,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             class: "friends-list",
+            aria_label: "Outgoing Requests List",
             Label {
                 text: get_local_text("friends.outgoing_requests"),
             },

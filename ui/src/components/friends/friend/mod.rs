@@ -60,9 +60,11 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "friend",
+            aria_label: "Friend",
             &cx.props.user_image,
             div {
                 class: "request-info",
+                aria_label: "Friend Info",
                 p {
                     "{cx.props.username}",
                     (!state.read().ui.is_minimal_view()).then(|| rsx!(
@@ -91,6 +93,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Button {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
+                        aria_label: "Accept Friend".into(),
                         onpress: move |_| match &cx.props.onaccept {
                             Some(f) => f.call(()),
                             None    => {},
@@ -100,6 +103,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.onchat.is_some().then(|| rsx! (
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
+                        aria_label: "Chat With Friend".into(),
                         text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
                         onpress: move |_| match &cx.props.onchat {
                             Some(f) => f.call(()),
@@ -114,6 +118,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         Some(f) => f.call(()),
                         None    => {},
                     }
+                    aria_label: "Remove or Deny Friend".into(),
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
@@ -129,6 +134,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             Some(f) => f.call(()),
                             None    => {},
                         }
+                        aria_label: "Block Friend".into(),
                         tooltip: cx.render(rsx!(
                             Tooltip {
                                 arrow_position: ArrowPosition::Right,
