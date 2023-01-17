@@ -26,6 +26,8 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
+            // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when 
+            // creating a new account on a mobile device. 
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
