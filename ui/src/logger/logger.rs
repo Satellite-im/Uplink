@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::fs::{self, File, OpenOptions};
+use std::fs::{File, OpenOptions};
 use std::io::{prelude::*, BufReader};
 use std::sync::Mutex;
 use warp::sync::RwLock;
@@ -65,11 +65,9 @@ impl Logger {
             log_entries,
         }
     }
+}
 
-    pub fn clear_logs() {
-        fs::write(".uplink/debug.log", "").unwrap();
-    }
-
+impl Logger {
     fn log(&self, level: LogLevel, message: &str) {
         if *LOG_ACTIVE.read() {
             let new_log = Log {
@@ -130,7 +128,6 @@ impl Logger {
             };
             logs.push(log);
         }
-
         logs
     }
 }

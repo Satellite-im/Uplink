@@ -3,6 +3,7 @@ use std::time::Duration;
 use chrono::Local;
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_window;
 use kit::elements::label::Label;
 use tokio::time::sleep;
 
@@ -18,14 +19,26 @@ pub fn LoggerDebug(cx: Scope) -> Element {
 
     let logs_to_show = use_state(cx, || logs.clone());
 
+    // let script = r#"
+    //     var objDiv = document.getElementById("debug_logger");
+    //     objDiv.scrollTop = objDiv.scrollHeight;
+    // "#;
+
+    let logs_on_screen_len = use_ref(cx, || 0);
+
+    let window = use_window(cx);
+    let script = include_str!("./script.js");
+
     use_future(cx, (), |_| {
-        to_owned![logs_to_show];
+        to_owned![logs_to_show, window, script, logs_on_screen_len];
         async move {
             loop {
                 sleep(Duration::from_millis(100)).await;
                 let new_logs = logger.show_log();
-                if new_logs.len() > logs_to_show.len() {
+                if new_logs.len() > *logs_on_screen_len.read() {
+                    *logs_on_screen_len.write_silent() = new_logs.len();
                     logs_to_show.set(new_logs);
+                    window.eval(&script);
                 }
             }
         }
@@ -37,6 +50,7 @@ pub fn LoggerDebug(cx: Scope) -> Element {
     cx.render(rsx!(
         style { STYLE }
         div {
+            id: "debug_logger",
             class: "debug-logger",
             div {
                 class: "initial-label",
@@ -53,6 +67,6 @@ pub fn LoggerDebug(cx: Scope) -> Element {
                     "{log_string}"
                 })
             })
-    }
+        }
     ))
 }
