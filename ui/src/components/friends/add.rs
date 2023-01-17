@@ -154,12 +154,12 @@ pub fn AddFriend(cx: Scope) -> Element {
                     aria_label: "Add Someone Button".into()
                 },
                 // todo: verify that this is the desired UI
-                Button {
+                /*Button {
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
                         id_ch.send(());
                     }
-                }
+                }*/
             }
         }
     ))
