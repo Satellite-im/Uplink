@@ -28,7 +28,7 @@ struct ComposeData {
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    println!("rendering compose");
+    //println!("rendering compose");
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     
