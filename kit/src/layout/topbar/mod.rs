@@ -39,6 +39,7 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "topbar",
+            aria_label: "Topbar",
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
                     icon: if currently_back { Icon::ChevronLeft } else { Icon::SidebarArrowLeft },
