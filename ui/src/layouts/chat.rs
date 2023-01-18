@@ -21,7 +21,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let is_mobile = state.read().ui.is_minimal_view();
     let show_sidebar = !state.read().ui.sidebar_hidden;
     let show_welcome = state.read().chats.active.is_none();
-    let render_layout = !is_mobile || (is_mobile && !show_sidebar);
+    let render_layout = !(is_mobile && show_sidebar);
 
     if *first_render.get() && is_mobile {
         state.write().mutate(Action::SidebarHidden(false));
