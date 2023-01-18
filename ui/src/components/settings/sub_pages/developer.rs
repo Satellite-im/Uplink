@@ -96,10 +96,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             }
             SettingSection {
-                section_label: "Debug logger".into(),
-                section_description: "Open a debug logger to see logs when use app".into(),
+                section_label: get_local_text("settings-developer.debug-logger"),
+                section_description: get_local_text("settings-developer.debug-logger-description"),
                 Button {
-                    text: "Open debug logger".into(),
+                    text: get_local_text("settings-developer.open-debug-logger"),
                     aria_label: "debug-logger-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
@@ -108,7 +108,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             state.write().mutate(Action::ClearDebugLogger(window.clone()));
                             return;
                         }
-
                         let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
                         let logger_debug = VirtualDom::new_with_props(LoggerDebug, LoggerDebugProps{
                             _drop_handler: drop_handler,

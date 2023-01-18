@@ -127,6 +127,9 @@ settings-developer = Developer Settings
     .clear-cache = Clear Cache
     .clear-cache-description = Reset your account, basically.
     .clear = Clear
+    .debug-logger = Debug Logger
+    .debug-logger-description = Open new window to see logs when use app
+    .open-debug-logger = Open debug logger
 
 media-player = Media Player 
     .enable-camera = Enable Camera 
