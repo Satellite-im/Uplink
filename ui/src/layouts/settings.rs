@@ -29,7 +29,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let to = use_state(cx, || Page::Profile);
 
     let first_render = use_state(cx, || true);
-    if *first_render.clone() && state.read().ui.is_minimal_view() {
+    if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(false));
         first_render.set(false);
     }

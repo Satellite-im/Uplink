@@ -8,6 +8,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
+use futures::channel::oneshot;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
@@ -15,7 +16,9 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 use state::State;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use uuid::Uuid;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -30,9 +33,11 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
+use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::{WarpCmdChannels, WarpEventChannels};
+use crate::warp_runner::commands::{MultiPassCmd, RayGunCmd};
+use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -335,7 +340,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimized: desktop.is_minimized(),
         width: desktop.inner_size().width,
         height: desktop.inner_size().height,
-        minimal_view: desktop.inner_size().width < 600,
+        minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
 
@@ -348,6 +353,9 @@ fn app(cx: Scope) -> Element {
     //println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    // don't fetch friends and conversations from warp when using mock data
+    let friends_init = use_ref(cx, || !STATIC_ARGS.no_mock);
+    let chats_init = use_ref(cx, || !STATIC_ARGS.no_mock);
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -378,17 +386,27 @@ fn app(cx: Scope) -> Element {
 
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![needs_update, friends_init, chats_init];
         async move {
+            // don't process warp events until friends and chats have been loaded
+            while !(*friends_init.read() && *chats_init.read()) {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             //println!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("warp_runner got event");
-                if warp_runner::handle_event(inner.clone(), evt).await {
-                    needs_update.set(true);
+                //println!("got warp event");
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().process_warp_event(evt);
+                        needs_update.set(true);
+                    }
+                    Err(_e) => {
+                        // todo: log error
+                    }
                 }
             }
         }
@@ -407,10 +425,100 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![friends_init, needs_update];
+        async move {
+            if *friends_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
+                    rsp: tx,
+                }))
+                .expect("main failed to send warp command");
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+
+            //println!("got response from warp");
+            match res {
+                Ok(friends) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().friends = friends;
+                        needs_update.set(true);
+                    }
+                    Err(_e) => {
+                        // todo: log error
+                    }
+                },
+                Err(_e) => {
+                    todo!("handle error response");
+                }
+            }
+
+            *friends_init.write_silent() = true;
+            needs_update.set(true);
+        }
+    });
+
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![chats_init, needs_update];
+        async move {
+            if *chats_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let res = loop {
+                let (tx, rx) =
+                    oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
+                        rsp: tx,
+                    }))
+                    .expect("main failed to send warp command");
+
+                match rx.await {
+                    Ok(r) => break r,
+                    Err(_e) => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
+                }
+            };
+
+            //println!("got response from warp");
+            match res {
+                Ok(mut all_chats) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        // for all_chats, fill in participants and messages.
+                        for (k, v) in &state.read().chats.all {
+                            // the # of unread chats defaults to the length of the conversation. but this number
+                            // is stored in state
+                            if let Some(chat) = all_chats.get_mut(k) {
+                                chat.unreads = v.unreads;
+                            }
+                        }
+                        state.write().chats.all = all_chats;
+                        state.write().chats.initialized = true;
+                        //println!("{:#?}", state.read().chats);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        // todo: log error
+                        println!("error: {}", e);
+                    }
+                },
+                Err(_e) => {
+                    todo!("handle error response");
+                }
+            }
+            *chats_init.write_silent() = true;
+            needs_update.set(true);
+        }
+    });
+
     let user_lang_saved = state.read().settings.language.clone();
     change_language(user_lang_saved);
-
-    let pre_release_text = get_local_text("uplink.pre-release");
 
     let theme = state
         .read()
@@ -420,88 +528,38 @@ fn app(cx: Scope) -> Element {
         .map(|theme| theme.styles.clone())
         .unwrap_or_default();
 
-    let pending_friends = state.read().friends.incoming_requests.len();
-    let config = Configuration::load_or_default();
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
-            div {
-                id: "titlebar",
-                onmousedown: move |_| { desktop.drag(); },
-                // Only display this if developer mode is enabled.
-                (config.developer.developer_mode).then(|| rsx!(
-                    Button {
-                        icon: Icon::DevicePhoneMobile,
-                        appearance: Appearance::Transparent,
-                        onpress: move |_| {
-                            desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                            let meta = state.read().ui.metadata.clone();
-                            state.write().mutate(Action::SetMeta(WindowMeta {
-                                width: 300,
-                                height: 534,
-                                minimal_view: true,
-                                ..meta
-                            }));
-                        }
-                    },
-                    Button {
-                        icon: Icon::DeviceTablet,
-                        appearance: Appearance::Transparent,
-                        onpress: move |_| {
-                            desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                            let meta = state.read().ui.metadata.clone();
-                            state.write().mutate(Action::SetMeta(WindowMeta {
-                                width: 600,
-                                height: 534,
-                                minimal_view: false,
-                                ..meta
-                            }));
-                        }
-                    },
-                    Button {
-                        icon: Icon::ComputerDesktop,
-                        appearance: Appearance::Transparent,
-                        onpress: move |_| {
-                            desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                            let meta = state.read().ui.metadata.clone();
-                            state.write().mutate(Action::SetMeta(WindowMeta {
-                                width: 950,
-                                height: 600,
-                                minimal_view: false,
-                                ..meta
-                            }));
-                        }
-                    },
-                    Button {
-                        icon: Icon::CommandLine,
-                        appearance: Appearance::Transparent,
-                        onpress: |_| {
-                            desktop.devtool();
-                        }
-                    }
-                )),
-            },
-            get_toasts(cx, &state.read()),
+            get_titlebar(cx),
+            get_toasts(cx),
             get_call_dialog(cx),
-            div {
-                id: "pre-release",
-                aria_label: "pre-release",
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
-            },
-           get_router(cx, pending_friends)
+            get_pre_release_message(cx),
+            get_router(cx)
         }
     ))
 }
 
-fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
-    cx.render(rsx!(state.ui.toast_notifications.iter().map(
+fn get_pre_release_message(cx: Scope) -> Element {
+    let pre_release_text = get_local_text("uplink.pre-release");
+    cx.render(rsx!(
+        div {
+            id: "pre-release",
+            aria_label: "pre-release",
+            IconElement {
+                icon: Icon::Beaker,
+            },
+            p {
+                "{pre_release_text}",
+            }
+        },
+    ))
+}
+
+fn get_toasts(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
         |(id, toast)| {
             rsx!(Toast {
                 id: *id,
@@ -512,6 +570,71 @@ fn get_toasts<'a>(cx: Scope<'a>, state: &State) -> Element<'a> {
             },)
         }
     )))
+}
+
+fn get_titlebar(cx: Scope) -> Element {
+    let desktop = use_window(cx);
+    let state = use_shared_state::<State>(cx)?;
+    let config = Configuration::load_or_default();
+
+    cx.render(rsx!(
+        div {
+            id: "titlebar",
+            onmousedown: move |_| { desktop.drag(); },
+            // Only display this if developer mode is enabled.
+            (config.developer.developer_mode).then(|| rsx!(
+                Button {
+                    icon: Icon::DevicePhoneMobile,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 300,
+                            height: 534,
+                            minimal_view: true,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::DeviceTablet,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 600,
+                            height: 534,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::ComputerDesktop,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                        let meta = state.read().ui.metadata.clone();
+                        state.write().mutate(Action::SetMeta(WindowMeta {
+                            width: 950,
+                            height: 600,
+                            minimal_view: false,
+                            ..meta
+                        }));
+                    }
+                },
+                Button {
+                    icon: Icon::CommandLine,
+                    appearance: Appearance::Transparent,
+                    onpress: |_| {
+                        desktop.devtool();
+                    }
+                }
+            )),
+        },
+    ))
 }
 
 fn get_call_dialog(_cx: Scope) -> Element {
@@ -542,7 +665,10 @@ fn get_call_dialog(_cx: Scope) -> Element {
     None
 }
 
-fn get_router(cx: Scope, pending_friends: usize) -> Element {
+fn get_router(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let pending_friends = state.read().friends.incoming_requests.len();
+
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,
         name: get_local_text("uplink.chats"),

@@ -18,7 +18,14 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
-use crate::{testing::mock::generate_mock, STATIC_ARGS};
+use crate::{
+    testing::mock::generate_mock,
+    warp_runner::{
+        ui_adapter::{MultiPassEvent, RayGunEvent},
+        WarpEvent,
+    },
+    STATIC_ARGS,
+};
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -26,7 +33,7 @@ use std::{
     fmt, fs,
 };
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::Message};
+use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun::Message};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
@@ -93,6 +100,7 @@ impl State {
     ///
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
+        //println!("set-active-chat: {:#?}", chat);
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
             self.chats.in_sidebar.push(chat.id);
@@ -227,14 +235,10 @@ impl State {
     fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
         match direction {
             Direction::Outgoing => {
-                self.friends
-                    .outgoing_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.outgoing_requests.remove(identity);
             }
             Direction::Incoming => {
-                self.friends
-                    .incoming_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.incoming_requests.remove(identity);
             }
         }
     }
@@ -242,17 +246,13 @@ impl State {
     fn complete_request(&mut self, direction: Direction, identity: &Identity) {
         match direction {
             Direction::Outgoing => {
-                self.friends
-                    .outgoing_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.outgoing_requests.remove(identity);
                 self.friends
                     .all
                     .insert(identity.did_key(), identity.clone());
             }
             Direction::Incoming => {
-                self.friends
-                    .incoming_requests
-                    .retain(|friend| friend.did_key() != identity.did_key());
+                self.friends.incoming_requests.remove(identity);
                 self.friends
                     .all
                     .insert(identity.did_key(), identity.clone());
@@ -261,35 +261,26 @@ impl State {
     }
 
     fn new_incoming_request(&mut self, identity: &Identity) {
-        self.friends.incoming_requests.push(identity.clone());
+        self.friends.incoming_requests.insert(identity.clone());
     }
 
     fn new_outgoing_request(&mut self, identity: &Identity) {
-        self.friends.outgoing_requests.push(identity.clone());
+        self.friends.outgoing_requests.insert(identity.clone());
     }
 
     fn block(&mut self, identity: &Identity) {
         // If the identity is not already blocked, add it to the blocked list
-        if !self.friends.blocked.contains(identity) {
-            self.friends.blocked.push(identity.clone());
-        }
+        self.friends.blocked.insert(identity.clone());
 
         // Remove the identity from the outgoing requests list if they are present
-        self.friends
-            .outgoing_requests
-            .retain(|friend| friend.did_key() != identity.did_key());
+        self.friends.outgoing_requests.remove(identity);
 
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
     }
 
     fn unblock(&mut self, identity: &Identity) {
-        // Find the index of the identity in the blocked list
-        let index = self.friends.blocked.iter().position(|x| *x == *identity);
-        // If the identity is in the blocked list, remove it
-        if let Some(i) = index {
-            self.friends.blocked.remove(i);
-        }
+        self.friends.blocked.remove(identity);
     }
 
     fn remove_friend(&mut self, did: &DID) {
@@ -364,14 +355,12 @@ impl State {
             .and_then(|uuid| self.chats.all.get(&uuid))
     }
 
-    pub fn get_chat_with_friend(&self, friend: &Identity) -> Chat {
-        let chat = self
-            .chats
+    pub fn get_chat_with_friend(&self, friend: &Identity) -> Option<Chat> {
+        self.chats
             .all
             .values()
-            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend));
-
-        chat.unwrap_or(&Chat::default()).clone()
+            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend))
+            .cloned()
     }
 
     pub fn get_without_me(&self, identities: Vec<Identity>) -> Vec<Identity> {
@@ -393,8 +382,11 @@ impl State {
 
     // Define a method for sorting a vector of messages.
     pub fn get_sort_messages(&self, chat: &Chat) -> Vec<MessageGroup> {
+        if chat.messages.is_empty() {
+            return vec![];
+        }
         let mut message_groups = Vec::new();
-        let current_sender = chat.messages[0].sender(); // TODO: This could error in runtime
+        let current_sender = chat.messages[0].sender();
         let mut current_group = MessageGroup {
             remote: self.has_friend_with_did(&current_sender),
             sender: current_sender,
@@ -562,12 +554,15 @@ impl State {
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
-                // TODO: this should create a conversation in warp if one doesn't exist
+                // warning: ensure that warp is used to get/create the chat which is passed in here
+                //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
                 self.clear_unreads(&chat);
+                self.chats.all.entry(chat.id).or_insert(chat);
             }
             Action::AddToSidebar(chat) => {
-                self.add_chat_to_sidebar(chat);
+                self.add_chat_to_sidebar(chat.clone());
+                self.chats.all.entry(chat.id).or_insert(chat);
             }
             Action::RemoveFromSidebar(chat_id) => {
                 self.remove_sidebar_chat(chat_id);
@@ -645,7 +640,69 @@ impl State {
     }
 }
 
+impl State {
+    pub fn process_warp_event(&mut self, event: WarpEvent) {
+        // handle any number of events and then save
+        match event {
+            WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
+            WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
+        };
+
+        let _ = self.save();
+    }
+
+    fn process_multipass_event(&mut self, event: MultiPassEvent) {
+        match event {
+            MultiPassEvent::None => {}
+            MultiPassEvent::FriendRequestReceived(identity) => {
+                self.friends.incoming_requests.insert(identity);
+            }
+            MultiPassEvent::FriendRequestSent(identity) => {
+                self.friends.outgoing_requests.insert(identity);
+            }
+            MultiPassEvent::FriendAdded(identity) => {
+                self.friends.incoming_requests.remove(&identity);
+                self.friends.outgoing_requests.remove(&identity);
+                self.friends.all.insert(identity.did_key(), identity);
+            }
+            MultiPassEvent::FriendRemoved(identity) => {
+                self.friends.all.remove(&identity.did_key());
+            }
+            MultiPassEvent::FriendRequestCancelled(identity) => {
+                self.friends.incoming_requests.remove(&identity);
+                self.friends.outgoing_requests.remove(&identity);
+            }
+            MultiPassEvent::FriendOnline(identity) => {
+                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                    ident.set_identity_status(IdentityStatus::Online);
+                }
+            }
+            MultiPassEvent::FriendOffline(identity) => {
+                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                    ident.set_identity_status(IdentityStatus::Offline);
+                }
+            }
+        }
+    }
+
+    fn process_raygun_event(&mut self, event: RayGunEvent) {
+        match event {
+            RayGunEvent::ConversationCreated(chat) => {
+                if !self.chats.in_sidebar.contains(&chat.id) {
+                    self.chats.in_sidebar.insert(0, chat.id);
+                }
+                self.chats.all.insert(chat.id, chat);
+            }
+            RayGunEvent::ConversationDeleted(id) => {
+                self.chats.in_sidebar.retain(|x| *x != id);
+                self.chats.all.remove(&id);
+            }
+        }
+    }
+}
+
 // Define a struct to represent a group of messages from the same sender.
+#[derive(Clone)]
 pub struct MessageGroup {
     pub sender: DID,
     pub remote: bool,
@@ -653,6 +710,7 @@ pub struct MessageGroup {
 }
 
 // Define a struct to represent a message that has been placed into a group.
+#[derive(Clone)]
 pub struct GroupedMessage {
     pub message: Message,
     pub is_first: bool,

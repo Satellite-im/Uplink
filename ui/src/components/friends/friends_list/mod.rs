@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
+use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -15,9 +16,10 @@ use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    state::{Action, State},
+    state::{Action, Chat, Identity, State},
     utils::convert_status,
-    UPLINK_ROUTES,
+    warp_runner::{commands::RayGunCmd, WarpCmd},
+    UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 #[allow(non_snake_case)]
@@ -25,6 +27,52 @@ pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
     let friends_list = state.read().friends.all.clone();
     let friends = State::get_friends_by_first_letter(friends_list);
+    let router = use_router(cx);
+
+    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
+
+    if let Some(chat) = chat_with.get().clone() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(chat));
+        if state.read().ui.is_minimal_view() {
+            state.write().mutate(Action::SidebarHidden(true));
+        }
+        router.replace_route(UPLINK_ROUTES.chat, None, None);
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Identity, Option<Chat>)>| {
+        to_owned![chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((friend, chat)) = rx.next().await {
+                // verify chat exists
+                let chat = match chat {
+                    Some(c) => c,
+                    None => {
+                        // if not, create the chat
+                        let (tx, rx) = oneshot::channel::<Result<Chat, warp::error::Error>>();
+                        warp_cmd_tx
+                            .send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                                recipient: friend.did_key(),
+                                rsp: tx,
+                            }))
+                            .expect("failed to send cmd");
+
+                        let rsp = rx.await.expect("command canceled");
+
+                        match rsp {
+                            Ok(c) => c,
+                            Err(e) => {
+                                println!("failed to create conversation: {}", e);
+                                todo!()
+                            }
+                        }
+                    }
+                };
+                chat_with.set(Some(chat));
+            }
+        }
+    });
 
     cx.render(rsx! (
         div {
@@ -43,14 +91,16 @@ pub fn Friends(cx: Scope) -> Element {
                         },
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
+                            let chat = state.read().get_chat_with_friend(&friend);
+                            let chat2 = chat.clone();
+                            let chat3 = chat.clone();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                            let chat_with_friend = state.read().get_chat_with_friend(&friend);
-                            let chat_with_friend_context = state.read().get_chat_with_friend(&friend);
-                            let chat_with_friend_context_clone = chat_with_friend_context.clone();
                             let remove_friend = friend.clone();
-                            let remove_friend_2 = remove_friend.clone();
+                            let remove_friend_2 = friend.clone();
+                            let chat_with_friend = friend.clone();
                             let block_friend = friend.clone();
-                            let block_friend_clone = friend.clone();
+                            let block_friend_2 = friend.clone();
+                            let context_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
                             let platform = match friend.platform() {
@@ -67,12 +117,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::ChatWith(chat_with_friend_context.clone()));
-                                                use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
-                                                // TODO: This doesn't actually work for some reason.
-                                                if state.read().ui.is_minimal_view() {
-                                                    state.write().mutate(Action::SidebarHidden(true));
-                                                }
+                                                ch.send((context_friend.clone(), chat2.clone()));
                                             }
                                         },
                                         ContextItem {
@@ -84,7 +129,11 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::Heart,
                                             text: get_local_text("favorites.favorites"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::Favorite(chat_with_friend_context_clone.clone()));
+                                                // can't favorite a non-existent conversation
+                                                // todo: don't even allow favoriting from the friends page unless there's a conversation
+                                                if let Some(c) = &chat {
+                                                    state.write().mutate(Action::Favorite(c.clone()));
+                                                }
                                             }
                                         },
                                         hr{}
@@ -118,18 +167,13 @@ pub fn Friends(cx: Scope) -> Element {
                                             }
                                         )),
                                         onchat: move |_| {
-                                            state.write().mutate(Action::ChatWith(chat_with_friend.clone()));
-                                            use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
-                                            // TODO: This doesn't actually work for some reason.
-                                            if state.read().ui.is_minimal_view() {
-                                                state.write().mutate(Action::SidebarHidden(true));
-                                            }
+                                           ch.send((chat_with_friend.clone(), chat3.clone()));
                                         },
                                         onremove: move |_| {
                                             state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                         },
                                         onblock: move |_| {
-                                            state.write().mutate(Action::Block(block_friend_clone.clone()));
+                                            state.write().mutate(Action::Block(block_friend_2.clone()));
                                         }
                                     }
                                 }

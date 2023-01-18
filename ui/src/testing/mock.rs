@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     io::{BufWriter, Write},
 };
 
@@ -54,6 +54,8 @@ pub fn generate_mock() -> State {
         Uuid::new_v4(),
         ToastNotification::init("title2".into(), "content2".into(), None, 10),
     );
+    // comment this out to test toast notifications
+    toast_notifications.clear();
 
     State {
         ui: UI {
@@ -77,6 +79,7 @@ pub fn generate_mock() -> State {
         },
         route: Route { active: "/".into() },
         chats: Chats {
+            initialized: true,
             all: all_chats.clone(),
             active: None,
             active_media: None,
@@ -84,13 +87,14 @@ pub fn generate_mock() -> State {
             favorites: vec![],
         },
         friends: Friends {
+            initialized: true,
             all: identities
                 .into_iter()
                 .map(|id| (id.did_key(), id))
                 .collect(),
-            blocked: blocked_identities,
-            incoming_requests,
-            outgoing_requests,
+            blocked: HashSet::from_iter(blocked_identities.iter().cloned()),
+            incoming_requests: HashSet::from_iter(incoming_requests.iter().cloned()),
+            outgoing_requests: HashSet::from_iter(outgoing_requests.iter().cloned()),
         },
         hooks: Vec::new(),
     }

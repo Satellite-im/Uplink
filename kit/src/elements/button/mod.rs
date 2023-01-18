@@ -1,8 +1,9 @@
+use icons::IconButton;
 use uuid::Uuid;
 
 use dioxus::{prelude::*, core::Event, events::{MouseData, MouseEvent}};
 
-use crate::{get_script, elements::Appearance, icons::{Icon, IconElement}};
+use crate::{get_script, elements::Appearance, icons::{Icon}};
 
 const SCRIPT: &str = include_str!("./script.js");
 
@@ -143,10 +144,13 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onclick: move |e| emit(&cx, e),
                     // If an icon was provided, render it before the text.
                     (cx.props.icon.is_some()).then(|| rsx!(
-                        IconElement { 
-                            icon: get_icon(&cx)
+                        IconButton { 
+                            onclick: move |e: MouseEvent| {
+                                e.stop_propagation();
+                                emit(&cx, e);
+                            },
+                            icon: get_icon(&cx),
                         }
-                        
                     )),
                     // We only need to include the text if it contains something.
                     (!text.is_empty()).then(|| rsx!( "{text2}" )),

@@ -15,6 +15,8 @@ fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae
 kit = { path = "../kit" }
 shared = { path = "../shared" }
 regex = "1"
+
+arboard = "3.1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
 warp = { git = "https://github.com/Satellite-im/Warp", rev = "ed3b5de968fb623a7d76170a5d7dd3f3c79d3e1b"}

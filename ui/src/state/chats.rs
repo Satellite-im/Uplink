@@ -5,29 +5,34 @@ use uuid::Uuid;
 use warp::raygun::Message;
 
 use super::identity::Identity;
-#[derive(Clone, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
     #[serde(default)]
     pub id: Uuid,
     // Includes the list of participants within a given chat.
-    #[serde(default)]
+    // these don't need to be stored in state either
+    #[serde(skip)]
     pub participants: Vec<Identity>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
-    #[serde(default)]
+    // don't store the actual message in state
+    #[serde(skip)]
     pub messages: Vec<Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
     pub unreads: u32,
     // If a value exists, we will render the message we're replying to above the chatbar
-    #[serde(default)]
+    #[serde(skip)]
     pub replying_to: Option<Message>,
 }
 
 // TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Chats {
+    #[serde(skip)]
+    pub initialized: bool,
     // All active chats from warp.
     #[serde(default)]
     pub all: HashMap<Uuid, Chat>,
