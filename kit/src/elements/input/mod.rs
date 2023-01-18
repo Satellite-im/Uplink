@@ -1,6 +1,7 @@
 use dioxus::{prelude::*};
 use dioxus_html::input_data::keyboard_types::Code;
 use shared::language::get_local_text;
+use unic::emoji::char::is_emoji;
 
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
@@ -79,8 +80,11 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 }
 
 pub fn validate_alphanumeric(val: &str) -> Option<ValidationError> {
-    if val.chars().all(char::is_alphanumeric) {
-        return Some(get_local_text("warning-messages.only-alpha-chars"));
+    let val_char = val.chars();
+    for c in val_char {
+        if is_emoji(c) || !val.chars().all(char::is_alphanumeric) {
+            return Some(get_local_text("warning-messages.only-alpha-chars"));
+        }
     }
     None
 }
@@ -130,15 +134,21 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
     let validation = options.with_validation.unwrap_or_default();
 
     if validation.alpha_numeric_only {
-        error = validate_alphanumeric(val);
+        if validate_alphanumeric(val).is_some() {
+            error = validate_alphanumeric(val);
+        }
     }
 
     if validation.no_whitespace {
-        error = validate_no_whitespace(val);
+        if validate_no_whitespace(val).is_some() {
+            error = validate_no_whitespace(val);
+        }
     }
 
     if validation.max_length.is_some() || validation.min_length.is_some() {
-        error = validate_min_max(val, validation.min_length, validation.max_length);
+        if validate_min_max(val, validation.min_length, validation.max_length).is_some() {
+            error = validate_min_max(val, validation.min_length, validation.max_length);
+        }
     }
 
     error
