@@ -59,6 +59,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onclick: move |e| emit(&cx, e),
                 div {
                     class: "user-image",
+                    aria_label: "User Image",
                     div {
                         class: "image",
                         style: "background-image: url('{image_data}');"

@@ -75,6 +75,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             (!favorites.is_empty()).then(|| rsx!(
                 div {
                     id: "favorites",
+                    aria_label: "Favorites",
                     Label {
                         text: get_local_text("favorites.favorites"),
                     },
@@ -137,6 +138,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             )),
             div {
                 id: "chats",
+                aria_label: "Chats",
                 (!sidebar_chats.is_empty()).then(|| rsx!(
                     Label {
                         text: get_local_text("uplink.chats"),

@@ -69,9 +69,11 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         format_args!("user {} noselect defaultcursor", if active { "active" } else { "" })
                     },
                     onclick: move |e| emit(&cx, e),
+                    aria_label: "User",
                     (!badge.is_empty()).then(|| rsx!(
                         span {
                             class: "badge",
+                            aria_label: "User Badge",
                             span {
                                 class: "badge-prefix",
                                 "{time_ago}"
@@ -85,12 +87,15 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     &cx.props.user_image,
                     div {
                         class: "info",
+                        aria_label: "User Info",
                         p {
                             class: "username",
+                            aria_label: "Username",
                             "{cx.props.username}"
                         },
                         p {
                             class: "subtext",
+                            aria_label: "User Status",
                             "{cx.props.subtext}"
                         }
                     }

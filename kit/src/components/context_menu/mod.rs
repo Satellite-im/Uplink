@@ -35,6 +35,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
     cx.render(rsx! {
         button {
             class: "{class}",
+            aria_label: "Context Item",
             onclick: move |e| emit(&cx, e),
             (cx.props.icon.is_some()).then(|| {
                 let icon = cx.props.icon.unwrap_or(Shape::Cog6Tooth);
@@ -73,6 +74,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 id: "{id}",
                 class: "context-menu hidden",
+                aria_label: "Context Menu",
                 &cx.props.items,
                 cx.props.devmode.is_some().then(|| rsx!(
                     hr {},

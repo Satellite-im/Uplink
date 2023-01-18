@@ -130,6 +130,7 @@ fn get_controls(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
         Button {
             icon: Icon::Heart,
             disabled: data.is_none(),
+            aria_label: "Add to Favorites".into(),
             appearance: data.as_ref().map(|data| if data.is_favorite { Appearance::Primary } else { Appearance::Secondary }).unwrap_or(Appearance::Secondary),
             tooltip: cx.render(rsx!(
                 Tooltip { 
@@ -146,6 +147,7 @@ fn get_controls(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: data.is_none(),
+            aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(
                 Tooltip { 
@@ -165,6 +167,7 @@ fn get_controls(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
             Button {
                 icon: Icon::VideoCamera,
                 disabled: data.is_none(),
+                aria_label: "Videocall".into(),
                 appearance: Appearance::Secondary,
                 tooltip: cx.render(rsx!(
                     Tooltip { 
