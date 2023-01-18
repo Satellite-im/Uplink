@@ -7,13 +7,18 @@ use dioxus_desktop::use_window;
 use kit::elements::label::Label;
 use tokio::time::sleep;
 
+use crate::components::settings::sub_pages::developer::WindowDropHandler;
+
 use super::logger::{Logger, LOGGER};
 
 const STYLE: &str = include_str!("./style.scss");
 
+#[inline_props]
 #[allow(non_snake_case)]
-pub fn LoggerDebug(cx: Scope) -> Element {
+pub fn LoggerDebug(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     Logger::activate_logger();
+    let window = use_window(cx);
+
     let logger = LOGGER.read();
     let logs = logger.show_log();
 
@@ -25,7 +30,6 @@ pub fn LoggerDebug(cx: Scope) -> Element {
     let formatted_datetime = now.format("%a %b %d %H:%M:%S").to_string();
     let debug_logger_started_time = use_ref(cx, || formatted_datetime.clone());
 
-    let window = use_window(cx);
     let script = include_str!("./script.js");
 
     use_future(cx, (), |_| {

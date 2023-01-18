@@ -58,8 +58,10 @@ pub fn generate_mock() -> State {
     State {
         ui: UI {
             current_call: None,
+            current_debug_logger: None,
             overlays: vec![],
             popout_player: false,
+            debug_logger: false,
             toast_notifications,
             theme: None,
             sidebar_hidden: false,

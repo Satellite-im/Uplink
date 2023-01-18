@@ -2,7 +2,7 @@ use std::rc::Weak;
 
 use dioxus::prelude::*;
 
-use dioxus_desktop::{use_window, Config};
+use dioxus_desktop::use_window;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
@@ -12,8 +12,10 @@ use shared::language::get_local_text;
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
-    logger::logger_debug::LoggerDebug,
+    logger::logger_debug::{LoggerDebug, LoggerDebugProps},
     state::{Action, State},
+    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
+    WINDOW_CMD_CH,
 };
 
 #[allow(non_snake_case)]
@@ -33,29 +35,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     active: config.developer.developer_mode,
                     onflipped: move |value| {
                         config.set_developer_mode(value);
-                        if value {
-                            if state.read().ui.popout_player {
-                                state.write().mutate(Action::ClearPopout(window.clone()));
-                                return;
-                            }
-
-                           let logger_debug = VirtualDom::new_with_props(LoggerDebug, ());
-
-                           let config = Config::default().with_custom_index(
-                             r#"
-                                    <!doctype html>
-                                    <html>
-                                    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-                                    </html>"#
-                                    .to_string()
-                           );
-
-                           let window = window.new_window(logger_debug, config);
-                           if let Some(wv) = Weak::upgrade(&window) {
-                               let id = wv.window().id();
-                               state.write().mutate(Action::SetPopout(id));
-                           }
-                        }
                     },
                 }
             },
@@ -116,6 +95,56 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     }
                 }
             }
+            SettingSection {
+                section_label: "Debug logger".into(),
+                section_description: "Open a debug logger to see logs when use app".into(),
+                Button {
+                    text: "Open debug logger".into(),
+                    aria_label: "debug-logger-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::CodeBracketSquare,
+                    onpress: move |_| {
+                        if state.read().ui.debug_logger {
+                            state.write().mutate(Action::ClearDebugLogger(window.clone()));
+                            return;
+                        }
+
+                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                        let logger_debug = VirtualDom::new_with_props(LoggerDebug, LoggerDebugProps{
+                            _drop_handler: drop_handler,
+                        });
+                        let window = window.new_window(logger_debug, Default::default());
+                        if let Some(wv) = Weak::upgrade(&window) {
+                            let id = wv.window().id();
+                            state.write().mutate(Action::SetDebugLogger(id));
+                        }
+                    }
+                }
+            }
         }
     ))
+}
+
+pub struct WindowDropHandler {
+    cmd_tx: WindowManagerCmdTx,
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
+        Self { cmd_tx }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
+            // todo: log error
+        }
+    }
 }

@@ -1,3 +1,4 @@
+use dioxus_desktop::tao::window::WindowId;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::fs::{File, OpenOptions};

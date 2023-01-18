@@ -516,6 +516,12 @@ impl State {
             Action::SetPopout(webview) => {
                 self.ui.set_popout(webview);
             }
+            Action::SetDebugLogger(webview) => {
+                self.ui.set_debug_logger(webview);
+            }
+            Action::ClearDebugLogger(window) => {
+                self.ui.clear_debug_logger(window);
+            }
             Action::AddOverlay(window) => {
                 self.ui.overlays.push(window);
             }
