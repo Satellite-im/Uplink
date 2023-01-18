@@ -106,12 +106,9 @@ pub async fn convert_multipass_event(
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
-        MultiPassEventKind::IncomingFriendRequestClosed { .. }
-        | MultiPassEventKind::IncomingFriendRequestRejected { .. } => {
-            // can probably ignore this
-            MultiPassEvent::None
-        }
-        MultiPassEventKind::OutgoingFriendRequestClosed { did }
+        MultiPassEventKind::IncomingFriendRequestClosed { did }
+        | MultiPassEventKind::IncomingFriendRequestRejected { did }
+        | MultiPassEventKind::OutgoingFriendRequestClosed { did }
         | MultiPassEventKind::OutgoingFriendRequestRejected { did } => {
             let identity = did_to_identity(did, account).await?;
             MultiPassEvent::FriendRequestCancelled(identity)
