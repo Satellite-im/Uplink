@@ -15,7 +15,6 @@ icons = { path="../icons" }
 timeago = "0.4.0"
 humansize = "2.0.0"
 shared = { path = "../shared" }
-unic = "0.9.0"
 
 derive_more = "0.99"
 

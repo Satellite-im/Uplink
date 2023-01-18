@@ -80,11 +80,8 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 }
 
 pub fn validate_alphanumeric(val: &str) -> Option<ValidationError> {
-    let val_char = val.chars();
-    for c in val_char {
-        if is_emoji(c) || !val.chars().all(char::is_alphanumeric) {
-            return Some(get_local_text("warning-messages.only-alpha-chars"));
-        }
+    if !val.chars().all(char::is_alphanumeric) {
+        return Some(get_local_text("warning-messages.only-alpha-chars"));
     }
     None
 }
