@@ -28,9 +28,9 @@ struct ComposeData {
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
+    println!("rendering compose");
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
-    let loading = data.is_none();
     
     cx.render(rsx!(
         div {
@@ -55,18 +55,7 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            if loading {
-                rsx!(
-                    div {
-                        id: "messages",
-                        MessageGroupSkeletal {},
-                        MessageGroupSkeletal { alt: true }
-                    }
-                )
-            } else {
-                let data = data.clone();
-                rsx! (get_messages(cx, data))
-            },
+            get_messages(cx, data.clone()),
             get_chatbar(cx, data)
         }  
     ))
@@ -237,7 +226,19 @@ fn get_topbar_children(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
 
 fn get_messages(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let data = data.expect("get_messages called with None value");
+
+    let data = match data {
+        Some(d) => d,
+        None => {
+            return cx.render(rsx!(
+                div {
+                    id: "messages",
+                    MessageGroupSkeletal {},
+                    MessageGroupSkeletal { alt: true }
+                }
+            ))
+        }
+    };
     cx.render(rsx!(
         div {
             id: "messages",

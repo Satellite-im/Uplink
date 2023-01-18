@@ -278,6 +278,7 @@ fn auth_page_manager(cx: Scope) -> Element {
 
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    println!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
     let pre_release_text = get_local_text("uplink.pre-release");
@@ -308,7 +309,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 // called at the end of the auth flow
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
-    //println!("rendering app_bootstrap");
+    println!("rendering app_bootstrap");
     let mut state = if STATIC_ARGS.no_mock {
         State::load().expect("failed to load state")
     } else {
@@ -344,7 +345,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    //println!("rendering app");
+    println!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     // don't fetch friends and conversations from warp when using mock data
@@ -371,6 +372,7 @@ fn app(cx: Scope) -> Element {
                         continue;
                     }
                     if state.write().decrement_toasts() {
+                        println!("decrement toasts");
                         needs_update.set(true);
                     }
                 }
@@ -392,7 +394,7 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("got warp event");
+                println!("received warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().process_warp_event(evt);
@@ -413,6 +415,7 @@ fn app(cx: Scope) -> Element {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
+                println!("window manager received command");
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
@@ -436,7 +439,7 @@ fn app(cx: Scope) -> Element {
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
-            //println!("got response from warp");
+            println!("init friends");
             match res {
                 Ok(friends) => match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -480,7 +483,7 @@ fn app(cx: Scope) -> Element {
                 }
             };
 
-            //println!("got response from warp");
+            println!("init chats");
             match res {
                 Ok(mut all_chats) => match inner.try_borrow_mut() {
                     Ok(state) => {

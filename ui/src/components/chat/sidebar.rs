@@ -34,6 +34,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
+    println!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
 
     // todo: display a loading page if chats is not initialized

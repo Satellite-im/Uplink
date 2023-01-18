@@ -18,6 +18,7 @@ use crate::{
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    println!("rendering create account layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
