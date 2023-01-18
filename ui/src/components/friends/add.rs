@@ -78,16 +78,19 @@ pub fn AddFriend(cx: Scope) -> Element {
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
-                    Ok(_) | Err(Error::CannotSendFriendRequest) => request_sent.set(true),
+                    Ok(_) | Err(Error::FriendRequestExist) => {
+                        request_sent.set(true);
+                    }
                     Err(e) => match e {
                         Error::CannotSendSelfFriendRequest
+                        | Error::CannotSendFriendRequest
                         | Error::IdentityDoesntExist
                         | Error::BlockedByUser
                         | Error::InvalidIdentifierCondition => {
                             // todo: show an error message
                         }
                         _ => {
-                            println!("error: {}", e);
+                            println!("error: {:?}", e);
                             todo!("failed to send friend request");
                         }
                     },
