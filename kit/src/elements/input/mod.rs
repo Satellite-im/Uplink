@@ -1,7 +1,6 @@
 use dioxus::{prelude::*};
 use dioxus_html::input_data::keyboard_types::Code;
 use shared::language::get_local_text;
-use unic::emoji::char::is_emoji;
 
 pub type ValidationError = String;
 use crate::{icons::{Icon, IconElement}, elements::label::Label};
