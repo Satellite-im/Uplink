@@ -111,7 +111,7 @@ pub async fn convert_multipass_event(
     account: &mut super::Account,
     _messaging: &mut super::Messaging,
 ) -> Result<MultiPassEvent, Error> {
-    println!("got {:?}", &event);
+    //println!("got {:?}", &event);
     let evt = match event {
         MultiPassEventKind::FriendRequestSent { to } => {
             let identity = did_to_identity(to, account).await?;
@@ -156,7 +156,7 @@ pub async fn convert_raygun_event(
     account: &mut super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<RayGunEvent, Error> {
-    println!("got {:?}", &event);
+    //println!("got {:?}", &event);
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;

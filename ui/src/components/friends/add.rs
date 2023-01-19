@@ -113,7 +113,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(did) => my_id.set(Some(did.to_string())),
-                    Err(_) => todo!("failed to get own identity"),
+                    Err(_) => {} // todo: log error,
                 }
             }
         }
