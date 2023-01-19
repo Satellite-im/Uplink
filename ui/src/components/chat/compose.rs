@@ -321,7 +321,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
 
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
-    println!("rendering chatbar");
+    //println!("rendering chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
     let loading = data.is_none();
