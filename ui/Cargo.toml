@@ -14,7 +14,6 @@ dioxus-core = "0.3.0"
 fermi = { git="https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
 shared = { path = "../shared" }
-regex = "1"
 
 arboard = "3.1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
@@ -42,6 +41,7 @@ soloud = "1.0.2"
 open = "3.2.0"
 wry = { version = "0.23.4" }
 lazy_static = "1.4.0"
+derive_more = "0.99"
 
 notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }
 once_cell = "1.13"
