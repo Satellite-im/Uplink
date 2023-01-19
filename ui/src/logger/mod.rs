@@ -52,7 +52,7 @@ pub struct Log {
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} | {} | {}", self.level, self.message, self.datetime)
+        write!(f, "{} | {} | {}", self.level, self.datetime, self.message)
     }
 }
 
