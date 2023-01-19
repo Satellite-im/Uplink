@@ -239,8 +239,8 @@ async fn warp_initialization(
     .map(|ct| Box::new(ct) as Storage)?;
 
     let mut rg_config = RgIpfsConfig::production(&path);
-    // Used to prevent broadcasting `ConversationCreated` on the sender side
-    rg_config.store_setting.disable_sender_event_emit = true;
+    // setting to `true` will prevent broadcasting `ConversationCreated` on the sender side
+    rg_config.store_setting.disable_sender_event_emit = false;
 
     let messaging = warp_rg_ipfs::IpfsMessaging::<Persistent>::new(
         Some(rg_config),
