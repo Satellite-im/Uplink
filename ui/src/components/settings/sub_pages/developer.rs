@@ -10,9 +10,11 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::settings::SettingSection,
+    components::{
+        debug_logger::{DebugLogger, DebugLoggerProps},
+        settings::SettingSection,
+    },
     config::Configuration,
-    logger::logger_debug::{LoggerDebug, LoggerDebugProps},
     state::{Action, State},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     WINDOW_CMD_CH,
@@ -109,7 +111,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             return;
                         }
                         let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                        let logger_debug = VirtualDom::new_with_props(LoggerDebug, LoggerDebugProps{
+                        let logger_debug = VirtualDom::new_with_props(DebugLogger, DebugLoggerProps{
                             _drop_handler: drop_handler,
                         });
                         let window = window.new_window(logger_debug, Default::default());

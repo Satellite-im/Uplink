@@ -8,7 +8,7 @@ use tokio::sync::{
 };
 
 use crate::{
-    logger::logger::Logger,
+    logger::Logger,
     state::{Action, State},
 };
 

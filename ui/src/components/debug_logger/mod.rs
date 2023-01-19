@@ -7,15 +7,13 @@ use dioxus_desktop::use_window;
 use kit::elements::label::Label;
 use tokio::time::sleep;
 
-use crate::components::settings::sub_pages::developer::WindowDropHandler;
-
-use super::logger::Logger;
+use crate::{components::settings::sub_pages::developer::WindowDropHandler, logger::Logger};
 
 const STYLE: &str = include_str!("./style.scss");
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn LoggerDebug(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
+pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     Logger::get_logger().activate_logger();
     let window = use_window(cx);
 

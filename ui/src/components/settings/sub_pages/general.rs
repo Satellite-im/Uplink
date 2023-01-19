@@ -9,7 +9,7 @@ use shared::language::{change_language, get_available_languages, get_local_text}
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
-    logger::logger::Logger,
+    logger::Logger,
     state::{Action, State},
     utils::get_available_themes,
 };

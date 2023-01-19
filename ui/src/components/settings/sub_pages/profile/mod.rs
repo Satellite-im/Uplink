@@ -9,7 +9,7 @@ use rfd::FileDialog;
 use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
 
-use crate::logger::logger::Logger;
+use crate::logger::Logger;
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
