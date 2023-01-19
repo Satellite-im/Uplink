@@ -134,6 +134,7 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
             let _ = rsp.send(r);
         }
         RayGunCmd::SendMessage { conv_id, msg, rsp } => {
+            println!("rayGun sending message: {:?}", &msg);
             let r = messaging.send(conv_id, None, msg).await;
             let _ = rsp.send(r);
         }

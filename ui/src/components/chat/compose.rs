@@ -7,6 +7,7 @@ use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user
 
 use dioxus_desktop::use_window;
 use shared::language::get_local_text;
+use uuid::Uuid;
 
 
 use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}};
@@ -327,24 +328,35 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
     let loading = data.is_none();
     let input = use_state(cx, Vec::<String>::new);
-    let chat_id = use_state(cx, || None);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-    if active_chat_id != *chat_id.get() {
-        chat_id.set(active_chat_id);
-    }
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![input, chat_id];
+    
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Option<Uuid>)>| {
+        //to_owned![];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while rx.next().await.is_some() {
-                let conv_id = match chat_id.get() {
-                    Some(c) => c.clone(),
+            while let Some((msg, chat_id)) = rx.next().await {
+                let conv_id = match chat_id {
+                    Some(c) => c,
                     None => {
                         // todo: log
                         continue;
                     }
                 };
-                let msg = input.get().clone();
+
+                // don't send empty messages
+                if msg.is_empty() {
+                    continue;
+                }
+
+                // this is also an empty message
+                if msg.len() == 1 {
+                    if let Some(msg) = msg.first(){
+                        if msg.is_empty() {
+                            continue;
+                        }
+                    }
+                } 
+               
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 warp_cmd_tx
                     .send(WarpCmd::RayGun(RayGunCmd::SendMessage {
@@ -369,13 +381,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             onchange: move |v: String| {
                 input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             },
-            onreturn: move |_| ch.send(()),
+            onreturn: move |_| ch.send((input.get().clone(), active_chat_id)),
             controls: cx.render(rsx!(
                 Button {
                     icon: Icon::ChevronDoubleRight,
                     disabled: loading,
                     appearance: Appearance::Secondary,
-                    onpress: move |_| ch.send(()),
+                    onpress: move |_| ch.send((input.get().clone(), active_chat_id)),
                     tooltip: cx.render(rsx!(
                         Tooltip { 
                             arrow_position: ArrowPosition::Bottom, 
