@@ -111,9 +111,9 @@ pub fn AddFriend(cx: Scope) -> Element {
                     .expect("AddFriendLayout failed to send warp command");
 
                 let res = rx.await.expect("failed to get response from warp_runner");
-                match res {
-                    Ok(did) => my_id.set(Some(did.to_string())),
-                    Err(_) => {} // todo: log error,
+                if let Ok(did) = res {
+                    // todo: log error,
+                    my_id.set(Some(did.to_string()));
                 }
             }
         }
