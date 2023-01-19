@@ -27,8 +27,6 @@ pub struct UI {
     #[serde(skip)]
     pub popout_player: bool,
     #[serde(skip)]
-    pub debug_logger: bool,
-    #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
     pub enable_overlay: bool,
@@ -59,11 +57,10 @@ impl UI {
     }
 
     fn take_debug_logger_id(&mut self) -> Option<WindowId> {
-        self.debug_logger = false;
         match self.current_debug_logger.take() {
             Some(mut debug_logger) => {
                 let id = debug_logger.take_window_id();
-                self.current_debug_logger = Some(debug_logger);
+                self.current_debug_logger = None;
                 id
             }
             None => None,
@@ -89,7 +86,6 @@ impl UI {
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
         self.current_debug_logger = Some(DebugLogger::new(Some(id)));
-        self.debug_logger = true;
     }
     pub fn clear_debug_logger(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_debug_logger_id() {

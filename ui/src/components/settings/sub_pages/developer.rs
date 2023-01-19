@@ -104,7 +104,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: move |_| {
-                        if state.read().ui.debug_logger {
+                        if state.read().ui.current_debug_logger.is_some() {
                             state.write().mutate(Action::ClearDebugLogger(window.clone()));
                             return;
                         }
