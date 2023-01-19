@@ -172,10 +172,6 @@ impl WarpRunner {
                         match opt {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
-<<<<<<< HEAD
-                            WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
-                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
-=======
                             WarpCmd::MultiPass(cmd) => {
                                 // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
                                 // todo: ask for that event
@@ -196,7 +192,6 @@ impl WarpRunner {
                                 handle_multipass_cmd(cmd, &mut tesseract, &mut account).await;
                             },
                             WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut stream_manager, &mut account, &mut messaging).await,
->>>>>>> 442bfc4 (feat(block): ui updates when users are blocked/unblocked)
                         },
                         None => break,
                     }
