@@ -129,22 +129,22 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
     let validation = options.with_validation.unwrap_or_default();
 
-    if validation.alpha_numeric_only {
-        if validate_alphanumeric(val).is_some() {
+    if validation.alpha_numeric_only 
+        && validate_alphanumeric(val).is_some() {
             error = validate_alphanumeric(val);
-        }
+        
     }
 
-    if validation.no_whitespace {
-        if validate_no_whitespace(val).is_some() {
+    if validation.no_whitespace 
+        && validate_no_whitespace(val).is_some() {
             error = validate_no_whitespace(val);
-        }
+        
     }
 
-    if validation.max_length.is_some() || validation.min_length.is_some() {
-        if validate_min_max(val, validation.min_length, validation.max_length).is_some() {
+    if (validation.max_length.is_some() || validation.min_length.is_some())
+        && validate_min_max(val, validation.min_length, validation.max_length).is_some() {
             error = validate_min_max(val, validation.min_length, validation.max_length);
-        }
+        
     }
 
     error

@@ -151,6 +151,8 @@ pub async fn handle_multipass_cmd(
                 let _ = rsp.send(Err(e));
                 return;
             }
+            // without the delay, there is an error that the multipass extension is unavailable
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
             let r = account.get_own_identity().await.map(|_| ());
             let _ = rsp.send(r);
         }

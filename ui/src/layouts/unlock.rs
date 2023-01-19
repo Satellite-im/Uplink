@@ -29,7 +29,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
-                //println!("unlock got password input");
+                //println!("unlock got password input: {}", &password);
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
@@ -49,13 +49,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         warp::error::Error::MultiPassExtensionUnavailable => {
                             // need to create an account
                             no_account.set(Some(true));
-                            //println!("need to create an account");
+                            //println!("multipass extension unavailable");
                         }
                         warp::error::Error::DecryptionError => {
                             // wrong password
                             no_account.set(Some(false));
                             password_failed.set(Some(true));
-                            //println!("wrong password");
+                            //println!("decryption error");
                         }
                         _ => {
                             // unexpected
@@ -112,7 +112,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     if *button_disabled.get() != should_disable {
                         button_disabled.set(should_disable);
                     }
-                    ch.send(val)
+                    if !should_disable {
+                        ch.send(val)
+                    }
                 }
             },
             Button {
