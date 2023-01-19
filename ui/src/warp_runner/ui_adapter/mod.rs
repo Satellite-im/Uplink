@@ -27,6 +27,8 @@ pub enum MultiPassEvent {
     FriendRequestCancelled(state::Identity),
     FriendOnline(state::Identity),
     FriendOffline(state::Identity),
+    Blocked(state::Identity),
+    Unblocked(state::Identity),
 }
 
 pub async fn did_to_identity(

@@ -60,6 +60,7 @@ friends = Friends
     .copied-did = Copiado para a área de transferência!
     .request-sent = ¡Solicitud de amistad enviada!
     .copied-did = ¡Copiado al portapapeles!
+    .unblock = Desbloquear
 
 files = Files
     .files = Arquivos

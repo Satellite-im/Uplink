@@ -17,7 +17,7 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
-use warp::{crypto::DID, multipass::identity::Relationship};
+use warp::{crypto::DID, error::Error, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
@@ -36,8 +36,13 @@ pub fn BlockedUsers(cx: Scope) -> Element {
 
                 let rsp = rx.await.expect("command canceled");
                 if let Err(e) = rsp {
-                    println!("failed to unblock user: {}", e);
-                    todo!()
+                    match e {
+                        Error::PublicKeyIsntBlocked => {}
+                        _ => {
+                            println!("failed to unblock user: {}", e);
+                            todo!()
+                        }
+                    }
                 }
             }
         }
@@ -60,6 +65,8 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                     _ => Platform::Headless //TODO: Unknown
                 };
+                let mut relationship = Relationship::default();
+                relationship.set_blocked(true);
                 rsx!(
                     ContextMenu {
                         id: format!("{}-friend-listing", did),
@@ -78,7 +85,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             username: blocked_user.username(),
                             suffix: did_suffix,
                             status_message: blocked_user.status_message().unwrap_or_default(),
-                            relationship: Relationship::default(),
+                            relationship: relationship,
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,

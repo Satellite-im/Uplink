@@ -676,6 +676,12 @@ impl State {
                     ident.set_identity_status(IdentityStatus::Offline);
                 }
             }
+            MultiPassEvent::Blocked(identity) => {
+                self.block(&identity);
+            }
+            MultiPassEvent::Unblocked(identity) => {
+                self.unblock(&identity);
+            }
         }
     }
 
