@@ -23,6 +23,22 @@ pub fn set_max_logs(s: usize) {
     LOGGER.write().max_logs = s;
 }
 
+pub fn set_display_trace(b: bool) {
+    LOGGER.write().display_trace = b;
+}
+
+// don't persist tracing information. at most, print it to the terminal
+pub fn trace(message: &str) {
+    if LOGGER.read().display_trace {
+        let log = Log {
+            level: LogLevel::Trace,
+            message: message.to_string(),
+            datetime: Local::now().to_string()[0..19].to_string(),
+        };
+        println!("{:?}", log)
+    }
+}
+
 pub fn debug(message: &str) {
     LOGGER.write().log(LogLevel::Debug, message);
 }
@@ -56,7 +72,7 @@ impl std::fmt::Display for Log {
     }
 }
 
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, Clone, Copy, Display, PartialEq, Eq)]
 pub enum LogLevel {
     #[display(fmt = "DEBUG")]
     Debug,
@@ -66,12 +82,14 @@ pub enum LogLevel {
     Warn,
     #[display(fmt = "ERROR")]
     Error,
+    #[display(fmt = "TRACE")]
+    Trace,
 }
 
 impl LogLevel {
     pub fn color(&self) -> &'static str {
         match self {
-            LogLevel::Debug => "rgb(0, 255, 0)",
+            LogLevel::Debug | LogLevel::Trace => "rgb(0, 255, 0)",
             LogLevel::Info => "rgb(0, 195, 255)",
             LogLevel::Warn => "yellow",
             LogLevel::Error => "red",
@@ -83,6 +101,7 @@ impl LogLevel {
 pub struct Logger {
     save_to_file: bool,
     write_to_stdout: bool,
+    display_trace: bool,
     log_file: String,
     log_entries: VecDeque<Log>,
     max_logs: usize,
@@ -100,6 +119,7 @@ impl Logger {
         Logger {
             save_to_file: false,
             write_to_stdout: false,
+            display_trace: false,
             log_file: logger_path,
             log_entries,
             max_logs: 100, // todo: configurable?
@@ -112,16 +132,10 @@ impl Logger {
         let new_log = Log {
             level,
             message: message.to_string(),
-            datetime: Local::now().to_string(),
+            datetime: Local::now().to_string()[0..19].to_string(),
         };
 
-        let log_to_log_entries = Log {
-            level: new_log.level.clone(),
-            message: new_log.message.clone(),
-            datetime: new_log.datetime[0..19].to_string(),
-        };
-
-        self.log_entries.push_back(log_to_log_entries);
+        self.log_entries.push_back(new_log.clone());
         if self.log_entries.len() >= self.max_logs {
             self.log_entries.pop_front();
         }
