@@ -6,11 +6,9 @@ use warp::sync::RwLock;
 
 use chrono::Local;
 
-pub static LOG_ACTIVE: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
+use crate::STATIC_ARGS;
 
-static DEBUG_LOG_PATH: &str = ".uplink/debug.log";
-
-pub static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
+static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 
 #[derive(Debug, Clone)]
 pub struct Log {
@@ -59,19 +57,32 @@ impl LogLevel {
 
 #[derive(Debug, Clone)]
 pub struct Logger {
+    is_log_active: bool,
     log_file: String,
-    pub log_entries: Vec<Log>,
+    log_entries: Vec<Log>,
 }
 
 impl Logger {
-    pub fn activate_logger() {
-        *LOG_ACTIVE.write() = true;
+    pub fn activate_logger(&self) {
+        *LOGGER.write() = Logger {
+            is_log_active: true,
+            log_file: self.log_file.clone(),
+            log_entries: self.log_entries.clone(),
+        };
+    }
+
+    pub fn get_logger() -> Logger {
+        LOGGER.read().clone()
+    }
+
+    pub fn get_log_entries() -> Vec<Log> {
+        LOGGER.read().log_entries.clone()
     }
 
     fn load() -> Logger {
         let logger_path = dirs::home_dir()
             .unwrap_or_default()
-            .join(DEBUG_LOG_PATH.to_string())
+            .join(STATIC_ARGS.logger_path.clone())
             .into_os_string()
             .into_string()
             .unwrap_or_default();
@@ -83,16 +94,25 @@ impl Logger {
 
         let log_entries = Vec::new();
         Logger {
+            is_log_active: false,
             log_file: logger_path,
             log_entries,
         }
+    }
+
+    pub fn close(&self) {
+        *LOGGER.write() = Logger {
+            is_log_active: false,
+            log_file: self.log_file.clone(),
+            log_entries: Vec::new(),
+        };
     }
 }
 
 impl Logger {
     fn log(&self, level: LogLevel, message: &str) {
         let mut log_entries = self.log_entries.clone();
-        if is_log_active() {
+        if self.is_log_active {
             let new_log = Log {
                 level,
                 message: message.to_string(),
@@ -113,6 +133,7 @@ impl Logger {
                 .unwrap();
 
             *LOGGER.write() = Logger {
+                is_log_active: true,
                 log_file: self.log_file.clone(),
                 log_entries,
             };
@@ -124,22 +145,22 @@ impl Logger {
     }
 
     pub fn debug(message: &str) {
-        let logger = get_logger();
+        let logger = Logger::get_logger();
         logger.log(LogLevel::Debug, message);
     }
 
     pub fn warn(message: &str) {
-        let logger = get_logger();
+        let logger = Logger::get_logger();
         logger.log(LogLevel::Warn, message);
     }
 
     pub fn info(message: &str) {
-        let logger = get_logger();
+        let logger = Logger::get_logger();
         logger.log(LogLevel::Info, message);
     }
 
     pub fn error(message: &str) {
-        let logger = get_logger();
+        let logger = Logger::get_logger();
         logger.log(LogLevel::Error, message);
     }
 
@@ -181,17 +202,10 @@ impl Logger {
             logs.push(log);
         }
         *LOGGER.write() = Logger {
+            is_log_active: true,
             log_file: self.log_file.clone(),
             log_entries: logs.clone(),
         };
         logs
     }
-}
-
-fn get_logger() -> Logger {
-    LOGGER.read().clone()
-}
-
-fn is_log_active() -> bool {
-    *LOG_ACTIVE.read()
 }

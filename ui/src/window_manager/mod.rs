@@ -8,7 +8,7 @@ use tokio::sync::{
 };
 
 use crate::{
-    logger::logger::LOG_ACTIVE,
+    logger::logger::Logger,
     state::{Action, State},
 };
 
@@ -41,7 +41,7 @@ pub async fn handle_cmd(
         WindowManagerCmd::CloseDebugLogger => {
             if let Ok(s) = state.try_borrow_mut() {
                 s.write().mutate(Action::ClearDebugLogger(desktop));
-                *LOG_ACTIVE.write() = false;
+                Logger::get_logger().close();
             } else {
                 //todo: add logging
             }
