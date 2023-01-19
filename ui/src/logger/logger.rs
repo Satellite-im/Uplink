@@ -2,7 +2,6 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::fs::{File, OpenOptions};
 use std::io::{prelude::*, BufReader};
-use std::sync::Mutex;
 use warp::sync::RwLock;
 
 use chrono::Local;
@@ -58,9 +57,10 @@ impl LogLevel {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Logger {
     log_file: String,
-    log_entries: Mutex<Vec<Log>>,
+    pub log_entries: Vec<Log>,
 }
 
 impl Logger {
@@ -71,7 +71,7 @@ impl Logger {
     fn load() -> Logger {
         let log_file = DEBUG_LOG_PATH.to_string();
         let _ = OpenOptions::new().create(true).append(true).open(&log_file);
-        let log_entries = Mutex::new(Vec::new());
+        let log_entries = Vec::new();
         Logger {
             log_file,
             log_entries,
@@ -81,19 +81,31 @@ impl Logger {
 
 impl Logger {
     fn log(&self, level: LogLevel, message: &str) {
-        if *LOG_ACTIVE.read() {
+        let mut log_entries = self.log_entries.clone();
+        if is_log_active() {
             let new_log = Log {
                 level,
                 message: message.to_string(),
                 datetime: Local::now().to_string(),
             };
-            let mut log_entries = self.log_entries.lock().unwrap();
-            log_entries.push(new_log.clone());
+
+            let log_to_log_entries = Log {
+                level: new_log.level.clone(),
+                message: new_log.message.clone(),
+                datetime: new_log.datetime[0..19].to_string(),
+            };
+
+            log_entries.push(log_to_log_entries.clone());
 
             let mut file = OpenOptions::new()
                 .append(true)
                 .open(&self.log_file)
                 .unwrap();
+
+            *LOGGER.write() = Logger {
+                log_file: self.log_file.clone(),
+                log_entries,
+            };
 
             if let Err(error) = writeln!(file, "{:?}", new_log.clone()) {
                 Logger::error(format!("Couldn't write to debug.log file. {error}").as_str());
@@ -102,22 +114,26 @@ impl Logger {
     }
 
     pub fn debug(message: &str) {
-        LOGGER.read().log(LogLevel::Debug, message);
+        let logger = get_logger();
+        logger.log(LogLevel::Debug, message);
     }
 
     pub fn warn(message: &str) {
-        LOGGER.read().log(LogLevel::Warn, message);
+        let logger = get_logger();
+        logger.log(LogLevel::Warn, message);
     }
 
     pub fn info(message: &str) {
-        LOGGER.read().log(LogLevel::Info, message);
+        let logger = get_logger();
+        logger.log(LogLevel::Info, message);
     }
 
     pub fn error(message: &str) {
-        LOGGER.read().log(LogLevel::Error, message);
+        let logger = get_logger();
+        logger.log(LogLevel::Error, message);
     }
 
-    pub fn show_log(&self) -> Vec<Log> {
+    pub fn load_logs_from_file(&self) -> Vec<Log> {
         let file = match File::open(DEBUG_LOG_PATH) {
             Ok(log) => log,
             Err(error) => {
@@ -154,6 +170,18 @@ impl Logger {
             };
             logs.push(log);
         }
+        *LOGGER.write() = Logger {
+            log_file: self.log_file.clone(),
+            log_entries: logs.clone(),
+        };
         logs
     }
+}
+
+fn get_logger() -> Logger {
+    LOGGER.read().clone()
+}
+
+fn is_log_active() -> bool {
+    *LOG_ACTIVE.read()
 }

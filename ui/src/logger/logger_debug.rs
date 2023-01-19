@@ -9,7 +9,7 @@ use tokio::time::sleep;
 
 use crate::components::settings::sub_pages::developer::WindowDropHandler;
 
-use super::logger::{Logger, LOGGER};
+use super::logger::{Log, Logger, LOGGER};
 
 const STYLE: &str = include_str!("./style.scss");
 
@@ -19,10 +19,9 @@ pub fn LoggerDebug(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     Logger::activate_logger();
     let window = use_window(cx);
 
-    let logger = LOGGER.read();
-    let logs = logger.show_log();
+    let logger = get_logger();
 
-    let logs_to_show = use_state(cx, || logs.clone());
+    let logs_to_show = use_state(cx, || logger.load_logs_from_file());
 
     let logs_on_screen_len = use_ref(cx, || 0);
 
@@ -37,7 +36,7 @@ pub fn LoggerDebug(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
         async move {
             loop {
                 sleep(Duration::from_millis(100)).await;
-                let new_logs = logger.show_log();
+                let new_logs = get_log_entries();
                 if new_logs.len() > *logs_on_screen_len.read() {
                     *logs_on_screen_len.write_silent() = new_logs.len();
                     logs_to_show.set(new_logs);
@@ -86,4 +85,12 @@ pub fn LoggerDebug(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
             })
         }
     ))
+}
+
+fn get_log_entries() -> Vec<Log> {
+    LOGGER.read().log_entries.clone()
+}
+
+fn get_logger() -> Logger {
+    LOGGER.read().clone()
 }
