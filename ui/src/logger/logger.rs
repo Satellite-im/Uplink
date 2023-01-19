@@ -6,7 +6,7 @@ use warp::sync::RwLock;
 
 use chrono::Local;
 
-static LOG_ACTIVE: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
+pub static LOG_ACTIVE: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
 static DEBUG_LOG_PATH: &str = ".uplink/debug.log";
 
@@ -69,11 +69,21 @@ impl Logger {
     }
 
     fn load() -> Logger {
-        let log_file = DEBUG_LOG_PATH.to_string();
-        let _ = OpenOptions::new().create(true).append(true).open(&log_file);
+        let logger_path = dirs::home_dir()
+            .unwrap_or_default()
+            .join(DEBUG_LOG_PATH.to_string())
+            .into_os_string()
+            .into_string()
+            .unwrap_or_default();
+
+        let _ = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&logger_path);
+
         let log_entries = Vec::new();
         Logger {
-            log_file,
+            log_file: logger_path,
             log_entries,
         }
     }
@@ -134,7 +144,7 @@ impl Logger {
     }
 
     pub fn load_logs_from_file(&self) -> Vec<Log> {
-        let file = match File::open(DEBUG_LOG_PATH) {
+        let file = match File::open(self.log_file.clone()) {
             Ok(log) => log,
             Err(error) => {
                 Logger::error(format!("Unable to read debug.log file. {error}").as_str());

@@ -7,7 +7,10 @@ use tokio::sync::{
     Mutex,
 };
 
-use crate::state::{Action, State};
+use crate::{
+    logger::logger::LOG_ACTIVE,
+    state::{Action, State},
+};
 
 pub type WindowManagerCmdTx = UnboundedSender<WindowManagerCmd>;
 pub type WindowManagerCmdRx = Arc<Mutex<UnboundedReceiver<WindowManagerCmd>>>;
@@ -38,6 +41,7 @@ pub async fn handle_cmd(
         WindowManagerCmd::CloseDebugLogger => {
             if let Ok(s) = state.try_borrow_mut() {
                 s.write().mutate(Action::ClearDebugLogger(desktop));
+                *LOG_ACTIVE.write() = false;
             } else {
                 //todo: add logging
             }

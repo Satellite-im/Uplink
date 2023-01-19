@@ -172,8 +172,6 @@ fn main() {
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
         .expect("Error creating Uplink directory");
     std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
-    std::fs::create_dir_all(STATIC_ARGS.logger_path.clone())
-        .expect("Error creating Logger directory");
 
     copy_assets();
 
