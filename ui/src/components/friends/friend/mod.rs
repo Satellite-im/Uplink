@@ -114,15 +114,18 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Button {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
-                    onpress: move |_| match &cx.props.onremove {
-                        Some(f) => f.call(()),
-                        None    => {},
+                    onpress: move |_| {
+                        // note that the blocked list uses the onremove callback to unblock the user.yes, it's kind of a hack
+                        match &cx.props.onremove {
+                            Some(f) => f.call(()),
+                            None => {},
+                        }
                     }
                     aria_label: "Remove or Deny Friend".into(),
                     tooltip: cx.render(rsx!(
                         Tooltip {
                             arrow_position: ArrowPosition::Right,
-                            text: if cx.props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
+                            text: if cx.props.relationship.blocked() { get_local_text("friends.unblock") } else if cx.props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
                         }
                     )),
                 },

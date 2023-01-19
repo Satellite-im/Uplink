@@ -29,6 +29,8 @@ pub enum MultiPassEvent {
     FriendRequestCancelled(state::Identity),
     FriendOnline(state::Identity),
     FriendOffline(state::Identity),
+    Blocked(state::Identity),
+    Unblocked(state::Identity),
 }
 
 pub enum MessageEvent {

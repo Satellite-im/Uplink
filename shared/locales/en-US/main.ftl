@@ -58,6 +58,7 @@ friends = Friends
     .deny = Deny Request
     .request-sent = Friend Request Sent!
     .copied-did = Copied ID to clipboard!
+    .unblock = Unblock
 
 files = Files
     .files = Files
