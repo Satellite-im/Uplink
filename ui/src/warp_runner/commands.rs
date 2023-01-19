@@ -7,6 +7,7 @@ use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 use crate::state::{self, chats, friends};
 
 use super::{
+    conv_stream,
     ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
     Account, Messaging,
 };
@@ -103,7 +104,12 @@ pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) 
     }
 }
 
-pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging: &mut Messaging) {
+pub async fn handle_raygun_cmd(
+    cmd: RayGunCmd,
+    stream_manager: &mut conv_stream::Manager,
+    account: &mut Account,
+    messaging: &mut Messaging,
+) {
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
             Ok(convs) => {
@@ -112,7 +118,11 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 for conv in convs {
                     match conversation_to_chat(conv, account, messaging).await {
                         Ok(chat) => {
+                            let conv_id = chat.id;
                             let _ = all_chats.insert(chat.id, chat);
+                            if let Err(_e) = stream_manager.add_stream(conv_id, messaging).await {
+                                // todo: log error
+                            }
                         }
                         Err(_e) => todo!("log error"),
                     };

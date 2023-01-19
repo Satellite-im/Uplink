@@ -21,7 +21,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use crate::{
     testing::mock::generate_mock,
     warp_runner::{
-        ui_adapter::{MultiPassEvent, RayGunEvent},
+        ui_adapter::{MessageEvent, MultiPassEvent, RayGunEvent},
         WarpEvent,
     },
     STATIC_ARGS,
@@ -640,6 +640,7 @@ impl State {
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
+            WarpEvent::Message(evt) => self.process_message_event(evt),
         };
 
         let _ = self.save();
@@ -690,6 +691,29 @@ impl State {
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);
                 self.chats.all.remove(&id);
+            }
+        }
+    }
+
+    fn process_message_event(&mut self, event: MessageEvent) {
+        match event {
+            MessageEvent::Received {
+                conversation_id,
+                message,
+            } => {
+                // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.messages.push(message);
+                }
+            }
+            MessageEvent::Sent {
+                conversation_id,
+                message,
+            } => {
+                // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.messages.push(message);
+                }
             }
         }
     }

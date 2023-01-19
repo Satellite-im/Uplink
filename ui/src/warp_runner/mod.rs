@@ -26,6 +26,7 @@ use self::{
 };
 
 pub mod commands;
+mod conv_stream;
 pub mod ui_adapter;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
@@ -50,6 +51,7 @@ type Messaging = Box<dyn RayGun>;
 #[allow(clippy::large_enum_variant)]
 pub enum WarpEvent {
     RayGun(RayGunEvent),
+    Message(ui_adapter::MessageEvent),
     MultiPass(MultiPassEvent),
 }
 
@@ -130,6 +132,9 @@ impl WarpRunner {
                 };
             };
 
+            let (msg_tx, mut msg_rx) = tokio::sync::mpsc::unbounded_channel();
+            let mut stream_manager = conv_stream::Manager::new(msg_tx.clone());
+
             loop {
                 // println!("warp runner waiting for event");
                 tokio::select! {
@@ -150,7 +155,7 @@ impl WarpRunner {
                     },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            match ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await {
+                            match ui_adapter::convert_raygun_event(evt, &mut stream_manager, &mut account, &mut messaging).await {
                                 Ok(evt) => {
                                       if tx.send(WarpEvent::RayGun(evt)).is_err() {
                                         break;
@@ -162,7 +167,20 @@ impl WarpRunner {
                             }
                         }
                     },
-
+                    opt = msg_rx.recv() => {
+                        if let Some(msg) =  opt {
+                            match ui_adapter::convert_message_event(msg, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                    if tx.send(WarpEvent::Message(evt)).is_err() {
+                                      break;
+                                    }
+                              }
+                              Err(_e) => {
+                                  // todo: log error
+                              }
+                            }
+                        }
+                    }
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => {
                         //println!("got warp_runner cmd");
@@ -170,7 +188,7 @@ impl WarpRunner {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
                             WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
-                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
+                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut stream_manager, &mut account, &mut messaging).await,
                         },
                         None => break,
                     }

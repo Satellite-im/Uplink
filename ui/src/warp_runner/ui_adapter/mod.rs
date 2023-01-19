@@ -7,10 +7,12 @@ use warp::{
     crypto::DID,
     error::Error,
     multipass::MultiPassEventKind,
-    raygun::{Conversation, MessageOptions, RayGunEventKind},
+    raygun::{self, Conversation, MessageEventKind, MessageOptions, RayGunEventKind},
 };
 
 use crate::state::{self, chats};
+
+use super::conv_stream;
 
 #[allow(clippy::large_enum_variant)]
 pub enum RayGunEvent {
@@ -27,6 +29,17 @@ pub enum MultiPassEvent {
     FriendRequestCancelled(state::Identity),
     FriendOnline(state::Identity),
     FriendOffline(state::Identity),
+}
+
+pub enum MessageEvent {
+    Received {
+        conversation_id: Uuid,
+        message: raygun::Message,
+    },
+    Sent {
+        conversation_id: Uuid,
+        message: raygun::Message,
+    },
 }
 
 pub async fn did_to_identity(
@@ -137,6 +150,7 @@ pub async fn convert_multipass_event(
 
 pub async fn convert_raygun_event(
     event: warp::raygun::RayGunEventKind,
+    stream_manager: &mut conv_stream::Manager,
     account: &mut super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<RayGunEvent, Error> {
@@ -145,10 +159,47 @@ pub async fn convert_raygun_event(
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;
             let chat = conversation_to_chat(conv, account, messaging).await?;
+            stream_manager.add_stream(chat.id, messaging).await?;
             RayGunEvent::ConversationCreated(chat)
         }
         RayGunEventKind::ConversationDeleted { conversation_id } => {
+            stream_manager.remove_stream(conversation_id);
             RayGunEvent::ConversationDeleted(conversation_id)
+        }
+    };
+
+    Ok(evt)
+}
+
+pub async fn convert_message_event(
+    event: warp::raygun::MessageEventKind,
+    _account: &mut super::Account,
+    messaging: &mut super::Messaging,
+) -> Result<MessageEvent, Error> {
+    let evt = match event {
+        MessageEventKind::MessageReceived {
+            conversation_id,
+            message_id,
+        } => {
+            let message = messaging.get_message(conversation_id, message_id).await?;
+            MessageEvent::Received {
+                conversation_id,
+                message,
+            }
+        }
+        MessageEventKind::MessageSent {
+            conversation_id,
+            message_id,
+        } => {
+            let message = messaging.get_message(conversation_id, message_id).await?;
+            MessageEvent::Sent {
+                conversation_id,
+                message,
+            }
+        }
+        _ => {
+            println!("evt received: {:?}", event);
+            todo!();
         }
     };
 
