@@ -7,7 +7,7 @@ use warp::{
     crypto::DID,
     error::Error,
     multipass::MultiPassEventKind,
-    raygun::{Conversation, MessageOptions, RayGunEventKind},
+    raygun::{self, Conversation, MessageOptions, RayGunEventKind},
 };
 
 use crate::state::{self, chats};
@@ -29,6 +29,17 @@ pub enum MultiPassEvent {
     FriendOffline(state::Identity),
     Blocked(state::Identity),
     Unblocked(state::Identity),
+}
+
+pub enum MessageEvent {
+    Received {
+        conversation_id: Uuid,
+        message: raygun::Message,
+    },
+    Sent {
+        conversation_id: Uuid,
+        message: raygun::Message,
+    },
 }
 
 pub async fn did_to_identity(
