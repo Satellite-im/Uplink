@@ -32,7 +32,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_validation = Validation {
         max_length: Some(56),
         min_length: Some(56),
-        alpha_numeric_only: true,
+        alpha_numeric_only: false,
         no_whitespace: true,
     };
 
@@ -86,7 +86,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                         | Error::CannotSendFriendRequest
                         | Error::IdentityDoesntExist
                         | Error::BlockedByUser
-                        | Error::InvalidIdentifierCondition => {
+                        | Error::InvalidIdentifierCondition
+                        | Error::PublicKeyIsBlocked => {
                             // todo: show an error message
                         }
                         _ => {
