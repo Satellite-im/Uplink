@@ -47,6 +47,7 @@ pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
 pub mod layouts;
+pub mod logger;
 pub mod overlay;
 pub mod state;
 pub mod testing;
@@ -63,6 +64,7 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
+    pub logger_path: PathBuf,
     pub no_mock: bool,
 }
 
@@ -78,6 +80,7 @@ lazy_static! {
             cache_path: uplink_path.join("state.json"),
             config_path: uplink_path.join("Config.json"),
             warp_path: uplink_path.join("warp"),
+            logger_path: uplink_path.join("debug.log"),
             no_mock: args.no_mock,
         }
     };
@@ -169,6 +172,7 @@ fn main() {
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
         .expect("Error creating Uplink directory");
     std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
+
     copy_assets();
 
     let mut main_menu = Menu::new();
