@@ -1,5 +1,8 @@
+use std::rc::Weak;
+
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_window;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
@@ -7,13 +10,22 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::settings::SettingSection, config::Configuration, state::State,
+    components::{
+        debug_logger::{DebugLogger, DebugLoggerProps},
+        settings::SettingSection,
+    },
+    config::Configuration,
+    logger,
+    state::{Action, State},
+    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
+    WINDOW_CMD_CH,
 };
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let mut config = Configuration::load_or_default();
+    let window = use_window(cx);
 
     cx.render(rsx!(
         div {
@@ -86,6 +98,65 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     }
                 }
             }
+            SettingSection {
+                section_label: get_local_text("settings-developer.debug-logger"),
+                section_description: get_local_text("settings-developer.debug-logger-description"),
+                Button {
+                    text: get_local_text("settings-developer.open-debug-logger"),
+                    aria_label: "debug-logger-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::CodeBracketSquare,
+                    onpress: move |_| {
+                        if state.read().ui.current_debug_logger.is_some() {
+                            state.write().mutate(Action::ClearDebugLogger(window.clone()));
+                            return;
+                        }
+                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                        let logger_debug = VirtualDom::new_with_props(DebugLogger, DebugLoggerProps{
+                            _drop_handler: drop_handler,
+                        });
+                        let window = window.new_window(logger_debug, Default::default());
+                        if let Some(wv) = Weak::upgrade(&window) {
+                            let id = wv.window().id();
+                            state.write().mutate(Action::SetDebugLogger(id));
+                        }
+                    }
+                }
+            }
+            SettingSection {
+                section_label: get_local_text("settings-developer.save-logs-to-file"),
+                section_description: get_local_text("settings-developer.save-logs-to-file-description"),
+                Switch {
+                    active: logger::get_save_to_file(),
+                    onflipped: move |value| {
+                        logger::set_save_to_file(value);
+                    },
+                }
+            }
         }
     ))
+}
+
+pub struct WindowDropHandler {
+    cmd_tx: WindowManagerCmdTx,
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
+        Self { cmd_tx }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
+            // todo: log error
+        }
+    }
 }

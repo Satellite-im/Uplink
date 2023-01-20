@@ -1,0 +1,25 @@
+html, body {
+    background-color: black;
+}
+
+.debug-logger {
+    height: 100%;
+    max-width: 100%;
+    overflow-y: scroll;
+    overflow: auto;
+    margin-bottom: 24px;
+}
+
+.initial-label {
+    color: white;
+    margin-left: 4px;
+    font-size: 12px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.log-text {
+    font-size: 12px;
+    font-family: 'Open Sans', sans-serif;
+    margin: 2px;
+    margin-left: 4px;
+}

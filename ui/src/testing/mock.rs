@@ -60,6 +60,7 @@ pub fn generate_mock() -> State {
     State {
         ui: UI {
             current_call: None,
+            current_debug_logger: None,
             overlays: vec![],
             popout_player: false,
             toast_notifications,

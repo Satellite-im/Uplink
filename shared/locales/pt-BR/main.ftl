@@ -131,6 +131,11 @@ settings-developer = Settings Developer
     .clear-cache = Limpar Cache
     .clear-cache-description = Restaura sua conta, basicamente.
     .clear = Limpar
+    .debug-logger = Registrador de depuração
+    .debug-logger-description = Abra uma nova janela para ver os logs ao usar o aplicativo.
+    .open-debug-logger = Abrir o registrador
+    .save-logs-to-file = Salvar logs em um arquivo
+    .save-logs-to-file-description = Ao habilitar essa opção, os logs serão salvos em um arquivo e serão persistentes.
 
 media-player = Media Player 
     .enable-camera = Habilitar Câmera
