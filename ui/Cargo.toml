@@ -40,7 +40,6 @@ opener = "0.5.0"
 soloud = "1.0.2"
 open = "3.2.0"
 wry = { version = "0.23.4" }
-lazy_static = "1.4.0"
 derive_more = "0.99"
 
 notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }

@@ -13,6 +13,7 @@ use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
+use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 use state::State;
@@ -55,9 +56,6 @@ pub mod utils;
 mod warp_runner;
 mod window_manager;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[derive(Debug)]
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
@@ -68,51 +66,49 @@ pub struct StaticArgs {
     pub no_mock: bool,
 }
 
-lazy_static! {
-    pub static ref STATIC_ARGS: StaticArgs = {
-        let args = Args::parse();
-        let uplink_path = match args.path {
-            Some(path) => path,
-            _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
-        };
-        StaticArgs {
-            uplink_path: uplink_path.clone(),
-            cache_path: uplink_path.join("state.json"),
-            config_path: uplink_path.join("Config.json"),
-            warp_path: uplink_path.join("warp"),
-            logger_path: uplink_path.join("debug.log"),
-            no_mock: args.no_mock,
-        }
+pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
+    let args = Args::parse();
+    let uplink_path = match args.path {
+        Some(path) => path,
+        _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+    StaticArgs {
+        uplink_path: uplink_path.clone(),
+        cache_path: uplink_path.join("state.json"),
+        config_path: uplink_path.join("Config.json"),
+        warp_path: uplink_path.join("warp"),
+        logger_path: uplink_path.join("debug.log"),
+        no_mock: args.no_mock,
+    }
+});
 
-    // allows the UI to send commands to Warp
-    pub static ref WARP_CMD_CH: WarpCmdChannels = {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        WarpCmdChannels {
-            tx,
-            rx:  Arc::new(Mutex::new(rx))
-        }
-    };
+// allows the UI to send commands to Warp
+pub static WARP_CMD_CH: Lazy<WarpCmdChannels> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    WarpCmdChannels {
+        tx,
+        rx: Arc::new(Mutex::new(rx)),
+    }
+});
 
-    // allows the UI to receive events to Warp
-    // pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-    pub static ref WARP_EVENT_CH: WarpEventChannels =  {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        WarpEventChannels {
-            tx,
-            rx:  Arc::new(Mutex::new(rx))
-        }
-    };
+// allows the UI to receive events to Warp
+// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
+pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    WarpEventChannels {
+        tx,
+        rx: Arc::new(Mutex::new(rx)),
+    }
+});
 
-    // used to close the popout player, among other things
-    pub static ref WINDOW_CMD_CH: WindowManagerCmdChannels = {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        WindowManagerCmdChannels {
-            tx,
-            rx:  Arc::new(Mutex::new(rx))
-        }
-    };
-}
+// used to close the popout player, among other things
+pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    WindowManagerCmdChannels {
+        tx,
+        rx: Arc::new(Mutex::new(rx)),
+    }
+});
 
 pub struct UplinkRoutes<'a> {
     pub chat: &'a str,
@@ -139,12 +135,18 @@ pub enum AuthPages {
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 struct Args {
+    /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
     #[clap(long)]
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
+    /// print logs to the terminal
+    #[clap(long, default_value_t = false)]
+    debug: bool,
     // todo: when the app is mature, default mock to false
     // there's no way to set --flag=true so for make the flag mean false
+    /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
+    /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
     #[clap(long, default_value_t = false)]
     no_mock: bool,
 }
@@ -168,6 +170,12 @@ fn copy_assets() {
 }
 
 fn main() {
+    let args = Args::parse();
+    if args.debug {
+        logger::set_display_trace(true);
+        logger::set_write_to_stdout(true);
+    }
+
     // Initializes the cache dir if needed
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
         .expect("Error creating Uplink directory");
@@ -249,7 +257,7 @@ fn main() {
 
 // start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
-    //println!("rendering bootstrap");
+    logger::trace("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
     let mut warp_runner = warp_runner::WarpRunner::init();
@@ -282,7 +290,7 @@ fn auth_page_manager(cx: Scope) -> Element {
 
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    //println!("rendering auth wrapper");
+    logger::trace("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
     let pre_release_text = get_local_text("uplink.pre-release");
@@ -313,7 +321,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 // called at the end of the auth flow
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
-    //println!("rendering app_bootstrap");
+    logger::trace("rendering app_bootstrap");
     let mut state = if STATIC_ARGS.no_mock {
         State::load().expect("failed to load state")
     } else {
@@ -349,7 +357,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    //println!("rendering app");
+    logger::trace("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     // don't fetch friends and conversations from warp when using mock data
@@ -384,6 +392,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // update state in response to warp events
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update, friends_init, chats_init];
@@ -393,7 +402,7 @@ fn app(cx: Scope) -> Element {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
-            //println!("starting warp_runner use_future");
+            logger::trace("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
@@ -404,14 +413,15 @@ fn app(cx: Scope) -> Element {
                         state.write().process_warp_event(evt);
                         needs_update.set(true);
                     }
-                    Err(_e) => {
-                        // todo: log error
+                    Err(e) => {
+                        logger::error(&e.to_string());
                     }
                 }
             }
         }
     });
 
+    // control child windows
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update, desktop];
@@ -426,6 +436,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // initialize friends
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![friends_init, needs_update];
@@ -443,19 +454,24 @@ fn app(cx: Scope) -> Element {
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
-            //println!("init friends");
+            logger::trace("init friends");
             match res {
-                Ok(friends) => match inner.try_borrow_mut() {
+                Ok(mut friends) => match inner.try_borrow_mut() {
                     Ok(state) => {
-                        state.write().friends = friends;
+                        if !STATIC_ARGS.no_mock {
+                            state.write().friends.join(&mut friends);
+                        } else {
+                            state.write().friends = friends;
+                        }
+
                         needs_update.set(true);
                     }
-                    Err(_e) => {
-                        // todo: log error
+                    Err(e) => {
+                        logger::error(&e.to_string());
                     }
                 },
-                Err(_e) => {
-                    todo!("handle error response");
+                Err(e) => {
+                    logger::error(&format!("init friends failed: {}", e));
                 }
             }
 
@@ -464,6 +480,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // initialize conversations
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![chats_init, needs_update];
@@ -487,7 +504,7 @@ fn app(cx: Scope) -> Element {
                 }
             };
 
-            //println!("init chats");
+            logger::trace("init chats");
             match res {
                 Ok(mut all_chats) => match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -499,18 +516,22 @@ fn app(cx: Scope) -> Element {
                                 chat.unreads = v.unreads;
                             }
                         }
-                        state.write().chats.all = all_chats;
+
+                        if !STATIC_ARGS.no_mock {
+                            state.write().chats.join(&mut all_chats);
+                        } else {
+                            state.write().chats.all = all_chats;
+                        }
                         state.write().chats.initialized = true;
                         //println!("{:#?}", state.read().chats);
                         needs_update.set(true);
                     }
                     Err(e) => {
-                        // todo: log error
-                        println!("error: {}", e);
+                        logger::error(&e.to_string());
                     }
                 },
-                Err(_e) => {
-                    todo!("handle error response");
+                Err(e) => {
+                    logger::error(&format!("failed to initialize chats: {}", e));
                 }
             }
             *chats_init.write_silent() = true;
@@ -518,6 +539,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // render the Uplink app
     let user_lang_saved = state.read().settings.language.clone();
     change_language(user_lang_saved);
 

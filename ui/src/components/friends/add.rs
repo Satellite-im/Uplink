@@ -16,6 +16,7 @@ use warp::crypto::DID;
 use warp::error::Error;
 
 use crate::{
+    logger,
     state::{Action, State, ToastNotification},
     warp_runner::{commands::MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
@@ -36,7 +37,6 @@ pub fn AddFriend(cx: Scope) -> Element {
         no_whitespace: true,
     };
 
-    // todo: add translations for toasts
     if *request_sent.get() {
         state
             .write()
@@ -88,11 +88,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                         | Error::BlockedByUser
                         | Error::InvalidIdentifierCondition
                         | Error::PublicKeyIsBlocked => {
-                            // todo: show an error message
+                            logger::warn(&format!("add friend failed: {}", e));
                         }
                         _ => {
-                            println!("error: {:?}", e);
-                            todo!("failed to send friend request");
+                            logger::error(&format!("add friend failed: {}", e));
                         }
                     },
                 }
@@ -111,9 +110,9 @@ pub fn AddFriend(cx: Scope) -> Element {
                     .expect("AddFriendLayout failed to send warp command");
 
                 let res = rx.await.expect("failed to get response from warp_runner");
-                if let Ok(did) = res {
-                    // todo: log error,
-                    my_id.set(Some(did.to_string()));
+                match res {
+                    Ok(did) => my_id.set(Some(did.to_string())),
+                    Err(e) => logger::error(&format!("get own did failed: {}", e)),
                 }
             }
         }
