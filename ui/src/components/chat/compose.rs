@@ -10,7 +10,7 @@ use shared::language::get_local_text;
 use uuid::Uuid;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}, logger};
 
 
 use super::sidebar::build_participants_names;
@@ -42,7 +42,7 @@ struct ComposeProps {
 
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
-    //println!("rendering compose");
+    logger::trace("rendering compose");
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
@@ -323,7 +323,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
 
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
-    //println!("rendering chatbar");
+    logger::trace("rendering chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
     let loading = data.is_none();

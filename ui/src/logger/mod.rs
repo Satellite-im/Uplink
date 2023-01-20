@@ -39,7 +39,7 @@ pub fn trace(message: &str) {
             message: message.to_string(),
             datetime: Local::now().to_string()[0..19].to_string(),
         };
-        println!("{:?}", log)
+        println!("{}", log)
     }
 }
 
@@ -76,7 +76,7 @@ pub struct Log {
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} | {} | {}", self.level, self.datetime, self.message)
+        write!(f, "{} | {} | {}", self.datetime, self.level, self.message)
     }
 }
 
@@ -155,13 +155,13 @@ impl Logger {
                 .open(&self.log_file)
                 .unwrap();
 
-            if let Err(error) = writeln!(file, "{:?}", new_log) {
+            if let Err(error) = writeln!(file, "{}", new_log) {
                 self::error(format!("Couldn't write to debug.log file. {error}").as_str());
             }
         }
 
         if self.write_to_stdout {
-            println!("{:?}", new_log)
+            println!("{}", new_log)
         }
     }
 }

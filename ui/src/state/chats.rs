@@ -54,3 +54,11 @@ pub enum Direction {
     Incoming,
     Outgoing,
 }
+
+impl Chats {
+    pub fn join(&mut self, other: &mut HashMap<Uuid, Chat>) {
+        for (k, v) in other.drain() {
+            self.all.insert(k, v);
+        }
+    }
+}

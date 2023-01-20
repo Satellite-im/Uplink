@@ -1,5 +1,6 @@
 use crate::{
     components::friends::friend::Friend,
+    logger,
     state::State,
     utils::convert_status,
     warp_runner::{commands::MultiPassCmd, WarpCmd},
@@ -41,8 +42,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
 
                 let rsp = rx.await.expect("command canceled");
                 if let Err(e) = rsp {
-                    println!("failed to cancel request: {}", e);
-                    todo!()
+                    logger::error(&format!("failed to cancel request: {}", e));
                 }
             }
         }

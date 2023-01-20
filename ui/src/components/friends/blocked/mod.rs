@@ -1,5 +1,6 @@
 use crate::{
     components::friends::friend::Friend,
+    logger,
     state::State,
     utils::convert_status,
     warp_runner::{commands::MultiPassCmd, WarpCmd},
@@ -39,8 +40,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     match e {
                         Error::PublicKeyIsntBlocked => {}
                         _ => {
-                            println!("failed to unblock user: {}", e);
-                            todo!()
+                            logger::error(&format!("failed to unblock user: {}", e));
                         }
                     }
                 }

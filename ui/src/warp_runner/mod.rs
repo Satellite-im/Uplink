@@ -16,6 +16,7 @@ use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{
+    logger,
     warp_runner::{
         commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
         ui_adapter::did_to_identity,
@@ -150,8 +151,8 @@ impl WarpRunner {
                                         break;
                                     }
                                 }
-                                Err(_e) => {
-                                    // todo: log error
+                                Err(e) => {
+                                    logger::error(&format!("failed to convert multipass event: {}", e));
                                 }
                             }
                         }
@@ -164,8 +165,8 @@ impl WarpRunner {
                                         break;
                                       }
                                 }
-                                Err(_e) => {
-                                    // todo: log error
+                                Err(e) => {
+                                    logger::error(&format!("failed to convert raygun event: {}", e));
                                 }
                             }
                         }
@@ -178,8 +179,8 @@ impl WarpRunner {
                                       break;
                                     }
                               }
-                              Err(_e) => {
-                                  // todo: log error
+                              Err(e) => {
+                                logger::error(&format!("failed to convert message event: {}", e));
                               }
                             }
                         }

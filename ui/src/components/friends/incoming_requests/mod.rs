@@ -1,5 +1,6 @@
 use crate::{
     components::friends::friend::Friend,
+    logger,
     state::{Identity, State},
     utils::convert_status,
     warp_runner::{commands::MultiPassCmd, WarpCmd},
@@ -48,8 +49,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            println!("failed to accept request: {}", e);
-                            todo!()
+                            logger::error(&format!("failed to accept request: {}", e));
                         }
                     }
                     ChanCmd::DenyRequest(identity) => {
@@ -63,8 +63,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            println!("failed to deny request: {}", e);
-                            todo!()
+                            logger::error(&format!("failed to deny request: {}", e));
                         }
                     }
                 }

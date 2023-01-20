@@ -16,6 +16,7 @@ use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
+    logger,
     state::{Action, Chat, Identity, State},
     utils::convert_status,
     warp_runner::{
@@ -79,8 +80,11 @@ pub fn Friends(cx: Scope) -> Element {
                                 match rsp {
                                     Ok(c) => c,
                                     Err(e) => {
-                                        println!("failed to create conversation: {}", e);
-                                        todo!()
+                                        logger::error(&format!(
+                                            "failed to create conversation: {}",
+                                            e
+                                        ));
+                                        continue;
                                     }
                                 }
                             }
@@ -98,8 +102,8 @@ pub fn Friends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            println!("failed to remove friend: {}", e);
-                            todo!()
+                            // todo: display message to user
+                            logger::error(&format!("failed to remove friend: {}", e));
                         }
                     }
                     ChanCmd::BlockFriend(identity) => {
@@ -113,8 +117,8 @@ pub fn Friends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            println!("failed to block friend: {}", e);
-                            todo!()
+                            // todo: display message to user
+                            logger::error(&format!("failed to block friend: {}", e));
                         }
                     }
                 }
