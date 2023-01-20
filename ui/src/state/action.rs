@@ -46,6 +46,8 @@ pub enum Action {
     /// used for the popout player or media player
     SetPopout(WindowId),
     ClearPopout(DesktopContext),
+    SetDebugLogger(WindowId),
+    ClearDebugLogger(DesktopContext),
 
     // Settings
     /// Sets the selected language.

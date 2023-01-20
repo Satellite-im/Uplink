@@ -20,6 +20,8 @@ pub struct UI {
     // stores information related to the current call
     #[serde(skip)]
     pub current_call: Option<Call>,
+    #[serde(skip)]
+    pub current_debug_logger: Option<DebugLogger>,
     // false: the media player is anchored in place
     // true: the media player can move around
     #[serde(skip)]
@@ -54,6 +56,17 @@ impl UI {
         }
     }
 
+    fn take_debug_logger_id(&mut self) -> Option<WindowId> {
+        match self.current_debug_logger.take() {
+            Some(mut debug_logger) => {
+                let id = debug_logger.take_window_id();
+                self.current_debug_logger = None;
+                id
+            }
+            None => None,
+        }
+    }
+
     pub fn get_meta(&self) -> WindowMeta {
         self.metadata.clone()
     }
@@ -70,6 +83,14 @@ impl UI {
     pub fn set_popout(&mut self, id: WindowId) {
         self.current_call = Some(Call::new(Some(id)));
         self.popout_player = true;
+    }
+    pub fn set_debug_logger(&mut self, id: WindowId) {
+        self.current_debug_logger = Some(DebugLogger::new(Some(id)));
+    }
+    pub fn clear_debug_logger(&mut self, desktop_context: DesktopContext) {
+        if let Some(id) = self.take_debug_logger_id() {
+            desktop_context.close_window(id);
+        };
     }
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
@@ -141,6 +162,24 @@ impl Call {
 
     pub fn take_window_id(&mut self) -> Option<WindowId> {
         self.popout_window_id.take()
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct DebugLogger {
+    #[serde(skip)]
+    pub debug_logger_window_id: Option<WindowId>,
+}
+
+impl DebugLogger {
+    pub fn new(popout_window_id: Option<WindowId>) -> Self {
+        Self {
+            debug_logger_window_id: popout_window_id,
+        }
+    }
+
+    pub fn take_window_id(&mut self) -> Option<WindowId> {
+        self.debug_logger_window_id.take()
     }
 }
 

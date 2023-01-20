@@ -9,6 +9,8 @@ use rfd::FileDialog;
 use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
 
+use crate::logger;
+
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
     // Set up validation options for the input field
@@ -38,7 +40,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
-
+    logger::error("Profile settings opened");
     cx.render(rsx!(
         div {
             id: "settings-profile",
