@@ -31,8 +31,9 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
         async move {
             loop {
                 sleep(Duration::from_millis(100)).await;
+                let max_logs = logger::get_logs_limit();
                 let new_logs = logger::get_log_entries();
-                if new_logs.len() > *logs_on_screen_len.read() {
+                if new_logs.len() > *logs_on_screen_len.read() || new_logs.len() == (max_logs - 1) {
                     *logs_on_screen_len.write_silent() = new_logs.len();
                     logs_to_show.set(new_logs);
                     window.eval(&script);

@@ -15,6 +15,7 @@ use crate::{
         settings::SettingSection,
     },
     config::Configuration,
+    logger,
     state::{Action, State},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     WINDOW_CMD_CH,
@@ -120,6 +121,16 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             state.write().mutate(Action::SetDebugLogger(id));
                         }
                     }
+                }
+            }
+            SettingSection {
+                section_label: get_local_text("settings-developer.save-logs-to-file"),
+                section_description: get_local_text("settings-developer.save-logs-to-file-description"),
+                Switch {
+                    active: logger::get_save_to_file(),
+                    onflipped: move |value| {
+                        logger::set_save_to_file(value);
+                    },
                 }
             }
         }

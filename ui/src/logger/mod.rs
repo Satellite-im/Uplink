@@ -15,6 +15,10 @@ pub fn set_save_to_file(b: bool) {
     LOGGER.write().save_to_file = b;
 }
 
+pub fn get_save_to_file() -> bool {
+    LOGGER.write().save_to_file
+}
+
 pub fn set_write_to_stdout(b: bool) {
     LOGGER.write().write_to_stdout = b;
 }
@@ -59,6 +63,10 @@ pub fn get_log_entries() -> Vec<Log> {
     Vec::from_iter(LOGGER.read().log_entries.iter().cloned())
 }
 
+pub fn get_logs_limit() -> usize {
+    LOGGER.read().max_logs
+}
+
 #[derive(Debug, Clone)]
 pub struct Log {
     pub level: LogLevel,
@@ -76,9 +84,9 @@ impl std::fmt::Display for Log {
 pub enum LogLevel {
     #[display(fmt = "DEBUG")]
     Debug,
-    #[display(fmt = "WARN")]
-    Info,
     #[display(fmt = "INFO")]
+    Info,
+    #[display(fmt = "WARN")]
     Warn,
     #[display(fmt = "ERROR")]
     Error,
@@ -136,6 +144,7 @@ impl Logger {
         };
 
         self.log_entries.push_back(new_log.clone());
+
         if self.log_entries.len() >= self.max_logs {
             self.log_entries.pop_front();
         }

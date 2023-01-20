@@ -130,8 +130,10 @@ settings-developer = Developer Settings
     .clear-cache-description = Reset your account, basically.
     .clear = Clear
     .debug-logger = Debug Logger
-    .debug-logger-description = Open new window to see logs when use app
+    .debug-logger-description = Open new window to see logs when use app.
     .open-debug-logger = Open debug logger
+    .save-logs-to-file = Save logs in a file
+    .save-logs-to-file-description = Enabling this option, logs will be saved in a file and will be persistent.
 
 media-player = Media Player 
     .enable-camera = Enable Camera 
