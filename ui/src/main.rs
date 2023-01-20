@@ -132,6 +132,16 @@ pub enum AuthPages {
     Success,
 }
 
+#[derive(clap::Subcommand, Debug)]
+enum LogProfile {
+    /// normal operation
+    Normal,
+    /// print everything but tracing logs to the terminal
+    Debug,
+    /// print everything including tracing logs to the terminal
+    Trace,
+}
+
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 struct Args {
@@ -140,15 +150,15 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    /// print logs to the terminal
-    #[clap(long, default_value_t = false)]
-    debug: bool,
     // todo: when the app is mature, default mock to false
     // there's no way to set --flag=true so for make the flag mean false
     /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
     /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
     #[clap(long, default_value_t = false)]
     no_mock: bool,
+    /// configures log output
+    #[command(subcommand)]
+    profile: Option<LogProfile>,
 }
 
 fn copy_assets() {
@@ -170,10 +180,19 @@ fn copy_assets() {
 }
 
 fn main() {
+    // configure logging
     let args = Args::parse();
-    if args.debug {
-        logger::set_display_trace(true);
-        logger::set_write_to_stdout(true);
+    if let Some(profile) = args.profile {
+        match profile {
+            LogProfile::Debug => {
+                logger::set_write_to_stdout(true);
+            }
+            LogProfile::Trace => {
+                logger::set_display_trace(true);
+                logger::set_write_to_stdout(true);
+            }
+            _ => {}
+        }
     }
 
     // Initializes the cache dir if needed
