@@ -210,7 +210,9 @@ impl WarpRunner {
                                 }
                                 handle_multipass_cmd(cmd, &mut tesseract, &mut account).await;
                             },
+
                             WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut stream_manager, &mut account, &mut messaging).await,
+
                         },
                         None => break,
                     }

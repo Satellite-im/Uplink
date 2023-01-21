@@ -150,7 +150,7 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: when the app is mature, default mock to false
+    // todo: when the app is mature, default mock to false. also hide it behind a #[cfg(debug_assertions)]
     // there's no way to set --flag=true so for make the flag mean false
     /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
     /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
@@ -475,10 +475,10 @@ fn app(cx: Scope) -> Element {
 
             logger::trace("init friends");
             match res {
-                Ok(mut friends) => match inner.try_borrow_mut() {
+                Ok(friends) => match inner.try_borrow_mut() {
                     Ok(state) => {
                         if !STATIC_ARGS.no_mock {
-                            state.write().friends.join(&mut friends);
+                            state.write().friends.join(friends);
                         } else {
                             state.write().friends = friends;
                         }
@@ -537,7 +537,7 @@ fn app(cx: Scope) -> Element {
                         }
 
                         if !STATIC_ARGS.no_mock {
-                            state.write().chats.join(&mut all_chats);
+                            state.write().chats.join(all_chats);
                         } else {
                             state.write().chats.all = all_chats;
                         }

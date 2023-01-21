@@ -56,7 +56,7 @@ pub enum Direction {
 }
 
 impl Chats {
-    pub fn join(&mut self, other: &mut HashMap<Uuid, Chat>) {
+    pub fn join(&mut self, mut other: HashMap<Uuid, Chat>) {
         for (k, v) in other.drain() {
             self.all.insert(k, v);
         }
