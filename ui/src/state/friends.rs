@@ -23,7 +23,7 @@ pub struct Friends {
 }
 
 impl Friends {
-    pub fn join(&mut self, other: &mut Friends) {
+    pub fn join(&mut self, mut other: Friends) {
         for (k, v) in other.all.drain() {
             self.all.insert(k, v);
         }
