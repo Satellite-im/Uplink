@@ -23,6 +23,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         alpha_numeric_only: true,
         // The input should not contain any whitespace
         no_whitespace: true,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     let status_validation_options = Validation {
@@ -34,6 +36,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         alpha_numeric_only: false,
         // The input should not contain any whitespace
         no_whitespace: false,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     let image_state = use_state(cx, String::new);

@@ -31,6 +31,8 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
         alpha_numeric_only: true,
         // The input should not contain any whitespace
         no_whitespace: true,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {

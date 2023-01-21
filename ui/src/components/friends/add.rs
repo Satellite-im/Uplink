@@ -34,6 +34,7 @@ pub fn AddFriend(cx: Scope) -> Element {
         min_length: Some(56),
         alpha_numeric_only: true,
         no_whitespace: true,
+        ignore_colons: true,
     };
 
     // todo: add translations for toasts
