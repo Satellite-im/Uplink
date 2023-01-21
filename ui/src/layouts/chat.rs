@@ -14,10 +14,16 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
+    //println!("rendering Chat layout");
     let state = use_shared_state::<State>(cx)?;
-
     let first_render = use_state(cx, || true);
-    if *first_render.get() && state.read().ui.is_minimal_view() {
+
+    let is_mobile = state.read().ui.is_minimal_view();
+    let show_sidebar = !state.read().ui.sidebar_hidden;
+    let show_welcome = state.read().chats.active.is_none();
+    let render_layout = !(is_mobile && show_sidebar);
+
+    if *first_render.get() && is_mobile {
         state.write().mutate(Action::SidebarHidden(false));
         first_render.set(false);
     }
@@ -26,20 +32,17 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
-            // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when 
-            // creating a new account on a mobile device. 
+            // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
+            // creating a new account on a mobile device.
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
-            
-            ((state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden) || !state.read().ui.is_minimal_view()).then(|| rsx!(
-                state.read().chats.active.is_some().then(|| rsx! (
-                    Compose {}
-                )),
-                state.read().chats.active.is_none().then(|| rsx! (
-                    Welcome {}
-                ))
-            ))
+
+            render_layout.then(|| if show_welcome {
+                rsx!(Welcome {})
+            } else {
+                rsx!(Compose {})
+            })
         }
     ))
 }

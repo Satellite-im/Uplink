@@ -56,6 +56,7 @@ friends = Friends
     .blocked = Bloqueado
     .accept = Aceptar
     .deny = Rechazar solicitud
+    .unblock = Desbloquear
 
 files = Files
     .files = Archivos

@@ -8,8 +8,7 @@ use dioxus_desktop::use_window;
 use shared::language::get_local_text;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}};
-
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, logger};
 
 use super::sidebar::build_participants_names;
 
@@ -26,11 +25,24 @@ struct ComposeData {
     platform: Platform
 }
 
+impl PartialEq for ComposeData {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+#[derive(PartialEq, Props)]
+struct ComposeProps {
+    #[props(!optional)]
+    data: Option<Rc<ComposeData>>
+}
+
 #[allow(non_snake_case)]
 pub fn Compose(cx: Scope) -> Element {
+    logger::trace("rendering compose");
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
-    let loading = data.is_none();
+    let data2 = data.clone();
     
     cx.render(rsx!(
         div {
@@ -42,8 +54,8 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                controls: get_controls(cx, data.clone()),
-                get_topbar_children(cx, data.clone())
+                controls: cx.render(rsx!(get_controls{data: data2})),
+                get_topbar_children{data: data.clone()}
             },
             data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
                 MediaPlayer {
@@ -55,19 +67,8 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            if loading {
-                rsx!(
-                    div {
-                        id: "messages",
-                        MessageGroupSkeletal {},
-                        MessageGroupSkeletal { alt: true }
-                    }
-                )
-            } else {
-                let data = data.clone();
-                rsx! (get_messages(cx, data))
-            },
-            get_chatbar(cx, data)
+            get_messages{data: data.clone()},
+            get_chatbar{data: data}
         }  
     ))
 }
@@ -121,9 +122,10 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     Some(data)
 }
 
-fn get_controls(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
+fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
+    let data = cx.props.data.clone();
     let active_chat = data.as_ref().map(|x| x.active_chat.clone());
     let active_chat2 = active_chat.clone();
     cx.render(rsx!(
@@ -180,7 +182,8 @@ fn get_controls(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
     ))
 }
 
-fn get_topbar_children(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
+fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
+    let data = cx.props.data.clone();
     let is_loading = data.is_none();
     let other_participants_names = data.as_ref().map(|x| x.other_participants_names.clone()).unwrap_or_default();
     let subtext = data.as_ref().map(|x| x.subtext.clone()).unwrap_or_default();
@@ -235,9 +238,21 @@ fn get_topbar_children(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
     ))
 }
 
-fn get_messages(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
+fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let data = data.expect("get_messages called with None value");
+
+    let data = match &cx.props.data {
+        Some(d) => d.clone(),
+        None => {
+            return cx.render(rsx!(
+                div {
+                    id: "messages",
+                    MessageGroupSkeletal {},
+                    MessageGroupSkeletal { alt: true }
+                }
+            ))
+        }
+    };
     cx.render(rsx!(
         div {
             id: "messages",
@@ -303,8 +318,11 @@ fn get_messages(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
     ))
 }
 
-fn get_chatbar(cx: Scope, data: Option<Rc<ComposeData>>) -> Element {
+
+fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
+    logger::trace("rendering chatbar");
     let state = use_shared_state::<State>(cx)?;
+    let data = cx.props.data.clone();
     let loading = data.is_none();
     cx.render(rsx!(
         Chatbar {

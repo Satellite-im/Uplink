@@ -11,6 +11,7 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
+    logger,
     warp_runner::{commands::MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -18,6 +19,7 @@ use crate::{
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
+    logger::trace("rendering create account layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
@@ -56,10 +58,8 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                     Ok(_) => {
                         page.set(AuthPages::Success);
                     }
-                    Err(e) => {
-                        eprintln!("auth failed: {}", e);
-                        todo!("handle error response");
-                    }
+                    // todo: notify user
+                    Err(e) => logger::error(&format!("create identity failed: {}", e)),
                 }
             }
         }
