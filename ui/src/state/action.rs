@@ -74,7 +74,7 @@ pub enum Action {
     // Friends
     RemoveFriend(Identity),
     Block(Identity),
-    UnBlock(Identity),
+    Unblock(Identity),
     /// Handles the display of "favorite" chats
     Favorite(Chat),
     UnFavorite(Uuid),
