@@ -83,7 +83,7 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 pub fn validate_alphanumeric(val: &str, ignore_colon: bool) -> Option<ValidationError> {
     let mut val_no_colons = val.to_string();
     if val.contains(":") && ignore_colon {
-        val_no_colons = val.replace(":", "a");
+        val_no_colons = val.replace(':', "a");
     }
     if !val_no_colons.chars().all(char::is_alphanumeric) {
         return Some(get_local_text("warning-messages.only-alpha-chars"));
