@@ -16,11 +16,25 @@ use warp::multipass::identity::Relationship;
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
+    logger,
     state::{Action, Chat, Identity, State},
     utils::convert_status,
-    warp_runner::{commands::RayGunCmd, WarpCmd},
+    warp_runner::{
+        commands::{MultiPassCmd, RayGunCmd},
+        WarpCmd,
+    },
     UPLINK_ROUTES, WARP_CMD_CH,
 };
+
+#[allow(clippy::large_enum_variant)]
+enum ChanCmd {
+    CreateConversation {
+        friend: Identity,
+        chat: Option<Chat>,
+    },
+    RemoveFriend(Identity),
+    BlockFriend(Identity),
+}
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
@@ -40,36 +54,74 @@ pub fn Friends(cx: Scope) -> Element {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Identity, Option<Chat>)>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![chat_with];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((friend, chat)) = rx.next().await {
-                // verify chat exists
-                let chat = match chat {
-                    Some(c) => c,
-                    None => {
-                        // if not, create the chat
-                        let (tx, rx) = oneshot::channel::<Result<Chat, warp::error::Error>>();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    ChanCmd::CreateConversation { chat, friend } => {
+                        // verify chat exists
+                        let chat = match chat {
+                            Some(c) => c,
+                            None => {
+                                // if not, create the chat
+                                let (tx, rx) =
+                                    oneshot::channel::<Result<Chat, warp::error::Error>>();
+                                warp_cmd_tx
+                                    .send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                                        recipient: friend.did_key(),
+                                        rsp: tx,
+                                    }))
+                                    .expect("failed to send cmd");
+
+                                let rsp = rx.await.expect("command canceled");
+
+                                match rsp {
+                                    Ok(c) => c,
+                                    Err(e) => {
+                                        logger::error(&format!(
+                                            "failed to create conversation: {}",
+                                            e
+                                        ));
+                                        continue;
+                                    }
+                                }
+                            }
+                        };
+                        chat_with.set(Some(chat));
+                    }
+                    ChanCmd::RemoveFriend(identity) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         warp_cmd_tx
-                            .send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                recipient: friend.did_key(),
+                            .send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
+                                did: identity.did_key(),
                                 rsp: tx,
                             }))
                             .expect("failed to send cmd");
 
                         let rsp = rx.await.expect("command canceled");
-
-                        match rsp {
-                            Ok(c) => c,
-                            Err(e) => {
-                                println!("failed to create conversation: {}", e);
-                                todo!()
-                            }
+                        if let Err(e) = rsp {
+                            // todo: display message to user
+                            logger::error(&format!("failed to remove friend: {}", e));
                         }
                     }
-                };
-                chat_with.set(Some(chat));
+                    ChanCmd::BlockFriend(identity) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        warp_cmd_tx
+                            .send(WarpCmd::MultiPass(MultiPassCmd::Block {
+                                did: identity.did_key(),
+                                rsp: tx,
+                            }))
+                            .expect("failed to send cmd");
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            // todo: display message to user
+                            logger::error(&format!("failed to block friend: {}", e));
+                        }
+                    }
+                }
             }
         }
     });
@@ -117,7 +169,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                ch.send((context_friend.clone(), chat2.clone()));
+                                                ch.send(ChanCmd::CreateConversation{friend: context_friend.clone(), chat: chat2.clone()});
                                             }
                                         },
                                         ContextItem {
@@ -142,7 +194,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                ch.send(ChanCmd::RemoveFriend(remove_friend.clone()));
                                             }
                                         },
                                         ContextItem {
@@ -150,7 +202,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
-                                                state.write().mutate(Action::Block(block_friend.clone()));
+                                                ch.send(ChanCmd::BlockFriend(block_friend.clone()));
                                             }
                                         },
                                     )),
@@ -167,13 +219,13 @@ pub fn Friends(cx: Scope) -> Element {
                                             }
                                         )),
                                         onchat: move |_| {
-                                           ch.send((chat_with_friend.clone(), chat3.clone()));
+                                           ch.send(ChanCmd::CreateConversation{friend: chat_with_friend.clone(), chat: chat3.clone()});
                                         },
                                         onremove: move |_| {
-                                            state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                            ch.send(ChanCmd::RemoveFriend(remove_friend_2.clone()));
                                         },
                                         onblock: move |_| {
-                                            state.write().mutate(Action::Block(block_friend_2.clone()));
+                                            ch.send(ChanCmd::BlockFriend(block_friend_2.clone()));
                                         }
                                     }
                                 }

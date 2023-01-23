@@ -27,6 +27,8 @@ pub enum MultiPassEvent {
     FriendRequestCancelled(state::Identity),
     FriendOnline(state::Identity),
     FriendOffline(state::Identity),
+    Blocked(state::Identity),
+    Unblocked(state::Identity),
 }
 
 pub async fn did_to_identity(
@@ -96,6 +98,7 @@ pub async fn convert_multipass_event(
     account: &mut super::Account,
     _messaging: &mut super::Messaging,
 ) -> Result<MultiPassEvent, Error> {
+    //println!("got {:?}", &event);
     let evt = match event {
         MultiPassEventKind::FriendRequestSent { to } => {
             let identity = did_to_identity(to, account).await?;
@@ -106,12 +109,9 @@ pub async fn convert_multipass_event(
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
-        MultiPassEventKind::IncomingFriendRequestClosed { .. }
-        | MultiPassEventKind::IncomingFriendRequestRejected { .. } => {
-            // can probably ignore this
-            MultiPassEvent::None
-        }
-        MultiPassEventKind::OutgoingFriendRequestClosed { did }
+        MultiPassEventKind::IncomingFriendRequestClosed { did }
+        | MultiPassEventKind::IncomingFriendRequestRejected { did }
+        | MultiPassEventKind::OutgoingFriendRequestClosed { did }
         | MultiPassEventKind::OutgoingFriendRequestRejected { did } => {
             let identity = did_to_identity(did, account).await?;
             MultiPassEvent::FriendRequestCancelled(identity)
@@ -142,6 +142,7 @@ pub async fn convert_raygun_event(
     account: &mut super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<RayGunEvent, Error> {
+    //println!("got {:?}", &event);
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;

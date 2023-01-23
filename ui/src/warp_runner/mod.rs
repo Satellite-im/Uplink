@@ -16,7 +16,11 @@ use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use crate::{
-    warp_runner::commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
+    logger,
+    warp_runner::{
+        commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
+        ui_adapter::did_to_identity,
+    },
     STATIC_ARGS,
 };
 
@@ -142,8 +146,8 @@ impl WarpRunner {
                                         break;
                                     }
                                 }
-                                Err(_e) => {
-                                    // todo: log error
+                                Err(e) => {
+                                    logger::error(&format!("failed to convert multipass event: {}", e));
                                 }
                             }
                         }
@@ -156,20 +160,37 @@ impl WarpRunner {
                                         break;
                                       }
                                 }
-                                Err(_e) => {
-                                    // todo: log error
+                                Err(e) => {
+                                    logger::error(&format!("failed to convert raygun event: {}", e));
                                 }
                             }
                         }
                     },
-
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => {
                         //println!("got warp_runner cmd");
                         match opt {
                         Some(cmd) => match cmd {
                             WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut tesseract).await,
-                            WarpCmd::MultiPass(cmd) => handle_multipass_cmd(cmd, &mut tesseract, &mut account).await,
+                            WarpCmd::MultiPass(cmd) => {
+                                // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
+                                // todo: ask for that event
+                                if let MultiPassCmd::Block{did, .. } = &cmd {
+                                    if let Ok(ident) = did_to_identity(did.clone(), &mut account).await {
+                                        if tx.send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident))).is_err() {
+                                            break;
+                                        }
+                                    }
+                                }
+                                if let MultiPassCmd::Unblock{did, .. } = &cmd {
+                                    if let Ok(ident) = did_to_identity(did.clone(), &mut account).await {
+                                        if tx.send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident))).is_err() {
+                                            break;
+                                        }
+                                    }
+                                }
+                                handle_multipass_cmd(cmd, &mut tesseract, &mut account).await;
+                            },
                             WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
                         },
                         None => break,

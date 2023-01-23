@@ -45,6 +45,31 @@ pub enum MultiPassCmd {
     GetOwnDid {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
+    RemoveFriend {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    Unblock {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    // can block anyone, friend or not
+    Block {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    AcceptRequest {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    DenyRequest {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    CancelRequest {
+        did: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -126,6 +151,8 @@ pub async fn handle_multipass_cmd(
                 let _ = rsp.send(Err(e));
                 return;
             }
+            // without the delay, there is an error that the multipass extension is unavailable
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
             let r = account.get_own_identity().await.map(|_| ());
             let _ = rsp.send(r);
         }
@@ -139,6 +166,30 @@ pub async fn handle_multipass_cmd(
         }
         MultiPassCmd::InitializeFriends { rsp } => {
             let r = multipass_initialize_friends(account).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::RemoveFriend { did, rsp } => {
+            let r = account.remove_friend(&did).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::Unblock { did, rsp } => {
+            let r = account.unblock(&did).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::Block { did, rsp } => {
+            let r = account.block(&did).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::AcceptRequest { did, rsp } => {
+            let r = account.accept_request(&did).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::DenyRequest { did, rsp } => {
+            let r = account.deny_request(&did).await;
+            let _ = rsp.send(r);
+        }
+        MultiPassCmd::CancelRequest { did, rsp } => {
+            let r = account.close_request(&did).await;
             let _ = rsp.send(r);
         }
     }

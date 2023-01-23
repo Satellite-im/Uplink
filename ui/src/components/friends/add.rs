@@ -16,6 +16,7 @@ use warp::crypto::DID;
 use warp::error::Error;
 
 use crate::{
+    logger,
     state::{Action, State, ToastNotification},
     warp_runner::{commands::MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
@@ -32,12 +33,11 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_validation = Validation {
         max_length: Some(56),
         min_length: Some(56),
-        alpha_numeric_only: true,
+        alpha_numeric_only: false,
         no_whitespace: true,
         ignore_colons: true,
     };
 
-    // todo: add translations for toasts
     if *request_sent.get() {
         state
             .write()
@@ -79,17 +79,20 @@ pub fn AddFriend(cx: Scope) -> Element {
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
-                    Ok(_) | Err(Error::CannotSendFriendRequest) => request_sent.set(true),
+                    Ok(_) | Err(Error::FriendRequestExist) => {
+                        request_sent.set(true);
+                    }
                     Err(e) => match e {
                         Error::CannotSendSelfFriendRequest
+                        | Error::CannotSendFriendRequest
                         | Error::IdentityDoesntExist
                         | Error::BlockedByUser
-                        | Error::InvalidIdentifierCondition => {
-                            // todo: show an error message
+                        | Error::InvalidIdentifierCondition
+                        | Error::PublicKeyIsBlocked => {
+                            logger::warn(&format!("add friend failed: {}", e));
                         }
                         _ => {
-                            println!("error: {}", e);
-                            todo!("failed to send friend request");
+                            logger::error(&format!("add friend failed: {}", e));
                         }
                     },
                 }
@@ -110,7 +113,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(did) => my_id.set(Some(did.to_string())),
-                    Err(_) => todo!("failed to get own identity"),
+                    Err(e) => logger::error(&format!("get own did failed: {}", e)),
                 }
             }
         }

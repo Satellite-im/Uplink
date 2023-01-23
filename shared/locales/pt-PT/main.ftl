@@ -48,6 +48,7 @@ friends = Friends
     .deny = Recusar convite
     .request-sent = Pedido de Amigo Enviado!
     .copied-did = Copiado para a prancheta!
+    .unblock = Desbloquear
 
 files = Files
     .files = Arquivos
