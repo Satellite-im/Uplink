@@ -75,6 +75,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         alpha_numeric_only: false,
         // The input should not contain any whitespace
         no_whitespace: true,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     // todo: use password_failed to display an error message
