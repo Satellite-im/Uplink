@@ -30,7 +30,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
-                //println!("unlock got password input: {}", &password);
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 warp_cmd_tx
@@ -42,8 +41,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 
-                // todo: remove the printlns and instead use the hooks to update the UI
-                //println!("got response from warp");
                 match res {
                     Ok(_) => page.set(AuthPages::Success),
                     Err(err) => match err {
@@ -115,6 +112,11 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                     if !should_disable {
                         ch.send(val)
+                    }
+                }
+                onreturn: move |_| {
+                    if !*button_disabled.get() {
+                        page.set(AuthPages::CreateAccount);
                     }
                 }
             },
