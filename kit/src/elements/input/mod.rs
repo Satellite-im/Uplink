@@ -81,7 +81,7 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 
 // Default to requireing alpha-numeric inputs, unless ignore_colon override is set on the input field
 pub fn validate_alphanumeric(val: &str, ignore_colon: bool) -> Option<ValidationError> {
-    val_no_colons = val.to_string();
+    let mut val_no_colons = val.to_string();
     if val.contains(":") && ignore_colon {
         val_no_colons = val.replace(":", "a");
     }
