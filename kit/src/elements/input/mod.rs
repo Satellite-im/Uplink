@@ -138,7 +138,7 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
     if validation.alpha_numeric_only 
         && validate_alphanumeric(val, validation.ignore_colons).is_some() {
-            error = validate_alphanumeric(val);
+            error = validate_alphanumeric(val, validation.ignore_colons);
     }
 
     if validation.no_whitespace 
