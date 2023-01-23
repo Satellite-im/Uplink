@@ -700,6 +700,9 @@ impl State {
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);
                 self.chats.all.remove(&id);
+                if self.chats.active == Some(id) {
+                    self.chats.active = None;
+                }
             }
         }
     }
