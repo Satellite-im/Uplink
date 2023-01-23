@@ -4,7 +4,10 @@ use futures::channel::oneshot;
 use uuid::Uuid;
 use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
-use crate::state::{self, chats, friends};
+use crate::{
+    logger,
+    state::{self, chats, friends},
+};
 
 use super::{
     ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
@@ -76,7 +79,11 @@ pub enum MultiPassCmd {
 #[derive(Debug)]
 pub enum RayGunCmd {
     InitializeConversations {
-        rsp: oneshot::Sender<Result<HashMap<Uuid, chats::Chat>, warp::error::Error>>,
+        // response is (own identity, chats)
+        // need to send over own identity because 'State' sets it to default
+        rsp: oneshot::Sender<
+            Result<(state::Identity, HashMap<Uuid, chats::Chat>), warp::error::Error>,
+        >,
     },
     CreateConversation {
         recipient: DID,
@@ -109,10 +116,22 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                         Ok(chat) => {
                             let _ = all_chats.insert(chat.id, chat);
                         }
-                        Err(_e) => todo!("log error"),
+                        Err(e) => {
+                            logger::error(&format!(
+                                "failed to convert conversation to chat: {}",
+                                e
+                            ));
+                        }
                     };
                 }
-                let _ = rsp.send(Ok(all_chats));
+                match get_own_identity(account).await {
+                    Ok(id) => {
+                        let _ = rsp.send(Ok((id, all_chats)));
+                    }
+                    Err(e) => {
+                        let _ = rsp.send(Err(e));
+                    }
+                }
             }
             Err(_e) => {
                 // do nothing. will cancel the channel
@@ -237,4 +256,9 @@ async fn multipass_initialize_friends(
         outgoing_requests,
     };
     Ok(ret)
+}
+
+async fn get_own_identity(account: &Account) -> Result<state::Identity, Error> {
+    let identity = account.get_own_identity().await?;
+    Ok(state::Identity::from(identity))
 }

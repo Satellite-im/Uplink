@@ -509,8 +509,9 @@ fn app(cx: Scope) -> Element {
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
-                let (tx, rx) =
-                    oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
+                let (tx, rx) = oneshot::channel::<
+                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                >();
                 warp_cmd_tx
                     .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
                         rsp: tx,
@@ -525,7 +526,7 @@ fn app(cx: Scope) -> Element {
 
             logger::trace("init chats");
             match res {
-                Ok(mut all_chats) => match inner.try_borrow_mut() {
+                Ok((own_id, mut all_chats)) => match inner.try_borrow_mut() {
                     Ok(state) => {
                         // for all_chats, fill in participants and messages.
                         for (k, v) in &state.read().chats.all {
@@ -541,6 +542,7 @@ fn app(cx: Scope) -> Element {
                         } else {
                             state.write().chats.all = all_chats;
                         }
+                        state.write().account.identity = own_id;
                         state.write().chats.initialized = true;
                         //println!("{:#?}", state.read().chats);
                         needs_update.set(true);
