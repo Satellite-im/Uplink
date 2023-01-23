@@ -23,7 +23,7 @@ use crate::{
         commands::{MultiPassCmd, RayGunCmd},
         WarpCmd,
     },
-    UPLINK_ROUTES, WARP_CMD_CH,
+    STATIC_ARGS, UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
