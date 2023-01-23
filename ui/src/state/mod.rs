@@ -365,7 +365,7 @@ impl State {
 
     pub fn get_without_me(&self, identities: &[Identity]) -> Vec<Identity> {
         identities
-            .into_iter()
+            .iter()
             .filter(|identity| identity.did_key() != self.account.identity.did_key())
             .cloned()
             .collect()

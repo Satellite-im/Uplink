@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
 use uuid::Uuid;
-use warp::{crypto::DID, error::Error, tesseract::Tesseract};
+use warp::{crypto::DID, error::Error, raygun, tesseract::Tesseract};
 
 use crate::{
     logger,
@@ -81,6 +81,7 @@ pub enum RayGunCmd {
     InitializeConversations {
         // response is (own identity, chats)
         // need to send over own identity because 'State' sets it to default
+        #[allow(clippy::type_complexity)]
         rsp: oneshot::Sender<
             Result<(state::Identity, HashMap<Uuid, chats::Chat>), warp::error::Error>,
         >,
@@ -88,6 +89,11 @@ pub enum RayGunCmd {
     CreateConversation {
         recipient: DID,
         rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
+    },
+    // removes all 2-person conversations containing the recipient
+    Remove2PersonConv {
+        recipient: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
 }
 
@@ -109,29 +115,8 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
             Ok(convs) => {
-                //println!("warp runner got conversations: {:#?}", convs);
-                let mut all_chats = HashMap::new();
-                for conv in convs {
-                    match conversation_to_chat(conv, account, messaging).await {
-                        Ok(chat) => {
-                            let _ = all_chats.insert(chat.id, chat);
-                        }
-                        Err(e) => {
-                            logger::error(&format!(
-                                "failed to convert conversation to chat: {}",
-                                e
-                            ));
-                        }
-                    };
-                }
-                match get_own_identity(account).await {
-                    Ok(id) => {
-                        let _ = rsp.send(Ok((id, all_chats)));
-                    }
-                    Err(e) => {
-                        let _ = rsp.send(Err(e));
-                    }
-                }
+                let r = raygun_initialize_conversations(&convs, account, messaging).await;
+                let _ = rsp.send(r);
             }
             Err(_e) => {
                 // do nothing. will cancel the channel
@@ -141,10 +126,14 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
         RayGunCmd::CreateConversation { recipient, rsp } => {
             let r = match messaging.create_conversation(&recipient).await {
                 Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    conversation_to_chat(conv, account, messaging).await
+                    conversation_to_chat(&conv, account, messaging).await
                 }
                 Err(e) => Err(e),
             };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::Remove2PersonConv { recipient, rsp } => {
+            let r = raygun_remove_2person_conv(recipient, messaging).await;
             let _ = rsp.send(r);
         }
     }
@@ -258,7 +247,41 @@ async fn multipass_initialize_friends(
     Ok(ret)
 }
 
-async fn get_own_identity(account: &Account) -> Result<state::Identity, Error> {
-    let identity = account.get_own_identity().await?;
-    Ok(state::Identity::from(identity))
+async fn raygun_initialize_conversations(
+    convs: &[raygun::Conversation],
+    account: &Account,
+    messaging: &mut Messaging,
+) -> Result<(state::Identity, HashMap<Uuid, chats::Chat>), Error> {
+    let own_identity = account.get_own_identity().await?;
+    let mut all_chats = HashMap::new();
+    for conv in convs {
+        match conversation_to_chat(conv, account, messaging).await {
+            Ok(chat) => {
+                let _ = all_chats.insert(chat.id, chat);
+            }
+            Err(e) => {
+                logger::error(&format!("failed to convert conversation to chat: {}", e));
+            }
+        };
+    }
+    Ok((state::Identity::from(own_identity), all_chats))
+}
+
+async fn raygun_remove_2person_conv(
+    recipient: DID,
+    messaging: &mut Messaging,
+) -> Result<(), Error> {
+    match messaging.list_conversations().await {
+        Ok(convs) => {
+            for conv in convs {
+                // check if conversation should be deleted
+                // only consider conversations with 2 participants
+                if conv.recipients().len() == 2 && conv.recipients().contains(&recipient) {
+                    messaging.delete(conv.id(), None).await?;
+                }
+            }
+            Ok(())
+        }
+        Err(e) => Err(e),
+    }
 }
