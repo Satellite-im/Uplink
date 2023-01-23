@@ -17,6 +17,7 @@ use crate::{
     config::Configuration,
     logger,
     state::{Action, State},
+    utils::get_available_themes,
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     WINDOW_CMD_CH,
 };
@@ -38,6 +39,12 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     active: config.developer.developer_mode,
                     onflipped: move |value| {
                         config.set_developer_mode(value);
+                        if state.read().ui.theme.is_none() {
+                            let available_theme = get_available_themes();
+                            // let default_theme = available_theme.iter().find(|t| t.name == "default").unwrap();
+                            let default_theme = available_theme.first().unwrap();
+                            state.write().mutate(Action::SetTheme(default_theme.clone()));
+                        }
                     },
                 }
             },
