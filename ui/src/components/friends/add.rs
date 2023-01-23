@@ -33,8 +33,9 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_validation = Validation {
         max_length: Some(56),
         min_length: Some(56),
-        alpha_numeric_only: false,
+        alpha_numeric_only: true,
         no_whitespace: true,
+        ignore_colons: true,
     };
 
     if *request_sent.get() {
