@@ -17,7 +17,6 @@ use crate::{
     config::Configuration,
     logger,
     state::{Action, State},
-    utils::get_available_themes,
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     WINDOW_CMD_CH,
 };
