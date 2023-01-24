@@ -7,7 +7,7 @@ use kit::elements::{
 use mime::*;
 use rfd::FileDialog;
 use shared::language::get_local_text;
-use warp::{error::Error, logging::tracing::log};
+use warp::error::Error;
 
 use crate::logger;
 
@@ -43,8 +43,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(cx, String::new);
     let banner_state = use_state(cx, String::new);
 
+    // todo: don't do this?
+    let username_input = use_ref(cx, || String::from("Mock Username"));
+    let status_input = use_ref(cx, || String::from("Mock status messages are so 2008."));
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::error("Profile settings opened");
+    logger::trace("rendering profile settings");
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -58,7 +62,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
@@ -69,7 +73,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     Button {
@@ -77,7 +81,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     },
@@ -92,7 +96,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         icon: kit::icons::Icon::Plus,
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     }
@@ -105,7 +109,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.username"),
                         aria_label: "username-input".into(),
-                        default_text: "Mock Username".into(),
+                        value: username_input.clone(),
                         options: get_input_options(username_validation_options),
                     },
                 },
@@ -117,7 +121,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.status"),
                         aria_label: "status-input".into(),
-                        default_text: "Mock status messages are so 2008.".into(),
+                        value: status_input.clone(),
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options(status_validation_options)

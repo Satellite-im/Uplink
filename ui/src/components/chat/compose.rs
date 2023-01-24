@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use futures::{StreamExt, channel::oneshot};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window, use_eval};
 use shared::language::get_local_text;
 use uuid::Uuid;
 
@@ -46,7 +46,7 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
-    
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -244,6 +244,9 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    let script = include_str!("./script.js");
+    use_eval(cx)(script.to_string());
+
     let data = match &cx.props.data {
         Some(d) => d.clone(),
         None => {
@@ -256,6 +259,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     };
+
     cx.render(rsx!(
         div {
             id: "messages",
@@ -328,6 +332,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
     let loading = data.is_none();
     let input = use_state(cx, Vec::<String>::new);
+    let raw_input_val = use_ref(cx, String::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
     
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Option<Uuid>)>| {
@@ -372,10 +377,12 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
+            value: raw_input_val.clone(),
             onchange: move |v: String| {
                 input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             },
             onreturn: move |_| {
+                raw_input_val.write().clear();
                 if STATIC_ARGS.use_mock {
                     todo!();
                 } else {
@@ -388,6 +395,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     disabled: loading,
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
+                        raw_input_val.write().clear();
                         if STATIC_ARGS.use_mock {
                             todo!();
                         } else {

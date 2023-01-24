@@ -55,12 +55,6 @@ pub enum Direction {
     Outgoing,
 }
 
-#[derive(Debug)]
-pub struct ChatConfig {
-    pub cache_size: usize,
-    pub page_size: usize,
-}
-
 impl Chats {
     pub fn join(&mut self, mut other: HashMap<Uuid, Chat>) {
         for (k, v) in other.drain() {

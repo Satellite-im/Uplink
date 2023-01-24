@@ -33,10 +33,10 @@ pub struct Props<'a> {
     #[props(optional)]
     _loading: Option<bool>,
     placeholder: String,
+    // need to be able to clear the input box on button press
+    value: UseRef<String>,
     #[props(optional)]
     max_length: Option<i32>,
-    #[props(optional)]
-    default_text: Option<String>,
     #[props(optional)]
     aria_label: Option<String>,
     #[props(optional)]
@@ -116,10 +116,6 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
     cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
-pub fn get_text(cx: &Scope<Props>) -> String {
-    cx.props.default_text.clone().unwrap_or_default()
-}
-
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
@@ -159,7 +155,6 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
-    let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.unwrap_or_default();
 
@@ -206,7 +201,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: format_args!("{}", val.read()),
+                    value: format_args!("{}", cx.props.value.read()),
                     maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
@@ -214,7 +209,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let current_val = evt.value.clone();
                         let validation_result = validate(&cx, &current_val).unwrap_or_default();
                         error.set(validation_result.clone());
-                        *val.write_silent() = current_val.to_string();
+                        *cx.props.value.write_silent() = current_val.to_string();
 
                         if !validation_result.is_empty() {
                             valid.set(false);
@@ -222,20 +217,20 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
-                        emit(&cx, val.read().to_string(), *valid.current());
+                        emit(&cx, cx.props.value.read().to_string(), *valid.current());
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string(), *valid.current());
+                            emit_return(&cx, cx.props.value.read().to_string(), *valid.current());
                         }
                     }
                 }
-                (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
+                (options.with_clear_btn && !cx.props.value.read().is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
-                            *val.write() = "".into();
-                            emit(&cx, val.read().to_string(), false);
+                            cx.props.value.set("".into());
+                            emit(&cx, cx.props.value.read().to_string(), false);
                             error.set("".into());
                             valid.set(false);
                         },

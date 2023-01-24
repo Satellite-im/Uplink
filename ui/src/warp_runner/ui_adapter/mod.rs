@@ -12,10 +12,7 @@ use warp::{
     raygun::{self, Conversation, MessageEventKind, MessageOptions, RayGunEventKind},
 };
 
-use crate::{
-    state::{self, chats},
-    STATIC_ARGS,
-};
+use crate::state::{self, chats};
 
 use super::conv_stream;
 
@@ -88,21 +85,18 @@ pub async fn conversation_to_chat(
         participants.push(identity);
     }
 
+    // todo: warp doesn't support paging yet. it also doesn't check the range bounds
+    let unreads = messaging.get_message_count(conv.id()).await?;
     let messages: VecDeque<raygun::Message> = messaging
-        .get_messages(
-            conv.id(),
-            MessageOptions::default().set_range(0..STATIC_ARGS.chat_config.cache_size),
-        )
+        .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
         .await?
         .into();
-
-    let unreads = messaging.get_message_count(conv.id()).await? as u32;
 
     Ok(chats::Chat {
         id: conv.id(),
         participants,
         messages,
-        unreads,
+        unreads: unreads as u32,
         replying_to: None,
     })
 }
