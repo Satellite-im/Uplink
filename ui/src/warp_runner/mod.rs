@@ -176,14 +176,14 @@ impl WarpRunner {
                                 // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
                                 // todo: ask for that event
                                 if let MultiPassCmd::Block{did, .. } = &cmd {
-                                    if let Ok(ident) = did_to_identity(did.clone(), &mut account).await {
+                                    if let Ok(ident) = did_to_identity(did.clone(), &account).await {
                                         if tx.send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident))).is_err() {
                                             break;
                                         }
                                     }
                                 }
                                 if let MultiPassCmd::Unblock{did, .. } = &cmd {
-                                    if let Ok(ident) = did_to_identity(did.clone(), &mut account).await {
+                                    if let Ok(ident) = did_to_identity(did.clone(), &account).await {
                                         if tx.send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident))).is_err() {
                                             break;
                                         }

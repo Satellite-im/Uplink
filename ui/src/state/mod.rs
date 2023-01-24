@@ -29,7 +29,7 @@ use crate::{
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashMap},
     fmt, fs,
 };
 use uuid::Uuid;
@@ -363,13 +363,11 @@ impl State {
             .cloned()
     }
 
-    pub fn get_without_me(&self, identities: Vec<Identity>) -> Vec<Identity> {
-        let mut set = HashSet::new();
-        set.insert(&self.account.identity);
-
+    pub fn get_without_me(&self, identities: &[Identity]) -> Vec<Identity> {
         identities
-            .into_iter()
-            .filter(|identity| !set.contains(identity))
+            .iter()
+            .filter(|identity| identity.did_key() != self.account.identity.did_key())
+            .cloned()
             .collect()
     }
 
@@ -702,6 +700,9 @@ impl State {
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);
                 self.chats.all.remove(&id);
+                if self.chats.active == Some(id) {
+                    self.chats.active = None;
+                }
             }
         }
     }

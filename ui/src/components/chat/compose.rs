@@ -87,7 +87,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         None => return None
     };
     let message_groups = s.get_sort_messages(&active_chat);
-    let other_participants = s.get_without_me(active_chat.participants.clone());
+    let other_participants = s.get_without_me(&active_chat.participants);
     let active_participant = other_participants.first().cloned().expect("chat should have at least 2 participants");
     let subtext = active_participant.status_message().unwrap_or_default();
     let is_favorite = s.is_favorite(&active_chat);
