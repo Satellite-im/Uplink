@@ -270,7 +270,11 @@ fn main() {
     <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
     </html>"#
                     .to_string(),
-            ),
+            )
+            .with_file_drop_handler(|_w, drag_event| {
+                logger::debug(format!("Drag Event: {:?}", drag_event).as_str());
+                true
+            }),
     )
 }
 
