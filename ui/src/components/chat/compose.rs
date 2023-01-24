@@ -350,7 +350,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     let our_did = state.read().account.identity.did_key();
                     let mut participants = data.active_chat.participants.clone();
                     participants.retain(|p| p.did_key() == msg.sender());
-                    let msg_owner = participants.iter().next().clone();
+                    let msg_owner = participants.iter().next();
                     let (platform, status) = get_platform_and_status(msg_owner);
 
                     rsx!(
