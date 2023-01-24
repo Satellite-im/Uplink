@@ -48,7 +48,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let status_input = use_ref(cx, || String::from("Mock status messages are so 2008."));
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::trace("Profile settings opened");
+    logger::trace("rendering profile settings");
     cx.render(rsx!(
         div {
             id: "settings-profile",
