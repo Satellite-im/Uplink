@@ -12,28 +12,27 @@ use kit::{
 };
 
 use shared::language::get_local_text;
-use warp::multipass::identity::Relationship;
+use warp::{crypto::DID, multipass::identity::Relationship};
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
     logger,
-    state::{Action, Chat, Identity, State},
+    state::{Action, Chat, State},
     utils::convert_status,
     warp_runner::{
         commands::{MultiPassCmd, RayGunCmd},
         WarpCmd,
     },
-    UPLINK_ROUTES, WARP_CMD_CH,
+    STATIC_ARGS, UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
 enum ChanCmd {
-    CreateConversation {
-        friend: Identity,
-        chat: Option<Chat>,
-    },
-    RemoveFriend(Identity),
-    BlockFriend(Identity),
+    CreateConversation { recipient: DID, chat: Option<Chat> },
+    RemoveFriend(DID),
+    BlockFriend(DID),
+    // will remove direct conversations involving the friend
+    RemoveDirectConvs(DID),
 }
 
 #[allow(non_snake_case)]
@@ -60,7 +59,7 @@ pub fn Friends(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    ChanCmd::CreateConversation { chat, friend } => {
+                    ChanCmd::CreateConversation { chat, recipient } => {
                         // verify chat exists
                         let chat = match chat {
                             Some(c) => c,
@@ -70,7 +69,7 @@ pub fn Friends(cx: Scope) -> Element {
                                     oneshot::channel::<Result<Chat, warp::error::Error>>();
                                 warp_cmd_tx
                                     .send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                        recipient: friend.did_key(),
+                                        recipient,
                                         rsp: tx,
                                     }))
                                     .expect("failed to send cmd");
@@ -91,34 +90,47 @@ pub fn Friends(cx: Scope) -> Element {
                         };
                         chat_with.set(Some(chat));
                     }
-                    ChanCmd::RemoveFriend(identity) => {
+                    ChanCmd::RemoveFriend(did) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         warp_cmd_tx
                             .send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
-                                did: identity.did_key(),
+                                did,
                                 rsp: tx,
                             }))
                             .expect("failed to send cmd");
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            // todo: display message to user
                             logger::error(&format!("failed to remove friend: {}", e));
                         }
                     }
-                    ChanCmd::BlockFriend(identity) => {
+                    ChanCmd::BlockFriend(did) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         warp_cmd_tx
-                            .send(WarpCmd::MultiPass(MultiPassCmd::Block {
-                                did: identity.did_key(),
-                                rsp: tx,
-                            }))
+                            .send(WarpCmd::MultiPass(MultiPassCmd::Block { did, rsp: tx }))
                             .expect("failed to send cmd");
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
                             // todo: display message to user
                             logger::error(&format!("failed to block friend: {}", e));
+                        }
+                    }
+                    ChanCmd::RemoveDirectConvs(recipient) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        warp_cmd_tx
+                            .send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
+                                recipient: recipient.clone(),
+                                rsp: tx,
+                            }))
+                            .expect("failed to send cmd");
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            logger::error(&format!(
+                                "failed to remove conversation with friend {}: {}",
+                                recipient, e
+                            ));
                         }
                     }
                 }
@@ -169,7 +181,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::CreateConversation{friend: context_friend.clone(), chat: chat2.clone()});
+                                                ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
                                         },
                                         ContextItem {
@@ -194,7 +206,12 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::RemoveFriend(remove_friend.clone()));
+                                                if STATIC_ARGS.use_mock {
+                                                    state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                } else {
+                                                    ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
+                                                }
                                             }
                                         },
                                         ContextItem {
@@ -202,7 +219,12 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::BlockFriend(block_friend.clone()));
+                                                if STATIC_ARGS.use_mock {
+                                                    state.write().mutate(Action::Block(block_friend.clone()));
+                                                } else {
+                                                    ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
+                                                }
                                             }
                                         },
                                     )),
@@ -219,13 +241,24 @@ pub fn Friends(cx: Scope) -> Element {
                                             }
                                         )),
                                         onchat: move |_| {
-                                           ch.send(ChanCmd::CreateConversation{friend: chat_with_friend.clone(), chat: chat3.clone()});
+                                            // this works for mock data because the conversations already exist
+                                           ch.send(ChanCmd::CreateConversation{recipient: chat_with_friend.did_key(), chat: chat3.clone()});
                                         },
                                         onremove: move |_| {
-                                            ch.send(ChanCmd::RemoveFriend(remove_friend_2.clone()));
+                                            if STATIC_ARGS.use_mock {
+                                                state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                            } else {
+                                                ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
+                                            }
                                         },
                                         onblock: move |_| {
-                                            ch.send(ChanCmd::BlockFriend(block_friend_2.clone()));
+                                            if STATIC_ARGS.use_mock {
+                                                state.write().mutate(Action::Block(block_friend_2.clone()));
+                                            } else {
+                                                ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
+                                            }
                                         }
                                     }
                                 }

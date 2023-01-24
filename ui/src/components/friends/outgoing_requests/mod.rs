@@ -1,10 +1,10 @@
 use crate::{
     components::friends::friend::Friend,
     logger,
-    state::State,
+    state::{Action, State},
     utils::convert_status,
     warp_runner::{commands::MultiPassCmd, WarpCmd},
-    WARP_CMD_CH,
+    STATIC_ARGS, WARP_CMD_CH,
 };
 use chrono::{Duration, Utc};
 use dioxus::prelude::*;
@@ -76,7 +76,11 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.cancel"),
                                 onpress: move |_| {
-                                    ch.send(friend_clone_clone.did_key());
+                                    if STATIC_ARGS.use_mock {
+                                        state.write().mutate(Action::CancelRequest(friend_clone_clone.clone()));
+                                    } else {
+                                        ch.send(friend_clone_clone.did_key());
+                                    }
                                 }
                             },
                         )),
@@ -98,7 +102,11 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 }
                             )),
                             onremove: move |_| {
-                                ch.send(friend_clone.did_key());
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::CancelRequest(friend_clone.clone()));
+                                } else {
+                                    ch.send(friend_clone.did_key());
+                                }
                             }
                         }
                     }

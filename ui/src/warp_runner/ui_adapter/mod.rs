@@ -44,10 +44,7 @@ pub enum MessageEvent {
     },
 }
 
-pub async fn did_to_identity(
-    did: DID,
-    account: &mut super::Account,
-) -> Result<state::Identity, Error> {
+pub async fn did_to_identity(did: DID, account: &super::Account) -> Result<state::Identity, Error> {
     account
         .get_identity(did.into())
         .await
@@ -72,8 +69,8 @@ pub async fn dids_to_identity(
 }
 
 pub async fn conversation_to_chat(
-    conv: Conversation,
-    account: &mut super::Account,
+    conv: &Conversation,
+    account: &super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<chats::Chat, Error> {
     // todo: should Chat::participants include self?
@@ -160,7 +157,7 @@ pub async fn convert_raygun_event(
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;
-            let chat = conversation_to_chat(conv, account, messaging).await?;
+            let chat = conversation_to_chat(&conv, account, messaging).await?;
             stream_manager.add_stream(chat.id, messaging).await?;
             RayGunEvent::ConversationCreated(chat)
         }
