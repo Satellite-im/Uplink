@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
+use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
 use dioxus_desktop::use_window;
 use shared::language::get_local_text;
@@ -343,25 +343,34 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             )),
             with_replying_to: data.map(|data| {
                 let active_chat = data.active_chat.clone();
+                let participants = build_participants(&data.active_chat.participants.clone());
+
                 cx.render(rsx!(
-                    active_chat.clone().replying_to.map(|msg| rsx!(
+                    active_chat.clone().replying_to.map(|msg|
+                    {
+                    let our_did = state.read().account.identity.did_key();
+                    let their_did = msg.sender();
+                    let (platform, status) = if our_did == their_did {
+                        (participants[1].platform, participants[1].status)
+                    } else {
+                        (participants[0].platform, participants[0].status)
+                    };
+
+                    rsx!(
                         Reply {
                             label: get_local_text("messages.replying"),
-                            remote: {
-                                let our_did = state.read().account.identity.did_key();
-                                let their_did = msg.sender();
-                                our_did != their_did
-                            },
+                            remote: our_did != their_did,
                             onclose: move |_| {
                                 state.write().mutate(Action::CancelReply(active_chat.clone()))
                             },
                             message: msg.value().join("\n"),
                             UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
+                                platform: platform,
+                                status: status,
                             },
                         }
-                    ))
+                            )}
+                )
                 ))
             }).unwrap_or(None),
             with_file_upload: cx.render(rsx!(
