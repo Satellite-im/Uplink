@@ -10,7 +10,7 @@ use shared::language::get_local_text;
 use uuid::Uuid;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}, logger};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}, logger, STATIC_ARGS};
 
 
 use super::sidebar::build_participants_names;
@@ -338,7 +338,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 let conv_id = match chat_id {
                     Some(c) => c,
                     None => {
-                        // todo: log
                         continue;
                     }
                 };
@@ -349,12 +348,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 }
 
                 // this is also an empty message
-                if msg.len() == 1 {
-                    if let Some(msg) = msg.first(){
-                        if msg.is_empty() {
-                            continue;
-                        }
-                    }
+                if msg.iter().all(|line| line.is_empty())  {
+                    continue;
                 } 
                
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -368,8 +363,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
                 let rsp = rx.await.expect("command canceled");
                 if let Err(e) = rsp {
-                    println!("failed to send message: {}", e);
-                    todo!()
+                    logger::error(&format!("failed to send message: {}", e));
                 }
             }
         }
@@ -381,13 +375,25 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             onchange: move |v: String| {
                 input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             },
-            onreturn: move |_| ch.send((input.get().clone(), active_chat_id)),
+            onreturn: move |_| {
+                if STATIC_ARGS.use_mock {
+                    todo!();
+                } else {
+                    ch.send((input.get().clone(), active_chat_id));
+                }
+            },
             controls: cx.render(rsx!(
                 Button {
                     icon: Icon::ChevronDoubleRight,
                     disabled: loading,
                     appearance: Appearance::Secondary,
-                    onpress: move |_| ch.send((input.get().clone(), active_chat_id)),
+                    onpress: move |_| {
+                        if STATIC_ARGS.use_mock {
+                            todo!();
+                        } else {
+                            ch.send((input.get().clone(), active_chat_id));
+                        }
+                    },
                     tooltip: cx.render(rsx!(
                         Tooltip { 
                             arrow_position: ArrowPosition::Bottom, 
