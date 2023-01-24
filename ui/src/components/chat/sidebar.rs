@@ -36,6 +36,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     logger::trace("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
+    let input_val = use_ref(cx, String::new);
 
     // todo: display a loading page if chats is not initialized
     let (sidebar_chats, favorites, active_media_chat) = if state.read().chats.initialized { 
@@ -56,6 +57,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         disabled: true,
                         aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
+                        value: input_val.clone(),
                         options: Options {
                             with_clear_btn: true,
                             ..Options::default()

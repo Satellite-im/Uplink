@@ -50,6 +50,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
+    let input_val = use_ref(cx, String::new);
 
     let loading = cx.props.loading.unwrap_or_default();
 
@@ -73,6 +74,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Input {
                         disabled: disabled,
                         placeholder: placeholder,
+                        value: input_val.clone(),
                         // todo: use is_valid
                         onreturn: move |(s, _is_valid)| emit(&cx, s)
                     }
