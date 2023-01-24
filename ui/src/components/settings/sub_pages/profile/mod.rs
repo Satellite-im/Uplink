@@ -44,8 +44,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     // todo: don't do this?
-    let username_input = use_state(cx, || String::from("Mock Username"));
-    let status_input = use_state(cx, || String::from("Mock status messages are so 2008."));
+    let username_input = use_ref(cx, || String::from("Mock Username"));
+    let status_input = use_ref(cx, || String::from("Mock status messages are so 2008."));
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     logger::trace("Profile settings opened");

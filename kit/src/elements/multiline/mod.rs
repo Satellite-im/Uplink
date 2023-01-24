@@ -22,7 +22,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let input_val = use_state(cx, || {
+    let input_val = use_ref(cx, || {
         cx.props
             .default_text
             .clone()

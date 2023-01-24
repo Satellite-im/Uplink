@@ -47,7 +47,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let input_val = use_state(cx, String::new);
+    let input_val = use_ref(cx, String::new);
     let open = cx.props.open.unwrap_or_default();
     let text = get_text(&cx);
     let aria_label = get_aria_label(&cx);

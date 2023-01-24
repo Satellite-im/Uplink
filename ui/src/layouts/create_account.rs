@@ -23,7 +23,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
-    let input_val = use_state(cx, String::new);
+    let input_val = use_ref(cx, String::new);
 
     let username_validation = Validation {
         // The input should have a maximum length of 32

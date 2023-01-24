@@ -34,7 +34,7 @@ pub struct Props<'a> {
     _loading: Option<bool>,
     placeholder: String,
     // need to be able to clear the input box on button press
-    value: UseState<String>,
+    value: UseRef<String>,
     #[props(optional)]
     max_length: Option<i32>,
     #[props(optional)]
@@ -201,7 +201,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: "{cx.props.value}",
+                    value: format_args!("{}", cx.props.value.read()),
                     maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
@@ -209,7 +209,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let current_val = evt.value.clone();
                         let validation_result = validate(&cx, &current_val).unwrap_or_default();
                         error.set(validation_result.clone());
-                        cx.props.value.set(current_val.to_string());
+                        *cx.props.value.write_silent() = current_val.to_string();
 
                         if !validation_result.is_empty() {
                             valid.set(false);
@@ -217,20 +217,20 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else if current_val.len() >= min_len as usize {
                             valid.set(true);
                         }
-                        emit(&cx, cx.props.value.get().to_string(), *valid.current());
+                        emit(&cx, cx.props.value.read().to_string(), *valid.current());
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, cx.props.value.get().to_string(), *valid.current());
+                            emit_return(&cx, cx.props.value.read().to_string(), *valid.current());
                         }
                     }
                 }
-                (options.with_clear_btn && !cx.props.value.get().is_empty()).then(|| rsx!(
+                (options.with_clear_btn && !cx.props.value.read().is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
                             cx.props.value.set("".into());
-                            emit(&cx, cx.props.value.get().to_string(), false);
+                            emit(&cx, cx.props.value.read().to_string(), false);
                             error.set("".into());
                             valid.set(false);
                         },

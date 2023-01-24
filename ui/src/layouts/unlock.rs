@@ -24,7 +24,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
-    let input_val = use_state(cx, String::new);
+    let input_val = use_ref(cx, String::new);
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
