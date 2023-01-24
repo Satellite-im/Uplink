@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window, use_eval};
 use shared::language::get_local_text;
 
 
@@ -43,7 +43,7 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
-    
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -241,6 +241,9 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    let script = include_str!("./script.js");
+    use_eval(cx)(script.to_string());
+
     let data = match &cx.props.data {
         Some(d) => d.clone(),
         None => {
@@ -253,6 +256,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     };
+
     cx.render(rsx!(
         div {
             id: "messages",
