@@ -31,7 +31,8 @@ enum ChanCmd {
     CreateConversation { recipient: DID, chat: Option<Chat> },
     RemoveFriend(DID),
     BlockFriend(DID),
-    RemoveConversation(DID),
+    // will remove direct conversations involving the friend
+    RemoveDirectConvs(DID),
 }
 
 #[allow(non_snake_case)]
@@ -115,10 +116,10 @@ pub fn Friends(cx: Scope) -> Element {
                             logger::error(&format!("failed to block friend: {}", e));
                         }
                     }
-                    ChanCmd::RemoveConversation(recipient) => {
+                    ChanCmd::RemoveDirectConvs(recipient) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         warp_cmd_tx
-                            .send(WarpCmd::RayGun(RayGunCmd::Remove2PersonConv {
+                            .send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
                                 recipient: recipient.clone(),
                                 rsp: tx,
                             }))
@@ -180,7 +181,6 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                // this works for mock data because the conversations already exist
                                                 ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
                                         },
@@ -210,7 +210,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                     state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
                                                 } else {
                                                     ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveConversation(remove_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
                                                 }
                                             }
                                         },
@@ -223,7 +223,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                     state.write().mutate(Action::Block(block_friend.clone()));
                                                 } else {
                                                     ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveConversation(block_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
                                                 }
                                             }
                                         },
@@ -249,7 +249,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                 state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
                                             } else {
                                                 ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
-                                                ch.send(ChanCmd::RemoveConversation(remove_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
                                             }
                                         },
                                         onblock: move |_| {
@@ -257,7 +257,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                 state.write().mutate(Action::Block(block_friend_2.clone()));
                                             } else {
                                                 ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
-                                                ch.send(ChanCmd::RemoveConversation(block_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
                                             }
                                         }
                                     }

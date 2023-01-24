@@ -2,7 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
 use uuid::Uuid;
-use warp::{crypto::DID, error::Error, raygun, tesseract::Tesseract};
+use warp::{
+    crypto::DID,
+    error::Error,
+    raygun::{self, ConversationType},
+    tesseract::Tesseract,
+};
 
 use crate::{
     logger,
@@ -90,8 +95,8 @@ pub enum RayGunCmd {
         recipient: DID,
         rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
     },
-    // removes all 2-person conversations containing the recipient
-    Remove2PersonConv {
+    // removes all direct conversations involving the recipient
+    RemoveDirectConvs {
         recipient: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
@@ -132,8 +137,8 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
             };
             let _ = rsp.send(r);
         }
-        RayGunCmd::Remove2PersonConv { recipient, rsp } => {
-            let r = raygun_remove_2person_conv(recipient, messaging).await;
+        RayGunCmd::RemoveDirectConvs { recipient, rsp } => {
+            let r = raygun_remove_direct_convs(recipient, messaging).await;
             let _ = rsp.send(r);
         }
     }
@@ -267,7 +272,7 @@ async fn raygun_initialize_conversations(
     Ok((state::Identity::from(own_identity), all_chats))
 }
 
-async fn raygun_remove_2person_conv(
+async fn raygun_remove_direct_convs(
     recipient: DID,
     messaging: &mut Messaging,
 ) -> Result<(), Error> {
@@ -276,7 +281,9 @@ async fn raygun_remove_2person_conv(
             for conv in convs {
                 // check if conversation should be deleted
                 // only consider conversations with 2 participants
-                if conv.recipients().len() == 2 && conv.recipients().contains(&recipient) {
+                if conv.conversation_type() == ConversationType::Direct
+                    && conv.recipients().contains(&recipient)
+                {
                     messaging.delete(conv.id(), None).await?;
                 }
             }
