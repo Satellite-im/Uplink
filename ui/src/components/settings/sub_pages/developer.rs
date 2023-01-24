@@ -23,6 +23,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
+    logger::debug("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
     let mut config = Configuration::load_or_default();
     let window = use_window(cx);

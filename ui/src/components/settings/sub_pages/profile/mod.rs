@@ -44,7 +44,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::error("Profile settings opened");
+    logger::debug("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
