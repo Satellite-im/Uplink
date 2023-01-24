@@ -7,7 +7,7 @@ use kit::elements::{
 use mime::*;
 use rfd::FileDialog;
 use shared::language::get_local_text;
-use warp::{error::Error, logging::tracing::log};
+use warp::error::Error;
 
 use crate::logger;
 
@@ -58,7 +58,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
@@ -69,7 +69,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     Button {
@@ -77,7 +77,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     },
@@ -92,7 +92,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         icon: kit::icons::Icon::Plus,
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     }
