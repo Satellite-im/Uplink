@@ -240,21 +240,21 @@ async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
-    let idents = dids_to_identity(reqs, account).await?;
+    let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
     let outgoing = account.list_outgoing_request().await?;
-    let idents = dids_to_identity(outgoing, account).await?;
+    let idents = dids_to_identity(&outgoing, account).await?;
     let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.block_list().await?;
-    let idents = dids_to_identity(ids, account).await?;
+    let idents = dids_to_identity(&ids, account).await?;
     let blocked = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.list_friends().await?;
     let mut friends = HashMap::new();
     for id in ids {
-        let ident = did_to_identity(id.clone(), account).await?;
+        let ident = did_to_identity(&id, account).await?;
         friends.insert(id, ident);
     }
 

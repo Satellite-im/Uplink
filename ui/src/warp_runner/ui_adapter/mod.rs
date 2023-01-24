@@ -44,9 +44,12 @@ pub enum MessageEvent {
     },
 }
 
-pub async fn did_to_identity(did: DID, account: &super::Account) -> Result<state::Identity, Error> {
+pub async fn did_to_identity(
+    did: &DID,
+    account: &super::Account,
+) -> Result<state::Identity, Error> {
     account
-        .get_identity(did.into())
+        .get_identity(did.clone().into())
         .await
         // if Ok, get the first item in the vector. 
         // if the vector is empty, become Error::IdentityDoesntExist
@@ -56,7 +59,7 @@ pub async fn did_to_identity(did: DID, account: &super::Account) -> Result<state
 }
 
 pub async fn dids_to_identity(
-    dids: Vec<DID>,
+    dids: &[DID],
     account: &mut super::Account,
 ) -> Result<Vec<state::Identity>, Error> {
     let mut ret = Vec::new();
@@ -76,7 +79,7 @@ pub async fn conversation_to_chat(
     // todo: should Chat::participants include self?
     let mut participants = Vec::new();
     for id in conv.recipients() {
-        let identity = did_to_identity(id, account).await?;
+        let identity = did_to_identity(&id, account).await?;
         participants.push(identity);
     }
 
@@ -111,11 +114,11 @@ pub async fn convert_multipass_event(
     //println!("got {:?}", &event);
     let evt = match event {
         MultiPassEventKind::FriendRequestSent { to } => {
-            let identity = did_to_identity(to, account).await?;
+            let identity = did_to_identity(&to, account).await?;
             MultiPassEvent::FriendRequestSent(identity)
         }
         MultiPassEventKind::FriendRequestReceived { from } => {
-            let identity = did_to_identity(from, account).await?;
+            let identity = did_to_identity(&from, account).await?;
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
@@ -123,23 +126,23 @@ pub async fn convert_multipass_event(
         | MultiPassEventKind::IncomingFriendRequestRejected { did }
         | MultiPassEventKind::OutgoingFriendRequestClosed { did }
         | MultiPassEventKind::OutgoingFriendRequestRejected { did } => {
-            let identity = did_to_identity(did, account).await?;
+            let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendRequestCancelled(identity)
         }
         MultiPassEventKind::FriendAdded { did } => {
-            let identity = did_to_identity(did, account).await?;
+            let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendAdded(identity)
         }
         MultiPassEventKind::FriendRemoved { did } => {
-            let identity = did_to_identity(did, account).await?;
+            let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendRemoved(identity)
         }
         MultiPassEventKind::IdentityOnline { did } => {
-            let identity = did_to_identity(did, account).await?;
+            let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendOnline(identity)
         }
         MultiPassEventKind::IdentityOffline { did } => {
-            let identity = did_to_identity(did, account).await?;
+            let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendOffline(identity)
         }
     };
