@@ -23,7 +23,7 @@ use crate::{
         commands::{MultiPassCmd, RayGunCmd},
         WarpCmd,
     },
-    UPLINK_ROUTES, WARP_CMD_CH,
+    STATIC_ARGS, UPLINK_ROUTES, WARP_CMD_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -206,8 +206,12 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
-                                                ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
+                                                if STATIC_ARGS.use_mock {
+                                                    state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                } else {
+                                                    ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
+                                                }
                                             }
                                         },
                                         ContextItem {
@@ -215,8 +219,12 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
-                                                ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
+                                                if STATIC_ARGS.use_mock {
+                                                    state.write().mutate(Action::Block(block_friend.clone()));
+                                                } else {
+                                                    ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
+                                                }
                                             }
                                         },
                                     )),
@@ -233,15 +241,24 @@ pub fn Friends(cx: Scope) -> Element {
                                             }
                                         )),
                                         onchat: move |_| {
+                                            // this works for mock data because the conversations already exist
                                            ch.send(ChanCmd::CreateConversation{recipient: chat_with_friend.did_key(), chat: chat3.clone()});
                                         },
                                         onremove: move |_| {
-                                            ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
-                                            ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
+                                            if STATIC_ARGS.use_mock {
+                                                state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                            } else {
+                                                ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
+                                            }
                                         },
                                         onblock: move |_| {
-                                            ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
-                                            ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
+                                            if STATIC_ARGS.use_mock {
+                                                state.write().mutate(Action::Block(block_friend_2.clone()));
+                                            } else {
+                                                ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
+                                            }
                                         }
                                     }
                                 }

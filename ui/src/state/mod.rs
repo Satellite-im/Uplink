@@ -275,6 +275,8 @@ impl State {
         // Remove the identity from the outgoing requests list if they are present
         self.friends.outgoing_requests.remove(identity);
 
+        self.friends.incoming_requests.remove(identity);
+
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
     }
@@ -548,7 +550,7 @@ impl State {
             }
             Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
             Action::Block(identity) => self.block(&identity),
-            Action::UnBlock(identity) => self.unblock(&identity),
+            Action::Unblock(identity) => self.unblock(&identity),
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
