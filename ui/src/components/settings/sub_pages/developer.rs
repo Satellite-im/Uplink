@@ -40,10 +40,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     onflipped: move |value| {
                         config.set_developer_mode(value);
                         if state.read().ui.theme.is_none() {
-                            // let available_theme = get_available_themes();
-                            // let default_theme = available_theme.iter().find(|t| t.name == "default").unwrap();
-                            // let default_theme = available_theme.first().unwrap();
                             state.write().mutate(Action::SetTheme(Theme::default()));
+                        } else {
+                            let active_theme = state.read().ui.theme.clone().unwrap();
+                            state.write().mutate(Action::SetTheme(active_theme));
                         }
                     },
                 }
