@@ -16,6 +16,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
+use state::chats::ChatConfig;
 use state::State;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -63,6 +64,7 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    pub chat_config: ChatConfig,
     pub use_mock: bool,
 }
 
@@ -78,6 +80,10 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
+        chat_config: ChatConfig {
+            cache_size: 60,
+            page_size: 20,
+        },
         use_mock: !args.no_mock,
     }
 });

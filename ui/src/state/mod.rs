@@ -718,7 +718,7 @@ impl State {
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push(message);
+                    chat.messages.push_back(message);
                 }
             }
             MessageEvent::Sent {
@@ -727,7 +727,7 @@ impl State {
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push(message);
+                    chat.messages.push_back(message);
                 }
             }
         }

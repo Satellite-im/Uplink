@@ -2,6 +2,8 @@
 //! a translation must be performed by WarpRunner.
 //!
 
+use std::collections::VecDeque;
+
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -10,7 +12,10 @@ use warp::{
     raygun::{self, Conversation, MessageEventKind, MessageOptions, RayGunEventKind},
 };
 
-use crate::state::{self, chats};
+use crate::{
+    state::{self, chats},
+    STATIC_ARGS,
+};
 
 use super::conv_stream;
 
@@ -83,18 +88,15 @@ pub async fn conversation_to_chat(
         participants.push(identity);
     }
 
-    let messages = match messaging
-        .get_messages(conv.id(), MessageOptions::default())
-        .await
-    {
-        Ok(m) => m,
-        Err(e) => match e {
-            warp::error::Error::EmptyMessage => vec![],
-            _ => return Err(e),
-        },
-    };
+    let messages: VecDeque<raygun::Message> = messaging
+        .get_messages(
+            conv.id(),
+            MessageOptions::default().set_range(0..STATIC_ARGS.chat_config.cache_size),
+        )
+        .await?
+        .into();
 
-    let unreads = messages.len() as u32;
+    let unreads = messaging.get_message_count(conv.id()).await? as u32;
 
     Ok(chats::Chat {
         id: conv.id(),

@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     io::{BufWriter, Write},
 };
 
@@ -101,7 +101,7 @@ pub fn generate_mock() -> State {
 
 fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
     let default_id = Identity::default();
-    let mut messages: Vec<Message> = vec![];
+    let mut messages = VecDeque::<Message>::new();
 
     let mut rng = rand::thread_rng();
 
@@ -115,7 +115,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_reactions(vec![]);
         default_message.set_value(vec![lipsum(word_count)]);
 
-        messages.push(default_message);
+        messages.push_back(default_message);
     }
 
     Chat {
@@ -145,7 +145,7 @@ fn generate_random_chat(me: Identity, identities: &[Identity]) -> Chat {
     for _ in 0..num_messages {
         // Generate a random message and add it to the chat
         let message = generate_fake_message(chat.id, identities);
-        chat.messages.push(message);
+        chat.messages.push_back(message);
     }
 
     chat
