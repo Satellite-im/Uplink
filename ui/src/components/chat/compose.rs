@@ -252,6 +252,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     use_future(cx, &id, |_| {
         to_owned![script, scroll_position_script, window];
         async move {
+            if id.is_none() {
+                return;
+            }
             window.eval(script.as_str());
             loop {
                 sleep(Duration::from_millis(500)).await;
