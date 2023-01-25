@@ -637,6 +637,10 @@ impl State {
 
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // mock data loads the same random data every time. no point in saving it.
+        if STATIC_ARGS.use_mock {
+            return Ok(());
+        }
         let serialized = serde_json::to_string(self)?;
         fs::write(&STATIC_ARGS.cache_path, serialized)?;
         Ok(())
