@@ -10,8 +10,7 @@ use shared::language::get_local_text;
 use uuid::Uuid;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}, logger, STATIC_ARGS};
-
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants, build_user_from_identity}, WARP_CMD_CH, warp_runner::{WarpCmd, commands::RayGunCmd}, logger, STATIC_ARGS};
 
 use super::sidebar::build_participants_names;
 
@@ -377,7 +376,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
-            value: raw_input_val.clone(),
             onchange: move |v: String| {
                 input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             },
@@ -412,25 +410,31 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             )),
             with_replying_to: data.map(|data| {
                 let active_chat = data.active_chat.clone();
+
                 cx.render(rsx!(
-                    active_chat.clone().replying_to.map(|msg| rsx!(
+                    active_chat.clone().replying_to.map(|msg|
+                    {
+                    let our_did = state.read().account.identity.did_key();
+                    let mut participants = data.active_chat.participants.clone();
+                    participants.retain(|p| p.did_key() == msg.sender());
+                    let msg_owner = participants.first();
+                    let (platform, status) = get_platform_and_status(msg_owner);
+
+                    rsx!(
                         Reply {
                             label: get_local_text("messages.replying"),
-                            remote: {
-                                let our_did = state.read().account.identity.did_key();
-                                let their_did = msg.sender();
-                                our_did != their_did
-                            },
+                            remote: our_did != msg.sender(),
                             onclose: move |_| {
                                 state.write().mutate(Action::CancelReply(active_chat.clone()))
                             },
                             message: msg.value().join("\n"),
                             UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
+                                platform: platform,
+                                status: status,
                             },
                         }
-                    ))
+                    )}
+                )
                 ))
             }).unwrap_or(None),
             with_file_upload: cx.render(rsx!(
@@ -448,4 +452,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     ))
+}
+
+fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {
+    let sender = match msg_sender {
+        Some(identity) => identity,
+        None => return (Platform::Desktop, Status::Offline)
+    };
+    let user_sender = build_user_from_identity(sender.clone());
+    (user_sender.platform, user_sender.status)
 }

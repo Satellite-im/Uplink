@@ -78,3 +78,17 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     // Return the resulting user_info vector
     user_info
 }
+
+pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
+    let platform = match identity.platform() {
+        warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
+        warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
+        _ => indicator::Platform::Headless, //TODO: Unknown
+    };
+    UserInfo {
+        platform,
+        status: convert_status(&identity.identity_status()),
+        username: identity.username(),
+        photo: identity.graphics().profile_picture(),
+    }
+}

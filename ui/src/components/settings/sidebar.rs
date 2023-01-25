@@ -106,7 +106,6 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let active_route = routes[0].clone();
     let state = use_shared_state::<State>(cx)?;
-    let input_val = use_ref(cx, String::new);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -119,7 +118,6 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: "settings-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         disabled: true,
-                        value: input_val.clone(),
                         options: Options {
                             with_clear_btn: true,
                             ..Options::default()

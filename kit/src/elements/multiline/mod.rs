@@ -22,19 +22,18 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let input_val = use_ref(cx, || {
-        cx.props
-            .default_text
-            .clone()
-            .unwrap_or_else(|| "Placeholder...".to_owned())
-    });
+    let default_text = cx
+        .props
+        .default_text
+        .clone()
+        .unwrap_or_else(|| "Placeholder...".to_owned());
 
     cx.render(rsx! (
         div {
             class: "multiline",
             Input {
                 placeholder: cx.props.placeholder.clone(),
-                value: input_val.clone(),
+                default_text: default_text,
                 icon: cx.props.icon.unwrap_or(Icon::QuestionMarkCircle),
                 options: cx.props.options.unwrap_or_default(),
 

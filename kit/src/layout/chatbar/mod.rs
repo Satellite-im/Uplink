@@ -35,7 +35,6 @@ pub struct Props<'a> {
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
-    value: UseRef<String>,
 }
 
 #[derive(Props)]
@@ -89,7 +88,6 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             Input {
                 disabled: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
-                value: cx.props.value.clone(),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
                 onreturn: move |(v, _)| cx.props.onreturn.call(v),
             },
