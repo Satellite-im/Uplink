@@ -357,12 +357,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 };
 
                 // don't send empty messages
-                if msg.is_empty() {
-                    continue;
-                }
-
-                // this is also an empty message
-                if msg.iter().all(|line| line.is_empty())  {
+                if msg.iter().all(|line| line.trim().is_empty())  {
                     continue;
                 } 
                
