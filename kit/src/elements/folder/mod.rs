@@ -47,13 +47,16 @@ pub fn emit_press(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let input_val = use_ref(cx, String::new);
     let open = cx.props.open.unwrap_or_default();
     let text = get_text(&cx);
     let aria_label = get_aria_label(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-    let icon = if open { Icon::FolderOpen } else { Icon::Folder };
+    let icon = if open {
+        Icon::FolderOpen
+    } else {
+        Icon::Folder
+    };
     let disabled = cx.props.disabled.unwrap_or_default();
 
     let loading = cx.props.loading.unwrap_or_default();
@@ -78,7 +81,6 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Input {
                         disabled: disabled,
                         placeholder: placeholder,
-                        value: input_val.clone(),
                         // todo: use is_valid
                         onreturn: move |(s, _is_valid)| emit(&cx, s)
                     }

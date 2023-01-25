@@ -43,12 +43,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(cx, String::new);
     let banner_state = use_state(cx, String::new);
 
-    // todo: don't do this?
-    let username_input = use_ref(cx, || String::from("Mock Username"));
-    let status_input = use_ref(cx, || String::from("Mock status messages are so 2008."));
-
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::trace("rendering profile settings");
+    logger::debug("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -109,7 +105,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.username"),
                         aria_label: "username-input".into(),
-                        value: username_input.clone(),
+                        default_text: "Mock Username".into(),
                         options: get_input_options(username_validation_options),
                     },
                 },
@@ -121,7 +117,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.status"),
                         aria_label: "status-input".into(),
-                        value: status_input.clone(),
+                        default_text: "Mock status messages are so 2008.".into(),
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options(status_validation_options)
