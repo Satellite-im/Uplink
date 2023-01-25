@@ -243,22 +243,8 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let window = use_window(cx);
 
-
     let script = include_str!("./script.js");
     window.eval(script);
-
-    let data = match &cx.props.data {
-        Some(d) => d.clone(),
-        None => {
-            return cx.render(rsx!(
-                div {
-                    id: "messages",
-                    MessageGroupSkeletal {},
-                    MessageGroupSkeletal { alt: true }
-                }
-            ))
-        }
-    };
     let scroll_position_script = include_str!("./scroll_position.js");
 
     use_future(cx, (), |_| {
@@ -281,6 +267,19 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             }
         }
     });
+
+    let data = match &cx.props.data {
+        Some(d) => d.clone(),
+        None => {
+            return cx.render(rsx!(
+                div {
+                    id: "messages",
+                    MessageGroupSkeletal {},
+                    MessageGroupSkeletal { alt: true }
+                }
+            ))
+        }
+    };
 
     cx.render(rsx!(
         div {
