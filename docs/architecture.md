@@ -13,8 +13,11 @@
 - use different logger profile using subcommand. `debug` and `trace` are common choices. 
 
 ## UI Design
-- todo: elements, components, layouts ; kit and ui both follow that design
-- todo: ui modifies state while kit doesn't 
+- the `kit` project contains the following modules
+    + `elements`: correspond to HTML elements such as `input`, `button`, etc
+    + `components`: are made up of elements, adding additional features
+    + `layout`: are made up of components and elements. 
+- the `ui` project contains `components` and `layout` modules, which have the same meaning as in `kit`, with the following exception: modules in `ui` can modify `State`. 
 - use `logger::trace` to track when elements render
 - get a hook for `State` via `use_shared_state`. no need to pass it in Props. 
 
@@ -41,7 +44,37 @@
 - `WINDOW_CMD_CH`: if Uplink spawns a child window, it is controlled via this channel. Commands are passed to the `window_manager` module, which at a minimum allows for closing the window in response to a UI event such as a button press. 
 
 ## warp_runner::WarpRunner
-- provides access to `RayGun`, `MultiPass`, and `Tesseract` via the `WarpCmd` struct. Commands contain a oneshot channel for returning the result.  
+- provides access to `RayGun`, `MultiPass`, and `Tesseract` via the `WarpCmd` struct. Commands contain a oneshot channel for returning the result. `WARP_CMD_CH` is used to send `WarpCmd`s to `WarpRunner`.   
 - notifies Uplink of Warp events via the `WarpEvent` struct. ex: friend requests and incoming messages. Note that a Warp event may not be in a format usable by the UI, and converting the event may require Warp. `warp_runner::ui_adapter` provides utilities for converting Warp events into something usable by the UI. 
 - `WarpRunner` automatically shuts down all threads using `tokio::notify` and a `Drop` implementation.
 - all of the events/commands are processed inside of a `loop { select!{...} }`. It's messy but this allows all the different functions to use the same mutable references to `RayGun`, `MultiPass`, and `Tesseract`. 
+
+## Examples
+
+### Sending Warp commands
+- `ui/src/components/friends/incoming_requests/mod.rs` displays a list of incoming friend requests. the user can accept or reject a request. When this happens, Warp needs to be notified. 
+- `use_coroutine` provides a channel
+- on button press (accept/rejct), send a command to the coroutine
+- clone `WARP_CMD_CH.tx` and write the command to the channel. 
+
+
+### Spawning a child window
+- `ui/src/components/media/player.rs` has an `onpress` event which does the following
+    - uses a Dioxus DesktopContext to create a new window
+        - passes in a `WindowDropHandler` as a prop. This struct exists to ensure a close command is written to the `WINDOW_CMD_CH` when the window closes. 
+    - gets the window id
+    - saves the window id in State. State will now know which window to close when it receives a command. Unfortunately we don't know the window ID until after the window is created, so we can't just have the `WindowDropHandler` send the WindowID in the channel. 
+- look in the `use_future` in `main.rs` to see how the command is handled. 
+
+### Ask Warp for something new
+- this requires adding a command to `WarpCmd`, in `ui/src/warp_runner/mod.rs`. 
+- handle the command in `command.rs`. ex: add an enumeration to `RayGunCmd` and handle it in `command::handle_raygun_command`
+- invoke the command from the UI by writing to `WARP_CMD_CH.tx` (demonstrated in a previous example). 
+
+### Handle a new event from Warp
+- add an enumeration to `WarpEvent` (located in `warp_runner.rs`)
+- in `warp_runner.rs`, in the `run` function, write the new event to the `WarpEventTx` channel, for one of the following reasons
+    - in response an event received via the `multipass_stream`
+    - in response an event received via the `raygun_stream`
+    - in response to a command received over the `WarpCmdRx` channel. 
+- in `ui/src/state/mod.rs`, in `State::process_warp_event`, add handling for the new event. 
