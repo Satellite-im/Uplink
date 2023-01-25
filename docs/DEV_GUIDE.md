@@ -67,6 +67,10 @@ Sometimes you're working on very big features and want to add a whole new "page"
 
 ## Other Common Patterns
 
+### Adding or modifying the `kit`
+
+You should avoid modifying the kit to fit a specific need. Instead use this resource as a tool and only add new functionality or components that will be useful for not only Satellite but extension developers and perhaps even others using Dioxus. This also keeps kit components and elements very reusable and extensible.
+
 ### Adding a new warp hook
 
 // todo
