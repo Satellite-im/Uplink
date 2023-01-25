@@ -12,7 +12,10 @@ use warp::{
     raygun::{self, Conversation, MessageEventKind, MessageOptions, RayGunEventKind},
 };
 
-use crate::state::{self, chats};
+use crate::{
+    logger,
+    state::{self, chats},
+};
 
 use super::conv_stream;
 
@@ -152,7 +155,7 @@ pub async fn convert_raygun_event(
     account: &mut super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<RayGunEvent, Error> {
-    //println!("got {:?}", &event);
+    logger::debug(&format!("got {:?}", &event));
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;
@@ -174,6 +177,7 @@ pub async fn convert_message_event(
     _account: &mut super::Account,
     messaging: &mut super::Messaging,
 ) -> Result<MessageEvent, Error> {
+    logger::debug(&format!("got {:?}", &event));
     let evt = match event {
         MessageEventKind::MessageReceived {
             conversation_id,

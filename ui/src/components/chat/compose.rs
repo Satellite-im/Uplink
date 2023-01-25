@@ -331,13 +331,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
     let loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
-    let reset_input = use_ref(cx, || false);
+    let should_clear_input = use_state(cx,|| false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
-    let should_clear_input = *reset_input.read();
-
-    if should_clear_input {
-        *reset_input.write_silent() = false;
+    if *should_clear_input.get() {
         // nasty hack because when using mock data, the charbar would be cleared for every keypress after the first message was sent
         if STATIC_ARGS.use_mock {
             state.write();
@@ -384,7 +381,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
-            reset: should_clear_input,
+            reset: should_clear_input.clone(),
             onchange: move |v: String| {
                 *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
             },
@@ -398,7 +395,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 } else {
                     ch.send((msg, active_chat_id));
                 }
-                reset_input.set(true);
+                should_clear_input.set(true);
             },
             controls: cx.render(rsx!(
                 Button {
@@ -414,7 +411,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                         } else {
                             ch.send((msg, active_chat_id));
                         }
-                        reset_input.set(true);
+                        should_clear_input.set(true);
                     },
                     tooltip: cx.render(rsx!(
                         Tooltip { 

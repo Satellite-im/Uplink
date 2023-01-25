@@ -35,7 +35,7 @@ pub struct Props<'a> {
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
-    reset: Option<bool>,
+    reset: Option<UseState<bool>>,
 }
 
 #[derive(Props)]
@@ -81,17 +81,36 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    //println!("rendering chatbar");
+
     cx.render(rsx!(
         div {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            Input {
-                disabled: cx.props.loading.unwrap_or_default(),
-                placeholder: cx.props.placeholder.clone(),
-                reset: cx.props.reset.unwrap_or(false),
-                onchange: move |(v, _)| cx.props.onchange.call(v),
-                onreturn: move |(v, _)| cx.props.onreturn.call(v),
+            // apologies for the crappy code.
+            match &cx.props.reset {
+                Some(hook) => {
+                    rsx!(
+                        Input {
+                            disabled: cx.props.loading.unwrap_or_default(),
+                            placeholder: cx.props.placeholder.clone(),
+                            reset: hook.clone(),
+                            onchange: move |(v, _)| cx.props.onchange.call(v),
+                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                        }
+                    )
+                }
+                None => {
+                    rsx!(
+                        Input {
+                            disabled: cx.props.loading.unwrap_or_default(),
+                            placeholder: cx.props.placeholder.clone(),
+                            onchange: move |(v, _)| cx.props.onchange.call(v),
+                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                        }
+                    )
+                }
             },
             cx.props.extensions.as_ref(),
             div {
