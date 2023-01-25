@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Platform, Status}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
-use dioxus_desktop::{use_window, use_eval};
+use dioxus_desktop::{use_window};
 use shared::language::get_local_text;
 use tokio::time::sleep;
 
@@ -241,9 +241,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let window = use_window(cx);
+
 
     let script = include_str!("./script.js");
-    use_eval(cx)(script.to_string());
+    window.eval(script);
 
     let data = match &cx.props.data {
         Some(d) => d.clone(),
@@ -257,19 +259,21 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     };
-    let script = include_str!("./scroll_position.js");
-    let window = use_window(cx);
+    let scroll_position_script = include_str!("./scroll_position.js");
 
     use_future(cx, (), |_| {
-        to_owned![script, window];
+        to_owned![script, scroll_position_script, window];
         async move {
+            window.eval(script.as_str());
             loop {
                 sleep(Duration::from_millis(500)).await;
-                let scroll_position_eval_result = window.eval(script.as_str());
-                let scroll_position_result = scroll_position_eval_result.await;
+                let scroll_position_eval_result = window.eval(scroll_position_script.as_str());
+                let scroll_position_result =  scroll_position_eval_result.await;
                 match scroll_position_result {
                     Ok(data) => {
                         let scroll_top_position = data.as_i64().unwrap_or(0);
+                        // TODO: Let this print for Phill tests, but remove later
+                        println!("Scroll Top position: {:?}", scroll_top_position);
                         logger::trace(format!("Scroll Top position: {:?}", scroll_top_position).as_str());
                     },
                     Err(error) => logger::error(format!("{:?}", error).as_str()),

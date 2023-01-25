@@ -1,2 +1,2 @@
-const chat = document.getElementById("messages")
+var chat = document.getElementById("messages")
 return chat.scrollTop
