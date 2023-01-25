@@ -338,6 +338,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     if should_clear_input {
         *reset_input.write_silent() = false;
+        // nasty hack because when using mock data, the charbar would be cleared for every keypress after the first message was sent
+        if STATIC_ARGS.use_mock {
+            state.write();
+        }
     }
     
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Option<Uuid>)>| {
@@ -390,10 +394,14 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
             },
             onreturn: move |_| {
+                let msg = input.read().clone();
                 if STATIC_ARGS.use_mock {
-                    todo!();
+                    if let Some(id) = active_chat_id {
+                        // this is a hack. see where reset_input is set to false again for explanation
+                        state.write_silent().mutate(Action::MockSend(id, msg));
+                    }
                 } else {
-                    ch.send((input.read().clone(), active_chat_id));
+                    ch.send((msg, active_chat_id));
                 }
                 reset_input.set(true);
             },
@@ -403,10 +411,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     disabled: loading,
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
+                        let msg = input.read().clone();
                         if STATIC_ARGS.use_mock {
-                            todo!();
+                            if let Some(id) = active_chat_id {
+                                state.write_silent().mutate(Action::MockSend(id, msg));
+                            }
                         } else {
-                            ch.send((input.read().clone(), active_chat_id));
+                            ch.send((msg, active_chat_id));
                         }
                         reset_input.set(true);
                     },

@@ -33,7 +33,11 @@ use std::{
     fmt, fs,
 };
 use uuid::Uuid;
-use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun::Message};
+use warp::{
+    crypto::DID,
+    multipass::identity::IdentityStatus,
+    raygun::{self, Message},
+};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
@@ -327,6 +331,12 @@ impl State {
         self.ui.toggle_silenced();
     }
 
+    fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: raygun::Message) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            chat.messages.push_back(message);
+        }
+    }
+
     /// Getters
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
@@ -582,7 +592,14 @@ impl State {
             }
             Action::React(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
-            Action::Send(_, _) => todo!(),
+            Action::MockSend(id, msg) => {
+                let sender = self.account.identity.did_key();
+                let mut m = raygun::Message::default();
+                m.set_conversation_id(id);
+                m.set_sender(sender);
+                m.set_value(msg);
+                self.add_msg_to_chat(id, m);
+            }
             Action::Navigate(to) => {
                 self.set_active_route(to);
             }
@@ -717,9 +734,7 @@ impl State {
                 message,
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
-                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push_back(message);
-                }
+                self.add_msg_to_chat(conversation_id, message);
             }
             MessageEvent::Sent {
                 conversation_id,
