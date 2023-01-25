@@ -51,6 +51,7 @@ pub struct Props<'a> {
     onchange: Option<EventHandler<'a, (String, bool)>>,
     #[props(optional)]
     onreturn: Option<EventHandler<'a, (String, bool)>>,
+    reset: Option<bool>,
 }
 
 pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -162,6 +163,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.unwrap_or_default();
+    
+    if let Some(true) = cx.props.reset { 
+        if !val.read().is_empty() {
+            val.write().clear();
+        }
+    }
 
     let valid = use_state(cx, || false);
     let min_len =  options.with_validation.map(|opt| opt.min_length.unwrap_or_default()).unwrap_or_default();

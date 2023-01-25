@@ -326,13 +326,19 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
 
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
-    logger::trace("rendering chatbar");
+    logger::trace("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
     let loading = data.is_none();
-    let input = use_state(cx, Vec::<String>::new);
-    let raw_input_val = use_ref(cx, String::new);
+    let input = use_ref(cx, Vec::<String>::new);
+    let reset_input = use_ref(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+
+    let should_clear_input = *reset_input.read();
+
+    if should_clear_input {
+        *reset_input.write_silent() = false;
+    }
     
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Option<Uuid>)>| {
         //to_owned![];
@@ -369,23 +375,27 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 if let Err(e) = rsp {
                     logger::error(&format!("failed to send message: {}", e));
                 }
+
+             
             }
         }
     });
+   
     cx.render(rsx!(
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
+            reset: should_clear_input,
             onchange: move |v: String| {
-                input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
+                *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
             },
             onreturn: move |_| {
-                raw_input_val.write().clear();
                 if STATIC_ARGS.use_mock {
                     todo!();
                 } else {
-                    ch.send((input.get().clone(), active_chat_id));
+                    ch.send((input.read().clone(), active_chat_id));
                 }
+                reset_input.set(true);
             },
             controls: cx.render(rsx!(
                 Button {
@@ -393,12 +403,12 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     disabled: loading,
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        raw_input_val.write().clear();
                         if STATIC_ARGS.use_mock {
                             todo!();
                         } else {
-                            ch.send((input.get().clone(), active_chat_id));
+                            ch.send((input.read().clone(), active_chat_id));
                         }
+                        reset_input.set(true);
                     },
                     tooltip: cx.render(rsx!(
                         Tooltip { 
