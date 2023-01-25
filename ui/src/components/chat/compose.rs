@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, time::Duration};
 
 use dioxus::prelude::*;
 
@@ -6,6 +6,7 @@ use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user
 
 use dioxus_desktop::{use_window, use_eval};
 use shared::language::get_local_text;
+use tokio::time::sleep;
 
 
 use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants, build_user_from_identity}, logger};
@@ -256,6 +257,26 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     };
+    let script = include_str!("./scroll_position.js");
+    let window = use_window(cx);
+
+    use_future(cx, (), |_| {
+        to_owned![script, window];
+        async move {
+            loop {
+                sleep(Duration::from_millis(500)).await;
+                let scroll_position_eval_result = window.eval(script.as_str());
+                let scroll_position_result = scroll_position_eval_result.await;
+                match scroll_position_result {
+                    Ok(data) => {
+                        let scroll_top_position = data.as_i64().unwrap_or(0);
+                        logger::trace(format!("Scroll Top position: {:?}", scroll_top_position).as_str());
+                    },
+                    Err(error) => logger::error(format!("{:?}", error).as_str()),
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(
         div {
