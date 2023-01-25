@@ -333,31 +333,12 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx,|| false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-
-    if *should_clear_input.get() {
-        // nasty hack because when using mock data, the charbar would be cleared for every keypress after the first message was sent
-        if STATIC_ARGS.use_mock {
-            state.write();
-        }
-    }
     
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Option<Uuid>)>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
         //to_owned![];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((msg, chat_id)) = rx.next().await {
-                let conv_id = match chat_id {
-                    Some(c) => c,
-                    None => {
-                        continue;
-                    }
-                };
-
-                // don't send empty messages
-                if msg.is_empty()  || !msg.iter().any(|line| !line.trim().is_empty()) {
-                    continue;
-                } 
-               
+            while let Some((msg, conv_id)) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 warp_cmd_tx
                     .send(WarpCmd::RayGun(RayGunCmd::SendMessage {
@@ -376,6 +357,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         }
     });
+
+    let msg_valid = |msg: &[String]| {
+        !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty())
+    };
    
     cx.render(rsx!(
         Chatbar {
@@ -387,18 +372,23 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             },
             onreturn: move |_| {
                 let msg = input.read().clone();
-                if STATIC_ARGS.use_mock {
-                    if let Some(id) = active_chat_id {
-                        if  !(msg.is_empty() || !msg.iter().any(|line| !line.trim().is_empty())) {
-                            state.write_silent().mutate(Action::MockSend(id, msg));
-                        }
-                    }
-                } else {
-                    ch.send((msg, active_chat_id));
-                }
                 // clearing input here should prevent the possibility to double send a message if enter is pressed twice
                 input.write().clear();
                 should_clear_input.set(true);
+
+                if !msg_valid(&msg) {
+                    return;
+                }
+                let id = match active_chat_id {
+                    Some(i) => i,
+                    None => return
+                };
+
+                if STATIC_ARGS.use_mock {
+                    state.write().mutate(Action::MockSend(id, msg));
+                } else {
+                    ch.send((msg, id));
+                }
             },
             controls: cx.render(rsx!(
                 Button {
@@ -407,17 +397,24 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
                         let msg = input.read().clone();
-                        if STATIC_ARGS.use_mock {
-                            if let Some(id) = active_chat_id {
-                                if  !(msg.is_empty() || !msg.iter().any(|line| !line.trim().is_empty())) {
-                                    state.write_silent().mutate(Action::MockSend(id, msg));
-                                }
-                            }
-                        } else {
-                            ch.send((msg, active_chat_id));
-                        }
+                        // clearing input here should prevent the possibility to double send a message if enter is pressed twice
                         input.write().clear();
                         should_clear_input.set(true);
+
+                        if !msg_valid(&msg) {
+                            return;
+                        }
+
+                        let id = match active_chat_id {
+                            Some(i) => i,
+                            None => return
+                        };
+
+                        if STATIC_ARGS.use_mock {
+                            state.write().mutate(Action::MockSend(id, msg));
+                        } else {
+                            ch.send((msg, id));
+                        }
                     },
                     tooltip: cx.render(rsx!(
                         Tooltip { 
