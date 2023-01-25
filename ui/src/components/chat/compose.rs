@@ -354,7 +354,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 };
 
                 // don't send empty messages
-                if msg.iter().all(|line| line.trim().is_empty())  {
+                if msg.is_empty()  || !msg.iter().any(|line| !line.trim().is_empty()) {
                     continue;
                 } 
                
@@ -389,12 +389,15 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 let msg = input.read().clone();
                 if STATIC_ARGS.use_mock {
                     if let Some(id) = active_chat_id {
-                        // this is a hack. see where reset_input is set to false again for explanation
-                        state.write_silent().mutate(Action::MockSend(id, msg));
+                        if  !(msg.is_empty() || !msg.iter().any(|line| !line.trim().is_empty())) {
+                            state.write_silent().mutate(Action::MockSend(id, msg));
+                        }
                     }
                 } else {
                     ch.send((msg, active_chat_id));
                 }
+                // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+                input.write().clear();
                 should_clear_input.set(true);
             },
             controls: cx.render(rsx!(
@@ -406,11 +409,14 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                         let msg = input.read().clone();
                         if STATIC_ARGS.use_mock {
                             if let Some(id) = active_chat_id {
-                                state.write_silent().mutate(Action::MockSend(id, msg));
+                                if  !(msg.is_empty() || !msg.iter().any(|line| !line.trim().is_empty())) {
+                                    state.write_silent().mutate(Action::MockSend(id, msg));
+                                }
                             }
                         } else {
                             ch.send((msg, active_chat_id));
                         }
+                        input.write().clear();
                         should_clear_input.set(true);
                     },
                     tooltip: cx.render(rsx!(
