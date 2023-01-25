@@ -247,7 +247,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     window.eval(script);
     let scroll_position_script = include_str!("./scroll_position.js");
 
-    use_future(cx, (), |_| {
+    // pass the id of the active_conversation so that the use_future restarts when chats are changed. 
+    let id = cx.props.data.as_ref().map(|d| d.active_chat.id).clone();
+    use_future(cx, &id, |_| {
         to_owned![script, scroll_position_script, window];
         async move {
             window.eval(script.as_str());
