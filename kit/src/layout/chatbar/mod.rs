@@ -78,7 +78,6 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let input_val = use_ref(cx, String::new);
     cx.render(rsx!(
         div {
             class: "chatbar",
@@ -87,7 +86,6 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             Input {
                 disabled: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
-                value: input_val.clone(),
             },
             cx.props.extensions.as_ref(),
             div {

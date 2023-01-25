@@ -24,7 +24,6 @@ use crate::{
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let input_val = use_ref(cx, String::new);
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
     let request_sent = use_state(cx, || false);
@@ -131,7 +130,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                 Input {
                     placeholder: get_local_text("friends.placeholder"),
                     icon: Icon::MagnifyingGlass,
-                    value: input_val.clone(),
                     options: Options {
                         with_validation: Some(friend_validation),
                         // Do not replace spaces with underscores
