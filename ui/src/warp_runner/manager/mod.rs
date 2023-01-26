@@ -1,3 +1,5 @@
+//! this is the main warp_runner task. It initializes Warp and sits between Warp and Uplink, allowing communication via channels.
+
 pub mod commands;
 mod events;
 use futures::StreamExt;
@@ -37,18 +39,21 @@ impl Warp {
 }
 
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
+    // receive command from Uplink
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
 
     // using a mutex was the only way to get a mutable static variable. this channel should only be read here and only needs to be acquired once
     let mut warp_cmd_rx = warp_cmd_rx.lock().await;
+
+    // receive events from RayGun and MultiPass
     let mut raygun_stream = get_raygun_stream(&mut warp.raygun).await;
     let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
 
-    let (msg_tx, mut msg_rx) = tokio::sync::mpsc::unbounded_channel();
-    let mut stream_manager = conv_stream::Manager::new(msg_tx.clone());
+    // gather incoming messages from all conversations and read them from conversation_msg_rx
+    let (conversation_msg_tx, mut conversation_msg_rx) = tokio::sync::mpsc::unbounded_channel();
+    let mut conversation_manager = conv_stream::Manager::new(conversation_msg_tx.clone());
 
     loop {
-        // println!("warp runner waiting for event");
         tokio::select! {
             opt = multipass_stream.next() => {
                 if events::handle_multipass_event(opt, &mut warp).await.is_err() {
@@ -56,19 +61,17 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                 }
             },
             opt = raygun_stream.next() => {
-                if events::handle_raygun_event(opt, &mut warp, &mut stream_manager).await.is_err() {
+                if events::handle_raygun_event(opt, &mut warp, &mut conversation_manager).await.is_err() {
                     break;
                 }
             },
-            opt = msg_rx.recv() => {
+            opt = conversation_msg_rx.recv() => {
                 if events::handle_message_event(opt, &mut warp).await.is_err() {
                     break;
                 }
             }
-            // receive a command from the UI. call the corresponding function
             opt = warp_cmd_rx.recv() => {
-                //println!("got warp_runner cmd");
-                if events::handle_warp_command(opt, &mut warp, &mut stream_manager).await.is_err() {
+                if events::handle_warp_command(opt, &mut warp, &mut conversation_manager).await.is_err() {
                     break;
                 }
             } ,
@@ -77,7 +80,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
         }
     }
 
-    // println!("terminating warp_runner thread");
+    logger::debug("terminating warp_runner thread");
 }
 
 fn init_tesseract() -> Tesseract {

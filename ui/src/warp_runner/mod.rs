@@ -1,3 +1,4 @@
+//! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use std::sync::Arc;
 
 use tokio::sync::{
@@ -49,6 +50,7 @@ pub enum WarpCmd {
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp
 pub struct WarpRunner {
+    // perhaps collecting a JoinHandle and calling abort() would be better than using Notify.
     notify: Arc<Notify>,
     ran_once: bool,
 }

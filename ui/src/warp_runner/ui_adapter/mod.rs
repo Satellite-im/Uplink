@@ -74,5 +74,3 @@ pub async fn conversation_to_chat(
         replying_to: None,
     })
 }
-
-// todo: put account and messaging in a module
