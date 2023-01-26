@@ -47,7 +47,7 @@
 - provides access to `RayGun`, `MultiPass`, and `Tesseract` via the `WarpCmd` struct. Commands contain a oneshot channel for returning the result. `WARP_CMD_CH` is used to send `WarpCmd`s to `WarpRunner`.   
 - notifies Uplink of Warp events via the `WarpEvent` struct. ex: friend requests and incoming messages. Note that a Warp event may not be in a format usable by the UI, and converting the event may require Warp. `warp_runner::ui_adapter` provides utilities for converting Warp events into something usable by the UI. 
 - `WarpRunner` automatically shuts down all threads using `tokio::notify` and a `Drop` implementation.
-- all of the events/commands are processed inside of a `loop { select!{...} }`. It's messy but this allows all the different functions to use the same mutable references to `RayGun`, `MultiPass`, and `Tesseract`. 
+- all of the events/commands are processed inside of a `loop { select!{...} }`. 
 
 ## Examples
 
@@ -68,13 +68,14 @@
 
 ### Ask Warp for something new
 - this requires adding a command to `WarpCmd`, in `ui/src/warp_runner/mod.rs`. 
-- handle the command in `command.rs`. ex: add an enumeration to `RayGunCmd` and handle it in `command::handle_raygun_command`
+- handle the command in `command.rs`. ex: add an enumeration to `RayGunCmd` and handle it in the `manager::commands::raygun_command` module. 
 - invoke the command from the UI by writing to `WARP_CMD_CH.tx` (demonstrated in a previous example). 
 
 ### Handle a new event from Warp
 - add an enumeration to `WarpEvent` (located in `warp_runner.rs`)
-- in `warp_runner.rs`, in the `run` function, write the new event to the `WarpEventTx` channel, for one of the following reasons
+- in `warp_runner/manager/mod.rs`, in the `run` function, write the new event to the `WarpEventTx` channel, for one of the following reasons
     - in response an event received via the `multipass_stream`
     - in response an event received via the `raygun_stream`
+    - in response to a new conversation message, received by the `conversation_manager`
     - in response to a command received over the `WarpCmdRx` channel. 
 - in `ui/src/state/mod.rs`, in `State::process_warp_event`, add handling for the new event. 
