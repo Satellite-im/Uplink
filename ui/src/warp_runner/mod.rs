@@ -30,6 +30,7 @@ use self::{
 };
 
 pub mod commands;
+mod conv_stream;
 pub mod ui_adapter;
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
@@ -54,6 +55,7 @@ type Messaging = Box<dyn RayGun>;
 #[allow(clippy::large_enum_variant)]
 pub enum WarpEvent {
     RayGun(RayGunEvent),
+    Message(ui_adapter::MessageEvent),
     MultiPass(MultiPassEvent),
 }
 
@@ -134,6 +136,9 @@ impl WarpRunner {
                 };
             };
 
+            let (msg_tx, mut msg_rx) = tokio::sync::mpsc::unbounded_channel();
+            let mut stream_manager = conv_stream::Manager::new(msg_tx.clone());
+
             loop {
                 // println!("warp runner waiting for event");
                 tokio::select! {
@@ -154,7 +159,7 @@ impl WarpRunner {
                     },
                     opt = raygun_stream.next() => {
                         if let Some(evt) = opt {
-                            match ui_adapter::convert_raygun_event(evt, &mut account, &mut messaging).await {
+                            match ui_adapter::convert_raygun_event(evt, &mut stream_manager, &mut account, &mut messaging).await {
                                 Ok(evt) => {
                                       if tx.send(WarpEvent::RayGun(evt)).is_err() {
                                         break;
@@ -166,6 +171,20 @@ impl WarpRunner {
                             }
                         }
                     },
+                    opt = msg_rx.recv() => {
+                        if let Some(msg) =  opt {
+                            match ui_adapter::convert_message_event(msg, &mut account, &mut messaging).await {
+                                Ok(evt) => {
+                                    if tx.send(WarpEvent::Message(evt)).is_err() {
+                                      break;
+                                    }
+                              }
+                              Err(e) => {
+                                logger::error(&format!("failed to convert message event: {}", e));
+                              }
+                            }
+                        }
+                    }
                     // receive a command from the UI. call the corresponding function
                     opt = rx.recv() => {
                         //println!("got warp_runner cmd");
@@ -176,14 +195,14 @@ impl WarpRunner {
                                 // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
                                 // todo: ask for that event
                                 if let MultiPassCmd::Block{did, .. } = &cmd {
-                                    if let Ok(ident) = did_to_identity(did.clone(), &account).await {
+                                    if let Ok(ident) = did_to_identity(did, &account).await {
                                         if tx.send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident))).is_err() {
                                             break;
                                         }
                                     }
                                 }
                                 if let MultiPassCmd::Unblock{did, .. } = &cmd {
-                                    if let Ok(ident) = did_to_identity(did.clone(), &account).await {
+                                    if let Ok(ident) = did_to_identity(did, &account).await {
                                         if tx.send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident))).is_err() {
                                             break;
                                         }
@@ -191,7 +210,9 @@ impl WarpRunner {
                                 }
                                 handle_multipass_cmd(cmd, &mut tesseract, &mut account).await;
                             },
-                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut account, &mut messaging).await,
+
+                            WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut stream_manager, &mut account, &mut messaging).await,
+
                         },
                         None => break,
                     }
@@ -241,9 +262,8 @@ async fn warp_initialization(
     .await
     .map(|ct| Box::new(ct) as Storage)?;
 
-    let mut rg_config = RgIpfsConfig::production(&path);
-    // Used to prevent broadcasting `ConversationCreated` on the sender side
-    rg_config.store_setting.disable_sender_event_emit = true;
+    // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
+    let rg_config = RgIpfsConfig::production(&path);
 
     let messaging = warp_rg_ipfs::IpfsMessaging::<Persistent>::new(
         Some(rg_config),

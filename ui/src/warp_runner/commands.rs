@@ -15,6 +15,7 @@ use crate::{
 };
 
 use super::{
+    conv_stream,
     ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
     Account, Messaging,
 };
@@ -95,6 +96,11 @@ pub enum RayGunCmd {
         recipient: DID,
         rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
     },
+    SendMessage {
+        conv_id: Uuid,
+        msg: Vec<String>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     // removes all direct conversations involving the recipient
     RemoveDirectConvs {
         recipient: DID,
@@ -116,11 +122,17 @@ pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) 
     }
 }
 
-pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging: &mut Messaging) {
+pub async fn handle_raygun_cmd(
+    cmd: RayGunCmd,
+    stream_manager: &mut conv_stream::Manager,
+    account: &mut Account,
+    messaging: &mut Messaging,
+) {
     match cmd {
         RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
             Ok(convs) => {
-                let r = raygun_initialize_conversations(&convs, account, messaging).await;
+                let r = raygun_initialize_conversations(&convs, stream_manager, account, messaging)
+                    .await;
                 let _ = rsp.send(r);
             }
             Err(_e) => {
@@ -135,6 +147,10 @@ pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging:
                 }
                 Err(e) => Err(e),
             };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::SendMessage { conv_id, msg, rsp } => {
+            let r = messaging.send(conv_id, None, msg).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::RemoveDirectConvs { recipient, rsp } => {
@@ -224,21 +240,21 @@ async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
-    let idents = dids_to_identity(reqs, account).await?;
+    let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
     let outgoing = account.list_outgoing_request().await?;
-    let idents = dids_to_identity(outgoing, account).await?;
+    let idents = dids_to_identity(&outgoing, account).await?;
     let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.block_list().await?;
-    let idents = dids_to_identity(ids, account).await?;
+    let idents = dids_to_identity(&ids, account).await?;
     let blocked = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.list_friends().await?;
     let mut friends = HashMap::new();
     for id in ids {
-        let ident = did_to_identity(id.clone(), account).await?;
+        let ident = did_to_identity(&id, account).await?;
         friends.insert(id, ident);
     }
 
@@ -254,6 +270,7 @@ async fn multipass_initialize_friends(
 
 async fn raygun_initialize_conversations(
     convs: &[raygun::Conversation],
+    stream_manager: &mut conv_stream::Manager,
     account: &Account,
     messaging: &mut Messaging,
 ) -> Result<(state::Identity, HashMap<Uuid, chats::Chat>), Error> {
@@ -262,6 +279,12 @@ async fn raygun_initialize_conversations(
     for conv in convs {
         match conversation_to_chat(conv, account, messaging).await {
             Ok(chat) => {
+                if let Err(e) = stream_manager.add_stream(chat.id, messaging).await {
+                    logger::error(&format!(
+                        "failed to open conversation stream for conv {}: {}",
+                        chat.id, e
+                    ));
+                }
                 let _ = all_chats.insert(chat.id, chat);
             }
             Err(e) => {
