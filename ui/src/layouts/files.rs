@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
-    components::nav::Nav,
+    components::{nav::Nav, new_folder::NewFolder},
     elements::{
         button::Button,
         file::File,
@@ -30,6 +30,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let home_text = get_local_text("uplink.home");
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
+
+    let add_new_folder = use_state(cx, || false);
 
     let first_render = use_state(cx, || true);
     if *first_render.get() && state.read().ui.is_minimal_view() {
@@ -67,8 +69,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    // ...
-                                }
+                                    add_new_folder.set(!add_new_folder);
+                                },
                             },
                             Button {
                                 icon: Icon::Plus,
@@ -141,6 +143,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-list",
                     aria_label: "files-list",
+                    add_new_folder.then(|| {
+                        rsx!(NewFolder {
+
+                        })
+                    }),
                     span {
                         Folder {
                             text: "Fake Folder 1".into(),

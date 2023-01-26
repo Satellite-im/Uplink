@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 use crate::{
-    elements::input::Input,
+    elements::input::{Input, Size},
     icons::{Icon, IconElement},
 };
 
@@ -52,11 +53,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let aria_label = get_aria_label(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-    let icon = if open {
-        Icon::FolderOpen
-    } else {
-        Icon::Folder
-    };
+    let icon = if open { Icon::FolderOpen } else { Icon::Folder };
     let disabled = cx.props.disabled.unwrap_or_default();
 
     let loading = cx.props.loading.unwrap_or_default();
@@ -78,12 +75,15 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 },
                 with_rename.then(|| rsx! (
-                    Input {
-                        disabled: disabled,
-                        placeholder: placeholder,
-                        // todo: use is_valid
-                        onreturn: move |(s, _is_valid)| emit(&cx, s)
-                    }
+                        Input {
+                            id: Uuid::new_v4().to_string(),
+                            disabled: disabled,
+                            placeholder: placeholder,
+                            focus: true,
+                            size: Size::Small,
+                            // todo: use is_valid
+                            onreturn: move |(s, _is_valid)| emit(&cx, s)
+                        }
                 )),
                 (!with_rename).then(|| rsx! (
                     label {
