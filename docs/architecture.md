@@ -46,7 +46,7 @@
 ## warp_runner::WarpRunner
 - provides access to `RayGun`, `MultiPass`, and `Tesseract` via the `WarpCmd` struct. Commands contain a oneshot channel for returning the result. `WARP_CMD_CH` is used to send `WarpCmd`s to `WarpRunner`.   
 - notifies Uplink of Warp events via the `WarpEvent` struct. ex: friend requests and incoming messages. Note that a Warp event may not be in a format usable by the UI, and converting the event may require Warp. `warp_runner::ui_adapter` provides utilities for converting Warp events into something usable by the UI. 
-- `WarpRunner` automatically shuts down all threads using `tokio::notify` and a `Drop` implementation.
+- `WarpRunner` automatically shuts down all tasks using `tokio::notify` and a `Drop` implementation.
 - all of the events/commands are processed inside of a `loop { select!{...} }`. It's messy but this allows all the different functions to use the same mutable references to `RayGun`, `MultiPass`, and `Tesseract`. 
 
 ## Examples
