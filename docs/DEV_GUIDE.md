@@ -21,6 +21,8 @@ Next you'll want to create your UI component. It's a simple process involving as
 
 This file represents the visual portion of your new feature. It will be responsible for rendering the component and handling any events that occur within it. It will also be responsible for dispatching any actions that need to be sent to the state layer. Lastly you should also expect all of your user interactions to happen within this component. Components should **NOT include async tasks** as they are not allowed to block the main thread. If you need to perform an async task, you should dispatch an action to the state layer and handle it there. The component should then have a loading state if it expects data that is async, it should self induce this state when firing an async action, and return to a normal state when the async action is complete (or the data we expect has loaded which is more common then watching the actual task).
 
+*NOTE:* Everything you put inside this component will be run any time this element is rendered. Again do not put any async tasks here, only use this for rendering and handling events.
+
 **Create a new SCSS file**
 
     touch src/styles/components/<component-name>.scss
@@ -69,7 +71,7 @@ Sometimes you're working on very big features and want to add a whole new "page"
 
 ### Adding or modifying the `kit`
 
-You should avoid modifying the kit to fit a specific need. Instead use this resource as a tool and only add new functionality or components that will be useful for not only Satellite but extension developers and perhaps even others using Dioxus. This also keeps kit components and elements very reusable and extensible.
+You should avoid modifying the kit to fit a specific need. Instead use this resource as a tool and only add new functionality or components that will be useful for not only Satellite but extension developers and perhaps even others using Dioxus. This also keeps kit components and elements very reusable and
 
 ### Adding a new warp hook
 
