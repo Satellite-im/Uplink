@@ -2,11 +2,13 @@ use std::{rc::Rc, time::Duration};
 
 use dioxus::prelude::*;
 
+use futures::StreamExt;
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Platform, Status}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
 use dioxus_desktop::{use_window};
 use shared::language::get_local_text;
 use tokio::time::sleep;
+use uuid::Uuid;
 
 
 use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants, build_user_from_identity}, logger};
@@ -246,28 +248,38 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let script = include_str!("./script.js");
     window.eval(script);
     let scroll_position_script = include_str!("./scroll_position.js");
+    let scroll_last_position: &UseRef<i64> = use_ref(cx, || 0);
+    let scroll_position_code_is_running = use_ref(cx, || false);
 
-    // pass the id of the active_conversation so that the use_future restarts when chats are changed. 
-    let id = cx.props.data.as_ref().map(|d| d.active_chat.id).clone();
-    use_future(cx, &id, |_| {
-        to_owned![script, scroll_position_script, window];
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Option<Uuid>>| {
+        to_owned![window, script, scroll_position_script, scroll_last_position, scroll_position_code_is_running];
+        window.eval(script.as_str());
         async move {
-            if id.is_none() {
-                return;
-            }
-            window.eval(script.as_str());
-            loop {
-                sleep(Duration::from_millis(500)).await;
-                let scroll_position_eval_result = window.eval(scroll_position_script.as_str());
-                let scroll_position_result =  scroll_position_eval_result.await;
-                match scroll_position_result {
-                    Ok(data) => {
-                        let scroll_top_position = data.as_i64().unwrap_or(0);
-                        // TODO: Let this print for Phill tests, but remove later
-                        println!("Scroll Top position: {:?}", scroll_top_position);
-                        logger::trace(format!("Scroll Top position: {:?}", scroll_top_position).as_str());
-                    },
-                    Err(error) => logger::error(format!("{:?}", error).as_str()),
+            while let Some(id) = rx.next().await {
+                *scroll_position_code_is_running.write_silent() = true;
+                if id.is_none() {
+                    *scroll_position_code_is_running.write_silent() = false;
+                    return;
+                }
+                loop {
+                    sleep(Duration::from_millis(500)).await;
+                    let scroll_position_eval_result = window.eval(scroll_position_script.as_str());
+                    let scroll_position_result =  scroll_position_eval_result.await;
+                    match scroll_position_result {
+                        Ok(data) => {
+                            let scroll_top_position = data.as_i64().unwrap_or(0);
+                            if *scroll_last_position.read() == scroll_top_position {
+                                *scroll_position_code_is_running.write_silent() = false;
+                                break;
+                            } else {
+                                *scroll_last_position.write_silent() = scroll_top_position;
+                            };
+                            // TODO: Let this print for Phill tests, but remove later
+                            println!("Scroll Top position: {:?}", scroll_top_position);
+                            logger::trace(format!("Scroll Top position: {:?}", scroll_top_position).as_str());
+                        },
+                        Err(error) => logger::error(format!("{:?}", error).as_str()),
+                    }
                 }
             }
         }
@@ -289,6 +301,12 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
+            onmouseout: |_| {
+                if *scroll_position_code_is_running.read() == false {
+                    let id = cx.props.data.as_ref().map(|d| d.active_chat.id).clone();
+                    ch.send(id.clone());
+                }
+            },
             div {
                 data.message_groups.iter().map(|group| {
                     let messages = &group.messages;
