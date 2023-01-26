@@ -251,9 +251,15 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let scroll_last_position: &UseRef<i64> = use_ref(cx, || 0);
     let scroll_position_code_is_running = use_ref(cx, || false);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Option<Uuid>>| {
-        to_owned![window, script, scroll_position_script, scroll_last_position, scroll_position_code_is_running];
+
+    use_future(cx, (), |_| {
+    to_owned![window, script];
+    async move {
         window.eval(script.as_str());
+    }});
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Option<Uuid>>| {
+        to_owned![window, scroll_position_script, scroll_last_position, scroll_position_code_is_running];
         async move {
             while let Some(id) = rx.next().await {
                 *scroll_position_code_is_running.write_silent() = true;
@@ -261,26 +267,20 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     *scroll_position_code_is_running.write_silent() = false;
                     return;
                 }
-                loop {
                     sleep(Duration::from_millis(500)).await;
                     let scroll_position_eval_result = window.eval(scroll_position_script.as_str());
                     let scroll_position_result =  scroll_position_eval_result.await;
                     match scroll_position_result {
                         Ok(data) => {
                             let scroll_top_position = data.as_i64().unwrap_or(0);
-                            if *scroll_last_position.read() == scroll_top_position {
-                                *scroll_position_code_is_running.write_silent() = false;
-                                break;
-                            } else {
-                                *scroll_last_position.write_silent() = scroll_top_position;
-                            };
+                            *scroll_last_position.write_silent() = scroll_top_position;
                             // TODO: Let this print for Phill tests, but remove later
                             println!("Scroll Top position: {:?}", scroll_top_position);
                             logger::trace(format!("Scroll Top position: {:?}", scroll_top_position).as_str());
+                            *scroll_position_code_is_running.write_silent() = false;
                         },
                         Err(error) => logger::error(format!("{:?}", error).as_str()),
                     }
-                }
             }
         }
     });
@@ -337,6 +337,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 rsx! (
+                                    div {
+                                        id: "test_div",
+                                        color: "red",
+                                    },
                                     ContextMenu {
                                         id: format!("message-{}", message.id()),
                                         items: cx.render(rsx!(
