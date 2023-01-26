@@ -1,0 +1,138 @@
+use warp::{
+    multipass::MultiPassEventKind,
+    raygun::{MessageEventKind, RayGunEventKind},
+};
+
+use crate::{
+    logger,
+    warp_runner::{
+        commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd, MultiPassCmd},
+        conv_stream,
+        ui_adapter::{self, did_to_identity, MultiPassEvent},
+        WarpCmd, WarpEvent,
+    },
+    WARP_EVENT_CH,
+};
+
+pub async fn handle_multipass_event(
+    evt: Option<MultiPassEventKind>,
+    warp: &mut super::Warp,
+) -> Result<(), ()> {
+    let evt = match evt {
+        Some(e) => e,
+        None => return Ok(()),
+    };
+    let warp_event_tx = WARP_EVENT_CH.tx.clone();
+    match ui_adapter::convert_multipass_event(evt, &mut warp.multipass, &mut warp.raygun).await {
+        Ok(evt) => {
+            if warp_event_tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                return Err(());
+            }
+        }
+        Err(e) => {
+            logger::error(&format!("failed to convert multipass event: {}", e));
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_raygun_event(
+    evt: Option<RayGunEventKind>,
+    warp: &mut super::Warp,
+    stream_manager: &mut conv_stream::Manager,
+) -> Result<(), ()> {
+    let evt = match evt {
+        Some(e) => e,
+        None => return Ok(()),
+    };
+    let warp_event_tx = WARP_EVENT_CH.tx.clone();
+    match ui_adapter::convert_raygun_event(
+        evt,
+        stream_manager,
+        &mut warp.multipass,
+        &mut warp.raygun,
+    )
+    .await
+    {
+        Ok(evt) => {
+            if warp_event_tx.send(WarpEvent::RayGun(evt)).is_err() {
+                return Err(());
+            }
+        }
+        Err(e) => {
+            logger::error(&format!("failed to convert raygun event: {}", e));
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_message_event(
+    evt: Option<MessageEventKind>,
+    warp: &mut super::Warp,
+) -> Result<(), ()> {
+    let msg = match evt {
+        Some(e) => e,
+        None => return Ok(()),
+    };
+    let warp_event_tx = WARP_EVENT_CH.tx.clone();
+    match ui_adapter::convert_message_event(msg, &mut warp.multipass, &mut warp.raygun).await {
+        Ok(evt) => {
+            if warp_event_tx.send(WarpEvent::Message(evt)).is_err() {
+                return Err(());
+            }
+        }
+        Err(e) => {
+            logger::error(&format!("failed to convert message event: {}", e));
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_warp_command(
+    evt: Option<WarpCmd>,
+    warp: &mut super::Warp,
+    stream_manager: &mut conv_stream::Manager,
+) -> Result<(), ()> {
+    let cmd = match evt {
+        Some(e) => e,
+        None => return Ok(()),
+    };
+    let warp_event_tx = WARP_EVENT_CH.tx.clone();
+
+    match cmd {
+        WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut warp.tesseract).await,
+        WarpCmd::MultiPass(cmd) => {
+            // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
+            // todo: ask for that event
+            if let MultiPassCmd::Block { did, .. } = &cmd {
+                if let Ok(ident) = did_to_identity(did, &warp.multipass).await {
+                    if warp_event_tx
+                        .send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident)))
+                        .is_err()
+                    {
+                        return Err(());
+                    }
+                }
+            }
+            if let MultiPassCmd::Unblock { did, .. } = &cmd {
+                if let Ok(ident) = did_to_identity(did, &warp.multipass).await {
+                    if warp_event_tx
+                        .send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident)))
+                        .is_err()
+                    {
+                        return Err(());
+                    }
+                }
+            }
+            handle_multipass_cmd(cmd, &mut warp.tesseract, &mut warp.multipass).await;
+        }
+
+        WarpCmd::RayGun(cmd) => {
+            handle_raygun_cmd(cmd, stream_manager, &mut warp.multipass, &mut warp.raygun).await
+        }
+    }
+    Ok(())
+}

@@ -1,22 +1,15 @@
-use std::sync::Arc;
+mod events;
 
 use futures::StreamExt;
+use std::sync::Arc;
 use tokio::sync::Notify;
-use warp::{raygun::RayGunEventStream, tesseract::Tesseract};
+use warp::{multipass::MultiPassEventStream, raygun::RayGunEventStream, tesseract::Tesseract};
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 
 use super::{conv_stream, Account, Messaging, Storage};
-use crate::{
-    logger,
-    warp_runner::{
-        commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd, MultiPassCmd},
-        ui_adapter::{self, did_to_identity, MultiPassEvent},
-        WarpCmd, WarpEvent,
-    },
-    STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
-};
+use crate::{logger, STATIC_ARGS, WARP_CMD_CH};
 
 /// Contains the structs for Warp
 pub struct Warp {
@@ -42,27 +35,12 @@ impl Warp {
 }
 
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
-    let (tx, rx) = (WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
-    let (messaging, account, tesseract) =
-        (&mut warp.raygun, &mut warp.multipass, &mut warp.tesseract);
+    let warp_cmd_rx = WARP_CMD_CH.rx.clone();
 
     // this was the only way to get a mutable static variable. but this channel should only be read here.
-    let mut rx = rx.lock().await;
-    let mut raygun_stream = get_raygun_stream(messaging).await;
-    let mut multipass_stream = loop {
-        match account.subscribe().await {
-            Ok(stream) => break stream,
-            Err(e) => match e {
-                //Note: Used as a precaution for future checks
-                warp::error::Error::MultiPassExtensionUnavailable => {
-                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-                }
-                //TODO: log error
-                //Note: Shouldnt give any other error but if it does to probably file as a bug
-                _ => return,
-            },
-        };
-    };
+    let mut warp_cmd_rx = warp_cmd_rx.lock().await;
+    let mut raygun_stream = get_raygun_stream(&mut warp.raygun).await;
+    let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
 
     let (msg_tx, mut msg_rx) = tokio::sync::mpsc::unbounded_channel();
     let mut stream_manager = conv_stream::Manager::new(msg_tx.clone());
@@ -71,81 +49,27 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
         // println!("warp runner waiting for event");
         tokio::select! {
             opt = multipass_stream.next() => {
-                //println!("got multiPass event");
-                if let Some(evt) = opt {
-                    match ui_adapter::convert_multipass_event(evt, account,  messaging).await {
-                        Ok(evt) => {
-                            if tx.send(WarpEvent::MultiPass(evt)).is_err() {
-                                break;
-                            }
-                        }
-                        Err(e) => {
-                            logger::error(&format!("failed to convert multipass event: {}", e));
-                        }
-                    }
+                if events::handle_multipass_event(opt, &mut warp).await.is_err() {
+                    break;
                 }
             },
             opt = raygun_stream.next() => {
-                if let Some(evt) = opt {
-                    match ui_adapter::convert_raygun_event(evt, &mut stream_manager, account, messaging).await {
-                        Ok(evt) => {
-                              if tx.send(WarpEvent::RayGun(evt)).is_err() {
-                                break;
-                              }
-                        }
-                        Err(e) => {
-                            logger::error(&format!("failed to convert raygun event: {}", e));
-                        }
-                    }
+                if events::handle_raygun_event(opt, &mut warp, &mut stream_manager).await.is_err() {
+                    break;
                 }
             },
             opt = msg_rx.recv() => {
-                if let Some(msg) =  opt {
-                    match ui_adapter::convert_message_event(msg, account, messaging).await {
-                        Ok(evt) => {
-                            if tx.send(WarpEvent::Message(evt)).is_err() {
-                              break;
-                            }
-                      }
-                      Err(e) => {
-                        logger::error(&format!("failed to convert message event: {}", e));
-                      }
-                    }
+                if events::handle_message_event(opt, &mut warp).await.is_err() {
+                    break;
                 }
             }
             // receive a command from the UI. call the corresponding function
-            opt = rx.recv() => {
+            opt = warp_cmd_rx.recv() => {
                 //println!("got warp_runner cmd");
-                match opt {
-                Some(cmd) => match cmd {
-                    WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, tesseract).await,
-                    WarpCmd::MultiPass(cmd) => {
-                        // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
-                        // todo: ask for that event
-                        if let MultiPassCmd::Block{did, .. } = &cmd {
-                            if let Ok(ident) = did_to_identity(did, account).await {
-                                if tx.send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident))).is_err() {
-                                    break;
-                                }
-                            }
-                        }
-                        if let MultiPassCmd::Unblock{did, .. } = &cmd {
-                            if let Ok(ident) = did_to_identity(did, account).await {
-                                if tx.send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident))).is_err() {
-                                    break;
-                                }
-                            }
-                        }
-                        handle_multipass_cmd(cmd, tesseract, account).await;
-                    },
-
-                    WarpCmd::RayGun(cmd) => handle_raygun_cmd(cmd, &mut stream_manager, account, messaging).await,
-
-                },
-                None => break,
-            }
+                if events::handle_warp_command(opt, &mut warp, &mut stream_manager).await.is_err() {
+                    break;
+                }
             } ,
-
             // the WarpRunner has been dropped. stop the thread
             _ = notify.notified() => break,
         }
@@ -214,5 +138,25 @@ async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
             }
         }
+    }
+}
+
+async fn get_multipass_stream(account: &mut Account) -> MultiPassEventStream {
+    loop {
+        match account.subscribe().await {
+            Ok(stream) => break stream,
+            Err(e) => match e {
+                //Note: Used as a precaution for future checks
+                warp::error::Error::MultiPassExtensionUnavailable => {
+                    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                }
+                //TODO: log error
+                //Note: Shouldnt give any other error but if it does to probably file as a bug
+                _e => {
+                    logger::error(&format!("failed to get multipass stream: {}", _e));
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                }
+            },
+        };
     }
 }
