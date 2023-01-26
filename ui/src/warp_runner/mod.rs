@@ -69,7 +69,7 @@ impl WarpRunner {
         }
     }
 
-    // spawns a thread which will terminate when WarpRunner is dropped
+    // spawns a task which will terminate when WarpRunner is dropped
     pub fn run(&mut self) {
         assert!(!self.ran_once, "WarpRunner called run() multiple times");
         self.ran_once = true;
