@@ -11,9 +11,8 @@ use warp::{
 use crate::{
     logger,
     state::{self, chats},
+    warp_runner::{conv_stream, ui_adapter::conversation_to_chat, Account, Messaging},
 };
-
-use super::super::{conv_stream, ui_adapter::conversation_to_chat, Account, Messaging};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]

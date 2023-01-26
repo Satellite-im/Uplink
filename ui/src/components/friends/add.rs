@@ -18,7 +18,7 @@ use warp::error::Error;
 use crate::{
     logger,
     state::{Action, Identity, State, ToastNotification},
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
 #[allow(non_snake_case)]

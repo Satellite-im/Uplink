@@ -1,5 +1,5 @@
+pub mod commands;
 mod events;
-
 use futures::StreamExt;
 use std::sync::Arc;
 use tokio::sync::Notify;
@@ -11,7 +11,9 @@ use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
 use super::{conv_stream, Account, Messaging, Storage};
 use crate::{logger, STATIC_ARGS, WARP_CMD_CH};
 
-/// Contains the structs for Warp
+pub use commands::{MultiPassCmd, RayGunCmd, TesseractCmd};
+
+/// Contains the structs needed for run() to handle various events
 pub struct Warp {
     tesseract: Tesseract,
     multipass: Account,
@@ -37,7 +39,7 @@ impl Warp {
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
 
-    // this was the only way to get a mutable static variable. but this channel should only be read here.
+    // using a mutex was the only way to get a mutable static variable. this channel should only be read here and only needs to be acquired once
     let mut warp_cmd_rx = warp_cmd_rx.lock().await;
     let mut raygun_stream = get_raygun_stream(&mut warp.raygun).await;
     let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
@@ -70,7 +72,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                     break;
                 }
             } ,
-            // the WarpRunner has been dropped. stop the thread
+            // the WarpRunner has been dropped. stop the task
             _ = notify.notified() => break,
         }
     }
