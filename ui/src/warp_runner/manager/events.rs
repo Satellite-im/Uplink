@@ -6,12 +6,16 @@ use warp::{
 use crate::{
     logger,
     warp_runner::{
-        commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd, MultiPassCmd},
         conv_stream,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
         WarpCmd, WarpEvent,
     },
     WARP_EVENT_CH,
+};
+
+use super::{
+    commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
+    MultiPassCmd,
 };
 
 pub async fn handle_multipass_event(

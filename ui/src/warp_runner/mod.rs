@@ -6,15 +6,13 @@ use tokio::sync::{
 };
 use warp::{constellation::Constellation, multipass::MultiPass, raygun::RayGun};
 
-use self::{
-    commands::{MultiPassCmd, RayGunCmd, TesseractCmd},
-    ui_adapter::{MultiPassEvent, RayGunEvent},
-};
+use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
-pub mod commands;
 mod conv_stream;
 mod manager;
 pub mod ui_adapter;
+
+pub use manager::{MultiPassCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -76,7 +74,7 @@ impl WarpRunner {
 
         let notify = self.notify.clone();
         tokio::spawn(async move {
-            // todo: retry this in a loop
+            // todo: retry this in a loop if warp fails to initialize
             let warp = manager::Warp::new()
                 .await
                 .expect("failed to initialize warp");

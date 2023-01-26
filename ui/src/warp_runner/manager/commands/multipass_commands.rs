@@ -3,11 +3,12 @@ use std::collections::{HashMap, HashSet};
 use futures::channel::oneshot;
 use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
-use crate::state::{self, friends};
-
-use super::super::{
-    ui_adapter::{did_to_identity, dids_to_identity},
-    Account,
+use crate::{
+    state::{self, friends},
+    warp_runner::{
+        ui_adapter::{did_to_identity, dids_to_identity},
+        Account,
+    },
 };
 
 #[derive(Debug)]
