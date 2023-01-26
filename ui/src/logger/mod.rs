@@ -1,8 +1,9 @@
-use derive_more::Display;
+use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+use warp::logging::tracing::log::{self, Level, LevelFilter, SetLoggerError};
 use warp::sync::RwLock;
 
 use chrono::Local;
@@ -10,6 +11,33 @@ use chrono::Local;
 use crate::STATIC_ARGS;
 
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
+
+pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
+    log::set_max_level(level);
+    log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
+    Ok(())
+}
+
+// todo: remove these slowly and replace with log macros
+pub fn trace(msg: &str) {
+    log::trace!("{msg}");
+}
+
+pub fn debug(msg: &str) {
+    log::debug!("{msg}");
+}
+
+pub fn info(msg: &str) {
+    log::info!("{msg}");
+}
+
+pub fn warn(msg: &str) {
+    log::warn!("{msg}");
+}
+
+pub fn error(msg: &str) {
+    log::error!("{msg}");
+}
 
 pub fn set_save_to_file(b: bool) {
     LOGGER.write().save_to_file = b;
@@ -31,34 +59,6 @@ pub fn set_display_trace(b: bool) {
     LOGGER.write().display_trace = b;
 }
 
-// don't persist tracing information. at most, print it to the terminal
-pub fn trace(message: &str) {
-    if LOGGER.read().display_trace {
-        let log = Log {
-            level: LogLevel::Trace,
-            message: message.to_string(),
-            datetime: Local::now().to_string()[0..19].to_string(),
-        };
-        println!("{}", log)
-    }
-}
-
-pub fn debug(message: &str) {
-    LOGGER.write().log(LogLevel::Debug, message);
-}
-
-pub fn warn(message: &str) {
-    LOGGER.write().log(LogLevel::Warn, message);
-}
-
-pub fn info(message: &str) {
-    LOGGER.write().log(LogLevel::Info, message);
-}
-
-pub fn error(message: &str) {
-    LOGGER.write().log(LogLevel::Error, message);
-}
-
 pub fn get_log_entries() -> Vec<Log> {
     Vec::from_iter(LOGGER.read().log_entries.iter().cloned())
 }
@@ -69,39 +69,34 @@ pub fn get_logs_limit() -> usize {
 
 #[derive(Debug, Clone)]
 pub struct Log {
-    pub level: LogLevel,
+    pub level: Level,
     pub message: String,
     pub datetime: String,
 }
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} | {} | {}", self.datetime, self.level, self.message)
+        let level = get_level_string(self.level);
+        write!(f, "{} | {} | {}", self.datetime, level, self.message)
     }
 }
 
-#[derive(Debug, Clone, Copy, Display, PartialEq, Eq)]
-pub enum LogLevel {
-    #[display(fmt = "DEBUG")]
-    Debug,
-    #[display(fmt = "INFO")]
-    Info,
-    #[display(fmt = "WARN")]
-    Warn,
-    #[display(fmt = "ERROR")]
-    Error,
-    #[display(fmt = "TRACE")]
-    Trace,
+fn get_level_string(level: Level) -> String {
+    match level {
+        Level::Error => level.to_string().red().to_string(),
+        Level::Warn => level.to_string().yellow().to_string(),
+        Level::Info => level.to_string().cyan().to_string(),
+        Level::Debug => level.to_string().purple().to_string(),
+        Level::Trace => level.to_string().normal().to_string(),
+    }
 }
 
-impl LogLevel {
-    pub fn color(&self) -> &'static str {
-        match self {
-            LogLevel::Debug | LogLevel::Trace => "rgb(0, 255, 0)",
-            LogLevel::Info => "rgb(0, 195, 255)",
-            LogLevel::Warn => "yellow",
-            LogLevel::Error => "red",
-        }
+pub fn get_color_string(level: Level) -> &'static str {
+    match level {
+        Level::Debug | Level::Trace => "rgb(0, 255, 0)",
+        Level::Info => "rgb(0, 195, 255)",
+        Level::Warn => "yellow",
+        Level::Error => "red",
     }
 }
 
@@ -116,7 +111,7 @@ pub struct Logger {
 }
 
 impl Logger {
-    fn load() -> Logger {
+    fn load() -> Self {
         let logger_path = STATIC_ARGS.logger_path.to_string_lossy().to_string();
         let _ = OpenOptions::new()
             .create(true)
@@ -124,7 +119,7 @@ impl Logger {
             .open(&logger_path);
 
         let log_entries = VecDeque::new();
-        Logger {
+        Self {
             save_to_file: false,
             write_to_stdout: false,
             display_trace: false,
@@ -136,12 +131,19 @@ impl Logger {
 }
 
 impl Logger {
-    fn log(&mut self, level: LogLevel, message: &str) {
+    fn log(&mut self, level: Level, message: &str) {
         let new_log = Log {
             level,
             message: message.to_string(),
             datetime: Local::now().to_string()[0..19].to_string(),
         };
+
+        // special path for Trace logs
+        // don't persist tracing information. at most, print it to the terminal
+        if level == Level::Trace && self.display_trace {
+            println!("{}", new_log);
+            return;
+        }
 
         self.log_entries.push_back(new_log.clone());
 
@@ -156,7 +158,7 @@ impl Logger {
                 .unwrap();
 
             if let Err(error) = writeln!(file, "{}", new_log) {
-                self::error(format!("Couldn't write to debug.log file. {error}").as_str());
+                eprintln!("Couldn't write to debug.log file. {error}");
             }
         }
 
@@ -164,4 +166,38 @@ impl Logger {
             println!("{}", new_log)
         }
     }
+}
+
+// connects the `log` crate to the `Logger` singleton
+struct LogGlue {
+    max_level: LevelFilter,
+}
+
+impl LogGlue {
+    pub fn new(max_level: LevelFilter) -> Self {
+        Self { max_level }
+    }
+}
+
+impl crate::log::Log for LogGlue {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= self.max_level
+    }
+
+    fn log(&self, record: &log::Record) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
+
+        // todo: send .warp logs somewhere else
+        // don't care about other libraries
+        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+            return;
+        }
+
+        let msg = format!("{}", record.args());
+        LOGGER.write().log(record.level(), &msg);
+    }
+
+    fn flush(&self) {}
 }
