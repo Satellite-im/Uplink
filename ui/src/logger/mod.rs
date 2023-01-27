@@ -7,9 +7,6 @@
 //!
 //! the debug_logger GUI loads all entries from debug.log and then adds new logs to the display.
 //!
-//! for simplicity, the logger will not keep a circular buffer of logs in memory, because it would have to track
-//! which logs were in memory and which were written to the file, and prevent duplicates. that's just too complicated.
-//!
 //! for readability, the `Log` struct implements display, and logs are written to the file in a regular log format, rather than using Serde::Serialize
 //!
 //! for simplicity, the debug_logger should parse these fields directly. this seems better than converting the
@@ -17,6 +14,7 @@
 
 use colored::Colorize;
 use once_cell::sync::Lazy;
+use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use tokio::sync::mpsc;
@@ -46,11 +44,14 @@ impl std::fmt::Display for Log {
 
 #[derive(Debug, Clone)]
 pub struct Logger {
+    log_file: String,
+    // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
+    log_entries: VecDeque<Log>,
+    subscribers: Vec<mpsc::UnboundedSender<Log>>,
+    max_logs: usize,
     save_to_file: bool,
     write_to_stdout: bool,
     display_trace: bool,
-    log_file: String,
-    subscribers: Vec<mpsc::UnboundedSender<Log>>,
 }
 
 // connects the `log` crate to the `Logger` singleton
@@ -101,6 +102,8 @@ impl Logger {
             display_trace: false,
             log_file: logger_path,
             subscribers: vec![],
+            log_entries: VecDeque::new(),
+            max_logs: 100,
         }
     }
 
@@ -135,6 +138,12 @@ impl Logger {
             if let Err(error) = writeln!(file, "{}", new_log) {
                 eprintln!("Couldn't write to debug.log file. {error}");
             }
+        } else {
+            self.log_entries.push_back(new_log.clone());
+
+            if self.log_entries.len() >= self.max_logs {
+                self.log_entries.pop_front();
+            }
         }
 
         if self.write_to_stdout {
@@ -142,6 +151,25 @@ impl Logger {
         }
 
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
+    }
+
+    fn set_save_to_file(&mut self, enabled: bool) {
+        self.save_to_file = enabled;
+
+        if enabled {
+            return;
+        }
+
+        let mut file = OpenOptions::new()
+            .append(true)
+            .open(&self.log_file)
+            .unwrap();
+
+        for entry in self.log_entries.drain(..) {
+            if let Err(error) = writeln!(file, "{}", entry) {
+                eprintln!("Couldn't write to debug.log file. {error}");
+            }
+        }
     }
 }
 
@@ -176,8 +204,12 @@ pub fn error(msg: &str) {
     log::error!("{msg}");
 }
 
+pub fn set_display_trace(b: bool) {
+    LOGGER.write().display_trace = b;
+}
+
 pub fn set_save_to_file(b: bool) {
-    LOGGER.write().save_to_file = b;
+    LOGGER.write().set_save_to_file(b);
 }
 
 pub fn get_save_to_file() -> bool {
@@ -188,8 +220,12 @@ pub fn set_write_to_stdout(b: bool) {
     LOGGER.write().write_to_stdout = b;
 }
 
-pub fn set_display_trace(b: bool) {
-    LOGGER.write().display_trace = b;
+pub fn set_max_logs(s: usize) {
+    LOGGER.write().max_logs = s;
+}
+
+pub fn get_logs_limit() -> usize {
+    LOGGER.read().max_logs
 }
 
 pub fn load_debug_log() -> Vec<String> {
