@@ -83,6 +83,18 @@ pub async fn handle_raygun_cmd(
             let r = raygun_remove_direct_convs(recipient, messaging).await;
             let _ = rsp.send(r);
         }
+        RayGunCmd::React {
+            conversation_id,
+            message_id,
+            reaction_state,
+            emoji,
+            rsp,
+        } => {
+            let r = messaging
+                .react(conversation_id, message_id, reaction_state, emoji)
+                .await;
+            let _ = rsp.send(r);
+        }
     }
 }
 

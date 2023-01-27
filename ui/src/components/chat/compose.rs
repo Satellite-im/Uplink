@@ -278,8 +278,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             rsp: tx
                         })).expect("failed to send command");
 
-                        if let Err(_e) = rx.await {
-
+                        let res = rx.await.expect("command canceled");
+                        if res.is_err() {
+                            // failed to add/remove reaction
                         }
 
                     }
@@ -331,7 +332,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             remote: group.remote,
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();
-                                let message_id = message.id();
+                                let message2 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 rsx! (
@@ -351,7 +352,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 //TODO: let the user pick a reaction
                                                 onpress: move |_| {
                                                       // using "like" for now
-                                                    ch.send(MessagesCommand::React((message_id, "👍".into())));
+                                                    ch.send(MessagesCommand::React((message2.clone(), "👍".into())));
                                                 }
                                             },
                                         )),

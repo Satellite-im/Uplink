@@ -36,7 +36,7 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     multipass::identity::IdentityStatus,
-    raygun::{self, Message},
+    raygun::{self, Message, Reaction},
 };
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
@@ -501,6 +501,67 @@ impl State {
     pub fn remove_window(&mut self, id: WindowId) {
         self.ui.remove_overlay(id);
     }
+
+    pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
+        let user = self.account.identity.did_key();
+        if let Some(conv) = self.chats.all.get_mut(&chat_id) {
+            // using any() here for an easy way to apply the Fn to the entire list
+            let _ = conv.messages.iter_mut().any(|msg| {
+                if msg.id() != message_id {
+                    return false;
+                }
+
+                let mut reactions = msg.reactions();
+                let has_emoji = reactions.iter_mut().any(|r| {
+                    if r.emoji() != emoji {
+                        return false;
+                    }
+                    if !r.users().contains(&user) {
+                        r.users_mut().push(user.clone());
+                    }
+                    true
+                });
+
+                if !has_emoji {
+                    let mut r = Reaction::default();
+                    r.set_emoji(&emoji);
+                    r.set_users(vec![user.clone()]);
+                    msg.reactions_mut().push(r);
+                }
+
+                msg.set_reactions(reactions);
+                true
+            });
+        }
+    }
+    pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
+        let user = self.account.identity.did_key();
+        if let Some(conv) = self.chats.all.get_mut(&chat_id) {
+            // using any() here for an easy way to apply the Fn to the entire list
+            let _ = conv.messages.iter_mut().any(|msg| {
+                if msg.id() != message_id {
+                    return false;
+                }
+
+                let mut reactions = msg.reactions();
+                let modified_reactions = reactions.iter_mut().any(|r| {
+                    if r.emoji() != emoji {
+                        return false;
+                    }
+                    let mut users = r.users();
+                    users.retain(|id| id != &user);
+                    r.set_users(users);
+                    true
+                });
+                if !modified_reactions {
+                    return false;
+                }
+                reactions.retain(|r| !r.users().is_empty());
+                msg.set_reactions(reactions);
+                true
+            });
+        }
+    }
 }
 
 impl State {
@@ -590,7 +651,8 @@ impl State {
             Action::ClearUnreads(chat) => {
                 self.clear_unreads(&chat);
             }
-            Action::React(_, _, _) => todo!(),
+            Action::AddReaction(_, _, _) => todo!(),
+            Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.account.identity.did_key();
@@ -748,6 +810,20 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
+            }
+            MessageEvent::MessageReactionAdded {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.add_message_reaction(conversation_id, message_id, reaction);
+            }
+            MessageEvent::MessageReactionRemoved {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.remove_message_reaction(conversation_id, message_id, reaction);
             }
         }
     }
