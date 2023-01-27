@@ -46,6 +46,7 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                     text: format!("{}: {}", "Logger Debug opened on".to_owned(), *debug_logger_started_time.read())},
             },
             logs_to_show.iter().map(|log| {
+               
                 let mut fields = log.split('|');
                 let log_datetime = fields.next().unwrap_or_default();
                 let log_level = fields.next().unwrap_or_default();

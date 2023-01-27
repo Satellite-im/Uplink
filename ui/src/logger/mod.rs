@@ -12,7 +12,6 @@
 //! for simplicity, the debug_logger should parse these fields directly. this seems better than converting the
 //! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
 
-use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
@@ -36,9 +35,8 @@ pub struct Log {
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let level = get_level_string(self.level);
         let datetime = &self.datetime.to_string()[0..19];
-        write!(f, "{} | {} | {}", datetime, level, self.message)
+        write!(f, "{} | {} | {}", datetime, self.level, self.message)
     }
 }
 
@@ -238,17 +236,18 @@ pub fn load_debug_log() -> Vec<String> {
         }
     };
 
-    raw_file.lines().map(|x| x.to_string()).collect::<Vec<_>>()
-}
+    let mut in_memory: Vec<_> = LOGGER
+        .read()
+        .log_entries
+        .iter()
+        .map(|x| x.to_string())
+        .collect();
 
-fn get_level_string(level: Level) -> String {
-    match level {
-        Level::Error => level.to_string().red().to_string(),
-        Level::Warn => level.to_string().yellow().to_string(),
-        Level::Info => level.to_string().cyan().to_string(),
-        Level::Debug => level.to_string().purple().to_string(),
-        Level::Trace => level.to_string().normal().to_string(),
-    }
+    raw_file
+        .lines()
+        .map(|x| x.to_string())
+        .chain(in_memory.drain(..))
+        .collect::<Vec<_>>()
 }
 
 pub fn get_color_string(level: Level) -> &'static str {
