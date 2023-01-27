@@ -17,5 +17,3 @@ pub mod message_typing;
 pub mod file_embed;
 
 pub mod context_menu;
-
-pub mod new_folder;

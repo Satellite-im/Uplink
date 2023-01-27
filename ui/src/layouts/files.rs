@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
-    components::{nav::Nav, new_folder::NewFolder},
+    components::nav::Nav,
     elements::{
         button::Button,
         file::File,
@@ -144,8 +144,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     class: "files-list",
                     aria_label: "files-list",
                     add_new_folder.then(|| {
-                        rsx!(NewFolder {
-
+                        rsx!( Folder {
+                            with_rename: true,
+                            onrename: |val| {
+                                println!("{:?}", val);
+                                add_new_folder.set(false);
+                             }
                         })
                     }),
                     span {
