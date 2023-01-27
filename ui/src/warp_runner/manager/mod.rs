@@ -83,8 +83,10 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     logger::debug("terminating warp_runner thread");
 }
 
+const KEYSTORE_PATH_NAME: &str = ".keystore";
+
 fn init_tesseract() -> Tesseract {
-    let tess_path = STATIC_ARGS.warp_path.join(".keystore");
+    let tess_path = STATIC_ARGS.warp_path.join(&KEYSTORE_PATH_NAME);
     match Tesseract::from_file(&tess_path) {
         Ok(tess) => tess,
         Err(_) => {
@@ -95,6 +97,10 @@ fn init_tesseract() -> Tesseract {
             tess
         }
     }
+}
+
+pub fn account_exists() -> bool {
+    return STATIC_ARGS.warp_path.join(&KEYSTORE_PATH_NAME).exists();
 }
 
 async fn warp_initialization(

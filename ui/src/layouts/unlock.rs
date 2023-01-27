@@ -12,7 +12,7 @@ use shared::language::get_local_text;
 
 use crate::{
     logger,
-    warp_runner::{MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, WarpCmd, WarpRunner},
     AuthPages, WARP_CMD_CH,
 };
 
@@ -25,6 +25,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
 
+    let account_exists = WarpRunner::account_exists();
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
         async move {
@@ -122,16 +123,18 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                 }
             },
-            Button {
-                text: get_local_text("unlock.create-account"),
-                aria_label: "create-account-button".into(),
-                appearance: kit::elements::Appearance::Primary,
-                icon: Icon::Check,
-                disabled: *button_disabled.get(),
-                onpress: move |_| {
-                    page.set(AuthPages::CreateAccount);
+            (!account_exists).then(|| rsx!(
+                Button {
+                    text: get_local_text("unlock.create-account"),
+                    aria_label: "create-account-button".into(),
+                    appearance: kit::elements::Appearance::Primary,
+                    icon: Icon::Check,
+                    disabled: *button_disabled.get(),
+                    onpress: move |_| {
+                        page.set(AuthPages::CreateAccount);
+                    }
                 }
-            }
+            ))
         }
     ))
 }
