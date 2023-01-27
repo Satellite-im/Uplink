@@ -20,20 +20,20 @@ pub struct Warp {
     tesseract: Tesseract,
     multipass: Account,
     raygun: Messaging,
-    _constellation: Storage,
+    constellation: Storage,
 }
 
 impl Warp {
     pub async fn new() -> Result<Self, warp::error::Error> {
         let tesseract = init_tesseract();
-        let (multipass, raygun, _constellation) =
+        let (multipass, raygun, constellation) =
             warp_initialization(tesseract.clone(), false).await?;
 
         Ok(Self {
             tesseract,
             multipass,
             raygun,
-            _constellation,
+            constellation,
         })
     }
 }
