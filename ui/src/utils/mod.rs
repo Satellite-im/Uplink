@@ -85,13 +85,10 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
         _ => indicator::Platform::Headless, //TODO: Unknown
     };
-    let user_info = UserInfo {
+    UserInfo {
         platform,
         status: convert_status(&identity.identity_status()),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
-    };
-
-    // Return the resulting user_info vector
-    user_info
+    }
 }
