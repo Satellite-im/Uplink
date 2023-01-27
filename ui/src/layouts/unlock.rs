@@ -12,7 +12,7 @@ use shared::language::get_local_text;
 
 use crate::{
     logger,
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
 
