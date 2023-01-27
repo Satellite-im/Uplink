@@ -5,7 +5,7 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     error::Error,
-    raygun::{self, ConversationType},
+    raygun::{self, ConversationType, ReactionState},
 };
 
 use crate::{
@@ -37,6 +37,13 @@ pub enum RayGunCmd {
     // removes all direct conversations involving the recipient
     RemoveDirectConvs {
         recipient: DID,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    React {
+        conversation_id: Uuid,
+        message_id: Uuid,
+        reaction_state: ReactionState,
+        emoji: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
 }

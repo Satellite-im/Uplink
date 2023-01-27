@@ -8,6 +8,7 @@ use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user
 use dioxus_desktop::{use_window, use_eval};
 use shared::language::get_local_text;
 use uuid::Uuid;
+use warp::raygun::{self, ReactionState};
 
 
 use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants, build_user_from_identity}, WARP_CMD_CH, warp_runner::{WarpCmd, RayGunCmd}, logger, STATIC_ARGS};
@@ -240,11 +241,52 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     ))
 }
 
+enum MessagesCommand {
+    // contains the emoji reaction
+    React((raygun::Message, String)),
+}
+
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let user = state.read().account.identity.did_key();
 
     let script = include_str!("./script.js");
     use_eval(cx)(script.to_string());
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
+        //to_owned![];
+        async move {
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    MessagesCommand::React((message, emoji)) => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+
+                        let mut reactions = message.reactions();
+                        reactions.retain(|x| x.users().contains(&user));
+                        reactions.retain(|x| x.emoji().eq(&emoji));
+                        let reaction_state = if reactions.is_empty() {
+                            ReactionState::Add
+                        } else {
+                            ReactionState::Remove
+                        };
+                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React{
+                            conversation_id: message.conversation_id(),
+                            message_id: message.id(),
+                            reaction_state,
+                            emoji,
+                            rsp: tx
+                        })).expect("failed to send command");
+
+                        if let Err(_e) = rx.await {
+
+                        }
+
+                    }
+                }
+            }
+        }
+    });
 
     let data = match &cx.props.data {
         Some(d) => d.clone(),
@@ -289,6 +331,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             remote: group.remote,
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();
+                                let message_id = message.id();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 rsx! (
@@ -305,7 +348,11 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             ContextItem {
                                                 icon: Icon::FaceSmile,
                                                 text: get_local_text("messages.react"),
-                                                //TODO: Wire to state
+                                                //TODO: let the user pick a reaction
+                                                onpress: move |_| {
+                                                      // using "like" for now
+                                                    ch.send(MessagesCommand::React((message_id, "👍".into())));
+                                                }
                                             },
                                         )),
                                         Message {
