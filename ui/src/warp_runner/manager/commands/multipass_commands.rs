@@ -71,7 +71,8 @@ pub async fn handle_multipass_cmd(
             passphrase,
             rsp,
         } => {
-            //println!("create_identity: unlock tesseract");
+            // needed if an old password exists
+            tesseract.clear();
             let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
             let _ = rsp.send(r);
         }
