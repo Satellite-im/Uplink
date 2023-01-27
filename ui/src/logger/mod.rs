@@ -1,9 +1,8 @@
 use colored::Colorize;
 use once_cell::sync::Lazy;
-use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::str::FromStr;
+use tokio::sync::mpsc;
 use warp::logging::tracing::log::{self, Level, LevelFilter, SetLoggerError};
 use warp::sync::RwLock;
 
@@ -13,10 +12,130 @@ use crate::STATIC_ARGS;
 
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 
+#[derive(Debug, Clone)]
+pub struct Log {
+    pub level: Level,
+    pub message: String,
+    pub datetime: DateTime<Local>,
+}
+
+impl std::fmt::Display for Log {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let level = get_level_string(self.level);
+        let datetime = &self.datetime.to_string()[0..19];
+        write!(f, "{} | {} | {}", datetime, level, self.message)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Logger {
+    save_to_file: bool,
+    write_to_stdout: bool,
+    display_trace: bool,
+    log_file: String,
+    subscribers: Vec<mpsc::UnboundedSender<Log>>,
+}
+
+// connects the `log` crate to the `Logger` singleton
+struct LogGlue {
+    max_level: LevelFilter,
+}
+
+impl LogGlue {
+    pub fn new(max_level: LevelFilter) -> Self {
+        Self { max_level }
+    }
+}
+
+impl crate::log::Log for LogGlue {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= self.max_level
+    }
+
+    fn log(&self, record: &log::Record) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
+
+        // todo: send .warp logs somewhere else
+        // don't care about other libraries
+        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+            return;
+        }
+
+        let msg = format!("{}", record.args());
+        LOGGER.write().log(record.level(), &msg);
+    }
+
+    fn flush(&self) {}
+}
+
+impl Logger {
+    fn load() -> Self {
+        let logger_path = STATIC_ARGS.logger_path.to_string_lossy().to_string();
+        let _ = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&logger_path);
+
+        Self {
+            save_to_file: false,
+            write_to_stdout: false,
+            display_trace: false,
+            log_file: logger_path,
+            subscribers: vec![],
+        }
+    }
+
+    fn subscribe(&mut self) -> mpsc::UnboundedReceiver<Log> {
+        let (tx, rx) = mpsc::unbounded_channel();
+        self.subscribers.push(tx);
+        rx
+    }
+}
+
+impl Logger {
+    fn log(&mut self, level: Level, message: &str) {
+        let new_log = Log {
+            level,
+            message: message.to_string(),
+            datetime: Local::now(),
+        };
+
+        // special path for Trace logs
+        // don't persist tracing information. at most, print it to the terminal
+        if level == Level::Trace && self.display_trace {
+            println!("{}", new_log);
+            return;
+        }
+
+        if self.save_to_file {
+            let mut file = OpenOptions::new()
+                .append(true)
+                .open(&self.log_file)
+                .unwrap();
+
+            if let Err(error) = writeln!(file, "{}", new_log) {
+                eprintln!("Couldn't write to debug.log file. {error}");
+            }
+        }
+
+        if self.write_to_stdout {
+            println!("{}", new_log)
+        }
+
+        self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
+    }
+}
+
 pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_max_level(level);
     log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
     Ok(())
+}
+
+pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {
+    LOGGER.write().subscribe()
 }
 
 // todo: remove these slowly and replace with log macros
@@ -52,89 +171,20 @@ pub fn set_write_to_stdout(b: bool) {
     LOGGER.write().write_to_stdout = b;
 }
 
-pub fn set_max_logs(s: usize) {
-    LOGGER.write().max_logs = s;
-}
-
 pub fn set_display_trace(b: bool) {
     LOGGER.write().display_trace = b;
 }
 
-// not sure what's worse. logs that are hard to read or needing to write this parsing code.
-pub fn get_log_entries() -> Vec<Log> {
-    // if you can't read the file, just return the logs in memory
-    let in_mem = Vec::from_iter(LOGGER.read().log_entries.iter().cloned());
-    let raw_logs = match std::fs::read_to_string(&STATIC_ARGS.logger_path) {
+pub fn load_debug_log() -> Vec<String> {
+    let raw_file = match std::fs::read_to_string(&STATIC_ARGS.logger_path) {
         Ok(l) => l,
         Err(e) => {
             log::error!("failed to read debug.log: {}", e);
-            return in_mem;
+            return vec![];
         }
     };
-    // if you can read the file, extract the fields
-    let stored_logs: Vec<Option<Log>> = raw_logs
-        .lines()
-        .map(|line| {
-            let mut entries = line.split('|').map(|x| x.trim());
-            let datetime = match entries.next().and_then(|x| DateTime::from_str(x).ok()) {
-                Some(d) => d,
-                None => return None,
-            };
-            let level: Level = match entries.next().and_then(|s| Level::from_str(s).ok()) {
-                Some(s) => s,
-                None => return None,
-            };
-            let message = match entries.next() {
-                Some(s) => s.into(),
-                None => return None,
-            };
 
-            Some(Log {
-                level,
-                message,
-                datetime,
-            })
-        })
-        .collect();
-    // get rid of lines which couldn't be parsed
-    let flattened: Vec<Log> = stored_logs
-        .iter()
-        .filter(|x| x.is_some())
-        .map(|x| x.clone().expect("get_log_entries failed"))
-        .collect();
-
-    // remove duplicate logs
-    let earliest_in_mem = match in_mem.first().map(|x| x.datetime) {
-        Some(d) => d,
-        None => return flattened,
-    };
-
-    // combine
-    flattened
-        .iter()
-        .filter(|x| x.datetime < earliest_in_mem)
-        .chain(in_mem.iter())
-        .cloned()
-        .collect()
-}
-
-pub fn get_logs_limit() -> usize {
-    LOGGER.read().max_logs
-}
-
-#[derive(Debug, Clone)]
-pub struct Log {
-    pub level: Level,
-    pub message: String,
-    pub datetime: DateTime<Local>,
-}
-
-impl std::fmt::Display for Log {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let level = get_level_string(self.level);
-        let datetime = &self.datetime.to_string()[0..19];
-        write!(f, "{} | {} | {}", datetime, level, self.message)
-    }
+    raw_file.lines().map(|x| x.to_string()).collect::<Vec<_>>()
 }
 
 fn get_level_string(level: Level) -> String {
@@ -154,106 +204,4 @@ pub fn get_color_string(level: Level) -> &'static str {
         Level::Warn => "yellow",
         Level::Error => "red",
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Logger {
-    save_to_file: bool,
-    write_to_stdout: bool,
-    display_trace: bool,
-    log_file: String,
-    log_entries: VecDeque<Log>,
-    max_logs: usize,
-}
-
-impl Logger {
-    fn load() -> Self {
-        let logger_path = STATIC_ARGS.logger_path.to_string_lossy().to_string();
-        let _ = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&logger_path);
-
-        let log_entries = VecDeque::new();
-        Self {
-            save_to_file: false,
-            write_to_stdout: false,
-            display_trace: false,
-            log_file: logger_path,
-            log_entries,
-            max_logs: 100, // todo: configurable?
-        }
-    }
-}
-
-impl Logger {
-    fn log(&mut self, level: Level, message: &str) {
-        let new_log = Log {
-            level,
-            message: message.to_string(),
-            datetime: Local::now(),
-        };
-
-        // special path for Trace logs
-        // don't persist tracing information. at most, print it to the terminal
-        if level == Level::Trace && self.display_trace {
-            println!("{}", new_log);
-            return;
-        }
-
-        self.log_entries.push_back(new_log.clone());
-
-        if self.log_entries.len() >= self.max_logs {
-            self.log_entries.pop_front();
-        }
-
-        if self.save_to_file {
-            let mut file = OpenOptions::new()
-                .append(true)
-                .open(&self.log_file)
-                .unwrap();
-
-            if let Err(error) = writeln!(file, "{}", new_log) {
-                eprintln!("Couldn't write to debug.log file. {error}");
-            }
-        }
-
-        if self.write_to_stdout {
-            println!("{}", new_log)
-        }
-    }
-}
-
-// connects the `log` crate to the `Logger` singleton
-struct LogGlue {
-    max_level: LevelFilter,
-}
-
-impl LogGlue {
-    pub fn new(max_level: LevelFilter) -> Self {
-        Self { max_level }
-    }
-}
-
-impl crate::log::Log for LogGlue {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        metadata.level() <= self.max_level
-    }
-
-    fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
-        }
-
-        // todo: send .warp logs somewhere else
-        // don't care about other libraries
-        if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
-            return;
-        }
-
-        let msg = format!("{}", record.args());
-        LOGGER.write().log(record.level(), &msg);
-    }
-
-    fn flush(&self) {}
 }

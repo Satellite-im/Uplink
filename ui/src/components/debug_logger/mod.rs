@@ -1,11 +1,11 @@
-use std::time::Duration;
+use std::str::FromStr;
 
 use chrono::Local;
 use dioxus::prelude::*;
 
 use dioxus_desktop::use_window;
 use kit::elements::label::Label;
-use tokio::time::sleep;
+use warp::logging::tracing::log::Level;
 
 use crate::{components::settings::sub_pages::developer::WindowDropHandler, logger};
 
@@ -16,9 +16,7 @@ const STYLE: &str = include_str!("./style.scss");
 pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     let window = use_window(cx);
 
-    let logs_to_show = use_state(cx, logger::get_log_entries);
-
-    let logs_on_screen_len = use_ref(cx, || 0);
+    let logs_to_show = use_state(cx, logger::load_debug_log);
 
     let now = Local::now();
     let formatted_datetime = now.format("%a %b %d %H:%M:%S").to_string();
@@ -27,17 +25,12 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     let script = include_str!("./script.js");
 
     use_future(cx, (), |_| {
-        to_owned![logs_to_show, window, script, logs_on_screen_len];
+        to_owned![logs_to_show, window, script];
         async move {
-            loop {
-                sleep(Duration::from_millis(100)).await;
-                let max_logs = logger::get_logs_limit();
-                let new_logs = logger::get_log_entries();
-                if new_logs.len() > *logs_on_screen_len.read() || new_logs.len() == (max_logs - 1) {
-                    *logs_on_screen_len.write_silent() = new_logs.len();
-                    logs_to_show.set(new_logs);
-                    window.eval(&script);
-                }
+            let mut log_ch = logger::subscribe();
+            while let Some(log) = log_ch.recv().await {
+                logs_to_show.with_mut(|x| x.push(log.to_string()));
+                window.eval(&script);
             }
         }
     });
@@ -53,10 +46,11 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                     text: format!("{}: {}", "Logger Debug opened on".to_owned(), *debug_logger_started_time.read())},
             },
             logs_to_show.iter().map(|log| {
-                let log_level = log.level.to_string();
-                let log_message = log.message.clone();
-                let log_datetime = format!("[{}]", &log.datetime.to_string()[0..19]);
-                let log_color = logger::get_color_string(log.level);
+                let mut fields = log.split('|');
+                let log_datetime = fields.next().unwrap_or_default();
+                let log_level = fields.next().unwrap_or_default();
+                let log_message = fields.next().unwrap_or_default();
+                let log_color = logger::get_color_string(Level::from_str(log_level).unwrap_or(Level::Debug));
                 rsx!(
                     div {
                         display: "flex",
