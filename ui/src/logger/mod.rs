@@ -3,10 +3,11 @@ use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+use std::str::FromStr;
 use warp::logging::tracing::log::{self, Level, LevelFilter, SetLoggerError};
 use warp::sync::RwLock;
 
-use chrono::Local;
+use chrono::{DateTime, Local};
 
 use crate::STATIC_ARGS;
 
@@ -59,8 +60,62 @@ pub fn set_display_trace(b: bool) {
     LOGGER.write().display_trace = b;
 }
 
+// not sure what's worse. logs that are hard to read or needing to write this parsing code.
 pub fn get_log_entries() -> Vec<Log> {
-    Vec::from_iter(LOGGER.read().log_entries.iter().cloned())
+    // if you can't read the file, just return the logs in memory
+    let in_mem = Vec::from_iter(LOGGER.read().log_entries.iter().cloned());
+    let raw_logs = match std::fs::read_to_string(&STATIC_ARGS.logger_path) {
+        Ok(l) => l,
+        Err(e) => {
+            log::error!("failed to read debug.log: {}", e);
+            return in_mem;
+        }
+    };
+    // if you can read the file, extract the fields
+    let stored_logs: Vec<Option<Log>> = raw_logs
+        .lines()
+        .map(|line| {
+            let mut entries = line.split('|').map(|x| x.trim());
+            let datetime = match entries.next().and_then(|x| DateTime::from_str(x).ok()) {
+                Some(d) => d,
+                None => return None,
+            };
+            let level: Level = match entries.next().and_then(|s| Level::from_str(s).ok()) {
+                Some(s) => s,
+                None => return None,
+            };
+            let message = match entries.next() {
+                Some(s) => s.into(),
+                None => return None,
+            };
+
+            Some(Log {
+                level,
+                message,
+                datetime,
+            })
+        })
+        .collect();
+    // get rid of lines which couldn't be parsed
+    let flattened: Vec<Log> = stored_logs
+        .iter()
+        .filter(|x| x.is_some())
+        .map(|x| x.clone().expect("get_log_entries failed"))
+        .collect();
+
+    // remove duplicate logs
+    let earliest_in_mem = match in_mem.first().map(|x| x.datetime) {
+        Some(d) => d,
+        None => return flattened,
+    };
+
+    // combine
+    flattened
+        .iter()
+        .filter(|x| x.datetime < earliest_in_mem)
+        .chain(in_mem.iter())
+        .cloned()
+        .collect()
 }
 
 pub fn get_logs_limit() -> usize {
@@ -71,13 +126,14 @@ pub fn get_logs_limit() -> usize {
 pub struct Log {
     pub level: Level,
     pub message: String,
-    pub datetime: String,
+    pub datetime: DateTime<Local>,
 }
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let level = get_level_string(self.level);
-        write!(f, "{} | {} | {}", self.datetime, level, self.message)
+        let datetime = &self.datetime.to_string()[0..19];
+        write!(f, "{} | {} | {}", datetime, level, self.message)
     }
 }
 
@@ -135,7 +191,7 @@ impl Logger {
         let new_log = Log {
             level,
             message: message.to_string(),
-            datetime: Local::now().to_string()[0..19].to_string(),
+            datetime: Local::now(),
         };
 
         // special path for Trace logs

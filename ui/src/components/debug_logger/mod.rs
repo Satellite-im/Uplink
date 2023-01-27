@@ -55,7 +55,7 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
             logs_to_show.iter().map(|log| {
                 let log_level = log.level.to_string();
                 let log_message = log.message.clone();
-                let log_datetime = format!("[{}]",log.datetime);
+                let log_datetime = format!("[{}]", &log.datetime.to_string()[0..19]);
                 let log_color = logger::get_color_string(log.level);
                 rsx!(
                     div {
