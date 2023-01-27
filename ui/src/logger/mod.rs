@@ -1,3 +1,20 @@
+//! custom logging implementation
+//! use with the log crate
+//! has options to save logs to a file, print to the terminal, and send new logs to anyone who asks (via logger::subscribe())
+//! this hopefully satisfies the needs of everyone:
+//!     - people who prefer to view logs in the terminal (with and without saving the logs)
+//!     - people who prefer to view logs in the debug_logger GUI
+//!
+//! the debug_logger GUI loads all entries from debug.log and then adds new logs to the display.
+//!
+//! for simplicity, the logger will not keep a circular buffer of logs in memory, because it would have to track
+//! which logs were in memory and which were written to the file, and prevent duplicates. that's just too complicated.
+//!
+//! for readability, the `Log` struct implements display, and logs are written to the file in a regular log format, rather than using Serde::Serialize
+//!
+//! for simplicity, the debug_logger should parse these fields directly. this seems better than converting the
+//! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
+
 use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::fs::OpenOptions;
