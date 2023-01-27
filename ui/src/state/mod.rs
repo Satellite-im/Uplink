@@ -35,6 +35,7 @@ use std::{
 use uuid::Uuid;
 use warp::{
     crypto::DID,
+    logging::tracing::log,
     multipass::identity::IdentityStatus,
     raygun::{self, Message, Reaction},
 };
@@ -506,7 +507,7 @@ impl State {
         let user = self.account.identity.did_key();
         if let Some(conv) = self.chats.all.get_mut(&chat_id) {
             // using any() here for an easy way to apply the Fn to the entire list
-            let _ = conv.messages.iter_mut().any(|msg| {
+            let res = conv.messages.iter_mut().any(|msg| {
                 if msg.id() != message_id {
                     return false;
                 }
@@ -532,13 +533,17 @@ impl State {
                 msg.set_reactions(reactions);
                 true
             });
+            log::debug!("add reaction result: {}", res);
+        } else {
+            log::warn!("attempted to add reaction to nonexistent conversation");
         }
     }
+
     pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
         let user = self.account.identity.did_key();
         if let Some(conv) = self.chats.all.get_mut(&chat_id) {
             // using any() here for an easy way to apply the Fn to the entire list
-            let _ = conv.messages.iter_mut().any(|msg| {
+            let res = conv.messages.iter_mut().any(|msg| {
                 if msg.id() != message_id {
                     return false;
                 }
@@ -560,6 +565,9 @@ impl State {
                 msg.set_reactions(reactions);
                 true
             });
+            log::debug!("remove reaction result: {}", res);
+        } else {
+            log::warn!("attempted to remove reaction to nonexistent conversation");
         }
     }
 }

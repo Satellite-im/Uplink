@@ -1,10 +1,9 @@
 use uuid::Uuid;
 use warp::{
     error::Error,
+    logging::tracing::log,
     raygun::{self, MessageEventKind},
 };
-
-use crate::logger;
 
 pub enum MessageEvent {
     Received {
@@ -32,7 +31,7 @@ pub async fn convert_message_event(
     _account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<MessageEvent, Error> {
-    logger::debug(&format!("got event: {:?}", &event));
+    log::debug!("got event: {:?}", &event);
     let evt = match event {
         MessageEventKind::MessageReceived {
             conversation_id,
