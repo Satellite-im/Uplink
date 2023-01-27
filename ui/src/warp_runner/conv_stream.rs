@@ -1,3 +1,6 @@
+//! Uplink spawns a new task to receive incoming messages for each RayGun conversation
+//! Incoming messages are sent through a mspc:UnboundedSender. The "single consumer" is warp_runner (technically the manager::run() function)
+//!
 use std::collections::HashMap;
 
 use futures::StreamExt;
@@ -10,14 +13,14 @@ use super::Messaging;
 pub struct Manager {
     // (conversation_id, thread)
     handles: HashMap<Uuid, JoinHandle<()>>,
-    ch: mpsc::UnboundedSender<raygun::MessageEventKind>,
+    msg_received_ch: mpsc::UnboundedSender<raygun::MessageEventKind>,
 }
 
 impl Manager {
-    pub fn new(ch: mpsc::UnboundedSender<raygun::MessageEventKind>) -> Self {
+    pub fn new(msg_received_ch: mpsc::UnboundedSender<raygun::MessageEventKind>) -> Self {
         Self {
             handles: HashMap::new(),
-            ch,
+            msg_received_ch,
         }
     }
 
@@ -26,7 +29,7 @@ impl Manager {
         conv_id: Uuid,
         messaging: &mut Messaging,
     ) -> Result<(), warp::error::Error> {
-        let ch = self.ch.clone();
+        let ch = self.msg_received_ch.clone();
         let mut stream = messaging.get_conversation_stream(conv_id).await?;
         let t = tokio::task::spawn(async move {
             while let Some(evt) = stream.next().await {

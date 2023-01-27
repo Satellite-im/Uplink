@@ -37,8 +37,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::commands::{MultiPassCmd, RayGunCmd};
-use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
+use crate::warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -288,8 +287,8 @@ fn bootstrap(cx: Scope) -> Element {
     logger::trace("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
-    let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
+    let mut warp_runner = warp_runner::WarpRunner::new();
+    warp_runner.run();
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);

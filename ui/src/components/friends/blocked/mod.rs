@@ -3,7 +3,7 @@ use crate::{
     logger,
     state::{Action, State},
     utils::convert_status,
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
