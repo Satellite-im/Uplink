@@ -56,6 +56,14 @@ pub async fn convert_multipass_event(
             let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::FriendOffline(identity)
         }
+        MultiPassEventKind::Blocked { did } => {
+            let identity = did_to_identity(&did, account).await?;
+            MultiPassEvent::Blocked(identity)
+        }
+        MultiPassEventKind::Unblocked { did } => {
+            let identity = did_to_identity(&did, account).await?;
+            MultiPassEvent::Unblocked(identity)
+        }
     };
 
     Ok(evt)
