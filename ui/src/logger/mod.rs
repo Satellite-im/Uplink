@@ -150,6 +150,7 @@ impl Logger {
             println!("{}", new_log)
         }
 
+        // if a subscriber closes a channel, send() will fail. remove from subscribers
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
     }
 
