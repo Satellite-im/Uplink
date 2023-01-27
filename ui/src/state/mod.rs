@@ -505,69 +505,63 @@ impl State {
 
     pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
         let user = self.account.identity.did_key();
-        if let Some(conv) = self.chats.all.get_mut(&chat_id) {
-            // using any() here for an easy way to apply the Fn to the entire list
-            let res = conv.messages.iter_mut().any(|msg| {
-                if msg.id() != message_id {
-                    return false;
+        let conv = match self.chats.all.get_mut(&chat_id) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to add reaction to nonexistent conversation");
+                return;
+            }
+        };
+
+        for msg in &mut conv.messages {
+            if msg.id() != message_id {
+                continue;
+            }
+
+            let mut has_emoji = false;
+            for reaction in msg.reactions_mut() {
+                if !reaction.emoji().eq(&emoji) {
+                    continue;
                 }
-
-                let mut reactions = msg.reactions();
-                let has_emoji = reactions.iter_mut().any(|r| {
-                    if r.emoji() != emoji {
-                        return false;
-                    }
-                    if !r.users().contains(&user) {
-                        r.users_mut().push(user.clone());
-                    }
-                    true
-                });
-
-                if !has_emoji {
-                    let mut r = Reaction::default();
-                    r.set_emoji(&emoji);
-                    r.set_users(vec![user.clone()]);
-                    msg.reactions_mut().push(r);
+                if !reaction.users().contains(&user) {
+                    reaction.users_mut().push(user.clone());
+                    has_emoji = true;
                 }
+            }
 
-                msg.set_reactions(reactions);
-                true
-            });
-            log::debug!("add reaction result: {}", res);
-        } else {
-            log::warn!("attempted to add reaction to nonexistent conversation");
+            if !has_emoji {
+                let mut r = Reaction::default();
+                r.set_emoji(&emoji);
+                r.set_users(vec![user.clone()]);
+                msg.reactions_mut().push(r);
+            }
         }
     }
 
     pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
         let user = self.account.identity.did_key();
-        if let Some(conv) = self.chats.all.get_mut(&chat_id) {
-            // using any() here for an easy way to apply the Fn to the entire list
-            let res = conv.messages.iter_mut().any(|msg| {
-                if msg.id() != message_id {
-                    return false;
-                }
+        let conv = match self.chats.all.get_mut(&chat_id) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to remove reaction to nonexistent conversation");
+                return;
+            }
+        };
 
-                let mut reactions = msg.reactions();
-                let modified_reactions = reactions.iter_mut().any(|r| {
-                    if r.emoji() != emoji {
-                        return false;
-                    }
-                    let mut users = r.users();
-                    users.retain(|id| id != &user);
-                    r.set_users(users);
-                    true
-                });
-                if !modified_reactions {
-                    return false;
+        for msg in &mut conv.messages {
+            if msg.id() != message_id {
+                continue;
+            }
+
+            for reaction in msg.reactions_mut() {
+                if !reaction.emoji().eq(&emoji) {
+                    continue;
                 }
-                reactions.retain(|r| !r.users().is_empty());
-                msg.set_reactions(reactions);
-                true
-            });
-            log::debug!("remove reaction result: {}", res);
-        } else {
-            log::warn!("attempted to remove reaction to nonexistent conversation");
+                let mut users = reaction.users();
+                users.retain(|id| id != &user);
+                reaction.set_users(users);
+            }
+            msg.reactions_mut().retain(|r| !r.users().is_empty());
         }
     }
 }
