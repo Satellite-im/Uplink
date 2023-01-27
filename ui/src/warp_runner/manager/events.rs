@@ -1,10 +1,10 @@
 use warp::{
+    logging::tracing::log,
     multipass::MultiPassEventKind,
     raygun::{MessageEventKind, RayGunEventKind},
 };
 
 use crate::{
-    logger,
     warp_runner::{
         conv_stream,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
@@ -26,15 +26,17 @@ pub async fn handle_multipass_event(
         Some(e) => e,
         None => return Ok(()),
     };
+    log::debug!("received multipass event: {:?}", &evt);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_multipass_event(evt, &mut warp.multipass, &mut warp.raygun).await {
         Ok(evt) => {
             if warp_event_tx.send(WarpEvent::MultiPass(evt)).is_err() {
+                log::error!("failed to send warp_event");
                 return Err(());
             }
         }
         Err(e) => {
-            logger::error(&format!("failed to convert multipass event: {}", e));
+            log::error!("failed to convert multipass event: {}", e);
         }
     }
 
@@ -50,6 +52,7 @@ pub async fn handle_raygun_event(
         Some(e) => e,
         None => return Ok(()),
     };
+    log::debug!("received raygun event: {:?}", &evt);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_raygun_event(
         evt,
@@ -61,11 +64,12 @@ pub async fn handle_raygun_event(
     {
         Ok(evt) => {
             if warp_event_tx.send(WarpEvent::RayGun(evt)).is_err() {
+                log::error!("failed to send warp_event");
                 return Err(());
             }
         }
         Err(e) => {
-            logger::error(&format!("failed to convert raygun event: {}", e));
+            log::error!("failed to convert raygun event: {}", e);
         }
     }
 
@@ -80,15 +84,17 @@ pub async fn handle_message_event(
         Some(e) => e,
         None => return Ok(()),
     };
+    log::debug!("received message event: {:?}", &msg);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_message_event(msg, &mut warp.multipass, &mut warp.raygun).await {
         Ok(evt) => {
             if warp_event_tx.send(WarpEvent::Message(evt)).is_err() {
+                log::error!("failed to send warp_event");
                 return Err(());
             }
         }
         Err(e) => {
-            logger::error(&format!("failed to convert message event: {}", e));
+            log::error!("failed to convert message event: {}", e);
         }
     }
 
@@ -104,8 +110,8 @@ pub async fn handle_warp_command(
         Some(e) => e,
         None => return Ok(()),
     };
+    log::debug!("received warp command: {:?}", &cmd);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
-
     match cmd {
         WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut warp.tesseract).await,
         WarpCmd::MultiPass(cmd) => {
@@ -117,6 +123,7 @@ pub async fn handle_warp_command(
                         .send(WarpEvent::MultiPass(MultiPassEvent::Blocked(ident)))
                         .is_err()
                     {
+                        log::error!("failed to send warp_event");
                         return Err(());
                     }
                 }
@@ -127,6 +134,7 @@ pub async fn handle_warp_command(
                         .send(WarpEvent::MultiPass(MultiPassEvent::Unblocked(ident)))
                         .is_err()
                     {
+                        log::error!("failed to send warp_event");
                         return Err(());
                     }
                 }
