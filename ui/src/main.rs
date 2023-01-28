@@ -287,7 +287,7 @@ fn bootstrap(cx: Scope) -> Element {
 
     // warp_runner must be started from within a tokio reactor
     // store in a use_ref to make it not get dropped
-    let warp_runner = use_ref(cx, || warp_runner::WarpRunner::new());
+    let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
     warp_runner.write_silent().run();
 
     // make the window smaller while the user authenticates
