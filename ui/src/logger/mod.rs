@@ -176,16 +176,20 @@ impl Logger {
     }
 
     fn log_warp(&mut self, level: Level, message: &str) {
-        let mut file = OpenOptions::new()
-            .append(true)
-            .open(&self.warp_file)
-            .unwrap();
-
         let new_log = Log {
             level,
             message: message.to_string(),
             datetime: Local::now(),
             colorized: false,
+        };
+
+        let mut file = match OpenOptions::new().append(true).open(&self.warp_file) {
+            Ok(f) => f,
+            Err(e) => {
+                eprintln!("failed to log_warp: {}", e);
+                eprintln!("lost log: {}", new_log);
+                return;
+            }
         };
 
         if let Err(error) = writeln!(file, "{}", new_log) {
