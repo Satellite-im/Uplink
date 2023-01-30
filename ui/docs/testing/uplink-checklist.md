@@ -1,15 +1,13 @@
-# Uplink Testing
+# Uplink Checklist
 
-The following is a step-by-step list you should follow to ensure functionality when physically or automatically testing Uplink.
-
-Please keep in mind when testing that sometimes things can "work" i.e. meet the guidelines of a requirement but cause undesired visual effects or jarring movements, delay, and disposition of the cursor. We want the application to feel refined, in most cases when the UI looks ugly, it means we should go back to the drawing board on some feature because modern machines are fast enough to not have these bugs. Indications of jumping UI's or the mouse cursor jumping around when editing text with postprocessing like real-time markdown effects means the way we're doing that processing is slow, or un-tidy, not that it's so advanced that a computer or browser can't handle it. Remember we're building for everyone here and the average user wants something easy on the eyes as much as it is functional. Check that even if your physical tests "passed" they also still look nice and don't make sacrifices elsewhere.
-
-Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
+This document provides a checklist top-to-bottom of every step you should be able to physically do within the app. If you are commiting a big change, or want to be certain the application meets all requirements before publishing a release, you should go through this checklist.
 
 
-## Functionality Checklist
 
-### Registration / Login
+
+## **Functionality Checklist**
+
+### **Registration / Login**
 **PIN Creation**
 - [ ] Limits PIN to a maximun of 6 characters.
 - [ ] Requires PIN to be a minimum of 4 characters.
@@ -29,7 +27,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Preview of how the profile picture should look appears for user.
 - [ ] User cannot proceed without first entering required account information.
 
-### Friends
+### **Friends**
 **Adding friends**
 - [ ] Clicking Copy Code should copy User's did key
 - [ ] There should be an input field for us to paste a did key or user#short_id.
@@ -41,8 +39,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 **Blocking friends**
 - [ ] Clicking Blocked displays all accounts that User has blocked.
 
-### Files
-**Basics**
+**Files**
 - [ ] User should be able to Drag+Drop 1 or more files.
 - [ ] User should be able to Drag+Drop Files into a specific Folder.
 - [ ] User should not be able to have 2 Folders with the same name inside the same folder.
@@ -54,13 +51,12 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] User can take file already uploaded and drag it into folder.
 
 ### Calling & Video 
-**Basics**
 - [ ] Clicking *Settings* button should take User to the *Settings* Page.
 - [ ] User should be able to click+drag Pop-out player anywhere on screen.
 
-## Visual & UX Checklist
+## **Visual & UX Checklist**
 
-### Registration / Login
+### **Registration / Login**
 **PIN Creation** 
 - [ ] Displays an error message when the PIN is not at least 4 characters long. 
 - [ ] Anything already typed should change from blue to red when error message appears.
@@ -79,7 +75,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
  **CTA Button**
 - [ ] The register button should use a reusable component and only appear clickable when all of the required information is submitted and there are no errors on the page.
 
-### Chat Page
+### **Chat Page**
 **Landing page for New Accounts**
 - [ ] "No active chats, wanna make one?" with option underneath to start one.
 - [ ] Page indicator in Sidebar should indicate User they are on the Chat page.
@@ -104,6 +100,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Tooltip should appear for *Favorites* button.
 - [ ] User can reply to a message by right+clicking and selecting in context menu.
 - [ ] User can react to a message by right+clicking and selecting in context menu.
+- [ ] User should enter chat at the bottom with most recent messages.
 
 ### Calling & Video 
 - [ ] Call modal opens when User starts a call. 
@@ -116,7 +113,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Pop-Out player should appear when User enables it. 
 - [ ] While Pop-out is enabled original call should display *Media Detached*.
  
-### Friends
+### **Friends**
 **Friends List** 
 - [ ] Friends are ordered alphabetically.
 - [ ] Profile picture should be present next to Username if friend has one.
@@ -147,13 +144,19 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Search Bar should display *Username#0000* when user is not clicked into it. 
 - [ ] Error should appear when User has less than 4 chars typed.
 - [ ] Search Input should display green indicator when User types more than 4 chars.
+- [ ] Request should appear under *Pending* after it is sent.
+- [ ] If user cancels request, the request should no longer appear in *Pending*.
+- [ ] Error should appear if User sends 2nd friend request to the same person.
+- [ ] Error should appear when User tries to add themselves.
 
 **Incoming Request**
-- [ ] Incoming Friend Request should have an *X* or *Checkmark* next it.
+- [ ] Incoming Friend Request should have an *Deny* or *Accept* next it.
 - [ ] Profile Picture should appear with Username next to it.
 - [ ] Incoming request should be ordered by *Most Relevant*. 
 - [ ] Notification counter should display correct amount of requests on *Pending*.
 - [ ] Notification counter should display correct amount of requests on *Friends Page Button*
+- [ ] After accepting friend request, the pending request should clear and they should be added to the All Friends list. 
+
 
 ### Files 
 - [ ] + Icon should open the Upload File Modal.
@@ -177,7 +180,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Total Space should appear at the top of Files Page.
 
 ### Settings
-**Profile**
+**Profile Page**
 - [ ] *Change Avatar* should appear when user hovers cursor over Profile Pic.
 - [ ] *Change Banner* should appear when user hovers cursor over Banner area.
 - [ ] Clicking the Banner should open Users local files browser.
@@ -214,10 +217,17 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Clicking *Compress* should compress the Users .Cache into a zip file.
 - [ ] User can clear .Cache by clicking *Clear Cache*
 - [ ] Chat Sidebar should not appear when User is in Settings.
-
+- [ ] Clicking *Open debug logger* should open the debugging logger. 
+- [ ] Logs should save in a file when User toggles on *Save Logs In A File*
+- [ ] Dev tools should appear in top right corner when toggled on.
+- [ ] Clicking Mobile dev tool should resize window to replicate a Mobile device.
+- [ ] Clicking Tablet dev tool should resize window to replicate a Tablet. 
+- [ ] Clicking Desktop dev tool sohuld resize window to original Desktop view. 
+- [ ] Clicking fullscreen dev tool should resize window to take up entire screen. 
+  
 ### Sidebar
-**Basics**
 - [ ] Sidebar should persist through Chat, Files, and Friends pages.
+- [ ] Any active chats user has created should appear in Sidebar.
 - [ ] Sidebar should be hidden when User enters Settings. 
 - [ ] Sidebar should display Users favorite chats (If user has any).
 - [ ] User should be navigated to chat when they click a friend in their favorites.
@@ -233,3 +243,4 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] Tooltip should appear when hovering cursor over *Settings Page* icon.
 - [ ] User can search within Settings by clicking into Settings Search Bar. 
 - [ ] Call controls should appear in Sidebar when User enters a call. 
+
