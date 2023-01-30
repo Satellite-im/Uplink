@@ -34,10 +34,12 @@ use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels};
+use crate::state::{friends, items};
+use crate::warp_runner::{
+    ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
+};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -385,6 +387,7 @@ fn app(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
@@ -418,10 +421,10 @@ fn app(cx: Scope) -> Element {
     // update state in response to warp events
     let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init, chats_init];
+        to_owned![needs_update, friends_init, chats_init, items_init];
         async move {
             // don't process warp events until friends and chats have been loaded
-            while !(*friends_init.read() && *chats_init.read()) {
+            while !(*friends_init.read() && *chats_init.read() && *items_init.read()) {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
@@ -499,6 +502,50 @@ fn app(cx: Scope) -> Element {
             }
 
             *friends_init.write_silent() = true;
+            needs_update.set(true);
+        }
+    });
+
+    // initialize files
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![items_init, needs_update];
+        async move {
+            if *items_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel::<Result<items::Items, warp::error::Error>>();
+            warp_cmd_tx
+                .send(WarpCmd::Constellation(ConstellationCmd::InitialiazeItems {
+                    rsp: tx,
+                }))
+                .expect("main failed to send warp command");
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+
+            logger::trace("init items");
+            match res {
+                Ok(items) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        if STATIC_ARGS.use_mock {
+                            state.write().items.join(items);
+                        } else {
+                            state.write().items = items;
+                        }
+
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        logger::error(&e.to_string());
+                    }
+                },
+                Err(e) => {
+                    logger::error(&format!("init items failed: {}", e));
+                }
+            }
+
+            *items_init.write_silent() = true;
             needs_update.set(true);
         }
     });

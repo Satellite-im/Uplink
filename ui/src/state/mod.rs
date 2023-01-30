@@ -3,6 +3,7 @@ pub mod action;
 pub mod chats;
 pub mod friends;
 pub mod identity;
+pub mod items;
 pub mod route;
 pub mod settings;
 pub mod ui;
@@ -52,6 +53,8 @@ pub struct State {
     #[serde(default)]
     pub friends: friends::Friends,
     #[serde(default)]
+    pub items: items::Items,
+    #[serde(default)]
     pub settings: settings::Settings,
     #[serde(default)]
     pub ui: ui::UI,
@@ -78,6 +81,7 @@ impl Clone for State {
             route: self.route.clone(),
             chats: self.chats.clone(),
             friends: self.friends.clone(),
+            items: self.items.clone(),
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),
