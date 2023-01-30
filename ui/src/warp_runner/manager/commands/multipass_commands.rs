@@ -1,35 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    error::Error,
-    raygun::{self, ConversationType},
-    tesseract::Tesseract,
-};
+use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
 use crate::{
-    logger,
-    state::{self, chats, friends},
-};
-
-use super::{
-    ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
-    Account, Messaging,
-};
-
-#[derive(Debug)]
-pub enum TesseractCmd {
-    KeyExists {
-        key: String,
-        rsp: oneshot::Sender<bool>,
+    state::{self, friends},
+    warp_runner::{
+        ui_adapter::{did_to_identity, dids_to_identity},
+        Account,
     },
-    Unlock {
-        passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
-    },
-}
+};
 
 #[derive(Debug)]
 pub enum MultiPassCmd {
@@ -80,70 +60,6 @@ pub enum MultiPassCmd {
     },
 }
 
-#[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
-pub enum RayGunCmd {
-    InitializeConversations {
-        // response is (own identity, chats)
-        // need to send over own identity because 'State' sets it to default
-        #[allow(clippy::type_complexity)]
-        rsp: oneshot::Sender<
-            Result<(state::Identity, HashMap<Uuid, chats::Chat>), warp::error::Error>,
-        >,
-    },
-    CreateConversation {
-        recipient: DID,
-        rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
-    },
-    // removes all direct conversations involving the recipient
-    RemoveDirectConvs {
-        recipient: DID,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
-    },
-}
-
-// currently unused
-pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) {
-    match cmd {
-        TesseractCmd::KeyExists { key, rsp } => {
-            let res = tesseract.exist(&key);
-            let _ = rsp.send(res);
-        }
-        TesseractCmd::Unlock { passphrase, rsp } => {
-            let r = tesseract.unlock(passphrase.as_bytes());
-            let _ = rsp.send(r);
-        }
-    }
-}
-
-pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging: &mut Messaging) {
-    match cmd {
-        RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
-            Ok(convs) => {
-                let r = raygun_initialize_conversations(&convs, account, messaging).await;
-                let _ = rsp.send(r);
-            }
-            Err(_e) => {
-                // do nothing. will cancel the channel
-                // could happen if warp isn't available yet
-            }
-        },
-        RayGunCmd::CreateConversation { recipient, rsp } => {
-            let r = match messaging.create_conversation(&recipient).await {
-                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    conversation_to_chat(&conv, account, messaging).await
-                }
-                Err(e) => Err(e),
-            };
-            let _ = rsp.send(r);
-        }
-        RayGunCmd::RemoveDirectConvs { recipient, rsp } => {
-            let r = raygun_remove_direct_convs(recipient, messaging).await;
-            let _ = rsp.send(r);
-        }
-    }
-}
-
 pub async fn handle_multipass_cmd(
     cmd: MultiPassCmd,
     tesseract: &mut Tesseract,
@@ -155,7 +71,8 @@ pub async fn handle_multipass_cmd(
             passphrase,
             rsp,
         } => {
-            //println!("create_identity: unlock tesseract");
+            // needed if an old password exists
+            tesseract.clear();
             let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
             let _ = rsp.send(r);
         }
@@ -224,21 +141,21 @@ async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
-    let idents = dids_to_identity(reqs, account).await?;
+    let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
     let outgoing = account.list_outgoing_request().await?;
-    let idents = dids_to_identity(outgoing, account).await?;
+    let idents = dids_to_identity(&outgoing, account).await?;
     let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.block_list().await?;
-    let idents = dids_to_identity(ids, account).await?;
+    let idents = dids_to_identity(&ids, account).await?;
     let blocked = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.list_friends().await?;
     let mut friends = HashMap::new();
     for id in ids {
-        let ident = did_to_identity(id.clone(), account).await?;
+        let ident = did_to_identity(&id, account).await?;
         friends.insert(id, ident);
     }
 
@@ -250,45 +167,4 @@ async fn multipass_initialize_friends(
         outgoing_requests,
     };
     Ok(ret)
-}
-
-async fn raygun_initialize_conversations(
-    convs: &[raygun::Conversation],
-    account: &Account,
-    messaging: &mut Messaging,
-) -> Result<(state::Identity, HashMap<Uuid, chats::Chat>), Error> {
-    let own_identity = account.get_own_identity().await?;
-    let mut all_chats = HashMap::new();
-    for conv in convs {
-        match conversation_to_chat(conv, account, messaging).await {
-            Ok(chat) => {
-                let _ = all_chats.insert(chat.id, chat);
-            }
-            Err(e) => {
-                logger::error(&format!("failed to convert conversation to chat: {}", e));
-            }
-        };
-    }
-    Ok((state::Identity::from(own_identity), all_chats))
-}
-
-async fn raygun_remove_direct_convs(
-    recipient: DID,
-    messaging: &mut Messaging,
-) -> Result<(), Error> {
-    match messaging.list_conversations().await {
-        Ok(convs) => {
-            for conv in convs {
-                // check if conversation should be deleted
-                // only consider conversations with 2 participants
-                if conv.conversation_type() == ConversationType::Direct
-                    && conv.recipients().contains(&recipient)
-                {
-                    messaging.delete(conv.id(), None).await?;
-                }
-            }
-            Ok(())
-        }
-        Err(e) => Err(e),
-    }
 }

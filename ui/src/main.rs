@@ -26,7 +26,7 @@ use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log;
+use warp::logging::tracing::log::{self, LevelFilter};
 
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
@@ -37,8 +37,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::commands::{MultiPassCmd, RayGunCmd};
-use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
+use crate::warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -182,18 +181,23 @@ fn copy_assets() {
 fn main() {
     // configure logging
     let args = Args::parse();
-    if let Some(profile) = args.profile {
+    let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
                 logger::set_write_to_stdout(true);
+                LevelFilter::Debug
             }
             LogProfile::Trace => {
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
+                LevelFilter::Trace
             }
-            _ => {}
+            _ => LevelFilter::Debug,
         }
-    }
+    } else {
+        LevelFilter::Debug
+    };
+    logger::init_with_level(max_log_level).expect("failed to init logger");
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
@@ -283,8 +287,9 @@ fn bootstrap(cx: Scope) -> Element {
     logger::trace("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
-    let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
+    // store in a use_ref to make it not get dropped
+    let warp_runner = use_ref(cx, || warp_runner::WarpRunner::new());
+    warp_runner.write_silent().run();
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);

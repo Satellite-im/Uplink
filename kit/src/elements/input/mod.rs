@@ -51,6 +51,8 @@ pub struct Props<'a> {
     onchange: Option<EventHandler<'a, (String, bool)>>,
     #[props(optional)]
     onreturn: Option<EventHandler<'a, (String, bool)>>,
+    #[props(optional)]
+    reset: Option<UseState<bool>>,
 }
 
 pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -162,10 +164,23 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.unwrap_or_default();
+    let should_validate = options.with_validation.is_some();
+    
+    //let mut debug_reset = false;
+    if let Some(hook) = &cx.props.reset {
+        let should_reset = hook.get();
+        if *should_reset {
+            val.write().clear();
+            hook.set(false);
+            //debug_reset = true;
+        }
+    }
+
+    //println!("rendering input. reset is: {}", debug_reset);
 
     let valid = use_state(cx, || false);
     let min_len =  options.with_validation.map(|opt| opt.min_length.unwrap_or_default()).unwrap_or_default();
-    let apply_validation_class = options.with_validation.is_some();
+    let apply_validation_class = should_validate;
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
@@ -212,17 +227,23 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
-                        let validation_result = validate(&cx, &current_val).unwrap_or_default();
-                        error.set(validation_result.clone());
                         *val.write_silent() = current_val.to_string();
 
-                        if !validation_result.is_empty() {
-                            valid.set(false);
-                            evt.stop_propagation();
-                        } else if current_val.len() >= min_len as usize {
-                            valid.set(true);
-                        }
-                        emit(&cx, val.read().to_string(), *valid.current());
+                        let is_valid = if should_validate {
+                            let validation_result = validate(&cx, &current_val).unwrap_or_default();
+                            error.set(validation_result.clone());
+                            if !validation_result.is_empty() {
+                                valid.set(false);
+                                evt.stop_propagation();
+                            } else if current_val.len() >= min_len as usize {
+                                valid.set(true);
+                            }
+                            *valid.current()
+                        } else {
+                            true
+                        };
+                        
+                        emit(&cx, val.read().to_string(), is_valid);
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {

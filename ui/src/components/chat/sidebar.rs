@@ -161,7 +161,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         _ => Platform::Headless //TODO: Unknown
                     };
 
-                    let last_message = chat.messages.last();
+                    let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
                         Some(m) => m,
                         None => &default_message,
