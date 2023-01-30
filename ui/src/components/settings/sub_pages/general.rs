@@ -57,7 +57,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 Select {
-                    initial_value: state.read().ui.theme.clone().unwrap_or_default().name,
+                    initial_value: state.read().ui.theme.clone().map(|t| t.name).unwrap_or("Default".into()),
                     options: themes.iter().map(|t| t.name.clone()).collect(),
                     onselect: move |value| {
                         themes.iter().for_each(|t| {
