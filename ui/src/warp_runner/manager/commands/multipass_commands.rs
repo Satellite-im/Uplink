@@ -1,12 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, logging::tracing::log};
+use warp::{crypto::DID, error::Error};
 
 use crate::{
     state::{self, friends},
     warp_runner::{
-        manager::warp_initialization,
         ui_adapter::{did_to_identity, dids_to_identity},
         Account,
     },
@@ -63,25 +62,8 @@ pub enum MultiPassCmd {
 
 pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Warp) {
     match cmd {
-        MultiPassCmd::CreateIdentity {
-            username,
-            passphrase,
-            rsp,
-        } => {
-            // needed if an old password exists
-            warp.tesseract.clear();
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            let r = multipass_create_identity(&username, &passphrase, warp).await;
-            let _ = rsp.send(r);
-        }
-        MultiPassCmd::TryLogIn { passphrase, rsp } => {
-            if let Err(e) = login(&passphrase, warp).await {
-                let _ = rsp.send(Err(e));
-                return;
-            }
-            log::debug!("TryLogIn unlocked tesseract");
-            let r = warp.multipass.get_own_identity().await.map(|_| ());
-            let _ = rsp.send(r);
+        MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
+            // do nothing and drop the rsp channel
         }
         MultiPassCmd::RequestFriend { did, rsp } => {
             let r = warp.multipass.send_request(&did).await;
@@ -124,30 +106,6 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = rsp.send(r);
         }
     }
-}
-
-async fn multipass_create_identity(
-    username: &str,
-    passphrase: &str,
-    warp: &mut super::super::Warp,
-) -> Result<(), Error> {
-    login(passphrase, warp).await?;
-    let _ = warp.multipass.create_identity(Some(username), None).await?;
-    Ok(())
-}
-
-// tesseract needs to be initialized before warp is initialized. this function does just that
-async fn login(passphrase: &str, warp: &mut super::super::Warp) -> Result<(), Error> {
-    warp.tesseract.unlock(passphrase.as_bytes())?;
-    while !warp.tesseract.is_unlock() {
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-    }
-
-    let (account, messaging, storage) = warp_initialization(warp.tesseract.clone(), false).await?;
-    warp.multipass = account;
-    warp.raygun = messaging;
-    warp._constellation = storage;
-    Ok(())
 }
 
 async fn multipass_initialize_friends(
