@@ -64,7 +64,6 @@ pub struct StaticArgs {
     pub logger_path: PathBuf,
     pub use_mock: bool,
 }
-
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
     let uplink_path = match args.path {

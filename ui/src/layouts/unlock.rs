@@ -9,10 +9,11 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
     logger,
-    warp_runner::{MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
 
@@ -25,6 +26,19 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
 
+    let account_exists = use_future(cx, (), |_| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        let (tx, rx) = oneshot::channel::<bool>();
+        warp_cmd_tx
+            .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
+                key: "keypair".into(),
+                rsp: tx,
+            }))
+            .expect("failed to send command");
+        let exists = rx.await.unwrap_or(false);
+        log::debug!("account_exists: {}", exists);
+        exists
+    });
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
         async move {
@@ -122,16 +136,20 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                 }
             },
-            Button {
-                text: get_local_text("unlock.create-account"),
-                aria_label: "create-account-button".into(),
-                appearance: kit::elements::Appearance::Primary,
-                icon: Icon::Check,
-                disabled: *button_disabled.get(),
-                onpress: move |_| {
-                    page.set(AuthPages::CreateAccount);
+            // want this to not render while account_exists is loading.
+            // therefore, default it to true
+            (!account_exists.value().unwrap_or(&true)).then(|| rsx!(
+                Button {
+                    text: get_local_text("unlock.create-account"),
+                    aria_label: "create-account-button".into(),
+                    appearance: kit::elements::Appearance::Primary,
+                    icon: Icon::Check,
+                    disabled: *button_disabled.get(),
+                    onpress: move |_| {
+                        page.set(AuthPages::CreateAccount);
+                    }
                 }
-            }
+            ))
         }
     ))
 }
