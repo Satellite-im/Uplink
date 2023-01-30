@@ -5,7 +5,10 @@ mod events;
 use futures::StreamExt;
 use std::sync::Arc;
 use tokio::sync::Notify;
-use warp::{multipass::MultiPassEventStream, raygun::RayGunEventStream, tesseract::Tesseract};
+use warp::{
+    logging::tracing::log, multipass::MultiPassEventStream, raygun::RayGunEventStream,
+    tesseract::Tesseract,
+};
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::{config::RgIpfsConfig, Persistent};
@@ -89,6 +92,7 @@ fn init_tesseract() -> Tesseract {
         Ok(tess) => tess,
         Err(_) => {
             //doesnt exist so its set
+            log::info!("creating new tesseract");
             let tess = Tesseract::default();
             tess.set_file(tess_path);
             tess.set_autosave();

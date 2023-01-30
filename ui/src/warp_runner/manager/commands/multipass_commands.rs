@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, tesseract::Tesseract};
+use warp::{crypto::DID, error::Error, logging::tracing::log, tesseract::Tesseract};
 
 use crate::{
     state::{self, friends},
@@ -73,6 +73,7 @@ pub async fn handle_multipass_cmd(
         } => {
             // needed if an old password exists
             tesseract.clear();
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
             let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
             let _ = rsp.send(r);
         }
@@ -81,8 +82,10 @@ pub async fn handle_multipass_cmd(
                 let _ = rsp.send(Err(e));
                 return;
             }
-            // without the delay, there is an error that the multipass extension is unavailable
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            while !tesseract.is_unlock() {
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            }
+            log::debug!("TryLogIn unlocked tesseract");
             let r = account.get_own_identity().await.map(|_| ());
             let _ = rsp.send(r);
         }
@@ -132,6 +135,9 @@ async fn multipass_create_identity(
     account: &mut Account,
 ) -> Result<(), Error> {
     tesseract.unlock(passphrase.as_bytes())?;
+    while !tesseract.is_unlock() {
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
     //println!("create_identity: account.create_identity");
     let _ = account.create_identity(Some(username), None).await?;
     Ok(())

@@ -12,6 +12,7 @@
 //! for simplicity, the debug_logger should parse these fields directly. this seems better than converting the
 //! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
 
+use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
@@ -31,12 +32,14 @@ pub struct Log {
     pub level: Level,
     pub message: String,
     pub datetime: DateTime<Local>,
+    pub colorized: bool,
 }
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let datetime = &self.datetime.to_string()[0..19];
-        write!(f, "{} | {} | {}", datetime, self.level, self.message)
+        let level = self.get_level_string();
+        write!(f, "{} | {} | {}", datetime, level, self.message)
     }
 }
 
@@ -118,12 +121,13 @@ impl Logger {
             level,
             message: message.to_string(),
             datetime: Local::now(),
+            colorized: false,
         };
 
         // special path for Trace logs
         // don't persist tracing information. at most, print it to the terminal
         if level == Level::Trace && self.display_trace {
-            println!("{}", new_log);
+            println!("{}", new_log.colorize());
             return;
         }
 
@@ -145,7 +149,7 @@ impl Logger {
         }
 
         if self.write_to_stdout {
-            println!("{}", new_log)
+            println!("{}", new_log.colorize())
         }
 
         // if a subscriber closes a channel, send() will fail. remove from subscribers
@@ -256,5 +260,29 @@ pub fn get_color_string(level: Level) -> &'static str {
         Level::Info => "rgb(0, 195, 255)",
         Level::Warn => "yellow",
         Level::Error => "red",
+    }
+}
+
+// this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.
+impl Log {
+    fn colorize(&self) -> Self {
+        let mut log = self.clone();
+        log.colorized = true;
+        log
+    }
+
+    fn get_level_string(&self) -> String {
+        if !self.colorized {
+            return self.level.to_string();
+        }
+
+        let level = &self.level;
+        match self.level {
+            Level::Error => level.to_string().red().to_string(),
+            Level::Warn => level.to_string().yellow().to_string(),
+            Level::Info => level.to_string().cyan().to_string(),
+            Level::Debug => level.to_string().purple().to_string(),
+            Level::Trace => level.to_string().normal().to_string(),
+        }
     }
 }
