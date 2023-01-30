@@ -9,7 +9,7 @@ use warp::logging::tracing::log;
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
-    state::{Action, State, Theme},
+    state::{Action, State},
     utils::get_available_themes,
 };
 
@@ -19,18 +19,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
-    let theme = state
-        .read()
-        .ui
-        .theme
-        .as_ref()
-        .map(|theme| theme.name.clone())
-        .unwrap_or_default();
-
     let mut config = Configuration::load_or_default();
-    if theme.is_empty() {
-        state.write().mutate(Action::SetTheme(Theme::default()));
-    }
 
     cx.render(rsx!(
         div {
