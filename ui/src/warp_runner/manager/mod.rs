@@ -66,6 +66,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
         }
     }
 
+    warp.tesseract.lock();
     logger::debug("terminating warp_runner thread");
 }
 

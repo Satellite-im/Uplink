@@ -93,7 +93,8 @@ impl WarpRunner {
             let warp: Option<manager::Warp> = loop {
                 tokio::select! {
                     opt = warp_cmd_rx.recv() => {
-                       match opt {
+                        log::debug!("received warp command: {:?}", opt);
+                        match opt {
                         Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                             username,
                             passphrase,
@@ -101,7 +102,8 @@ impl WarpRunner {
                         })) => {
                             tesseract.clear();
                             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                            let mut warp = match login(&passphrase, tesseract.clone()).await {
+                            let new_account = true;
+                            let mut warp = match login(&passphrase, tesseract.clone(), new_account).await {
                                 Ok(w) => w,
                                 Err(e) => {
                                     let _ = rsp.send(Err(e));
@@ -120,7 +122,8 @@ impl WarpRunner {
                             }
                         }
                         Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
-                            let warp = match login(&passphrase, tesseract.clone()).await {
+                            let new_account = false;
+                            let warp = match login(&passphrase, tesseract.clone(), new_account).await {
                                 Ok(w) => w,
                                 Err(e) => {
                                     let _ = rsp.send(Err(e));
@@ -140,7 +143,7 @@ impl WarpRunner {
                             let _ = rsp.send(res);
                         }
                         _ => {}
-                       }
+                        }
                     } ,
                     // the WarpRunner has been dropped. stop the task
                     _ = notify.notified() => break None,
@@ -159,12 +162,13 @@ impl WarpRunner {
 }
 
 fn init_tesseract() -> Tesseract {
+    log::trace!("initializing tesseract");
     let tess_path = STATIC_ARGS.warp_path.join(".keystore");
     match Tesseract::from_file(&tess_path) {
         Ok(tess) => tess,
         Err(_) => {
             //doesnt exist so its set
-            log::info!("creating new tesseract");
+            log::trace!("creating new tesseract");
             let tess = Tesseract::default();
             tess.set_file(tess_path);
             tess.set_autosave();
@@ -177,10 +181,19 @@ fn init_tesseract() -> Tesseract {
 async fn login(
     passphrase: &str,
     tesseract: Tesseract,
+    new_account: bool,
 ) -> Result<manager::Warp, warp::error::Error> {
+    log::debug!("login");
     tesseract.unlock(passphrase.as_bytes())?;
     while !tesseract.is_unlock() {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
+    if !new_account {
+        if !tesseract.exist("keypair") {
+            log::info!("string keypair not found in tesseract");
+            return Err(warp::error::Error::IdentityNotCreated);
+        }
     }
     let res = warp_initialization(tesseract, false).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -192,6 +205,7 @@ async fn warp_initialization(
     tesseract: Tesseract,
     experimental: bool,
 ) -> Result<manager::Warp, warp::error::Error> {
+    log::debug!("warp initialization");
     let path = &STATIC_ARGS.warp_path;
     let config = MpIpfsConfig::production(path, experimental);
 

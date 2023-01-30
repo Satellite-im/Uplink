@@ -5,6 +5,7 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     error::Error,
+    logging::tracing::log,
     raygun::{self, ConversationType},
 };
 
@@ -85,6 +86,7 @@ async fn raygun_initialize_conversations(
     account: &Account,
     messaging: &mut Messaging,
 ) -> Result<(state::Identity, HashMap<Uuid, chats::Chat>), Error> {
+    log::trace!("init convs with {} total", convs.len());
     let own_identity = account.get_own_identity().await?;
     let mut all_chats = HashMap::new();
     for conv in convs {

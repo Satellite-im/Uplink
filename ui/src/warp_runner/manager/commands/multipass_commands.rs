@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error};
+use warp::{crypto::DID, error::Error, logging::tracing::log};
 
 use crate::{
     state::{self, friends},
@@ -112,6 +112,7 @@ async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
+    log::trace!("init friends with {} total", reqs.len());
     let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
