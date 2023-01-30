@@ -1,14 +1,16 @@
-use std::rc::Rc;
+use std::{rc::Rc};
 
 use dioxus::prelude::*;
 
+use futures::{StreamExt, channel::oneshot};
 use kit::{layout::{topbar::Topbar, chatbar::{Chatbar, Reply}}, components::{user_image::UserImage, indicator::{Status, Platform}, context_menu::{ContextMenu, ContextItem}, message_group::{MessageGroup, MessageGroupSkeletal}, message::{Message, Order}, user_image_group::UserImageGroup}, elements::{button::Button, tooltip::{Tooltip, ArrowPosition}, Appearance}, icons::Icon};
 
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window, use_eval};
 use shared::language::get_local_text;
+use uuid::Uuid;
 
 
-use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants}, logger};
+use crate::{state::{State, Action, Chat, Identity, self}, components::{media::player::MediaPlayer}, utils::{format_timestamp::format_timestamp_timeago, convert_status, build_participants, build_user_from_identity}, WARP_CMD_CH, warp_runner::{WarpCmd, RayGunCmd}, logger, STATIC_ARGS};
 
 use super::sidebar::build_participants_names;
 
@@ -43,7 +45,7 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
-    
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -87,7 +89,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         None => return None
     };
     let message_groups = s.get_sort_messages(&active_chat);
-    let other_participants = s.get_without_me(active_chat.participants.clone());
+    let other_participants = s.get_without_me(&active_chat.participants);
     let active_participant = other_participants.first().cloned().expect("chat should have at least 2 participants");
     let subtext = active_participant.status_message().unwrap_or_default();
     let is_favorite = s.is_favorite(&active_chat);
@@ -241,6 +243,9 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    let script = include_str!("./script.js");
+    use_eval(cx)(script.to_string());
+
     let data = match &cx.props.data {
         Some(d) => d.clone(),
         None => {
@@ -253,6 +258,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     };
+
     cx.render(rsx!(
         div {
             id: "messages",
@@ -320,19 +326,96 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
 
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
-    logger::trace("rendering chatbar");
+    logger::trace("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
     let loading = data.is_none();
+    let input = use_ref(cx, Vec::<String>::new);
+    let should_clear_input = use_state(cx,|| false);
+    let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+    
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
+        //to_owned![];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((msg, conv_id)) = rx.next().await {
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                warp_cmd_tx
+                    .send(WarpCmd::RayGun(RayGunCmd::SendMessage {
+                        conv_id,
+                        msg,
+                        rsp: tx,
+                    }))
+                    .expect("failed to send cmd");
+
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    logger::error(&format!("failed to send message: {}", e));
+                }
+
+             
+            }
+        }
+    });
+
+    let msg_valid = |msg: &[String]| {
+        !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty())
+    };
+   
     cx.render(rsx!(
         Chatbar {
             loading: loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
+            reset: should_clear_input.clone(),
+            onchange: move |v: String| {
+                *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+            },
+            onreturn: move |_| {
+                let msg = input.read().clone();
+                // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+                input.write().clear();
+                should_clear_input.set(true);
+
+                if !msg_valid(&msg) {
+                    return;
+                }
+                let id = match active_chat_id {
+                    Some(i) => i,
+                    None => return
+                };
+
+                if STATIC_ARGS.use_mock {
+                    state.write().mutate(Action::MockSend(id, msg));
+                } else {
+                    ch.send((msg, id));
+                }
+            },
             controls: cx.render(rsx!(
                 Button {
                     icon: Icon::ChevronDoubleRight,
-                    // disabled: **loading,
+                    disabled: loading,
                     appearance: Appearance::Secondary,
+                    onpress: move |_| {
+                        let msg = input.read().clone();
+                        // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+                        input.write().clear();
+                        should_clear_input.set(true);
+
+                        if !msg_valid(&msg) {
+                            return;
+                        }
+
+                        let id = match active_chat_id {
+                            Some(i) => i,
+                            None => return
+                        };
+
+                        if STATIC_ARGS.use_mock {
+                            state.write().mutate(Action::MockSend(id, msg));
+                        } else {
+                            ch.send((msg, id));
+                        }
+                    },
                     tooltip: cx.render(rsx!(
                         Tooltip { 
                             arrow_position: ArrowPosition::Bottom, 
@@ -343,31 +426,37 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             )),
             with_replying_to: data.map(|data| {
                 let active_chat = data.active_chat.clone();
+
                 cx.render(rsx!(
-                    active_chat.clone().replying_to.map(|msg| rsx!(
+                    active_chat.clone().replying_to.map(|msg|
+                    {
+                    let our_did = state.read().account.identity.did_key();
+                    let mut participants = data.active_chat.participants.clone();
+                    participants.retain(|p| p.did_key() == msg.sender());
+                    let msg_owner = participants.first();
+                    let (platform, status) = get_platform_and_status(msg_owner);
+
+                    rsx!(
                         Reply {
                             label: get_local_text("messages.replying"),
-                            remote: {
-                                let our_did = state.read().account.identity.did_key();
-                                let their_did = msg.sender();
-                                our_did != their_did
-                            },
+                            remote: our_did != msg.sender(),
                             onclose: move |_| {
                                 state.write().mutate(Action::CancelReply(active_chat.clone()))
                             },
                             message: msg.value().join("\n"),
                             UserImage {
-                                platform: Platform::Mobile,
-                                status: Status::Online
+                                platform: platform,
+                                status: status,
                             },
                         }
-                    ))
+                    )}
+                )
                 ))
             }).unwrap_or(None),
             with_file_upload: cx.render(rsx!(
                 Button {
                     icon: Icon::Plus,
-                    // disabled: loading,
+                    disabled: loading,
                     appearance: Appearance::Primary,
                     tooltip: cx.render(rsx!(
                         Tooltip { 
@@ -379,4 +468,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             ))
         }
     ))
+}
+
+fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {
+    let sender = match msg_sender {
+        Some(identity) => identity,
+        None => return (Platform::Desktop, Status::Offline)
+    };
+    let user_sender = build_user_from_identity(sender.clone());
+    (user_sender.platform, user_sender.status)
 }

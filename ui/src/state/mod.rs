@@ -21,7 +21,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use crate::{
     testing::mock::generate_mock,
     warp_runner::{
-        ui_adapter::{MultiPassEvent, RayGunEvent},
+        ui_adapter::{MessageEvent, MultiPassEvent, RayGunEvent},
         WarpEvent,
     },
     STATIC_ARGS,
@@ -29,11 +29,15 @@ use crate::{
 use either::Either;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashMap},
     fmt, fs,
 };
 use uuid::Uuid;
-use warp::{crypto::DID, multipass::identity::IdentityStatus, raygun::Message};
+use warp::{
+    crypto::DID,
+    multipass::identity::IdentityStatus,
+    raygun::{self, Message},
+};
 
 use self::{action::ActionHook, chats::Direction, ui::Call};
 
@@ -275,6 +279,8 @@ impl State {
         // Remove the identity from the outgoing requests list if they are present
         self.friends.outgoing_requests.remove(identity);
 
+        self.friends.incoming_requests.remove(identity);
+
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
     }
@@ -325,6 +331,12 @@ impl State {
         self.ui.toggle_silenced();
     }
 
+    fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: raygun::Message) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            chat.messages.push_back(message);
+        }
+    }
+
     /// Getters
     /// Getters are the only public facing methods besides dispatch.
     /// Getters help retrieve data from state in common ways preventing reused code.
@@ -363,13 +375,11 @@ impl State {
             .cloned()
     }
 
-    pub fn get_without_me(&self, identities: Vec<Identity>) -> Vec<Identity> {
-        let mut set = HashSet::new();
-        set.insert(&self.account.identity);
-
+    pub fn get_without_me(&self, identities: &[Identity]) -> Vec<Identity> {
         identities
-            .into_iter()
-            .filter(|identity| !set.contains(identity))
+            .iter()
+            .filter(|identity| identity.did_key() != self.account.identity.did_key())
+            .cloned()
             .collect()
     }
 
@@ -550,7 +560,7 @@ impl State {
             }
             Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
             Action::Block(identity) => self.block(&identity),
-            Action::UnBlock(identity) => self.unblock(&identity),
+            Action::Unblock(identity) => self.unblock(&identity),
             Action::Favorite(chat) => self.favorite(&chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             Action::ChatWith(chat) => {
@@ -582,7 +592,14 @@ impl State {
             }
             Action::React(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
-            Action::Send(_, _) => todo!(),
+            Action::MockSend(id, msg) => {
+                let sender = self.account.identity.did_key();
+                let mut m = raygun::Message::default();
+                m.set_conversation_id(id);
+                m.set_sender(sender);
+                m.set_value(msg);
+                self.add_msg_to_chat(id, m);
+            }
             Action::Navigate(to) => {
                 self.set_active_route(to);
             }
@@ -620,6 +637,10 @@ impl State {
 
     /// Saves the current state to disk.
     fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // mock data loads the same random data every time. no point in saving it.
+        if STATIC_ARGS.use_mock {
+            return Ok(());
+        }
         let serialized = serde_json::to_string(self)?;
         fs::write(&STATIC_ARGS.cache_path, serialized)?;
         Ok(())
@@ -646,6 +667,7 @@ impl State {
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
+            WarpEvent::Message(evt) => self.process_message_event(evt),
         };
 
         let _ = self.save();
@@ -702,6 +724,30 @@ impl State {
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);
                 self.chats.all.remove(&id);
+                if self.chats.active == Some(id) {
+                    self.chats.active = None;
+                }
+            }
+        }
+    }
+
+    fn process_message_event(&mut self, event: MessageEvent) {
+        match event {
+            MessageEvent::Received {
+                conversation_id,
+                message,
+            } => {
+                // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                self.add_msg_to_chat(conversation_id, message);
+            }
+            MessageEvent::Sent {
+                conversation_id,
+                message,
+            } => {
+                // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.messages.push_back(message);
+                }
             }
         }
     }

@@ -1,10 +1,10 @@
 use crate::{
     components::friends::friend::Friend,
     logger,
-    state::State,
+    state::{Action, State},
     utils::convert_status,
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
-    WARP_CMD_CH,
+    warp_runner::{MultiPassCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
@@ -77,7 +77,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.unblock"),
                                 onpress: move |_| {
-                                    ch.send(unblock_user.clone().did_key());
+                                    if STATIC_ARGS.use_mock {
+                                        state.write().mutate(Action::Unblock(unblock_user.clone()));
+                                    } else {
+                                        ch.send(unblock_user.clone().did_key());
+                                    }
                                 }
                             },
                         )),
@@ -94,7 +98,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 }
                             )),
                             onremove: move |_| {
-                                ch.send(unblock_user_clone.clone().did_key());
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::Unblock(unblock_user_clone.clone()));
+                                } else {
+                                    ch.send(unblock_user_clone.clone().did_key());
+                                }
                             }
                         }
                     }

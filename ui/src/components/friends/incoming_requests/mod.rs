@@ -1,10 +1,10 @@
 use crate::{
     components::friends::friend::Friend,
     logger,
-    state::{Identity, State},
+    state::{Action, Identity, State},
     utils::convert_status,
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
-    WARP_CMD_CH,
+    warp_runner::{MultiPassCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
 };
 use chrono::{Duration, Utc};
 use dioxus::prelude::*;
@@ -100,7 +100,11 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.deny"),
                                 onpress: move |_| {
-                                    ch.send(ChanCmd::DenyRequest(friend_clone_clone_clone.clone()));
+                                    if STATIC_ARGS.use_mock {
+                                        state.write().mutate(Action::DenyRequest(friend_clone_clone_clone.clone()));
+                                    } else {
+                                       ch.send(ChanCmd::DenyRequest(friend_clone_clone_clone.clone()));
+                                    }
                                 }
                             },
                         )),
@@ -122,10 +126,19 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 }
                             )),
                             onaccept: move |_| {
-                                ch.send(ChanCmd::AcceptRequest(friend_clone.clone()));
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::AcceptRequest(friend_clone.clone()));
+                                } else {
+                                     ch.send(ChanCmd::AcceptRequest(friend_clone.clone()));
+                                }
+
                             },
                             onremove: move |_| {
-                               ch.send(ChanCmd::DenyRequest(friend_clone_clone.clone()));
+                                if STATIC_ARGS.use_mock {
+                                    state.write().mutate(Action::AcceptRequest(friend_clone_clone.clone()));
+                                } else {
+                                    ch.send(ChanCmd::DenyRequest(friend_clone_clone.clone()));
+                                }
                             }
                         }
                     }

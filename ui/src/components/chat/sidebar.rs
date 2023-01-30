@@ -89,7 +89,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             };
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
-                            let without_me = state.read().get_without_me(chat.participants.clone());
+                            let without_me = state.read().get_without_me(&chat.participants);
                             let participants_name = build_participants_names(&without_me);
                             
                             rsx! (
@@ -150,7 +150,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         Some(c) => c.clone(),
                         None => return rsx!("")
                     };
-                    let without_me = state.read().get_without_me(chat.participants.clone());
+                    let without_me = state.read().get_without_me(&chat.participants);
                     let user = without_me.first();
                     let default_message = Message::default();
                     let parsed_user = user.cloned().unwrap_or_default();
@@ -161,7 +161,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         _ => Platform::Headless //TODO: Unknown
                     };
 
-                    let last_message = chat.messages.last();
+                    let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
                         Some(m) => m,
                         None => &default_message,

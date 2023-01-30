@@ -26,7 +26,7 @@ use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log;
+use warp::logging::tracing::log::{self, LevelFilter};
 
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
@@ -37,8 +37,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::commands::{MultiPassCmd, RayGunCmd};
-use crate::warp_runner::{WarpCmd, WarpCmdChannels, WarpEventChannels};
+use crate::warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -63,7 +62,7 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
-    pub no_mock: bool,
+    pub use_mock: bool,
 }
 
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -78,7 +77,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
-        no_mock: args.no_mock,
+        use_mock: !args.no_mock,
     }
 });
 
@@ -182,18 +181,23 @@ fn copy_assets() {
 fn main() {
     // configure logging
     let args = Args::parse();
-    if let Some(profile) = args.profile {
+    let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
                 logger::set_write_to_stdout(true);
+                LevelFilter::Debug
             }
             LogProfile::Trace => {
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
+                LevelFilter::Trace
             }
-            _ => {}
+            _ => LevelFilter::Debug,
         }
-    }
+    } else {
+        LevelFilter::Debug
+    };
+    logger::init_with_level(max_log_level).expect("failed to init logger");
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
@@ -270,7 +274,11 @@ fn main() {
     <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
     </html>"#
                     .to_string(),
-            ),
+            )
+            .with_file_drop_handler(|_w, drag_event| {
+                logger::debug(format!("Drag Event: {:?}", drag_event).as_str());
+                true
+            }),
     )
 }
 
@@ -279,8 +287,9 @@ fn bootstrap(cx: Scope) -> Element {
     logger::trace("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
-    let mut warp_runner = warp_runner::WarpRunner::init();
-    warp_runner.run(WARP_EVENT_CH.tx.clone(), WARP_CMD_CH.rx.clone());
+    // store in a use_ref to make it not get dropped
+    let warp_runner = use_ref(cx, || warp_runner::WarpRunner::new());
+    warp_runner.write_silent().run();
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
@@ -341,10 +350,10 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
     logger::trace("rendering app_bootstrap");
-    let mut state = if STATIC_ARGS.no_mock {
-        State::load().expect("failed to load state")
-    } else {
+    let mut state = if STATIC_ARGS.use_mock {
         State::mock()
+    } else {
+        State::load().expect("failed to load state")
     };
 
     // set the window to the normal size.
@@ -380,8 +389,8 @@ fn app(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     // don't fetch friends and conversations from warp when using mock data
-    let friends_init = use_ref(cx, || !STATIC_ARGS.no_mock);
-    let chats_init = use_ref(cx, || !STATIC_ARGS.no_mock);
+    let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
     // yes, double render. sry.
@@ -477,7 +486,7 @@ fn app(cx: Scope) -> Element {
             match res {
                 Ok(friends) => match inner.try_borrow_mut() {
                     Ok(state) => {
-                        if !STATIC_ARGS.no_mock {
+                        if STATIC_ARGS.use_mock {
                             state.write().friends.join(friends);
                         } else {
                             state.write().friends = friends;
@@ -509,8 +518,9 @@ fn app(cx: Scope) -> Element {
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
-                let (tx, rx) =
-                    oneshot::channel::<Result<HashMap<Uuid, state::Chat>, warp::error::Error>>();
+                let (tx, rx) = oneshot::channel::<
+                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                >();
                 warp_cmd_tx
                     .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
                         rsp: tx,
@@ -525,7 +535,7 @@ fn app(cx: Scope) -> Element {
 
             logger::trace("init chats");
             match res {
-                Ok(mut all_chats) => match inner.try_borrow_mut() {
+                Ok((own_id, mut all_chats)) => match inner.try_borrow_mut() {
                     Ok(state) => {
                         // for all_chats, fill in participants and messages.
                         for (k, v) in &state.read().chats.all {
@@ -536,11 +546,12 @@ fn app(cx: Scope) -> Element {
                             }
                         }
 
-                        if !STATIC_ARGS.no_mock {
+                        if STATIC_ARGS.use_mock {
                             state.write().chats.join(all_chats);
                         } else {
                             state.write().chats.all = all_chats;
                         }
+                        state.write().account.identity = own_id;
                         state.write().chats.initialized = true;
                         //println!("{:#?}", state.read().chats);
                         needs_update.set(true);

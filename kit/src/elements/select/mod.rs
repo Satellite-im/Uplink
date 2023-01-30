@@ -23,7 +23,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let initial_value = cx.props.initial_value.clone();
     let mut options = cx.props.options.clone();
     options.retain(|value| value != &initial_value);
-    options.insert(0, initial_value);
+    options.insert(0, initial_value.clone());
     let iter = IntoIterator::into_iter(options.clone());
 
     // TODO: We should iterate through the options and figure out the maximum length of an option
@@ -33,6 +33,7 @@ pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "select",
             aria_label: "Selector",
             select {
+                value: "{initial_value}",
                 onchange: move |e| emit(&cx, e.value.clone()),
                 iter.map(|val|
                     rsx!(option {key: "{val}", label: "{val}", value: "{val}", aria_label: "Selector Option"})

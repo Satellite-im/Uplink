@@ -7,7 +7,7 @@ use kit::elements::{
 use mime::*;
 use rfd::FileDialog;
 use shared::language::get_local_text;
-use warp::{error::Error, logging::tracing::log};
+use warp::error::Error;
 
 use crate::logger;
 
@@ -23,6 +23,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         alpha_numeric_only: true,
         // The input should not contain any whitespace
         no_whitespace: true,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     let status_validation_options = Validation {
@@ -34,13 +36,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         alpha_numeric_only: false,
         // The input should not contain any whitespace
         no_whitespace: false,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
     };
 
     let image_state = use_state(cx, String::new);
     let banner_state = use_state(cx, String::new);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::error("Profile settings opened");
+    logger::debug("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -54,7 +58,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
@@ -65,7 +69,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
-                            log::error!("Error to change profile avatar image {error}");
+                            logger::error(&format!("Error to change profile avatar image {error}"));
                         };
                     },
                     Button {
@@ -73,7 +77,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     },
@@ -88,7 +92,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         icon: kit::icons::Icon::Plus,
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
+                                logger::error(&format!("Error to change profile avatar image {error}"));
                             };
                         }
                     }

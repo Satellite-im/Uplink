@@ -6,7 +6,7 @@ use crate::{components::settings::SettingSection, logger};
 
 #[allow(non_snake_case)]
 pub fn AudioSettings(cx: Scope) -> Element {
-    logger::warn("Audio settings opened");
+    logger::debug("Audio settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-audio",

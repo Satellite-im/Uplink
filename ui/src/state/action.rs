@@ -74,7 +74,7 @@ pub enum Action {
     // Friends
     RemoveFriend(Identity),
     Block(Identity),
-    UnBlock(Identity),
+    Unblock(Identity),
     /// Handles the display of "favorite" chats
     Favorite(Chat),
     UnFavorite(Uuid),
@@ -98,8 +98,11 @@ pub enum Action {
     StartReplying(Chat, Message),
     /// Clears the reply for a given chat
     CancelReply(Chat),
-    /// Sends a message to the given chat
-    Send(Chat, Message),
+    /// fakes sending a message to the specified chat
+    /// for normal operation, warp sends a message, Uplink receives an event when that message was sent, and state is updated accordingly.
+    /// for mock data, warp is not used and this is needed to fake sending a message
+    /// (Conversation Id, message)
+    MockSend(Uuid, Vec<String>),
     ClearUnreads(Chat),
 }
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -19,7 +19,7 @@ pub struct Chat {
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     #[serde(skip)]
-    pub messages: Vec<Message>,
+    pub messages: VecDeque<Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
     pub unreads: u32,

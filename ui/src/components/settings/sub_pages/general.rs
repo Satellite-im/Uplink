@@ -4,17 +4,18 @@ use kit::{
     icons::Icon,
 };
 use shared::language::{change_language, get_available_languages, get_local_text};
+use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
-    logger,
     state::{Action, State, Theme},
     utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
+    log::trace!("General settings rendered");
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
@@ -27,10 +28,10 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         .unwrap_or_default();
 
     let mut config = Configuration::load_or_default();
-    if theme == "" {
+    if theme.is_empty() {
         state.write().mutate(Action::SetTheme(Theme::default()));
     }
-    logger::debug("General settings opened");
+
     cx.render(rsx!(
         div {
             id: "settings-general",

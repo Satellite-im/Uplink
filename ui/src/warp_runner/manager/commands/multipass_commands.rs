@@ -1,27 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use uuid::Uuid;
 use warp::{crypto::DID, error::Error, tesseract::Tesseract};
 
-use crate::state::{self, chats, friends};
-
-use super::{
-    ui_adapter::{conversation_to_chat, did_to_identity, dids_to_identity},
-    Account, Messaging,
+use crate::{
+    state::{self, friends},
+    warp_runner::{
+        ui_adapter::{did_to_identity, dids_to_identity},
+        Account,
+    },
 };
-
-#[derive(Debug)]
-pub enum TesseractCmd {
-    KeyExists {
-        key: String,
-        rsp: oneshot::Sender<bool>,
-    },
-    Unlock {
-        passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
-    },
-}
 
 #[derive(Debug)]
 pub enum MultiPassCmd {
@@ -72,65 +60,6 @@ pub enum MultiPassCmd {
     },
 }
 
-#[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
-pub enum RayGunCmd {
-    InitializeConversations {
-        rsp: oneshot::Sender<Result<HashMap<Uuid, chats::Chat>, warp::error::Error>>,
-    },
-    CreateConversation {
-        recipient: DID,
-        rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
-    },
-}
-
-// currently unused
-pub async fn handle_tesseract_cmd(cmd: TesseractCmd, tesseract: &mut Tesseract) {
-    match cmd {
-        TesseractCmd::KeyExists { key, rsp } => {
-            let res = tesseract.exist(&key);
-            let _ = rsp.send(res);
-        }
-        TesseractCmd::Unlock { passphrase, rsp } => {
-            let r = tesseract.unlock(passphrase.as_bytes());
-            let _ = rsp.send(r);
-        }
-    }
-}
-
-pub async fn handle_raygun_cmd(cmd: RayGunCmd, account: &mut Account, messaging: &mut Messaging) {
-    match cmd {
-        RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
-            Ok(convs) => {
-                //println!("warp runner got conversations: {:#?}", convs);
-                let mut all_chats = HashMap::new();
-                for conv in convs {
-                    match conversation_to_chat(conv, account, messaging).await {
-                        Ok(chat) => {
-                            let _ = all_chats.insert(chat.id, chat);
-                        }
-                        Err(_e) => todo!("log error"),
-                    };
-                }
-                let _ = rsp.send(Ok(all_chats));
-            }
-            Err(_e) => {
-                // do nothing. will cancel the channel
-                // could happen if warp isn't available yet
-            }
-        },
-        RayGunCmd::CreateConversation { recipient, rsp } => {
-            let r = match messaging.create_conversation(&recipient).await {
-                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    conversation_to_chat(conv, account, messaging).await
-                }
-                Err(e) => Err(e),
-            };
-            let _ = rsp.send(r);
-        }
-    }
-}
-
 pub async fn handle_multipass_cmd(
     cmd: MultiPassCmd,
     tesseract: &mut Tesseract,
@@ -142,7 +71,8 @@ pub async fn handle_multipass_cmd(
             passphrase,
             rsp,
         } => {
-            //println!("create_identity: unlock tesseract");
+            // needed if an old password exists
+            tesseract.clear();
             let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
             let _ = rsp.send(r);
         }
@@ -211,21 +141,21 @@ async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
-    let idents = dids_to_identity(reqs, account).await?;
+    let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
     let outgoing = account.list_outgoing_request().await?;
-    let idents = dids_to_identity(outgoing, account).await?;
+    let idents = dids_to_identity(&outgoing, account).await?;
     let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.block_list().await?;
-    let idents = dids_to_identity(ids, account).await?;
+    let idents = dids_to_identity(&ids, account).await?;
     let blocked = HashSet::from_iter(idents.iter().cloned());
 
     let ids = account.list_friends().await?;
     let mut friends = HashMap::new();
     for id in ids {
-        let ident = did_to_identity(id.clone(), account).await?;
+        let ident = did_to_identity(&id, account).await?;
         friends.insert(id, ident);
     }
 

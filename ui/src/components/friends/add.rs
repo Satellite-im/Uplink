@@ -17,9 +17,9 @@ use warp::error::Error;
 
 use crate::{
     logger,
-    state::{Action, State, ToastNotification},
-    warp_runner::{commands::MultiPassCmd, WarpCmd},
-    WARP_CMD_CH,
+    state::{Action, Identity, State, ToastNotification},
+    warp_runner::{MultiPassCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
 };
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
@@ -33,8 +33,9 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_validation = Validation {
         max_length: Some(56),
         min_length: Some(56),
-        alpha_numeric_only: false,
+        alpha_numeric_only: true,
         no_whitespace: true,
+        ignore_colons: true,
     };
 
     if *request_sent.get() {
@@ -150,16 +151,22 @@ pub fn AddFriend(cx: Scope) -> Element {
                     disabled: !friend_input_valid.get(),
                     onpress: move |_| {
                         match DID::from_str(friend_input.get()) {
-                            Ok(did) => ch.send(did),
+                            Ok(did) => {
+                                if STATIC_ARGS.use_mock {
+                                    let mut ident = Identity::default();
+                                    ident.set_did_key(did);
+                                    state.write().mutate(Action::SendRequest(ident))
+                                } else {
+                                    ch.send(did);
+                                }
+                            },
                             Err(e) => {
-                                println!("error: {}", e);
-                                todo!("failed to convert string to DID");
+                                logger::error(&format!("could not get did from str: {}", e));
                             }
                         }
                     },
                     aria_label: "Add Someone Button".into()
                 },
-                // todo: verify that this is the desired UI
                 Button {
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
