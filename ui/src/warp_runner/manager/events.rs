@@ -114,7 +114,7 @@ pub async fn handle_warp_command(
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
         WarpCmd::Tesseract(_cmd) => {
-            // not accepted at this stage of the program. this will drop the rx channel and alert the sender
+            // not accepted at this stage of the program. do nothing and drop the rsp channel
         }
         WarpCmd::MultiPass(cmd) => {
             // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
