@@ -1,11 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, logging::tracing::log, tesseract::Tesseract};
+use warp::{crypto::DID, error::Error, logging::tracing::log};
 
 use crate::{
     state::{self, friends},
     warp_runner::{
+        manager::warp_initialization,
         ui_adapter::{did_to_identity, dids_to_identity},
         Account,
     },
@@ -60,11 +61,7 @@ pub enum MultiPassCmd {
     },
 }
 
-pub async fn handle_multipass_cmd(
-    cmd: MultiPassCmd,
-    tesseract: &mut Tesseract,
-    account: &mut Account,
-) {
+pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Warp) {
     match cmd {
         MultiPassCmd::CreateIdentity {
             username,
@@ -72,57 +69,58 @@ pub async fn handle_multipass_cmd(
             rsp,
         } => {
             // needed if an old password exists
-            tesseract.clear();
+            warp.tesseract.clear();
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
+            let r = multipass_create_identity(&username, &passphrase, warp).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::TryLogIn { passphrase, rsp } => {
-            if let Err(e) = tesseract.unlock(passphrase.as_bytes()) {
+            if let Err(e) = login(&passphrase, warp).await {
                 let _ = rsp.send(Err(e));
                 return;
             }
-            while !tesseract.is_unlock() {
-                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            }
             log::debug!("TryLogIn unlocked tesseract");
-            let r = account.get_own_identity().await.map(|_| ());
+            let r = warp.multipass.get_own_identity().await.map(|_| ());
             let _ = rsp.send(r);
         }
         MultiPassCmd::RequestFriend { did, rsp } => {
-            let r = account.send_request(&did).await;
+            let r = warp.multipass.send_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::GetOwnDid { rsp } => {
-            let r = account.get_own_identity().await.map(|id| id.did_key());
+            let r = warp
+                .multipass
+                .get_own_identity()
+                .await
+                .map(|id| id.did_key());
             let _ = rsp.send(r);
         }
         MultiPassCmd::InitializeFriends { rsp } => {
-            let r = multipass_initialize_friends(account).await;
+            let r = multipass_initialize_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::RemoveFriend { did, rsp } => {
-            let r = account.remove_friend(&did).await;
+            let r = warp.multipass.remove_friend(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::Unblock { did, rsp } => {
-            let r = account.unblock(&did).await;
+            let r = warp.multipass.unblock(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::Block { did, rsp } => {
-            let r = account.block(&did).await;
+            let r = warp.multipass.block(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::AcceptRequest { did, rsp } => {
-            let r = account.accept_request(&did).await;
+            let r = warp.multipass.accept_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::DenyRequest { did, rsp } => {
-            let r = account.deny_request(&did).await;
+            let r = warp.multipass.deny_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::CancelRequest { did, rsp } => {
-            let r = account.close_request(&did).await;
+            let r = warp.multipass.close_request(&did).await;
             let _ = rsp.send(r);
         }
     }
@@ -131,15 +129,24 @@ pub async fn handle_multipass_cmd(
 async fn multipass_create_identity(
     username: &str,
     passphrase: &str,
-    tesseract: &mut Tesseract,
-    account: &mut Account,
+    warp: &mut super::super::Warp,
 ) -> Result<(), Error> {
-    tesseract.unlock(passphrase.as_bytes())?;
-    while !tesseract.is_unlock() {
+    login(passphrase, warp).await?;
+    let _ = warp.multipass.create_identity(Some(username), None).await?;
+    Ok(())
+}
+
+// tesseract needs to be initialized before warp is initialized. this function does just that
+async fn login(passphrase: &str, warp: &mut super::super::Warp) -> Result<(), Error> {
+    warp.tesseract.unlock(passphrase.as_bytes())?;
+    while !warp.tesseract.is_unlock() {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
-    //println!("create_identity: account.create_identity");
-    let _ = account.create_identity(Some(username), None).await?;
+
+    let (account, messaging, storage) = warp_initialization(warp.tesseract.clone(), false).await?;
+    warp.multipass = account;
+    warp.raygun = messaging;
+    warp._constellation = storage;
     Ok(())
 }
 

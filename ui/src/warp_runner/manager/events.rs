@@ -139,7 +139,7 @@ pub async fn handle_warp_command(
                     }
                 }
             }
-            handle_multipass_cmd(cmd, &mut warp.tesseract, &mut warp.multipass).await;
+            handle_multipass_cmd(cmd, warp).await;
         }
 
         WarpCmd::RayGun(cmd) => {

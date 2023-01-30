@@ -101,6 +101,7 @@ fn init_tesseract() -> Tesseract {
     }
 }
 
+// tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password
 async fn warp_initialization(
     tesseract: Tesseract,
     experimental: bool,
