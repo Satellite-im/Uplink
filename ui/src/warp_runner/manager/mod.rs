@@ -99,10 +99,6 @@ fn init_tesseract() -> Tesseract {
     }
 }
 
-pub fn account_exists() -> bool {
-    return STATIC_ARGS.warp_path.join(&KEYSTORE_PATH_NAME).exists();
-}
-
 async fn warp_initialization(
     tesseract: Tesseract,
     experimental: bool,

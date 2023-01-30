@@ -83,7 +83,4 @@ impl WarpRunner {
             manager::run(warp, notify).await;
         });
     }
-    pub fn account_exists() -> bool {
-        return manager::account_exists();
-    }
 }
