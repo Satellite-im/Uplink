@@ -199,11 +199,9 @@ async fn login(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
 
-    if !new_account {
-        if !tesseract.exist("keypair") {
-            log::info!("string keypair not found in tesseract");
-            return Err(warp::error::Error::IdentityNotCreated);
-        }
+    if !new_account && !tesseract.exist("keypair") {
+        log::info!("string keypair not found in tesseract");
+        return Err(warp::error::Error::IdentityNotCreated);
     }
     let res = warp_initialization(tesseract, false).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
