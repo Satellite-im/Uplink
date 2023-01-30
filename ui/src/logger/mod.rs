@@ -46,11 +46,13 @@ impl std::fmt::Display for Log {
 #[derive(Debug, Clone)]
 pub struct Logger {
     log_file: String,
+    warp_file: String,
     // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
     log_entries: VecDeque<Log>,
     subscribers: Vec<mpsc::UnboundedSender<Log>>,
     max_logs: usize,
     save_to_file: bool,
+    save_warp: bool,
     write_to_stdout: bool,
     display_trace: bool,
 }
@@ -79,6 +81,11 @@ impl crate::log::Log for LogGlue {
         // todo: send .warp logs somewhere else
         // don't care about other libraries
         if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+            if LOGGER.read().save_warp && record.file().map(|x| x.contains("warp")).unwrap_or(false)
+            {
+                let msg = format!("{}", record.args());
+                LOGGER.write().log_warp(record.level(), &msg)
+            }
             return;
         }
 
@@ -97,11 +104,23 @@ impl Logger {
             .append(true)
             .open(&logger_path);
 
+        let warp_path = STATIC_ARGS
+            .warp_path
+            .join("warp.log")
+            .to_string_lossy()
+            .to_string();
+        let _ = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&warp_path);
+
         Self {
             save_to_file: false,
+            save_warp: false,
             write_to_stdout: false,
             display_trace: false,
             log_file: logger_path,
+            warp_file: warp_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
             max_logs: 100,
@@ -156,6 +175,24 @@ impl Logger {
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
     }
 
+    fn log_warp(&mut self, level: Level, message: &str) {
+        let mut file = OpenOptions::new()
+            .append(true)
+            .open(&self.warp_file)
+            .unwrap();
+
+        let new_log = Log {
+            level,
+            message: message.to_string(),
+            datetime: Local::now(),
+            colorized: false,
+        };
+
+        if let Err(error) = writeln!(file, "{}", new_log) {
+            eprintln!("Couldn't write to warp.log file. {error}");
+        }
+    }
+
     fn set_save_to_file(&mut self, enabled: bool) {
         self.save_to_file = enabled;
 
@@ -179,6 +216,9 @@ impl Logger {
 pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_max_level(level);
     log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
+    if level == LevelFilter::Trace {
+        set_save_warp(true);
+    }
     Ok(())
 }
 
@@ -213,6 +253,10 @@ pub fn set_display_trace(b: bool) {
 
 pub fn set_save_to_file(b: bool) {
     LOGGER.write().set_save_to_file(b);
+}
+
+pub fn set_save_warp(b: bool) {
+    LOGGER.write().save_warp = b;
 }
 
 pub fn get_save_to_file() -> bool {
