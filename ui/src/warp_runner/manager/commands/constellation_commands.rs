@@ -25,7 +25,7 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, storage: &mut Stora
     match cmd {
         ConstellationCmd::InitialiazeItems { rsp } => {
             let r = initialize_items(storage);
-            rsp.send(r);
+            let _ = rsp.send(r);
         }
         ConstellationCmd::CreateNewFolder { folder_name, rsp } => {
             let r = create_new_directory(&folder_name, storage).await;
@@ -43,10 +43,10 @@ async fn create_new_directory(folder_name: &str, storage: &mut Storage) -> Resul
 fn initialize_items(storage: &mut Storage) -> Result<Items, Error> {
     let current_dir = storage.current_directory()?;
     let items = current_dir.get_items();
-    let mut directories: HashSet<Directory>;
-    let mut files: HashSet<File>;
+    let mut directories: HashSet<Directory> = HashSet::new();
+    let mut files: HashSet<File> = HashSet::new();
 
-    for item in items {
+    for item in &items {
         if item.is_directory() {
             let dir = item.get_directory()?;
             directories.insert(dir);

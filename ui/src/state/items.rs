@@ -20,7 +20,7 @@ pub struct Items {
 }
 
 impl Items {
-    pub fn join(&mut self, mut other: Items) {
+    pub fn join(&mut self, other: Items) {
         for k in other.all {
             self.all.push(k);
         }

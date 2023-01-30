@@ -18,7 +18,7 @@ use warp::{
 };
 
 use crate::state::{
-    ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
+    items::Items, ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
     ToastNotification, UI,
 };
 
@@ -84,6 +84,12 @@ pub fn generate_mock() -> State {
             active_media: None,
             in_sidebar,
             favorites: vec![],
+        },
+        items: Items {
+            initialized: true,
+            all: Vec::new(),
+            directories: HashSet::new(),
+            files: HashSet::new(),
         },
         friends: Friends {
             initialized: true,

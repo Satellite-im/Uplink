@@ -7,6 +7,7 @@ use warp::{
 use crate::{
     warp_runner::{
         conv_stream,
+        manager::commands::handle_constellation_cmd,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
         WarpCmd, WarpEvent,
     },
@@ -145,6 +146,8 @@ pub async fn handle_warp_command(
         WarpCmd::RayGun(cmd) => {
             handle_raygun_cmd(cmd, stream_manager, &mut warp.multipass, &mut warp.raygun).await
         }
+
+        WarpCmd::Constellation(cmd) => handle_constellation_cmd(cmd, &mut warp.constellation).await,
     }
     Ok(())
 }
