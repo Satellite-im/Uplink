@@ -39,8 +39,8 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     active: config.developer.developer_mode,
                     onflipped: move |value| {
                         config.set_developer_mode(value);
-                        let theme = state.read().ui.theme.clone().unwrap_or_default();
-                        state.write().mutate(Action::SetTheme(theme));
+                        // cause a re-render
+                        state.write();
                     },
                 }
             },
