@@ -1,6 +1,6 @@
 # Uplink Checklist
 
-This document provides a checklist top-to-bottom of every step you should be able to physically do within the app. If you are commiting a big change, or want to be certain the application meets all requirements before publishing a release, you should go through this checklist.
+This document provides a checklist top-to-bottom of every step you should be able to physically do within the app. If you are committing a big change, or want to be certain the application meets all requirements before publishing a release, you should go through this checklist.
 
 # Uplink Testing
 
