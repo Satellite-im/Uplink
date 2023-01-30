@@ -78,7 +78,6 @@ impl crate::log::Log for LogGlue {
             return;
         }
 
-        // todo: send .warp logs somewhere else
         // don't care about other libraries
         if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
             if LOGGER.read().save_warp && record.file().map(|x| x.contains("warp")).unwrap_or(false)
