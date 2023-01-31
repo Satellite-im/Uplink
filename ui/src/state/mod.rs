@@ -335,6 +335,7 @@ impl State {
 
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: raygun::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
         }
     }
