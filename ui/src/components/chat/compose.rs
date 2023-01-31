@@ -1,4 +1,4 @@
-use std::{rc::Rc};
+use std::{rc::Rc, time::{Instant, Duration}};
 
 use dioxus::prelude::*;
 
@@ -373,6 +373,21 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     ))
 }
 
+#[derive(Eq, PartialEq)]
+enum TypingIndicator {
+    // reset the typing indicator timer
+    Typing(Uuid),
+    // clears the typing indicator, ensuring the indicator
+    // will not be refreshed
+    NotTyping,
+    // resend the typing indicator
+    Refresh(Uuid),
+}
+#[derive(Clone)]
+struct TypingInfo {
+    pub chat_id: Uuid,
+    pub last_update: Instant
+}
 
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
@@ -382,8 +397,14 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx,|| false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+
+    // todo: use this to render the typing indicator
+    let  _users_typing = active_chat_id.and_then(|id| state.read().chats.all.get(&id).cloned()).map(|chat| chat.participants.iter().filter(|x| chat.typing_indicator.contains_key(&x.did_key())).map(|x| x.username()).collect::<Vec<_>>());
     
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
+    //println!("active chat: {:?}", &active_chat_id);
+    //println!("users typing: {:?}", &users_typing);
+
+    let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
         //to_owned![];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -407,6 +428,82 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
+    // typing indicator notes
+    // consider side A, the local side, and side B, the remote side
+    // side A -> (typing indicator) -> side B
+    // side B removes the typing indicator after a timeout
+    // side A doesn't want to send too many typing indicators, say once every 4-5 seconds
+
+    // tracks if the local participant is typing
+    // re-sends typing indicator in response to the Refresh command
+    let local_typing_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<TypingIndicator>| {
+        // to_owned![];
+        async move {
+           
+            let mut typing_info: Option<TypingInfo> = None;
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+
+            let send_typing_indicator = |conv_id| async move {
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let event = raygun::MessageEvent::Typing;
+                warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendEvent { conv_id, event, rsp: tx })).expect("failed to send command");
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    log::error!("failed to send typing indicator: {}", e);
+                }
+            };
+
+            while let Some(indicator) = rx.next().await {
+                match indicator {
+                    TypingIndicator::Typing(chat_id) => {
+                        // if typing_info was none or the chat id changed, send the indicator immediately
+                        let should_send_indicator = match typing_info {
+                            None =>  true,
+                            Some(info) => info.chat_id != chat_id,
+                        };
+                        if should_send_indicator {
+                            send_typing_indicator.clone()(chat_id).await;
+                        }
+                        typing_info = Some(TypingInfo{chat_id, last_update: Instant::now()});
+                    }
+                    TypingIndicator::NotTyping => {
+                        typing_info = None;
+                    }
+                    TypingIndicator::Refresh(conv_id) => {
+                        let info = match &typing_info {
+                            Some(i) => i.clone(),
+                            None => continue
+                        };
+                        if info.chat_id != conv_id {
+                            typing_info = None;
+                            continue;
+                        }
+                        // todo: verify duration for timeout
+                        let now = Instant::now();
+                        if now - info.last_update <= (Duration::from_secs(STATIC_ARGS.typing_indicator_timeout) - Duration::from_millis(500)) {
+                            send_typing_indicator.clone()(conv_id).await;
+                        }
+                    }
+                } 
+            }
+        }
+    });
+
+    // drives the sending of TypingIndicator
+    let local_typing_ch1 = local_typing_ch.clone();
+    use_future(
+        cx,
+        &active_chat_id.clone(),
+        |current_chat| async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
+                if let Some(c) = current_chat {
+                    local_typing_ch1.send(TypingIndicator::Refresh(c));
+                }
+            }
+        },
+    );
+
     let msg_valid = |msg: &[String]| {
         !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty())
     };
@@ -418,8 +515,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             reset: should_clear_input.clone(),
             onchange: move |v: String| {
                 *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+                if let Some(id) = &active_chat_id {
+                    local_typing_ch.send(TypingIndicator::Typing(*id));
+                }
             },
             onreturn: move |_| {
+                local_typing_ch.send(TypingIndicator::NotTyping);
+
                 let msg = input.read().clone();
                 // clearing input here should prevent the possibility to double send a message if enter is pressed twice
                 input.write().clear();
@@ -436,7 +538,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 if STATIC_ARGS.use_mock {
                     state.write().mutate(Action::MockSend(id, msg));
                 } else {
-                    ch.send((msg, id));
+                    msg_ch.send((msg, id));
                 }
             },
             controls: cx.render(rsx!(
@@ -445,6 +547,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     disabled: loading,
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
+                        local_typing_ch.send(TypingIndicator::NotTyping);
+
                         let msg = input.read().clone();
                         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
                         input.write().clear();
@@ -462,7 +566,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                         if STATIC_ARGS.use_mock {
                             state.write().mutate(Action::MockSend(id, msg));
                         } else {
-                            ch.send((msg, id));
+                            msg_ch.send((msg, id));
                         }
                     },
                     tooltip: cx.render(rsx!(

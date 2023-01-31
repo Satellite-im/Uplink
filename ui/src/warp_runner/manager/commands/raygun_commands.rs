@@ -47,6 +47,11 @@ pub enum RayGunCmd {
         emoji: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    SendEvent {
+        conv_id: Uuid,
+        event: raygun::MessageEvent,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_raygun_cmd(
@@ -94,6 +99,14 @@ pub async fn handle_raygun_cmd(
             let r = messaging
                 .react(conversation_id, message_id, reaction_state, emoji)
                 .await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::SendEvent {
+            conv_id,
+            event,
+            rsp,
+        } => {
+            let r = messaging.send_event(conv_id, event).await;
             let _ = rsp.send(r);
         }
     }

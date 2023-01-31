@@ -19,6 +19,7 @@ use shared::language::{change_language, get_local_text};
 use state::State;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 use uuid::Uuid;
 
 use std::sync::Arc;
@@ -62,6 +63,10 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    // seconds
+    pub typing_indicator_refresh: u64,
+    // seconds
+    pub typing_indicator_timeout: u64,
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -76,6 +81,8 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
+        typing_indicator_refresh: 5,
+        typing_indicator_timeout: 6,
         use_mock: !args.no_mock,
     }
 });
@@ -287,7 +294,7 @@ fn bootstrap(cx: Scope) -> Element {
 
     // warp_runner must be started from within a tokio reactor
     // store in a use_ref to make it not get dropped
-    let warp_runner = use_ref(cx, || warp_runner::WarpRunner::new());
+    let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
     warp_runner.write_silent().run();
 
     // make the window smaller while the user authenticates
@@ -392,32 +399,60 @@ fn app(cx: Scope) -> Element {
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
+    // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
+    let main_element = {
+        // render the Uplink app
+        let user_lang_saved = state.read().settings.language.clone();
+        change_language(user_lang_saved);
+
+        let theme = state
+            .read()
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.styles.clone())
+            .unwrap_or_default();
+
+        rsx! (
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+            div {
+                id: "app-wrap",
+                get_titlebar(cx),
+                get_toasts(cx),
+                get_call_dialog(cx),
+                get_pre_release_message(cx),
+                get_router(cx)
+            }
+        )
+    };
+
+    // `use_future`s
+    // all of Uplinks periodic tasks are located here. it's a lot to read but
+    // it's better to have them in one place. this makes it a lot easier to find them.
+    // there are 2 categories of tasks: warp tasks and UI tasks
+    //
+    // warp tasks
+    // handle warp events
+    // initialize friends: load from warp and store in State
+    // initialize conversations: same
+    //
+    // UI tasks
+    // clear toasts
+    // update message timestamps
+    // control child windows
+    // clear typing indicator
+    //
+    // misc
+    // when a task requires the UI be updated, `needs_update` is set.
+    // when mock data is used, friends and conversations are generated randomly,
+    //     not loaded from Warp. however, warp_runner continues to operate normally.
+    //
+
     // yes, double render. sry.
     if *needs_update.get() {
         needs_update.set(false);
         state.write();
     }
-
-    let inner = state.inner();
-    use_future(cx, (), |_| {
-        to_owned![needs_update];
-        async move {
-            //println!("starting toast use_future");
-            loop {
-                sleep(Duration::from_secs(1)).await;
-                {
-                    let state = inner.borrow();
-                    if !state.read().has_toasts() {
-                        continue;
-                    }
-                    if state.write().decrement_toasts() {
-                        //println!("decrement toasts");
-                        needs_update.set(true);
-                    }
-                }
-            }
-        }
-    });
 
     // update state in response to warp events
     let inner = state.inner();
@@ -443,6 +478,59 @@ fn app(cx: Scope) -> Element {
                     Err(e) => {
                         logger::error(&e.to_string());
                     }
+                }
+            }
+        }
+    });
+
+    // clear toasts
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            //println!("starting toast use_future");
+            loop {
+                sleep(Duration::from_secs(1)).await;
+                {
+                    let state = inner.borrow();
+                    if !state.read().has_toasts() {
+                        continue;
+                    }
+                    if state.write().decrement_toasts() {
+                        //println!("decrement toasts");
+                        needs_update.set(true);
+                    }
+                }
+            }
+        }
+    });
+
+    // clear typing indicator
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
+                {
+                    let state = inner.borrow();
+                    let now = Instant::now();
+                    if state.write().clear_typing_indicator(now) {
+                        needs_update.set(true);
+                    }
+                }
+            }
+        }
+    });
+
+    // periodically refresh message timestamps
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                sleep(Duration::from_secs(60)).await;
+                {
+                    needs_update.set(true);
                 }
             }
         }
@@ -568,29 +656,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // render the Uplink app
-    let user_lang_saved = state.read().settings.language.clone();
-    change_language(user_lang_saved);
-
-    let theme = state
-        .read()
-        .ui
-        .theme
-        .as_ref()
-        .map(|theme| theme.styles.clone())
-        .unwrap_or_default();
-
-    cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
-        div {
-            id: "app-wrap",
-            get_titlebar(cx),
-            get_toasts(cx),
-            get_call_dialog(cx),
-            get_pre_release_message(cx),
-            get_router(cx)
-        }
-    ))
+    cx.render(main_element)
 }
 
 fn get_pre_release_message(cx: Scope) -> Element {
