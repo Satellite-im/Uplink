@@ -19,6 +19,7 @@ use shared::language::{change_language, get_local_text};
 use state::State;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 use uuid::Uuid;
 
 use std::sync::Arc;
@@ -398,6 +399,7 @@ fn app(cx: Scope) -> Element {
         state.write();
     }
 
+    // clear toasts
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update];
@@ -412,6 +414,24 @@ fn app(cx: Scope) -> Element {
                     }
                     if state.write().decrement_toasts() {
                         //println!("decrement toasts");
+                        needs_update.set(true);
+                    }
+                }
+            }
+        }
+    });
+
+    // clear typing indicator
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                sleep(Duration::from_secs(6)).await;
+                {
+                    let state = inner.borrow();
+                    let now = Instant::now();
+                    if state.write().clear_typing_indicator(now) {
                         needs_update.set(true);
                     }
                 }

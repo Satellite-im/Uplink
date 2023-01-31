@@ -474,7 +474,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                         }
                         // todo: verify duration for timeout
                         let now = Instant::now();
-                        if now - info.last_update <= Duration::from_secs(3) {
+                        if now - info.last_update <= Duration::from_secs(6) {
                             send_typing_indicator.clone()(conv_id).await;
                         }
                     }
@@ -490,7 +490,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         &active_chat_id.clone(),
         |current_chat| async move {
             loop {
-                tokio::time::sleep(Duration::from_secs(4)).await;
+                tokio::time::sleep(Duration::from_secs(5)).await;
                 if let Some(c) = current_chat {
                     local_typing_ch1.send(TypingIndicator::Refresh(c));
                 }

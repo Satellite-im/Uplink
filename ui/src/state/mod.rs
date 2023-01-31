@@ -31,6 +31,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
+    time::{Duration, Instant},
 };
 use uuid::Uuid;
 use warp::{
@@ -503,6 +504,29 @@ impl State {
         self.ui.remove_overlay(id);
     }
 
+    pub fn clear_typing_indicator(&mut self, instant: Instant) -> bool {
+        let mut needs_update = false;
+        for conv_id in self.chats.in_sidebar.iter() {
+            let chat = match self.chats.all.get_mut(conv_id) {
+                Some(c) => c,
+                None => {
+                    log::warn!("conv {} found in sidebar but not in HashMap", conv_id);
+                    continue;
+                }
+            };
+            let old_len = chat.typing_indicator.len();
+            chat.typing_indicator
+                .retain(|_id, time| instant - *time < Duration::from_secs(5));
+            let new_len = chat.typing_indicator.len();
+
+            if old_len != new_len {
+                needs_update = true;
+            }
+        }
+
+        needs_update
+    }
+
     pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
         let user = self.account.identity.did_key();
         let conv = match self.chats.all.get_mut(&chat_id) {
@@ -826,6 +850,25 @@ impl State {
                 reaction,
             } => {
                 self.remove_message_reaction(conversation_id, message_id, reaction);
+            }
+            MessageEvent::TypingIndicator {
+                conversation_id,
+                participant,
+            } => {
+                if !self.chats.in_sidebar.contains(&conversation_id) {
+                    return;
+                }
+                match self.chats.all.get_mut(&conversation_id) {
+                    Some(chat) => {
+                        chat.typing_indicator.insert(participant, Instant::now());
+                    }
+                    None => {
+                        log::warn!(
+                            "attempted to update typing indicator for nonexistent conversation: {}",
+                            conversation_id
+                        );
+                    }
+                }
             }
         }
     }
