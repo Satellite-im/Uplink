@@ -245,6 +245,6 @@ async fn warp_initialization(
         tesseract,
         multipass: account,
         raygun: messaging,
-        _constellation: storage,
+        constellation: storage,
     })
 }
