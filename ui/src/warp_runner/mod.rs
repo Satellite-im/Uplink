@@ -5,7 +5,15 @@ use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
 };
-use warp::{constellation::Constellation, multipass::MultiPass, raygun::RayGun};
+use warp::{
+    constellation::Constellation, logging::tracing::log, multipass::MultiPass, raygun::RayGun,
+    tesseract::Tesseract,
+};
+use warp_fs_ipfs::config::FsIpfsConfig;
+use warp_mp_ipfs::config::MpIpfsConfig;
+use warp_rg_ipfs::config::RgIpfsConfig;
+
+use crate::{STATIC_ARGS, WARP_CMD_CH};
 
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
@@ -77,11 +85,166 @@ impl WarpRunner {
 
         let notify = self.notify.clone();
         tokio::spawn(async move {
-            // todo: retry this in a loop if warp fails to initialize
-            let warp = manager::Warp::new()
-                .await
-                .expect("failed to initialize warp");
-            manager::run(warp, notify).await;
+            handle_login(notify.clone()).await;
         });
     }
+}
+
+// handle_login calls manager::run, which continues to process warp commands
+async fn handle_login(notify: Arc<Notify>) {
+    let warp_cmd_rx = WARP_CMD_CH.rx.clone();
+    // be sure to drop this channel before calling manager::run()
+    let mut warp_cmd_rx = warp_cmd_rx.lock().await;
+    let tesseract = init_tesseract();
+
+    // until the user logs in, raygun and multipass are no use.
+    let warp: Option<manager::Warp> = loop {
+        tokio::select! {
+            opt = warp_cmd_rx.recv() => {
+                log::debug!("received warp command: {:?}", opt);
+                match opt {
+                Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
+                    username,
+                    passphrase,
+                    rsp,
+                })) => {
+                    tesseract.clear();
+                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                    let new_account = true;
+                    let mut warp = match login(&passphrase, tesseract.clone(), new_account).await {
+                        Ok(w) => w,
+                        Err(e) => {
+                            let _ = rsp.send(Err(e));
+                            continue;
+                        }
+                    };
+                    match warp.multipass.create_identity(Some(&username), None).await {
+                        Ok(_id) => {
+                            // don't want a panic during the first run of the app to mess up tesseract.
+                            // calling save() here is intended to ensure that the username and password will
+                            // work the next time uplink is run.
+                            let _ = warp.tesseract.save();
+
+                            let _ = rsp.send(Ok(()));
+                            break Some(warp);
+                        }
+                        Err(e) => {
+                            log::error!("create_identity failed. should never happen: {}", e);
+                            let _ = rsp.send(Err(e));
+                        }
+                    }
+                }
+                Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
+                    let new_account = false;
+                    let warp = match login(&passphrase, tesseract.clone(), new_account).await {
+                        Ok(w) => w,
+                        Err(e) => {
+                            let _ = rsp.send(Err(e));
+                            continue;
+                        }
+                    };
+                    log::debug!("TryLogIn unlocked tesseract");
+                    let r = warp.multipass.get_own_identity().await.map(|_| ());
+                    let is_ok = r.is_ok();
+                    let _ = rsp.send(r);
+                    if is_ok {
+                        break Some(warp);
+                    }
+                }
+                Some(WarpCmd::Tesseract(TesseractCmd::KeyExists { key, rsp }))  => {
+                    let res = tesseract.exist(&key);
+                    let _ = rsp.send(res);
+                }
+                _ => {}
+                }
+            } ,
+            // the WarpRunner has been dropped. stop the task
+            _ = notify.notified() => break None,
+        }
+    };
+
+    // release the lock
+    drop(warp_cmd_rx);
+    if let Some(warp) = warp {
+        manager::run(warp, notify).await;
+    } else {
+        log::info!("warp_runner terminated during initialization");
+    }
+}
+
+fn init_tesseract() -> Tesseract {
+    log::trace!("initializing tesseract");
+    let tess_path = STATIC_ARGS.warp_path.join(".keystore");
+    match Tesseract::from_file(&tess_path) {
+        Ok(tess) => tess,
+        Err(_) => {
+            //doesnt exist so its set
+            log::trace!("creating new tesseract");
+            let tess = Tesseract::default();
+            tess.set_file(tess_path);
+            tess.set_autosave();
+            tess
+        }
+    }
+}
+
+// tesseract needs to be initialized before warp is initialized. this function does just that
+async fn login(
+    passphrase: &str,
+    tesseract: Tesseract,
+    new_account: bool,
+) -> Result<manager::Warp, warp::error::Error> {
+    log::debug!("login");
+    tesseract.unlock(passphrase.as_bytes())?;
+    while !tesseract.is_unlock() {
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
+    if !new_account && !tesseract.exist("keypair") {
+        log::info!("string keypair not found in tesseract");
+        return Err(warp::error::Error::IdentityNotCreated);
+    }
+    let res = warp_initialization(tesseract, false).await;
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    res
+}
+
+// tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password
+async fn warp_initialization(
+    tesseract: Tesseract,
+    experimental: bool,
+) -> Result<manager::Warp, warp::error::Error> {
+    log::debug!("warp initialization");
+    let path = &STATIC_ARGS.warp_path;
+    let config = MpIpfsConfig::production(path, experimental);
+
+    let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
+        .await
+        .map(|mp| Box::new(mp) as Account)?;
+
+    let storage = warp_fs_ipfs::IpfsFileSystem::<warp_fs_ipfs::Persistent>::new(
+        account.clone(),
+        Some(FsIpfsConfig::production(path)),
+    )
+    .await
+    .map(|ct| Box::new(ct) as Storage)?;
+
+    // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
+    let rg_config = RgIpfsConfig::production(path);
+
+    let messaging = warp_rg_ipfs::IpfsMessaging::<warp_mp_ipfs::Persistent>::new(
+        Some(rg_config),
+        account.clone(),
+        Some(storage.clone()),
+        None,
+    )
+    .await
+    .map(|rg| Box::new(rg) as Messaging)?;
+
+    Ok(manager::Warp {
+        tesseract,
+        multipass: account,
+        raygun: messaging,
+        _constellation: storage,
+    })
 }

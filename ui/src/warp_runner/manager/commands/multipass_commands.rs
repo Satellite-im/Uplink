@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, tesseract::Tesseract};
+use warp::{crypto::DID, error::Error, logging::tracing::log};
 
 use crate::{
     state::{self, friends},
@@ -60,87 +60,59 @@ pub enum MultiPassCmd {
     },
 }
 
-pub async fn handle_multipass_cmd(
-    cmd: MultiPassCmd,
-    tesseract: &mut Tesseract,
-    account: &mut Account,
-) {
+pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Warp) {
     match cmd {
-        MultiPassCmd::CreateIdentity {
-            username,
-            passphrase,
-            rsp,
-        } => {
-            // needed if an old password exists
-            tesseract.clear();
-            let r = multipass_create_identity(&username, &passphrase, tesseract, account).await;
-            let _ = rsp.send(r);
-        }
-        MultiPassCmd::TryLogIn { passphrase, rsp } => {
-            if let Err(e) = tesseract.unlock(passphrase.as_bytes()) {
-                let _ = rsp.send(Err(e));
-                return;
-            }
-            // without the delay, there is an error that the multipass extension is unavailable
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-            let r = account.get_own_identity().await.map(|_| ());
-            let _ = rsp.send(r);
+        MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
+            // do nothing and drop the rsp channel
         }
         MultiPassCmd::RequestFriend { did, rsp } => {
-            let r = account.send_request(&did).await;
+            let r = warp.multipass.send_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::GetOwnDid { rsp } => {
-            let r = account.get_own_identity().await.map(|id| id.did_key());
+            let r = warp
+                .multipass
+                .get_own_identity()
+                .await
+                .map(|id| id.did_key());
             let _ = rsp.send(r);
         }
         MultiPassCmd::InitializeFriends { rsp } => {
-            let r = multipass_initialize_friends(account).await;
+            let r = multipass_initialize_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::RemoveFriend { did, rsp } => {
-            let r = account.remove_friend(&did).await;
+            let r = warp.multipass.remove_friend(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::Unblock { did, rsp } => {
-            let r = account.unblock(&did).await;
+            let r = warp.multipass.unblock(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::Block { did, rsp } => {
-            let r = account.block(&did).await;
+            let r = warp.multipass.block(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::AcceptRequest { did, rsp } => {
-            let r = account.accept_request(&did).await;
+            let r = warp.multipass.accept_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::DenyRequest { did, rsp } => {
-            let r = account.deny_request(&did).await;
+            let r = warp.multipass.deny_request(&did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::CancelRequest { did, rsp } => {
-            let r = account.close_request(&did).await;
+            let r = warp.multipass.close_request(&did).await;
             let _ = rsp.send(r);
         }
     }
-}
-
-async fn multipass_create_identity(
-    username: &str,
-    passphrase: &str,
-    tesseract: &mut Tesseract,
-    account: &mut Account,
-) -> Result<(), Error> {
-    tesseract.unlock(passphrase.as_bytes())?;
-    //println!("create_identity: account.create_identity");
-    let _ = account.create_identity(Some(username), None).await?;
-    Ok(())
 }
 
 async fn multipass_initialize_friends(
     account: &mut Account,
 ) -> Result<state::friends::Friends, Error> {
     let reqs = account.list_incoming_request().await?;
+    log::trace!("init friends with {} total", reqs.len());
     let idents = dids_to_identity(&reqs, account).await?;
     let incoming_requests = HashSet::from_iter(idents.iter().cloned());
 
