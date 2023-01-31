@@ -399,11 +399,89 @@ fn app(cx: Scope) -> Element {
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
+    // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
+    let main_element = {
+        // render the Uplink app
+        let user_lang_saved = state.read().settings.language.clone();
+        change_language(user_lang_saved);
+
+        let theme = state
+            .read()
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.styles.clone())
+            .unwrap_or_default();
+
+        rsx! (
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+            div {
+                id: "app-wrap",
+                get_titlebar(cx),
+                get_toasts(cx),
+                get_call_dialog(cx),
+                get_pre_release_message(cx),
+                get_router(cx)
+            }
+        )
+    };
+
+    // `use_future`s
+    // all of Uplinks periodic tasks are located here. it's a lot to read but
+    // it's better to have them in one place. this makes it a lot easier to find them.
+    // there are 2 categories of tasks: warp tasks and UI tasks
+    //
+    // warp tasks
+    // handle warp events
+    // initialize friends: load from warp and store in State
+    // initialize conversations: same
+    //
+    // UI tasks
+    // clear toasts
+    // update message timestamps
+    // control child windows
+    // clear typing indicator
+    //
+    // misc
+    // when a task requires the UI be updated, `needs_update` is set.
+    // when mock data is used, friends and conversations are generated randomly,
+    //     not loaded from Warp. however, warp_runner continues to operate normally.
+    //
+
     // yes, double render. sry.
     if *needs_update.get() {
         needs_update.set(false);
         state.write();
     }
+
+    // update state in response to warp events
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update, friends_init, chats_init];
+        async move {
+            // don't process warp events until friends and chats have been loaded
+            while !(*friends_init.read() && *chats_init.read()) {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+            let warp_event_rx = WARP_EVENT_CH.rx.clone();
+            logger::trace("starting warp_runner use_future");
+            // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
+            // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
+            let mut ch = warp_event_rx.lock().await;
+            while let Some(evt) = ch.recv().await {
+                //println!("received warp event");
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().process_warp_event(evt);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        logger::error(&e.to_string());
+                    }
+                }
+            }
+        }
+    });
 
     // clear toasts
     let inner = state.inner();
@@ -445,30 +523,14 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // update state in response to warp events
-    let inner = state.inner();
+    // periodically refresh message timestamps
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init, chats_init];
+        to_owned![needs_update];
         async move {
-            // don't process warp events until friends and chats have been loaded
-            while !(*friends_init.read() && *chats_init.read()) {
-                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-            }
-            let warp_event_rx = WARP_EVENT_CH.rx.clone();
-            logger::trace("starting warp_runner use_future");
-            // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
-            // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_event_rx.lock().await;
-            while let Some(evt) = ch.recv().await {
-                //println!("received warp event");
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().process_warp_event(evt);
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        logger::error(&e.to_string());
-                    }
+            loop {
+                sleep(Duration::from_secs(60)).await;
+                {
+                    needs_update.set(true);
                 }
             }
         }
@@ -594,29 +656,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // render the Uplink app
-    let user_lang_saved = state.read().settings.language.clone();
-    change_language(user_lang_saved);
-
-    let theme = state
-        .read()
-        .ui
-        .theme
-        .as_ref()
-        .map(|theme| theme.styles.clone())
-        .unwrap_or_default();
-
-    cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
-        div {
-            id: "app-wrap",
-            get_titlebar(cx),
-            get_toasts(cx),
-            get_call_dialog(cx),
-            get_pre_release_message(cx),
-            get_router(cx)
-        }
-    ))
+    cx.render(main_element)
 }
 
 fn get_pre_release_message(cx: Scope) -> Element {
