@@ -63,6 +63,10 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    // seconds
+    pub typing_indicator_refresh: u64,
+    // seconds
+    pub typing_indicator_timeout: u64,
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -77,6 +81,8 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
+        typing_indicator_refresh: 5,
+        typing_indicator_timeout: 6,
         use_mock: !args.no_mock,
     }
 });
@@ -427,7 +433,7 @@ fn app(cx: Scope) -> Element {
         to_owned![needs_update];
         async move {
             loop {
-                sleep(Duration::from_secs(6)).await;
+                sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
                 {
                     let state = inner.borrow();
                     let now = Instant::now();
