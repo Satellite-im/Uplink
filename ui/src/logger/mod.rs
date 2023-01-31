@@ -12,6 +12,7 @@
 //! for simplicity, the debug_logger should parse these fields directly. this seems better than converting the
 //! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
 
+use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
@@ -31,23 +32,27 @@ pub struct Log {
     pub level: Level,
     pub message: String,
     pub datetime: DateTime<Local>,
+    pub colorized: bool,
 }
 
 impl std::fmt::Display for Log {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let datetime = &self.datetime.to_string()[0..19];
-        write!(f, "{} | {} | {}", datetime, self.level, self.message)
+        let level = self.get_level_string();
+        write!(f, "{} | {} | {}", datetime, level, self.message)
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Logger {
     log_file: String,
+    warp_file: String,
     // holds the last `max_logs` in memory, unless `save_to_file` is true. when `save_to_file` is set to true, `log_entries` are written to disk.
     log_entries: VecDeque<Log>,
     subscribers: Vec<mpsc::UnboundedSender<Log>>,
     max_logs: usize,
     save_to_file: bool,
+    save_warp: bool,
     write_to_stdout: bool,
     display_trace: bool,
 }
@@ -73,9 +78,13 @@ impl crate::log::Log for LogGlue {
             return;
         }
 
-        // todo: send .warp logs somewhere else
         // don't care about other libraries
         if record.file().map(|x| x.contains(".cargo")).unwrap_or(true) {
+            if LOGGER.read().save_warp && record.file().map(|x| x.contains("warp")).unwrap_or(false)
+            {
+                let msg = format!("{}", record.args());
+                LOGGER.write().log_warp(record.level(), &msg)
+            }
             return;
         }
 
@@ -94,11 +103,23 @@ impl Logger {
             .append(true)
             .open(&logger_path);
 
+        let warp_path = STATIC_ARGS
+            .warp_path
+            .join("warp.log")
+            .to_string_lossy()
+            .to_string();
+        let _ = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&warp_path);
+
         Self {
             save_to_file: false,
+            save_warp: false,
             write_to_stdout: false,
             display_trace: false,
             log_file: logger_path,
+            warp_file: warp_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
             max_logs: 100,
@@ -118,12 +139,13 @@ impl Logger {
             level,
             message: message.to_string(),
             datetime: Local::now(),
+            colorized: false,
         };
 
         // special path for Trace logs
         // don't persist tracing information. at most, print it to the terminal
         if level == Level::Trace && self.display_trace {
-            println!("{}", new_log);
+            println!("{}", new_log.colorize());
             return;
         }
 
@@ -145,11 +167,33 @@ impl Logger {
         }
 
         if self.write_to_stdout {
-            println!("{}", new_log)
+            println!("{}", new_log.colorize())
         }
 
         // if a subscriber closes a channel, send() will fail. remove from subscribers
         self.subscribers.retain(|x| x.send(new_log.clone()).is_ok());
+    }
+
+    fn log_warp(&mut self, level: Level, message: &str) {
+        let new_log = Log {
+            level,
+            message: message.to_string(),
+            datetime: Local::now(),
+            colorized: false,
+        };
+
+        let mut file = match OpenOptions::new().append(true).open(&self.warp_file) {
+            Ok(f) => f,
+            Err(e) => {
+                eprintln!("failed to log_warp: {}", e);
+                eprintln!("lost log: {}", new_log);
+                return;
+            }
+        };
+
+        if let Err(error) = writeln!(file, "{}", new_log) {
+            eprintln!("Couldn't write to warp.log file. {error}");
+        }
     }
 
     fn set_save_to_file(&mut self, enabled: bool) {
@@ -175,6 +219,9 @@ impl Logger {
 pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_max_level(level);
     log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
+    if level == LevelFilter::Trace {
+        set_save_warp(true);
+    }
     Ok(())
 }
 
@@ -209,6 +256,10 @@ pub fn set_display_trace(b: bool) {
 
 pub fn set_save_to_file(b: bool) {
     LOGGER.write().set_save_to_file(b);
+}
+
+pub fn set_save_warp(b: bool) {
+    LOGGER.write().save_warp = b;
 }
 
 pub fn get_save_to_file() -> bool {
@@ -256,5 +307,29 @@ pub fn get_color_string(level: Level) -> &'static str {
         Level::Info => "rgb(0, 195, 255)",
         Level::Warn => "yellow",
         Level::Error => "red",
+    }
+}
+
+// this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.
+impl Log {
+    fn colorize(&self) -> Self {
+        let mut log = self.clone();
+        log.colorized = true;
+        log
+    }
+
+    fn get_level_string(&self) -> String {
+        if !self.colorized {
+            return self.level.to_string();
+        }
+
+        let level = &self.level;
+        match self.level {
+            Level::Error => level.to_string().red().to_string(),
+            Level::Warn => level.to_string().yellow().to_string(),
+            Level::Info => level.to_string().cyan().to_string(),
+            Level::Debug => level.to_string().purple().to_string(),
+            Level::Trace => level.to_string().normal().to_string(),
+        }
     }
 }
