@@ -256,28 +256,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             aria_label: file.name(),
                         })
                     }),
-                    // span {
-                    //     Folder {
-                    //         text: "Fake Folder 1".into(),
-                    //         aria_label: "fake-folder-1".into(),
-                    //     },
-                    //     File {
-                    //         text: "fake_2.png".into(),
-                    //         aria_label: "fake-file-1".into(),
-                    //     },
-                    //     Folder {
-                    //         text: "New Fake".into(),
-                    //         aria_label: "fake-folder-2".into(),
-                    //     },
-                    //     Folder {
-                    //         loading: true,
-                    //         text: "Fake Folder 1".into(),
-                    //     },
-                    //     File {
-                    //         loading: true,
-                    //         text: "Fake File".into(),
-                    //     }
-                    // }
+                    if STATIC_ARGS.use_mock {
+                        rsx!(span {
+                            Folder {
+                                text: "Fake Folder 1".into(),
+                                aria_label: "fake-folder-1".into(),
+                            },
+                            File {
+                                text: "fake_2.png".into(),
+                                aria_label: "fake-file-1".into(),
+                            },
+                            Folder {
+                                text: "New Fake".into(),
+                                aria_label: "fake-folder-2".into(),
+                            },
+                            Folder {
+                                loading: true,
+                                text: "Fake Folder 1".into(),
+                            },
+                            File {
+                                loading: true,
+                                text: "Fake File".into(),
+                            }
+                        })
+                    }
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
