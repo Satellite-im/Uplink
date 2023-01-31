@@ -397,7 +397,20 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx,|| false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+
+    // todo: use this to render the typing indicator
+    let  _users_typing = match active_chat_id.and_then(|id| state.read().chats.all.get(&id).cloned()) {
+        Some(chat) => {
+            let users_typing = chat.participants.iter().filter(|x| chat.typing_indicator.contains_key(&x.did_key())).collect::<Vec<_>>();
+            let names = users_typing.iter().map(|x| x.username()).collect::<Vec<_>>();
+            Some(names)
+        }
+        None => None
+    };
     
+    //println!("active chat: {:?}", &active_chat_id);
+    //println!("users typing: {:?}", &users_typing);
+
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
         //to_owned![];
         async move {
