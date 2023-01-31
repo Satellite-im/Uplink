@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
@@ -14,6 +16,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use shared::language::get_local_text;
+use tokio::time::sleep;
 use warp::{
     constellation::{directory::Directory, file::File},
     logging::tracing::log,
@@ -126,8 +129,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
-        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
     }
+
+    use_future(cx, (), |_| {
+        to_owned![ch];
+        async move {
+            sleep(Duration::from_millis(100)).await;
+            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+        }
+    });
 
     cx.render(rsx!(
         div {
