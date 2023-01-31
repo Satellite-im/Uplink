@@ -3,6 +3,7 @@ pub mod action;
 pub mod chats;
 pub mod friends;
 pub mod identity;
+pub mod notifications;
 pub mod route;
 pub mod settings;
 pub mod ui;
@@ -92,6 +93,99 @@ impl State {
     /// Constructs a new `State` instance with default values.
     pub fn new() -> Self {
         State::default()
+    }
+
+    pub fn mutate(&mut self, action: Action) {
+        self.call_hooks(&action);
+
+        match action {
+            // ===== Notifications =====
+            Action::AddNotification(kind, count) => self.ui.notifications.add(kind, count),
+            Action::RemoveNotification(kind, count) => self.ui.notifications.remove(kind, count),
+            Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
+            Action::ClearAllNotifications => self.ui.notifications.clear_all(),
+            Action::AddToastNotification(notification) => {
+                self.ui
+                    .toast_notifications
+                    .insert(Uuid::new_v4(), notification);
+            }
+            // ===== Friends =====
+            Action::SendRequest(identity) => self.new_outgoing_request(&identity),
+            Action::RequestAccepted(identity) => {
+                self.complete_request(Direction::Outgoing, &identity)
+            }
+            Action::CancelRequest(identity) => self.cancel_request(Direction::Outgoing, &identity),
+            Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
+            Action::AcceptRequest(identity) => {
+                self.complete_request(Direction::Incoming, &identity)
+            }
+            Action::DenyRequest(identity) => self.cancel_request(Direction::Incoming, &identity),
+            Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
+            Action::Block(identity) => self.block(&identity),
+            Action::Unblock(identity) => self.unblock(&identity),
+
+            // ===== UI =====
+            // Favorites
+            Action::Favorite(chat) => self.favorite(&chat),
+            Action::ToggleFavorite(chat) => self.toggle_favorite(&chat),
+            Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
+            // Language
+            Action::SetLanguage(language) => self.set_language(&language),
+            // Overlay
+            Action::AddOverlay(window) => self.ui.overlays.push(window),
+            Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
+            // Sidebar
+            Action::RemoveFromSidebar(chat_id) => self.remove_sidebar_chat(chat_id),
+            Action::AddToSidebar(chat) => {
+                self.add_chat_to_sidebar(chat.clone());
+                self.chats.all.entry(chat.id).or_insert(chat);
+            }
+            Action::SidebarHidden(hidden) => self.ui.sidebar_hidden = hidden,
+            // Navigation
+            Action::Navigate(to) => self.set_active_route(to),
+            // Generic UI
+            Action::SetMeta(metadata) => self.ui.metadata = metadata,
+            Action::ClearPopout(window) => self.ui.clear_popout(window),
+            Action::SetPopout(webview) => self.ui.set_popout(webview),
+            // Development
+            Action::SetDebugLogger(webview) => self.ui.set_debug_logger(webview),
+            Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(window),
+            // Themes
+            Action::SetTheme(theme) => self.set_theme(Some(theme)),
+            Action::ClearTheme => self.set_theme(None),
+
+            // ===== Chats =====
+            Action::ChatWith(chat) => {
+                // warning: ensure that warp is used to get/create the chat which is passed in here
+                //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
+                self.set_active_chat(&chat);
+                self.clear_unreads(&chat);
+                self.chats.all.entry(chat.id).or_insert(chat);
+            }
+            Action::NewMessage(_, _) => todo!(),
+            Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
+            Action::CancelReply(chat) => self.cancel_reply(&chat),
+            Action::ClearUnreads(chat) => self.clear_unreads(&chat),
+            Action::React(_, _, _) => todo!(),
+            Action::Reply(_, _) => todo!(),
+            Action::MockSend(id, msg) => {
+                let sender = self.account.identity.did_key();
+                let mut m = raygun::Message::default();
+                m.set_conversation_id(id);
+                m.set_sender(sender);
+                m.set_value(msg);
+                self.add_msg_to_chat(id, m);
+            }
+
+            // ===== Media =====
+            Action::ToggleMute => self.toggle_mute(),
+            Action::ToggleSilence => self.toggle_silence(),
+            Action::SetId(identity) => self.set_identity(&identity),
+            Action::SetActiveMedia(id) => self.set_active_media(id),
+            Action::DisableMedia => self.disable_media(),
+        }
+
+        let _ = self.save();
     }
 
     pub fn set_theme(&mut self, theme: Option<Theme>) {
@@ -500,115 +594,6 @@ impl State {
 
     pub fn remove_window(&mut self, id: WindowId) {
         self.ui.remove_overlay(id);
-    }
-}
-
-impl State {
-    pub fn mutate(&mut self, action: Action) {
-        self.call_hooks(&action);
-
-        match action {
-            Action::SetMeta(metadata) => {
-                self.ui.metadata = metadata;
-            }
-            Action::SidebarHidden(hidden) => self.ui.sidebar_hidden = hidden,
-            Action::ClearPopout(window) => {
-                self.ui.clear_popout(window);
-            }
-            Action::SetPopout(webview) => {
-                self.ui.set_popout(webview);
-            }
-            Action::SetDebugLogger(webview) => {
-                self.ui.set_debug_logger(webview);
-            }
-            Action::ClearDebugLogger(window) => {
-                self.ui.clear_debug_logger(window);
-            }
-            Action::AddOverlay(window) => {
-                self.ui.overlays.push(window);
-            }
-            Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
-            // Action::Call(_) => todo!(),
-            // Action::Hangup(_) => todo!(),
-            Action::AddToastNotification(notification) => {
-                self.ui
-                    .toast_notifications
-                    .insert(Uuid::new_v4(), notification);
-            }
-            // Action::RemoveToastNotification => {
-            //     self.ui.toast_notifications.pop_front();
-            // }
-            Action::ToggleMute => self.toggle_mute(),
-            Action::ToggleSilence => self.toggle_silence(),
-            Action::SetId(identity) => self.set_identity(&identity),
-            Action::SetActiveMedia(id) => self.set_active_media(id),
-            Action::DisableMedia => self.disable_media(),
-            Action::SetLanguage(language) => self.set_language(&language),
-            Action::SendRequest(identity) => self.new_outgoing_request(&identity),
-            Action::RequestAccepted(identity) => {
-                self.complete_request(Direction::Outgoing, &identity);
-            }
-            Action::CancelRequest(identity) => {
-                self.cancel_request(Direction::Outgoing, &identity);
-            }
-            Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
-            Action::AcceptRequest(identity) => {
-                self.complete_request(Direction::Incoming, &identity);
-            }
-            Action::DenyRequest(identity) => {
-                self.cancel_request(Direction::Incoming, &identity);
-            }
-            Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
-            Action::Block(identity) => self.block(&identity),
-            Action::Unblock(identity) => self.unblock(&identity),
-            Action::Favorite(chat) => self.favorite(&chat),
-            Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
-            Action::ChatWith(chat) => {
-                // warning: ensure that warp is used to get/create the chat which is passed in here
-                //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
-                self.set_active_chat(&chat);
-                self.clear_unreads(&chat);
-                self.chats.all.entry(chat.id).or_insert(chat);
-            }
-            Action::AddToSidebar(chat) => {
-                self.add_chat_to_sidebar(chat.clone());
-                self.chats.all.entry(chat.id).or_insert(chat);
-            }
-            Action::RemoveFromSidebar(chat_id) => {
-                self.remove_sidebar_chat(chat_id);
-            }
-            Action::NewMessage(_, _) => todo!(),
-            Action::ToggleFavorite(chat) => {
-                self.toggle_favorite(&chat);
-            }
-            Action::StartReplying(chat, message) => {
-                self.start_replying(&chat, &message);
-            }
-            Action::CancelReply(chat) => {
-                self.cancel_reply(&chat);
-            }
-            Action::ClearUnreads(chat) => {
-                self.clear_unreads(&chat);
-            }
-            Action::React(_, _, _) => todo!(),
-            Action::Reply(_, _) => todo!(),
-            Action::MockSend(id, msg) => {
-                let sender = self.account.identity.did_key();
-                let mut m = raygun::Message::default();
-                m.set_conversation_id(id);
-                m.set_sender(sender);
-                m.set_value(msg);
-                self.add_msg_to_chat(id, m);
-            }
-            Action::Navigate(to) => {
-                self.set_active_route(to);
-            }
-            // UI
-            Action::SetTheme(theme) => self.set_theme(Some(theme)),
-            Action::ClearTheme => self.set_theme(None),
-        }
-
-        let _ = self.save();
     }
 
     fn call_hooks(&mut self, action: &Action) {

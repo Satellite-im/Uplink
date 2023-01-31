@@ -59,6 +59,7 @@ pub fn generate_mock() -> State {
 
     State {
         ui: UI {
+            notifications: Default::default(),
             current_call: None,
             current_debug_logger: None,
             overlays: vec![],

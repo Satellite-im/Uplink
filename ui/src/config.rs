@@ -26,6 +26,10 @@ pub struct Configuration {
     /// Developer-related configuration options.
     #[serde(default)]
     pub developer: Developer,
+
+    /// Notification-related configuration options.
+    #[serde(default)]
+    pub notifications: Notifications,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -64,6 +68,25 @@ pub struct Extensions {
 pub struct Developer {
     #[serde(default)]
     pub developer_mode: bool,
+}
+
+fn bool_true() -> bool {
+    true
+}
+
+// We may want to give the user the ability to pick and choose which notifications they want to see.
+// This is a good place to start.
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct Notifications {
+    #[serde(default)]
+    pub show_app_icon: bool,
+    #[serde(default = "bool_true")]
+    pub friends_notifications: bool,
+    #[serde(default = "bool_true")]
+    pub messages_notifications: bool,
+    // By default we leave this one off.
+    #[serde(default)]
+    pub settings_notifications: bool,
 }
 
 impl Configuration {
