@@ -1,27 +1,26 @@
 use dioxus::prelude::*;
-
 use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
 use shared::language::{change_language, get_available_languages, get_local_text};
+use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
     config::Configuration,
-    logger,
     state::{Action, State},
     utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
+    log::trace!("General settings rendered");
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
-
     let mut config = Configuration::load_or_default();
-    logger::debug("General settings page rendered.");
+
     cx.render(rsx!(
         div {
             id: "settings-general",
@@ -47,11 +46,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 Select {
-                    initial_value: if let Some(theme) = &state.read().ui.theme {
-                        theme.name.clone()
-                    } else {
-                        "Default".to_string()
-                    },
+                    initial_value: state.read().ui.theme.clone().map(|t| t.name).unwrap_or("Default".into()),
                     options: themes.iter().map(|t| t.name.clone()).collect(),
                     onselect: move |value| {
                         themes.iter().for_each(|t| {

@@ -1,13 +1,13 @@
 use std::rc::Weak;
 
 use dioxus::prelude::*;
-
 use dioxus_desktop::use_window;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
     components::{
@@ -23,7 +23,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    logger::debug("Developer settings page rendered.");
+    log::debug!("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
     let mut config = Configuration::load_or_default();
     let window = use_window(cx);
@@ -39,6 +39,8 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     active: config.developer.developer_mode,
                     onflipped: move |value| {
                         config.set_developer_mode(value);
+                        // cause a re-render
+                        state.write();
                     },
                 }
             },
@@ -156,8 +158,8 @@ impl WindowDropHandler {
 
 impl Drop for WindowDropHandler {
     fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
-            // todo: log error
+        if let Err(e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
+            log::warn!("WindowDropHandler failed to send msg: {}", e);
         }
     }
 }
