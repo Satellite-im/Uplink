@@ -257,7 +257,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         })
                     }),
                     if STATIC_ARGS.use_mock {
-                        rsx!(span {
+                        rsx!(
                             Folder {
                                 text: "Fake Folder 1".into(),
                                 aria_label: "fake-folder-1".into(),
@@ -278,7 +278,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 loading: true,
                                 text: "Fake File".into(),
                             }
-                        })
+                        )
                     }
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
