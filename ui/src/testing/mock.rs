@@ -88,8 +88,8 @@ pub fn generate_mock() -> State {
         items: Items {
             initialized: true,
             all: Vec::new(),
-            directories: HashSet::new(),
-            files: HashSet::new(),
+            directories: Vec::new(),
+            files: Vec::new(),
         },
         friends: Friends {
             initialized: true,

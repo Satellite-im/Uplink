@@ -517,9 +517,9 @@ fn app(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel::<Result<items::Items, warp::error::Error>>();
             warp_cmd_tx
-                .send(WarpCmd::Constellation(ConstellationCmd::InitialiazeItems {
-                    rsp: tx,
-                }))
+                .send(WarpCmd::Constellation(
+                    ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
+                ))
                 .expect("main failed to send warp command");
 
             let res = rx.await.expect("failed to get response from warp_runner");
@@ -531,7 +531,7 @@ fn app(cx: Scope) -> Element {
                         if STATIC_ARGS.use_mock {
                             state.write().items.join(items);
                         } else {
-                            state.write().items = items;
+                            state.write().items = items.clone();
                         }
 
                         needs_update.set(true);

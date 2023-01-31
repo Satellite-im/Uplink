@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use warp::{constellation::directory::Directory, constellation::file::File};
 
 // TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
@@ -13,10 +12,10 @@ pub struct Items {
     pub all: Vec<warp::constellation::item::Item>,
     // List of directories inside current directory
     #[serde(skip)]
-    pub directories: HashSet<Directory>,
+    pub directories: Vec<Directory>,
     // List of files inside current directory
     #[serde(skip)]
-    pub files: HashSet<File>,
+    pub files: Vec<File>,
 }
 
 impl Items {

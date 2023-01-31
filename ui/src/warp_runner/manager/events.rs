@@ -7,7 +7,6 @@ use warp::{
 use crate::{
     warp_runner::{
         conv_stream,
-        manager::commands::handle_constellation_cmd,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
         WarpCmd, WarpEvent,
     },
@@ -15,7 +14,9 @@ use crate::{
 };
 
 use super::{
-    commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
+    commands::{
+        handle_constellation_cmd, handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd,
+    },
     MultiPassCmd,
 };
 

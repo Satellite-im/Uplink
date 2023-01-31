@@ -87,6 +87,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 (!with_rename).then(|| rsx! (
                     label {
+                        class: "folder-name",
                         "{text}"
                     }
                 ))

@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use futures::channel::oneshot;
 
 use crate::{state::items::Items, warp_runner::Storage};
@@ -12,7 +10,7 @@ use warp::{
 
 #[derive(Debug)]
 pub enum ConstellationCmd {
-    InitialiazeItems {
+    GetItemsFromCurrentDirectory {
         rsp: oneshot::Sender<Result<Items, warp::error::Error>>,
     },
     CreateNewFolder {
@@ -23,7 +21,7 @@ pub enum ConstellationCmd {
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, storage: &mut Storage) {
     match cmd {
-        ConstellationCmd::InitialiazeItems { rsp } => {
+        ConstellationCmd::GetItemsFromCurrentDirectory { rsp } => {
             let r = initialize_items(storage);
             let _ = rsp.send(r);
         }
@@ -43,19 +41,18 @@ async fn create_new_directory(folder_name: &str, storage: &mut Storage) -> Resul
 fn initialize_items(storage: &mut Storage) -> Result<Items, Error> {
     let current_dir = storage.current_directory()?;
     let items = current_dir.get_items();
-    let mut directories: HashSet<Directory> = HashSet::new();
-    let mut files: HashSet<File> = HashSet::new();
 
-    for item in &items {
+    let mut directories: Vec<Directory> = Vec::new();
+    let mut files: Vec<File> = Vec::new();
+
+    for item in items.iter() {
         if item.is_directory() {
             let dir = item.get_directory()?;
-            directories.insert(dir);
-            continue;
-        }
-        if item.is_file() {
+            directories.insert(0, dir);
+        } else if item.is_file() {
             let file = item.get_file()?;
-            files.insert(file);
-        }
+            files.insert(0, file);
+        };
     }
 
     let item = Items {
