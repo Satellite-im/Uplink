@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 
-use dioxus_desktop::use_window;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
@@ -10,7 +9,7 @@ use shared::language::get_local_text;
 use crate::{
     components::settings::SettingSection,
     logger,
-    state::{Action, State},
+    state::State,
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
 };
 
@@ -18,7 +17,6 @@ use crate::{
 pub fn DeveloperSettings(cx: Scope) -> Element {
     logger::debug("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
-    let window = use_window(cx);
 
     cx.render(rsx!(
         div {
@@ -88,29 +86,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     icon: Icon::Trash,
                     onpress: move |_| {
                         state.write().clear();
-                    }
-                }
-            }
-            SettingSection {
-                section_label: get_local_text("settings-developer.debug-logger"),
-                section_description: get_local_text("settings-developer.debug-logger-description"),
-                Button {
-                    text: get_local_text("settings-developer.open-debug-logger"),
-                    aria_label: "debug-logger-button".into(),
-                    appearance: Appearance::Secondary,
-                    icon: Icon::CodeBracketSquare,
-                    onpress: move |_| {
-                        if state.read().ui.current_debug_logger.is_some() {
-                            state.write().mutate(Action::ClearDebugLogger(window.clone()));
-                            return;
-                        }
-                        // let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                        // let logger_debug = VirtualDom::new_with_props(DebugLogger, DebugLoggerProps{ });
-                        // let window = window.new_window(logger_debug, Default::default());
-                        // if let Some(wv) = Weak::upgrade(&window) {
-                        //     let id = wv.window().id();
-                        //     state.write().mutate(Action::SetDebugLogger(id));
-                        // }
                     }
                 }
             }

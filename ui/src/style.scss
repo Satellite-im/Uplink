@@ -21,6 +21,7 @@ html, body {
 }
 
 #titlebar {
+    height: var(--titlebar-height);
     width: 100%;
     background-color: var(--background);
     border-bottom: 1px solid var(--border-color);
