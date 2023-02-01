@@ -7,9 +7,7 @@ use kit::elements::{
 use mime::*;
 use rfd::FileDialog;
 use shared::language::get_local_text;
-use warp::error::Error;
-
-use crate::logger;
+use warp::{error::Error, logging::tracing::log};
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
@@ -44,7 +42,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    logger::debug("Profile settings page rendered.");
+    log::debug!("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
@@ -58,7 +56,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({banner_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(banner_state) {
-                            logger::error(&format!("Error to change profile avatar image {error}"));
+                            log::error!("Error to change profile avatar image {error}");
                         };
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
@@ -69,7 +67,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     style: "background-image: url({image_state});",
                     onclick: move |_| {
                         if let Err(error) = change_profile_image(image_state) {
-                            logger::error(&format!("Error to change profile avatar image {error}"));
+                            log::error!("Error to change profile avatar image {error}");
                         };
                     },
                     Button {
@@ -77,7 +75,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                logger::error(&format!("Error to change profile avatar image {error}"));
+                                log::error!("Error to change profile avatar image {error}");
                             };
                         }
                     },
@@ -92,7 +90,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         icon: kit::icons::Icon::Plus,
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
-                                logger::error(&format!("Error to change profile avatar image {error}"));
+                                log::error!("Error to change profile avatar image {error}");
                             };
                         }
                     }

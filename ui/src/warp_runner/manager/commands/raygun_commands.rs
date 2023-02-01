@@ -10,7 +10,6 @@ use warp::{
 };
 
 use crate::{
-    logger,
     state::{self, chats},
     warp_runner::{conv_stream, ui_adapter::conversation_to_chat, Account, Messaging},
 };
@@ -125,15 +124,16 @@ async fn raygun_initialize_conversations(
         match conversation_to_chat(conv, account, messaging).await {
             Ok(chat) => {
                 if let Err(e) = stream_manager.add_stream(chat.id, messaging).await {
-                    logger::error(&format!(
+                    log::error!(
                         "failed to open conversation stream for conv {}: {}",
-                        chat.id, e
-                    ));
+                        chat.id,
+                        e
+                    );
                 }
                 let _ = all_chats.insert(chat.id, chat);
             }
             Err(e) => {
-                logger::error(&format!("failed to convert conversation to chat: {}", e));
+                log::error!("failed to convert conversation to chat: {}", e);
             }
         };
     }

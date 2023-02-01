@@ -282,7 +282,7 @@ fn main() {
                     .to_string(),
             )
             .with_file_drop_handler(|_w, drag_event| {
-                logger::debug(format!("Drag Event: {:?}", drag_event).as_str());
+                log::debug!("Drag Event: {:?}", drag_event);
                 true
             }),
     )
@@ -290,7 +290,7 @@ fn main() {
 
 // start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
-    logger::trace("rendering bootstrap");
+    log::trace!("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
     // store in a use_ref to make it not get dropped
@@ -324,7 +324,7 @@ fn auth_page_manager(cx: Scope) -> Element {
 
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    logger::trace("rendering auth wrapper");
+    log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
     let pre_release_text = get_local_text("uplink.pre-release");
@@ -355,7 +355,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 // called at the end of the auth flow
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
-    logger::trace("rendering app_bootstrap");
+    log::trace!("rendering app_bootstrap");
     let mut state = if STATIC_ARGS.use_mock {
         State::mock()
     } else {
@@ -391,7 +391,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    logger::trace("rendering app");
+    log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     // don't fetch friends and conversations from warp when using mock data
@@ -464,7 +464,7 @@ fn app(cx: Scope) -> Element {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
-            logger::trace("starting warp_runner use_future");
+            log::trace!("starting warp_runner use_future");
             // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
@@ -476,7 +476,7 @@ fn app(cx: Scope) -> Element {
                         needs_update.set(true);
                     }
                     Err(e) => {
-                        logger::error(&e.to_string());
+                        log::error!("{e}");
                     }
                 }
             }
@@ -569,7 +569,7 @@ fn app(cx: Scope) -> Element {
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
-            logger::trace("init friends");
+            log::trace!("init friends");
             match res {
                 Ok(friends) => match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -582,11 +582,11 @@ fn app(cx: Scope) -> Element {
                         needs_update.set(true);
                     }
                     Err(e) => {
-                        logger::error(&e.to_string());
+                        log::error!("{e}");
                     }
                 },
                 Err(e) => {
-                    logger::error(&format!("init friends failed: {}", e));
+                    log::error!("init friends failed: {}", e);
                 }
             }
 
@@ -620,7 +620,7 @@ fn app(cx: Scope) -> Element {
                 }
             };
 
-            logger::trace("init chats");
+            log::trace!("init chats");
             match res {
                 Ok((own_id, mut all_chats)) => match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -644,11 +644,11 @@ fn app(cx: Scope) -> Element {
                         needs_update.set(true);
                     }
                     Err(e) => {
-                        logger::error(&e.to_string());
+                        log::error!("{e}");
                     }
                 },
                 Err(e) => {
-                    logger::error(&format!("failed to initialize chats: {}", e));
+                    log::error!("failed to initialize chats: {}", e);
                 }
             }
             *chats_init.write_silent() = true;

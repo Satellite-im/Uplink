@@ -1,12 +1,13 @@
 use dioxus::prelude::*;
 use kit::elements::{button::Button, switch::Switch};
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
-use crate::{components::settings::SettingSection, logger};
+use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn FilesSettings(cx: Scope) -> Element {
-    logger::debug("Files settings page rendered.");
+    log::debug!("Files settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-files",

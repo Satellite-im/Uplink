@@ -12,11 +12,10 @@ use kit::{
 };
 
 use shared::language::get_local_text;
-use warp::{crypto::DID, multipass::identity::Relationship};
+use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    logger,
     state::{Action, Chat, State},
     utils::convert_status,
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
@@ -76,10 +75,7 @@ pub fn Friends(cx: Scope) -> Element {
                                 match rsp {
                                     Ok(c) => c,
                                     Err(e) => {
-                                        logger::error(&format!(
-                                            "failed to create conversation: {}",
-                                            e
-                                        ));
+                                        log::error!("failed to create conversation: {}", e);
                                         continue;
                                     }
                                 }
@@ -98,7 +94,7 @@ pub fn Friends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            logger::error(&format!("failed to remove friend: {}", e));
+                            log::error!("failed to remove friend: {}", e);
                         }
                     }
                     ChanCmd::BlockFriend(did) => {
@@ -110,7 +106,7 @@ pub fn Friends(cx: Scope) -> Element {
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
                             // todo: display message to user
-                            logger::error(&format!("failed to block friend: {}", e));
+                            log::error!("failed to block friend: {}", e);
                         }
                     }
                     ChanCmd::RemoveDirectConvs(recipient) => {
@@ -124,10 +120,11 @@ pub fn Friends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            logger::error(&format!(
+                            log::error!(
                                 "failed to remove conversation with friend {}: {}",
-                                recipient, e
-                            ));
+                                recipient,
+                                e
+                            );
                         }
                     }
                 }

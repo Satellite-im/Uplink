@@ -1,6 +1,5 @@
 use crate::{
     components::friends::friend::Friend,
-    logger,
     state::{Action, Identity, State},
     utils::convert_status,
     warp_runner::{MultiPassCmd, WarpCmd},
@@ -20,7 +19,7 @@ use kit::{
 };
 use rand::Rng;
 use shared::language::get_local_text;
-use warp::multipass::identity::Relationship;
+use warp::{logging::tracing::log, multipass::identity::Relationship};
 
 enum ChanCmd {
     AcceptRequest(Identity),
@@ -49,7 +48,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            logger::error(&format!("failed to accept request: {}", e));
+                            log::error!("failed to accept request: {}", e);
                         }
                     }
                     ChanCmd::DenyRequest(identity) => {
@@ -63,7 +62,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
-                            logger::error(&format!("failed to deny request: {}", e));
+                            log::error!("failed to deny request: {}", e);
                         }
                     }
                 }

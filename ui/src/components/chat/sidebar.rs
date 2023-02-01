@@ -17,11 +17,10 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 use shared::language::get_local_text;
-use warp::raygun::Message;
+use warp::{logging::tracing::log, raygun::Message};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    logger,
     state::{Action, Identity, State},
     utils::{build_participants, convert_status},
     UPLINK_ROUTES,
@@ -53,7 +52,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    logger::trace("rendering chats sidebar layout");
+    log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
 
     // todo: display a loading page if chats is not initialized
