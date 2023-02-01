@@ -30,13 +30,13 @@ use warp::logging::tracing::log::{self, LevelFilter};
 
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
-use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
+use crate::layouts::storage::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::state::{friends, items};
+use crate::state::{friends, storage};
 use crate::warp_runner::{
     ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
 };
@@ -519,7 +519,7 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<items::Items, warp::error::Error>>();
+            let (tx, rx) = oneshot::channel::<Result<storage::Storage, warp::error::Error>>();
             warp_cmd_tx
                 .send(WarpCmd::Constellation(
                     ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
@@ -530,22 +530,18 @@ fn app(cx: Scope) -> Element {
 
             logger::trace("init items");
             match res {
-                Ok(items) => match inner.try_borrow_mut() {
+                Ok(storage) => match inner.try_borrow_mut() {
                     Ok(state) => {
-                        if STATIC_ARGS.use_mock {
-                            state.write().items.join(items);
-                        } else {
-                            state.write().items = items.clone();
-                        }
+                        state.write().storage = storage.clone();
 
                         needs_update.set(true);
                     }
                     Err(e) => {
-                        logger::error(&e.to_string());
+                        log::error!("{e}");
                     }
                 },
                 Err(e) => {
-                    logger::error(&format!("init items failed: {}", e));
+                    log::error!("init items failed: {}", e);
                 }
             }
 

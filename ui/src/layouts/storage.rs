@@ -24,7 +24,7 @@ use warp::{
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    state::{items::Items, Action, State},
+    state::{storage::Storage, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -45,32 +45,29 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let home_text = get_local_text("uplink.home");
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
-    let items_state: &UseState<Option<Items>> = use_state(cx, || None);
-    let directories_list = use_ref(cx, || state.read().items.directories.clone());
-    let files_list = use_ref(cx, || state.read().items.files.clone());
+    let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
+    let directories_list = use_ref(cx, || state.read().storage.directories.clone());
+    let files_list = use_ref(cx, || state.read().storage.files.clone());
 
     let add_new_folder = use_state(cx, || false);
 
-    if let Some(items) = items_state.get().clone() {
+    if let Some(storage) = storage_state.get().clone() {
         if STATIC_ARGS.use_mock == false {
-            *directories_list.write_silent() = items.directories.clone();
-            *files_list.write_silent() = items.files.clone();
+            *directories_list.write_silent() = storage.directories.clone();
+            *files_list.write_silent() = storage.files.clone();
         };
-        state.write().items = items.clone();
-        items_state.set(None);
+        state.write().storage = storage.clone();
+        storage_state.set(None);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![items_state, directories_list, files_list];
+        to_owned![storage_state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     ChanCmd::AddNewFolder(folder_name) => {
-                        if STATIC_ARGS.use_mock {
-                            directories_list
-                                .with_mut(|i| i.insert(0, Directory::new(&folder_name)));
-                        } else {
+                    
                             let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                             let folder_name2 = folder_name.clone();
                             warp_cmd_tx
@@ -91,17 +88,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     continue;
                                 }
                             }
-                        }
+                        
                     }
                     ChanCmd::GetItemsFromCurrentDirectory => {
-                        if STATIC_ARGS.use_mock {
-                            update_items_with_mock_data(
-                                items_state.clone(),
-                                directories_list.clone(),
-                                files_list.clone(),
-                            );
-                        } else {
-                            let (tx, rx) = oneshot::channel::<Result<Items, warp::error::Error>>();
+                                             let (tx, rx) =
+                                oneshot::channel::<Result<Storage, warp::error::Error>>();
                             warp_cmd_tx
                                 .send(WarpCmd::Constellation(
                                     ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
@@ -110,15 +101,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
                             let rsp = rx.await.expect("command canceled");
                             match rsp {
-                                Ok(items) => {
-                                    items_state.set(Some(items));
+                                Ok(storage) => {
+                                    storage_state.set(Some(storage));
                                 }
                                 Err(e) => {
                                     log::error!("failed to add new folder conversation: {}", e);
                                     continue;
                                 }
                             }
-                        }
+                        
                     }
                 }
             }
@@ -248,8 +239,20 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         Folder {
                             with_rename: true,
                             onrename: |val| {
-                                ch.send(ChanCmd::AddNewFolder(val));
-                                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                let new_name: String = val;
+                                if STATIC_ARGS.use_mock {
+                                    directories_list
+                                        .with_mut(|i| i.insert(0, Directory::new(&new_name)));
+                                        update_items_with_mock_data(
+                                            storage_state.clone(),
+                                            directories_list.clone(),
+                                            files_list.clone(),
+                                        );
+                                } else {
+                                    ch.send(ChanCmd::AddNewFolder(new_name));
+                                    ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                }
+                               
                                 add_new_folder.set(false);
                              }
                         })
@@ -306,15 +309,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 }
 
 fn update_items_with_mock_data(
-    items_state: UseState<Option<Items>>,
+    storage_state: UseState<Option<Storage>>,
     directories_list: UseRef<Vec<Directory>>,
     files_list: UseRef<Vec<File>>,
 ) {
-    let items_mock = Items {
+    let storage_mock = Storage {
         initialized: true,
-        all: Vec::new(),
         directories: directories_list.read().clone(),
         files: files_list.read().clone(),
     };
-    items_state.set(Some(items_mock.clone()));
+    storage_state.set(Some(storage_mock.clone()));
 }

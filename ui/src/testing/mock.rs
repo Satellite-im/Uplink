@@ -18,8 +18,8 @@ use warp::{
 };
 
 use crate::state::{
-    items::Items, ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
-    ToastNotification, UI,
+    storage::Storage, ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings,
+    State, ToastNotification, UI,
 };
 
 const FRIEND_COUNT: usize = 20;
@@ -85,9 +85,8 @@ pub fn generate_mock() -> State {
             in_sidebar,
             favorites: vec![],
         },
-        items: Items {
+        storage: Storage {
             initialized: true,
-            all: Vec::new(),
             directories: Vec::new(),
             files: Vec::new(),
         },
