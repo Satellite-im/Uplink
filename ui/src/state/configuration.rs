@@ -15,6 +15,12 @@ impl Configuration {
             config: Config::load_or_default(),
         }
     }
+
+    pub fn set_notifications_enabled(&mut self, enabled: bool) {
+        self.config.notifications.enabled = enabled;
+        let _ = self.config.save();
+    }
+
     pub fn set_theme(&mut self, theme_name: String) {
         self.config.general.theme = theme_name;
         let _ = self.config.save();

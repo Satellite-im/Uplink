@@ -78,6 +78,8 @@ fn bool_true() -> bool {
 // This is a good place to start.
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Notifications {
+    #[serde(default = "bool_true")]
+    pub enabled: bool,
     #[serde(default)]
     pub show_app_icon: bool,
     #[serde(default = "bool_true")]

@@ -118,6 +118,8 @@ settings-files = Files Settings
 
 settings-notifications = Notifications
     .notifications-description = Enable notifications for incoming calls, messages, and more.
+    .enabled = Enabled
+    .enabled-description = Enable notifications for incoming calls, messages, and more.
     .grant-permissions= Grant Permissions
     .grant-permissions-description = Grant permissions to receive notifications.
     .friends-description = Enable notifications for friend requests.

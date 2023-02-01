@@ -65,7 +65,10 @@ impl Notifications {
         let _ = set_badge(self.total());
 
         // Plays the notification sound.
-        crate::utils::sounds::Play(Sounds::Notification);
+        let config = Configuration::load_or_default();
+        if config.notifications.enabled {
+            let _ = crate::utils::sounds::Play(Sounds::Notification);
+        }
     }
 
     // Removes notification(s) from the specified kind.
