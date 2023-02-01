@@ -434,7 +434,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
-    let loading = data.is_none();
+    let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
@@ -562,7 +562,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
     cx.render(rsx!(Chatbar {
-        loading,
+        loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         reset: should_clear_input.clone(),
         onchange: move |v: String| {
@@ -595,7 +595,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         },
         controls: cx.render(rsx!(Button {
             icon: Icon::ChevronDoubleRight,
-            disabled: loading,
+            disabled: is_loading,
             appearance: Appearance::Secondary,
             onpress: move |_| {
                 local_typing_ch.send(TypingIndicator::NotTyping);
@@ -628,7 +628,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         with_replying_to: data
             .map(|data| {
                 let active_chat = data.active_chat.clone();
-
                 cx.render(rsx!(active_chat.clone().replying_to.map(|msg| {
                     let our_did = state.read().account.identity.did_key();
                     let mut participants = data.active_chat.participants.clone();
@@ -655,7 +654,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: loading,
+            disabled: is_loading,
             appearance: Appearance::Primary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
