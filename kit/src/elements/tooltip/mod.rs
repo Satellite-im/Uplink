@@ -1,6 +1,6 @@
+use derive_more::Display;
 use dioxus::prelude::*;
 use uuid::Uuid;
-use derive_more::Display;
 
 #[derive(PartialEq, Eq, Copy, Clone, Display)]
 /// Which direction will the arrow on the popup point?
@@ -52,7 +52,7 @@ pub fn Tooltip(cx: Scope<Props>) -> Element {
     let UUID: String = Uuid::new_v4().to_string();
 
     let arrow_position = get_arrow_position(&cx);
-    
+
     let text = cx.props.text.clone().unwrap_or_default();
 
     cx.render(rsx! {
