@@ -49,7 +49,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     initial_value: if let Some(theme) = &state.read().ui.theme {
                         theme.name.clone()
                     } else {
-                        "Default".to_string()
+                        "Default".into()
                     },
                     options: themes.iter().map(|t| t.name.clone()).collect(),
                     onselect: move |value| {

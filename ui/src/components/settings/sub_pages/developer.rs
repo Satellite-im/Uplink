@@ -24,7 +24,6 @@ use crate::{
 pub fn DeveloperSettings(cx: Scope) -> Element {
     logger::debug("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
-    let mut configuration = state.write().configuration.clone();
     let window = use_window(cx);
 
     cx.render(rsx!(
@@ -35,9 +34,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
-                    active: configuration.config.developer.developer_mode,
+                    active: state.read().configuration.config.developer.developer_mode,
                     onflipped: move |value| {
-                        configuration.set_developer_mode(value);
+                        state.write().configuration.set_developer_mode(value);
                     },
                 }
             },
