@@ -16,7 +16,7 @@ pub fn PushNotification(
         .timeout(timeout)
         .show();
     // Play notification sound
-    Play(notification_sound);
+    Play(notification_sound, false);
 }
 
 pub fn set_badge(count: u32) -> Result<(), String> {

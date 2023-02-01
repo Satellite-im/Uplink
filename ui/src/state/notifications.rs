@@ -67,7 +67,7 @@ impl Notifications {
         // Plays the notification sound.
         let config = Configuration::load_or_default();
         if config.notifications.enabled {
-            let _ = crate::utils::sounds::Play(Sounds::Notification);
+            crate::utils::sounds::Play(Sounds::Notification, false);
         }
     }
 

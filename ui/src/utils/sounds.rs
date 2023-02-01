@@ -7,7 +7,7 @@ pub enum Sounds {
 }
 
 #[allow(non_snake_case)]
-pub fn Play(sound: Sounds) {
+pub fn Play(sound: Sounds, wait: bool) {
     // Create a Soloud instance
     let sl = Soloud::default().expect("Soloud::default");
     // Create a Wav instance
@@ -26,7 +26,9 @@ pub fn Play(sound: Sounds) {
     // Play the sound
     sl.play(&wav);
     // Wait until the sound finishes playing
-    while sl.voice_count() > 0 {
-        std::thread::sleep(std::time::Duration::from_millis(100));
+    if wait {
+        while sl.voice_count() > 0 {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
 }
