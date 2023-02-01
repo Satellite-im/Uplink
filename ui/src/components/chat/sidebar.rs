@@ -1,11 +1,11 @@
 
 use dioxus::prelude::*;
 use shared::language::get_local_text;
-use warp::{raygun::Message};
+use warp::{raygun::Message, logging::tracing::log};
 use dioxus_router::*;
 use kit::{elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
 
-use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::{convert_status, build_participants}, logger};
+use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::{convert_status, build_participants}};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -34,7 +34,7 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    logger::trace("rendering chats sidebar layout");
+    log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
 
     // todo: display a loading page if chats is not initialized

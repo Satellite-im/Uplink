@@ -9,9 +9,9 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
-    logger,
     warp_runner::{MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -19,7 +19,7 @@ use crate::{
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    logger::trace("rendering create account layout");
+    log::trace!("rendering create account layout");
     let username = use_state(cx, String::new);
     //let error = use_state(cx, String::new);
     let button_disabled = use_state(cx, || true);
@@ -61,7 +61,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                         page.set(AuthPages::Success);
                     }
                     // todo: notify user
-                    Err(e) => logger::error(&format!("create identity failed: {}", e)),
+                    Err(e) => log::error!("create identity failed: {}", e),
                 }
             }
         }
