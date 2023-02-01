@@ -58,9 +58,9 @@ pub enum WarpCmd {
 impl std::fmt::Display for WarpCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass{{{cmd}}}"),
-            WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract{{{cmd:?}}}"),
-            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun{{{cmd:?}}}"),
+            WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass {{{cmd}}} "),
+            WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract {{{cmd:?}}} "),
+            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun {{{cmd:?}}} "),
         }
     }
 }
@@ -110,7 +110,7 @@ async fn handle_login(notify: Arc<Notify>) {
         tokio::select! {
             opt = warp_cmd_rx.recv() => {
                 if let Some(cmd) = &opt {
-                    log::debug!("received warp command: {}", cmd);
+                    log::debug!("received {}", cmd);
                 }
 
                 match opt {
