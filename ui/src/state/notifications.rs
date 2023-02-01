@@ -58,7 +58,7 @@ impl Notifications {
             NotificaitonKind::FriendRequest => self.friends += count,
             NotificaitonKind::Message => self.messages += count,
             NotificaitonKind::Settings => self.settings += count,
-        }
+        };
 
         // Update the badge any time notifications are added.
         let _ = set_badge(self.total());
@@ -94,7 +94,7 @@ impl Notifications {
                     self.settings -= count
                 }
             }
-        }
+        };
 
         // Update the badge any time notifications are removed.
         let _ = set_badge(self.total());
@@ -127,7 +127,7 @@ impl Notifications {
             NotificaitonKind::FriendRequest => self.friends = 0,
             NotificaitonKind::Message => self.messages = 0,
             NotificaitonKind::Settings => self.settings = 0,
-        }
+        };
         // Upadte the badge with new possible totals.
         let _ = set_badge(self.total());
     }

@@ -388,6 +388,7 @@ fn app(cx: Scope) -> Element {
     logger::trace("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);

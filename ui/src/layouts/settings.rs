@@ -14,7 +14,7 @@ use crate::{
             },
         },
     },
-    state::{Action, State},
+    state::{notifications::NotificaitonKind, Action, State},
 };
 
 use kit::{components::nav::Nav, layout::topbar::Topbar};
@@ -32,8 +32,16 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let first_render = use_state(cx, || true);
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(false));
-        first_render.set(false);
     }
+
+    // TODO: Remove this before merging to main just for testing.
+    if *first_render.get() {
+        state
+            .write()
+            .mutate(Action::AddNotification(NotificaitonKind::Settings, 4));
+    }
+
+    first_render.set(false);
 
     cx.render(rsx!(
         div {
