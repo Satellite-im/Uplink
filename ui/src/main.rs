@@ -161,7 +161,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = STATIC_ARGS.uplink_path.join("themes");
+    let themes_dest = STATIC_ARGS.uplink_path.join("");
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
