@@ -60,7 +60,7 @@ impl std::fmt::Display for WarpCmd {
         match self {
             WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass{{{cmd}}}"),
             WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract{{{cmd:?}}}"),
-            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun{{{cmcd:?}}}"),
+            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun{{{cmd:?}}}"),
         }
     }
 }
