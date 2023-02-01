@@ -1,6 +1,7 @@
 pub mod account;
 pub mod action;
 pub mod chats;
+pub mod configuration;
 pub mod friends;
 pub mod identity;
 pub mod notifications;
@@ -40,7 +41,7 @@ use warp::{
     raygun::{self, Message},
 };
 
-use self::{action::ActionHook, chats::Direction, ui::Call};
+use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
@@ -56,6 +57,8 @@ pub struct State {
     pub settings: settings::Settings,
     #[serde(default)]
     pub ui: ui::UI,
+    #[serde(default)]
+    pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
 }
@@ -82,6 +85,7 @@ impl Clone for State {
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),
+            configuration: Configuration::new(),
         }
     }
 }

@@ -34,6 +34,7 @@ impl Notifications {
 
     // This method is used for calculating the badge count for the app tray icon.
     pub fn total(&self) -> u32 {
+        // Since this is read only, we can just load the config here.
         let config = Configuration::load_or_default();
 
         let mut total = 0;

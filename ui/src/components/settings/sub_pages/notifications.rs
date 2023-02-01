@@ -5,16 +5,11 @@ use kit::{
 };
 use shared::language::get_local_text;
 
-use crate::{components::settings::SettingSection, config::Configuration};
+use crate::{components::settings::SettingSection, state::State};
 
 #[allow(non_snake_case)]
 pub fn NotificationSettings(cx: Scope) -> Element {
-    let config = Configuration::load_or_default();
-    let (
-        mut friends_switch_ref, 
-        mut messages_switch_ref, 
-        mut settings_switch_ref
-    ) = (config.clone(), config.clone(), config.clone());
+    let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
         div {
@@ -35,9 +30,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 section_label: get_local_text("friends"),
                 section_description: get_local_text("settings-notifications.friends-description"),
                 Switch { 
-                    active: config.notifications.friends_notifications,
+                    active: state.read().configuration.config.notifications.friends_notifications,
                     onflipped: move |e| {
-                        friends_switch_ref.set_friends_notifications(e);
+                        state.write().configuration.set_friends_notifications(e);
                     }
                 }
             },
@@ -45,9 +40,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 section_label: get_local_text("messages"),
                 section_description: get_local_text("settings-notifications.messages-description"),
                 Switch { 
-                    active: config.notifications.messages_notifications,
+                    active: state.read().configuration.config.notifications.messages_notifications,
                     onflipped: move |e| {
-                        messages_switch_ref.set_messages_notifications(e);
+                        state.write().configuration.set_messages_notifications(e);
                     }
                 }
             },
@@ -55,9 +50,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings"),
                 section_description: get_local_text("settings-notifications.settings-description"),
                 Switch { 
-                    active: config.notifications.settings_notifications,
+                    active: state.read().configuration.config.notifications.settings_notifications,
                     onflipped: move |e| {
-                        settings_switch_ref.set_settings_notifications(e);
+                        state.write().configuration.set_settings_notifications(e);
                     }
                 }
             },

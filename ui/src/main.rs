@@ -1,7 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
-use config::Configuration;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::menu::AboutMetadata;
@@ -362,7 +361,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     // todo: delete this. it is just an example
-    if Configuration::load_or_default().general.enable_overlay {
+    if state.configuration.config.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
@@ -629,7 +628,7 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let config = Configuration::load_or_default();
+    let config = state.read().configuration.config.clone();
 
     cx.render(rsx!(
         div {

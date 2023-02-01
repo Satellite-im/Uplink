@@ -129,41 +129,9 @@ impl Configuration {
         }
     }
 
-    fn save(&self) -> Result<(), std::io::Error> {
+    pub fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
         fs::write(&STATIC_ARGS.config_path, config_json)?;
         Ok(())
-    }
-}
-
-impl Configuration {
-    pub fn set_theme(&mut self, theme_name: String) {
-        self.general.theme = theme_name;
-        let _ = self.save();
-    }
-
-    pub fn set_overlay(&mut self, overlay: bool) {
-        self.general.enable_overlay = overlay;
-        let _ = self.save();
-    }
-
-    pub fn set_developer_mode(&mut self, developer_mode: bool) {
-        self.developer.developer_mode = developer_mode;
-        let _ = self.save();
-    }
-
-    pub fn set_friends_notifications(&mut self, friends_notifications: bool) {
-        self.notifications.friends_notifications = friends_notifications;
-        let _ = self.save();
-    }
-
-    pub fn set_messages_notifications(&mut self, messages_notifications: bool) {
-        self.notifications.messages_notifications = messages_notifications;
-        let _ = self.save();
-    }
-
-    pub fn set_settings_notifications(&mut self, settings_notifications: bool) {
-        self.notifications.settings_notifications = settings_notifications;
-        let _ = self.save();
     }
 }

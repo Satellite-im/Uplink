@@ -8,7 +8,6 @@ use shared::language::{change_language, get_available_languages, get_local_text}
 
 use crate::{
     components::settings::SettingSection,
-    config::Configuration,
     logger,
     state::{Action, State},
     utils::get_available_themes,
@@ -20,8 +19,8 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
 
-    let mut config = Configuration::load_or_default();
     logger::debug("General settings page rendered.");
+
     cx.render(rsx!(
         div {
             id: "settings-general",
@@ -30,9 +29,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
-                    active: config.general.enable_overlay,
+                    active: state.read().configuration.config.general.enable_overlay,
                     onflipped: move |e| {
-                        config.set_overlay(e);
+                        state.write().configuration.set_overlay(e);
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }
