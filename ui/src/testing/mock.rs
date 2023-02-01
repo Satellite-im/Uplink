@@ -13,6 +13,7 @@ use substring::Substring;
 use titlecase::titlecase;
 use uuid::Uuid;
 use warp::{
+    constellation::{directory::Directory, file::File},
     multipass::identity::{Graphics, IdentityStatus, Platform},
     raygun::Message,
 };
@@ -57,6 +58,8 @@ pub fn generate_mock() -> State {
     // comment this out to test toast notifications
     toast_notifications.clear();
 
+    let storage = generate_fake_storage();
+
     State {
         ui: UI {
             current_call: None,
@@ -85,11 +88,7 @@ pub fn generate_mock() -> State {
             in_sidebar,
             favorites: vec![],
         },
-        storage: Storage {
-            initialized: true,
-            directories: Vec::new(),
-            files: Vec::new(),
-        },
+        storage,
         friends: Friends {
             initialized: true,
             all: identities
@@ -260,4 +259,24 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> Mess
     default_message.set_value(vec![text.into()]);
 
     default_message
+}
+
+fn generate_fake_storage() -> Storage {
+    let directories = vec![
+        Directory::new("Fake Folder 1"),
+        Directory::new("Fake Folder 2"),
+        Directory::new("Fake Folder 3"),
+    ];
+
+    let files = vec![
+        File::new("Fake 1.png"),
+        File::new("Fake 2.txt"),
+        File::new("Fake 3.jpeg"),
+    ];
+
+    Storage {
+        initialized: true,
+        directories,
+        files,
+    }
 }
