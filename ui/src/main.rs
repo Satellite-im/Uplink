@@ -273,6 +273,7 @@ fn main() {
                 r#"
     <!doctype html>
     <html>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
     </html>"#
                     .to_string(),
@@ -612,8 +613,14 @@ fn get_pre_release_message(cx: Scope) -> Element {
 
 fn get_logger(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    
-    cx.render(rsx!(state.read().configuration.config.developer.developer_mode.then(|| rsx!(DebugLogger {}))))
+
+    cx.render(rsx!(state
+        .read()
+        .configuration
+        .config
+        .developer
+        .developer_mode
+        .then(|| rsx!(DebugLogger {}))))
 }
 
 fn get_toasts(cx: Scope) -> Element {

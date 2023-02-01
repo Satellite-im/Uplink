@@ -9,6 +9,7 @@ use warp::logging::tracing::log::Level;
 use crate::logger;
 
 const STYLE: &str = include_str!("./style.scss");
+const SCRIPT: &str = include_str!("./script.js");
 
 #[inline_props]
 #[allow(non_snake_case)]
@@ -33,7 +34,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
         style { STYLE }
         div {
             id: "debug_logger",
-            class: "debug-logger",
+            class: "debug-logger resize-vert-top",
             div {
                 div {
                     class: "initial-label",
@@ -73,6 +74,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                     )
                 })
             }
-        }
+        },
+        script { SCRIPT }
     ))
 }
