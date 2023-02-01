@@ -9,7 +9,8 @@ use shared::language::get_local_text;
 use crate::{
     components::settings::SettingSection,
     logger,
-    state::State,
+    state::{notifications::NotificaitonKind, Action, State},
+    utils::{notifications::push_notification, sounds::Sounds},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
 };
 
@@ -44,6 +45,27 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                         let _ = open::that("https://github.com/Satellite-im/Uplink-UI_Kit/tree/main/uplink_skeleton");
                     }
                 }
+            },
+            SettingSection {
+                section_label: "Test Notification".into(),
+                section_description: "Sends a test notification".into(),
+                Button {
+                    text: "Test Notifications".into(),
+                    aria_label: "open-codebase-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::BellAlert,
+                    onpress: move |_| {
+                        push_notification(
+                            "Test".to_string(),
+                            "Test".to_string(),
+                            Sounds::General,
+                            notify_rust::Timeout::Milliseconds(4),
+                        );
+                        state
+                            .write()
+                            .mutate(Action::AddNotification(NotificaitonKind::Settings, 1));
+                        }
+                    }
             },
             SettingSection {
                 section_label: get_local_text("settings-developer.open-cache"),

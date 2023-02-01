@@ -25,6 +25,10 @@
 	}
 }
 
+.sidebar.resizing {
+	border-right: 1px solid var(--primary);
+}
+
 @media only screen and (max-width: 300px) {
 	.sidebar {
 		border-right: none;
