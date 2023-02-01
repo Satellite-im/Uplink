@@ -211,7 +211,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     rsx!(
                         ContextMenu {
                             key: "{key}-chat",
-                            id: format!("{}-chat", key),
+                            id: format!("{key}-chat"),
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,

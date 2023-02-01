@@ -60,6 +60,25 @@ pub enum MultiPassCmd {
     },
 }
 
+// hide sensitive information from debug logs
+impl std::fmt::Display for MultiPassCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MultiPassCmd::CreateIdentity { username, .. } => {
+                write!(
+                    f,
+                    "MultiPassCmd::CreateIdentity{{ username: {} }}",
+                    username
+                )
+            }
+            MultiPassCmd::TryLogIn { .. } => {
+                write!(f, "MultiPassCmd::TryLogIn")
+            }
+            _ => write!(f, "{:?}", self),
+        }
+    }
+}
+
 pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Warp) {
     match cmd {
         MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {

@@ -161,7 +161,7 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
     let image = match &file.len() {
         0 => "".to_string(),
         _ => {
-            let prefix = format!("data:{};base64,", mime);
+            let prefix = format!("data:{mime};base64,");
             let base64_image = base64::encode(&file);
             let img = prefix + base64_image.as_str();
             img
