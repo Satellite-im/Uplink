@@ -636,17 +636,28 @@ impl State {
     }
 
     /// Loads the state from a file on disk, if it exists.
-    pub fn load() -> Result<Self, std::io::Error> {
+    pub fn load() -> Self {
+        if STATIC_ARGS.use_mock {
+            return State::load_mock();
+        };
+
         let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
-            Err(_) => return Ok(State::default()),
+            Err(_) => {
+                return State::default();
+            }
         };
-        let state: State = serde_json::from_str(&contents).unwrap_or_default();
-        Ok(state)
+        serde_json::from_str(&contents).unwrap_or_default()
     }
 
-    pub fn mock() -> Self {
-        generate_mock()
+    fn load_mock() -> Self {
+        let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
+            Ok(r) => r,
+            Err(_) => {
+                return generate_mock();
+            }
+        };
+        serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
     }
 }
 

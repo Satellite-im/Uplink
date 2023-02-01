@@ -58,6 +58,7 @@ mod window_manager;
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
     pub cache_path: PathBuf,
+    pub mock_cache_path: PathBuf,
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
@@ -73,6 +74,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         uplink_path: uplink_path.clone(),
         cache_path: uplink_path.join("state.json"),
+        mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
@@ -349,11 +351,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
     logger::trace("rendering app_bootstrap");
-    let mut state = if STATIC_ARGS.use_mock {
-        State::mock()
-    } else {
-        State::load().expect("failed to load state")
-    };
+    let mut state = State::load();
 
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
