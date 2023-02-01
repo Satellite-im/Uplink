@@ -58,9 +58,9 @@ pub enum WarpCmd {
 impl std::fmt::Display for WarpCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass {{{cmd}}} "),
-            WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract {{{cmd:?}}} "),
-            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun {{{cmd:?}}} "),
+            WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass {{ {cmd} }} "),
+            WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract {{ {cmd:?} }} "),
+            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun {{ {cmd:?} }} "),
         }
     }
 }
