@@ -249,11 +249,10 @@ async fn warp_initialization(
 }
 
 fn log_debug_warp_command(opt: &Option<WarpCmd>) {
-    let debug_info = format!("{:?}", opt);
-    let mut modified_string = debug_info.clone();
+    let mut debug_info = format!("{:?}", opt);
     let parts = debug_info.split("passphrase: \"").collect::<Vec<&str>>();
     if parts.len() >= 2 {
-        modified_string = debug_info.replace(
+        debug_info = debug_info.replace(
             &format!(
                 "passphrase: \"{}\",",
                 parts[1].split("\",").collect::<Vec<&str>>()[0]
@@ -261,5 +260,5 @@ fn log_debug_warp_command(opt: &Option<WarpCmd>) {
             "",
         );
     };
-    log::debug!("received warp command: {:?}", modified_string);
+    log::debug!("received warp command: {:?}", debug_info);
 }
