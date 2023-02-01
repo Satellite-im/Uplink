@@ -53,7 +53,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
-                        let _ = open::that("https://github.com/Satellite-im/Uplink-UI_Kit/tree/main/uplink_skeleton");
+                        let _ = open::that("https://github.com/Satellite-im/Uplink");
                     }
                 }
             },
