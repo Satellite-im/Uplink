@@ -42,14 +42,17 @@ fn initialize_items(warp_storage: &mut warp_storage) -> Result<uplink_storage, E
     let current_dir = warp_storage.current_directory()?;
     let items = current_dir.get_items();
 
-    let directories = items
+    let mut directories = items
         .iter()
         .filter_map(|item| item.get_directory().ok())
         .collect::<Vec<_>>();
-    let files = items
+    let mut files = items
         .iter()
         .filter_map(|item| item.get_file().ok())
         .collect::<Vec<_>>();
+
+    directories.sort_by_key(|b| std::cmp::Reverse(b.modified()));
+    files.sort_by_key(|b| std::cmp::Reverse(b.modified()));
 
     let uplink_storage = uplink_storage {
         initialized: true,
