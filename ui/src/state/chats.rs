@@ -1,12 +1,15 @@
 use std::collections::{HashMap, VecDeque};
 
-use serde::{Deserialize, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::raygun::Message;
 
+use crate::STATIC_ARGS;
+
 use super::identity::Identity;
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+// warning: Chat implements Serialize
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct Chat {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
@@ -14,11 +17,11 @@ pub struct Chat {
     pub id: Uuid,
     // Includes the list of participants within a given chat.
     // these don't need to be stored in state either
-    #[serde(skip)]
+    #[serde(default)]
     pub participants: Vec<Identity>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
-    #[serde(skip)]
+    #[serde(default)]
     pub messages: VecDeque<Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
@@ -60,5 +63,28 @@ impl Chats {
         for (k, v) in other.drain() {
             self.all.insert(k, v);
         }
+    }
+}
+
+// don't skip messages and participants when using mock data
+impl Serialize for Chat {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Chat", 5)?;
+        state.serialize_field("id", &self.id)?;
+
+        if STATIC_ARGS.use_mock {
+            state.serialize_field("participants", &self.participants)?;
+            state.serialize_field("messages", &self.messages)?;
+        } else {
+            state.skip_field("participants")?;
+            state.skip_field("messages")?;
+        }
+
+        state.serialize_field("unreads", &self.unreads)?;
+        state.skip_field("replying_to")?;
+        state.end()
     }
 }
