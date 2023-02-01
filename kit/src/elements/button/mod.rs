@@ -1,12 +1,15 @@
 use icons::IconButton;
 use uuid::Uuid;
 
-use dioxus::{prelude::*, core::Event, events::{MouseData, MouseEvent}};
+use dioxus::{
+    core::Event,
+    events::{MouseData, MouseEvent},
+    prelude::*,
+};
 
-use crate::{get_script, elements::Appearance, icons::{Icon}};
+use crate::{elements::Appearance, get_script, icons::Icon};
 
 const SCRIPT: &str = include_str!("./script.js");
-
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -29,7 +32,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_badge: Option<String>,
     #[props(optional)]
-    small: Option<bool>
+    small: Option<bool>,
 }
 
 /// Generates the optional text for the button.
@@ -54,8 +57,8 @@ pub fn get_badge(cx: &Scope<Props>) -> String {
 /// If there is no icon provided, the button should not call this.
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
     match &cx.props.icon {
-        Some(icon)  => icon.to_owned(),
-        None        => Icon::QuestionMarkCircle,
+        Some(icon) => icon.to_owned(),
+        None => Icon::QuestionMarkCircle,
     }
 }
 
@@ -75,23 +78,22 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
     match &cx.props.onpress {
         Some(f) => f.call(e),
-        None    => {},
+        None => {}
     }
 }
 
-
 /// Returns a button element generated based on given props.
-/// 
+///
 /// # Examples
 /// ```no_run
 /// use kit::{Icon, tooltip::{Tooltip, ArrowPosition}, components::nav::{Nav, Route}};
-/// 
+///
 /// Button {
 ///     appearance: Appearance::Primary,
 ///     icon: Icon::Cog6Tooth,
 ///     tooltip: cx.render(rsx!(
-///         Tooltip { 
-///             arrow_position: ArrowPosition::Bottom, 
+///         Tooltip {
+///             arrow_position: ArrowPosition::Bottom,
 ///             text: String::from("Settings")
 ///         }
 ///     )),
@@ -134,7 +136,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     class: {
                         format_args!(
                             "btn appearance-{} btn-{} {} {}", 
-                            appearance, 
+                            appearance,
                             UUID,
                             if disabled { "btn-disabled" } else { "" }, 
                             if text.is_empty() { "no-text" } else {""}
@@ -144,7 +146,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onclick: move |e| emit(&cx, e),
                     // If an icon was provided, render it before the text.
                     (cx.props.icon.is_some()).then(|| rsx!(
-                        IconButton { 
+                        IconButton {
                             onclick: move |e: MouseEvent| {
                                 e.stop_propagation();
                                 emit(&cx, e);

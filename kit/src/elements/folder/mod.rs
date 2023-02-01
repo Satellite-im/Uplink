@@ -52,11 +52,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let aria_label = get_aria_label(&cx);
     let placeholder = text.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
-    let icon = if open {
-        Icon::FolderOpen
-    } else {
-        Icon::Folder
-    };
+    let icon = if open { Icon::FolderOpen } else { Icon::Folder };
     let disabled = cx.props.disabled.unwrap_or_default();
 
     let loading = cx.props.loading.unwrap_or_default();

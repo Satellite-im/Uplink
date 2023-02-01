@@ -1,10 +1,12 @@
-use dioxus::{prelude::*};
+use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 use shared::language::get_local_text;
 
 pub type ValidationError = String;
-use crate::{icons::{Icon, IconElement}, elements::label::Label};
-
+use crate::{
+    elements::label::Label,
+    icons::{Icon, IconElement},
+};
 
 #[derive(Default, Clone, Copy)]
 pub struct Validation {
@@ -18,7 +20,7 @@ pub struct Validation {
 #[derive(Default, Clone, Copy)]
 pub struct Options {
     pub with_validation: Option<Validation>,
-    pub replace_spaces_underscore: bool, 
+    pub replace_spaces_underscore: bool,
     pub disabled: bool,
     pub with_clear_btn: bool,
     pub with_label: Option<&'static str>,
@@ -56,21 +58,21 @@ pub struct Props<'a> {
 }
 
 pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
-    if let Some(f) =  &cx.props.onchange {
-       f.call((s, is_valid));
+    if let Some(f) = &cx.props.onchange {
+        f.call((s, is_valid));
     }
 }
 
 pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool) {
-    if let Some(f) =  &cx.props.onreturn {
+    if let Some(f) = &cx.props.onreturn {
         f.call((s, is_valid));
     }
 }
 
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 pub fn submit(cx: &Scope<Props>, s: String) {
-    if let Some(f) =  &cx.props.onreturn {
-      f.call((s, true));
+    if let Some(f) = &cx.props.onreturn {
+        f.call((s, true));
     }
 }
 
@@ -101,14 +103,24 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
     // Ensure the maximum value isn't the default
     // then make sure the value's length is less than or equal to the max
     if max > 0 && val.len() > max {
-        return Some(format!("{} {} {} {}.", get_local_text("warning-messages.maximum-of"),
-         max, get_local_text("uplink.characters"), get_local_text("uplink.exceeded")));
+        return Some(format!(
+            "{} {} {} {}.",
+            get_local_text("warning-messages.maximum-of"),
+            max,
+            get_local_text("uplink.characters"),
+            get_local_text("uplink.exceeded")
+        ));
     }
 
     // Ensure the minimum is not the default value
     // then make sure the value's length is greater than or equal to the minimum
     if min > 0 && val.len() < min {
-        return Some(format!("{} {} {}.",  get_local_text("warning-messages.please-enter-at-least"), min, get_local_text("uplink.characters")));
+        return Some(format!(
+            "{} {} {}.",
+            get_local_text("warning-messages.please-enter-at-least"),
+            min,
+            get_local_text("uplink.characters")
+        ));
     }
 
     None
@@ -127,8 +139,11 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 }
 
 pub fn get_label(cx: &Scope<Props>) -> String {
-    let options =  cx.props.options.unwrap_or_default();
-    options.with_label.map(|text| text.to_string()).unwrap_or_default()
+    let options = cx.props.options.unwrap_or_default();
+    options
+        .with_label
+        .map(|text| text.to_string())
+        .unwrap_or_default()
 }
 
 pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
@@ -138,21 +153,20 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
     let validation = options.with_validation.unwrap_or_default();
 
-    if validation.alpha_numeric_only 
-        && validate_alphanumeric(val, validation.ignore_colons).is_some() {
-            error = validate_alphanumeric(val, validation.ignore_colons);
+    if validation.alpha_numeric_only
+        && validate_alphanumeric(val, validation.ignore_colons).is_some()
+    {
+        error = validate_alphanumeric(val, validation.ignore_colons);
     }
 
-    if validation.no_whitespace 
-        && validate_no_whitespace(val).is_some() {
-            error = validate_no_whitespace(val);
-        
+    if validation.no_whitespace && validate_no_whitespace(val).is_some() {
+        error = validate_no_whitespace(val);
     }
 
     if (validation.max_length.is_some() || validation.min_length.is_some())
-        && validate_min_max(val, validation.min_length, validation.max_length).is_some() {
-            error = validate_min_max(val, validation.min_length, validation.max_length);
-        
+        && validate_min_max(val, validation.min_length, validation.max_length).is_some()
+    {
+        error = validate_min_max(val, validation.min_length, validation.max_length);
     }
 
     error
@@ -165,7 +179,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.unwrap_or_default();
     let should_validate = options.with_validation.is_some();
-    
+
     //let mut debug_reset = false;
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
@@ -179,14 +193,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //println!("rendering input. reset is: {}", debug_reset);
 
     let valid = use_state(cx, || false);
-    let min_len =  options.with_validation.map(|opt| opt.min_length.unwrap_or_default()).unwrap_or_default();
+    let min_len = options
+        .with_validation
+        .map(|opt| opt.min_length.unwrap_or_default())
+        .unwrap_or_default();
     let apply_validation_class = should_validate;
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
     let disabled = cx.props.disabled.unwrap_or_default();
 
-    let typ = cx.props.is_password.and_then(|b| b.then_some("password")).unwrap_or("text");
+    let typ = cx
+        .props
+        .is_password
+        .and_then(|b| b.then_some("password"))
+        .unwrap_or("text");
 
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js").replace("UUID", &cx.props.id);
@@ -209,7 +230,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 (cx.props.icon.is_some()).then(|| rsx!(
                     span {
                         class: "icon",
-                        IconElement { 
+                        IconElement {
                             icon: get_icon(&cx)
                         }
                     }
@@ -242,7 +263,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             true
                         };
-                        
                         emit(&cx, val.read().to_string(), is_valid);
                     },
                     onkeyup: move |evt| {
@@ -260,13 +280,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             error.set("".into());
                             valid.set(false);
                         },
-                        IconElement { 
+                        IconElement {
                             icon: Icon::Backspace
                         }
                     }
                 )),
             },
-            (!error.is_empty()).then(|| rsx!( 
+            (!error.is_empty()).then(|| rsx!(
                 p {
                     class: "error",
                     aria_label: "input-error",

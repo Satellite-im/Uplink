@@ -1,15 +1,14 @@
 use std::rc::Weak;
 
 use crate::{
-    components::{
-        media::popout_player::{PopoutPlayer, PopoutPlayerProps},
-    },
+    components::media::popout_player::{PopoutPlayer, PopoutPlayerProps},
     state::{Action, State},
-    UPLINK_ROUTES, window_manager::{WindowManagerCmdTx, WindowManagerCmd}, WINDOW_CMD_CH,
+    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
+    UPLINK_ROUTES, WINDOW_CMD_CH,
 };
 
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window};
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 
 use kit::{
@@ -92,7 +91,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                          if state.read().ui.popout_player {
                              state.write().mutate(Action::ClearPopout(window.clone()));
                              return;
-                         } 
+                         }
 
                         // close the PopoutPlayer on drop, if not already closed
                         // pass WindowDropHandler as a prop so that it doesn't get dropped when PopoutPlayer returns an Element
@@ -174,9 +173,8 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     }))
 }
 
-
 pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx
+    cmd_tx: WindowManagerCmdTx,
 }
 
 impl PartialEq for WindowDropHandler {
