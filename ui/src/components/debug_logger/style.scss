@@ -1,5 +1,5 @@
 html, body {
-    background-color: black;
+    background-color: var(--background);
 }
 
 .debug-logger {
@@ -11,15 +11,27 @@ html, body {
 }
 
 .initial-label {
-    color: white;
+    color: var(--text-color-bright);
     margin-left: 4px;
     font-size: 12px;
-    font-family: 'Open Sans', sans-serif;
+}
+
+.item {
+    display: inline-flex;
+    gap: var(--gap);
 }
 
 .log-text {
-    font-size: 12px;
-    font-family: 'Open Sans', sans-serif;
-    margin: 2px;
-    margin-left: 4px;
+    font-size: var(--text-size);
+    color: var(--text-color-muted);
+}
+
+.muted {
+    color: var(--text-color-dark);
+    white-space: nowrap;
+}   
+
+.bold { 
+    font-weight: bold;
+    white-space: nowrap;
 }

@@ -110,7 +110,7 @@ pub async fn handle_warp_command(
         Some(e) => e,
         None => return Ok(()),
     };
-    log::debug!("received warp command: {:?}", &cmd);
+    log::debug!("WARP CMD: `{:?}`", &cmd);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
         WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut warp.tesseract).await,

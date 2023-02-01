@@ -10,6 +10,7 @@ use warp::logging::tracing::log::Level;
 use crate::{components::settings::sub_pages::developer::WindowDropHandler, logger};
 
 const STYLE: &str = include_str!("./style.scss");
+use kit::STYLE as UIKIT_STYLES;
 
 #[inline_props]
 #[allow(non_snake_case)]
@@ -36,14 +37,15 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     });
 
     cx.render(rsx!(
-        style { STYLE }
+        style { UIKIT_STYLES, STYLE }
         div {
             id: "debug_logger",
             class: "debug-logger",
             div {
                 class: "initial-label",
                 Label {
-                    text: format!("{}: {}", "Logger Debug opened on".to_owned(), *debug_logger_started_time.read())},
+                    text: format!("{} {}", "Logger Debug opened on".to_owned(), *debug_logger_started_time.read())
+                },
             },
             logs_to_show.iter().map(|log| {
                
@@ -52,24 +54,27 @@ pub fn DebugLogger(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                 let log_level = fields.next().unwrap_or_default();
                 let log_message = fields.next().unwrap_or_default();
                 let log_color = logger::get_color_string(Level::from_str(log_level).unwrap_or(Level::Debug));
+                
                 rsx!(
-                    div {
-                        display: "flex",
-                        p {
-                            class: "log-text",
-                            color: "rgb(199, 136, 19)",
-                            "{log_datetime}"
-                            },
-                        p {
-                            class: "log-text",
+                    p {
+                        class: "item",
+                        span {
+                            class: "log-text muted",
+                            "∘ {log_datetime}"
+                        },
+                        span {
+                            class: "log-text bold",
                             color: "{log_color}",
-                            "{log_level}:"
-                            }
-                        p {
+                            "{log_level}"
+                        },
+                        span {
+                            class: "log-text muted",
+                            "»"
+                        }
+                        span {
                             id: "log_text",
                             class: "log-text",
-                            color: "white",
-                            "{log_message}"
+                            " {log_message}"
                         }
                     }
                 )
