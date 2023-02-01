@@ -27,7 +27,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let to = use_state(cx, || Page::Profile);
+    let to = use_state(cx, || Page::General);
 
     let first_render = use_state(cx, || true);
     if *first_render.get() {
@@ -71,11 +71,11 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                     id: "content",
                     class: "full-width",
                     match to.get() {
-                        Page::Profile       => cx.render(rsx! (
-                            ProfileSettings {}
-                        )),
                         Page::General       => cx.render(rsx! (
                             GeneralSettings {}
+                        )),
+                        Page::Profile       => cx.render(rsx! (
+                            ProfileSettings {}
                         )),
                         Page::Audio         => cx.render(rsx! (
                             AudioSettings {}

@@ -35,7 +35,7 @@ impl FromStr for Page {
             "privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
-            _ => Ok(Page::Profile),
+            _ => Ok(Page::General),
         }
     }
 
