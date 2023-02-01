@@ -1,15 +1,15 @@
-html, body {
-    background-color: var(--background);
-}
-
 .debug-logger {
-    height: 100%;
-    max-width: 100%;
+    height: calc(var(--text-size) + (var(--gap) * 2));
+    width: 100%;
+    border-top: 1px solid var(--border-color);
     overflow-y: scroll;
-    overflow: auto;
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column-reverse;
+    font-size: var(--text-size-less);
+    padding: var(--gap);
+    resize: vertical;
 }
-
+f
 .initial-label {
     color: var(--text-color-bright);
     margin-left: 4px;
@@ -19,10 +19,11 @@ html, body {
 .item {
     display: inline-flex;
     gap: var(--gap);
+    width: 100%;
 }
 
 .log-text {
-    font-size: var(--text-size);
+    font-size: var(--text-size-less);
     color: var(--text-color-muted);
 }
 

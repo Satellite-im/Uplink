@@ -1,5 +1,3 @@
-use std::rc::Weak;
-
 use dioxus::prelude::*;
 
 use dioxus_desktop::use_window;
@@ -10,14 +8,10 @@ use kit::{
 use shared::language::get_local_text;
 
 use crate::{
-    components::{
-        debug_logger::{DebugLogger, DebugLoggerProps},
-        settings::SettingSection,
-    },
+    components::settings::SettingSection,
     logger,
     state::{Action, State},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
-    WINDOW_CMD_CH,
 };
 
 #[allow(non_snake_case)]
@@ -110,15 +104,13 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             state.write().mutate(Action::ClearDebugLogger(window.clone()));
                             return;
                         }
-                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                        let logger_debug = VirtualDom::new_with_props(DebugLogger, DebugLoggerProps{
-                            _drop_handler: drop_handler,
-                        });
-                        let window = window.new_window(logger_debug, Default::default());
-                        if let Some(wv) = Weak::upgrade(&window) {
-                            let id = wv.window().id();
-                            state.write().mutate(Action::SetDebugLogger(id));
-                        }
+                        // let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                        // let logger_debug = VirtualDom::new_with_props(DebugLogger, DebugLoggerProps{ });
+                        // let window = window.new_window(logger_debug, Default::default());
+                        // if let Some(wv) = Weak::upgrade(&window) {
+                        //     let id = wv.window().id();
+                        //     state.write().mutate(Action::SetDebugLogger(id));
+                        // }
                     }
                 }
             }

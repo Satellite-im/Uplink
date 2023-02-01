@@ -8,9 +8,12 @@ html, body {
 }
 #main, #app-wrap {
     height: 100%;
+    width: 100%;
     margin: 0;
     overscroll-behavior-x: none;
     overscroll-behavior-y: none;
+    display: inline-flex;
+    flex-direction: column;
 }
 
 :root {
@@ -18,7 +21,6 @@ html, body {
 }
 
 #titlebar {
-    height: calc(var(--titlebar-height) - 1px);
     width: 100%;
     background-color: var(--background);
     border-bottom: 1px solid var(--border-color);

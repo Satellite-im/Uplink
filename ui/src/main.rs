@@ -27,6 +27,7 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
 
+use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::files::FilesLayout;
@@ -587,7 +588,8 @@ fn app(cx: Scope) -> Element {
             get_toasts(cx),
             get_call_dialog(cx),
             get_pre_release_message(cx),
-            get_router(cx)
+            get_router(cx),
+            get_logger(cx)
         }
     ))
 }
@@ -606,6 +608,12 @@ fn get_pre_release_message(cx: Scope) -> Element {
             }
         },
     ))
+}
+
+fn get_logger(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    
+    cx.render(rsx!(state.read().configuration.config.developer.developer_mode.then(|| rsx!(DebugLogger {}))))
 }
 
 fn get_toasts(cx: Scope) -> Element {
