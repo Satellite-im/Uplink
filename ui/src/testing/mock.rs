@@ -191,7 +191,7 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         }
 
         let base64_url = encode(&buffer);
-        let image_url = format!("data:image/png;base64,{}", base64_url);
+        let image_url = format!("data:image/png;base64,{base64_url}");
 
         let mut graphics = Graphics::default();
         graphics.set_profile_picture(&image_url);

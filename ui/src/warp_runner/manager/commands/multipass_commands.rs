@@ -67,14 +67,13 @@ impl std::fmt::Display for MultiPassCmd {
             MultiPassCmd::CreateIdentity { username, .. } => {
                 write!(
                     f,
-                    "MultiPassCmd::CreateIdentity{{ username: {} }}",
-                    username
+                    "MultiPassCmd::CreateIdentity{{ username: {username} }}"
                 )
             }
             MultiPassCmd::TryLogIn { .. } => {
                 write!(f, "MultiPassCmd::TryLogIn")
             }
-            _ => write!(f, "{:?}", self),
+            _ => write!(f, "{self:?}"),
         }
     }
 }
