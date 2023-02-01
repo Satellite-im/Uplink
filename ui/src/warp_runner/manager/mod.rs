@@ -11,7 +11,7 @@ use warp::{
 };
 
 use super::{conv_stream, Account, Messaging, Storage};
-use crate::{logger, WARP_CMD_CH};
+use crate::WARP_CMD_CH;
 
 pub use commands::{MultiPassCmd, RayGunCmd, TesseractCmd};
 
@@ -69,7 +69,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     // why is autosave not working? hope this works.
     let _ = warp.tesseract.save();
     // tesseract.lock() is called on drop. no need to do it here
-    logger::debug("terminating warp_runner thread");
+    log::debug!("terminating warp_runner thread");
 }
 
 async fn get_raygun_stream(rg: &mut Messaging) -> RayGunEventStream {
@@ -100,7 +100,7 @@ async fn get_multipass_stream(account: &mut Account) -> MultiPassEventStream {
                 //TODO: log error
                 //Note: Shouldnt give any other error but if it does to probably file as a bug
                 _e => {
-                    logger::error(&format!("failed to get multipass stream: {}", _e));
+                    log::error!("failed to get multipass stream: {}", _e);
                     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 }
             },
