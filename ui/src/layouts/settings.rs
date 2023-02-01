@@ -30,18 +30,16 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let to = use_state(cx, || Page::Profile);
 
     let first_render = use_state(cx, || true);
-    if *first_render.get() && state.read().ui.is_minimal_view() {
-        state.write().mutate(Action::SidebarHidden(false));
-    }
-
-    // TODO: Remove this before merging to main just for testing.
     if *first_render.get() {
+        if state.read().ui.is_minimal_view() {
+            state.write().mutate(Action::SidebarHidden(false));
+        }
+        // TODO: Remove this before merging to main just for testing.
         state
             .write()
             .mutate(Action::AddNotification(NotificaitonKind::Settings, 4));
+        first_render.set(false);
     }
-
-    first_render.set(false);
 
     cx.render(rsx!(
         div {
