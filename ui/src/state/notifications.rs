@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::config::Configuration;
+use crate::{
+    config::Configuration,
+    utils::{notifications::set_badge, sounds::Sounds},
+};
 
 // This kind is used to determine which notification kind to add to. It can also be used for querying specific notification counts.
 pub enum NotificaitonKind {
@@ -50,21 +53,51 @@ impl Notifications {
     }
 
     // Adds notification(s) to the specified kind.
-    pub fn add(&mut self, kind: NotificaitonKind, count: u32) {
+    pub fn increment(&mut self, kind: NotificaitonKind, count: u32) {
         match kind {
             NotificaitonKind::FriendRequest => self.friends += count,
             NotificaitonKind::Message => self.messages += count,
             NotificaitonKind::Settings => self.settings += count,
         }
+
+        // Update the badge any time notifications are added.
+        let _ = set_badge(self.total());
+
+        // Plays the notification sound.
+        crate::utils::sounds::Play(Sounds::Notification);
     }
 
     // Removes notification(s) from the specified kind.
-    pub fn remove(&mut self, kind: NotificaitonKind, count: u32) {
+    pub fn decrement(&mut self, kind: NotificaitonKind, count: u32) {
         match kind {
-            NotificaitonKind::FriendRequest => self.friends -= count,
-            NotificaitonKind::Message => self.messages -= count,
-            NotificaitonKind::Settings => self.settings -= count,
+            NotificaitonKind::FriendRequest => {
+                // Prevent underflow.
+                if count > self.friends {
+                    self.friends = 0
+                } else {
+                    self.friends -= count
+                }
+            }
+            NotificaitonKind::Message => {
+                // Prevent underflow.
+                if count > self.messages {
+                    self.messages = 0
+                } else {
+                    self.messages -= count
+                }
+            }
+            NotificaitonKind::Settings => {
+                // Prevent underflow.
+                if count > self.settings {
+                    self.settings = 0
+                } else {
+                    self.settings -= count
+                }
+            }
         }
+
+        // Update the badge any time notifications are removed.
+        let _ = set_badge(self.total());
     }
 
     // Sets a notification count for the specified kind.
@@ -73,7 +106,10 @@ impl Notifications {
             NotificaitonKind::FriendRequest => self.friends = count,
             NotificaitonKind::Message => self.messages = count,
             NotificaitonKind::Settings => self.settings = count,
-        }
+        };
+
+        // Update the badge with new possible totals.
+        let _ = set_badge(self.total());
     }
 
     // Returns the total count for a given notification kind.
@@ -92,6 +128,8 @@ impl Notifications {
             NotificaitonKind::Message => self.messages = 0,
             NotificaitonKind::Settings => self.settings = 0,
         }
+        // Upadte the badge with new possible totals.
+        let _ = set_badge(self.total());
     }
 
     // Clears all notifications.
@@ -99,5 +137,8 @@ impl Notifications {
         self.friends = 0;
         self.messages = 0;
         self.settings = 0;
+
+        // Clear the badge.
+        let _ = set_badge(self.total());
     }
 }

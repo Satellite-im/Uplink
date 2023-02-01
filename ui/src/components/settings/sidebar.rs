@@ -21,6 +21,7 @@ pub enum Page {
     Files,
     Privacy,
     Profile,
+    Notifications,
 }
 
 impl FromStr for Page {
@@ -33,6 +34,7 @@ impl FromStr for Page {
             "general" => Ok(Page::General),
             "privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
+            "notifications" => Ok(Page::Notifications),
             _ => Ok(Page::Profile),
         }
     }
@@ -58,28 +60,29 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _ = use_shared_state::<State>(cx)?;
 
-    let profile = UIRoute {
-        to: "profile",
-        name: get_local_text("settings.profile"),
-        icon: Icon::User,
-        ..UIRoute::default()
-    };
     let general = UIRoute {
         to: "general",
         name: get_local_text("settings.general"),
         icon: Icon::Cog6Tooth,
         ..UIRoute::default()
     };
-    let privacy = UIRoute {
-        to: "privacy",
-        name: get_local_text("settings.privacy"),
-        icon: Icon::LockClosed,
+
+    let profile = UIRoute {
+        to: "profile",
+        name: get_local_text("settings.profile"),
+        icon: Icon::User,
         ..UIRoute::default()
     };
     let audio = UIRoute {
         to: "audio",
         name: get_local_text("settings.audio"),
         icon: Icon::MusicalNote,
+        ..UIRoute::default()
+    };
+    let privacy = UIRoute {
+        to: "privacy",
+        name: get_local_text("settings.privacy"),
+        icon: Icon::LockClosed,
         ..UIRoute::default()
     };
     let files = UIRoute {
@@ -94,6 +97,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::Beaker,
         ..UIRoute::default()
     };
+    let notifications = UIRoute {
+        to: "notifications",
+        name: get_local_text("settings-notifications"),
+        icon: Icon::BellAlert,
+        ..UIRoute::default()
+    };
     let developer = UIRoute {
         to: "developer",
         name: get_local_text("settings.developer"),
@@ -101,7 +110,14 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ..UIRoute::default()
     };
     let routes = vec![
-        profile, general, privacy, audio, files, extensions, developer,
+        general,
+        profile,
+        privacy,
+        audio,
+        files,
+        extensions,
+        notifications,
+        developer,
     ];
 
     let active_route = routes[0].clone();

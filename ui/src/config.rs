@@ -5,7 +5,7 @@ use std::fs;
 use crate::STATIC_ARGS;
 
 /// A struct that represents the configuration of the application.
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct Configuration {
     /// General configuration options.
     #[serde(default)]
@@ -32,7 +32,7 @@ pub struct Configuration {
     pub notifications: Notifications,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct General {
     #[serde(default)]
     pub theme: String,
@@ -42,7 +42,7 @@ pub struct General {
     pub enable_overlay: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Privacy {
     #[serde(default)]
     pub satellite_sync_nodes: bool,
@@ -50,7 +50,7 @@ pub struct Privacy {
     pub safer_file_scanning: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct AudioVideo {
     #[serde(default)]
     pub noise_suppression: bool,
@@ -58,13 +58,13 @@ pub struct AudioVideo {
     pub call_timer: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Extensions {
     #[serde(default)]
     pub enable: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Developer {
     #[serde(default)]
     pub developer_mode: bool,
@@ -76,7 +76,7 @@ fn bool_true() -> bool {
 
 // We may want to give the user the ability to pick and choose which notifications they want to see.
 // This is a good place to start.
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Notifications {
     #[serde(default)]
     pub show_app_icon: bool,
@@ -149,6 +149,21 @@ impl Configuration {
 
     pub fn set_developer_mode(&mut self, developer_mode: bool) {
         self.developer.developer_mode = developer_mode;
+        let _ = self.save();
+    }
+
+    pub fn set_friends_notifications(&mut self, friends_notifications: bool) {
+        self.notifications.friends_notifications = friends_notifications;
+        let _ = self.save();
+    }
+
+    pub fn set_messages_notifications(&mut self, messages_notifications: bool) {
+        self.notifications.messages_notifications = messages_notifications;
+        let _ = self.save();
+    }
+
+    pub fn set_settings_notifications(&mut self, settings_notifications: bool) {
+        self.notifications.settings_notifications = settings_notifications;
         let _ = self.save();
     }
 }

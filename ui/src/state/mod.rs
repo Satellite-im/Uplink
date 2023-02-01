@@ -100,8 +100,8 @@ impl State {
 
         match action {
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => self.ui.notifications.add(kind, count),
-            Action::RemoveNotification(kind, count) => self.ui.notifications.remove(kind, count),
+            Action::AddNotification(kind, count) => self.ui.notifications.increment(kind, count),
+            Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
             Action::ClearAllNotifications => self.ui.notifications.clear_all(),
             Action::AddToastNotification(notification) => {

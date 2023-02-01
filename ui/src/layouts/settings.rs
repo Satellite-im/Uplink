@@ -8,7 +8,8 @@ use crate::{
             sidebar::{Page, Sidebar},
             sub_pages::{
                 audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-                files::FilesSettings, general::GeneralSettings, privacy::PrivacySettings,
+                files::FilesSettings, general::GeneralSettings,
+                notifications::NotificationSettings, privacy::PrivacySettings,
                 profile::ProfileSettings,
             },
         },
@@ -84,7 +85,10 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                         )),
                         Page::Developer     => cx.render(rsx! (
                             DeveloperSettings {}
-                        ))
+                        )),
+                        Page::Notifications  => cx.render(rsx! (
+                            NotificationSettings {}
+                        )),
                     }
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
