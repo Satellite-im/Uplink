@@ -10,7 +10,7 @@ pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use warp::{
     crypto::DID,
@@ -72,5 +72,6 @@ pub async fn conversation_to_chat(
         messages,
         unreads: unreads as u32,
         replying_to: None,
+        typing_indicator: HashMap::new(),
     })
 }

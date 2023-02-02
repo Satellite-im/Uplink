@@ -1,6 +1,5 @@
 use crate::{
     components::friends::friend::Friend,
-    logger,
     state::{Action, State},
     utils::convert_status,
     warp_runner::{MultiPassCmd, WarpCmd},
@@ -20,7 +19,7 @@ use kit::{
 };
 use rand::Rng;
 use shared::language::get_local_text;
-use warp::{crypto::DID, multipass::identity::Relationship};
+use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
@@ -42,7 +41,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
 
                 let rsp = rx.await.expect("command canceled");
                 if let Err(e) = rsp {
-                    logger::error(&format!("failed to cancel request: {}", e));
+                    log::error!("failed to cancel request: {}", e);
                 }
             }
         }

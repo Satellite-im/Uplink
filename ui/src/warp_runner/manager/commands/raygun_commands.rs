@@ -10,7 +10,6 @@ use warp::{
 };
 
 use crate::{
-    logger,
     state::{self, chats},
     warp_runner::{conv_stream, ui_adapter::conversation_to_chat, Account, Messaging},
 };
@@ -45,6 +44,11 @@ pub enum RayGunCmd {
         message_id: Uuid,
         reaction_state: ReactionState,
         emoji: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    SendEvent {
+        conv_id: Uuid,
+        event: raygun::MessageEvent,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
 }
@@ -96,6 +100,14 @@ pub async fn handle_raygun_cmd(
                 .await;
             let _ = rsp.send(r);
         }
+        RayGunCmd::SendEvent {
+            conv_id,
+            event,
+            rsp,
+        } => {
+            let r = messaging.send_event(conv_id, event).await;
+            let _ = rsp.send(r);
+        }
     }
 }
 
@@ -112,15 +124,16 @@ async fn raygun_initialize_conversations(
         match conversation_to_chat(conv, account, messaging).await {
             Ok(chat) => {
                 if let Err(e) = stream_manager.add_stream(chat.id, messaging).await {
-                    logger::error(&format!(
+                    log::error!(
                         "failed to open conversation stream for conv {}: {}",
-                        chat.id, e
-                    ));
+                        chat.id,
+                        e
+                    );
                 }
                 let _ = all_chats.insert(chat.id, chat);
             }
             Err(e) => {
-                logger::error(&format!("failed to convert conversation to chat: {}", e));
+                log::error!("failed to convert conversation to chat: {}", e);
             }
         };
     }

@@ -4,12 +4,13 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
-use crate::{components::settings::SettingSection, logger};
+use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn PrivacySettings(cx: Scope) -> Element {
-    logger::debug("Privacy settings page rendered.");
+    log::debug!("Privacy settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-privacy",

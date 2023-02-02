@@ -1,5 +1,5 @@
-use dioxus::prelude::*;
 use derive_more::Display;
+use dioxus::prelude::*;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {

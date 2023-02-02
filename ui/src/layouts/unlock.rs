@@ -12,7 +12,6 @@ use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{
-    logger,
     warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -21,7 +20,7 @@ use crate::{
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    logger::trace("rendering unlock layout");
+    log::trace!("rendering unlock layout");
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
@@ -61,17 +60,17 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         warp::error::Error::MultiPassExtensionUnavailable => {
                             // need to create an account
                             no_account.set(Some(true));
-                            logger::warn("multipass extension unavailable");
+                            log::warn!("multipass extension unavailable");
                         }
                         warp::error::Error::DecryptionError => {
                             // wrong password
                             no_account.set(Some(false));
                             password_failed.set(Some(true));
-                            logger::warn("decryption error");
+                            log::warn!("decryption error");
                         }
                         _ => {
                             // unexpected
-                            logger::error(&format!("LogIn failed: {}", err));
+                            log::error!("LogIn failed: {}", err);
                         }
                     },
                 }

@@ -5,7 +5,7 @@ use kit::{
 };
 use shared::language::get_local_text;
 
-use crate::{components::settings::ExtensionSetting};
+use crate::components::settings::ExtensionSetting;
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings(cx: Scope) -> Element {

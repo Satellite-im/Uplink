@@ -1,11 +1,30 @@
-
 use dioxus::prelude::*;
-use shared::language::get_local_text;
-use warp::{raygun::Message};
 use dioxus_router::*;
-use kit::{elements::{input::{Input, Options}, label::Label}, icons::Icon, components::{nav::Nav, context_menu::{ContextMenu, ContextItem}, user::User, user_image::UserImage, indicator::{Platform, Status}, user_image_group::UserImageGroup}, layout::sidebar::Sidebar as ReusableSidebar};
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        indicator::{Platform, Status},
+        nav::Nav,
+        user::User,
+        user_image::UserImage,
+        user_image_group::UserImageGroup,
+    },
+    elements::{
+        input::{Input, Options},
+        label::Label,
+    },
+    icons::Icon,
+    layout::sidebar::Sidebar as ReusableSidebar,
+};
+use shared::language::get_local_text;
+use warp::{logging::tracing::log, raygun::Message};
 
-use crate::{components::{chat::{RouteInfo}, media::remote_control::RemoteControls}, state::{State, Action, Identity}, UPLINK_ROUTES, utils::{convert_status, build_participants}, logger};
+use crate::{
+    components::{chat::RouteInfo, media::remote_control::RemoteControls},
+    state::{Action, Identity, State},
+    utils::{build_participants, convert_status},
+    UPLINK_ROUTES,
+};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -31,16 +50,19 @@ pub fn build_participants_names(identities: &Vec<Identity>) -> String {
     participants_name
 }
 
-
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
-    logger::trace("rendering chats sidebar layout");
+    log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, favorites, active_media_chat) = if state.read().chats.initialized { 
-        (state.read().chats.in_sidebar.clone(),  state.read().chats.favorites.clone(), state.read().get_active_chat())
-    } else { 
+    let (sidebar_chats, favorites, active_media_chat) = if state.read().chats.initialized {
+        (
+            state.read().chats.in_sidebar.clone(),
+            state.read().chats.favorites.clone(),
+            state.read().get_active_chat(),
+        )
+    } else {
         (vec![], vec![], None)
     };
 
@@ -91,7 +113,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(&chat.participants);
                             let participants_name = build_participants_names(&without_me);
-                            
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -173,7 +194,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let badge = if chat.unreads > 0 {
                         chat.unreads.to_string()
                     } else { "".into() };
-                    
                     let key = chat.id;
 
                     let is_active = state.read().get_active_chat().map(|c| c.id) == Some(chat.id);

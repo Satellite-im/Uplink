@@ -1,5 +1,6 @@
 use uuid::Uuid;
 use warp::{
+    crypto::DID,
     error::Error,
     logging::tracing::log,
     raygun::{self, MessageEventKind},
@@ -23,6 +24,10 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         message_id: Uuid,
         reaction: String,
+    },
+    TypingIndicator {
+        conversation_id: Uuid,
+        participant: DID,
     },
 }
 
@@ -72,6 +77,16 @@ pub async fn convert_message_event(
             conversation_id,
             message_id,
             reaction,
+        },
+        MessageEventKind::EventReceived {
+            conversation_id,
+            did_key,
+            event,
+        } => match event {
+            raygun::MessageEvent::Typing => MessageEvent::TypingIndicator {
+                conversation_id,
+                participant: did_key,
+            },
         },
         _ => {
             println!("evt received: {:?}", event);

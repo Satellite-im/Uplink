@@ -229,27 +229,6 @@ pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {
     LOGGER.write().subscribe()
 }
 
-// todo: remove these slowly and replace with log macros
-pub fn trace(msg: &str) {
-    log::trace!("{msg}");
-}
-
-pub fn debug(msg: &str) {
-    log::debug!("{msg}");
-}
-
-pub fn info(msg: &str) {
-    log::info!("{msg}");
-}
-
-pub fn warn(msg: &str) {
-    log::warn!("{msg}");
-}
-
-pub fn error(msg: &str) {
-    log::error!("{msg}");
-}
-
 pub fn set_display_trace(b: bool) {
     LOGGER.write().display_trace = b;
 }

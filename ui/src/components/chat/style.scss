@@ -105,3 +105,56 @@
         animation: none;
     }
 }
+
+#compose {
+    .typing-indicator {
+        width: 100%;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        color: var(--theme-text-bright);
+        .loader {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            margin-right: 32px;
+            position: relative;
+            flex-shrink: 0;
+            animation: typing 1s linear infinite alternate;
+        }
+        .primary {
+            height: 20px;
+            padding-right: 4px;
+            font-weight: bold;
+            word-break: break-all;
+            overflow: hidden;
+            box-sizing: border-box;
+            text-transform: capitalize;
+        }
+        .secondary {
+            height: 20px;
+            flex-shrink: 0;
+            word-wrap: nowrap;
+        }
+    }
+    
+    @keyframes typing {
+        0% {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 10px 0px 0px 0px rgba(255, 255, 255, 0.2),
+            20px 0px 0px 0px rgba(255, 255, 255, 0.2);
+        }
+        50% {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 10px 0px 0px 0px rgba(255, 255, 255, 2),
+            20px 0px 0px 0px rgba(255, 255, 255, 0.2);
+        }
+        100% {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 10px 0px 0px 0px rgba(255, 255, 255, 0.2),
+            20px 0px 0px 0px rgba(255, 255, 255, 1);
+        }
+    }
+}
+
+  
