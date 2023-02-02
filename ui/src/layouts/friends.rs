@@ -7,6 +7,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
     components::{
@@ -36,11 +37,10 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
 
-    let first_render = use_state(cx, || true);
-    if *first_render.get() && state.read().ui.is_minimal_view() {
-        state.write().mutate(Action::SidebarHidden(true));
-        first_render.set(false);
+    if state.read().ui.is_minimal_view() {
+        return MinimalFriendsLayout(cx);
     }
+    log::trace!("rendering FriendsLayout");
 
     cx.render(rsx!(
         div {
@@ -60,7 +60,35 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 render_route(cx, (*route.current()).clone()),
-                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+            }
+        }
+    ))
+}
+
+#[allow(non_snake_case)]
+pub fn MinimalFriendsLayout(cx: Scope<Props>) -> Element {
+    log::trace!("rendering MinimalFriendsLayout");
+    let state = use_shared_state::<State>(cx)?;
+    let route = use_state(cx, || FriendRoute::All);
+
+    let view = if !state.read().ui.sidebar_hidden {
+        rsx!(ChatSidebar {
+            route_info: cx.props.route_info.clone()
+        },)
+    } else {
+        rsx!(
+            div {
+                class: "friends-body",
+                aria_label: "friends-body",
+                get_topbar(cx, route),
+                AddFriend {},
+                div {
+                    class: "friends-controls",
+                    aria_label: "friends-controls",
+                },
+                // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
+                render_route(cx, (*route.current()).clone()),
+                (state.read().ui.sidebar_hidden).then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
                         active: cx.props.route_info.active.clone(),
@@ -70,8 +98,14 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     }
                 ))
             }
-        }
-    ))
+        )
+    };
+
+    cx.render(rsx!(div {
+        id: "friends-layout",
+        aria_label: "friends-layout",
+        view
+    }))
 }
 
 fn render_route(cx: Scope<Props>, route: FriendRoute) -> Element {

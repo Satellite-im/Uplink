@@ -715,6 +715,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: true,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(true));
                     }
                 },
                 Button {
@@ -729,6 +730,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {
@@ -743,6 +745,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {
