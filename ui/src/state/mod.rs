@@ -874,20 +874,6 @@ impl State {
                     }
                 }
             }
-            MessageEvent::MessageReactionAdded {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.add_message_reaction(conversation_id, message_id, reaction);
-            }
-            MessageEvent::MessageReactionRemoved {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.remove_message_reaction(conversation_id, message_id, reaction);
-            }
         }
     }
 }

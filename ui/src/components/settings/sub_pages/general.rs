@@ -8,20 +8,17 @@ use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
-    logger,
     state::{Action, State},
     utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
-    log::trace!("General settings rendered");
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
 
-    logger::debug("General settings page rendered.");
-    let mut config = Configuration::load_or_default();
+    log::debug!("General settings page rendered.");
 
     cx.render(rsx!(
         div {
