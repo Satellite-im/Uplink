@@ -616,7 +616,7 @@ fn app(cx: Scope) -> Element {
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
-            logger::trace("init items");
+            log::trace!("init items");
             match res {
                 Ok(storage) => match inner.try_borrow_mut() {
                     Ok(state) => {
