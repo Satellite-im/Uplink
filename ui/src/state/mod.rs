@@ -101,6 +101,10 @@ impl State {
         State::default()
     }
 
+    pub fn mock() -> Self {
+        generate_mock()
+    }
+
     pub fn mutate(&mut self, action: Action) {
         self.call_hooks(&action);
 
@@ -172,7 +176,8 @@ impl State {
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
             Action::CancelReply(chat) => self.cancel_reply(&chat),
             Action::ClearUnreads(chat) => self.clear_unreads(&chat),
-            Action::React(_, _, _) => todo!(),
+            Action::AddReaction(_, _, _) => todo!(),
+            Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.account.identity.did_key();
@@ -748,9 +753,7 @@ impl State {
         };
         serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
     }
-}
 
-impl State {
     pub fn process_warp_event(&mut self, event: WarpEvent) {
         // handle any number of events and then save
         match event {
@@ -870,6 +873,20 @@ impl State {
                         );
                     }
                 }
+            }
+            MessageEvent::MessageReactionAdded {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.add_message_reaction(conversation_id, message_id, reaction);
+            }
+            MessageEvent::MessageReactionRemoved {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.remove_message_reaction(conversation_id, message_id, reaction);
             }
         }
     }

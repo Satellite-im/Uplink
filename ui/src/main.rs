@@ -362,7 +362,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     let mut state = if STATIC_ARGS.use_mock {
         State::mock()
     } else {
-        State::load().expect("failed to load state")
+        State::load()
     };
 
     // set the window to the normal size.
