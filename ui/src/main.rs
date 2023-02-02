@@ -384,6 +384,9 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+    if state.ui.is_minimal_view() {
+        state.ui.sidebar_hidden = true;
+    }
 
     use_shared_state_provider(cx, || state);
 
@@ -715,6 +718,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: true,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(true));
                     }
                 },
                 Button {
@@ -729,6 +733,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {
@@ -743,6 +748,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {
