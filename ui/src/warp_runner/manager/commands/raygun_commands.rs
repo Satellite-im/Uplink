@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-
+use derive_more::Display;
 use futures::channel::oneshot;
+use std::collections::HashMap;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -15,8 +15,9 @@ use crate::{
 };
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
+#[derive(Display)]
 pub enum RayGunCmd {
+    #[display(fmt = "InitializeConversations")]
     InitializeConversations {
         // response is (own identity, chats)
         // need to send over own identity because 'State' sets it to default
@@ -25,20 +26,24 @@ pub enum RayGunCmd {
             Result<(state::Identity, HashMap<Uuid, chats::Chat>), warp::error::Error>,
         >,
     },
+    #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
     CreateConversation {
         recipient: DID,
         rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
     },
+    #[display(fmt = "SendMessage {{ conv_id: {conv_id} }} ")]
     SendMessage {
         conv_id: Uuid,
         msg: Vec<String>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
+    #[display(fmt = "RemoveDirectConvs {{ recipient: {recipient} }} ")]
     RemoveDirectConvs {
         recipient: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "React {{ conversation_id: {conversation_id} }} ")]
     React {
         conversation_id: Uuid,
         message_id: Uuid,
@@ -46,6 +51,7 @@ pub enum RayGunCmd {
         emoji: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "SendEvent {{ conv_id: {conv_id} }} ")]
     SendEvent {
         conv_id: Uuid,
         event: raygun::MessageEvent,
