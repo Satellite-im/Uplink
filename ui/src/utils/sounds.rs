@@ -1,5 +1,3 @@
-
-
 pub enum Sounds {
     Notification,
     FriendReq,
@@ -13,19 +11,20 @@ const FRIEND_SOUND: &[u8] = include_bytes!("../../extra/assets/sounds/Success.og
 pub fn Play(sound: Sounds) {
     // Create a Soloud instance
 
-    
     std::thread::spawn(move || {
-        let (_stream, audio_handle) = rodio::OutputStream::try_default().unwrap();
+        let Ok((_stream, audio_handle)) = rodio::OutputStream::try_default() else {
+            return
+        };
         // Load the appropriate sound file based on the `sound` argument
         let buffer = match sound {
             Sounds::Notification => NOTIFICATION_SOUND,
             Sounds::FriendReq => FRIEND_SOUND,
             // The `General` case is not handled
-            Sounds::General => return
+            Sounds::General => return,
         };
         //TODO: Maybe append into sink instead?
-        let sound = audio_handle.play_once(std::io::Cursor::new(buffer)).unwrap();
-
-        sound.sleep_until_end();
+        if let Ok(sound) = audio_handle.play_once(std::io::Cursor::new(buffer)) {
+            sound.sleep_until_end();
+        }
     });
 }
