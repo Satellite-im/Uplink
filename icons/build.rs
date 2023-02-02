@@ -25,7 +25,7 @@ fn main() {
 
         let icons = make_icons(&src_dir);
 
-        write_icons_file(&icons, &format!("{}.rs", style));
+        write_icons_file(&icons, &format!("{style}.rs"));
     }
 }
 

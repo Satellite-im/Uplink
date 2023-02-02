@@ -63,12 +63,12 @@ pub fn Friends(cx: Scope) -> Element {
                                 // if not, create the chat
                                 let (tx, rx) =
                                     oneshot::channel::<Result<Chat, warp::error::Error>>();
-                                warp_cmd_tx
-                                    .send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                        recipient,
-                                        rsp: tx,
-                                    }))
-                                    .expect("failed to send cmd");
+                                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
+                                    RayGunCmd::CreateConversation { recipient, rsp: tx },
+                                )) {
+                                    log::error!("failed to send warp command: {}", e);
+                                    continue;
+                                }
 
                                 let rsp = rx.await.expect("command canceled");
 
@@ -85,12 +85,15 @@ pub fn Friends(cx: Scope) -> Element {
                     }
                     ChanCmd::RemoveFriend(did) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        warp_cmd_tx
-                            .send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
                                 did,
                                 rsp: tx,
                             }))
-                            .expect("failed to send cmd");
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
@@ -99,9 +102,12 @@ pub fn Friends(cx: Scope) -> Element {
                     }
                     ChanCmd::BlockFriend(did) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        warp_cmd_tx
+                        if let Err(e) = warp_cmd_tx
                             .send(WarpCmd::MultiPass(MultiPassCmd::Block { did, rsp: tx }))
-                            .expect("failed to send cmd");
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
@@ -111,12 +117,15 @@ pub fn Friends(cx: Scope) -> Element {
                     }
                     ChanCmd::RemoveDirectConvs(recipient) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        warp_cmd_tx
-                            .send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
                                 recipient: recipient.clone(),
                                 rsp: tx,
                             }))
-                            .expect("failed to send cmd");
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
@@ -168,7 +177,7 @@ pub fn Friends(cx: Scope) -> Element {
                             };
                             rsx!(
                                 ContextMenu {
-                                    id: format!("{}-friend-listing", did),
+                                    id: format!("{did}-friend-listing"),
                                     key: "{did}-friend-listing",
                                     items: cx.render(rsx!(
                                         ContextItem {

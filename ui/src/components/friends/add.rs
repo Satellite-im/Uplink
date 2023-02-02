@@ -69,12 +69,13 @@ pub fn AddFriend(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
-                        did,
-                        rsp: tx,
-                    }))
-                    .expect("AddFriendLayout failed to send warp command");
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
+                    did,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
@@ -105,9 +106,12 @@ pub fn AddFriend(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
                 let (tx, rx) = oneshot::channel::<Result<DID, warp::error::Error>>();
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::GetOwnDid { rsp: tx }))
-                    .expect("AddFriendLayout failed to send warp command");
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetOwnDid { rsp: tx }))
+                {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
