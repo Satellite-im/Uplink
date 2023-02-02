@@ -1,6 +1,6 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
+use derive_more::Display;
 use std::sync::Arc;
-
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
@@ -49,20 +49,14 @@ pub enum WarpEvent {
     MultiPass(MultiPassEvent),
 }
 
+#[derive(Display)]
 pub enum WarpCmd {
+    #[display(fmt = "WarpCmd::Tesseract {{ {_0:?} }} ")]
     Tesseract(TesseractCmd),
+    #[display(fmt = "WarpCmd::MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
+    #[display(fmt = "WarpCmd::RayGun {{ {_0:?} }} ")]
     RayGun(RayGunCmd),
-}
-
-impl std::fmt::Display for WarpCmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            WarpCmd::MultiPass(cmd) => write!(f, "WarpCmd::MultiPass {{ {cmd} }} "),
-            WarpCmd::Tesseract(cmd) => write!(f, "WarpCmd::Tesseract {{ {cmd:?} }} "),
-            WarpCmd::RayGun(cmd) => write!(f, "WarpCmd::RayGun {{ {cmd:?} }} "),
-        }
-    }
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp

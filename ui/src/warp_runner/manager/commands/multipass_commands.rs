@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use derive_more::Display;
 use futures::channel::oneshot;
 use warp::{crypto::DID, error::Error, logging::tracing::log};
 
@@ -11,49 +12,60 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
+#[derive(Display)]
 pub enum MultiPassCmd {
+    #[display(fmt = "CreateIdentity {{ username: {username} }} ")]
     CreateIdentity {
         username: String,
         passphrase: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "TryLogIn")]
     TryLogIn {
         passphrase: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "RequestFriend {{ did: {did} }} ")]
     RequestFriend {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "InitializeFriends")]
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
     },
     // may later want this to return the Identity rather than the DID.
+    #[display(fmt = "GetOwnDid")]
     GetOwnDid {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
+    #[display(fmt = "RemoveFriend {{ did: {did} }} ")]
     RemoveFriend {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "Unblock {{ did: {did} }} ")]
     Unblock {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // can block anyone, friend or not
+    #[display(fmt = "Block {{ did: {did} }} ")]
     Block {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "AcceptRequest {{ did: {did} }} ")]
     AcceptRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "DenyRequest {{ did: {did} }} ")]
     DenyRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "CancelRequest {{ did: {did} }} ")]
     CancelRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
@@ -61,17 +73,10 @@ pub enum MultiPassCmd {
 }
 
 // hide sensitive information from debug logs
-impl std::fmt::Display for MultiPassCmd {
+// make Debug do same thing as Display
+impl std::fmt::Debug for MultiPassCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            MultiPassCmd::CreateIdentity { username, .. } => {
-                write!(f, "CreateIdentity {{ username: {username} }} ")
-            }
-            MultiPassCmd::TryLogIn { .. } => {
-                write!(f, "TryLogIn")
-            }
-            _ => write!(f, "{self:?}"),
-        }
+        write!(f, "{self}")
     }
 }
 
