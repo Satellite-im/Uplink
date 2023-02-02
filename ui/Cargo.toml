@@ -37,7 +37,7 @@ base64 = "0.20.0"
 timeago = "0.4.0"
 dirs = "4.0.0"
 opener = "0.5.0"
-soloud = "1.0.2"
+rodio = "0.16"
 open = "3.2.0"
 wry = { version = "0.23.4" }
 derive_more = "0.99"
