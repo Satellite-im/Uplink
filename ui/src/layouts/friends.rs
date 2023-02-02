@@ -59,7 +59,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                     aria_label: "friends-controls",
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(cx, (*route.current()).clone()),
+                render_route(cx, route.get().clone()),
             }
         }
     ))
@@ -87,7 +87,7 @@ pub fn MinimalFriendsLayout(cx: Scope<Props>) -> Element {
                     aria_label: "friends-controls",
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
-                render_route(cx, (*route.current()).clone()),
+                render_route(cx, route.get().clone()),
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
