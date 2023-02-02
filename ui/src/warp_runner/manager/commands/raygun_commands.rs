@@ -59,6 +59,12 @@ pub enum RayGunCmd {
     },
 }
 
+impl std::fmt::Debug for RayGunCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self}")
+    }
+}
+
 pub async fn handle_raygun_cmd(
     cmd: RayGunCmd,
     stream_manager: &mut conv_stream::Manager,

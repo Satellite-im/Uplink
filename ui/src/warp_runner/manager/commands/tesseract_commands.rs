@@ -9,3 +9,9 @@ pub enum TesseractCmd {
         rsp: oneshot::Sender<bool>,
     },
 }
+
+impl std::fmt::Debug for TesseractCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self}")
+    }
+}
