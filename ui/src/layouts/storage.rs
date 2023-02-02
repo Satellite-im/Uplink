@@ -52,7 +52,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let add_new_folder = use_state(cx, || false);
 
     if let Some(storage) = storage_state.get().clone() {
-        if STATIC_ARGS.use_mock == false {
+        if !STATIC_ARGS.use_mock {
             *directories_list.write_silent() = storage.directories.clone();
             *files_list.write_silent() = storage.files.clone();
         };
@@ -67,7 +67,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     ChanCmd::AddNewFolder(folder_name) => {
-                    
                             let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                             let folder_name2 = folder_name.clone();
                             warp_cmd_tx
@@ -90,7 +89,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                     }
                     ChanCmd::GetItemsFromCurrentDirectory => {
-                                             let (tx, rx) =
+                            let (tx, rx) =
                                 oneshot::channel::<Result<Storage, warp::error::Error>>();
                             warp_cmd_tx
                                 .send(WarpCmd::Constellation(
@@ -108,7 +107,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     continue;
                                 }
                             }
-                        
                     }
                 }
             }
@@ -120,14 +118,16 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
+    if !STATIC_ARGS.use_mock {
+        use_future(cx, (), |_| {
+            to_owned![ch];
+            async move {
+                sleep(Duration::from_millis(100)).await;
+                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+            }
+        });
+    };
 
-    use_future(cx, (), |_| {
-        to_owned![ch];
-        async move {
-            sleep(Duration::from_millis(100)).await;
-            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-        }
-    });
 
     cx.render(rsx!(
         div {
