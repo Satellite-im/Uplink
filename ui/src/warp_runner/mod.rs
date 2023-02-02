@@ -221,7 +221,9 @@ async fn warp_initialization(
 ) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
     let path = &STATIC_ARGS.warp_path;
-    let config = MpIpfsConfig::production(path, experimental);
+    let mut config = MpIpfsConfig::production(path, experimental);
+    config.ipfs_setting.portmapping = true;
+
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await

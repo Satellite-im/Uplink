@@ -64,6 +64,7 @@ pub async fn convert_multipass_event(
             let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::Unblocked(identity)
         }
+        _ => MultiPassEvent::None,
     };
 
     Ok(evt)
