@@ -12,11 +12,10 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
-use warp::crypto::DID;
 use warp::error::Error;
+use warp::{crypto::DID, logging::tracing::log};
 
 use crate::{
-    logger,
     state::{Action, Identity, State, ToastNotification},
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
@@ -89,10 +88,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                         | Error::BlockedByUser
                         | Error::InvalidIdentifierCondition
                         | Error::PublicKeyIsBlocked => {
-                            logger::warn(&format!("add friend failed: {}", e));
+                            log::warn!("add friend failed: {}", e);
                         }
                         _ => {
-                            logger::error(&format!("add friend failed: {}", e));
+                            log::error!("add friend failed: {}", e);
                         }
                     },
                 }
@@ -113,7 +112,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(did) => my_id.set(Some(did.to_string())),
-                    Err(e) => logger::error(&format!("get own did failed: {}", e)),
+                    Err(e) => log::error!("get own did failed: {}", e),
                 }
             }
         }
@@ -161,7 +160,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 }
                             },
                             Err(e) => {
-                                logger::error(&format!("could not get did from str: {}", e));
+                                log::error!("could not get did from str: {}", e);
                             }
                         }
                     },

@@ -3,7 +3,7 @@ use std::rc::Weak;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
 use uuid::Uuid;
-use warp::raygun::{Message, Reaction};
+use warp::raygun::Message;
 use wry::webview::WebView;
 
 use super::{
@@ -97,7 +97,10 @@ pub enum Action {
     /// Records a new message and plays associated notifications
     NewMessage(Chat, Message),
     /// React to a given message by ID
-    React(Chat, Message, Reaction),
+    /// conversation id, message id, reaction
+    AddReaction(Uuid, Uuid, String),
+    /// conversation id, message id, reaction
+    RemoveReaction(Uuid, Uuid, String),
     /// Reply to a given message by ID
     Reply(Chat, Message),
     /// Prep the UI for a message reply.

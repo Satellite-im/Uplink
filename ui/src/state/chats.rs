@@ -1,8 +1,11 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Instant,
+};
 
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
-use warp::raygun::Message;
+use warp::{crypto::DID, raygun::Message};
 
 use crate::STATIC_ARGS;
 
@@ -29,6 +32,10 @@ pub struct Chat {
     // If a value exists, we will render the message we're replying to above the chatbar
     #[serde(skip)]
     pub replying_to: Option<Message>,
+    // list of users currently typing.
+    // (user id, last update time)
+    #[serde(skip)]
+    pub typing_indicator: HashMap<DID, Instant>,
 }
 
 // TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.

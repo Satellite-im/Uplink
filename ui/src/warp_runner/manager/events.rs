@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{
-    commands::{handle_multipass_cmd, handle_raygun_cmd, handle_tesseract_cmd},
+    commands::{handle_multipass_cmd, handle_raygun_cmd},
     MultiPassCmd,
 };
 
@@ -113,7 +113,9 @@ pub async fn handle_warp_command(
     log::debug!("WARP CMD: `{:?}`", &cmd);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
-        WarpCmd::Tesseract(cmd) => handle_tesseract_cmd(cmd, &mut warp.tesseract).await,
+        WarpCmd::Tesseract(_cmd) => {
+            // not accepted at this stage of the program. do nothing and drop the rsp channel
+        }
         WarpCmd::MultiPass(cmd) => {
             // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
             // todo: ask for that event
@@ -139,7 +141,7 @@ pub async fn handle_warp_command(
                     }
                 }
             }
-            handle_multipass_cmd(cmd, &mut warp.tesseract, &mut warp.multipass).await;
+            handle_multipass_cmd(cmd, warp).await;
         }
 
         WarpCmd::RayGun(cmd) => {

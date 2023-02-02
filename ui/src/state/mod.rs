@@ -33,12 +33,14 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
+    time::{Duration, Instant},
 };
 use uuid::Uuid;
 use warp::{
     crypto::DID,
+    logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, Message},
+    raygun::{self, Message, Reaction},
 };
 
 use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
@@ -431,6 +433,7 @@ impl State {
 
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: raygun::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
         }
     }
@@ -600,6 +603,91 @@ impl State {
         self.ui.remove_overlay(id);
     }
 
+    pub fn clear_typing_indicator(&mut self, instant: Instant) -> bool {
+        let mut needs_update = false;
+        for conv_id in self.chats.in_sidebar.iter() {
+            let chat = match self.chats.all.get_mut(conv_id) {
+                Some(c) => c,
+                None => {
+                    log::warn!("conv {} found in sidebar but not in HashMap", conv_id);
+                    continue;
+                }
+            };
+            let old_len = chat.typing_indicator.len();
+            chat.typing_indicator
+                .retain(|_id, time| instant - *time < Duration::from_secs(5));
+            let new_len = chat.typing_indicator.len();
+
+            if old_len != new_len {
+                needs_update = true;
+            }
+        }
+
+        needs_update
+    }
+
+    pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
+        let user = self.account.identity.did_key();
+        let conv = match self.chats.all.get_mut(&chat_id) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to add reaction to nonexistent conversation");
+                return;
+            }
+        };
+
+        for msg in &mut conv.messages {
+            if msg.id() != message_id {
+                continue;
+            }
+
+            let mut has_emoji = false;
+            for reaction in msg.reactions_mut() {
+                if !reaction.emoji().eq(&emoji) {
+                    continue;
+                }
+                if !reaction.users().contains(&user) {
+                    reaction.users_mut().push(user.clone());
+                    has_emoji = true;
+                }
+            }
+
+            if !has_emoji {
+                let mut r = Reaction::default();
+                r.set_emoji(&emoji);
+                r.set_users(vec![user.clone()]);
+                msg.reactions_mut().push(r);
+            }
+        }
+    }
+
+    pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
+        let user = self.account.identity.did_key();
+        let conv = match self.chats.all.get_mut(&chat_id) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to remove reaction to nonexistent conversation");
+                return;
+            }
+        };
+
+        for msg in &mut conv.messages {
+            if msg.id() != message_id {
+                continue;
+            }
+
+            for reaction in msg.reactions_mut() {
+                if !reaction.emoji().eq(&emoji) {
+                    continue;
+                }
+                let mut users = reaction.users();
+                users.retain(|id| id != &user);
+                reaction.set_users(users);
+            }
+            msg.reactions_mut().retain(|r| !r.users().is_empty());
+        }
+    }
+
     fn call_hooks(&mut self, action: &Action) {
         for hook in self.hooks.iter() {
             match &hook.action_type {
@@ -748,6 +836,39 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
+                }
+            }
+            MessageEvent::MessageReactionAdded {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.add_message_reaction(conversation_id, message_id, reaction);
+            }
+            MessageEvent::MessageReactionRemoved {
+                conversation_id,
+                message_id,
+                reaction,
+            } => {
+                self.remove_message_reaction(conversation_id, message_id, reaction);
+            }
+            MessageEvent::TypingIndicator {
+                conversation_id,
+                participant,
+            } => {
+                if !self.chats.in_sidebar.contains(&conversation_id) {
+                    return;
+                }
+                match self.chats.all.get_mut(&conversation_id) {
+                    Some(chat) => {
+                        chat.typing_indicator.insert(participant, Instant::now());
+                    }
+                    None => {
+                        log::warn!(
+                            "attempted to update typing indicator for nonexistent conversation: {}",
+                            conversation_id
+                        );
+                    }
                 }
             }
         }

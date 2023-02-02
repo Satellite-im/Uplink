@@ -1,10 +1,7 @@
 use uuid::Uuid;
-use warp::{error::Error, raygun::RayGunEventKind};
+use warp::{error::Error, logging::tracing::log, raygun::RayGunEventKind};
 
-use crate::{
-    logger,
-    state::{self},
-};
+use crate::state::{self};
 
 use super::{super::conv_stream, conversation_to_chat};
 
@@ -20,7 +17,7 @@ pub async fn convert_raygun_event(
     account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<RayGunEvent, Error> {
-    logger::debug(&format!("got {:?}", &event));
+    log::debug!("got {:?}", &event);
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;

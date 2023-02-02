@@ -9,10 +9,10 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
-    logger,
-    warp_runner::{MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
 
@@ -20,11 +20,24 @@ use crate::{
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    logger::trace("rendering unlock layout");
+    log::trace!("rendering unlock layout");
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
 
+    let account_exists = use_future(cx, (), |_| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        let (tx, rx) = oneshot::channel::<bool>();
+        warp_cmd_tx
+            .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
+                key: "keypair".into(),
+                rsp: tx,
+            }))
+            .expect("failed to send command");
+        let exists = rx.await.unwrap_or(false);
+        log::debug!("account_exists: {}", exists);
+        exists
+    });
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
         async move {
@@ -47,17 +60,17 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         warp::error::Error::MultiPassExtensionUnavailable => {
                             // need to create an account
                             no_account.set(Some(true));
-                            logger::warn("multipass extension unavailable");
+                            log::warn!("multipass extension unavailable");
                         }
                         warp::error::Error::DecryptionError => {
                             // wrong password
                             no_account.set(Some(false));
                             password_failed.set(Some(true));
-                            logger::warn("decryption error");
+                            log::warn!("decryption error");
                         }
                         _ => {
                             // unexpected
-                            logger::error(&format!("LogIn failed: {}", err));
+                            log::error!("LogIn failed: {}", err);
                         }
                     },
                 }
@@ -122,16 +135,20 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                 }
             },
-            Button {
-                text: get_local_text("unlock.create-account"),
-                aria_label: "create-account-button".into(),
-                appearance: kit::elements::Appearance::Primary,
-                icon: Icon::Check,
-                disabled: *button_disabled.get(),
-                onpress: move |_| {
-                    page.set(AuthPages::CreateAccount);
+            // want this to not render while account_exists is loading.
+            // therefore, default it to true
+            (!account_exists.value().unwrap_or(&true)).then(|| rsx!(
+                Button {
+                    text: get_local_text("unlock.create-account"),
+                    aria_label: "create-account-button".into(),
+                    appearance: kit::elements::Appearance::Primary,
+                    icon: Icon::Check,
+                    disabled: *button_disabled.get(),
+                    onpress: move |_| {
+                        page.set(AuthPages::CreateAccount);
+                    }
                 }
-            }
+            ))
         }
     ))
 }

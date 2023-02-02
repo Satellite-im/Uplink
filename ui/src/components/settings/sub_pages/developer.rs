@@ -5,6 +5,7 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
+use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
@@ -16,7 +17,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    logger::debug("Developer settings page rendered.");
+    log::debug!("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
@@ -42,7 +43,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::CodeBracketSquare,
                     onpress: |_| {
-                        let _ = open::that("https://github.com/Satellite-im/Uplink-UI_Kit/tree/main/uplink_skeleton");
+                        let _ = open::that("https://github.com/Satellite-im/Uplink");
                     }
                 }
             },
@@ -143,8 +144,8 @@ impl WindowDropHandler {
 
 impl Drop for WindowDropHandler {
     fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
-            // todo: log error
+        if let Err(e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
+            log::warn!("WindowDropHandler failed to send msg: {}", e);
         }
     }
 }

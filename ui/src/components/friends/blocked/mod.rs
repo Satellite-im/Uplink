@@ -1,6 +1,5 @@
 use crate::{
     components::friends::friend::Friend,
-    logger,
     state::{Action, State},
     utils::convert_status,
     warp_runner::{MultiPassCmd, WarpCmd},
@@ -18,7 +17,7 @@ use kit::{
     icons::Icon,
 };
 use shared::language::get_local_text;
-use warp::{crypto::DID, error::Error, multipass::identity::Relationship};
+use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
@@ -40,7 +39,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                     match e {
                         Error::PublicKeyIsntBlocked => {}
                         _ => {
-                            logger::error(&format!("failed to unblock user: {}", e));
+                            log::error!("failed to unblock user: {}", e);
                         }
                     }
                 }

@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
-
 use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
 use shared::language::{change_language, get_available_languages, get_local_text};
+use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
@@ -15,11 +15,13 @@ use crate::{
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
+    log::trace!("General settings rendered");
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
 
     logger::debug("General settings page rendered.");
+    let mut config = Configuration::load_or_default();
 
     cx.render(rsx!(
         div {
