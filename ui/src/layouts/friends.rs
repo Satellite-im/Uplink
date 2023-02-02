@@ -88,15 +88,13 @@ pub fn MinimalFriendsLayout(cx: Scope<Props>) -> Element {
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 render_route(cx, (*route.current()).clone()),
-                (state.read().ui.sidebar_hidden).then(|| rsx!(
-                    Nav {
-                        routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.active.clone(),
-                        onnavigate: move |r| {
-                            use_router(cx).replace_route(r, None, None);
-                        }
+                Nav {
+                    routes: cx.props.route_info.routes.clone(),
+                    active: cx.props.route_info.active.clone(),
+                    onnavigate: move |r| {
+                        use_router(cx).replace_route(r, None, None);
                     }
-                ))
+                }
             }
         )
     };
