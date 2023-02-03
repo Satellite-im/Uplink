@@ -622,7 +622,7 @@ fn app(cx: Scope) -> Element {
             match res {
                 Ok(storage) => match inner.try_borrow_mut() {
                     Ok(state) => {
-                        state.write().storage = storage.clone();
+                        state.write().storage = storage;
 
                         needs_update.set(true);
                     }

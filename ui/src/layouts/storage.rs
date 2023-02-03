@@ -56,7 +56,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             *directories_list.write_silent() = storage.directories.clone();
             *files_list.write_silent() = storage.files.clone();
         };
-        state.write().storage = storage.clone();
+        state.write().storage = storage;
         storage_state.set(None);
     }
 
@@ -303,5 +303,5 @@ fn update_items_with_mock_data(
         directories: directories_list.read().clone(),
         files: files_list.read().clone(),
     };
-    storage_state.set(Some(storage_mock.clone()));
+    storage_state.set(Some(storage_mock));
 }
