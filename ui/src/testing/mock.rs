@@ -18,8 +18,7 @@ use warp::{
 };
 
 use crate::state::{
-    Account, Chat, Chats, Friends, Identity, Route, Settings, State,
-    ToastNotification, 
+    Account, Chat, Chats, Friends, Identity, Route, Settings, State, ToastNotification,
 };
 
 const FRIEND_COUNT: usize = 20;

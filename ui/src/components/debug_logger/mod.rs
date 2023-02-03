@@ -45,7 +45,6 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         let log_level = fields.next().unwrap_or_default();
                         let log_message = fields.next().unwrap_or_default();
                         let log_color = logger::get_color_string(Level::from_str(log_level).unwrap_or(Level::Debug));
-                        
                         rsx!(
                             p {
                                 class: "item",
