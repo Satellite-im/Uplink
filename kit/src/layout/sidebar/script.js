@@ -10,7 +10,6 @@ interact(".resize-horiz-right")
 
         // update the element's style
         target.style.width = event.rect.width + "px"
-        target.style.height = event.rect.height + "px"
 
         target.style.transform = "translate(" + x + "px," + y + "px)"
       },
