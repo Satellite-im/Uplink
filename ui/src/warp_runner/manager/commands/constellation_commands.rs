@@ -134,6 +134,8 @@ async fn upload_files(
             .await
         {
             Ok(mut upload_progress) => {
+                let mut previous_percentage: usize = 101;
+
                 while let Some(upload_progress) = upload_progress.next().await {
                     match upload_progress {
                         Progression::CurrentProgress {
@@ -141,7 +143,10 @@ async fn upload_files(
                             current,
                             total,
                         } => {
-                            log::info!("Written {} MB for {name}", current / 1024 / 1024);
+                            if previous_percentage == 101 {
+                                log::info!("Starting upload for {name}");
+                            };
+
                             if let Some(total) = total {
                                 let mut selector_without_percentage =
                                     "document.getElementById('dropzone').value = '".to_owned();
@@ -153,11 +158,15 @@ async fn upload_files(
 
                                 let ending_string = "% uploaded'";
                                 selector_without_percentage.push_str(ending_string);
-
-                                log::info!(
-                                    "{}% completed",
-                                    (((current as f64) / (total as f64)) * 100.) as usize
-                                )
+                                let current_percentage =
+                                    (((current as f64) / (total as f64)) * 100.) as usize;
+                                if previous_percentage != current_percentage {
+                                    previous_percentage = current_percentage;
+                                    log::info!(
+                                        "{}% completed -> written {current} bytes",
+                                        (((current as f64) / (total as f64)) * 100.) as usize
+                                    )
+                                }
                             }
                         }
                         Progression::ProgressComplete { name, total } => {
