@@ -85,7 +85,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
-        use_mock: args.no_mock,
+        use_mock: !args.no_mock,
     }
 });
 
@@ -169,7 +169,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = STATIC_ARGS.uplink_path.join("");
+    let themes_dest = &STATIC_ARGS.uplink_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -359,11 +359,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
     log::trace!("rendering app_bootstrap");
-    let mut state = if STATIC_ARGS.use_mock {
-        State::mock()
-    } else {
-        State::load()
-    };
+    let mut state = State::load();
 
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
