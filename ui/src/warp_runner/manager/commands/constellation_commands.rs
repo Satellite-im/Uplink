@@ -148,16 +148,6 @@ async fn upload_files(
                             };
 
                             if let Some(total) = total {
-                                let mut selector_without_percentage =
-                                    "document.getElementById('dropzone').value = '".to_owned();
-
-                                let percentage = ((((current as f64) / (total as f64)) * 100.)
-                                    as usize)
-                                    .to_string();
-                                selector_without_percentage.push_str(&percentage);
-
-                                let ending_string = "% uploaded'";
-                                selector_without_percentage.push_str(ending_string);
                                 let current_percentage =
                                     (((current as f64) / (total as f64)) * 100.) as usize;
                                 if previous_percentage != current_percentage {
