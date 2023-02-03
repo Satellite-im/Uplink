@@ -9,7 +9,7 @@ pub fn push_notification(
     notification_sound: Sounds,
     timeout: notify_rust::Timeout,
 ) {
-    let summary = format!("Uplink - {}", title);
+    let summary = format!("Uplink - {title}");
     let _n = Notification::new()
         .summary(summary.as_ref())
         .body(&content)
