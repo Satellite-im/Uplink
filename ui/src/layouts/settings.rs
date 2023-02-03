@@ -37,6 +37,17 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         first_render.set(false);
     }
 
+    let page = match to.get() {
+        Page::General => rsx!(GeneralSettings {}),
+        Page::Profile => rsx!(ProfileSettings {}),
+        Page::Audio => rsx!(AudioSettings {}),
+        Page::Privacy => rsx!(PrivacySettings {}),
+        Page::Files => rsx!(FilesSettings {}),
+        Page::Extensions => rsx!(ExtensionSettings {}),
+        Page::Developer => rsx!(DeveloperSettings {}),
+        Page::Notifications => rsx!(NotificationSettings {}),
+    };
+
     cx.render(rsx!(
         div {
             id: "settings-layout",
@@ -66,32 +77,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 div {
                     id: "content",
                     class: "full-width",
-                    match to.get() {
-                        Page::General       => cx.render(rsx! (
-                            GeneralSettings {}
-                        )),
-                        Page::Profile       => cx.render(rsx! (
-                            ProfileSettings {}
-                        )),
-                        Page::Audio         => cx.render(rsx! (
-                            AudioSettings {}
-                        )),
-                        Page::Privacy       => cx.render(rsx! (
-                            PrivacySettings {}
-                        )),
-                        Page::Files         => cx.render(rsx! (
-                            FilesSettings {}
-                        )),
-                        Page::Extensions    => cx.render(rsx! (
-                            ExtensionSettings {}
-                        )),
-                        Page::Developer     => cx.render(rsx! (
-                            DeveloperSettings {}
-                        )),
-                        Page::Notifications  => cx.render(rsx! (
-                            NotificationSettings {}
-                        )),
-                    }
+                    page
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {

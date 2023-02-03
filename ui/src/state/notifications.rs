@@ -72,31 +72,17 @@ impl Notifications {
     }
 
     // Removes notification(s) from the specified kind.
+    // Prevent underflow using checked_sub()
     pub fn decrement(&mut self, kind: NotificaitonKind, count: u32) {
         match kind {
             NotificaitonKind::FriendRequest => {
-                // Prevent underflow.
-                if count > self.friends {
-                    self.friends = 0
-                } else {
-                    self.friends -= count
-                }
+                self.friends = self.friends.checked_sub(count).unwrap_or(0);
             }
             NotificaitonKind::Message => {
-                // Prevent underflow.
-                if count > self.messages {
-                    self.messages = 0
-                } else {
-                    self.messages -= count
-                }
+                self.messages = self.messages.checked_sub(count).unwrap_or(0);
             }
             NotificaitonKind::Settings => {
-                // Prevent underflow.
-                if count > self.settings {
-                    self.settings = 0
-                } else {
-                    self.settings -= count
-                }
+                self.settings = self.settings.checked_sub(count).unwrap_or(0);
             }
         };
 

@@ -85,7 +85,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
-        use_mock: !args.no_mock,
+        use_mock: args.use_mock,
     }
 });
 
@@ -157,12 +157,9 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: when the app is mature, default mock to false. also hide it behind a #[cfg(debug_assertions)]
-    // there's no way to set --flag=true so for make the flag mean false
-    /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
-    /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
+    // todo: hide mock behind a #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
-    no_mock: bool,
+    use_mock: bool,
     /// configures log output
     #[command(subcommand)]
     profile: Option<LogProfile>,
