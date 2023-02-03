@@ -16,6 +16,8 @@
 		min-height: 0;
 		display: inline-flex;
 		flex-direction: column;
+		max-height: 100%;
+		overflow-y: scroll;
 		gap: var(--gap);
 	}
 
@@ -23,6 +25,10 @@
 		margin-left: calc(var(--sidebar-width) * -1);
 		border-right: none;
 	}
+}
+
+.sidebar.resizing {
+	border-right: 1px solid var(--primary);
 }
 
 @media only screen and (max-width: 300px) {

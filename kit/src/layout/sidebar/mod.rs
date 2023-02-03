@@ -12,6 +12,8 @@ pub struct Props<'a> {
     children: Option<Element<'a>>,
 }
 
+const SCRIPT: &str = include_str!("./script.js");
+
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let hidden = cx.props.hidden.unwrap_or(false);
@@ -19,7 +21,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: {
-                format_args!("sidebar {}", if hidden { "hidden" } else { "" })
+                format_args!("sidebar resize-horiz-right {}", if hidden { "hidden" } else { "" })
             },
             aria_label: "sidebar",
             div {
@@ -33,6 +35,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.children.as_ref()
             },
             cx.props.with_nav.as_ref(),
-        }
+        },
+        script { SCRIPT }
     ))
 }

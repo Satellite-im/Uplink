@@ -5,7 +5,7 @@ use std::fs;
 use crate::STATIC_ARGS;
 
 /// A struct that represents the configuration of the application.
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct Configuration {
     /// General configuration options.
     #[serde(default)]
@@ -26,9 +26,13 @@ pub struct Configuration {
     /// Developer-related configuration options.
     #[serde(default)]
     pub developer: Developer,
+
+    /// Notification-related configuration options.
+    #[serde(default)]
+    pub notifications: Notifications,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct General {
     #[serde(default)]
     pub theme: String,
@@ -38,7 +42,7 @@ pub struct General {
     pub enable_overlay: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Privacy {
     #[serde(default)]
     pub satellite_sync_nodes: bool,
@@ -46,7 +50,7 @@ pub struct Privacy {
     pub safer_file_scanning: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct AudioVideo {
     #[serde(default)]
     pub noise_suppression: bool,
@@ -54,16 +58,37 @@ pub struct AudioVideo {
     pub call_timer: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Extensions {
     #[serde(default)]
     pub enable: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Developer {
     #[serde(default)]
     pub developer_mode: bool,
+}
+
+fn bool_true() -> bool {
+    true
+}
+
+// We may want to give the user the ability to pick and choose which notifications they want to see.
+// This is a good place to start.
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct Notifications {
+    #[serde(default = "bool_true")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub show_app_icon: bool,
+    #[serde(default = "bool_true")]
+    pub friends_notifications: bool,
+    #[serde(default = "bool_true")]
+    pub messages_notifications: bool,
+    // By default we leave this one off.
+    #[serde(default)]
+    pub settings_notifications: bool,
 }
 
 impl Configuration {
@@ -106,26 +131,9 @@ impl Configuration {
         }
     }
 
-    fn save(&self) -> Result<(), std::io::Error> {
+    pub fn save(&self) -> Result<(), std::io::Error> {
         let config_json = serde_json::to_string(self)?;
         fs::write(&STATIC_ARGS.config_path, config_json)?;
         Ok(())
-    }
-}
-
-impl Configuration {
-    pub fn set_theme(&mut self, theme_name: String) {
-        self.general.theme = theme_name;
-        let _ = self.save();
-    }
-
-    pub fn set_overlay(&mut self, overlay: bool) {
-        self.general.enable_overlay = overlay;
-        let _ = self.save();
-    }
-
-    pub fn set_developer_mode(&mut self, developer_mode: bool) {
-        self.developer.developer_mode = developer_mode;
-        let _ = self.save();
     }
 }

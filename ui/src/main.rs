@@ -1,7 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
-use config::Configuration;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::menu::AboutMetadata;
@@ -29,6 +28,7 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
 
+use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::files::FilesLayout;
@@ -60,6 +60,7 @@ mod window_manager;
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
     pub cache_path: PathBuf,
+    pub mock_cache_path: PathBuf,
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
@@ -78,6 +79,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         uplink_path: uplink_path.clone(),
         cache_path: uplink_path.join("state.json"),
+        mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
@@ -167,7 +169,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = STATIC_ARGS.uplink_path.join("themes");
+    let themes_dest = &STATIC_ARGS.uplink_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -277,6 +279,7 @@ fn main() {
                 r#"
     <!doctype html>
     <html>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
     </html>"#
                     .to_string(),
@@ -356,11 +359,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
     log::trace!("rendering app_bootstrap");
-    let mut state = if STATIC_ARGS.use_mock {
-        State::mock()
-    } else {
-        State::load().expect("failed to load state")
-    };
+    let mut state = State::load();
 
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
@@ -368,7 +367,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     // todo: delete this. it is just an example
-    if Configuration::load_or_default().general.enable_overlay {
+    if state.configuration.config.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
@@ -397,6 +396,7 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -424,7 +424,8 @@ fn app(cx: Scope) -> Element {
                 get_toasts(cx),
                 get_call_dialog(cx),
                 get_pre_release_message(cx),
-                get_router(cx)
+                get_router(cx),
+                get_logger(cx)
             }
         )
     };
@@ -680,6 +681,18 @@ fn get_pre_release_message(cx: Scope) -> Element {
     ))
 }
 
+fn get_logger(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+
+    cx.render(rsx!(state
+        .read()
+        .configuration
+        .config
+        .developer
+        .developer_mode
+        .then(|| rsx!(DebugLogger {}))))
+}
+
 fn get_toasts(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
@@ -698,7 +711,7 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let config = Configuration::load_or_default();
+    let config = state.read().configuration.config.clone();
 
     cx.render(rsx!(
         div {

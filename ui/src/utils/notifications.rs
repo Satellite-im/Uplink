@@ -3,7 +3,7 @@ use notify_rust::Notification;
 
 // Implementation to create and push new notifications
 #[allow(non_snake_case)]
-pub fn PushNotification(
+pub fn push_notification(
     title: String,
     content: String,
     notification_sound: Sounds,

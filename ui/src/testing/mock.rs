@@ -18,8 +18,8 @@ use warp::{
 };
 
 use crate::state::{
-    ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
-    ToastNotification, UI,
+    Account, Chat, Chats, Friends, Identity, Route, Settings, State,
+    ToastNotification, 
 };
 
 const FRIEND_COUNT: usize = 20;
@@ -58,18 +58,6 @@ pub fn generate_mock() -> State {
     toast_notifications.clear();
 
     State {
-        ui: UI {
-            current_call: None,
-            current_debug_logger: None,
-            overlays: vec![],
-            popout_player: false,
-            toast_notifications,
-            theme: None,
-            sidebar_hidden: false,
-            // TODO: Until this is more functional, we should keep it disabled by default.
-            enable_overlay: false,
-            metadata: WindowMeta::default(),
-        },
         account: Account {
             identity: me.clone(),
         },
@@ -95,7 +83,7 @@ pub fn generate_mock() -> State {
             incoming_requests: HashSet::from_iter(incoming_requests.iter().cloned()),
             outgoing_requests: HashSet::from_iter(outgoing_requests.iter().cloned()),
         },
-        hooks: Vec::new(),
+        ..Default::default()
     }
 }
 
