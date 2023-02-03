@@ -65,14 +65,6 @@ pub enum Direction {
     Outgoing,
 }
 
-impl Chats {
-    pub fn join(&mut self, mut other: HashMap<Uuid, Chat>) {
-        for (k, v) in other.drain() {
-            self.all.insert(k, v);
-        }
-    }
-}
-
 impl Serialize for Chats {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
