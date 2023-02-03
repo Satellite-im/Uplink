@@ -45,13 +45,14 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 //println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
-                        username,
-                        passphrase,
-                        rsp: tx,
-                    }))
-                    .expect("UnlockLayout failed to send warp command");
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
+                    username,
+                    passphrase,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 

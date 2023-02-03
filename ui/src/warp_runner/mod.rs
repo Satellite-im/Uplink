@@ -1,6 +1,6 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
+use derive_more::Display;
 use std::sync::Arc;
-
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
@@ -49,10 +49,13 @@ pub enum WarpEvent {
     MultiPass(MultiPassEvent),
 }
 
-#[derive(Debug)]
+#[derive(Display)]
 pub enum WarpCmd {
+    #[display(fmt = "WarpCmd::Tesseract {{ {_0} }} ")]
     Tesseract(TesseractCmd),
+    #[display(fmt = "WarpCmd::MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
+    #[display(fmt = "WarpCmd::RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
 }
 
@@ -100,8 +103,11 @@ async fn handle_login(notify: Arc<Notify>) {
     let warp: Option<manager::Warp> = loop {
         tokio::select! {
             opt = warp_cmd_rx.recv() => {
-                log_debug_warp_command(&opt);
-               match opt {
+                if let Some(cmd) = &opt {
+                    log::debug!("received {}", cmd);
+                }
+
+                match opt {
                 Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                     username,
                     passphrase,
@@ -215,7 +221,9 @@ async fn warp_initialization(
 ) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
     let path = &STATIC_ARGS.warp_path;
-    let config = MpIpfsConfig::production(path, experimental);
+    let mut config = MpIpfsConfig::production(path, experimental);
+    config.ipfs_setting.portmapping = true;
+
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
@@ -246,19 +254,4 @@ async fn warp_initialization(
         raygun: messaging,
         _constellation: storage,
     })
-}
-
-fn log_debug_warp_command(opt: &Option<WarpCmd>) {
-    let mut debug_info = format!("{:?}", opt);
-    let parts = debug_info.split("passphrase: \"").collect::<Vec<&str>>();
-    if parts.len() >= 2 {
-        debug_info = debug_info.replace(
-            &format!(
-                "passphrase: \"{}\",",
-                parts[1].split("\",").collect::<Vec<&str>>()[0]
-            ),
-            "",
-        );
-    };
-    log::debug!("received warp command: {:?}", debug_info);
 }

@@ -28,12 +28,15 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists = use_future(cx, (), |_| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         let (tx, rx) = oneshot::channel::<bool>();
-        warp_cmd_tx
-            .send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
-                key: "keypair".into(),
-                rsp: tx,
-            }))
-            .expect("failed to send command");
+        if let Err(e) = warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
+            key: "keypair".into(),
+            rsp: tx,
+        })) {
+            log::error!("failed to send warp command: {}", e);
+            // returning true will prevent the account from being created
+            return true;
+        }
+
         let exists = rx.await.unwrap_or(false);
         log::debug!("account_exists: {}", exists);
         exists
@@ -45,12 +48,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             while let Some(password) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::TryLogIn {
-                        passphrase: password,
-                        rsp: tx,
-                    }))
-                    .expect("UnlockLayout failed to send warp command");
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::TryLogIn {
+                    passphrase: password,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 

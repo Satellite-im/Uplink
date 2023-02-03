@@ -383,6 +383,9 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+    if state.ui.is_minimal_view() {
+        state.ui.sidebar_hidden = true;
+    }
 
     use_shared_state_provider(cx, || state);
 
@@ -562,32 +565,31 @@ fn app(cx: Scope) -> Element {
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
-            warp_cmd_tx
-                .send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
-                    rsp: tx,
-                }))
-                .expect("main failed to send warp command");
+            if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
+                rsp: tx,
+            })) {
+                log::error!("failed to initialize Friends {}", e);
+                return;
+            }
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
             log::trace!("init friends");
-            match res {
-                Ok(friends) => match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        if STATIC_ARGS.use_mock {
-                            state.write().friends.join(friends);
-                        } else {
-                            state.write().friends = friends;
-                        }
-
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                },
+            let friends = match res {
+                Ok(friends) => friends,
                 Err(e) => {
                     log::error!("init friends failed: {}", e);
+                    return;
+                }
+            };
+
+            match inner.try_borrow_mut() {
+                Ok(state) => {
+                    state.write().friends = friends;
+                    needs_update.set(true);
+                }
+                Err(e) => {
+                    log::error!("{e}");
                 }
             }
 
@@ -609,11 +611,14 @@ fn app(cx: Scope) -> Element {
                 let (tx, rx) = oneshot::channel::<
                     Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
                 >();
-                warp_cmd_tx
-                    .send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
                         rsp: tx,
                     }))
-                    .expect("main failed to send warp command");
+                {
+                    log::error!("failed to init RayGun: {}", e);
+                    return;
+                }
 
                 match rx.await {
                     Ok(r) => break r,
@@ -622,36 +627,36 @@ fn app(cx: Scope) -> Element {
             };
 
             log::trace!("init chats");
-            match res {
-                Ok((own_id, mut all_chats)) => match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        // for all_chats, fill in participants and messages.
-                        for (k, v) in &state.read().chats.all {
-                            // the # of unread chats defaults to the length of the conversation. but this number
-                            // is stored in state
-                            if let Some(chat) = all_chats.get_mut(k) {
-                                chat.unreads = v.unreads;
-                            }
-                        }
-
-                        if STATIC_ARGS.use_mock {
-                            state.write().chats.join(all_chats);
-                        } else {
-                            state.write().chats.all = all_chats;
-                        }
-                        state.write().account.identity = own_id;
-                        state.write().chats.initialized = true;
-                        //println!("{:#?}", state.read().chats);
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                },
+            let (own_id, mut all_chats) = match res {
+                Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to initialize chats: {}", e);
+                    return;
+                }
+            };
+
+            match inner.try_borrow_mut() {
+                Ok(state) => {
+                    // for all_chats, fill in participants and messages.
+                    for (k, v) in &state.read().chats.all {
+                        // the # of unread chats defaults to the length of the conversation. but this number
+                        // is stored in state
+                        if let Some(chat) = all_chats.get_mut(k) {
+                            chat.unreads = v.unreads;
+                        }
+                    }
+
+                    state.write().chats.all = all_chats;
+                    state.write().account.identity = own_id;
+                    state.write().chats.initialized = true;
+                    //println!("{:#?}", state.read().chats);
+                    needs_update.set(true);
+                }
+                Err(e) => {
+                    log::error!("{e}");
                 }
             }
+
             *chats_init.write_silent() = true;
             needs_update.set(true);
         }
@@ -726,6 +731,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: true,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(true));
                     }
                 },
                 Button {
@@ -740,6 +746,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {
@@ -754,6 +761,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             minimal_view: false,
                             ..meta
                         }));
+                        state.write().mutate(Action::SidebarHidden(false));
                     }
                 },
                 Button {

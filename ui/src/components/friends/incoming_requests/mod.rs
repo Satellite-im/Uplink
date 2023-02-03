@@ -39,12 +39,15 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 match cmd {
                     ChanCmd::AcceptRequest(identity) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        warp_cmd_tx
-                            .send(WarpCmd::MultiPass(MultiPassCmd::AcceptRequest {
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::AcceptRequest {
                                 did: identity.did_key(),
                                 rsp: tx,
                             }))
-                            .expect("failed to send cmd");
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
@@ -53,12 +56,15 @@ pub fn PendingFriends(cx: Scope) -> Element {
                     }
                     ChanCmd::DenyRequest(identity) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        warp_cmd_tx
-                            .send(WarpCmd::MultiPass(MultiPassCmd::DenyRequest {
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::DenyRequest {
                                 did: identity.did_key(),
                                 rsp: tx,
                             }))
-                            .expect("failed to send cmd");
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
@@ -91,7 +97,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 };
                 rsx!(
                     ContextMenu {
-                        id: format!("{}-friend-listing", did),
+                        id: format!("{did}-friend-listing"),
                         key: "{did}-friend-listing",
                         items: cx.render(rsx!(
                             ContextItem {
