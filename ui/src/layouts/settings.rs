@@ -37,7 +37,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         first_render.set(false);
     }
 
-    let page = match to.get() {
+    let settings_page = match to.get() {
         Page::General => rsx!(GeneralSettings {}),
         Page::Profile => rsx!(ProfileSettings {}),
         Page::Audio => rsx!(AudioSettings {}),
@@ -77,7 +77,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 div {
                     id: "content",
                     class: "full-width",
-                    page
+                    settings_page
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
