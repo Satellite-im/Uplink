@@ -101,10 +101,6 @@ impl State {
         State::default()
     }
 
-    pub fn mock() -> Self {
-        generate_mock()
-    }
-
     pub fn mutate(&mut self, action: Action) {
         self.call_hooks(&action);
 
