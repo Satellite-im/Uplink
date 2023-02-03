@@ -29,7 +29,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
             SettingSection {
                 section_label: get_local_text("settings-notifications.enabled"),
                 section_description: get_local_text("settings-notifications.enabled-description"),
-                Switch { 
+                Switch {
                     active: state.read().configuration.config.notifications.enabled,
                     onflipped: move |e| {
                         state.write().configuration.set_notifications_enabled(e);
@@ -41,7 +41,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 SettingSection {
                     section_label: get_local_text("friends"),
                     section_description: get_local_text("settings-notifications.friends-description"),
-                    Switch { 
+                    Switch {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.friends_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {
@@ -52,7 +52,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 SettingSection {
                     section_label: get_local_text("messages"),
                     section_description: get_local_text("settings-notifications.messages-description"),
-                    Switch { 
+                    Switch {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.messages_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {
@@ -63,7 +63,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 SettingSection {
                     section_label: get_local_text("settings"),
                     section_description: get_local_text("settings-notifications.settings-description"),
-                    Switch { 
+                    Switch {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.settings_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {

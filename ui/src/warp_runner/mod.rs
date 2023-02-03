@@ -51,11 +51,11 @@ pub enum WarpEvent {
 
 #[derive(Display)]
 pub enum WarpCmd {
-    #[display(fmt = "WarpCmd::Tesseract {{ {_0} }} ")]
+    #[display(fmt = "Tesseract {{ {_0} }} ")]
     Tesseract(TesseractCmd),
-    #[display(fmt = "WarpCmd::MultiPass {{ {_0} }} ")]
+    #[display(fmt = "MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
-    #[display(fmt = "WarpCmd::RayGun {{ {_0} }} ")]
+    #[display(fmt = "RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
     Constellation(ConstellationCmd),
 }
@@ -105,7 +105,7 @@ async fn handle_login(notify: Arc<Notify>) {
         tokio::select! {
             opt = warp_cmd_rx.recv() => {
                 if let Some(cmd) = &opt {
-                    log::debug!("received {}", cmd);
+                    log::debug!("received warp cmd: {}", cmd);
                 }
 
                 match opt {
@@ -224,7 +224,6 @@ async fn warp_initialization(
     let path = &STATIC_ARGS.warp_path;
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
-
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
