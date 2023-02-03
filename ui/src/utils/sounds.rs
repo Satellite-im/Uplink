@@ -1,32 +1,30 @@
-use soloud::*;
-
 pub enum Sounds {
     Notification,
     FriendReq,
     General,
 }
 
+const NOTIFICATION_SOUND: &[u8] = include_bytes!("../../extra/assets/sounds/Ponderous.ogg");
+const FRIEND_SOUND: &[u8] = include_bytes!("../../extra/assets/sounds/Success.ogg");
+
 #[allow(non_snake_case)]
 pub fn Play(sound: Sounds) {
     // Create a Soloud instance
-    let sl = Soloud::default().expect("Soloud::default");
-    // Create a Wav instance
-    let mut wav = audio::Wav::default();
-    // Load the appropriate sound file based on the `sound` argument
-    match sound {
-        Sounds::Notification => wav
-            .load_mem(include_bytes!("../../extra/assets/sounds/Ponderous.ogg"))
-            .expect("Ponderous.ogg"),
-        Sounds::FriendReq => wav
-            .load_mem(include_bytes!("../../extra/assets/sounds/Success.ogg"))
-            .expect("Success.ogg"),
-        // The `General` case is not handled
-        Sounds::General => {}
-    };
-    // Play the sound
-    sl.play(&wav);
-    // Wait until the sound finishes playing
-    while sl.voice_count() > 0 {
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
+
+    std::thread::spawn(move || {
+        let Ok((_stream, audio_handle)) = rodio::OutputStream::try_default() else {
+            return
+        };
+        // Load the appropriate sound file based on the `sound` argument
+        let buffer = match sound {
+            Sounds::Notification => NOTIFICATION_SOUND,
+            Sounds::FriendReq => FRIEND_SOUND,
+            // The `General` case is not handled
+            Sounds::General => return,
+        };
+        //TODO: Maybe append into sink instead?
+        if let Ok(sound) = audio_handle.play_once(std::io::Cursor::new(buffer)) {
+            sound.sleep_until_end();
+        }
+    });
 }

@@ -9,6 +9,7 @@ use wry::webview::WebView;
 use super::{
     chats::Chat,
     identity::Identity,
+    notifications::NotificaitonKind,
     route::To,
     ui::{Theme, ToastNotification, WindowMeta},
     State,
@@ -49,6 +50,11 @@ pub enum Action {
     SetDebugLogger(WindowId),
     ClearDebugLogger(DesktopContext),
 
+    // Notifications
+    AddNotification(NotificaitonKind, u32),
+    RemoveNotification(NotificaitonKind, u32),
+    ClearNotification(NotificaitonKind),
+    ClearAllNotifications,
     // Settings
     /// Sets the selected language.
     SetLanguage(String),

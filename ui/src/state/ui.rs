@@ -5,6 +5,8 @@ use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
 use wry::webview::WebView;
 
+use super::notifications::Notifications;
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct WindowMeta {
     pub focused: bool,
@@ -17,6 +19,7 @@ pub struct WindowMeta {
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct UI {
+    pub notifications: Notifications,
     // stores information related to the current call
     #[serde(skip)]
     pub current_call: Option<Call>,

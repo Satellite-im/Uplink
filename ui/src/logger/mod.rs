@@ -155,7 +155,7 @@ impl Logger {
                 .open(&self.log_file)
                 .unwrap();
 
-            if let Err(error) = writeln!(file, "{}", new_log) {
+            if let Err(error) = writeln!(file, "{new_log}") {
                 eprintln!("Couldn't write to debug.log file. {error}");
             }
         } else {
@@ -185,13 +185,13 @@ impl Logger {
         let mut file = match OpenOptions::new().append(true).open(&self.warp_file) {
             Ok(f) => f,
             Err(e) => {
-                eprintln!("failed to log_warp: {}", e);
-                eprintln!("lost log: {}", new_log);
+                eprintln!("failed to log_warp: {e}");
+                eprintln!("lost log: {new_log}");
                 return;
             }
         };
 
-        if let Err(error) = writeln!(file, "{}", new_log) {
+        if let Err(error) = writeln!(file, "{new_log}") {
             eprintln!("Couldn't write to warp.log file. {error}");
         }
     }
@@ -209,7 +209,7 @@ impl Logger {
             .unwrap();
 
         for entry in self.log_entries.drain(..) {
-            if let Err(error) = writeln!(file, "{}", entry) {
+            if let Err(error) = writeln!(file, "{entry}") {
                 eprintln!("Couldn't write to debug.log file. {error}");
             }
         }

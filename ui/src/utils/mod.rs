@@ -7,7 +7,7 @@ use crate::state::{self, Theme};
 use kit::User as UserInfo;
 
 pub mod format_timestamp;
-//pub mod notifications;
+pub mod notifications;
 pub mod sounds;
 
 pub fn get_available_themes() -> Vec<Theme> {

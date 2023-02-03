@@ -30,9 +30,12 @@ pub fn BlockedUsers(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                warp_cmd_tx
-                    .send(WarpCmd::MultiPass(MultiPassCmd::Unblock { did, rsp: tx }))
-                    .expect("failed to send cmd");
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::Unblock { did, rsp: tx }))
+                {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
 
                 let rsp = rx.await.expect("command canceled");
                 if let Err(e) = rsp {
@@ -68,7 +71,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 relationship.set_blocked(true);
                 rsx!(
                     ContextMenu {
-                        id: format!("{}-friend-listing", did),
+                        id: format!("{did}-friend-listing"),
                         key: "{did}-friend-listing",
                         items: cx.render(rsx!(
                             ContextItem {

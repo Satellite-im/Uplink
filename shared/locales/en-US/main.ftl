@@ -116,6 +116,16 @@ settings-files = Files Settings
     .open-sync-folder = Open Sync Folder
     .open-sync-folder-description = Open the folder where your files are synced to.
 
+settings-notifications = Notifications
+    .notifications-description = Enable notifications for incoming calls, messages, and more.
+    .enabled = Enabled
+    .enabled-description = Enable notifications for incoming calls, messages, and more.
+    .grant-permissions= Grant Permissions
+    .grant-permissions-description = Grant permissions to receive notifications.
+    .friends-description = Enable notifications for friend requests.
+    .messages-description = Enable notifications for new messages.
+    .settings-description = Enable notifications for updates and important alerts.
+
 settings-developer = Developer Settings 
     .developer-mode = Developer Mode
     .developer-mode-description = Enabling developer mode adds logging and displays helpful debug information on the UI.

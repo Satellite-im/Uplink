@@ -19,8 +19,8 @@ use warp::{
 };
 
 use crate::state::{
-    storage::Storage, ui::WindowMeta, Account, Chat, Chats, Friends, Identity, Route, Settings,
-    State, ToastNotification, UI,
+    storage::Storage, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
+    ToastNotification,
 };
 
 const FRIEND_COUNT: usize = 20;
@@ -61,18 +61,6 @@ pub fn generate_mock() -> State {
     let storage = generate_fake_storage();
 
     State {
-        ui: UI {
-            current_call: None,
-            current_debug_logger: None,
-            overlays: vec![],
-            popout_player: false,
-            toast_notifications,
-            theme: None,
-            sidebar_hidden: false,
-            // TODO: Until this is more functional, we should keep it disabled by default.
-            enable_overlay: false,
-            metadata: WindowMeta::default(),
-        },
         account: Account {
             identity: me.clone(),
         },
@@ -99,7 +87,7 @@ pub fn generate_mock() -> State {
             incoming_requests: HashSet::from_iter(incoming_requests.iter().cloned()),
             outgoing_requests: HashSet::from_iter(outgoing_requests.iter().cloned()),
         },
-        hooks: Vec::new(),
+        ..Default::default()
     }
 }
 
@@ -195,7 +183,7 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         }
 
         let base64_url = encode(&buffer);
-        let image_url = format!("data:image/png;base64,{}", base64_url);
+        let image_url = format!("data:image/png;base64,{base64_url}");
 
         let mut graphics = Graphics::default();
         graphics.set_profile_picture(&image_url);

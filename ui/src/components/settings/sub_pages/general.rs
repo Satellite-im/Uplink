@@ -8,18 +8,17 @@ use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
-    config::Configuration,
     state::{Action, State},
     utils::get_available_themes,
 };
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
-    log::trace!("General settings rendered");
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
-    let mut config = Configuration::load_or_default();
+
+    log::debug!("General settings page rendered.");
 
     cx.render(rsx!(
         div {
@@ -29,9 +28,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
-                    active: config.general.enable_overlay,
+                    active: state.read().configuration.config.general.enable_overlay,
                     onflipped: move |e| {
-                        config.set_overlay(e);
+                        state.write().configuration.set_overlay(e);
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }
@@ -46,7 +45,11 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 Select {
-                    initial_value: state.read().ui.theme.clone().map(|t| t.name).unwrap_or_else(|| "Default".into()),
+                    initial_value: if let Some(theme) = &state.read().ui.theme {
+                        theme.name.clone()
+                    } else {
+                        "Default".into()
+                    },
                     options: themes.iter().map(|t| t.name.clone()).collect(),
                     onselect: move |value| {
                         themes.iter().for_each(|t| {

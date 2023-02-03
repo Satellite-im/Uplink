@@ -4,6 +4,7 @@
 #settings-general,
 #settings-profile,
 #settings-files,
+#settings-notifications,
 #settings-privacy {
     color: var(--text-color);
     flex: 1;
@@ -23,6 +24,10 @@
             flex: 1;
             overflow-y: scroll;
         }
+    }
+
+    div.disabled, div.enabled {
+        width: 100%;
     }
 }
 
