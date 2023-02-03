@@ -6,6 +6,8 @@ use crate::{
     icons::{Icon, IconElement},
 };
 
+const MAX_LEN_TO_FORMAT_NAME: usize = 15;
+
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(optional)]
@@ -30,7 +32,7 @@ pub fn get_text(cx: &Scope<Props>) -> (String, String) {
     let folder_name = cx.props.text.clone().unwrap_or_default();
     let mut folder_name_formatted = folder_name.clone();
 
-    if folder_name_formatted.len() > 15 {
+    if folder_name_formatted.len() > MAX_LEN_TO_FORMAT_NAME {
         folder_name_formatted = match &folder_name_formatted.get(0..12) {
             Some(name_sliced) => format!(
                 "{}...{}",
