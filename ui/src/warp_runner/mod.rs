@@ -21,7 +21,7 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
-pub use manager::{MultiPassCmd, RayGunCmd, TesseractCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -51,12 +51,13 @@ pub enum WarpEvent {
 
 #[derive(Display)]
 pub enum WarpCmd {
-    #[display(fmt = "WarpCmd::Tesseract {{ {_0} }} ")]
+    #[display(fmt = "Tesseract {{ {_0} }} ")]
     Tesseract(TesseractCmd),
-    #[display(fmt = "WarpCmd::MultiPass {{ {_0} }} ")]
+    #[display(fmt = "MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
-    #[display(fmt = "WarpCmd::RayGun {{ {_0} }} ")]
+    #[display(fmt = "RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
+    Constellation(ConstellationCmd),
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp
@@ -104,7 +105,7 @@ async fn handle_login(notify: Arc<Notify>) {
         tokio::select! {
             opt = warp_cmd_rx.recv() => {
                 if let Some(cmd) = &opt {
-                    log::debug!("received {}", cmd);
+                    log::debug!("received warp cmd: {}", cmd);
                 }
 
                 match opt {
@@ -224,7 +225,6 @@ async fn warp_initialization(
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
 
-
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
@@ -252,6 +252,6 @@ async fn warp_initialization(
         tesseract,
         multipass: account,
         raygun: messaging,
-        _constellation: storage,
+        constellation: storage,
     })
 }

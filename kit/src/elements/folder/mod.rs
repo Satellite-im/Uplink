@@ -1,9 +1,12 @@
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 use crate::{
-    elements::input::Input,
+    elements::input::{Input, Size},
     icons::{Icon, IconElement},
 };
+
+const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -25,8 +28,21 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_text(cx: &Scope<Props>) -> String {
-    cx.props.text.clone().unwrap_or_default()
+pub fn get_text(cx: &Scope<Props>) -> (String, String) {
+    let folder_name = cx.props.text.clone().unwrap_or_default();
+    let mut folder_name_formatted = folder_name.clone();
+
+    if folder_name_formatted.len() > MAX_LEN_TO_FORMAT_NAME {
+        folder_name_formatted = match &folder_name_formatted.get(0..12) {
+            Some(name_sliced) => format!(
+                "{}...{}",
+                name_sliced,
+                &folder_name_formatted[folder_name_formatted.len() - 3..].to_string(),
+            ),
+            None => folder_name_formatted.clone(),
+        };
+    }
+    (folder_name, folder_name_formatted)
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
@@ -48,9 +64,9 @@ pub fn emit_press(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let open = cx.props.open.unwrap_or_default();
-    let text = get_text(&cx);
+    let (folder_name, folder_name_formatted) = get_text(&cx);
     let aria_label = get_aria_label(&cx);
-    let placeholder = text.clone();
+    let placeholder = folder_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let icon = if open { Icon::FolderOpen } else { Icon::Folder };
     let disabled = cx.props.disabled.unwrap_or_default();
@@ -74,16 +90,21 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 },
                 with_rename.then(|| rsx! (
-                    Input {
-                        disabled: disabled,
-                        placeholder: placeholder,
-                        // todo: use is_valid
-                        onreturn: move |(s, _is_valid)| emit(&cx, s)
-                    }
+                        Input {
+                            id: Uuid::new_v4().to_string(),
+                            disabled: disabled,
+                            placeholder: placeholder,
+                            focus: true,
+                            max_length: 64,
+                            size: Size::Small,
+                            // todo: use is_valid
+                            onreturn: move |(s, _is_valid)| emit(&cx, s)
+                        }
                 )),
                 (!with_rename).then(|| rsx! (
                     label {
-                        "{text}"
+                        class: "folder-name",
+                        "{folder_name_formatted}"
                     }
                 ))
             }

@@ -35,14 +35,16 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
-use crate::layouts::files::FilesLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
+use crate::layouts::storage::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::state::friends;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
-use crate::warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels};
+use crate::state::{friends, storage};
+use crate::warp_runner::{
+    ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
+};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use dioxus_router::*;
@@ -161,10 +163,7 @@ struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: when the app is mature, default mock to false. also hide it behind a #[cfg(debug_assertions)]
-    // there's no way to set --flag=true so for make the flag mean false
-    /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
-    /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
+    // todo: hide mock behind a #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
     /// configures log output
@@ -365,6 +364,11 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     log::trace!("rendering app_bootstrap");
     let mut state = State::load();
 
+    if STATIC_ARGS.use_mock {
+        assert!(state.friends.initialized);
+        assert!(state.chats.initialized);
+    }
+
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
@@ -414,6 +418,7 @@ fn app(cx: Scope) -> Element {
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
@@ -609,6 +614,48 @@ fn app(cx: Scope) -> Element {
             }
 
             *friends_init.write_silent() = true;
+            needs_update.set(true);
+        }
+    });
+
+    // initialize files
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![items_init, needs_update];
+        async move {
+            if *items_init.read() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel::<Result<storage::Storage, warp::error::Error>>();
+
+            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
+            )) {
+                log::error!("failed to initialize Files {}", e);
+                return;
+            }
+
+            let res = rx.await.expect("failed to get response from warp_runner");
+
+            log::trace!("init items");
+            match res {
+                Ok(storage) => match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().storage = storage;
+
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                },
+                Err(e) => {
+                    log::error!("init items failed: {}", e);
+                }
+            }
+
+            *items_init.write_silent() = true;
             needs_update.set(true);
         }
     });
