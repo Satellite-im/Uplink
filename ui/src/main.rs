@@ -3,6 +3,7 @@
 use clap::Parser;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
+use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
@@ -27,6 +28,9 @@ use tao::window::WindowBuilder;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
+
+use dioxus_desktop::use_wry_event_handler;
+use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
@@ -85,7 +89,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
-        use_mock: !args.no_mock,
+        use_mock: args.with_mock,
     }
 });
 
@@ -162,7 +166,7 @@ struct Args {
     /// mock data is fake friends, conversations, and messages, which allow for testing the UI.
     /// may cause crashes when attempting to add/remove fake friends, send messages to them, etc.
     #[clap(long, default_value_t = false)]
-    no_mock: bool,
+    with_mock: bool,
     /// configures log output
     #[command(subcommand)]
     profile: Option<LogProfile>,
@@ -383,6 +387,17 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+
+    use_wry_event_handler(cx, {
+        move |event, _| match event {
+            WryEvent::WindowEvent {
+                event: WindowEvent::Focused(new_focused),
+                ..
+            } => state.ui.metadata.focused = *new_focused,
+            _ => {}
+        }
+    });
+
     if state.ui.is_minimal_view() {
         state.ui.sidebar_hidden = true;
     }
