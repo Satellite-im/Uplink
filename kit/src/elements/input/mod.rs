@@ -26,6 +26,21 @@ pub struct Options {
     pub with_label: Option<&'static str>,
 }
 
+#[derive(Clone, Copy)]
+pub enum Size {
+    Small,
+    Normal,
+}
+
+impl Size {
+    fn get_height(&self) -> &str {
+        match self {
+            Size::Small => "0",
+            _ => "",
+        }
+    }
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(default = "".to_owned())]
@@ -37,6 +52,8 @@ pub struct Props<'a> {
     placeholder: String,
     #[props(optional)]
     max_length: Option<i32>,
+    #[props(default = Size::Normal)]
+    size: Size,
     #[props(optional)]
     default_text: Option<String>,
     #[props(optional)]
@@ -226,6 +243,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("input {}", if *valid.current() && apply_validation_class { "input-success" } else if !error.is_empty() && apply_validation_class { "input-warning" } else { "" })
                 },
+                height: cx.props.size.get_height(),
                 // If an icon was provided, render it before the input.
                 (cx.props.icon.is_some()).then(|| rsx!(
                     span {

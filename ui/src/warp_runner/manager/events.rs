@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{
-    commands::{handle_multipass_cmd, handle_raygun_cmd},
+    commands::{handle_constellation_cmd, handle_multipass_cmd, handle_raygun_cmd},
     MultiPassCmd,
 };
 
@@ -147,6 +147,8 @@ pub async fn handle_warp_command(
         WarpCmd::RayGun(cmd) => {
             handle_raygun_cmd(cmd, stream_manager, &mut warp.multipass, &mut warp.raygun).await
         }
+
+        WarpCmd::Constellation(cmd) => handle_constellation_cmd(cmd, &mut warp.constellation).await,
     }
     Ok(())
 }

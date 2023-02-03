@@ -7,6 +7,7 @@ pub mod identity;
 pub mod notifications;
 pub mod route;
 pub mod settings;
+pub mod storage;
 pub mod ui;
 
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
@@ -55,6 +56,8 @@ pub struct State {
     pub chats: chats::Chats,
     #[serde(default)]
     pub friends: friends::Friends,
+    #[serde(skip)]
+    pub storage: storage::Storage,
     #[serde(default)]
     pub settings: settings::Settings,
     #[serde(default)]
@@ -84,6 +87,7 @@ impl Clone for State {
             route: self.route.clone(),
             chats: self.chats.clone(),
             friends: self.friends.clone(),
+            storage: self.storage.clone(),
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),

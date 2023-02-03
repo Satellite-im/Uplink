@@ -21,7 +21,7 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
-pub use manager::{MultiPassCmd, RayGunCmd, TesseractCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -57,6 +57,7 @@ pub enum WarpCmd {
     MultiPass(MultiPassCmd),
     #[display(fmt = "RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
+    Constellation(ConstellationCmd),
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp
@@ -251,6 +252,6 @@ async fn warp_initialization(
         tesseract,
         multipass: account,
         raygun: messaging,
-        _constellation: storage,
+        constellation: storage,
     })
 }
