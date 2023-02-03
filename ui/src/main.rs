@@ -360,6 +360,11 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     log::trace!("rendering app_bootstrap");
     let mut state = State::load();
 
+    if STATIC_ARGS.use_mock {
+        assert!(state.friends.initialized);
+        assert!(state.chats.initialized);
+    }
+
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);

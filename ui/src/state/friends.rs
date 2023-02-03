@@ -24,26 +24,6 @@ pub struct Friends {
     pub outgoing_requests: HashSet<Identity>,
 }
 
-impl Friends {
-    pub fn join(&mut self, mut other: Friends) {
-        for (k, v) in other.all.drain() {
-            self.all.insert(k, v);
-        }
-
-        for v in other.blocked.drain() {
-            self.blocked.insert(v);
-        }
-
-        for v in other.incoming_requests.drain() {
-            self.incoming_requests.insert(v);
-        }
-
-        for v in other.outgoing_requests.drain() {
-            self.outgoing_requests.insert(v);
-        }
-    }
-}
-
 // don't skip friends data when using mock data
 impl Serialize for Friends {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -51,13 +31,14 @@ impl Serialize for Friends {
         S: Serializer,
     {
         let mut state = serializer.serialize_struct("Friends", 5)?;
-        state.skip_field("initialized")?;
         if STATIC_ARGS.use_mock {
+            state.serialize_field("initialized", &self.initialized)?;
             state.serialize_field("all", &self.all)?;
             state.serialize_field("blocked", &self.blocked)?;
             state.serialize_field("incoming_requests", &self.incoming_requests)?;
             state.serialize_field("outgoing_requests", &self.outgoing_requests)?;
         } else {
+            state.skip_field("initialized")?;
             state.skip_field("all")?;
             state.skip_field("blocked")?;
             state.skip_field("incoming_requests")?;
