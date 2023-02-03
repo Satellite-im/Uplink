@@ -69,12 +69,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     ChanCmd::AddNewFolder(folder_name) => {
                             let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                             let folder_name2 = folder_name.clone();
-                            warp_cmd_tx
-                                .send(WarpCmd::Constellation(ConstellationCmd::CreateNewFolder {
+
+                                if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::CreateNewFolder {
                                     folder_name,
                                     rsp: tx,
-                                }))
-                                .expect("failed to send cmd");
+                                },
+                                )) {
+                                    log::error!("failed to add new folder {}", e);
+                                    return;
+                                }
 
                             let rsp = rx.await.expect("command canceled");
 
@@ -91,11 +94,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     ChanCmd::GetItemsFromCurrentDirectory => {
                             let (tx, rx) =
                                 oneshot::channel::<Result<Storage, warp::error::Error>>();
-                            warp_cmd_tx
-                                .send(WarpCmd::Constellation(
+
+                                if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                                     ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
-                                ))
-                                .expect("failed to send cmd");
+                                )) {
+                                    log::error!("failed to get items from current directory {}", e);
+                                    return;
+                                }
 
                             let rsp = rx.await.expect("command canceled");
                             match rsp {

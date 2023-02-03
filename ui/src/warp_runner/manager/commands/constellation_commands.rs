@@ -1,3 +1,4 @@
+use derive_more::Display;
 use futures::channel::oneshot;
 
 use crate::state::storage::Storage as uplink_storage;
@@ -5,11 +6,13 @@ use crate::warp_runner::Storage as warp_storage;
 
 use warp::{error::Error, logging::tracing::log};
 
-#[derive(Debug)]
+#[derive(Display)]
 pub enum ConstellationCmd {
+    #[display(fmt = "GetItemsFromCurrentDirectory")]
     GetItemsFromCurrentDirectory {
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(fmt = "CreateNewFolder {{ folder_name: {folder_name} }} ")]
     CreateNewFolder {
         folder_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,

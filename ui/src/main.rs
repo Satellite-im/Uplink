@@ -611,11 +611,13 @@ fn app(cx: Scope) -> Element {
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let (tx, rx) = oneshot::channel::<Result<storage::Storage, warp::error::Error>>();
-            warp_cmd_tx
-                .send(WarpCmd::Constellation(
-                    ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
-                ))
-                .expect("main failed to send warp command");
+
+            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
+            )) {
+                log::error!("failed to initialize Files {}", e);
+                return;
+            }
 
             let res = rx.await.expect("failed to get response from warp_runner");
 
