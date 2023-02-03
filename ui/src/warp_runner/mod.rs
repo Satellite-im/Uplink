@@ -104,7 +104,7 @@ async fn handle_login(notify: Arc<Notify>) {
         tokio::select! {
             opt = warp_cmd_rx.recv() => {
                 if let Some(cmd) = &opt {
-                    log::debug!("received {}", cmd);
+                    log::debug!("received warp cmd: {}", cmd);
                 }
 
                 match opt {
