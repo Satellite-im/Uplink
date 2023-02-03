@@ -51,13 +51,14 @@ impl Serialize for Friends {
         S: Serializer,
     {
         let mut state = serializer.serialize_struct("Friends", 5)?;
-        state.skip_field("initialized")?;
         if STATIC_ARGS.use_mock {
+            state.serialize_field("initialized", &self.initialized)?;
             state.serialize_field("all", &self.all)?;
             state.serialize_field("blocked", &self.blocked)?;
             state.serialize_field("incoming_requests", &self.incoming_requests)?;
             state.serialize_field("outgoing_requests", &self.outgoing_requests)?;
         } else {
+            state.skip_field("initialized")?;
             state.skip_field("all")?;
             state.skip_field("blocked")?;
             state.skip_field("incoming_requests")?;
