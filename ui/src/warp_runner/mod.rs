@@ -51,11 +51,11 @@ pub enum WarpEvent {
 
 #[derive(Display)]
 pub enum WarpCmd {
-    #[display(fmt = "WarpCmd::Tesseract {{ {_0} }} ")]
+    #[display(fmt = "Tesseract {{ {_0} }} ")]
     Tesseract(TesseractCmd),
-    #[display(fmt = "WarpCmd::MultiPass {{ {_0} }} ")]
+    #[display(fmt = "MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
-    #[display(fmt = "WarpCmd::RayGun {{ {_0} }} ")]
+    #[display(fmt = "RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
 }
 
