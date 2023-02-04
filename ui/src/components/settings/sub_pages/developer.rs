@@ -49,7 +49,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
             },
             SettingSection {
                 section_label: "Test Notification".into(),
-                section_description: "Sends a test notification".into(),
+                section_description: "Sends a test notification.".into(),
                 Button {
                     text: "Test Notifications".into(),
                     aria_label: "open-codebase-button".into(),
