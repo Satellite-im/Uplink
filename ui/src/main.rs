@@ -395,16 +395,16 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     use_wry_event_handler(cx, {
         move |event, _| match event {
             WryEvent::WindowEvent {
-                event: WindowEvent::Focused(new_focused),
+                event: WindowEvent::Focused(focused),
                 ..
-            } => state.ui.metadata.focused = *new_focused,
+            } => state.ui.metadata.focused = *focused,
             WryEvent::WindowEvent {
-                event: WindowEvent::Resized(new_size),
+                event: WindowEvent::Resized(size),
                 ..
             } => {
-                log::trace!("RESIZED TO {:?}", new_size);
-                state.ui.metadata.height = new_size.height;
-                state.ui.metadata.width = new_size.width;
+                log::debug!("RESIZED TO {:?}", size);
+                state.ui.metadata.height = size.height;
+                state.ui.metadata.width = size.width;
             }
             _ => {}
         }
