@@ -402,6 +402,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
                 event: WindowEvent::Resized(new_size),
                 ..
             } => {
+                log::trace!("RESIZED TO {:?}", new_size);
                 state.ui.metadata.height = new_size.height;
                 state.ui.metadata.width = new_size.width;
             }
