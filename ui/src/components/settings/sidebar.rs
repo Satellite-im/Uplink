@@ -146,6 +146,9 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |route| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                        }
                         use_router(cx).replace_route(route, None, None);
                     }
                 },
@@ -155,6 +158,9 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 active: active_route,
                 bubble: true,
                 onnavigate: move |route| {
+                    if state.read().configuration.config.audiovideo.interface_sounds {
+                        crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                    }
                     emit(&cx, Page::from_str(route).unwrap());
                 }
             }

@@ -56,6 +56,10 @@ pub struct AudioVideo {
     pub noise_suppression: bool,
     #[serde(default)]
     pub call_timer: bool,
+    #[serde(default)]
+    pub interface_sounds: bool,
+    #[serde(default)]
+    pub media_sounds: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]

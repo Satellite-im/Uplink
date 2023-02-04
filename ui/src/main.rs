@@ -397,7 +397,11 @@ pub fn app_bootstrap(cx: Scope) -> Element {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
                 ..
-            } => state.ui.metadata.focused = *focused,
+            } => {
+                log::debug!("FOCUS CHANGED {:?}", *focused);
+                state.ui.metadata.focused = *focused;
+                crate::utils::sounds::Play(utils::sounds::Sounds::Notification);
+            }
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(size),
                 ..

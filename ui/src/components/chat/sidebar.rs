@@ -90,6 +90,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                        }
                         use_router(cx).replace_route(r, None, None);
                     }
                 },
@@ -179,7 +182,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let platform = match parsed_user.platform() {
                         warp::multipass::identity::Platform::Desktop => Platform::Desktop,
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                        _ => Platform::Headless //TODO: Unknown
+                        _ => Platform::Headless //TODO: Unknown (Matt: This represents bots and other platforms which are not using known UIs)
                     };
 
                     let last_message = chat.messages.iter().last();
