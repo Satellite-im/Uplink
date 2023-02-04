@@ -398,13 +398,18 @@ pub fn app_bootstrap(cx: Scope) -> Element {
                 event: WindowEvent::Focused(new_focused),
                 ..
             } => state.ui.metadata.focused = *new_focused,
+            WryEvent::WindowEvent {
+                event: WindowEvent::Resized(new_size),
+                ..
+            } => {
+                state.ui.metadata.height = new_size.height;
+                state.ui.metadata.width = new_size.width;
+            }
             _ => {}
         }
     });
 
-    if state.ui.is_minimal_view() {
-        state.ui.sidebar_hidden = true;
-    }
+    state.ui.sidebar_hidden = state.ui.is_minimal_view();
 
     use_shared_state_provider(cx, || state);
 
