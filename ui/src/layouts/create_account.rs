@@ -12,6 +12,7 @@ use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{
+    config::Configuration,
     warp_runner::{MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -60,6 +61,9 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 match res {
                     Ok(_) => {
                         page.set(AuthPages::Success);
+                        if Configuration::load_or_default().audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                        }
                     }
                     // todo: notify user
                     Err(e) => log::error!("create identity failed: {}", e),
