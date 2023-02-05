@@ -136,7 +136,7 @@ impl Configuration {
     }
 
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let config_json = serde_json::to_string(self)?;
+        let config_json = serde_json::to_string_pretty(self)?;
         fs::write(&STATIC_ARGS.config_path, config_json)?;
         Ok(())
     }
