@@ -60,10 +60,10 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 //println!("got response from warp");
                 match res {
                     Ok(_) => {
-                        page.set(AuthPages::Success);
                         if Configuration::load_or_default().audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
                         }
+                        page.set(AuthPages::Success);
                     }
                     // todo: notify user
                     Err(e) => log::error!("create identity failed: {}", e),

@@ -42,6 +42,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
 use crate::state::{friends, storage};
+use crate::utils::sounds::Sounds;
 use crate::warp_runner::{
     ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
 };
@@ -381,18 +382,20 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         state.ui.overlays.push(window);
     }
 
+    let size = desktop.webview.inner_size();
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        width: desktop.inner_size().width,
-        height: desktop.inner_size().height,
-        minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        width: size.width,
+        height: size.height,
+        minimal_view: size.width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
 
     use_wry_event_handler(cx, {
+        to_owned![desktop];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
@@ -400,15 +403,17 @@ pub fn app_bootstrap(cx: Scope) -> Element {
             } => {
                 log::debug!("FOCUS CHANGED {:?}", *focused);
                 state.ui.metadata.focused = *focused;
-                crate::utils::sounds::Play(utils::sounds::Sounds::Notification);
+                crate::utils::sounds::Play(Sounds::Notification);
             }
             WryEvent::WindowEvent {
-                event: WindowEvent::Resized(size),
+                event: WindowEvent::Resized(_),
                 ..
             } => {
+                let size = desktop.webview.inner_size();
                 log::debug!("RESIZED TO {:?}", size);
                 state.ui.metadata.height = size.height;
                 state.ui.metadata.width = size.width;
+                state.ui.metadata.minimal_view = size.width < 600;
             }
             _ => {}
         }
