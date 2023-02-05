@@ -390,36 +390,9 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimized: desktop.is_minimized(),
         width: size.width,
         height: size.height,
-        minimal_view: size.width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
-
-    use_wry_event_handler(cx, {
-        to_owned![desktop];
-        move |event, _| match event {
-            WryEvent::WindowEvent {
-                event: WindowEvent::Focused(focused),
-                ..
-            } => {
-                log::debug!("FOCUS CHANGED {:?}", *focused);
-                state.ui.metadata.focused = *focused;
-                crate::utils::sounds::Play(Sounds::Notification);
-            }
-            WryEvent::WindowEvent {
-                event: WindowEvent::Resized(_),
-                ..
-            } => {
-                let size = desktop.webview.inner_size();
-                log::debug!("RESIZED TO {:?}", size);
-                state.ui.metadata.height = size.height;
-                state.ui.metadata.width = size.width;
-                state.ui.metadata.minimal_view = size.width < 600;
-            }
-            _ => {}
-        }
-    });
-
-    state.ui.sidebar_hidden = state.ui.is_minimal_view();
 
     use_shared_state_provider(cx, || state);
 
@@ -492,6 +465,39 @@ fn app(cx: Scope) -> Element {
         needs_update.set(false);
         state.write();
     }
+
+    let webview = desktop.webview.clone();
+    use_wry_event_handler(cx, {
+        move |event, _| match event {
+            WryEvent::WindowEvent {
+                event: WindowEvent::Focused(focused),
+                ..
+            } => {
+                log::debug!("FOCUS CHANGED {:?}", *focused);
+                state.write().ui.metadata.focused = *focused;
+                crate::utils::sounds::Play(Sounds::Notification);
+            }
+            WryEvent::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } => {
+                let size = webview.inner_size();
+                log::debug!(
+                    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
+                    size,
+                    size.width < 1200
+                );
+                state.write().ui.metadata = WindowMeta {
+                    height: size.height,
+                    width: size.width,
+                    minimal_view: size.width < 1200,
+                    ..state.read().ui.metadata
+                };
+                state.write().ui.sidebar_hidden = size.width < 1200;
+            }
+            _ => {}
+        }
+    });
 
     // update state in response to warp events
     let inner = state.inner();
