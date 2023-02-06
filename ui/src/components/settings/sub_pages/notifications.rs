@@ -32,6 +32,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 Switch {
                     active: state.read().configuration.config.notifications.enabled,
                     onflipped: move |e| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        }
                         state.write().configuration.set_notifications_enabled(e);
                     }
                 }
@@ -45,6 +48,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.friends_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {
+                            if state.read().configuration.config.audiovideo.interface_sounds {
+                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            }
                             state.write().configuration.set_friends_notifications(e);
                         }
                     }
@@ -56,6 +62,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.messages_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {
+                            if state.read().configuration.config.audiovideo.interface_sounds {
+                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            }
                             state.write().configuration.set_messages_notifications(e);
                         }
                     }
@@ -67,6 +76,9 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                         active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.settings_notifications,
                         disabled: !state.read().configuration.config.notifications.enabled,
                         onflipped: move |e| {
+                            if state.read().configuration.config.audiovideo.interface_sounds {
+                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            }
                             state.write().configuration.set_settings_notifications(e);
                         }
                     }

@@ -36,6 +36,16 @@ impl Configuration {
         let _ = self.config.save();
     }
 
+    pub fn set_interface_sounds(&mut self, status: bool) {
+        self.config.audiovideo.interface_sounds = status;
+        let _ = self.config.save();
+    }
+
+    pub fn set_media_sounds(&mut self, status: bool) {
+        self.config.audiovideo.media_sounds = status;
+        let _ = self.config.save();
+    }
+
     pub fn set_friends_notifications(&mut self, friends_notifications: bool) {
         self.config.notifications.friends_notifications = friends_notifications;
         let _ = self.config.save();

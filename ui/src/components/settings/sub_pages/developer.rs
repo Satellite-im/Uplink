@@ -30,6 +30,10 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 Switch {
                     active: state.read().configuration.config.developer.developer_mode,
                     onflipped: move |value| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        }
+
                         state.write().configuration.set_developer_mode(value);
                     },
                 }
@@ -118,6 +122,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 Switch {
                     active: logger::get_save_to_file(),
                     onflipped: move |value| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        }
                         logger::set_save_to_file(value);
                     },
                 }
