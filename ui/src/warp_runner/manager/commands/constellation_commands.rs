@@ -134,7 +134,8 @@ async fn upload_files(
             .await
         {
             Ok(mut upload_progress) => {
-                let mut previous_percentage: usize = 101;
+                let mut previous_percentage: usize = 0;
+                let mut upload_process_started = false;
 
                 while let Some(upload_progress) = upload_progress.next().await {
                     match upload_progress {
@@ -143,8 +144,10 @@ async fn upload_files(
                             current,
                             total,
                         } => {
-                            if previous_percentage == 101 {
+                            if !upload_process_started {
+                                upload_process_started = true;
                                 log::info!("Starting upload for {name}");
+                                log::info!("0% completed -> written 0 bytes")
                             };
 
                             if let Some(total) = total {
