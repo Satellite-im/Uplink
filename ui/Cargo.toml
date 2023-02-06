@@ -6,11 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = "0.3.1"
-dioxus-hooks = "0.3.0"
-dioxus-router = "0.3.0"
-dioxus-desktop = { version = "0.3.0", features = ["transparent"] }
-dioxus-core = "0.3.0"
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["transparent"] }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
 fermi = { git = "https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
 shared = { path = "../shared" }

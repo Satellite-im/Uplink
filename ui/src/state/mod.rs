@@ -101,6 +101,8 @@ impl Clone for State {
 //  These methods are used to update the relevant fields within the State struct in response to user actions or other events within the application.
 impl State {
     /// Constructs a new `State` instance with default values.
+    /// use state::load() instead
+    #[deprecated]
     pub fn new() -> Self {
         State::default()
     }

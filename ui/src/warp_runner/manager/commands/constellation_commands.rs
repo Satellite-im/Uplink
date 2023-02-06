@@ -58,7 +58,7 @@ async fn create_new_directory(
     folder_name: &str,
     warp_storage: &mut warp_storage,
 ) -> Result<(), Error> {
-    let _ = warp_storage.create_directory(folder_name, true).await?;
+    warp_storage.create_directory(folder_name, true).await?;
     log::debug!("New directory created: {:?}", folder_name);
     Ok(())
 }

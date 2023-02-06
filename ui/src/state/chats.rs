@@ -38,10 +38,10 @@ pub struct Chat {
     pub typing_indicator: HashMap<DID, Instant>,
 }
 
-// TODO: Properly wrap data which is expected to persist remotely in options, so we can know if we're still figuring out what exists "remotely", i.e. loading.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+// warning: Chats implements Serialize
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct Chats {
-    #[serde(skip)]
+    #[serde(default)]
     pub initialized: bool,
     // All active chats from warp.
     #[serde(default)]
@@ -65,11 +65,26 @@ pub enum Direction {
     Outgoing,
 }
 
-impl Chats {
-    pub fn join(&mut self, mut other: HashMap<Uuid, Chat>) {
-        for (k, v) in other.drain() {
-            self.all.insert(k, v);
+impl Serialize for Chats {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Chats", 6)?;
+
+        if STATIC_ARGS.use_mock {
+            state.serialize_field("initialized", &self.initialized)?;
+        } else {
+            state.skip_field("initialized")?;
         }
+
+        state.serialize_field("all", &self.all)?;
+        state.serialize_field("active", &self.active)?;
+        state.skip_field("active_media")?;
+        state.serialize_field("in_sidebar", &self.in_sidebar)?;
+        state.serialize_field("favorites", &self.favorites)?;
+
+        state.end()
     }
 }
 
