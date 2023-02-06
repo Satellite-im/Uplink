@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use dioxus::prelude::*;
 use dioxus_router::*;
@@ -15,6 +15,7 @@ use kit::{
     icons::{Icon, IconElement},
     layout::topbar::Topbar,
 };
+use rfd::FileDialog;
 use shared::language::get_local_text;
 use tokio::time::sleep;
 use warp::{
@@ -32,6 +33,7 @@ use crate::{
 enum ChanCmd {
     GetItemsFromCurrentDirectory,
     AddNewFolder(String),
+    UploadFiles(Vec<PathBuf>),
 }
 
 #[derive(PartialEq, Props)]
@@ -87,7 +89,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 log::info!("New folder added: {}", folder_name2);
                             }
                             Err(e) => {
-                                log::error!("failed to add new folder conversation: {}", e);
+                                log::error!("failed to add new folder in uplink storage: {}", e);
                                 continue;
                             }
                         }
@@ -108,7 +110,31 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 storage_state.set(Some(storage));
                             }
                             Err(e) => {
-                                log::error!("failed to add new folder conversation: {}", e);
+                                log::error!("failed to update storage with new items: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::UploadFiles(files_path) => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::UploadFiles {
+                                files_path,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to upload files {}", e);
+                            return;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!("failed to add new files into uplink storage: {}", e);
                                 continue;
                             }
                         }
@@ -176,6 +202,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         text: get_local_text("files.upload"),
                                     }
                                 ))
+                                onpress: move |_| {
+                                    let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
+                                        Some(path) => path,
+                                        None => return
+                                    };
+                                    ch.send(ChanCmd::UploadFiles(files_local_path));
+                                },
                             }
                         )
                     ),
@@ -260,7 +293,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     ch.send(ChanCmd::AddNewFolder(new_name));
                                     ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                 }
-
                                 add_new_folder.set(false);
                              }
                         })

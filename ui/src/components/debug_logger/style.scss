@@ -32,6 +32,10 @@
                 font-weight: bold;
                 white-space: nowrap;
             }
+            .error { color: var(--danger); }
+            .warn { color: var(--warning); }
+            .info { color: var(--success); }
+            .debug { color: white; }
         }
     }
     &.resizing {
