@@ -17,6 +17,13 @@
     gap: var(--gap);
     user-select: none;
 
+    @media only screen and (max-width: 600px) {
+        left: 0;
+        right: 0;
+        margin-left: var(--gap);
+        margin-right: var(--gap);
+    }
+
     color: var(--text-color);
 
     label {
