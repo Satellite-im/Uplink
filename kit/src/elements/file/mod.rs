@@ -1,9 +1,12 @@
+use std::{ffi::OsStr, path::PathBuf};
+
 use dioxus::prelude::*;
 
 use crate::{
     elements::input::Input,
     icons::{Icon, IconElement},
 };
+const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -23,8 +26,31 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_text(cx: &Scope<Props>) -> String {
-    cx.props.text.clone().unwrap_or_default()
+pub fn get_text(file_name: String) -> (String, String) {
+    let mut file_name_formatted = file_name.clone();
+    let file_extension = std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .unwrap_or_default();
+    let item = PathBuf::from(&file_name);
+    let file_stem = item
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
+        file_name_formatted = match &file_name.to_string().get(0..7) {
+            Some(name_sliced) => format!(
+                "{}...{}.{}",
+                name_sliced,
+                &file_stem[file_stem.len() - 2..].to_string(),
+                file_extension
+            ),
+            None => file_name.clone(),
+        };
+    }
+    (file_name, file_name_formatted)
 }
 
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
@@ -45,9 +71,9 @@ pub fn emit_press(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let text = get_text(&cx);
+    let (file_name, file_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
     let aria_label = get_aria_label(&cx);
-    let placeholder = text.clone();
+    let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
 
@@ -79,7 +105,8 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 (!with_rename).then(|| rsx! (
                     label {
-                        "{text}"
+                        class: "file-name",
+                        "{file_name_formatted}"
                     }
                 ))
             }
@@ -103,4 +130,41 @@ pub fn FileSkeletal(cx: Scope) -> Element {
             }
         }
     ))
+}
+
+#[cfg(test)]
+mod test {
+    pub use super::*;
+
+    #[test]
+    fn test_get_text1() {
+        let input = String::from("very_long_file_name.txt");
+        let (name, formatted) = get_text(input.clone());
+        assert_eq!(input, name);
+        assert_eq!(formatted, String::from("very_lo...me.txt"));
+    }
+
+    #[test]
+    fn test_get_text2() {
+        let input = String::from("very_long_file_name");
+        let (name, formatted) = get_text(input.clone());
+        assert_eq!(input, name);
+        assert_eq!(formatted, String::from("very_lo...me"));
+    }
+
+    #[test]
+    fn test_get_text3() {
+        let input = String::from("name.txt");
+        let (name, formatted) = get_text(input.clone());
+        assert_eq!(input, name);
+        assert_eq!(formatted, input);
+    }
+
+    #[test]
+    fn test_get_text4() {
+        let input = String::from("name");
+        let (name, formatted) = get_text(input.clone());
+        assert_eq!(input, name);
+        assert_eq!(formatted, input);
+    }
 }

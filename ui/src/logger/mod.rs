@@ -280,15 +280,6 @@ pub fn load_debug_log() -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-pub fn get_color_string(level: Level) -> &'static str {
-    match level {
-        Level::Debug | Level::Trace => "rgb(0, 255, 0)",
-        Level::Info => "rgb(0, 195, 255)",
-        Level::Warn => "yellow",
-        Level::Error => "red",
-    }
-}
-
 // this is kind of a hack. but Colorize adds characters to a string which display differently in the debug_logger and the terminal.
 impl Log {
     fn colorize(&self) -> Self {

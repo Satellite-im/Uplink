@@ -1,9 +1,6 @@
-use std::str::FromStr;
-
 use dioxus::prelude::*;
 
 use kit::elements::label::Label;
-use warp::logging::tracing::log::Level;
 
 use crate::logger;
 
@@ -44,7 +41,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         let log_datetime = fields.next().unwrap_or_default();
                         let log_level = fields.next().unwrap_or_default();
                         let log_message = fields.next().unwrap_or_default();
-                        let log_color = logger::get_color_string(Level::from_str(log_level).unwrap_or(Level::Debug));
+                        let log_level_string = log_level.trim().to_lowercase().as_str().to_string();
                         rsx!(
                             p {
                                 class: "item",
@@ -53,8 +50,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                     "〇 {log_datetime}"
                                 },
                                 span {
-                                    class: "log-text bold",
-                                    color: "{log_color}",
+                                    class: "log-text bold {log_level_string}",
                                     "{log_level}"
                                 },
                                 span {
