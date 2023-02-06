@@ -22,6 +22,8 @@
         right: 0;
         margin-left: var(--gap);
         margin-right: var(--gap);
+        width: var(--sidebar-width - 20px);
+
     }
 
     color: var(--text-color);
