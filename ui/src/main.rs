@@ -466,18 +466,28 @@ fn app(cx: Scope) -> Element {
         state.write();
     }
 
-    let webview = desktop.webview.clone();
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
+    let webview = desktop.webview.clone();
+    let inner = state.inner();
     use_wry_event_handler(cx, {
+        to_owned![needs_update];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
                 log::debug!("FOCUS CHANGED {:?}", *focused);
-                state.write().ui.metadata.focused = *focused;
-                crate::utils::sounds::Play(Sounds::Notification);
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().ui.metadata.focused = *focused;
+                        crate::utils::sounds::Play(Sounds::Notification);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
             }
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
@@ -489,13 +499,21 @@ fn app(cx: Scope) -> Element {
                     size,
                     size.width < 1200
                 );
-                state.write().ui.metadata = WindowMeta {
-                    height: size.height,
-                    width: size.width,
-                    minimal_view: size.width < 1200,
-                    ..state.read().ui.metadata
-                };
-                state.write().ui.sidebar_hidden = size.width < 1200;
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().ui.metadata = WindowMeta {
+                            height: size.height,
+                            width: size.width,
+                            minimal_view: size.width < 1200,
+                            ..state.read().ui.metadata
+                        };
+                        state.write().ui.sidebar_hidden = size.width < 1200;
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
             }
             _ => {}
         }
@@ -538,14 +556,18 @@ fn app(cx: Scope) -> Element {
             //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
-                {
-                    let state = inner.borrow();
-                    if !state.read().has_toasts() {
-                        continue;
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        if !state.read().has_toasts() {
+                            continue;
+                        }
+                        if state.write().decrement_toasts() {
+                            //println!("decrement toasts");
+                            needs_update.set(true);
+                        }
                     }
-                    if state.write().decrement_toasts() {
-                        //println!("decrement toasts");
-                        needs_update.set(true);
+                    Err(e) => {
+                        log::error!("{e}");
                     }
                 }
             }
@@ -559,11 +581,15 @@ fn app(cx: Scope) -> Element {
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                {
-                    let state = inner.borrow();
-                    let now = Instant::now();
-                    if state.write().clear_typing_indicator(now) {
-                        needs_update.set(true);
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        let now = Instant::now();
+                        if state.write().clear_typing_indicator(now) {
+                            needs_update.set(true);
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
                     }
                 }
             }
