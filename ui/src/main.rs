@@ -42,6 +42,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
 use crate::state::{friends, storage};
+use crate::utils::sounds::Sounds;
 use crate::warp_runner::{
     ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
 };
@@ -381,32 +382,17 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         state.ui.overlays.push(window);
     }
 
+    let size = desktop.webview.inner_size();
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        width: desktop.inner_size().width,
-        height: desktop.inner_size().height,
-        minimal_view: desktop.inner_size().width < 300, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        width: size.width,
+        height: size.height,
+        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
-
-    use_wry_event_handler(cx, {
-        move |event, _| {
-            if let WryEvent::WindowEvent {
-                event: WindowEvent::Focused(new_focused),
-                ..
-            } = event
-            {
-                state.ui.metadata.focused = *new_focused;
-            }
-        }
-    });
-
-    if state.ui.is_minimal_view() {
-        state.ui.sidebar_hidden = true;
-    }
 
     use_shared_state_provider(cx, || state);
 
@@ -480,6 +466,60 @@ fn app(cx: Scope) -> Element {
         state.write();
     }
 
+    // There is currently an issue in Tauri/Wry where the window size is not reported properly.
+    // Thus we bind to the resize event itself and update the size from the webview.
+    let webview = desktop.webview.clone();
+    let inner = state.inner();
+    use_wry_event_handler(cx, {
+        to_owned![needs_update];
+        move |event, _| match event {
+            WryEvent::WindowEvent {
+                event: WindowEvent::Focused(focused),
+                ..
+            } => {
+                log::debug!("FOCUS CHANGED {:?}", *focused);
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().ui.metadata.focused = *focused;
+                        crate::utils::sounds::Play(Sounds::Notification);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
+            }
+            WryEvent::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } => {
+                let size = webview.inner_size();
+                log::debug!(
+                    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
+                    size,
+                    size.width < 1200
+                );
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        let metadata = state.read().ui.metadata.clone();
+                        state.write().ui.metadata = WindowMeta {
+                            height: size.height,
+                            width: size.width,
+                            minimal_view: size.width < 1200,
+                            ..metadata
+                        };
+                        state.write().ui.sidebar_hidden = size.width < 1200;
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
+            }
+            _ => {}
+        }
+    });
+
     // update state in response to warp events
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -517,14 +557,18 @@ fn app(cx: Scope) -> Element {
             //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
-                {
-                    let state = inner.borrow();
-                    if !state.read().has_toasts() {
-                        continue;
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        if !state.read().has_toasts() {
+                            continue;
+                        }
+                        if state.write().decrement_toasts() {
+                            //println!("decrement toasts");
+                            needs_update.set(true);
+                        }
                     }
-                    if state.write().decrement_toasts() {
-                        //println!("decrement toasts");
-                        needs_update.set(true);
+                    Err(e) => {
+                        log::error!("{e}");
                     }
                 }
             }
@@ -538,11 +582,15 @@ fn app(cx: Scope) -> Element {
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                {
-                    let state = inner.borrow();
-                    let now = Instant::now();
-                    if state.write().clear_typing_indicator(now) {
-                        needs_update.set(true);
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        let now = Instant::now();
+                        if state.write().clear_typing_indicator(now) {
+                            needs_update.set(true);
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
                     }
                 }
             }

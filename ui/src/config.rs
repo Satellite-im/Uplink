@@ -56,6 +56,10 @@ pub struct AudioVideo {
     pub noise_suppression: bool,
     #[serde(default)]
     pub call_timer: bool,
+    #[serde(default)]
+    pub interface_sounds: bool,
+    #[serde(default)]
+    pub media_sounds: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
@@ -132,7 +136,7 @@ impl Configuration {
     }
 
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let config_json = serde_json::to_string(self)?;
+        let config_json = serde_json::to_string_pretty(self)?;
         fs::write(&STATIC_ARGS.config_path, config_json)?;
         Ok(())
     }

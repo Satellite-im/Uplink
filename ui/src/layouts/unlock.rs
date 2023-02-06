@@ -12,6 +12,7 @@ use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{
+    config::Configuration,
     warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -59,7 +60,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 let res = rx.await.expect("failed to get response from warp_runner");
 
                 match res {
-                    Ok(_) => page.set(AuthPages::Success),
+                    Ok(_) => {
+                        if Configuration::load_or_default().audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                        }
+                        page.set(AuthPages::Success)
+                    }
                     Err(err) => match err {
                         warp::error::Error::MultiPassExtensionUnavailable => {
                             // need to create an account
