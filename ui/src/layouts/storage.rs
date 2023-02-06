@@ -29,10 +29,13 @@ use crate::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 
+const ROOT_DIR_NAME: &str = "root";
+
 enum ChanCmd {
     GetItemsFromCurrentDirectory,
-    AddNewFolder(String),
-    OpenFolder(String),
+    CreateNewDirectory(String),
+    OpenDirectory(String),
+    BackToPreviousDirectory(Directory),
 }
 
 #[derive(PartialEq, Props)]
@@ -43,12 +46,13 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let home_text = get_local_text("uplink.home");
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
+    let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
     let files_list = use_ref(cx, || state.read().storage.files.clone());
+    let dirs_opened_ref = use_ref(cx, || vec![state.read().storage.current_dir.clone()]);
 
     let add_new_folder = use_state(cx, || false);
 
@@ -56,28 +60,29 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         if !STATIC_ARGS.use_mock {
             *directories_list.write_silent() = storage.directories.clone();
             *files_list.write_silent() = storage.files.clone();
+            *current_dir.write_silent() = storage.current_dir.clone();
         };
         state.write().storage = storage;
         storage_state.set(None);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state];
+        to_owned![storage_state, dirs_opened_ref];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    ChanCmd::AddNewFolder(folder_name) => {
+                    ChanCmd::CreateNewDirectory(directory_name) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        let folder_name2 = folder_name.clone();
+                        let directory_name2 = directory_name.clone();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::CreateNewFolder {
-                                folder_name,
+                            ConstellationCmd::CreateNewDirectory {
+                                directory_name,
                                 rsp: tx,
                             },
                         )) {
-                            log::error!("failed to add new folder {}", e);
+                            log::error!("failed to add new directory {}", e);
                             return;
                         }
 
@@ -85,10 +90,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
                         match rsp {
                             Ok(_) => {
-                                log::info!("New folder added: {}", folder_name2);
+                                log::info!("New directory added: {}", directory_name2);
                             }
                             Err(e) => {
-                                log::error!("failed to add new folder conversation: {}", e);
+                                log::error!("failed to add new directory: {}", e);
                                 continue;
                             }
                         }
@@ -109,32 +114,62 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 storage_state.set(Some(storage));
                             }
                             Err(e) => {
-                                log::error!("failed to add new folder conversation: {}", e);
+                                log::error!("failed to add new directory: {}", e);
                                 continue;
                             }
                         }
                     }
-                    ChanCmd::OpenFolder(folder_name) => {
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        let folder_name2 = folder_name.clone();
+                    ChanCmd::OpenDirectory(directory_name) => {
+                        let (tx, rx) = oneshot::channel::<
+                            Result<(Storage, Vec<Directory>), warp::error::Error>,
+                        >();
+                        let directory_name2 = directory_name.clone();
 
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::OpenFolder {
-                                folder_name: folder_name2,
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::OpenDirectory {
+                                directory_name,
                                 rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to open {folder_name} directory {}", e);
+                            },
+                        )) {
+                            log::error!("failed to open {directory_name2} directory {}", e);
                             return;
                         }
 
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
-                            Ok(_) => {
-                                log::info!("Folder {} opened", folder_name);
+                            Ok((storage, dirs_opened)) => {
+                                *dirs_opened_ref.write_silent() = dirs_opened;
+                                storage_state.set(Some(storage));
+                                log::info!("Folder {} opened", directory_name2);
                             }
                             Err(e) => {
-                                log::error!("failed to open folder {folder_name}: {}", e);
+                                log::error!("failed to open folder {directory_name2}: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::BackToPreviousDirectory(directory) => {
+                        let (tx, rx) = oneshot::channel::<
+                            Result<(Storage, Vec<Directory>), warp::error::Error>,
+                        >();
+                        let directory_name = directory.name();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::BackToPreviousDirectory { directory, rsp: tx },
+                        )) {
+                            log::error!("failed to open directory {}: {}", directory_name, e);
+                            return;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok((storage, dirs_opened)) => {
+                                *dirs_opened_ref.write_silent() = dirs_opened.clone();
+                                storage_state.set(Some(storage));
+                                log::info!("Folder {} opened", directory_name);
+                            }
+                            Err(e) => {
+                                log::error!("failed to open directory {}: {}", directory_name, e);
                                 continue;
                             }
                         }
@@ -235,30 +270,38 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
-                    div {
-                        class: "crumb",
-                        aria_label: "crumb",
-                        IconElement {
-                            icon: Icon::Home,
-                        },
-                        p {
-                            "{home_text}",
+                    dirs_opened_ref.read().iter().map(|dir| {
+                        let directory = use_ref(&cx, || dir.clone());
+                        let dir_name = dir.name();
+                        if dir_name == ROOT_DIR_NAME {
+                            let home_text = get_local_text("uplink.home");
+                            rsx!(div {
+                                class: "crumb",
+                                aria_label: "crumb",
+                                onclick: move |_| {
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.read().clone()));
+                                },
+                                IconElement {
+                                    icon: Icon::Home,
+                                },
+                                p {
+                                    "{home_text}",
+                                }
+                            })
+                        } else {
+                        let dir_name2 = dir.name();
+                            rsx!(div {
+                                class: "crumb",
+                                onclick: move |_| {
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.read().clone()));
+                                },
+                                aria_label: "crumb",
+                                p {
+                                    "{dir_name2}"
+                                }
+                            },)
                         }
-                    },
-                    div {
-                        class: "crumb",
-                        aria_label: "crumb",
-                        p {
-                            "Folder 1"
-                        }
-                    },
-                    div {
-                        class: "crumb",
-                        aria_label: "crumb",
-                        p {
-                            "Folder 3"
-                        }
-                    },
+                    })
                 },
                 div {
                     class: "files-list",
@@ -279,11 +322,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         .with_mut(|i| i.insert(0, Directory::new(&new_name)));
                                         update_items_with_mock_data(
                                             storage_state.clone(),
+                                            current_dir.clone(),
                                             directories_list.clone(),
                                             files_list.clone(),
                                         );
                                 } else {
-                                    ch.send(ChanCmd::AddNewFolder(new_name));
+                                    ch.send(ChanCmd::CreateNewDirectory(new_name));
                                     ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                 }
 
@@ -297,8 +341,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             text: dir.name(),
                             aria_label: dir.name(),
                             onpress: move |_| {
-                                ch.send(ChanCmd::OpenFolder(folder_name.clone()));
-                                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
                             }
                         })
                     }),
@@ -325,11 +368,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
 fn update_items_with_mock_data(
     storage_state: UseState<Option<Storage>>,
+    current_dir: UseRef<Directory>,
     directories_list: UseRef<Vec<Directory>>,
     files_list: UseRef<Vec<File>>,
 ) {
     let storage_mock = Storage {
         initialized: true,
+        current_dir: current_dir.read().clone(),
         directories: directories_list.read().clone(),
         files: files_list.read().clone(),
     };
