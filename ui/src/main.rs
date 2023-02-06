@@ -467,6 +467,8 @@ fn app(cx: Scope) -> Element {
     }
 
     let webview = desktop.webview.clone();
+    // There is currently an issue in Tauri/Wry where the window size is not reported properly.
+    // Thus we bind to the resize event itself and update the size from the webview.
     use_wry_event_handler(cx, {
         move |event, _| match event {
             WryEvent::WindowEvent {
