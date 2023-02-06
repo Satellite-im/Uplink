@@ -17,6 +17,11 @@ pub enum ConstellationCmd {
         folder_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "OpenFolder {{ folder_name: {folder_name} }} ")]
+    OpenFolder {
+        folder_name: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -27,6 +32,10 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::CreateNewFolder { folder_name, rsp } => {
             let r = create_new_directory(&folder_name, warp_storage).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::OpenFolder { folder_name, rsp } => {
+            let r = warp_storage.select(&folder_name);
             let _ = rsp.send(r);
         }
     }

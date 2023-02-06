@@ -32,6 +32,7 @@ use crate::{
 enum ChanCmd {
     GetItemsFromCurrentDirectory,
     AddNewFolder(String),
+    OpenFolder(String),
 }
 
 #[derive(PartialEq, Props)]
@@ -109,6 +110,31 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                             Err(e) => {
                                 log::error!("failed to add new folder conversation: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::OpenFolder(folder_name) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let folder_name2 = folder_name.clone();
+
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::OpenFolder {
+                                folder_name: folder_name2,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to open {folder_name} directory {}", e);
+                            return;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(_) => {
+                                log::info!("Folder {} opened", folder_name);
+                            }
+                            Err(e) => {
+                                log::error!("failed to open folder {folder_name}: {}", e);
                                 continue;
                             }
                         }
@@ -266,9 +292,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         })
                     }),
                     directories_list.read().iter().map(|dir| {
+                        let folder_name = dir.name();
                         rsx!(Folder {
                             text: dir.name(),
                             aria_label: dir.name(),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::OpenFolder(folder_name.clone()));
+                                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                            }
                         })
                     }),
                     files_list.read().iter().map(|file| {
