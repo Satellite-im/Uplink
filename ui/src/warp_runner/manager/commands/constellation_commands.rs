@@ -30,7 +30,7 @@ pub enum ConstellationCmd {
         folder_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "UploadFiles {{ files_path: {:?} }} ", files_path)]
+    #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
     UploadFiles {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
@@ -260,7 +260,7 @@ async fn set_thumbnail_if_file_is_image(
     };
 
     if !file.is_empty() || !mime.is_empty() {
-        let prefix = format!("data:{};base64,", mime);
+        let prefix = format!("data:{mime};base64,");
         let base64_image = base64::encode(&file);
         let img = prefix + base64_image.as_str();
         item.set_thumbnail(&img);

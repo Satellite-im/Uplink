@@ -393,12 +393,14 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     state.ui.metadata = window_meta;
 
     use_wry_event_handler(cx, {
-        move |event, _| match event {
-            WryEvent::WindowEvent {
+        move |event, _| {
+            if let WryEvent::WindowEvent {
                 event: WindowEvent::Focused(new_focused),
                 ..
-            } => state.ui.metadata.focused = *new_focused,
-            _ => {}
+            } = event
+            {
+                state.ui.metadata.focused = *new_focused;
+            }
         }
     });
 

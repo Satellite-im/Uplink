@@ -73,7 +73,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let (file_name, file_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
     let aria_label = get_aria_label(&cx);
-    let placeholder = file_name.clone();
+    let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
 

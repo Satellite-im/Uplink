@@ -41,7 +41,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         let log_datetime = fields.next().unwrap_or_default();
                         let log_level = fields.next().unwrap_or_default();
                         let log_message = fields.next().unwrap_or_default();
-                        let log_level_string = format!("{}", log_level.trim().to_lowercase().as_str());
+                        let log_level_string = log_level.trim().to_lowercase().as_str().to_string();
                         rsx!(
                             p {
                                 class: "item",
