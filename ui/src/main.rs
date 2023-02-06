@@ -501,11 +501,12 @@ fn app(cx: Scope) -> Element {
                 );
                 match inner.try_borrow_mut() {
                     Ok(state) => {
+                        let metadata = state.read().ui.metadata.clone();
                         state.write().ui.metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
                             minimal_view: size.width < 1200,
-                            ..state.read().ui.metadata
+                            ..metadata
                         };
                         state.write().ui.sidebar_hidden = size.width < 1200;
                         needs_update.set(true);
