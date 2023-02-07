@@ -54,7 +54,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
     let files_list = use_ref(cx, || state.read().storage.files.clone());
-    let dirs_opened_ref = use_ref(cx, || vec![state.read().storage.current_dir.clone()]);
+    let dirs_opened_ref = use_ref(cx, || state.read().storage.directories_opened.clone());
 
     let add_new_folder = use_state(cx, || false);
 
@@ -63,13 +63,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             *directories_list.write_silent() = storage.directories.clone();
             *files_list.write_silent() = storage.files.clone();
             *current_dir.write_silent() = storage.current_dir.clone();
+            *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
         };
         state.write().storage = storage;
         storage_state.set(None);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, dirs_opened_ref];
+        to_owned![storage_state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -122,9 +123,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::OpenDirectory(directory_name) => {
-                        let (tx, rx) = oneshot::channel::<
-                            Result<(Storage, Vec<Directory>), warp::error::Error>,
-                        >();
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
                         let directory_name2 = directory_name.clone();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -139,8 +138,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
-                            Ok((storage, dirs_opened)) => {
-                                *dirs_opened_ref.write_silent() = dirs_opened;
+                            Ok(storage) => {
                                 storage_state.set(Some(storage));
                                 log::info!("Folder {} opened", directory_name2);
                             }
@@ -151,9 +149,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::BackToPreviousDirectory(directory) => {
-                        let (tx, rx) = oneshot::channel::<
-                            Result<(Storage, Vec<Directory>), warp::error::Error>,
-                        >();
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
                         let directory_name = directory.name();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -165,8 +161,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
-                            Ok((storage, dirs_opened)) => {
-                                *dirs_opened_ref.write_silent() = dirs_opened.clone();
+                            Ok(storage) => {
                                 storage_state.set(Some(storage));
                                 log::info!("Folder {} opened", directory_name);
                             }
@@ -356,6 +351,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         update_items_with_mock_data(
                                             storage_state.clone(),
                                             current_dir.clone(),
+                                            dirs_opened_ref.clone(),
                                             directories_list.clone(),
                                             files_list.clone(),
                                         );
@@ -401,11 +397,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 fn update_items_with_mock_data(
     storage_state: UseState<Option<Storage>>,
     current_dir: UseRef<Directory>,
+    directories_opened: UseRef<Vec<Directory>>,
     directories_list: UseRef<Vec<Directory>>,
     files_list: UseRef<Vec<File>>,
 ) {
     let storage_mock = Storage {
         initialized: true,
+        directories_opened: directories_opened.read().clone(),
         current_dir: current_dir.read().clone(),
         directories: directories_list.read().clone(),
         files: files_list.read().clone(),

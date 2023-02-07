@@ -10,6 +10,9 @@ pub struct Storage {
     // Info about current directory opened
     #[serde(skip)]
     pub current_dir: Directory,
+    // All directories opened until current directory, inclusive current directory
+    #[serde(skip)]
+    pub directories_opened: Vec<Directory>,
     // List of directories inside current directory
     #[serde(skip)]
     pub directories: Vec<Directory>,

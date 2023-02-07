@@ -38,12 +38,12 @@ pub enum ConstellationCmd {
     #[display(fmt = "OpenDirectory {{ directory_name: {directory_name} }} ")]
     OpenDirectory {
         directory_name: String,
-        rsp: oneshot::Sender<Result<(uplink_storage, Vec<Directory>), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
     #[display(fmt = "BackToPreviousDirectory {{ directory: {:?} }} ", directory)]
     BackToPreviousDirectory {
         directory: Directory,
-        rsp: oneshot::Sender<Result<(uplink_storage, Vec<Directory>), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
     #[display(fmt = "UploadFiles {{ files_path: {:?} }} ", files_path)]
     UploadFiles {
@@ -96,8 +96,8 @@ fn get_items_from_current_directory(
     warp_storage: &mut warp_storage,
 ) -> Result<uplink_storage, Error> {
     let current_dir = warp_storage.current_directory()?;
-    let current_dirs = get_directories_opened();
-    set_new_directory_opened(current_dirs.clone().as_mut(), current_dir.clone());
+    let mut current_dirs = get_directories_opened();
+    set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
 
     let items = current_dir.get_items();
 
@@ -116,6 +116,7 @@ fn get_items_from_current_directory(
     let uplink_storage = uplink_storage {
         initialized: true,
         current_dir,
+        directories_opened: get_directories_opened(),
         directories,
         files,
     };
@@ -138,19 +139,16 @@ fn set_new_directory_opened(current_dir: &mut Vec<Directory>, new_dir: Directory
 fn open_new_directory(
     warp_storage: &mut warp_storage,
     folder_name: &str,
-) -> Result<(uplink_storage, Vec<Directory>), Error> {
+) -> Result<uplink_storage, Error> {
     warp_storage.select(&folder_name)?;
-
-    let new_storage = get_items_from_current_directory(warp_storage)?;
-    let dirs_opened = get_directories_opened();
     log::info!("Navigation to directory {} worked!", folder_name);
-    Ok((new_storage, dirs_opened))
+    get_items_from_current_directory(warp_storage)
 }
 
 fn go_back_to_previous_directory(
     warp_storage: &mut warp_storage,
     directory: Directory,
-) -> Result<(uplink_storage, Vec<Directory>), Error> {
+) -> Result<uplink_storage, Error> {
     let mut current_dirs = get_directories_opened();
     loop {
         let current_dir = match warp_storage.current_directory() {
@@ -161,8 +159,8 @@ fn go_back_to_previous_directory(
             }
         };
         current_dirs.remove(current_dirs.len() - 1);
-        set_new_directory_opened(current_dirs.clone().as_mut(), current_dir.clone());
         if current_dir.id() == directory.id() {
+            set_new_directory_opened(current_dirs.as_mut(), current_dir);
             break;
         }
 
@@ -171,10 +169,8 @@ fn go_back_to_previous_directory(
             return Err(error);
         };
     }
-    let new_storage = get_items_from_current_directory(warp_storage)?;
-    let dirs_opened = get_directories_opened();
     log::info!("Navigation to directory {} worked!", directory.name());
-    Ok((new_storage, dirs_opened))
+    get_items_from_current_directory(warp_storage)
 }
 
 async fn upload_files(
