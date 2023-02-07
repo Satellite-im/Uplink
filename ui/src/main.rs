@@ -482,7 +482,7 @@ fn app(cx: Scope) -> Element {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
                         crate::utils::sounds::Play(Sounds::Notification);
-                        needs_update.set(true);
+                        //needs_update.set(true);
                     }
                     Err(e) => {
                         log::error!("{e}");
@@ -502,14 +502,17 @@ fn app(cx: Scope) -> Element {
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
-                        state.write().ui.metadata = WindowMeta {
+                        let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
                             minimal_view: size.width < 1200,
                             ..metadata
                         };
-                        state.write().ui.sidebar_hidden = size.width < 1200;
-                        needs_update.set(true);
+                        if metadata != new_metadata {
+                            state.write().ui.metadata = new_metadata;
+                            state.write().ui.sidebar_hidden = size.width < 1200;
+                            needs_update.set(true);
+                        }
                     }
                     Err(e) => {
                         log::error!("{e}");
