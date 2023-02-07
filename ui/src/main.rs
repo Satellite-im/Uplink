@@ -191,6 +191,10 @@ fn copy_assets() {
 }
 
 fn main() {
+    // Attempts to increase the file desc limit on unix-like systems
+    // Note: Will be changed out in the future 
+    if fdlimit::raise_fd_limit().is_none() {}
+
     // configure logging
     let args = Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
