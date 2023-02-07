@@ -125,14 +125,14 @@ fn get_items_from_current_directory(
 }
 
 fn get_directories_opened() -> Vec<Directory> {
-    DIRECTORIES_AVAILABLE_TO_BROWSE.read().clone()
+    DIRECTORIES_AVAILABLE_TO_BROWSE.read().to_owned()
 }
 
 fn set_new_directory_opened(current_dir: &mut Vec<Directory>, new_dir: Directory) {
     if !current_dir.contains(&new_dir) {
         log::debug!("Updating directories opened to browse");
         current_dir.push(new_dir);
-        *DIRECTORIES_AVAILABLE_TO_BROWSE.write() = current_dir.clone()
+        *DIRECTORIES_AVAILABLE_TO_BROWSE.write() = current_dir.to_owned()
     }
 }
 
@@ -191,7 +191,7 @@ async fn upload_files(
         let original = filename.clone();
         let file = PathBuf::from(&original);
 
-        filename = verify_duplicate_name(current_directory.clone(), filename.clone(), file);
+        filename = verify_duplicate_name(current_directory.clone(), filename, file);
 
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
@@ -265,11 +265,11 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(warp_storage.clone(), filename.clone()).await {
+                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                     Ok(success) => log::info!("{:?}", success),
                     Err(error) => log::error!("Error on update thumbnail: {:?}", error),
                 }
-                log::info!("{:?} file uploaded!", &filename);
+                log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
         }
@@ -312,7 +312,7 @@ fn verify_duplicate_name(
 }
 
 async fn set_thumbnail_if_file_is_image(
-    warp_storage: warp_storage,
+    warp_storage: &mut warp_storage,
     filename_to_save: String,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let item = warp_storage

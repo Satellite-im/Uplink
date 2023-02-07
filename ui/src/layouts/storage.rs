@@ -317,7 +317,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 }
                             })
                         } else {
-                        let dir_name2 = dir.name();
                             rsx!(div {
                                 class: "crumb",
                                 onclick: move |_| {
@@ -325,7 +324,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                                 aria_label: "crumb",
                                 p {
-                                    "{dir_name2}"
+                                    "{dir_name}"
                                 }
                             },)
                         }
@@ -349,11 +348,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     directories_list
                                         .with_mut(|i| i.insert(0, Directory::new(&new_name)));
                                         update_items_with_mock_data(
-                                            storage_state.clone(),
-                                            current_dir.clone(),
-                                            dirs_opened_ref.clone(),
-                                            directories_list.clone(),
-                                            files_list.clone(),
+                                            storage_state,
+                                            current_dir,
+                                            dirs_opened_ref,
+                                            directories_list,
+                                            files_list,
                                         );
                                 } else {
                                     ch.send(ChanCmd::CreateNewDirectory(new_name));
@@ -395,11 +394,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 }
 
 fn update_items_with_mock_data(
-    storage_state: UseState<Option<Storage>>,
-    current_dir: UseRef<Directory>,
-    directories_opened: UseRef<Vec<Directory>>,
-    directories_list: UseRef<Vec<Directory>>,
-    files_list: UseRef<Vec<File>>,
+    storage_state: &UseState<Option<Storage>>,
+    current_dir: &UseRef<Directory>,
+    directories_opened: &UseRef<Vec<Directory>>,
+    directories_list: &UseRef<Vec<Directory>>,
+    files_list: &UseRef<Vec<File>>,
 ) {
     let storage_mock = Storage {
         initialized: true,
