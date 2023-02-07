@@ -480,9 +480,12 @@ fn app(cx: Scope) -> Element {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
+                        if state.write().ui.metadata.focused != *focused {
+                            state.write().ui.metadata.focused = *focused;
+                            crate::utils::sounds::Play(Sounds::Notification);
+                            // this isn't used anywhere else. no need to update.
+                            //needs_update.set(true);
+                        }
                     }
                     Err(e) => {
                         log::error!("{e}");
