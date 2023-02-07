@@ -481,7 +481,7 @@ fn app(cx: Scope) -> Element {
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
-                        crate::utils::sounds::Play(Sounds::Notification);
+                        //crate::utils::sounds::Play(Sounds::Notification);
                         needs_update.set(true);
                     }
                     Err(e) => {
