@@ -771,7 +771,31 @@ impl State {
         match event {
             MultiPassEvent::None => {}
             MultiPassEvent::FriendRequestReceived(identity) => {
-                self.friends.incoming_requests.insert(identity);
+                self.friends.incoming_requests.insert(identity.clone());
+
+                self.mutate(Action::AddNotification(
+                    notifications::NotificaitonKind::FriendRequest,
+                    1,
+                ));
+
+                // TODO: Get state available in this scope.
+                // Dispatch notifications only when we're not already focused on the application.
+                let notifications_enabled = self
+                    .configuration
+                    .config
+                    .notifications
+                    .friends_notifications;
+
+                if !self.ui.metadata.focused && notifications_enabled {
+                    crate::utils::notifications::push_notification(
+                        "New friend request!".into(),
+                        format!("{} sent a request.", identity.username()),
+                        Some(crate::utils::sounds::Sounds::Notification),
+                        notify_rust::Timeout::Milliseconds(4),
+                    );
+                } else {
+                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+                }
             }
             MultiPassEvent::FriendRequestSent(identity) => {
                 self.friends.outgoing_requests.insert(identity);
@@ -834,6 +858,11 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
+                self.mutate(Action::AddNotification(
+                    notifications::NotificaitonKind::Message,
+                    1,
+                ));
+
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
                 let notifications_enabled = self
@@ -845,11 +874,6 @@ impl State {
                     notifications_enabled && self.chats.active != Some(conversation_id);
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
-
-                self.mutate(Action::AddNotification(
-                    notifications::NotificaitonKind::Message,
-                    1,
-                ));
 
                 if should_dispatch_notification {
                     crate::utils::notifications::push_notification(
