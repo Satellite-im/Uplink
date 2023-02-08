@@ -7,6 +7,7 @@ use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
+use extensions::Librarian;
 use fs_extra::dir::*;
 use futures::channel::oneshot;
 use kit::elements::button::Button;
@@ -34,7 +35,6 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
-use crate::extensions::Librarian;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -54,7 +54,6 @@ use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
-pub mod extensions;
 pub mod layouts;
 pub mod logger;
 pub mod overlay;
@@ -312,7 +311,7 @@ fn bootstrap(cx: Scope) -> Element {
     // We should however ensure we use the same librarian across the app so they should probably live in a globally accessable place
     // that updates when they have new info, i.e. state.
     let mut librarian = Librarian::new();
-    let _ = librarian.locate();
+    let _ = librarian.locate(STATIC_ARGS.extensions_path.clone());
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
