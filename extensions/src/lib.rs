@@ -1,5 +1,11 @@
-use dioxus::prelude::Element;
+use libloading::{Library, Symbol};
+use std::ffi::OsStr;
+
+use dioxus::prelude::{Component, Element};
 use either::Either;
+
+type BoxedComponent = unsafe fn() -> Box<Component>;
+type BoxedExtension = unsafe fn() -> Box<Extension>;
 
 #[cfg(target_os = "macos")]
 static FILE_EXT: &str = "dylib";
@@ -35,7 +41,12 @@ pub struct Meta {
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 
-pub struct Manifest {
+pub enum Error {
+    Render { message: String },
+    Generic { message: String },
+}
+
+pub struct Extension {
     pub rustc_version: &'static str,
     pub core_version: &'static str,
 
@@ -47,21 +58,7 @@ pub struct Manifest {
     pub meta: Meta,
 }
 
-pub enum Error {
-    Render { message: String },
-    Generic { message: String },
-}
-
-// Extension Interface
-pub trait Extension {
-    fn about(&self) -> Manifest;
-
-    fn stylesheet(&self) -> String;
-
-    fn render(&self) -> Result<Element, crate::Error>;
-}
-
-impl Default for Manifest {
+impl Default for Extension {
     fn default() -> Self {
         Self {
             rustc_version: "0.0.0",
@@ -75,5 +72,47 @@ impl Default for Manifest {
                 description: "",
             },
         }
+    }
+}
+
+impl Extension {
+    pub fn load<P: AsRef<OsStr>>(filename: P) -> Result<Self, crate::Error> {
+        unsafe {
+            let lib = Library::new(filename).unwrap();
+            let extension: Symbol<BoxedExtension> = lib.get(b"ret_extension").unwrap();
+
+            Ok(Self { ..*extension() })
+        }
+    }
+}
+
+// Extension Interface
+pub trait BaseExtension {
+    fn about(&self) -> Extension;
+
+    fn stylesheet(&self) -> String;
+
+    fn render(&self) -> Result<Element, crate::Error>;
+}
+
+pub struct Librarian {
+    extensions: Vec<Extension>,
+}
+
+impl Librarian {
+    pub fn new() {
+        // TODO: Create the proper directory structure needed to store the extensions
+    }
+
+    pub fn locate(&mut self) -> &Self {
+        // TODO: Search the extensions folder for files. Load them into self
+        self.extensions = vec![];
+        self
+    }
+
+    pub fn remove(extension: Extension) -> Result<(), crate::Error> {
+        // TODO: Remove the extension from disk.
+        println!("Extension: {:?}", extension.meta.pretty_name);
+        Ok(())
     }
 }
