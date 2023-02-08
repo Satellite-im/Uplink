@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    config::Configuration,
-    utils::{notifications::set_badge, sounds::Sounds},
-};
+use crate::{config::Configuration, utils::notifications::set_badge};
 
 // This kind is used to determine which notification kind to add to. It can also be used for querying specific notification counts.
 pub enum NotificaitonKind {
@@ -63,12 +60,6 @@ impl Notifications {
 
         // Update the badge any time notifications are added.
         let _ = set_badge(self.total());
-
-        // Plays the notification sound.
-        let config = Configuration::load_or_default();
-        if config.notifications.enabled {
-            crate::utils::sounds::Play(Sounds::Notification);
-        }
     }
 
     // Removes notification(s) from the specified kind.

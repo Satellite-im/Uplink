@@ -58,9 +58,9 @@ pub struct AudioVideo {
     pub call_timer: bool,
     #[serde(default)]
     pub interface_sounds: bool,
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     pub message_sounds: bool,
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     pub media_sounds: bool,
 }
 
