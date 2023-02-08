@@ -94,20 +94,22 @@ pub trait BaseExtension {
     fn render(&self) -> Result<Element, crate::Error>;
 }
 
+#[derive(Default)]
 pub struct Librarian {
     extensions: Vec<Extension>,
 }
 
 impl Librarian {
-    pub fn new() {
-        // TODO: Create the proper directory structure needed to store the extensions
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn locate(&mut self) -> &Self {
         // TODO: Search the extensions folder for files. Load them into self
         let extensions_path = &crate::STATIC_ARGS.extensions_path;
-        let paths = fs::read_dir(extensions_path).expect("Directory is empty");
         let _ = fs::create_dir_all(extensions_path);
+
+        let paths = fs::read_dir(extensions_path).expect("Directory is empty");
 
         let mut extensions: Vec<Extension> = vec![];
 

@@ -34,6 +34,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
+use crate::extensions::Librarian;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -306,6 +307,12 @@ fn bootstrap(cx: Scope) -> Element {
     // store in a use_ref to make it not get dropped
     let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
     warp_runner.write_silent().run();
+
+    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessable place
+    // that updates when they have new info, i.e. state.
+    let mut librarian = Librarian::new();
+    let _ = librarian.locate();
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
