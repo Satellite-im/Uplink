@@ -10,8 +10,7 @@ const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]
 pub struct Props<'a> {
-    #[props(optional)]
-    text: Option<String>,
+    text: String,
     #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
@@ -28,10 +27,14 @@ pub struct Props<'a> {
 
 pub fn get_text(file_name: String) -> (String, String) {
     let mut file_name_formatted = file_name.clone();
-    let file_extension = std::path::Path::new(&file_name)
+    // don't append a '.' to a file name if it has no extension
+    let file_extension = match std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
-        .unwrap_or_default();
+    {
+        Some(s) => format!(".{s}"),
+        None => String::new(),
+    };
     let item = PathBuf::from(&file_name);
     let file_stem = item
         .file_stem()
@@ -42,7 +45,7 @@ pub fn get_text(file_name: String) -> (String, String) {
     if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
         file_name_formatted = match &file_name.to_string().get(0..7) {
             Some(name_sliced) => format!(
-                "{}...{}.{}",
+                "{}...{}{}",
                 name_sliced,
                 &file_stem[file_stem.len() - 2..].to_string(),
                 file_extension
@@ -71,7 +74,7 @@ pub fn emit_press(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let (file_name, file_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
+    let (file_name, file_name_formatted) = get_text(cx.props.text.clone());
     let aria_label = get_aria_label(&cx);
     let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();

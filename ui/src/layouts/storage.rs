@@ -79,7 +79,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         )) {
                             log::error!("failed to add new folder {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -101,7 +101,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
                         )) {
                             log::error!("failed to get items from current directory {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -125,7 +125,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         )) {
                             log::error!("failed to upload files {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
