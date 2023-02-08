@@ -42,7 +42,6 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
 use crate::state::{friends, storage};
-use crate::utils::sounds::Sounds;
 use crate::warp_runner::{
     ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
 };
@@ -54,6 +53,7 @@ use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
 pub mod config;
+pub mod extensions;
 pub mod layouts;
 pub mod logger;
 pub mod overlay;
@@ -69,6 +69,7 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     pub mock_cache_path: PathBuf,
     pub config_path: PathBuf,
+    pub extensions_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
     // seconds
@@ -85,7 +86,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     };
     StaticArgs {
         uplink_path: uplink_path.clone(),
+        // TODO: This isn't quite accurate since uplink path is technically what we consider the cache dir.
         cache_path: uplink_path.join("state.json"),
+        extensions_path: uplink_path.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),

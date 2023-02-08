@@ -1,10 +1,9 @@
-use libloading::{Library, Symbol};
-use std::ffi::OsStr;
-
 use dioxus::prelude::{Component, Element};
 use either::Either;
+use libloading::{Library, Symbol};
+use std::{ffi::OsStr, fs};
+use warp::logging::tracing::log;
 
-type BoxedComponent = unsafe fn() -> Box<Component>;
 type BoxedExtension = unsafe fn() -> Box<Extension>;
 
 #[cfg(target_os = "macos")]
@@ -53,7 +52,7 @@ pub struct Extension {
     // Location(s) the extension should be rendered.
     pub location: Either<Location, Vec<Location>>,
     // The type of extension being rendered.
-    pub ext_type: crate::Type,
+    pub ext_type: Type,
     // Additional information about the extension
     pub meta: Meta,
 }
@@ -64,7 +63,7 @@ impl Default for Extension {
             rustc_version: "0.0.0",
             core_version: "0.0.0",
             location: either::Left(Location::Chatbar),
-            ext_type: crate::Type::IconLaunched,
+            ext_type: Type::IconLaunched,
             meta: Meta {
                 name: "basic",
                 author: "Unknown",
@@ -106,7 +105,30 @@ impl Librarian {
 
     pub fn locate(&mut self) -> &Self {
         // TODO: Search the extensions folder for files. Load them into self
-        self.extensions = vec![];
+        let extensions_path = &crate::STATIC_ARGS.extensions_path;
+        let paths = fs::read_dir(extensions_path).expect("Directory is empty");
+        let _ = fs::create_dir_all(extensions_path);
+
+        let mut extensions: Vec<Extension> = vec![];
+
+        for entry in paths {
+            let path = entry.unwrap().path();
+            if path.extension().unwrap_or_default() == FILE_EXT {
+                let result = Extension::load(&path);
+                match result {
+                    Ok(extension) => {
+                        log::info!("Extension loaded {:?}", &extension.meta.name);
+                        extensions.push(extension);
+                    }
+                    Err(_) => {
+                        log::error!("Failed to load extension {:?}", &path);
+                    }
+                }
+            }
+        }
+
+        self.extensions = extensions;
+
         self
     }
 
