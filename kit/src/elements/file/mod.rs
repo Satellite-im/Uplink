@@ -43,7 +43,7 @@ pub fn get_text(file_name: String) -> (String, String) {
         .unwrap_or_default();
 
     if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
-        file_name_formatted = match &file_name.to_string().get(0..7) {
+        file_name_formatted = match &file_name.get(0..7) {
             Some(name_sliced) => format!(
                 "{}...{}{}",
                 name_sliced,
