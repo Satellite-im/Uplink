@@ -95,9 +95,7 @@ async fn create_new_directory(
 fn get_items_from_current_directory(
     warp_storage: &mut warp_storage,
 ) -> Result<uplink_storage, Error> {
-    let current_path = warp_storage.get_path();
-    let output_path = current_path.to_string_lossy().replace("\\", "/");
-    let current_dir = warp_storage.open_directory(&output_path)?;
+    let current_dir = warp_storage.current_directory()?;
     let mut current_dirs = get_directories_opened();
     set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
 
@@ -142,12 +140,20 @@ fn open_new_directory(
     warp_storage: &mut warp_storage,
     folder_name: &str,
 ) -> Result<uplink_storage, Error> {
-    println!("Folder path: {}", folder_name.clone());
-    match warp_storage.select(&folder_name) {
-        Ok(_) => println!("folder selected"),
-        Err(error) => println!("Error on select folder {error}"),
-    }
-    log::info!("Navigation to directory {} worked!", folder_name);
+    let current_path = PathBuf::from(
+        warp_storage
+            .get_path()
+            .join(folder_name)
+            .to_string_lossy()
+            .replace("\\", "/"),
+    );
+
+    warp_storage.set_path(current_path);
+
+    log::info!(
+        "Navigation to directory {:?} worked!",
+        warp_storage.get_path()
+    );
     get_items_from_current_directory(warp_storage)
 }
 
@@ -156,15 +162,11 @@ fn go_back_to_previous_directory(
     directory: Directory,
 ) -> Result<uplink_storage, Error> {
     let mut current_dirs = get_directories_opened();
+
     loop {
-        let current_dir = match warp_storage.current_directory() {
-            Ok(dir) => dir,
-            Err(error) => {
-                log::error!("Error on get current directory: {error}");
-                return Err(error);
-            }
-        };
+        let current_dir = warp_storage.current_directory()?;
         current_dirs.remove(current_dirs.len() - 1);
+
         if current_dir.id() == directory.id() {
             set_new_directory_opened(current_dirs.as_mut(), current_dir);
             break;
@@ -184,7 +186,6 @@ async fn upload_files(
     files_path: Vec<PathBuf>,
 ) -> Result<uplink_storage, Error> {
     let current_directory = warp_storage.current_directory()?;
-
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -194,11 +195,11 @@ async fn upload_files(
             None => continue,
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
+
         let original = filename.clone();
         let file = PathBuf::from(&original);
 
         filename = verify_duplicate_name(current_directory.clone(), filename, file);
-
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
             Err(error) => {
@@ -271,7 +272,13 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
+                match set_thumbnail_if_file_is_image(
+                    warp_storage,
+                    filename.clone(),
+                    current_directory.clone(),
+                )
+                .await
+                {
                     Ok(success) => log::info!("{:?}", success),
                     Err(error) => log::error!("Error on update thumbnail: {:?}", error),
                 }
@@ -320,10 +327,9 @@ fn verify_duplicate_name(
 async fn set_thumbnail_if_file_is_image(
     warp_storage: &mut warp_storage,
     filename_to_save: String,
+    current_directory: Directory,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
+    let item = current_directory.get_item(&filename_to_save)?;
     let parts_of_filename: Vec<&str> = filename_to_save.split('.').collect();
 
     let file = warp_storage.get_buffer(&filename_to_save).await?;
