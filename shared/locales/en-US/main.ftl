@@ -167,8 +167,10 @@ remote-controls = Remote Controls
 unlock = Unlock
     .warning1 = Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else.
     .warning2 = If you forget this password we cannot help you retrieve it.
+    .welcome-back = Welcome back! Please enter your pin to unlock your account.
     .enter-pin = Enter Pin
     .create-account = Create Account
+    .unlock-account = Unlock Account
 
 auth = Create Account 
     .enter-username = Enter Username

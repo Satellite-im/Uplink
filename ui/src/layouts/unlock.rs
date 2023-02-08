@@ -107,17 +107,26 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
-            p {
-                class: "info",
-                aria_label: "unlock-warning-paragraph",
-                get_local_text("unlock.warning1")
-                br {},
-                span {
-                    aria_label: "unlock-warning-span",
-                    class: "warning",
-                    get_local_text("unlock.warning2")
-                }
-            },
+            (!account_exists.value().unwrap_or(&true)).then(|| rsx!(
+                p {
+                    class: "info",
+                    aria_label: "unlock-warning-paragraph",
+                    get_local_text("unlock.warning1")
+                    br {},
+                    span {
+                        aria_label: "unlock-warning-span",
+                        class: "warning",
+                        get_local_text("unlock.warning2")
+                    }
+                },
+            )),
+            (account_exists.value().unwrap_or(&true)).then(|| rsx!(
+                p {
+                    class: "info",
+                    aria_label: "unlock-warning-paragraph",
+                    get_local_text("unlock.welcome-back")
+                },
+            )),
             Input {
                 is_password: true,
                 icon: Icon::Key,
@@ -156,6 +165,18 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     disabled: *button_disabled.get(),
                     onpress: move |_| {
                         page.set(AuthPages::CreateAccount);
+                    }
+                }
+            )),
+            (account_exists.value().unwrap_or(&true)).then(|| rsx!(
+                Button {
+                    text: get_local_text("unlock.unlock-account"),
+                    aria_label: "create-account-button".into(),
+                    appearance: kit::elements::Appearance::Primary,
+                    icon: Icon::Check,
+                    disabled: *button_disabled.get(),
+                    onpress: move |_| {
+                        // do nothing, it will unlock if the pin is correct, and should show the error message if it is not
                     }
                 }
             ))
