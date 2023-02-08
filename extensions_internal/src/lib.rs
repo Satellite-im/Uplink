@@ -18,7 +18,11 @@ impl Extension for ExampleExtension {
         Details {
             location: Location::Chatbar,
             ext_type: Type::IconLaunched,
-            meta: Meta::default(),
+            meta: Meta {
+                name: "example_extension",
+                pretty_name: "Example!",
+                ..Default::default()
+            },
         }
     }
 
