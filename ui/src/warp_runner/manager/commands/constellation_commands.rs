@@ -325,7 +325,7 @@ fn verify_duplicate_name(
 }
 
 async fn set_thumbnail_if_file_is_image(
-    warp_storage: &mut warp_storage,
+    warp_storage: &warp_storage,
     filename_to_save: String,
     current_directory: Directory,
 ) -> Result<String, Box<dyn std::error::Error>> {

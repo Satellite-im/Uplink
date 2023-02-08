@@ -86,7 +86,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         )) {
                             log::error!("failed to add new directory {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -108,7 +108,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
                         )) {
                             log::error!("failed to get items from current directory {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -133,7 +133,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         )) {
                             log::error!("failed to open {directory_name2} directory {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -156,7 +156,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             ConstellationCmd::BackToPreviousDirectory { directory, rsp: tx },
                         )) {
                             log::error!("failed to open directory {}: {}", directory_name, e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -181,7 +181,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         )) {
                             log::error!("failed to upload files {}", e);
-                            return;
+                            continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
@@ -298,10 +298,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
-                    dirs_opened_ref.read().iter().map(|dir| {
+                    dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
-                        if dir_name == ROOT_DIR_NAME {
+                        if dir_name == ROOT_DIR_NAME && index == 0 {
                             let home_text = get_local_text("uplink.home");
                             rsx!(div {
                                 class: "crumb",
