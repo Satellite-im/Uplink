@@ -42,7 +42,6 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::state::ui::WindowMeta;
 use crate::state::Action;
 use crate::state::{friends, storage};
-use crate::utils::sounds::Sounds;
 use crate::warp_runner::{
     ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
 };
@@ -191,6 +190,10 @@ fn copy_assets() {
 }
 
 fn main() {
+    // Attempts to increase the file desc limit on unix-like systems
+    // Note: Will be changed out in the future
+    if fdlimit::raise_fd_limit().is_none() {}
+
     // configure logging
     let args = Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
@@ -480,12 +483,9 @@ fn app(cx: Scope) -> Element {
                 log::trace!("FOCUS CHANGED {:?}", *focused);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
-                        if state.read().ui.metadata.focused != *focused {
-                            state.write().ui.metadata.focused = *focused;
-                            crate::utils::sounds::Play(Sounds::Notification);
-                            // this isn't used anywhere else. no need to update.
-                            //needs_update.set(true);
-                        }
+                        state.write().ui.metadata.focused = *focused;
+                        //crate::utils::sounds::Play(Sounds::Notification);
+                        needs_update.set(true);
                     }
                     Err(e) => {
                         log::error!("{e}");
