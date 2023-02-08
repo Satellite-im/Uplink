@@ -211,6 +211,8 @@ async fn login(
         }
     }
 
+    // this retry was in response to a bug where the user wasn't allowed to log in. it may be unneeded
+    let mut counter: u32 = 5;
     loop {
         match tesseract.unlock(passphrase.as_bytes()) {
             Ok(_) => break,
@@ -219,6 +221,11 @@ async fn login(
                 _ => {
                     log::info!("unlock failed: {:?}", e);
                     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                    counter = counter.saturating_sub(1);
+                    if counter == 0 {
+                        log::warn!("unlock failed too many times");
+                        return Err(e);
+                    }
                 }
             },
         }
