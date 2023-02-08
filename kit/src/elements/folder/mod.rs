@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use uuid::Uuid;
 
 use crate::{
-    elements::input::{Input, Size},
+    elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS},
     icons::{Icon, IconElement},
 };
 
@@ -89,18 +89,41 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: icon,
                     },
                 },
-                with_rename.then(|| rsx! (
-                        Input {
-                            id: Uuid::new_v4().to_string(),
-                            disabled: disabled,
-                            placeholder: placeholder,
-                            focus: true,
-                            max_length: 64,
-                            size: Size::Small,
-                            // todo: use is_valid
-                            onreturn: move |(s, _is_valid)| emit(&cx, s)
-                        }
-                )),
+                with_rename.then(||
+                    {
+                    let chars_to_remove = vec!['\\', '/'];
+                    let mut special_chars = SPECIAL_CHARS.to_vec();
+                    special_chars = special_chars
+                        .iter()
+                        .filter(|&&c| !chars_to_remove.contains(&c))
+                        .cloned()
+                        .collect();
+                        rsx! (
+                            Input {
+                                id: Uuid::new_v4().to_string(),
+                                disabled: disabled,
+                                placeholder: placeholder,
+                                focus: true,
+                                max_length: 64,
+                                size: Size::Small,
+                                options: Options {
+                                    with_validation: Some(Validation {
+                                        alpha_numeric_only: true,
+                                        special_chars_allowed: Some(special_chars),
+                                        ..Validation::default()
+                                    }),
+                                    ..Options::default()
+                                }
+                                // todo: use is_valid
+                                onreturn: move |(s, _is_valid)| {
+                                    if _is_valid {
+                                        emit(&cx, s);
+                                    }
+                                }
+                            }
+                    )
+                    }
+                  ),
                 (!with_rename).then(|| rsx! (
                     label {
                         class: "folder-name",
