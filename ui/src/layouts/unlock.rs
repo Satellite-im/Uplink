@@ -119,6 +119,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 }
             },
             Input {
+                id: "unlock-input".to_owned(),
+                focus: true,
                 is_password: true,
                 icon: Icon::Key,
                 aria_label: "pin-input".into(),
