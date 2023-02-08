@@ -113,6 +113,8 @@ settings-audio = Audio Settings
     .interface-sounds-description = When enabled, some additional sounds will play when you interact with the app.
     .media-sounds = Media Sounds
     .media-sounds-description = When enabled, media related events such as toggling microphone or headphones and other real time events, will play sounds.
+    .message-sounds = Message Sounds
+    .message-sounds-description = Play a sound when you get a new message or someone mentions you in a conversation.
 
 settings-files = Files Settings
     .local-sync = Local Sync

@@ -793,8 +793,6 @@ impl State {
                         Some(crate::utils::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
                     );
-                } else {
-                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
                 }
             }
             MultiPassEvent::FriendRequestSent(identity) => {
@@ -870,18 +868,25 @@ impl State {
                     .config
                     .notifications
                     .messages_notifications;
-                let should_play_sound =
-                    notifications_enabled && self.chats.active != Some(conversation_id);
+                let should_play_sound = self.chats.active != Some(conversation_id)
+                    && self.configuration.config.audiovideo.message_sounds;
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
 
+                // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
+                    let sound = if self.configuration.config.audiovideo.message_sounds {
+                        Some(crate::utils::sounds::Sounds::Notification)
+                    } else {
+                        None
+                    };
                     crate::utils::notifications::push_notification(
                         "New friend request!".into(),
                         format!("{} sent a request.", "NOT YET IMPL"),
-                        Some(crate::utils::sounds::Sounds::Notification),
+                        sound,
                         notify_rust::Timeout::Milliseconds(4),
                     );
+                // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
                 } else if should_play_sound {
                     crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
                 }

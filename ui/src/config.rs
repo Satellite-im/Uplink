@@ -59,6 +59,8 @@ pub struct AudioVideo {
     #[serde(default)]
     pub interface_sounds: bool,
     #[serde(default)]
+    pub message_sounds: bool,
+    #[serde(default)]
     pub media_sounds: bool,
 }
 
