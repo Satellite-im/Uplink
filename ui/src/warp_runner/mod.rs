@@ -201,7 +201,28 @@ async fn login(
     new_account: bool,
 ) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("login");
-    tesseract.unlock(passphrase.as_bytes())?;
+
+    if tesseract.is_unlock() {
+        log::warn!("login with tesseract alread unlocked. locking teseract");
+        tesseract.lock();
+        while tesseract.is_unlock() {
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
+    }
+
+    loop {
+        match tesseract.unlock(passphrase.as_bytes()) {
+            Ok(_) => break,
+            Err(e) => match e {
+                warp::error::Error::DecryptionError => return Err(e),
+                _ => {
+                    log::info!("unlock failed: {:?}", e);
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                }
+            },
+        }
+    }
+
     while !tesseract.is_unlock() {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
