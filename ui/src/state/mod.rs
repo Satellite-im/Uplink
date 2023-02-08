@@ -833,6 +833,34 @@ impl State {
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
+
+                // TODO: Get state available in this scope.
+                // Dispatch notifications only when we're not already focused on the application.
+                let notifications_enabled = self
+                    .configuration
+                    .config
+                    .notifications
+                    .messages_notifications;
+                let should_play_sound =
+                    notifications_enabled && self.chats.active != Some(conversation_id);
+                let should_dispatch_notification =
+                    notifications_enabled && !self.ui.metadata.focused;
+
+                self.mutate(Action::AddNotification(
+                    notifications::NotificaitonKind::Message,
+                    1,
+                ));
+
+                if should_dispatch_notification {
+                    crate::utils::notifications::push_notification(
+                        "New friend request!".into(),
+                        format!("{} sent a request.", "NOT YET IMPL"),
+                        Some(crate::utils::sounds::Sounds::Notification),
+                        notify_rust::Timeout::Milliseconds(4),
+                    );
+                } else if should_play_sound {
+                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+                }
             }
             MessageEvent::Sent {
                 conversation_id,
