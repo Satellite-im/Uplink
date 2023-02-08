@@ -203,10 +203,11 @@ async fn login(
     log::debug!("login");
 
     if tesseract.is_unlock() {
-        log::warn!("login with tesseract alread unlocked. locking teseract");
+        log::warn!("login with tesseract already unlocked. locking teseract");
         tesseract.lock();
-        while tesseract.is_unlock() {
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        if tesseract.is_unlock() {
+            log::warn!("locking tesseract had no effect...");
         }
     }
 
