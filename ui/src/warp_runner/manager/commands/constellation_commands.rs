@@ -252,10 +252,13 @@ async fn set_thumbnail_if_file_is_image(
             "jpg" => IMAGE_JPEG.to_string(),
             "jpeg" => IMAGE_JPEG.to_string(),
             "svg" => IMAGE_SVG.to_string(),
-            &_ => "".to_string(),
+            _ => {
+                log::warn!("invalid mime type: {m:?}");
+                return Err(Box::from(Error::InvalidItem));
+            }
         },
         None => {
-            log::warn!("invalid mime type: {extension:?}");
+            log::warn!("thumbnail has no mime type");
             return Err(Box::from(Error::InvalidItem));
         }
     };
