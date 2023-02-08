@@ -299,7 +299,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
                     dirs_opened_ref.read().iter().map(|dir| {
-                        let directory = use_ref(&cx, || dir.clone());
+                        let directory = dir.clone();
                         let dir_name = dir.name();
                         if dir_name == ROOT_DIR_NAME {
                             let home_text = get_local_text("uplink.home");
@@ -307,7 +307,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 class: "crumb",
                                 aria_label: "crumb",
                                 onclick: move |_| {
-                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.read().clone()));
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.clone()));
                                 },
                                 IconElement {
                                     icon: Icon::Home,
@@ -320,7 +320,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             rsx!(div {
                                 class: "crumb",
                                 onclick: move |_| {
-                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.read().clone()));
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.clone()));
                                 },
                                 aria_label: "crumb",
                                 p {
