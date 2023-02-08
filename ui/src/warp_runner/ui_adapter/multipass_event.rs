@@ -30,6 +30,34 @@ pub async fn convert_multipass_event(
         }
         MultiPassEventKind::FriendRequestReceived { from } => {
             let identity = did_to_identity(&from, account).await?;
+
+            // TODO: Get state available in this scope.
+            // Dispatch notifications only when we're not already focused on the application.
+            let notifications_enabled = state
+                .read()
+                .configuration
+                .config
+                .notifications
+                .friends_notifications;
+            let should_play_sound =
+                notifications_enabled && state.read().chats.active != conversation_id;
+            let should_dispatch_notification =
+                notifications_enabled && !state.read().ui.metadata.focused;
+            if !state.read().ui.metadata.focused {
+                crate::utils::notifications::push_notification(
+                    "New friend request!".into(),
+                    format!("{} sent a request.", identity.username()),
+                    Some(crate::utils::sounds::Sounds::Notification),
+                    notify_rust::Timeout::Milliseconds(4),
+                );
+            } else if state.read().chats.active != conversation_id {
+                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+            }
+            state.write().mutate(state::Action::AddNotification(
+                state::notifications::NotificaitonKind::FriendRequest,
+                1,
+            ));
+
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }

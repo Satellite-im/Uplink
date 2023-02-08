@@ -63,7 +63,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                         push_notification(
                             "Test".to_string(),
                             "Test".to_string(),
-                            Sounds::General,
+                            Some(Sounds::General),
                             notify_rust::Timeout::Milliseconds(4),
                         );
                         state
