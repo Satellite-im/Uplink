@@ -87,6 +87,7 @@ async fn create_new_directory(
     folder_name: &str,
     warp_storage: &mut warp_storage,
 ) -> Result<(), Error> {
+    println!("Folder path: {}", folder_name.clone());
     warp_storage.create_directory(folder_name, true).await?;
     log::debug!("New directory created: {:?}", folder_name);
     Ok(())
@@ -95,7 +96,13 @@ async fn create_new_directory(
 fn get_items_from_current_directory(
     warp_storage: &mut warp_storage,
 ) -> Result<uplink_storage, Error> {
-    let current_dir = warp_storage.current_directory()?;
+    let current_dir = match warp_storage.current_directory() {
+        Ok(dir) => dir,
+        Err(error) => {
+            println!("Error on get current directory: {error}");
+            return Err(error);
+        }
+    };
     let mut current_dirs = get_directories_opened();
     set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
 
@@ -140,7 +147,11 @@ fn open_new_directory(
     warp_storage: &mut warp_storage,
     folder_name: &str,
 ) -> Result<uplink_storage, Error> {
-    warp_storage.select(&folder_name)?;
+    println!("Folder path: {}", folder_name.clone());
+    match warp_storage.select(&folder_name) {
+        Ok(_) => println!("folder selected"),
+        Err(error) => println!("Error on select folder {error}"),
+    }
     log::info!("Navigation to directory {} worked!", folder_name);
     get_items_from_current_directory(warp_storage)
 }
