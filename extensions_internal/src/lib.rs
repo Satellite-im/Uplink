@@ -31,13 +31,13 @@ impl Extension for ExampleExtension {
         .into()
     }
 
-    fn render(&self, cx: Scope) -> dioxus::prelude::Element {
+    fn render(&self, cx: Scope) -> Element {
         let styles = self.stylesheet();
 
         cx.render(rsx! {
             style { "{styles}" },
             Button {
-                icon: Icon::CursorArrowRipple
+                icon: Icon::Truck
             }
         })
     }

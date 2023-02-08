@@ -1,3 +1,4 @@
+use dioxus::prelude::*;
 use std::{fs, path::PathBuf};
 
 use warp::logging::tracing::log;
@@ -81,7 +82,7 @@ pub trait Extension {
 
     fn stylesheet(&self) -> String;
 
-    fn render(&self, cx: dioxus::prelude::Scope) -> dioxus::prelude::Element;
+    fn render(&self, cx: Scope) -> Element;
 }
 
 #[derive(Default)]
