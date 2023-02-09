@@ -225,7 +225,11 @@ async fn login(
     }
 
     tesseract.set_file(&STATIC_ARGS.tesseract_path);
-    assert!(tesseract.file().is_some());
+    if tesseract.file().is_none() {
+        log::error!("failed to set tesseract file");
+        return Err(warp::error::Error::CannotSaveTesseract);
+    }
+
     tesseract.set_autosave();
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
