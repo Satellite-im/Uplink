@@ -111,7 +111,7 @@ impl Logger {
         let _ = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(&warp_path);
+            .open(warp_path);
 
         Self {
             save_to_file: false,
@@ -181,7 +181,7 @@ impl Logger {
             colorized: false,
         };
 
-        println!("{}", new_log);
+        println!("{new_log}");
     }
 
     fn set_save_to_file(&mut self, enabled: bool) {

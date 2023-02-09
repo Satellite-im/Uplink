@@ -207,7 +207,13 @@ fn main() {
                 logger::set_write_to_stdout(true);
                 LevelFilter::Debug
             }
-            LogProfile::Trace | LogProfile::Trace2 => {
+            LogProfile::Trace => {
+                logger::set_display_trace(true);
+                logger::set_write_to_stdout(true);
+                LevelFilter::Trace
+            }
+            LogProfile::Trace2 => {
+                logger::set_display_warp(true);
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
