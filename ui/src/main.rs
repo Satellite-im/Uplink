@@ -74,6 +74,7 @@ pub struct StaticArgs {
     pub typing_indicator_refresh: u64,
     // seconds
     pub typing_indicator_timeout: u64,
+    pub tesseract_path: PathBuf,
     pub tesseract_initialized_key: String,
     pub use_mock: bool,
 }
@@ -92,6 +93,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
+        tesseract_path: uplink_path.join("warp").join(".keystore"),
         tesseract_initialized_key: String::from("account_initialized"),
         use_mock: args.with_mock,
     }

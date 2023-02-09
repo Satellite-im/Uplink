@@ -93,6 +93,12 @@ impl WarpRunner {
     }
 }
 
+// required flor for tesseract initialization (both for a new account and an existing account):
+// init tesseract with from_file(Path)
+// unlock(pin)
+// set_file(Path)
+// set_autosave
+//
 // handle_login calls manager::run, which continues to process warp commands
 async fn handle_login(notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
@@ -126,11 +132,14 @@ async fn handle_login(notify: Arc<Notify>) {
                     };
                     match warp.multipass.create_identity(Some(&username), None).await {
                         Ok(_id) => {
-                            // don't want a panic during the first run of the app to mess up tesseract.
+                            if let Err(e) = tesseract.set(&STATIC_ARGS.tesseract_initialized_key, "true") {
+                                log::error!("failed to mark tesseract as initialized");
+                               let _ = rsp.send(Err(e));
+                               continue;
+                            }
                             // calling save() here is intended to ensure that the username and password will
                             // work the next time uplink is run.
                             let _ = warp.tesseract.save();
-
                             let _ = rsp.send(Ok(()));
                             break Some(warp);
                         }
@@ -180,18 +189,17 @@ async fn handle_login(notify: Arc<Notify>) {
 
 fn init_tesseract() -> Tesseract {
     log::trace!("initializing tesseract");
-    let tess_path = STATIC_ARGS.warp_path.join(".keystore");
-    match Tesseract::from_file(&tess_path) {
+    let tess = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
         Ok(tess) => tess,
         Err(_) => {
             //doesnt exist so its set
             log::trace!("creating new tesseract");
             let tess = Tesseract::default();
-            tess.set_file(tess_path);
-            tess.set_autosave();
             tess
         }
-    }
+    };
+
+    tess
 }
 
 // tesseract needs to be initialized before warp is initialized. this function does just that
@@ -235,19 +243,15 @@ async fn login(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
 
+    tesseract.set_file(&STATIC_ARGS.tesseract_path);
+    tesseract.set_autosave();
+
     if !new_account && !tesseract.exist(&STATIC_ARGS.tesseract_initialized_key) {
         log::info!(
             "string \"{}\" not found in tesseract",
             &STATIC_ARGS.tesseract_initialized_key
         );
         return Err(warp::error::Error::IdentityNotCreated);
-    }
-
-    if new_account {
-        if let Err(e) = tesseract.set(&STATIC_ARGS.tesseract_initialized_key, "true") {
-            log::error!("failed to mark tesseract as initialized");
-            return Err(e);
-        }
     }
 
     let res = warp_initialization(tesseract, false).await;
