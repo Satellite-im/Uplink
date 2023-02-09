@@ -1,7 +1,6 @@
-use dioxus::prelude::*;
 use extensions::*;
 use libloading::{Library, Symbol};
-use std::{collections::HashMap, ffi::OsStr, fs, io, path::PathBuf, rc::Rc};
+use std::{collections::HashMap, ffi::OsStr, io, rc::Rc};
 
 type ExtensionInfo = unsafe fn() -> Box<Core>;
 
@@ -48,7 +47,7 @@ impl AvailableExtensions {
     /// behaviour.
     pub unsafe fn load<P: AsRef<OsStr>>(&mut self, library_path: P) -> io::Result<()> {
         // load the library into memory
-        let library = Rc::new(Library::new(library_path)?);
+        let library = Rc::new(Library::new(library_path).unwrap());
 
         let extension_entry: Symbol<ExtensionInfo> = library.get(b"extension_entry").unwrap();
         let extension_info = *extension_entry();

@@ -311,11 +311,11 @@ fn bootstrap(cx: Scope) -> Element {
     // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
     // We should however ensure we use the same librarian across the app so they should probably live in a globally accessable place
     // that updates when they have new info, i.e. state.
-    let extensions_library = AvailableExtensions::new();
+    let mut extensions_library = AvailableExtensions::new();
     unsafe {
-        extensions_library.load(STATIC_ARGS.extensions_path);
+        let _ = extensions_library.load(STATIC_ARGS.extensions_path.clone());
     }
-    let extensions = extensions_library.extensions;
+    let _extensions = extensions_library.extensions;
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
