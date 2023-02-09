@@ -128,6 +128,7 @@ async fn handle_login(notify: Arc<Notify>) {
                             continue;
                         }
                     };
+                    warp.tesseract.clear();
                     match warp.multipass.create_identity(Some(&username), None).await {
                         Ok(_id) => {
                             // calling save() here is perhaps a little paranoid
@@ -142,19 +143,12 @@ async fn handle_login(notify: Arc<Notify>) {
                     }
                 }
                 Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
-                    let warp = match login(&passphrase).await {
-                        Ok(w) => w,
+                     match login(&passphrase).await {
+                        Ok(warp) => break Some(warp),
                         Err(e) => {
                             let _ = rsp.send(Err(e));
                             continue;
                         }
-                    };
-                    log::debug!("TryLogIn unlocked tesseract");
-                    let r = warp.multipass.get_own_identity().await.map(|_| ());
-                    let is_ok = r.is_ok();
-                    let _ = rsp.send(r);
-                    if is_ok {
-                        break Some(warp);
                     }
                 }
                 Some(WarpCmd::Tesseract(TesseractCmd::KeyExists { key, rsp }))  => {
