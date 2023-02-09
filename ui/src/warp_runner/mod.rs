@@ -191,13 +191,16 @@ fn init_tesseract() -> Tesseract {
 }
 
 // create a new tesseract, use it to initialize warp, and return it within the warp struct
-async fn login(
-    passphrase: &str,
-    clear_tesseract: bool,
-) -> Result<manager::Warp, warp::error::Error> {
+async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("login");
 
     let tesseract = init_tesseract();
+
+    if !new_account {
+        if !tesseract.exist("keypair") {
+            return Err(warp::error::Error::IdentityNotCreated);
+        }
+    }
 
     // this retry was in response to a bug where the user wasn't allowed to log in. it may be unneeded
     let mut counter: u8 = 5;
@@ -224,7 +227,7 @@ async fn login(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
 
-    if clear_tesseract {
+    if new_account {
         tesseract.clear();
     }
 
