@@ -121,14 +121,13 @@ async fn handle_login(notify: Arc<Notify>) {
                     passphrase,
                     rsp,
                 })) => {
-                    let mut warp = match login(&passphrase).await {
+                    let mut warp = match login(&passphrase, true).await {
                         Ok(w) => w,
                         Err(e) => {
                             let _ = rsp.send(Err(e));
                             continue;
                         }
                     };
-                    warp.tesseract.clear();
                     match warp.multipass.create_identity(Some(&username), None).await {
                         Ok(_id) => {
                             // calling save() here is perhaps a little paranoid
@@ -143,7 +142,7 @@ async fn handle_login(notify: Arc<Notify>) {
                     }
                 }
                 Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
-                     match login(&passphrase).await {
+                     match login(&passphrase, false).await {
                         Ok(warp) => break Some(warp),
                         Err(e) => {
                             let _ = rsp.send(Err(e));
@@ -188,7 +187,10 @@ fn init_tesseract() -> Tesseract {
 }
 
 // create a new tesseract, use it to initialize warp, and return it within the warp struct
-async fn login(passphrase: &str) -> Result<manager::Warp, warp::error::Error> {
+async fn login(
+    passphrase: &str,
+    clear_tesseract: bool,
+) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("login");
 
     let tesseract = init_tesseract();
@@ -216,6 +218,10 @@ async fn login(passphrase: &str) -> Result<manager::Warp, warp::error::Error> {
     while !tesseract.is_unlock() {
         log::trace!("waiting for tesseract to unlock");
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
+    if clear_tesseract {
+        tesseract.clear();
     }
 
     tesseract.set_file(&STATIC_ARGS.tesseract_path);
