@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use std::{fs, path::PathBuf};
+use libloading::Library;
+use std::{collections::HashMap, ffi::OsStr, fs, path::PathBuf, rc::Rc};
 
 use warp::logging::tracing::log;
 
@@ -41,6 +42,7 @@ pub struct Meta {
 pub trait ExtensionRegistrar {
     fn register(&mut self, name: &str, function: Box<dyn Extension>);
 }
+
 pub struct Core {
     pub rustc_version: &'static str,
     pub core_version: &'static str,
@@ -114,10 +116,31 @@ macro_rules! export_extension {
     ($register:expr) => {
         #[doc(hidden)]
         #[no_mangle]
-        pub static plugin_declaration: $crate::Core = $crate::Core {
+        pub static extension_entry: $crate::Core = $crate::Core {
             rustc_version: $crate::RUSTC_VERSION,
             core_version: $crate::CORE_VERSION,
             register: $register,
         };
     };
+}
+
+/// A proxy object which wraps an [`Extension`] and makes sure it can't outlive
+/// the library it came from.
+pub struct ExtensionProxy {
+    extension: Box<dyn Extension>,
+    _lib: Rc<Library>,
+}
+
+impl Extension for ExtensionProxy {
+    fn get(&self) -> Details {
+        self.extension.get()
+    }
+
+    fn stylesheet(&self) -> String {
+        self.extension.stylesheet()
+    }
+
+    fn render(&self, cx: Scope) -> Element {
+        self.extension.render(cx)
+    }
 }
