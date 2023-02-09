@@ -645,6 +645,8 @@ fn app(cx: Scope) -> Element {
                 rsp: tx,
             })) {
                 log::error!("failed to initialize Friends {}", e);
+                tokio::time::sleep(Duration::from_secs(1)).await;
+
                 return;
             }
 
@@ -735,7 +737,8 @@ fn app(cx: Scope) -> Element {
                     }))
                 {
                     log::error!("failed to init RayGun: {}", e);
-                    return;
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
 
                 match rx.await {
