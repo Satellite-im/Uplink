@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use ::extensions::{ExtensionRegistrar, FILE_EXT};
 use clap::Parser;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -18,6 +19,7 @@ use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
 use state::State;
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 use uuid::Uuid;
@@ -311,11 +313,20 @@ fn bootstrap(cx: Scope) -> Element {
     // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
     // We should however ensure we use the same librarian across the app so they should probably live in a globally accessable place
     // that updates when they have new info, i.e. state.
+    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
     let mut extensions_library = AvailableExtensions::new();
-    unsafe {
-        let _ = extensions_library.load(STATIC_ARGS.extensions_path.clone());
+
+    for entry in paths {
+        let path = entry.unwrap().path();
+        if path.extension().unwrap_or_default() == FILE_EXT {
+            unsafe {
+                let _ = extensions_library.load(path);
+            }
+        }
     }
-    let _extensions = extensions_library.extensions;
+    let extensions = extensions_library.extensions;
+    log::debug!("Loaded {} extensions.", extensions.len());
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);

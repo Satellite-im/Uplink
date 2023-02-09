@@ -8,11 +8,11 @@ pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 
 #[cfg(target_os = "macos")]
-static FILE_EXT: &str = "dylib";
+pub static FILE_EXT: &str = "dylib";
 #[cfg(target_os = "linux")]
-static FILE_EXT: &str = "so";
+pub static FILE_EXT: &str = "so";
 #[cfg(target_os = "windows")]
-static FILE_EXT: &str = "dll";
+pub static FILE_EXT: &str = "dll";
 
 // Represents where the extensions main render mthod should execute.
 // Note that some extension types will NOT render in some locations.
