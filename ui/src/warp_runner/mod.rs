@@ -101,6 +101,10 @@ impl WarpRunner {
 //
 // currently these steps are split between init_tesseract() and login()
 //
+// if a new account is created, clear tesseract after init
+//
+// must check if account exists. after init but before unlock, check for key "keypair"
+//
 // handle_login calls manager::run, which continues to process warp commands
 async fn handle_login(notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
