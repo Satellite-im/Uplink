@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use extensions::*;
-use libloading::Library;
+use libloading::{Library, Symbol};
 use std::{collections::HashMap, ffi::OsStr, fs, io, path::PathBuf, rc::Rc};
+
+type ExtensionEntry = unsafe fn() -> Box<ExtensionProxy>;
 
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
@@ -48,12 +50,11 @@ impl AvailableExtensions {
         // load the library into memory
         let library = Rc::new(Library::new(library_path)?);
 
-        // get a pointer to the plugin_declaration symbol.
-        let decl = library.get::<*mut Extension>(b"extension_entry\0")?.read();
+        let extension_proxy: Symbol<ExtensionEntry> = library.get(b"extension_entry");
 
         // version checks to prevent accidental ABI incompatibilities
-        if decl.rustc_version != extensions::RUSTC_VERSION
-            || decl.core_version != extensions::CORE_VERSION
+        if extension_proxy.rustc_version != extensions::RUSTC_VERSION
+            || extension_proxy.core_version != extensions::CORE_VERSION
         {
             return Err(io::Error::new(io::ErrorKind::Other, "Version mismatch"));
         }
