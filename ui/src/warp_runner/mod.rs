@@ -6,8 +6,8 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
-    constellation::Constellation, logging::tracing::log, multipass::MultiPass, raygun::RayGun,
-    tesseract::Tesseract,
+    constellation::Constellation, error::Error, logging::tracing::log, multipass::MultiPass,
+    raygun::RayGun, tesseract::Tesseract,
 };
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
@@ -110,6 +110,19 @@ async fn handle_login(notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
     // be sure to drop this channel before calling manager::run()
     let mut warp_cmd_rx = warp_cmd_rx.lock().await;
+    let tesseract = init_tesseract()
+        .await
+        .expect("failed to initialize tesseract");
+
+    let mut warp = match warp_initialization(tesseract, false).await {
+        Ok(w) => w,
+        Err(e) => {
+            log::error!("warp init failed: {}", e);
+            return;
+        }
+    };
+
+    let account_exists = warp.tesseract.exist("keypair");
 
     // until the user logs in, raygun and multipass are no use.
     let warp: Option<manager::Warp> = loop {
@@ -120,52 +133,62 @@ async fn handle_login(notify: Arc<Notify>) {
                 }
 
                 match opt {
-                Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
-                    username,
-                    passphrase,
-                    rsp,
-                })) => {
-                    let mut warp = match login(&passphrase, true).await {
-                        Ok(w) => w,
-                        Err(e) => {
-                            let _ = rsp.send(Err(e));
+                    Some(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
+                        username,
+                        passphrase,
+                        rsp,
+                    })) => {
+                        if account_exists {
+                            let _ = rsp.send(Err(Error::IdentityExist));
                             continue;
                         }
-                    };
-                    match warp.multipass.create_identity(Some(&username), None).await {
-                        Ok(_id) => {
-                            // calling save() here is perhaps a little paranoid
-                            let _ = warp.tesseract.save();
-                            let _ = rsp.send(Ok(()));
-                            break Some(warp);
-                        }
-                        Err(e) => {
-                            log::error!("create_identity failed. should never happen: {}", e);
-                            let _ = rsp.send(Err(e));
-                        }
-                    }
-                }
-                Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
-                     match login(&passphrase, false).await {
-                        Ok(warp) => {
-                            let _ = rsp.send(Ok(()));
-                            break Some(warp);
-                        }
-                        Err(e) => {
+                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                            log::info!("unlock failed: {:?}", e);
                             let _ = rsp.send(Err(e));
                             continue;
+                        };
+                        match warp.multipass.create_identity(Some(&username), None).await {
+                            Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
+                                Ok(_) => {
+                                    let _ = rsp.send(Ok(()));
+                                    break Some(warp);
+                                },
+                                Err(e) => {
+                                    warp.tesseract.lock();
+                                    let _ = rsp.send(Err(e));
+                                    continue;
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("create_identity failed. should never happen: {}", e);
+                                let _ = rsp.send(Err(e));
+                            }
                         }
                     }
+                    Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
+                        if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
+                            log::info!("unlock failed: {:?}", e);
+                            let _ = rsp.send(Err(e));
+                            continue;
+                        };
+                        match wait_for_multipass(&mut warp, notify.clone()).await {
+                            Ok(_) => {
+                                let _ = rsp.send(Ok(()));
+                                break Some(warp);
+                            },
+                            Err(e) => {
+                                warp.tesseract.lock();
+                                let _ = rsp.send(Err(e));
+                                continue;
+                            }
+                        }
+                    }
+                    Some(WarpCmd::Tesseract(TesseractCmd::AccountExists { rsp }))  => {
+                        let _ = rsp.send(account_exists);
+                    }
+                    _ => {}
                 }
-                Some(WarpCmd::Tesseract(TesseractCmd::KeyExists { key, rsp }))  => {
-                    let tesseract = init_tesseract();
-                    let res = tesseract.exist(&key);
-                    let _ = rsp.send(res);
-                }
-                _ => {
-                }
-                }
-            } ,
+            },
             // the WarpRunner has been dropped. stop the task
             _ = notify.notified() => break None,
         }
@@ -173,6 +196,7 @@ async fn handle_login(notify: Arc<Notify>) {
 
     // release the lock
     drop(warp_cmd_rx);
+
     if let Some(warp) = warp {
         manager::run(warp, notify).await;
     } else {
@@ -180,71 +204,57 @@ async fn handle_login(notify: Arc<Notify>) {
     }
 }
 
-// don't set file or autosave until tesseract is unlocked
-fn init_tesseract() -> Tesseract {
-    log::trace!("initializing tesseract");
-    let tess = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
-        Ok(tess) => tess,
-        Err(_) => {
-            log::trace!("creating new tesseract");
-            Tesseract::default()
+async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Result<(), Error> {
+    let multipass_init_done = async {
+        loop {
+            match warp.multipass.get_own_identity().await {
+                Ok(_) => return Ok(()),
+                Err(e) => match e {
+                    Error::MultiPassExtensionUnavailable => {
+                        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                        continue;
+                    }
+                    _ => {
+                        log::error!("multipass.get_own_identity failed: {}", e);
+                        return Err(e);
+                    }
+                },
+            }
         }
     };
 
-    tess
+    tokio::select! {
+        r = multipass_init_done => r,
+        _ = notify.notified() => {
+            log::error!("notified interrutped multipass initialization");
+            Err(Error::Other)
+        },
+    }
 }
 
-// create a new tesseract, use it to initialize warp, and return it within the warp struct
-async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, warp::error::Error> {
-    log::debug!("login");
+// don't set file or autosave until tesseract is unlocked
+async fn init_tesseract() -> Result<Tesseract, Error> {
+    log::trace!("initializing tesseract");
+    // from_file automatically sets file and autosave
+    let tesseract = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
+        Ok(tess) => tess,
+        Err(_) => {
+            log::trace!("creating new tesseract");
+            let tesseract = Tesseract::default();
+            tesseract.set_file(&STATIC_ARGS.tesseract_path);
 
-    let tesseract = init_tesseract();
+            if tesseract.file().is_none() {
+                log::error!("failed to set tesseract file");
+                return Err(warp::error::Error::CannotSaveTesseract);
+            }
 
-    if !new_account {
-        if !tesseract.exist("keypair") {
-            return Err(warp::error::Error::IdentityNotCreated);
+            tesseract.set_autosave();
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            tesseract
         }
-    }
+    };
 
-    // this retry was in response to a bug where the user wasn't allowed to log in. it may be unneeded
     let mut counter: u8 = 5;
-    loop {
-        match tesseract.unlock(passphrase.as_bytes()) {
-            Ok(_) => break,
-            Err(e) => match e {
-                warp::error::Error::DecryptionError => return Err(e),
-                _ => {
-                    log::info!("unlock failed: {:?}", e);
-                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                    counter = counter.saturating_sub(1);
-                    if counter == 0 {
-                        log::warn!("unlock failed too many times");
-                        return Err(e);
-                    }
-                }
-            },
-        }
-    }
-
-    while !tesseract.is_unlock() {
-        log::trace!("waiting for tesseract to unlock");
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    }
-
-    if new_account {
-        tesseract.clear();
-    }
-
-    tesseract.set_file(&STATIC_ARGS.tesseract_path);
-    if tesseract.file().is_none() {
-        log::error!("failed to set tesseract file");
-        return Err(warp::error::Error::CannotSaveTesseract);
-    }
-
-    tesseract.set_autosave();
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
-    counter = 5;
     while !tesseract.autosave_enabled() {
         log::trace!("retrying enable autosave");
         tesseract.set_autosave();
@@ -255,10 +265,7 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
         }
     }
 
-    let res = warp_initialization(tesseract, false).await;
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
-    res
+    Ok(tesseract)
 }
 
 // tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password

@@ -28,10 +28,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists = use_future(cx, (), |_| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         let (tx, rx) = oneshot::channel::<bool>();
-        if let Err(e) = warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
-            key: "keypair".into(),
-            rsp: tx,
-        })) {
+        if let Err(e) =
+            warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::AccountExists { rsp: tx }))
+        {
             log::error!("failed to send warp command: {}", e);
             // returning true will prevent the account from being created
             return true;

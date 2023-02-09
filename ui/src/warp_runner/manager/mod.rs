@@ -65,10 +65,8 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
             _ = notify.notified() => break,
         }
     }
-
-    // why is autosave not working? hope this works.
     let _ = warp.tesseract.save();
-    // tesseract.lock() is called on drop. no need to do it here
+    warp.tesseract.lock();
     log::debug!("terminating warp_runner thread");
 }
 
