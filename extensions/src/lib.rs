@@ -127,7 +127,7 @@ macro_rules! export_extension {
 /// A proxy object which wraps an [`Extension`] and makes sure it can't outlive
 /// the library it came from.
 pub struct ExtensionProxy {
-    extension: Box<dyn Extension>,
+    pub extension: Box<dyn Extension>,
     _lib: Rc<Library>,
 }
 

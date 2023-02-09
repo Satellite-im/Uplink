@@ -3,7 +3,7 @@ use extensions::*;
 use libloading::{Library, Symbol};
 use std::{collections::HashMap, ffi::OsStr, fs, io, path::PathBuf, rc::Rc};
 
-type ExtensionEntry = unsafe fn() -> Box<ExtensionProxy>;
+type ExtensionInfo = unsafe fn() -> Box<Core>;
 
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
@@ -50,18 +50,19 @@ impl AvailableExtensions {
         // load the library into memory
         let library = Rc::new(Library::new(library_path)?);
 
-        let extension_proxy: Symbol<ExtensionEntry> = library.get(b"extension_entry");
+        let extension_entry: Symbol<ExtensionInfo> = library.get(b"extension_entry").unwrap();
+        let extension_info = *extension_entry();
 
         // version checks to prevent accidental ABI incompatibilities
-        if extension_proxy.rustc_version != extensions::RUSTC_VERSION
-            || extension_proxy.core_version != extensions::CORE_VERSION
+        if extension_info.rustc_version != extensions::RUSTC_VERSION
+            || extension_info.core_version != extensions::CORE_VERSION
         {
             return Err(io::Error::new(io::ErrorKind::Other, "Version mismatch"));
         }
 
         let mut registrar = ExtensionRegistrar::new(Rc::clone(&library));
 
-        (decl.register)(&mut registrar);
+        (extension_info.register)(&mut registrar);
 
         // add all loaded extensions to the extensions map
         self.extensions.extend(registrar.extensions);
