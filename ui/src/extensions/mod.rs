@@ -57,9 +57,9 @@ impl AvailableExtensions {
 
         (decl.register)(&mut registrar);
 
-        // add all loaded plugins to the functions map
+        // add all loaded extensions to the extensions map
         self.extensions.extend(registrar.extensions);
-        // and make sure ExternalFunctions keeps a reference to the library
+        // and make sure AvailableExtensions keeps a reference to the library
         self.libraries.push(library);
 
         Ok(())
