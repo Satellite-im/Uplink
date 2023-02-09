@@ -128,7 +128,7 @@ macro_rules! export_extension {
 /// the library it came from.
 pub struct ExtensionProxy {
     pub extension: Box<dyn Extension>,
-    _lib: Rc<Library>,
+    pub _lib: Rc<Library>,
 }
 
 impl Extension for ExtensionProxy {
