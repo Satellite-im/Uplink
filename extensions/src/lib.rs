@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use libloading::Library;
-use std::{collections::HashMap, ffi::OsStr, fs, path::PathBuf, rc::Rc};
+use std::{fs, path::PathBuf, rc::Rc};
 
 use warp::logging::tracing::log;
 
