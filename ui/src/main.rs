@@ -646,7 +646,6 @@ fn app(cx: Scope) -> Element {
             })) {
                 log::error!("failed to initialize Friends {}", e);
                 tokio::time::sleep(Duration::from_secs(1)).await;
-
                 return;
             }
 
@@ -743,7 +742,10 @@ fn app(cx: Scope) -> Element {
 
                 match rx.await {
                     Ok(r) => break r,
-                    Err(_e) => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
+                    Err(e) => {
+                        log::error!("comamnd canceled: {}", e);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
+                    }
                 }
             };
 
