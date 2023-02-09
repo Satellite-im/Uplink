@@ -13,8 +13,8 @@ use warp::logging::tracing::log;
 
 use crate::{
     config::Configuration,
-    warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
-    AuthPages, STATIC_ARGS, WARP_CMD_CH,
+    warp_runner::{MultiPassCmd, WarpCmd},
+    AuthPages, WARP_CMD_CH,
 };
 
 // todo: go to the auth page if no account has been created
@@ -26,22 +26,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
 
-    let account_exists = use_future(cx, (), |_| async move {
-        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        let (tx, rx) = oneshot::channel::<bool>();
-        if let Err(e) = warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
-            key: STATIC_ARGS.tesseract_initialized_key.clone(),
-            rsp: tx,
-        })) {
-            log::error!("failed to send warp command: {}", e);
-            // returning true will prevent the account from being created
-            return true;
-        }
-
-        let exists = rx.await.unwrap_or(false);
-        log::debug!("account_exists: {}", exists);
-        exists
-    });
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, no_account, page];
         async move {
@@ -67,10 +51,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         page.set(AuthPages::Success)
                     }
                     Err(err) => match err {
-                        warp::error::Error::MultiPassExtensionUnavailable => {
-                            // need to create an account
+                        warp::error::Error::IdentityNotCreated => {
                             no_account.set(Some(true));
-                            log::warn!("multipass extension unavailable");
                         }
                         warp::error::Error::DecryptionError => {
                             // wrong password
@@ -147,7 +129,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             },
             // want this to not render while account_exists is loading.
             // therefore, default it to true
-            (!account_exists.value().unwrap_or(&true)).then(|| rsx!(
+            (no_account.get().unwrap_or(false)).then(|| rsx!(
                 Button {
                     text: get_local_text("unlock.create-account"),
                     aria_label: "create-account-button".into(),
