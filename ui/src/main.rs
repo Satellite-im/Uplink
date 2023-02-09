@@ -75,7 +75,6 @@ pub struct StaticArgs {
     // seconds
     pub typing_indicator_timeout: u64,
     pub tesseract_path: PathBuf,
-    pub tesseract_initialized_key: String,
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -84,17 +83,17 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+    let warp_path = uplink_path.join("warp");
     StaticArgs {
         uplink_path: uplink_path.clone(),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
-        warp_path: uplink_path.join("warp"),
+        warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
-        tesseract_path: uplink_path.join("warp").join(".keystore"),
-        tesseract_initialized_key: String::from("account_initialized"),
+        tesseract_path: warp_path.join(".keystore"),
         use_mock: args.with_mock,
     }
 });

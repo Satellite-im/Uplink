@@ -13,7 +13,7 @@ use warp::logging::tracing::log;
 
 use crate::{
     config::Configuration,
-    warp_runner::{MultiPassCmd, WarpCmd},
+    warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
 
@@ -23,11 +23,27 @@ use crate::{
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering unlock layout");
     let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
-    let no_account: &UseState<Option<bool>> = use_state(cx, || None);
     let button_disabled = use_state(cx, || true);
 
+    let account_exists = use_future(cx, (), |_| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        let (tx, rx) = oneshot::channel::<bool>();
+        if let Err(e) = warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
+            key: "keypair".into(),
+            rsp: tx,
+        })) {
+            log::error!("failed to send warp command: {}", e);
+            // returning true will prevent the account from being created
+            return true;
+        }
+
+        let exists = rx.await.unwrap_or(false);
+        log::debug!("account_exists: {}", exists);
+        exists
+    });
+
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![password_failed, no_account, page];
+        to_owned![password_failed, page];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
@@ -51,12 +67,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         page.set(AuthPages::Success)
                     }
                     Err(err) => match err {
-                        warp::error::Error::IdentityNotCreated => {
-                            no_account.set(Some(true));
-                        }
                         warp::error::Error::DecryptionError => {
                             // wrong password
-                            no_account.set(Some(false));
                             password_failed.set(Some(true));
                             log::warn!("decryption error");
                         }
@@ -129,7 +141,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             },
             // want this to not render while account_exists is loading.
             // therefore, default it to true
-            (no_account.get().unwrap_or(false)).then(|| rsx!(
+            (!account_exists.value().unwrap_or(&true)).then(|| rsx!(
                 Button {
                     text: get_local_text("unlock.create-account"),
                     aria_label: "create-account-button".into(),

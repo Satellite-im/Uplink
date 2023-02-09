@@ -13,7 +13,7 @@ use warp::{
 use super::{conv_stream, Account, Messaging, Storage};
 use crate::WARP_CMD_CH;
 
-pub use commands::{ConstellationCmd, MultiPassCmd, RayGunCmd};
+pub use commands::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
 /// Contains the structs needed for run() to handle various events
 pub struct Warp {

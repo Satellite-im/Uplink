@@ -21,7 +21,7 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
-pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -51,8 +51,8 @@ pub enum WarpEvent {
 
 #[derive(Display)]
 pub enum WarpCmd {
-    //    #[display(fmt = "Tesseract {{ {_0} }} ")]
-    //    Tesseract(TesseractCmd),
+    #[display(fmt = "Tesseract {{ {_0} }} ")]
+    Tesseract(TesseractCmd),
     #[display(fmt = "MultiPass {{ {_0} }} ")]
     MultiPass(MultiPassCmd),
     #[display(fmt = "RayGun {{ {_0} }} ")]
@@ -121,8 +121,7 @@ async fn handle_login(notify: Arc<Notify>) {
                     passphrase,
                     rsp,
                 })) => {
-                    let new_account = true;
-                    let mut warp = match login(&passphrase, new_account).await {
+                    let mut warp = match login(&passphrase).await {
                         Ok(w) => w,
                         Err(e) => {
                             let _ = rsp.send(Err(e));
@@ -143,8 +142,7 @@ async fn handle_login(notify: Arc<Notify>) {
                     }
                 }
                 Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
-                    let new_account = false;
-                    let warp = match login(&passphrase, new_account).await {
+                    let warp = match login(&passphrase).await {
                         Ok(w) => w,
                         Err(e) => {
                             let _ = rsp.send(Err(e));
@@ -158,6 +156,11 @@ async fn handle_login(notify: Arc<Notify>) {
                     if is_ok {
                         break Some(warp);
                     }
+                }
+                Some(WarpCmd::Tesseract(TesseractCmd::KeyExists { key, rsp }))  => {
+                    let tesseract = init_tesseract();
+                    let res = tesseract.exist(&key);
+                    let _ = rsp.send(res);
                 }
                 _ => {}
                 }
@@ -193,7 +196,7 @@ fn init_tesseract() -> Tesseract {
 }
 
 // create a new tesseract, use it to initialize warp, and return it within the warp struct
-async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, warp::error::Error> {
+async fn login(passphrase: &str) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("login");
 
     let tesseract = init_tesseract();
@@ -228,14 +231,6 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
     tesseract.set_autosave();
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-    if !new_account && !tesseract.exist(&STATIC_ARGS.tesseract_initialized_key) {
-        log::info!(
-            "string \"{}\" not found in tesseract",
-            &STATIC_ARGS.tesseract_initialized_key
-        );
-        return Err(warp::error::Error::IdentityNotCreated);
-    }
-
     counter = 5;
     while !tesseract.autosave_enabled() {
         log::trace!("retrying enable autosave");
@@ -244,18 +239,6 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
         counter = counter.saturating_sub(1);
         if counter == 0 {
             return Err(warp::error::Error::CannotSaveTesseract);
-        }
-    }
-
-    // if creating a new account, mark tesseract as initialized
-    counter = 5;
-    if new_account {
-        while let Err(e) = tesseract.set(&STATIC_ARGS.tesseract_initialized_key, "true") {
-            log::error!("failed to save key in tesseract: {}", e);
-            counter = counter.saturating_sub(1);
-            if counter == 0 {
-                return Err(warp::error::Error::CannotSaveTesseract);
-            }
         }
     }
 
