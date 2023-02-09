@@ -156,6 +156,8 @@ enum LogProfile {
     Debug,
     /// print everything including tracing logs to the terminal
     Trace,
+    /// like trace but include warp logs
+    Trace2,
 }
 
 #[derive(Debug, Parser)]
@@ -205,7 +207,7 @@ fn main() {
                 logger::set_write_to_stdout(true);
                 LevelFilter::Debug
             }
-            LogProfile::Trace => {
+            LogProfile::Trace | LogProfile::Trace2 => {
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
