@@ -1,18 +1,23 @@
+use dioxus::prelude::*;
+use extensions::*;
+use libloading::Library;
+use std::{collections::HashMap, ffi::OsStr, fs, io, path::PathBuf, rc::Rc};
+
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
     lib: Rc<Library>,
 }
 
-impl ExtesionRegistrar {
-    fn new(lib: Rc<Library>) -> ExtesionRegistrar {
-        ExtesionRegistrar {
+impl ExtensionRegistrar {
+    fn new(lib: Rc<Library>) -> ExtensionRegistrar {
+        ExtensionRegistrar {
             lib,
             extensions: HashMap::default(),
         }
     }
 }
 
-impl extensions::ExtensionRegistrar for ExtesionRegistrar {
+impl extensions::ExtensionRegistrar for ExtensionRegistrar {
     fn register(&mut self, name: &str, extension: Box<dyn Extension>) {
         let proxy = ExtensionProxy {
             extension,
@@ -24,8 +29,8 @@ impl extensions::ExtensionRegistrar for ExtesionRegistrar {
 
 #[derive(Default)]
 pub struct AvailableExtensions {
-    extensions: HashMap<String, ExtensionProxy>,
-    libraries: Vec<Rc<Library>>,
+    pub extensions: HashMap<String, ExtensionProxy>,
+    pub libraries: Vec<Rc<Library>>,
 }
 
 impl AvailableExtensions {
