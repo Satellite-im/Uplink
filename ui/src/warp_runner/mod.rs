@@ -220,7 +220,7 @@ async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Re
     tokio::select! {
         r = multipass_init_done => r,
         _ = notify.notified() => {
-            log::error!("notified interrutped multipass initialization");
+            log::error!("notified interrupted multipass initialization");
             Err(Error::Other)
         },
     }
