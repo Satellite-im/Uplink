@@ -30,7 +30,7 @@ impl Extension for ExampleExtension {
         include_str!("./style.css").to_string()
     }
 
-    fn render(&self, cx: Scope) -> Element {
+    fn render<'a>(&'a self, cx: Scope<'a>) -> Element<'a> {
         let styles = self.stylesheet();
 
         cx.render(rsx! {

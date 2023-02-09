@@ -84,7 +84,7 @@ pub trait Extension {
 
     fn stylesheet(&self) -> String;
 
-    fn render(&self, cx: Scope) -> Element;
+    fn render<'a>(&'a self, cx: Scope<'a>) -> Element<'a>;
 }
 
 #[derive(Default)]
@@ -140,7 +140,7 @@ impl Extension for ExtensionProxy {
         self.extension.stylesheet()
     }
 
-    fn render(&self, cx: Scope) -> Element {
+    fn render<'a>(&'a self, cx: Scope<'a>) -> Element<'a> {
         self.extension.render(cx)
     }
 }
