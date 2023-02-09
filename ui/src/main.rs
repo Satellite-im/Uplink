@@ -1,6 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use ::extensions::{ExtensionRegistrar, FILE_EXT};
+use ::extensions::FILE_EXT;
 use clap::Parser;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -311,7 +311,7 @@ fn bootstrap(cx: Scope) -> Element {
     warp_runner.write_silent().run();
 
     // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
-    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessable place
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
     // that updates when they have new info, i.e. state.
     fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
     let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
@@ -326,7 +326,9 @@ fn bootstrap(cx: Scope) -> Element {
         }
     }
     let extensions = extensions_library.extensions;
-    log::debug!("Loaded {} extensions.", extensions.len());
+    for extension_name in extensions.keys() {
+        log::debug!("Loaded extension: {}", extension_name);
+    }
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
