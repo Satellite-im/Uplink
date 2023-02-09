@@ -14,7 +14,7 @@ use warp::logging::tracing::log;
 use crate::{
     config::Configuration,
     warp_runner::{MultiPassCmd, TesseractCmd, WarpCmd},
-    AuthPages, WARP_CMD_CH,
+    AuthPages, STATIC_ARGS, WARP_CMD_CH,
 };
 
 // todo: go to the auth page if no account has been created
@@ -30,7 +30,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         let (tx, rx) = oneshot::channel::<bool>();
         if let Err(e) = warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::KeyExists {
-            key: "keypair".into(),
+            key: STATIC_ARGS.tesseract_initialized_key.clone(),
             rsp: tx,
         })) {
             log::error!("failed to send warp command: {}", e);

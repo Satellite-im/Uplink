@@ -235,12 +235,24 @@ async fn login(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
 
-    if !new_account && !tesseract.exist("keypair") {
-        log::info!("string keypair not found in tesseract");
+    if !new_account && !tesseract.exist(&STATIC_ARGS.tesseract_initialized_key) {
+        log::info!(
+            "string \"{}\" not found in tesseract",
+            &STATIC_ARGS.tesseract_initialized_key
+        );
         return Err(warp::error::Error::IdentityNotCreated);
     }
+
+    if new_account {
+        if let Err(e) = tesseract.set(&STATIC_ARGS.tesseract_initialized_key, "true") {
+            log::error!("failed to mark tesseract as initialized");
+            return Err(e);
+        }
+    }
+
     let res = warp_initialization(tesseract, false).await;
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
     res
 }
 
