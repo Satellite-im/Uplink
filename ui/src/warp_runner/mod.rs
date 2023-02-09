@@ -143,7 +143,10 @@ async fn handle_login(notify: Arc<Notify>) {
                 }
                 Some(WarpCmd::MultiPass(MultiPassCmd::TryLogIn { passphrase, rsp })) => {
                      match login(&passphrase, false).await {
-                        Ok(warp) => break Some(warp),
+                        Ok(warp) => {
+                            let _ = rsp.send(Ok(()));
+                            break Some(warp);
+                        }
                         Err(e) => {
                             let _ = rsp.send(Err(e));
                             continue;
@@ -155,7 +158,8 @@ async fn handle_login(notify: Arc<Notify>) {
                     let res = tesseract.exist(&key);
                     let _ = rsp.send(res);
                 }
-                _ => {}
+                _ => {
+                }
                 }
             } ,
             // the WarpRunner has been dropped. stop the task
