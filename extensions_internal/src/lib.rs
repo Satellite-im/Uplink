@@ -13,7 +13,7 @@ extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExampleExtension;
 
-impl Extension for ExampleExtension {
+impl<'a> Extension<'a> for ExampleExtension {
     fn get(&self) -> Details {
         Details {
             location: Location::Chatbar,
@@ -35,7 +35,7 @@ impl Extension for ExampleExtension {
         .into()
     }
 
-    fn render(&self, cx: Scope) -> Element {
+    fn render(&self, cx: Scope<'a>) -> Element<'a> {
         let styles = self.stylesheet();
 
         cx.render(rsx! {
