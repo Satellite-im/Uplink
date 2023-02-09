@@ -80,7 +80,7 @@ pub enum Error {
 
 // Basic extension interface with the minimum required information.
 pub trait Extension {
-    fn get(&self) -> Details;
+    fn details(&self) -> Details;
 
     fn stylesheet(&self) -> String;
 
@@ -132,8 +132,8 @@ pub struct ExtensionProxy {
 }
 
 impl Extension for ExtensionProxy {
-    fn get(&self) -> Details {
-        self.extension.get()
+    fn details(&self) -> Details {
+        self.extension.details()
     }
 
     fn stylesheet(&self) -> String {

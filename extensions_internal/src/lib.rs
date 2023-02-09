@@ -14,7 +14,7 @@ extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
 pub struct ExampleExtension;
 
 impl Extension for ExampleExtension {
-    fn get(&self) -> Details {
+    fn details(&self) -> Details {
         Details {
             location: Location::Chatbar,
             ext_type: Type::IconLaunched,
