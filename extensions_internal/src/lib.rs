@@ -27,12 +27,7 @@ impl Extension for ExampleExtension {
     }
 
     fn stylesheet(&self) -> String {
-        "
-        #example {
-            background: green;
-        }
-        "
-        .into()
+        include_str!("./style.css").to_string()
     }
 
     fn render(&self, cx: Scope) -> Element {
