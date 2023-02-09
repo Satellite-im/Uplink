@@ -79,12 +79,12 @@ pub enum Error {
 }
 
 // Basic extension interface with the minimum required information.
-pub trait Extension<'a> {
+pub trait Extension {
     fn get(&self) -> Details;
 
     fn stylesheet(&self) -> String;
 
-    fn render(&self, cx: Scope<'a>) -> Element<'a>;
+    fn render(&self, cx: Scope) -> Element;
 }
 
 #[derive(Default)]
