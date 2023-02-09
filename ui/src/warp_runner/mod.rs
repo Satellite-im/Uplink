@@ -192,7 +192,7 @@ fn init_tesseract() -> Tesseract {
     tess
 }
 
-// tesseract needs to be initialized before warp is initialized. this function does just that
+// create a new tesseract, use it to initialize warp, and return it within the warp struct
 async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("login");
 
@@ -219,8 +219,14 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
     }
 
     while !tesseract.is_unlock() {
+        log::trace!("waiting for tesseract to unlock");
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+
+    tesseract.set_file(&STATIC_ARGS.tesseract_path);
+    assert!(tesseract.file().is_some());
+    tesseract.set_autosave();
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
     if !new_account && !tesseract.exist(&STATIC_ARGS.tesseract_initialized_key) {
         log::info!(
@@ -230,10 +236,6 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
         return Err(warp::error::Error::IdentityNotCreated);
     }
 
-    tesseract.set_file(&STATIC_ARGS.tesseract_path);
-    tesseract.set_autosave();
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
     counter = 5;
     while !tesseract.autosave_enabled() {
         log::trace!("retrying enable autosave");
@@ -241,8 +243,19 @@ async fn login(passphrase: &str, new_account: bool) -> Result<manager::Warp, war
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         counter = counter.saturating_sub(1);
         if counter == 0 {
-            log::error!("failed to enable autosave!");
-            break;
+            return Err(warp::error::Error::CannotSaveTesseract);
+        }
+    }
+
+    // if creating a new account, mark tesseract as initialized
+    counter = 5;
+    if new_account {
+        while let Err(e) = tesseract.set(&STATIC_ARGS.tesseract_initialized_key, "true") {
+            log::error!("failed to save key in tesseract: {}", e);
+            counter = counter.saturating_sub(1);
+            if counter == 0 {
+                return Err(warp::error::Error::CannotSaveTesseract);
+            }
         }
     }
 

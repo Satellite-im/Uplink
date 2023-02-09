@@ -94,7 +94,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
         tesseract_path: uplink_path.join("warp").join(".keystore"),
-        tesseract_initialized_key: String::from("keypair"),
+        tesseract_initialized_key: String::from("account_initialized"),
         use_mock: args.with_mock,
     }
 });
