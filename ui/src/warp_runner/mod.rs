@@ -185,10 +185,8 @@ fn init_tesseract() -> Tesseract {
     let tess = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
         Ok(tess) => tess,
         Err(_) => {
-            //doesnt exist so its set
             log::trace!("creating new tesseract");
-            let tess = Tesseract::default();
-            tess
+            Tesseract::default()
         }
     };
 
