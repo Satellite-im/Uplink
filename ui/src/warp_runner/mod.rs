@@ -242,31 +242,14 @@ async fn init_tesseract() -> Result<Tesseract, Error> {
         Err(e) => {
             log::error!("failed to open file: {}", e);
             log::warn!("creating new tesseract");
+
+            if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
+                log::error!("failed to create tesseract file: {}", e);
+                return Err(warp::error::Error::CannotSaveTesseract);
+            }
             Tesseract::default()
         }
     };
-
-    // setting the file and enabling autosave might help but i doubt it.
-    tesseract.set_file(&STATIC_ARGS.tesseract_path);
-
-    if tesseract.file().is_none() {
-        log::error!("failed to set tesseract file");
-        return Err(warp::error::Error::CannotSaveTesseract);
-    }
-
-    tesseract.set_autosave();
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-
-    let mut counter: u8 = 5;
-    while !tesseract.autosave_enabled() {
-        log::trace!("retrying enable autosave");
-        tesseract.set_autosave();
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        counter = counter.saturating_sub(1);
-        if counter == 0 {
-            return Err(warp::error::Error::CannotSaveTesseract);
-        }
-    }
 
     Ok(tesseract)
 }
