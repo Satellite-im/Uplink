@@ -498,7 +498,7 @@ fn app(cx: Scope) -> Element {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
                         //crate::utils::sounds::Play(Sounds::Notification);
-                        needs_update.set(true);
+                        //needs_update.set(true);
                     }
                     Err(e) => {
                         log::error!("{e}");
