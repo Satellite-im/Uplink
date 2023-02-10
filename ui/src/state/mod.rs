@@ -19,6 +19,7 @@ pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
+use shared::language::get_local_text;
 pub use ui::{Theme, ToastNotification, UI};
 
 use crate::{
@@ -788,7 +789,7 @@ impl State {
 
                 if !self.ui.metadata.focused && notifications_enabled {
                     crate::utils::notifications::push_notification(
-                        "New friend request!".into(),
+                        get_local_text("friends.new-request"),
                         format!("{} sent a request.", identity.username()),
                         Some(crate::utils::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
@@ -881,7 +882,7 @@ impl State {
                         None
                     };
                     crate::utils::notifications::push_notification(
-                        "New friend request!".into(),
+                        get_local_text("friends.new-request"),
                         format!("{} sent a request.", "NOT YET IMPL"),
                         sound,
                         notify_rust::Timeout::Milliseconds(4),
