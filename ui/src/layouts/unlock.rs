@@ -98,6 +98,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         no_whitespace: true,
         // The input component validation is shared - if you need to allow just colons in, set this to true
         ignore_colons: false,
+        // The input should allow any special characters
+        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
+        special_chars_allowed: None,
     };
 
     // todo: use password_failed to display an error message
@@ -117,6 +120,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 }
             },
             Input {
+                id: "unlock-input".to_owned(),
+                focus: true,
                 is_password: true,
                 icon: Icon::Key,
                 aria_label: "pin-input".into(),
