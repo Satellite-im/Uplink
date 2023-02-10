@@ -128,6 +128,7 @@ async fn handle_login(notify: Arc<Notify>) {
                         rsp,
                     })) => {
                         if account_exists {
+                            log::debug!("attempting to overwrite old account");
                             let tesseract = init_tesseract(true)
                                 .await
                                 .expect("failed to initialize tesseract");
