@@ -1,5 +1,5 @@
 use kit::components::indicator::{self, Status};
-use std::fs;
+use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
@@ -42,6 +42,15 @@ pub fn get_available_themes() -> Vec<Theme> {
     themes.sort_by_key(|theme| theme.name.clone());
 
     themes
+}
+
+fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
+    let path = Path::new(name.as_ref());
+    let last = path
+        .file_name()
+        .and_then(|p| Path::new(p).file_stem())
+        .unwrap_or_default();
+    last.to_string_lossy().into()
 }
 
 // converts from Warp IdentityStatus to ui_kit Status
@@ -90,5 +99,16 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         status: convert_status(&identity.identity_status()),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_get_pretty_name1() {
+        let r = get_pretty_name("pretty/name1.scss");
+        assert_eq!(r, String::from("name1"));
     }
 }
