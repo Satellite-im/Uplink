@@ -23,18 +23,15 @@ pub fn get_available_themes() -> Vec<Theme> {
         .filter_map(|file| file.ok())
     {
         if file.metadata().unwrap().is_file() {
-            let theme = file.path().display().to_string();
-
-            let mut theme_str = theme.replace("\\", "/");
-            theme_str = theme_str.split('/').last().unwrap().to_string();
-
-            let pretty_theme_str = &theme_str.replace(".scss", "");
+            let theme_path = file.path().display().to_string();
+            let theme_name_str = file.path().iter().last().unwrap();
+            let pretty_theme_str = &theme_name_str.to_string_lossy().replace(".scss", "");
             let pretty_theme_str = titlecase(pretty_theme_str);
 
-            let styles = fs::read_to_string(&theme).unwrap_or_default();
+            let styles = fs::read_to_string(&theme_path).unwrap_or_default();
 
             let theme = Theme {
-                filename: theme_str.to_owned(),
+                filename: theme_path.to_owned(),
                 name: pretty_theme_str.to_owned(),
                 styles,
             };
