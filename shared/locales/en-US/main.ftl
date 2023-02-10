@@ -57,6 +57,7 @@ friends = Friends
     .accept = Accept
     .deny = Deny Request
     .request-sent = Friend Request Sent!
+    .new_request = New friend request.
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
 
