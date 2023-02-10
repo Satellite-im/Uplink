@@ -82,13 +82,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
-                        let cache_path = dirs::home_dir()
-                            .unwrap_or_default()
-                            .join(STATIC_ARGS.uplink_path.clone())
-                            .into_os_string()
-                            .into_string()
-                            .unwrap_or_default();
-                        let _ = opener::open(cache_path);
+                        let _ = opener::open(&STATIC_ARGS.uplink_path);
                     }
                 }
             },

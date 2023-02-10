@@ -16,17 +16,15 @@ pub mod sounds;
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
 
-    let theme_path = STATIC_ARGS.themes_path.clone();
-
-    for file in WalkDir::new(theme_path)
+    for file in WalkDir::new(&STATIC_ARGS.themes_path)
         .into_iter()
         .filter_map(|file| file.ok())
     {
         if file.metadata().unwrap().is_file() {
             let theme_path = file.path().display().to_string();
             let theme_name_str = file.path().iter().last().unwrap();
-            let pretty_theme_str = &theme_name_str.to_string_lossy().replace(".scss", "");
-            let pretty_theme_str = titlecase(pretty_theme_str);
+            let pretty_theme_str = get_pretty_name(theme_name_str.to_string_lossy());
+            let pretty_theme_str = titlecase(&pretty_theme_str);
 
             let styles = fs::read_to_string(&theme_path).unwrap_or_default();
 
@@ -116,4 +114,5 @@ mod test {
     fn test_get_pretty_name_windows() {
         let r = get_pretty_name("c:\\pretty\\name2.scss");
         assert_eq!(r, String::from("name2"));
-    }}
+    }
+}
