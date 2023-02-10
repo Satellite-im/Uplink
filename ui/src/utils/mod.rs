@@ -16,9 +16,7 @@ pub mod sounds;
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
 
-    let theme_path = STATIC_ARGS.themes_path.clone();
-
-    for file in WalkDir::new(theme_path)
+    for file in WalkDir::new(&STATIC_ARGS.themes_path)
         .into_iter()
         .filter_map(|file| file.ok())
     {
