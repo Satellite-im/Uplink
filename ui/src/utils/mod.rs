@@ -1,5 +1,5 @@
 use kit::components::indicator::{self, Status};
-use std::fs;
+use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
@@ -21,16 +21,15 @@ pub fn get_available_themes() -> Vec<Theme> {
         .filter_map(|file| file.ok())
     {
         if file.metadata().unwrap().is_file() {
-            let theme = file.path().display().to_string();
-
-            let theme_str = theme.split('/').last().unwrap();
-            let pretty_theme_str = &theme_str.replace(".scss", "");
+            let theme_path = file.path().display().to_string();
+            let theme_name_str = file.path().iter().last().unwrap();
+            let pretty_theme_str = &theme_name_str.to_string_lossy().replace(".scss", "");
             let pretty_theme_str = titlecase(pretty_theme_str);
 
-            let styles = fs::read_to_string(&theme).unwrap_or_default();
+            let styles = fs::read_to_string(&theme_path).unwrap_or_default();
 
             let theme = Theme {
-                filename: theme_str.to_owned(),
+                filename: theme_path.to_owned(),
                 name: pretty_theme_str.to_owned(),
                 styles,
             };
@@ -38,8 +37,18 @@ pub fn get_available_themes() -> Vec<Theme> {
             themes.push(theme);
         }
     }
+    themes.sort_by_key(|theme| theme.name.clone());
 
     themes
+}
+
+fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
+    let path = Path::new(name.as_ref());
+    let last = path
+        .file_name()
+        .and_then(|p| Path::new(p).file_stem())
+        .unwrap_or_default();
+    last.to_string_lossy().into()
 }
 
 // converts from Warp IdentityStatus to ui_kit Status
@@ -88,5 +97,22 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         status: convert_status(&identity.identity_status()),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_get_pretty_name1() {
+        let r = get_pretty_name("pretty/name1.scss");
+        assert_eq!(r, String::from("name1"));
+    }
+
+    #[test]
+    fn test_get_pretty_name_windows() {
+        let r = get_pretty_name("c:\\pretty\\name2.scss");
+        assert_eq!(r, String::from("name2"));
     }
 }
