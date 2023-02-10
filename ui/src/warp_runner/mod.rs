@@ -137,10 +137,15 @@ async fn handle_login(notify: Arc<Notify>) {
                         };
                         match warp.multipass.create_identity(Some(&username), None).await {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
-                                Ok(_) => {
-                                    let _ = save_tesseract(&warp.tesseract);
-                                    let _ = rsp.send(Ok(()));
-                                    break Some(warp);
+                                Ok(_) => match save_tesseract(&warp.tesseract) {
+                                    Ok(_) => {
+                                        let _ = rsp.send(Ok(()));
+                                        break Some(warp);
+                                    }
+                                    Err(e) => {
+                                        let _ = rsp.send(Err(e));
+                                        continue;
+                                    }
                                 },
                                 Err(e) => {
                                     warp.tesseract.lock();
