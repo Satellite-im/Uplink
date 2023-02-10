@@ -104,6 +104,7 @@ async fn handle_login(notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
     // be sure to drop this channel before calling manager::run()
     let mut warp_cmd_rx = warp_cmd_rx.lock().await;
+
     let tesseract = init_tesseract()
         .await
         .expect("failed to initialize tesseract");
@@ -115,7 +116,6 @@ async fn handle_login(notify: Arc<Notify>) {
             return;
         }
     };
-
     let account_exists = warp.tesseract.exist("keypair");
 
     // until the user logs in, raygun and multipass are no use.
@@ -233,7 +233,7 @@ async fn init_tesseract() -> Result<Tesseract, Error> {
     let tesseract = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
         Ok(tess) => tess,
         Err(_) => {
-            log::trace!("creating new tesseract");
+            log::warn!("creating new tesseract");
             let tesseract = Tesseract::default();
             tesseract.set_file(&STATIC_ARGS.tesseract_path);
 
