@@ -5,7 +5,7 @@ use kit::{
 };
 use shared::language::get_local_text;
 
-use crate::{components::settings::ExtensionSetting, state::State};
+use crate::{components::settings::ExtensionSetting, state::State, STATIC_ARGS};
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings(cx: Scope) -> Element {
@@ -20,6 +20,9 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
                 icon: Icon::FolderOpen,
                 text: open_folder,
                 aria_label: "open-extensions-folder-button".into(),
+                onpress: move |_| {
+                    let _ = opener::open(STATIC_ARGS.extensions_path.to_owned());
+                }
             },
             state.read().ui.extensions.values().map(|ext| {
                 let details = ext.extension.details();

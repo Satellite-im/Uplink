@@ -22,7 +22,8 @@ impl Extension for ExampleExtension {
             meta: Meta {
                 name: "example_extension",
                 pretty_name: "Example!",
-                ..Default::default()
+                description: "Click me to make things a little orange.",
+                author: "Big Juice",
             },
         }
     }

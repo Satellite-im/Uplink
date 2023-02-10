@@ -1,6 +1,5 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use ::extensions::FILE_EXT;
 use clap::Parser;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -307,14 +306,12 @@ fn main() {
 
 // start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
-
     log::trace!("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
     // store in a use_ref to make it not get dropped
     let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
     warp_runner.write_silent().run();
-
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
@@ -415,7 +412,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
 
     for entry in paths {
         let path = entry.unwrap().path();
-        if path.extension().unwrap_or_default() == FILE_EXT {
+        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
             log::debug!("Loading extension at: {:?}", path);
             unsafe {
                 let _ = extensions_library.load(path);
@@ -424,7 +421,6 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     }
     let extensions = extensions_library.extensions;
     state.mutate(Action::RegisterExtensions(extensions));
-
 
     use_shared_state_provider(cx, || state);
 
