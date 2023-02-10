@@ -11,7 +11,7 @@ use warp::{
 };
 
 use super::{conv_stream, Account, Messaging, Storage};
-use crate::WARP_CMD_CH;
+use crate::{warp_runner::save_tesseract, WARP_CMD_CH};
 
 pub use commands::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
@@ -65,7 +65,8 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
             _ = notify.notified() => break,
         }
     }
-    let _ = warp.tesseract.save();
+    // already logs everything
+    let _ = save_tesseract(&warp.tesseract);
     warp.tesseract.lock();
     log::debug!("terminating warp_runner thread");
 }

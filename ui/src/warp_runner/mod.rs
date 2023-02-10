@@ -144,7 +144,7 @@ async fn handle_login(notify: Arc<Notify>) {
                         match warp.multipass.create_identity(Some(&username), None).await {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(_) => {
-                                    let _ = warp.tesseract.save();
+                                    let _ = save_tesseract(&warp.tesseract);
                                     let _ = rsp.send(Ok(()));
                                     break Some(warp);
                                 },
@@ -230,24 +230,33 @@ async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Re
 // don't set file or autosave until tesseract is unlocked
 async fn init_tesseract() -> Result<Tesseract, Error> {
     log::trace!("initializing tesseract");
-    // from_file automatically sets file and autosave
-    let tesseract = match Tesseract::from_file(&STATIC_ARGS.tesseract_path) {
-        Ok(tess) => tess,
-        Err(_) => {
-            log::warn!("creating new tesseract");
-            let tesseract = Tesseract::default();
-            tesseract.set_file(&STATIC_ARGS.tesseract_path);
 
-            if tesseract.file().is_none() {
-                log::error!("failed to set tesseract file");
-                return Err(warp::error::Error::CannotSaveTesseract);
+    let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
+        Ok(mut file) => match Tesseract::from_reader(&mut file) {
+            Ok(t) => t,
+            Err(e) => {
+                log::error!("faield to deserialize tesseract: {}", e);
+                log::warn!("creating new tesseract");
+                Tesseract::default()
             }
-
-            tesseract.set_autosave();
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-            tesseract
+        },
+        Err(e) => {
+            log::error!("failed to open file: {}", e);
+            log::warn!("creating new tesseract");
+            Tesseract::default()
         }
     };
+
+    // setting the file and enabling autosave might help but i doubt it.
+    tesseract.set_file(&STATIC_ARGS.tesseract_path);
+
+    if tesseract.file().is_none() {
+        log::error!("failed to set tesseract file");
+        return Err(warp::error::Error::CannotSaveTesseract);
+    }
+
+    tesseract.set_autosave();
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
     let mut counter: u8 = 5;
     while !tesseract.autosave_enabled() {
@@ -302,4 +311,31 @@ async fn warp_initialization(
         raygun: messaging,
         constellation: storage,
     })
+}
+
+pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Error> {
+    log::info!("saving tesseract");
+    let mut file = match std::fs::OpenOptions::new()
+        .write(true)
+        .append(false)
+        .create(false)
+        .open(&STATIC_ARGS.tesseract_path)
+    {
+        Ok(f) => f,
+        Err(e) => {
+            log::error!("failed to open tesseract keystore for saving: {}", e);
+            return Err(Error::CorruptedDataStore);
+        }
+    };
+    if let Err(e) = tesseract.to_writer(&mut file) {
+        log::error!("tesseract.to_writer() failed: {}", e);
+        return Err(e);
+    }
+
+    if let Err(e) = file.sync_all() {
+        log::error!("failed to sync tesseract: {}", e);
+        return Err(Error::CorruptedDataStore);
+    }
+
+    Ok(())
 }

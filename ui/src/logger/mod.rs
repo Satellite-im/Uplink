@@ -108,10 +108,7 @@ impl Logger {
             .join("warp.log")
             .to_string_lossy()
             .to_string();
-        let _ = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(warp_path);
+        let _ = OpenOptions::new().create(true).append(true).open(warp_path);
 
         Self {
             save_to_file: false,
