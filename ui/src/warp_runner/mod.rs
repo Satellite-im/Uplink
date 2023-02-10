@@ -99,7 +99,7 @@ async fn handle_login(notify: Arc<Notify>) {
     // be sure to drop this channel before calling manager::run()
     let mut warp_cmd_rx = warp_cmd_rx.lock().await;
 
-    let tesseract = init_tesseract()
+    let tesseract = init_tesseract(false)
         .await
         .expect("failed to initialize tesseract");
 
@@ -110,6 +110,7 @@ async fn handle_login(notify: Arc<Notify>) {
             return;
         }
     };
+
     let account_exists = warp.tesseract.exist("keypair");
 
     // until the user logs in, raygun and multipass are no use.
@@ -127,9 +128,18 @@ async fn handle_login(notify: Arc<Notify>) {
                         rsp,
                     })) => {
                         if account_exists {
-                            let _ = rsp.send(Err(Error::IdentityExist));
-                            continue;
+                            let tesseract = init_tesseract(true)
+                                .await
+                                .expect("failed to initialize tesseract");
+                            warp = match warp_initialization(tesseract, false).await {
+                                Ok(w) => w,
+                                Err(e) => {
+                                    log::error!("warp init failed: {}", e);
+                                    return;
+                                }
+                            };
                         }
+
                         if let Err(e) = warp.tesseract.unlock(passphrase.as_bytes()) {
                             log::info!("unlock failed: {:?}", e);
                             let _ = rsp.send(Err(e));
@@ -227,12 +237,26 @@ async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Re
 }
 
 // don't set file or autosave until tesseract is unlocked
-async fn init_tesseract() -> Result<Tesseract, Error> {
+async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error> {
     log::trace!("initializing tesseract");
 
     let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
         Ok(mut file) => match Tesseract::from_reader(&mut file) {
-            Ok(t) => t,
+            Ok(t) => {
+                if overwrite_old_account {
+                    match std::fs::remove_file(&STATIC_ARGS.tesseract_path) {
+                        Ok(_) => log::debug!("File successfully deleted"),
+                        Err(e) => log::error!("Error deleting file: {}", e),
+                    }
+                    if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
+                        log::error!("failed to create tesseract file: {}", e);
+                        return Err(warp::error::Error::CannotSaveTesseract);
+                    }
+                    Tesseract::default()
+                } else {
+                    t
+                }
+            }
             Err(e) => {
                 log::error!("faield to deserialize tesseract: {}", e);
                 log::warn!("creating new tesseract");
