@@ -412,15 +412,28 @@ pub fn app_bootstrap(cx: Scope) -> Element {
 
     for entry in paths {
         let path = entry.unwrap().path();
+        println!("{:?}", path);
+        let ext = path.extension().unwrap_or_default();
+        println!("ext: {:?}", ext);
+        println!("expected: {:?}", ::extensions::FILE_EXT);
         if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
-            log::debug!("Loading extension at: {:?}", path);
+            log::debug!("Found extension: {:?}", path);
             unsafe {
-                let _ = extensions_library.load(path);
+                let loader = extensions_library.load(&path);
+                match loader {
+                    Ok(_) => {
+                        log::debug!("Loaded extension: {:?}", &path);
+                    }
+                    Err(e) => {
+                        log::error!("Error loading extension: {:?}", e);
+                    }
+                }
             }
         }
     }
     let extensions = extensions_library.extensions;
-    state.mutate(Action::RegisterExtensions(extensions));
+    state.ui.extensions = extensions;
+    log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
 
     use_shared_state_provider(cx, || state);
 

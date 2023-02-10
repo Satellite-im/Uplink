@@ -26,6 +26,7 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
             },
             state.read().ui.extensions.values().map(|ext| {
                 let details = ext.extension.details();
+                println!("Deets {:?}", &details.meta.pretty_name);
                 rsx!(
                     ExtensionSetting {
                         title: details.meta.pretty_name.to_owned(),

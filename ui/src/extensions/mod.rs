@@ -49,10 +49,11 @@ impl AvailableExtensions {
 
         let extension_info = library.get::<*mut Core>(b"extension_entry").unwrap().read();
 
+        let ext_rustc = extension_info.rustc_version;
+        let ext_core = extension_info.core_version;
+
         // version checks to prevent accidental ABI incompatibilities
-        if extension_info.rustc_version != extensions::RUSTC_VERSION
-            || extension_info.core_version != extensions::CORE_VERSION
-        {
+        if ext_rustc != extensions::RUSTC_VERSION || ext_core != extensions::CORE_VERSION {
             return Err(io::Error::new(io::ErrorKind::Other, "Version mismatch"));
         }
 
