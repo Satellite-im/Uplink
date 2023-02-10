@@ -30,7 +30,7 @@ use crate::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 
-const ROOT_DIR_NAME: &str = "root";
+pub const ROOT_DIR_NAME: &str = "root";
 
 enum ChanCmd {
     GetItemsFromCurrentDirectory,
