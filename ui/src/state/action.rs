@@ -1,7 +1,8 @@
-use std::rc::Weak;
+use std::{collections::HashMap, rc::Weak};
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
+use extensions::ExtensionProxy;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;
@@ -26,6 +27,7 @@ pub struct ActionHook {
 /// used exclusively by State::mutate
 pub enum Action {
     // UI
+    RegisterExtensions(HashMap<String, ExtensionProxy>),
     SetMeta(WindowMeta),
     // hang up for the active media stream
     DisableMedia,

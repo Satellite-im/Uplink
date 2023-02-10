@@ -307,6 +307,8 @@ fn main() {
 
 // start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+
     log::trace!("rendering bootstrap");
 
     // warp_runner must be started from within a tokio reactor
@@ -331,7 +333,7 @@ fn bootstrap(cx: Scope) -> Element {
         }
     }
     let extensions = extensions_library.extensions;
-    log::debug!("Loaded {} extension(s).", extensions.keys().len());
+    state.write().mutate(Action::RegisterExtensions(extensions));
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);

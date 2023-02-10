@@ -6,6 +6,7 @@ use kit::{elements::button::Button, icons::Icon};
 // You don't need to really worry about this but it is required.
 // Just change emoji's to the name of your extension in alpha-numeric snake case.
 export_extension!(register);
+#[allow(improper_ctypes_definitions)]
 extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
     registrar.register("emojis", Box::new(ExampleExtension));
 }

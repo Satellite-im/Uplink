@@ -111,6 +111,7 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
             // ===== Notifications =====
             Action::AddNotification(kind, count) => self.ui.notifications.increment(kind, count),
             Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
