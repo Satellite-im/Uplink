@@ -21,14 +21,17 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
                 text: open_folder,
                 aria_label: "open-extensions-folder-button".into(),
             },
-            state.read().ui.extensions.keys().map(|name| rsx!(
-                ExtensionSetting {
-                    title: name.clone(),
-                    author: "Nobody#1345".into(),
-                    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.".into(),
-                    Switch {}
-                }
-            ))
+            state.read().ui.extensions.values().map(|ext| {
+                let details = ext.extension.details();
+                rsx!(
+                    ExtensionSetting {
+                        title: details.meta.pretty_name.to_owned(),
+                        author: details.meta.author.to_owned(),
+                        description: details.meta.description.to_owned(),
+                        Switch {}
+                    }
+                )
+            })
         }
     ))
 }
