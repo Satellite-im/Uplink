@@ -240,29 +240,35 @@ async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Re
 async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error> {
     log::trace!("initializing tesseract");
 
-    let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
-        Ok(mut file) => match Tesseract::from_reader(&mut file) {
-            Ok(t) => {
-                // this code path addresses cross-platform issues involving the tesseract file being overwritten incorrectly.
-                // to fix this, manually delete the file and re-create it.
-                if overwrite_old_account {
-                    match std::fs::remove_file(&STATIC_ARGS.tesseract_path) {
-                        Ok(_) => {
-                            log::debug!("Tesseract file successfully deleted");
-                            if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
-                                log::error!("failed to create tesseract file: {}", e);
-                                return Err(warp::error::Error::CannotSaveTesseract);
-                            }
-                        }
-                        Err(e) => log::error!("Error deleting tesseract file: {}", e),
-                    }
-                    Tesseract::default()
-                } else {
-                    t
-                }
+    // this code path addresses cross-platform issues involving account recreation.
+    // the tesseract file was being overwritten incorrectly.
+    // to fix this, manually delete the file and re-create it.
+    if overwrite_old_account {
+        // delete file if it exists
+        match std::fs::remove_file(&STATIC_ARGS.tesseract_path) {
+            Ok(_) => {
+                log::debug!("Tesseract file successfully deleted");
             }
             Err(e) => {
-                log::error!("faield to deserialize tesseract: {}", e);
+                log::error!("Error deleting tesseract file: {}", e);
+            }
+        }
+
+        // create the file so it can be saved later
+        if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
+            log::error!("failed to create tesseract file: {}", e);
+            return Err(warp::error::Error::CannotSaveTesseract);
+        }
+
+        return Ok(Tesseract::default());
+    }
+
+    // open existing file or create new one
+    let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
+        Ok(mut file) => match Tesseract::from_reader(&mut file) {
+            Ok(t) => t,
+            Err(e) => {
+                log::error!("failed to deserialize tesseract: {}", e);
                 log::warn!("creating new tesseract");
                 Tesseract::default()
             }
@@ -271,6 +277,7 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
             log::error!("failed to open file: {}", e);
             log::warn!("creating new tesseract");
 
+            // create the file so it can be saved later
             if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
                 log::error!("failed to create tesseract file: {}", e);
                 return Err(warp::error::Error::CannotSaveTesseract);
