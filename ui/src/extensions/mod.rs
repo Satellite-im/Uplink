@@ -1,8 +1,6 @@
 use extensions::*;
-use libloading::{Library, Symbol};
+use libloading::Library;
 use std::{collections::HashMap, ffi::OsStr, io, rc::Rc};
-
-type ExtensionInfo = unsafe fn() -> Box<Core>;
 
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
@@ -49,8 +47,7 @@ impl AvailableExtensions {
         // load the library into memory
         let library = Rc::new(Library::new(library_path).unwrap());
 
-        let extension_entry: Symbol<ExtensionInfo> = library.get(b"extension_entry").unwrap();
-        let extension_info = *extension_entry();
+        let extension_info = library.get::<*mut Core>(b"extension_entry").unwrap().read();
 
         // version checks to prevent accidental ABI incompatibilities
         if extension_info.rustc_version != extensions::RUSTC_VERSION

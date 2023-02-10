@@ -116,11 +116,14 @@ macro_rules! export_extension {
     ($register:expr) => {
         #[doc(hidden)]
         #[no_mangle]
-        pub static extension_entry: $crate::Core = $crate::Core {
-            rustc_version: $crate::RUSTC_VERSION,
-            core_version: $crate::CORE_VERSION,
-            register: $register,
-        };
+        pub extern "C" fn extension_entry() -> *mut $crate::Core {
+            let core = $crate::Core {
+                rustc_version: $crate::RUSTC_VERSION,
+                core_version: $crate::CORE_VERSION,
+                register: $register,
+            };
+            Box::into_raw(Box::new(core)) as _
+        }
     };
 }
 

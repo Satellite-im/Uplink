@@ -324,15 +324,14 @@ fn bootstrap(cx: Scope) -> Element {
     for entry in paths {
         let path = entry.unwrap().path();
         if path.extension().unwrap_or_default() == FILE_EXT {
+            log::debug!("Loading extension at: {:?}", path);
             unsafe {
                 let _ = extensions_library.load(path);
             }
         }
     }
     let extensions = extensions_library.extensions;
-    for extension_name in extensions.keys() {
-        log::debug!("Loaded extension: {}", extension_name);
-    }
+    log::debug!("Loaded {} extension(s).", extensions.keys().len());
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
