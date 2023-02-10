@@ -8,16 +8,47 @@ use crate::{
     icons::{Icon, IconElement},
 };
 
-#[derive(Default, Clone, Copy)]
+/// This vector of special chars must be used to decide which char can or cannot be allowed in the input field.
+///
+/// ## Example:
+/// ```rust
+/// let chars_to_remove = vec!['\\', '/'];
+/// let mut special_chars = SPECIAL_CHARS.to_vec();
+/// special_chars = special_chars
+///    .iter()
+///    .filter(|&&c| !chars_to_remove.contains(&c))
+///    .cloned()
+///    .collect();
+/// rsx! (
+/// Input {
+///  ...
+/// options: Options {
+///    with_validation: Some(Validation {
+///        alpha_numeric_only: true,
+///        special_chars_allowed: Some(special_chars),
+///        ..Validation::default()
+///    }),
+///    ..Options::default()
+/// }
+/// ...
+/// )
+/// ```
+pub static SPECIAL_CHARS: &[char] = &[
+    '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\',
+    ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_',
+];
+
+#[derive(Default, Clone)]
 pub struct Validation {
     pub max_length: Option<i32>,
     pub min_length: Option<i32>,
     pub alpha_numeric_only: bool,
     pub ignore_colons: bool,
     pub no_whitespace: bool,
+    pub special_chars_allowed: Option<Vec<char>>,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub struct Options {
     pub with_validation: Option<Validation>,
     pub replace_spaces_underscore: bool,
@@ -101,10 +132,18 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 }
 
 // Default to requireing alpha-numeric inputs, unless ignore_colon override is set on the input field
-pub fn validate_alphanumeric(val: &str, ignore_colon: bool) -> Option<ValidationError> {
+pub fn validate_alphanumeric(
+    val: &str,
+    ignore_colon: bool,
+    special_characters_allowed: Option<Vec<char>>,
+) -> Option<ValidationError> {
     let mut val = val.to_string();
     if ignore_colon {
         val.retain(|c| c != ':');
+    }
+    let vec = special_characters_allowed.unwrap_or_default();
+    for s in vec {
+        val.retain(|c| c != s);
     }
     if !val.chars().all(char::is_alphanumeric) {
         return Some(get_local_text("warning-messages.only-alpha-chars"));
@@ -156,7 +195,7 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 }
 
 pub fn get_label(cx: &Scope<Props>) -> String {
-    let options = cx.props.options.unwrap_or_default();
+    let options = cx.props.options.clone().unwrap_or_default();
     options
         .with_label
         .map(|text| text.to_string())
@@ -166,14 +205,23 @@ pub fn get_label(cx: &Scope<Props>) -> String {
 pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
     let mut error: Option<ValidationError> = None;
 
-    let options = cx.props.options.unwrap_or_default();
+    let options = cx.props.options.clone().unwrap_or_default();
 
     let validation = options.with_validation.unwrap_or_default();
 
     if validation.alpha_numeric_only
-        && validate_alphanumeric(val, validation.ignore_colons).is_some()
+        && validate_alphanumeric(
+            val,
+            validation.ignore_colons,
+            validation.special_chars_allowed.clone(),
+        )
+        .is_some()
     {
-        error = validate_alphanumeric(val, validation.ignore_colons);
+        error = validate_alphanumeric(
+            val,
+            validation.ignore_colons,
+            validation.special_chars_allowed,
+        );
     }
 
     if validation.no_whitespace && validate_no_whitespace(val).is_some() {
@@ -194,7 +242,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
-    let options = cx.props.options.unwrap_or_default();
+    let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
 
     //let mut debug_reset = false;
