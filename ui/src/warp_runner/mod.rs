@@ -93,12 +93,6 @@ impl WarpRunner {
     }
 }
 
-// required for for tesseract initialization
-// init tesseract with from_file(Path)
-// unlock(pin)
-// set_file(Path)
-// set_autosave
-//
 // handle_login calls manager::run, which continues to process warp commands
 async fn handle_login(notify: Arc<Notify>) {
     let warp_cmd_rx = WARP_CMD_CH.rx.clone();
