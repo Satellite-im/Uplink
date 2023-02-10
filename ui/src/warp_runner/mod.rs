@@ -57,6 +57,7 @@ pub enum WarpCmd {
     MultiPass(MultiPassCmd),
     #[display(fmt = "RayGun {{ {_0} }} ")]
     RayGun(RayGunCmd),
+    #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
 }
 

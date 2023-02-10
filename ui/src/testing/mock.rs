@@ -265,6 +265,8 @@ fn generate_fake_storage() -> Storage {
 
     Storage {
         initialized: true,
+        current_dir: Directory::new("root"),
+        directories_opened: vec![Directory::new("root")],
         directories,
         files,
     }

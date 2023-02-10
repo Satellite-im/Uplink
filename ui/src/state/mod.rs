@@ -108,6 +108,7 @@ impl State {
     }
 
     pub fn mutate(&mut self, action: Action) {
+        log::debug!("state::mutate: {}", action);
         self.call_hooks(&action);
 
         match action {

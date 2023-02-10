@@ -8,6 +8,7 @@ use derive_more::Display;
 use futures::{channel::oneshot, StreamExt};
 use image::io::Reader as ImageReader;
 use mime::*;
+use once_cell::sync::Lazy;
 use tokio_util::io::ReaderStream;
 
 use crate::state::storage::Storage as uplink_storage;
@@ -17,7 +18,11 @@ use warp::{
     constellation::{directory::Directory, Progression},
     error::Error,
     logging::tracing::log,
+    sync::RwLock,
 };
+
+static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
+    Lazy::new(|| RwLock::new(Vec::new()));
 
 #[derive(Display)]
 pub enum ConstellationCmd {
@@ -25,12 +30,22 @@ pub enum ConstellationCmd {
     GetItemsFromCurrentDirectory {
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "CreateNewFolder {{ folder_name: {folder_name} }} ")]
-    CreateNewFolder {
-        folder_name: String,
+    #[display(fmt = "CreateNewDirectory {{ directory_name: {directory_name} }} ")]
+    CreateNewDirectory {
+        directory_name: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
+    #[display(fmt = "OpenDirectory {{ directory_name: {directory_name} }} ")]
+    OpenDirectory {
+        directory_name: String,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+    },
+    #[display(fmt = "BackToPreviousDirectory {{ directory: {:?} }} ", directory)]
+    BackToPreviousDirectory {
+        directory: Directory,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+    },
+    #[display(fmt = "UploadFiles {{ files_path: {:?} }} ", files_path)]
     UploadFiles {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
@@ -43,8 +58,22 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = get_items_from_current_directory(warp_storage);
             let _ = rsp.send(r);
         }
-        ConstellationCmd::CreateNewFolder { folder_name, rsp } => {
-            let r = create_new_directory(&folder_name, warp_storage).await;
+        ConstellationCmd::CreateNewDirectory {
+            directory_name,
+            rsp,
+        } => {
+            let r = create_new_directory(&directory_name, warp_storage).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::OpenDirectory {
+            directory_name,
+            rsp,
+        } => {
+            let r = open_new_directory(warp_storage, &directory_name);
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::BackToPreviousDirectory { directory, rsp } => {
+            let r = go_back_to_previous_directory(warp_storage, directory);
             let _ = rsp.send(r);
         }
         ConstellationCmd::UploadFiles { files_path, rsp } => {
@@ -67,6 +96,9 @@ fn get_items_from_current_directory(
     warp_storage: &mut warp_storage,
 ) -> Result<uplink_storage, Error> {
     let current_dir = warp_storage.current_directory()?;
+    let mut current_dirs = get_directories_opened();
+    set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
+
     let items = current_dir.get_items();
 
     let mut directories = items
@@ -83,10 +115,70 @@ fn get_items_from_current_directory(
 
     let uplink_storage = uplink_storage {
         initialized: true,
+        current_dir,
+        directories_opened: get_directories_opened(),
         directories,
         files,
     };
+    log::info!("Get items from current directory worked!");
     Ok(uplink_storage)
+}
+
+fn get_directories_opened() -> Vec<Directory> {
+    DIRECTORIES_AVAILABLE_TO_BROWSE.read().to_owned()
+}
+
+fn set_new_directory_opened(current_dir: &mut Vec<Directory>, new_dir: Directory) {
+    if !current_dir.contains(&new_dir) {
+        log::debug!("Updating directories opened to browse");
+        current_dir.push(new_dir);
+        *DIRECTORIES_AVAILABLE_TO_BROWSE.write() = current_dir.to_owned()
+    }
+}
+
+fn open_new_directory(
+    warp_storage: &mut warp_storage,
+    folder_name: &str,
+) -> Result<uplink_storage, Error> {
+    let current_path = PathBuf::from(
+        warp_storage
+            .get_path()
+            .join(folder_name)
+            .to_string_lossy()
+            .replace("\\", "/"),
+    );
+
+    warp_storage.set_path(current_path);
+
+    log::info!(
+        "Navigation to directory {:?} worked!",
+        warp_storage.get_path()
+    );
+    get_items_from_current_directory(warp_storage)
+}
+
+fn go_back_to_previous_directory(
+    warp_storage: &mut warp_storage,
+    directory: Directory,
+) -> Result<uplink_storage, Error> {
+    let mut current_dirs = get_directories_opened();
+
+    loop {
+        let current_dir = warp_storage.current_directory()?;
+        current_dirs.remove(current_dirs.len() - 1);
+
+        if current_dir.id() == directory.id() {
+            set_new_directory_opened(current_dirs.as_mut(), current_dir);
+            break;
+        }
+
+        if let Err(error) = warp_storage.go_back() {
+            log::error!("Error on go back a directory: {error}");
+            return Err(error);
+        };
+    }
+    log::info!("Navigation to directory {} worked!", directory.name());
+    get_items_from_current_directory(warp_storage)
 }
 
 async fn upload_files(
@@ -94,7 +186,6 @@ async fn upload_files(
     files_path: Vec<PathBuf>,
 ) -> Result<uplink_storage, Error> {
     let current_directory = warp_storage.current_directory()?;
-
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -104,6 +195,7 @@ async fn upload_files(
             None => continue,
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
+
         let original = filename.clone();
         let file = PathBuf::from(&original);
 
@@ -181,11 +273,11 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(warp_storage.clone(), filename.clone()).await {
+                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                     Ok(success) => log::info!("{:?}", success),
                     Err(error) => log::error!("Error on update thumbnail: {:?}", error),
                 }
-                log::info!("{:?} file uploaded!", &filename);
+                log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
         }
@@ -228,7 +320,7 @@ fn rename_if_duplicate(
 }
 
 async fn set_thumbnail_if_file_is_image(
-    warp_storage: warp_storage,
+    warp_storage: &warp_storage,
     filename_to_save: String,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let item = warp_storage
