@@ -40,12 +40,12 @@ pub enum ConstellationCmd {
         directory_name: String,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "BackToPreviousDirectory {{ directory: {:?} }} ", directory)]
+    #[display(fmt = "BackToPreviousDirectory {{ directory: {directory:?} }} ")]
     BackToPreviousDirectory {
         directory: Directory,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "UploadFiles {{ files_path: {:?} }} ", files_path)]
+    #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
     UploadFiles {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
@@ -145,7 +145,7 @@ fn open_new_directory(
             .get_path()
             .join(folder_name)
             .to_string_lossy()
-            .replace("\\", "/"),
+            .replace('\\', "/"),
     );
 
     warp_storage.set_path(current_path);
@@ -199,7 +199,8 @@ async fn upload_files(
         let original = filename.clone();
         let file = PathBuf::from(&original);
 
-        filename = verify_duplicate_name(current_directory.clone(), filename, file);
+        filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
+
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
             Err(error) => {
@@ -272,13 +273,7 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(
-                    warp_storage,
-                    filename.clone(),
-                    current_directory.clone(),
-                )
-                .await
-                {
+                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                     Ok(success) => log::info!("{:?}", success),
                     Err(error) => log::error!("Error on update thumbnail: {:?}", error),
                 }
@@ -290,7 +285,7 @@ async fn upload_files(
     get_items_from_current_directory(warp_storage)
 }
 
-fn verify_duplicate_name(
+fn rename_if_duplicate(
     current_directory: Directory,
     filename: String,
     file_pathbuf: PathBuf,
@@ -327,11 +322,10 @@ fn verify_duplicate_name(
 async fn set_thumbnail_if_file_is_image(
     warp_storage: &warp_storage,
     filename_to_save: String,
-    current_directory: Directory,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let item = current_directory.get_item(&filename_to_save)?;
-    let parts_of_filename: Vec<&str> = filename_to_save.split('.').collect();
-
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
     let file = warp_storage.get_buffer(&filename_to_save).await?;
 
     // Guarantee that is an image that has been uploaded
@@ -340,28 +334,35 @@ async fn set_thumbnail_if_file_is_image(
         .decode()?;
 
     // Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
-    let mime = match parts_of_filename
-        .iter()
-        .map(|extension| extension.to_lowercase())
-        .last()
-    {
+    let extension = Path::new(&filename_to_save)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|ext| ext.to_lowercase());
+    let mime = match extension {
         Some(m) => match m.as_str() {
             "png" => IMAGE_PNG.to_string(),
             "jpg" => IMAGE_JPEG.to_string(),
             "jpeg" => IMAGE_JPEG.to_string(),
             "svg" => IMAGE_SVG.to_string(),
-            &_ => "".to_string(),
+            _ => {
+                log::warn!("invalid mime type: {m:?}");
+                return Err(Box::from(Error::InvalidItem));
+            }
         },
-        None => "".to_string(),
+        None => {
+            log::warn!("thumbnail has no mime type");
+            return Err(Box::from(Error::InvalidItem));
+        }
     };
 
-    if !file.is_empty() || !mime.is_empty() {
+    if !file.is_empty() {
         let prefix = format!("data:{mime};base64,");
         let base64_image = base64::encode(&file);
         let img = prefix + base64_image.as_str();
         item.set_thumbnail(&img);
         Ok(format_args!("{} thumbnail updated with success!", item.name()).to_string())
     } else {
+        log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))
     }
 }
