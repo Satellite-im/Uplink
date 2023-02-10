@@ -7,6 +7,32 @@ use crate::{
     elements::label::Label,
     icons::{Icon, IconElement},
 };
+
+/// This vector of special chars must be used to decide which char can or cannot be allowed in the input field.
+///
+/// ## Example:
+/// ```rust
+/// let chars_to_remove = vec!['\\', '/'];
+/// let mut special_chars = SPECIAL_CHARS.to_vec();
+/// special_chars = special_chars
+///    .iter()
+///    .filter(|&&c| !chars_to_remove.contains(&c))
+///    .cloned()
+///    .collect();
+/// rsx! (
+/// Input {
+///  ...
+/// options: Options {
+///    with_validation: Some(Validation {
+///        alpha_numeric_only: true,
+///        special_chars_allowed: Some(special_chars),
+///        ..Validation::default()
+///    }),
+///    ..Options::default()
+/// }
+/// ...
+/// )
+/// ```
 pub static SPECIAL_CHARS: &[char] = &[
     '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', '{', '}', '[', ']', '|', '\\',
     ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_',
