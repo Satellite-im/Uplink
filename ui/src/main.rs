@@ -307,7 +307,6 @@ fn main() {
 
 // start warp_runner and ensure the user is logged in
 fn bootstrap(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
 
     log::trace!("rendering bootstrap");
 
@@ -316,24 +315,6 @@ fn bootstrap(cx: Scope) -> Element {
     let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
     warp_runner.write_silent().run();
 
-    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
-    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
-    // that updates when they have new info, i.e. state.
-    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
-    let mut extensions_library = AvailableExtensions::new();
-
-    for entry in paths {
-        let path = entry.unwrap().path();
-        if path.extension().unwrap_or_default() == FILE_EXT {
-            log::debug!("Loading extension at: {:?}", path);
-            unsafe {
-                let _ = extensions_library.load(path);
-            }
-        }
-    }
-    let extensions = extensions_library.extensions;
-    state.write().mutate(Action::RegisterExtensions(extensions));
 
     // make the window smaller while the user authenticates
     let desktop = use_window(cx);
@@ -424,6 +405,26 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+
+    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
+    // that updates when they have new info, i.e. state.
+    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
+    let mut extensions_library = AvailableExtensions::new();
+
+    for entry in paths {
+        let path = entry.unwrap().path();
+        if path.extension().unwrap_or_default() == FILE_EXT {
+            log::debug!("Loading extension at: {:?}", path);
+            unsafe {
+                let _ = extensions_library.load(path);
+            }
+        }
+    }
+    let extensions = extensions_library.extensions;
+    state.mutate(Action::RegisterExtensions(extensions));
+
 
     use_shared_state_provider(cx, || state);
 
