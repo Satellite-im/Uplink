@@ -238,8 +238,17 @@ async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Re
 }
 
 // don't set file or autosave until tesseract is unlocked
+// assumes that all anyone needs from tesseract is "keypair"
+// otherwise, Tesseract::to_file probably needs to call file.sync_all()
 async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error> {
     log::trace!("initializing tesseract");
+
+    let configure_tesseract = |tesseract: Tesseract| {
+        // prevent other things from corrupting the real tesseract file.
+        tesseract.set_file(STATIC_ARGS.warp_path.join("fake_tesseract.json"));
+        tesseract.set_autosave();
+        tesseract
+    };
 
     // this code path addresses cross-platform issues involving account recreation.
     // the tesseract file was being overwritten incorrectly.
@@ -261,17 +270,17 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
             return Err(warp::error::Error::CannotSaveTesseract);
         }
 
-        return Ok(Tesseract::default());
+        return Ok(configure_tesseract(Tesseract::default()));
     }
 
     // open existing file or create new one
     let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
         Ok(mut file) => match Tesseract::from_reader(&mut file) {
-            Ok(t) => t,
+            Ok(tesseract) => configure_tesseract(tesseract),
             Err(e) => {
                 log::error!("failed to deserialize tesseract: {}", e);
                 log::warn!("creating new tesseract");
-                Tesseract::default()
+                configure_tesseract(Tesseract::default())
             }
         },
         Err(e) => {
@@ -283,7 +292,7 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
                 log::error!("failed to create tesseract file: {}", e);
                 return Err(warp::error::Error::CannotSaveTesseract);
             }
-            Tesseract::default()
+            configure_tesseract(Tesseract::default())
         }
     };
 
