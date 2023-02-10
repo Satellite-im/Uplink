@@ -28,13 +28,11 @@ pub struct Props<'a> {
 pub fn get_text(file_name: String) -> (String, String) {
     let mut file_name_formatted = file_name.clone();
     // don't append a '.' to a file name if it has no extension
-    let file_extension = match std::path::Path::new(&file_name)
+    let file_extension = std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
-    {
-        Some(s) => format!(".{s}"),
-        None => String::new(),
-    };
+        .map(|s| format!(".{s}"))
+        .unwrap_or_default();
     let item = PathBuf::from(&file_name);
     let file_stem = item
         .file_stem()
