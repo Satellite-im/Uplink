@@ -493,7 +493,7 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                log::trace!("FOCUS CHANGED {:?}", *focused);
+                //log::trace!("FOCUS CHANGED {:?}", *focused);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
