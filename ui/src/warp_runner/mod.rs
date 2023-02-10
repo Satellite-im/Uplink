@@ -243,6 +243,8 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
     let tesseract = match std::fs::File::open(&STATIC_ARGS.tesseract_path) {
         Ok(mut file) => match Tesseract::from_reader(&mut file) {
             Ok(t) => {
+                // this code path addresses cross-platform issues involving the tesseract file being overwritten incorrectly.
+                // to fix this, manually delete the file and re-create it.
                 if overwrite_old_account {
                     match std::fs::remove_file(&STATIC_ARGS.tesseract_path) {
                         Ok(_) => log::debug!("File successfully deleted"),
