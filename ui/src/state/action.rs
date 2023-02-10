@@ -1,7 +1,7 @@
-use std::rc::Weak;
-
+use derive_more::Display;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
+use std::rc::Weak;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;
@@ -24,94 +24,140 @@ pub struct ActionHook {
 }
 
 /// used exclusively by State::mutate
+#[derive(Display)]
 pub enum Action {
     // UI
+    #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
     // hang up for the active media stream
+    #[display(fmt = "DisableMedia")]
     DisableMedia,
+    #[display(fmt = "ToggleSilence")]
     ToggleSilence,
+    #[display(fmt = "ToggleMute")]
     ToggleMute,
+    #[display(fmt = "SidebarHidden: {_0}")]
     SidebarHidden(bool),
+    #[display(fmt = "SetOverlay")]
     SetOverlay(bool),
+    #[display(fmt = "AddToastNotification")]
     AddToastNotification(ToastNotification),
+    #[display(fmt = "SetTheme")]
     SetTheme(Theme),
+    #[display(fmt = "ClearTheme")]
     ClearTheme,
     // RemoveToastNotification,
     /// sets the active media to the corresponding conversation uuid
+    #[display(fmt = "SetActiveMedia")]
     SetActiveMedia(Uuid),
     // Account
     /// Sets the ID for the user.
+    #[display(fmt = "SetId")]
     SetId(Identity),
     /// adds an overlay. currently only used for demonstration purposes
+    #[display(fmt = "AddOverlay")]
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
+    #[display(fmt = "SetPopout")]
     SetPopout(WindowId),
+    #[display(fmt = "ClearPopout")]
     ClearPopout(DesktopContext),
+    #[display(fmt = "SetDebugLogger")]
     SetDebugLogger(WindowId),
+    #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
 
     // Notifications
-    AddNotification(NotificationKind, u32),
-    RemoveNotification(NotificationKind, u32),
-    ClearNotification(NotificationKind),
+    #[display(fmt = "AddNotification")]
+    AddNotification(NotificaitonKind, u32),
+    #[display(fmt = "RemoveNotification")]
+    RemoveNotification(NotificaitonKind, u32),
+    #[display(fmt = "ClearNotification")]
+    ClearNotification(NotificaitonKind),
+    #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
     // Settings
     /// Sets the selected language.
+    #[display(fmt = "SetLanguage")]
     SetLanguage(String),
 
     // Routes
     /// Set the active route
+    #[display(fmt = "Navigate")]
     Navigate(To),
     // Requests
     /// Send a new friend request
+    #[display(fmt = "SendRequest")]
     SendRequest(Identity),
     /// To be fired when a friend request you sent is accepted
+    #[display(fmt = "RequestAccepted")]
     RequestAccepted(Identity),
     /// Cancel an outgoing request
+    #[display(fmt = "CancelRequest")]
     CancelRequest(Identity),
 
     /// Handle a new incoming friend request
+    #[display(fmt = "IncomingRequest")]
     IncomingRequest(Identity),
     /// Accept an incoming friend request
+    #[display(fmt = "AcceptRequest")]
     AcceptRequest(Identity),
     /// Deny a incoming friend request
+    #[display(fmt = "DenyRequest")]
     DenyRequest(Identity),
 
     // Friends
+    #[display(fmt = "RemoveFriend")]
     RemoveFriend(Identity),
+    #[display(fmt = "Block")]
     Block(Identity),
+    #[display(fmt = "Unblock")]
     Unblock(Identity),
     /// Handles the display of "favorite" chats
+    #[display(fmt = "Favorite")]
     Favorite(Chat),
+    #[display(fmt = "UnFavorite")]
     UnFavorite(Uuid),
     /// Sets the active chat to a given chat
+    #[display(fmt = "ChatWith")]
     ChatWith(Chat),
     /// Adds a chat to the sidebar
+    #[display(fmt = "AddToSidebar")]
     AddToSidebar(Chat),
     /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
+    #[display(fmt = "RemoveFromSidebar")]
     RemoveFromSidebar(Uuid),
     /// Adds or removes a chat from the favorites page
+    #[display(fmt = "ToggleFavorite")]
     ToggleFavorite(Chat),
 
     // Messaging
     /// Records a new message and plays associated notifications
+    #[display(fmt = "NewMessage")]
     NewMessage(Chat, Message),
     /// React to a given message by ID
     /// conversation id, message id, reaction
+    #[display(fmt = "AddReaction")]
     AddReaction(Uuid, Uuid, String),
     /// conversation id, message id, reaction
+    #[display(fmt = "RemoveReaction")]
     RemoveReaction(Uuid, Uuid, String),
     /// Reply to a given message by ID
+    #[display(fmt = "Reply")]
     Reply(Chat, Message),
     /// Prep the UI for a message reply.
+    #[display(fmt = "StartReplying")]
     StartReplying(Chat, Message),
     /// Clears the reply for a given chat
+    #[display(fmt = "CancelReply")]
     CancelReply(Chat),
     /// fakes sending a message to the specified chat
     /// for normal operation, warp sends a message, Uplink receives an event when that message was sent, and state is updated accordingly.
     /// for mock data, warp is not used and this is needed to fake sending a message
     /// (Conversation Id, message)
+    #[display(fmt = "MockSend")]
     MockSend(Uuid, Vec<String>),
+    #[display(fmt = "ClearUnreads")]
     ClearUnreads(Chat),
 }
 
