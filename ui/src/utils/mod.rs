@@ -111,4 +111,9 @@ mod test {
         let r = get_pretty_name("pretty/name1.scss");
         assert_eq!(r, String::from("name1"));
     }
-}
+
+    #[test]
+    fn test_get_pretty_name_windows() {
+        let r = get_pretty_name("c:\\pretty\\name2.scss");
+        assert_eq!(r, String::from("name2"));
+    }}
