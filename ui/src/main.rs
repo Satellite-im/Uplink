@@ -70,6 +70,7 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    pub themes_path: PathBuf,
     // seconds
     pub typing_indicator_refresh: u64,
     // seconds
@@ -89,6 +90,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         config_path: uplink_path.join("Config.json"),
         warp_path: uplink_path.join("warp"),
         logger_path: uplink_path.join("debug.log"),
+        themes_path: uplink_path.join("themes"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
         use_mock: args.with_mock,

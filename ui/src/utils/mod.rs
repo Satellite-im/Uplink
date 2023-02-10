@@ -3,7 +3,10 @@ use std::fs;
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
-use crate::state::{self, Theme};
+use crate::{
+    state::{self, Theme},
+    STATIC_ARGS,
+};
 use kit::User as UserInfo;
 
 pub mod format_timestamp;
@@ -13,12 +16,7 @@ pub mod sounds;
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
 
-    let theme_path = dirs::home_dir()
-        .unwrap_or_default()
-        .join(".uplink/")
-        .join("themes");
-
-    for file in WalkDir::new(theme_path)
+    for file in WalkDir::new(&STATIC_ARGS.themes_path)
         .into_iter()
         .filter_map(|file| file.ok())
     {
