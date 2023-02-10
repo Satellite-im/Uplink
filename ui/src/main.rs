@@ -65,6 +65,7 @@ mod window_manager;
 #[derive(Debug)]
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
+    pub themes_path: PathBuf,
     pub cache_path: PathBuf,
     pub mock_cache_path: PathBuf,
     pub config_path: PathBuf,
@@ -84,6 +85,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     };
     StaticArgs {
         uplink_path: uplink_path.clone(),
+        themes_path: uplink_path.join("themes"),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
