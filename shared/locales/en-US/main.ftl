@@ -115,8 +115,8 @@ settings-audio = Audio Settings
     .media-sounds = Media Sounds
     .media-sounds-description = When enabled, media related events such as toggling microphone or headphones and other real time events, will play sounds.
     .message-sounds = Message Sounds
-    .message-sounds-description = When enabled you will hear a notificaiton when a new message is recieved.
-    
+    .message-sounds-description = When enabled you will hear a notification when a new message is received.
+
 settings-files = Files Settings
     .local-sync = Local Sync
     .local-sync-description = When enabled, files will be synced to your local machine.

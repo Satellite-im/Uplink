@@ -775,7 +775,7 @@ impl State {
                 self.friends.incoming_requests.insert(identity.clone());
 
                 self.mutate(Action::AddNotification(
-                    notifications::NotificaitonKind::FriendRequest,
+                    notifications::NotificationKind::FriendRequest,
                     1,
                 ));
 
@@ -858,7 +858,7 @@ impl State {
                 self.add_msg_to_chat(conversation_id, message);
 
                 self.mutate(Action::AddNotification(
-                    notifications::NotificaitonKind::Message,
+                    notifications::NotificationKind::Message,
                     1,
                 ));
 

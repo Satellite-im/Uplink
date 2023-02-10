@@ -10,7 +10,7 @@ use warp::logging::tracing::log;
 use crate::{
     components::settings::SettingSection,
     logger,
-    state::{notifications::NotificaitonKind, Action, State},
+    state::{notifications::NotificationKind, Action, State},
     utils::{notifications::push_notification, sounds::Sounds},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
 };
@@ -68,7 +68,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                         );
                         state
                             .write()
-                            .mutate(Action::AddNotification(NotificaitonKind::Settings, 1));
+                            .mutate(Action::AddNotification(NotificationKind::Settings, 1));
                         }
                     }
             },

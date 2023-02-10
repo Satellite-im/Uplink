@@ -33,7 +33,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 Switch {
                     active: state.read().configuration.config.audiovideo.media_sounds,
                     onflipped: move |e| {
-                        if state.read().configuration.config.audiovideo.media_sounds {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
                         state.write().configuration.set_media_sounds(e);
@@ -46,7 +46,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 Switch {
                     active: state.read().configuration.config.audiovideo.message_sounds,
                     onflipped: move |e| {
-                        if state.read().configuration.config.audiovideo.message_sounds {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
                         state.write().configuration.set_message_sounds(e);
