@@ -40,12 +40,12 @@ pub enum ConstellationCmd {
         directory_name: String,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "BackToPreviousDirectory {{ directory: {:?} }} ", directory)]
+    #[display(fmt = "BackToPreviousDirectory {{ directory: {directory:?} }} ")]
     BackToPreviousDirectory {
         directory: Directory,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "UploadFiles {{ files_path: {:?} }} ", files_path)]
+    #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
     UploadFiles {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
@@ -145,7 +145,7 @@ fn open_new_directory(
             .get_path()
             .join(folder_name)
             .to_string_lossy()
-            .replace("\\", "/"),
+            .replace('\\', "/"),
     );
 
     warp_storage.set_path(current_path);
