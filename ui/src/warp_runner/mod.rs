@@ -255,14 +255,13 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
     // the tesseract file was being overwritten incorrectly.
     // to fix this, manually delete the file and re-create it.
     if overwrite_old_account {
-        // delete file if it exists
-        match std::fs::remove_file(&STATIC_ARGS.tesseract_path) {
-            Ok(_) => {
-                log::debug!("Tesseract file successfully deleted");
-            }
-            Err(e) => {
-                log::error!("Error deleting tesseract file: {}", e);
-            }
+        // delete the entire warp directory
+        if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.warp_path) {
+            log::warn!("failed to delete warp directory: {}", e);
+        }
+
+        if let Err(e) = std::fs::create_dir_all(&STATIC_ARGS.warp_path) {
+            log::warn!("failed to recreate warp directory: {}", e);
         }
 
         // create the file so it can be saved later
