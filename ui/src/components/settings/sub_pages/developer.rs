@@ -13,6 +13,7 @@ use crate::{
     state::{notifications::NotificaitonKind, Action, State},
     utils::{notifications::push_notification, sounds::Sounds},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
+    STATIC_ARGS,
 };
 
 #[allow(non_snake_case)]
@@ -81,16 +82,11 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::FolderOpen,
                     onpress: |_| {
-                        let cache_path = dirs::home_dir()
-                            .unwrap_or_default()
-                            .join(".uplink/")
-                            .into_os_string()
-                            .into_string()
-                            .unwrap_or_default();
-                        let _ = opener::open(cache_path);
+                        let _ = opener::open(&STATIC_ARGS.uplink_path);
                     }
                 }
             },
+
             SettingSection {
                 section_label: get_local_text("settings-developer.compress-download-cache"),
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),

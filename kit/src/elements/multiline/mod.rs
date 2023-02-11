@@ -35,7 +35,7 @@ pub fn Multiline<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 placeholder: cx.props.placeholder.clone(),
                 default_text: default_text,
                 icon: cx.props.icon.unwrap_or(Icon::QuestionMarkCircle),
-                options: cx.props.options.unwrap_or_default(),
+                options: cx.props.options.clone().unwrap_or_default(),
 
             }
         }
