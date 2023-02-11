@@ -310,20 +310,10 @@ async fn warp_initialization(
     experimental: bool,
 ) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
-    let repo_lock_path = format!("{}/repo_lock", &STATIC_ARGS.warp_path.to_string_lossy());
-    println!("{repo_lock_path}");
 
     let path = &STATIC_ARGS.warp_path;
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
-    match std::fs::remove_file(&repo_lock_path) {
-        Ok(_) => {
-            log::debug!("Repo lock file successfully deleted");
-        }
-        Err(e) => {
-            log::error!("Error deleting Repo lock file: {}", e);
-        }
-    };
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
