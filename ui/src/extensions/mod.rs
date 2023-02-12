@@ -47,15 +47,16 @@ impl AvailableExtensions {
         // load the library into memory
         let library = Rc::new(Library::new(library_path).unwrap());
 
-        let extension_info = library.get::<unsafe extern fn() -> *mut Core>(b"extension_entry").unwrap();
+        let extension_info = library
+            .get::<unsafe extern "C" fn() -> *mut Core>(b"extension_entry")
+            .unwrap();
 
         let extension_info = &*extension_info();
 
-        let ext_rustc = extension_info.rustc_version.clone();
-        let ext_core = extension_info.core_version.clone();
-
         // version checks to prevent accidental ABI incompatibilities
-        if ext_rustc != extensions::RUSTC_VERSION || ext_core != extensions::CORE_VERSION {
+        if extension_info.rustc_version.ne(extensions::RUSTC_VERSION)
+            || extension_info.core_version.ne(extensions::CORE_VERSION)
+        {
             return Err(io::Error::new(io::ErrorKind::Other, "Version mismatch"));
         }
 
