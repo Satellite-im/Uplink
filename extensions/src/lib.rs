@@ -44,8 +44,8 @@ pub trait ExtensionRegistrar {
 }
 
 pub struct Core {
-    pub rustc_version: &'static str,
-    pub core_version: &'static str,
+    pub rustc_version: String,
+    pub core_version: String,
     pub register: unsafe extern "C" fn(&mut dyn ExtensionRegistrar),
 }
 
@@ -118,8 +118,8 @@ macro_rules! export_extension {
         #[no_mangle]
         pub extern "C" fn extension_entry() -> *mut $crate::Core {
             let core = $crate::Core {
-                rustc_version: $crate::RUSTC_VERSION,
-                core_version: $crate::CORE_VERSION,
+                rustc_version: $crate::RUSTC_VERSION.into(),
+                core_version: $crate::CORE_VERSION.into(),
                 register: $register,
             };
             Box::into_raw(Box::new(core)) as _
@@ -141,7 +141,7 @@ impl fmt::Display for ExtensionProxy {
         // stream: `f`. Returns `fmt::Result` which indicates whether the
         // operation succeeded or failed. Note that `write!` uses syntax which
         // is very similar to `println!`.
-        write!(f, "{}", self)
+        write!(f, ".")
     }
 }
 

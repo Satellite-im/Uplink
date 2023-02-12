@@ -47,10 +47,12 @@ impl AvailableExtensions {
         // load the library into memory
         let library = Rc::new(Library::new(library_path).unwrap());
 
-        let extension_info = library.get::<*mut Core>(b"extension_entry").unwrap().read();
+        let extension_info = library.get::<unsafe extern fn() -> *mut Core>(b"extension_entry").unwrap();
 
-        let ext_rustc = extension_info.rustc_version;
-        let ext_core = extension_info.core_version;
+        let extension_info = &*extension_info();
+
+        let ext_rustc = extension_info.rustc_version.clone();
+        let ext_core = extension_info.core_version.clone();
 
         // version checks to prevent accidental ABI incompatibilities
         if ext_rustc != extensions::RUSTC_VERSION || ext_core != extensions::CORE_VERSION {
