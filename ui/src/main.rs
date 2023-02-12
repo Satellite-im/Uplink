@@ -68,6 +68,7 @@ mod window_manager;
 #[derive(Debug)]
 pub struct StaticArgs {
     pub uplink_path: PathBuf,
+    pub themes_path: PathBuf,
     pub cache_path: PathBuf,
     pub mock_cache_path: PathBuf,
     pub config_path: PathBuf,
@@ -89,6 +90,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         uplink_path: uplink_path.clone(),
         // TODO: This isn't quite accurate since uplink path is technically what we consider the cache dir.
+        themes_path: uplink_path.join("themes"),
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_path.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
@@ -518,7 +520,7 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                log::debug!("FOCUS CHANGED {:?}", *focused);
+                log::trace!("FOCUS CHANGED {:?}", *focused);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
@@ -535,22 +537,25 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 let size = webview.inner_size();
-                log::debug!(
-                    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                    size,
-                    size.width < 1200
-                );
+                //log::trace!(
+                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
+                //    size,
+                //    size.width < 1200
+                //);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
-                        state.write().ui.metadata = WindowMeta {
+                        let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
                             minimal_view: size.width < 1200,
                             ..metadata
                         };
-                        state.write().ui.sidebar_hidden = size.width < 1200;
-                        needs_update.set(true);
+                        if metadata != new_metadata {
+                            state.write().ui.metadata = new_metadata;
+                            state.write().ui.sidebar_hidden = size.width < 1200;
+                            needs_update.set(true);
+                        }
                     }
                     Err(e) => {
                         log::error!("{e}");

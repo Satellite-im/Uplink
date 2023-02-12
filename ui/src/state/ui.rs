@@ -8,7 +8,7 @@ use wry::webview::WebView;
 
 use super::notifications::Notifications;
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,

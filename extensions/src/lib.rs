@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use libloading::Library;
-use std::{fs, path::PathBuf, rc::Rc};
+use std::{fmt, fs, path::PathBuf, rc::Rc};
 
 use warp::logging::tracing::log;
 
@@ -132,6 +132,17 @@ macro_rules! export_extension {
 pub struct ExtensionProxy {
     pub extension: Box<dyn Extension>,
     pub _lib: Rc<Library>,
+}
+
+impl fmt::Display for ExtensionProxy {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+        write!(f, "{}", self)
+    }
 }
 
 impl Extension for ExtensionProxy {
