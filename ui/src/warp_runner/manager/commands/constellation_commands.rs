@@ -1,14 +1,17 @@
 use std::{
     ffi::OsStr,
-    io::Cursor,
+    io::{Cursor, Read},
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 use derive_more::Display;
+
 use futures::{channel::oneshot, StreamExt};
 use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
+use tempfile::TempDir;
 use tokio_util::io::ReaderStream;
 
 use crate::state::storage::Storage as uplink_storage;
@@ -275,7 +278,13 @@ async fn upload_files(
                 }
                 match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                     Ok(success) => log::info!("{:?}", success),
-                    Err(error) => log::error!("Error on update thumbnail: {:?}", error),
+                    Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
+                }
+                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path)
+                    .await
+                {
+                    Ok(success) => log::info!("Video Thumbnail: {:?}", success),
+                    Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
                 }
                 log::info!("{:?} file uploaded!", filename);
             }
@@ -317,6 +326,65 @@ fn rename_if_duplicate(
         count_index_for_duplicate_filename += 1;
     }
     new_file_name
+}
+
+async fn set_thumbnail_if_file_is_video(
+    warp_storage: &warp_storage,
+    filename_to_save: String,
+    file_path: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
+
+    let file_stem = file_path
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    let temp_dir = TempDir::new()?;
+
+    let path = format!(
+        "{}/{}{}.jpg",
+        temp_dir.path().to_string_lossy(),
+        file_stem,
+        uuid::Uuid::new_v4()
+    );
+
+    let output = Command::new("ffmpeg")
+        .arg("-i")
+        .arg(file_path)
+        .arg("-vf")
+        .arg("select=eq(pict_type\\,I)")
+        .arg("-fps_mode")
+        .arg("vfr")
+        .arg("-q:v")
+        .arg("2")
+        .arg("-f")
+        .arg("image2")
+        .arg(path.clone())
+        .stdout(Stdio::piped())
+        .spawn()?;
+
+    if let Some(mut child) = output.stdout {
+        let mut contents = vec![];
+
+        child
+            .read_to_end(&mut contents)
+            .expect("failed to read child's stdout");
+
+        let image = std::fs::read(path)?;
+
+        let prefix = format!("data:{};base64,", IMAGE_JPEG.to_string());
+        let base64_image = base64::encode(&image);
+        let img = prefix + base64_image.as_str();
+        item.set_thumbnail(&img);
+        Ok(())
+    } else {
+        log::warn!("Failed to save thumbnail from a video file");
+        Err(Box::from(Error::InvalidConversion))
+    }
 }
 
 async fn set_thumbnail_if_file_is_image(
