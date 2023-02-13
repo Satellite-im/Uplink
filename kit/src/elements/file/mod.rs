@@ -12,6 +12,8 @@ const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 pub struct Props<'a> {
     text: String,
     #[props(optional)]
+    thumbnail: Option<String>,
+    #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
     aria_label: Option<String>,
@@ -77,6 +79,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
+    let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
 
     let loading = cx.props.loading.unwrap_or_default();
 
@@ -92,9 +95,18 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "icon",
                     onclick: move |_| emit_press(&cx),
-                    IconElement {
-                        icon: Icon::Document,
-                    },
+                    if thumbnail.is_empty() {
+                        rsx!(IconElement {
+                            icon: Icon::Document,
+                        })
+                    } else {
+                        rsx!(img {
+                            src: "{thumbnail}",
+                            width: "95%",
+                            height: "95%",
+                            border_radius: "8px",
+                        })
+                    }
                 },
                 with_rename.then(|| rsx! (
                     Input {
