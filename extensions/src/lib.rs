@@ -1,8 +1,6 @@
 use dioxus::prelude::*;
 use libloading::Library;
-use std::{fmt, fs, path::PathBuf, rc::Rc};
-
-use warp::logging::tracing::log;
+use std::{fmt, rc::Rc};
 
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
@@ -85,30 +83,6 @@ pub trait Extension {
     fn stylesheet(&self) -> String;
 
     fn render<'a>(&'a self, cx: Scope<'a>) -> Element<'a>;
-}
-
-#[derive(Default)]
-pub struct Librarian {}
-
-impl Librarian {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn locate(&mut self, path: PathBuf) -> &Self {
-        log::debug!("Locating extensions");
-
-        // TODO: Search the extensions folder for files. Load them into self
-        let _ = fs::create_dir_all(&path);
-
-        let paths = fs::read_dir(&path).expect("Directory is empty");
-
-        for entry in paths {
-            let path = entry.unwrap().path();
-            if path.extension().unwrap_or_default() == FILE_EXT {}
-        }
-        self
-    }
 }
 
 #[macro_export]

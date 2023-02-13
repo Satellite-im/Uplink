@@ -15,7 +15,6 @@ use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
-use notify::Result as NotifyResult;
 use notify::{RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
@@ -384,7 +383,6 @@ fn get_extensions() -> HashMap<String, ExtensionProxy> {
 
     for entry in paths {
         let path = entry.unwrap().path();
-        let ext = path.extension().unwrap_or_default();
         if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
             log::debug!("Found extension: {:?}", path);
             unsafe {
