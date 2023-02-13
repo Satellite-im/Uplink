@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use ::extensions::ExtensionProxy;
 use clap::Parser;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -13,6 +14,8 @@ use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
+use notify::Result as NotifyResult;
+use notify::{RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
@@ -370,6 +373,35 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
+fn get_extensions() -> HashMap<String, ExtensionProxy> {
+    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
+    // that updates when they have new info, i.e. state.
+    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
+    let mut extensions_library = AvailableExtensions::new();
+
+    for entry in paths {
+        let path = entry.unwrap().path();
+        let ext = path.extension().unwrap_or_default();
+        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
+            log::debug!("Found extension: {:?}", path);
+            unsafe {
+                let loader = extensions_library.load(&path);
+                match loader {
+                    Ok(_) => {
+                        log::debug!("Loaded extension: {:?}", &path);
+                    }
+                    Err(e) => {
+                        log::error!("Error loading extension: {:?}", e);
+                    }
+                }
+            }
+        }
+    }
+    extensions_library.extensions
+}
+
 // called at the end of the auth flow
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
@@ -405,36 +437,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     };
     state.ui.metadata = window_meta;
 
-    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
-    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
-    // that updates when they have new info, i.e. state.
-    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
-    let mut extensions_library = AvailableExtensions::new();
-
-    for entry in paths {
-        let path = entry.unwrap().path();
-        println!("{:?}", path);
-        let ext = path.extension().unwrap_or_default();
-        println!("ext: {:?}", ext);
-        println!("expected: {:?}", ::extensions::FILE_EXT);
-        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
-            log::debug!("Found extension: {:?}", path);
-            unsafe {
-                let loader = extensions_library.load(&path);
-                match loader {
-                    Ok(_) => {
-                        log::debug!("Loaded extension: {:?}", &path);
-                    }
-                    Err(e) => {
-                        log::error!("Error loading extension: {:?}", e);
-                    }
-                }
-            }
-        }
-    }
-    let extensions = extensions_library.extensions;
-    state.ui.extensions = extensions;
+    state.ui.extensions = get_extensions();
     log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
 
     use_shared_state_provider(cx, || state);
@@ -446,6 +449,24 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+
+    // Automatically select the best implementation for your platform.
+    let mut watcher = notify::recommended_watcher(|res| match res {
+        Ok(event) => {
+            state
+                .write()
+                .mutate(Action::RegisterExtensions(get_extensions()));
+        }
+        Err(e) => println!("watch error: {:?}", e),
+    })
+    .unwrap();
+
+    // Add a path to be watched. All files and directories at that path and
+    // below will be monitored for changes.
+    watcher.watch(
+        STATIC_ARGS.extensions_path.as_path(),
+        RecursiveMode::Recursive,
+    );
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);

@@ -44,6 +44,7 @@ open = "3.2.0"
 wry = { version = "0.23.4" }
 derive_more = "0.99"
 colored = "2.0.0"
+notify = "5.1.0"
 
 fdlimit = "0.2"
 
