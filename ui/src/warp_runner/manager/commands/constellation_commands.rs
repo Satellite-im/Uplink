@@ -9,6 +9,7 @@ use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
 use image::io::Reader as ImageReader;
+use kit::elements::file::VIDEO_FILE_EXTENSIONS;
 use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
@@ -333,6 +334,18 @@ async fn set_thumbnail_if_file_is_video(
     filename_to_save: String,
     file_path: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+    let file_extension = std::path::Path::new(&filename_to_save)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| format!(".{s}"))
+        .unwrap_or_default();
+
+    if !video_formats.iter().any(|f| f == &file_extension) {
+        log::warn!("It is not a video file!");
+        return Err(Box::from(Error::InvalidDataType));
+    };
+
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
