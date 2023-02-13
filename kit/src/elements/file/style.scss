@@ -37,6 +37,21 @@
 	}
 }
 
+.thumbnail-container {
+	width: 95%;
+	height: 95%;
+	border-radius: 8px;
+  }
+
+  .play-button {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	appearance: none;
+	padding: 0;
+  }
+
 .file-name {
 	text-transform: none;
 	text-align: center;

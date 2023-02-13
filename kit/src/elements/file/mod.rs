@@ -3,10 +3,14 @@ use std::{ffi::OsStr, path::PathBuf};
 use dioxus::prelude::*;
 
 use crate::{
-    elements::input::Input,
+    elements::{button::Button, input::Input, Appearance},
     icons::{Icon, IconElement},
 };
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
+
+pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
+    ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
+];
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -56,6 +60,17 @@ pub fn get_text(file_name: String) -> (String, String) {
     (file_name, file_name_formatted)
 }
 
+pub fn is_video(file_name: String) -> bool {
+    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+    let file_extension = std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| format!(".{s}"))
+        .unwrap_or_default();
+
+    video_formats.iter().any(|f| f == &file_extension)
+}
+
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
@@ -80,6 +95,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
+    let is_video = is_video(cx.props.text.clone());
 
     let loading = cx.props.loading.unwrap_or_default();
 
@@ -100,12 +116,30 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             icon: Icon::Document,
                         })
                     } else {
-                        rsx!(img {
-                            src: "{thumbnail}",
-                            width: "95%",
-                            height: "95%",
-                            border_radius: "8px",
-                        })
+                        if is_video {
+                            rsx!(
+                                div {
+                                    position: "relative",
+                                    img {
+                                        class: "thumbnail-container",
+                                        src: "{thumbnail}",
+                                    },
+                                    div {
+                                        class: "play-button",
+                                        Button {
+                                            icon: Icon::Play,
+                                            appearance: Appearance::Transparent,
+                                            small: true,
+                                        }
+                                    }
+                                }
+                        )
+                        } else {
+                            rsx!(img {
+                                class: "thumbnail-container",
+                                src: "{thumbnail}",
+                            })
+                        }
                     }
                 },
                 with_rename.then(|| rsx! (
