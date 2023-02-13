@@ -71,23 +71,24 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    pub tesseract_path: PathBuf,
     // seconds
     pub typing_indicator_refresh: u64,
     // seconds
     pub typing_indicator_timeout: u64,
-    pub tesseract_path: PathBuf,
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
-    let uplink_path = match args.path {
+    let uplink_container = match args.path {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+    let uplink_path = uplink_container.join("uplink");
     let warp_path = uplink_path.join("warp");
     StaticArgs {
         uplink_path: uplink_path.clone(),
-        themes_path: uplink_path.join("themes"),
+        themes_path: uplink_container.join("themes"),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
@@ -179,7 +180,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.uplink_path;
+    let themes_dest = &STATIC_ARGS.themes_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {

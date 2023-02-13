@@ -265,10 +265,6 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
             log::warn!("failed to create warp directory: {}", e);
         }
 
-        if let Err(e) = std::fs::create_dir_all(&STATIC_ARGS.themes_path) {
-            log::warn!("failed to create themes directory: {}", e);
-        }
-
         // create the tesseract key file so it can be saved later
         if let Err(e) = std::fs::File::create(&STATIC_ARGS.tesseract_path) {
             log::error!("failed to create tesseract file: {}", e);
