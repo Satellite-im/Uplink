@@ -9,7 +9,8 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
-use futures::channel::oneshot;
+use futures::channel::{mpsc, oneshot};
+use futures::StreamExt;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
@@ -451,11 +452,21 @@ fn app(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     // Automatically select the best implementation for your platform.
-    let mut watcher = notify::recommended_watcher(|res| match res {
-        Ok(event) => {
-            state
-                .write()
-                .mutate(Action::RegisterExtensions(get_extensions()));
+    let inner = state.inner();
+    let (tx, mut rx) = mpsc::unbounded();
+    use_future(cx, (), |_| async move {
+        while let Some(()) = rx.next().await {
+            if let Ok(state) = inner.try_borrow_mut() {
+                state
+                    .write()
+                    .mutate(Action::RegisterExtensions(get_extensions()));
+            }
+        }
+    });
+
+    let mut watcher = notify::recommended_watcher(move |res| match res {
+        Ok(_event) => {
+            let _ = tx.unbounded_send(());
         }
         Err(e) => println!("watch error: {:?}", e),
     })
@@ -463,7 +474,8 @@ fn app(cx: Scope) -> Element {
 
     // Add a path to be watched. All files and directories at that path and
     // below will be monitored for changes.
-    watcher.watch(
+    //TODO: Check for errors
+    let _ = watcher.watch(
         STATIC_ARGS.extensions_path.as_path(),
         RecursiveMode::Recursive,
     );
