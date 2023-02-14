@@ -564,8 +564,17 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let msg_valid =
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
-    let dereffed = *cx.deref();
-    let extensions = state.read().ui.extensions.values();
+    let extensions = &state.read().ui.extensions;
+
+    let ext_renders = {
+        let mut list = vec![];
+        let extensions = extensions.iter();
+        for (_, proxy) in extensions {
+            list.push(rsx!(proxy.extension.render(cx)));
+        }
+
+        list
+    };
 
     cx.render(rsx!(Chatbar {
         loading: is_loading,
@@ -632,8 +641,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     text: get_local_text("uplink.send"),
                 })),
             },
-            for proxy in extensions {
-                rsx!(proxy.extension.render(dereffed))
+            for node in ext_renders {
+                rsx!(node)
             }
         )),
         with_replying_to: data
