@@ -46,7 +46,6 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
-                //println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
@@ -60,7 +59,6 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 
-                //println!("got response from warp");
                 match res {
                     Ok(_) => {
                         if Configuration::load_or_default().audiovideo.interface_sounds {
