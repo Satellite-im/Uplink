@@ -69,11 +69,11 @@ pub enum Action {
 
     // Notifications
     #[display(fmt = "AddNotification")]
-    AddNotification(NotificaitonKind, u32),
+    AddNotification(NotificationKind, u32),
     #[display(fmt = "RemoveNotification")]
-    RemoveNotification(NotificaitonKind, u32),
+    RemoveNotification(NotificationKind, u32),
     #[display(fmt = "ClearNotification")]
-    ClearNotification(NotificaitonKind),
+    ClearNotification(NotificationKind),
     #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
     // Settings
