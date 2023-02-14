@@ -7,7 +7,6 @@ interact(".resize-horiz-right")
         var target = event.target
         var x,
           y = 0
-        console.log('event.rect.width', event.rect.width)
         // update the element's style
         target.style.width = event.rect.width + "px"
 
