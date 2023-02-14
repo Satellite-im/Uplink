@@ -455,11 +455,15 @@ fn app(cx: Scope) -> Element {
     let (tx, mut rx) = mpsc::unbounded();
     use_future(cx, (), |_| async move {
         while let Some(()) = rx.next().await {
-            if let Ok(state) = inner.try_borrow_mut() {
-                println!("borrowed good");
-                state
-                    .write()
-                    .mutate(Action::RegisterExtensions(get_extensions()));
+            match inner.try_borrow_mut() {
+                Ok(state) => {
+                    state
+                        .write()
+                        .mutate(Action::RegisterExtensions(get_extensions()));
+                }
+                Err(e) => {
+                    log::error!("{e}");
+                }
             }
         }
     });
