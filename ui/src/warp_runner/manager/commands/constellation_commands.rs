@@ -281,9 +281,7 @@ async fn upload_files(
                     Ok(_) => log::info!("Image Thumbnail uploaded"),
                     Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
                 }
-                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path)
-                    .await
-                {
+                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path) {
                     Ok(_) => log::info!("Video Thumbnail uploaded"),
                     Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
                 }
@@ -329,7 +327,7 @@ fn rename_if_duplicate(
     new_file_name
 }
 
-async fn set_thumbnail_if_file_is_video(
+fn set_thumbnail_if_file_is_video(
     warp_storage: &warp_storage,
     filename_to_save: String,
     file_path: PathBuf,
