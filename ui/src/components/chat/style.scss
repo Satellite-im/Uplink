@@ -1,3 +1,9 @@
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    opacity: 0;
+}
+
 #chats .context-wrap,
 #chats .context-wrap > div:first-of-type {
     width: 100%;
@@ -10,11 +16,19 @@
     gap: var(--gap);
     padding: var(--gap-less);
     overflow-y: scroll;
-
     label {
         margin-left: var(--gap);
     }
+    /* overflow scroll adds padding that disrupt the grab handle resizer.
+	   this keeps functionality but hides scroller.
+	*/
+	::-webkit-scrollbar {
+		display: none;
+	}
+	-ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
 }
+
 
 #compose {
     flex: 1;

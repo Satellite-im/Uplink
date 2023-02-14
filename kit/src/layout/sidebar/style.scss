@@ -17,9 +17,19 @@
 		display: inline-flex;
 		flex-direction: column;
 		max-height: 100%;
-		overflow-y: scroll;
+		// overflow-y: scroll;
+		padding: var(--gap);
 		gap: var(--gap);
+		/* overflow scroll adds padding that disrupt the grab handle resizer.
+			this keeps functionality but hides scroller
+		*/
+		::-webkit-scrollbar {
+			display: none;
+		}
+		-ms-overflow-style: none;  /* IE and Edge */
+		scrollbar-width: none;  /* Firefox */
 	}
+
 
 	&.hidden {
 		margin-left: calc(var(--sidebar-width) * -1);
