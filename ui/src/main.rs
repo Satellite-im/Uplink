@@ -15,7 +15,7 @@ use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::icons::IconElement;
 use kit::{components::nav::Route as UIRoute, icons::Icon};
-use notify::{RecursiveMode, Watcher};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use shared::language::{change_language, get_local_text};
@@ -451,9 +451,41 @@ fn app(cx: Scope) -> Element {
 
     // Automatically select the best implementation for your platform.
     let inner = state.inner();
-    let (tx, mut rx) = mpsc::unbounded();
     use_future(cx, (), |_| async move {
-        while let Some(()) = rx.next().await {
+        let (tx, mut rx) = mpsc::unbounded();
+        let mut watcher = match RecommendedWatcher::new(
+            move |res| {
+                let _ = tx.unbounded_send(res);
+            },
+            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+        ) {
+            Ok(watcher) => watcher,
+            Err(e) => {
+                log::error!("{e}");
+                return;
+            }
+        };
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        if let Err(e) = watcher.watch(
+            STATIC_ARGS.extensions_path.as_path(),
+            RecursiveMode::Recursive,
+        ) {
+            log::error!("{e}");
+            return;
+        }
+
+        while let Some(event) = rx.next().await {
+            let event = match event {
+                Ok(event) => event,
+                Err(e) => {
+                    log::error!("{e}");
+                    continue;
+                }
+            };
+
+            log::debug!("{event:?}");
             match inner.try_borrow_mut() {
                 Ok(state) => {
                     state
@@ -466,22 +498,6 @@ fn app(cx: Scope) -> Element {
             }
         }
     });
-
-    let mut watcher = notify::recommended_watcher(move |res| match res {
-        Ok(_event) => {
-            let _ = tx.unbounded_send(());
-        }
-        Err(e) => println!("watch error: {:?}", e),
-    })
-    .unwrap();
-
-    // Add a path to be watched. All files and directories at that path and
-    // below will be monitored for changes.
-    //TODO: Check for errors
-    let _ = watcher.watch(
-        STATIC_ARGS.extensions_path.as_path(),
-        RecursiveMode::Recursive,
-    );
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
