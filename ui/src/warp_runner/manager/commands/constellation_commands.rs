@@ -372,7 +372,7 @@ async fn set_thumbnail_if_file_is_video(
         .arg("image2")
         .arg("-update")
         .arg("1")
-        .arg(temp_path.clone())
+        .arg(&temp_path)
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()?;
