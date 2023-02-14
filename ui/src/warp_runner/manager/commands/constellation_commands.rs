@@ -278,13 +278,13 @@ async fn upload_files(
                     }
                 }
                 match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
-                    Ok(success) => log::info!("{:?}", success),
+                    Ok(_) => log::info!("Image Thumbnail uploaded"),
                     Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
                 }
                 match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path)
                     .await
                 {
-                    Ok(success) => log::info!("Video Thumbnail: {:?}", success),
+                    Ok(_) => log::info!("Video Thumbnail uploaded"),
                     Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
                 }
                 log::info!("{:?} file uploaded!", filename);
@@ -335,6 +335,7 @@ async fn set_thumbnail_if_file_is_video(
     file_path: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+
     let file_extension = std::path::Path::new(&filename_to_save)
         .extension()
         .and_then(OsStr::to_str)
@@ -358,12 +359,7 @@ async fn set_thumbnail_if_file_is_video(
 
     let temp_dir = TempDir::new()?;
 
-    let path = format!(
-        "{}/{}{}.jpg",
-        temp_dir.path().to_string_lossy(),
-        file_stem,
-        uuid::Uuid::new_v4()
-    );
+    let temp_path = temp_dir.path().join(file_stem);
 
     let output = Command::new("ffmpeg")
         .arg("-i")
@@ -376,19 +372,17 @@ async fn set_thumbnail_if_file_is_video(
         .arg("image2")
         .arg("-update")
         .arg("1")
-        .arg(path.clone())
+        .arg(temp_path.clone())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null()) // redirect stderr to /dev/null
+        .stderr(Stdio::null())
         .spawn()?;
 
     if let Some(mut child) = output.stdout {
         let mut contents = vec![];
 
-        child
-            .read_to_end(&mut contents)
-            .expect("failed to read child's stdout");
+        child.read_to_end(&mut contents)?;
 
-        let image = std::fs::read(path)?;
+        let image = std::fs::read(temp_path)?;
 
         let prefix = format!("data:{};base64,", IMAGE_JPEG.to_string());
         let base64_image = base64::encode(&image);
@@ -404,7 +398,7 @@ async fn set_thumbnail_if_file_is_video(
 async fn set_thumbnail_if_file_is_image(
     warp_storage: &warp_storage,
     filename_to_save: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
@@ -420,6 +414,7 @@ async fn set_thumbnail_if_file_is_image(
         .extension()
         .and_then(OsStr::to_str)
         .map(|ext| ext.to_lowercase());
+
     let mime = match extension {
         Some(m) => match m.as_str() {
             "png" => IMAGE_PNG.to_string(),
@@ -442,7 +437,7 @@ async fn set_thumbnail_if_file_is_image(
         let base64_image = base64::encode(&file);
         let img = prefix + base64_image.as_str();
         item.set_thumbnail(&img);
-        Ok(format_args!("{} thumbnail updated with success!", item.name()).to_string())
+        Ok(())
     } else {
         log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))
