@@ -20,6 +20,8 @@ impl extensions::ExtensionRegistrar for ExtensionRegistrar {
     fn register(&mut self, name: &str, extension: Box<dyn Extension>) {
         let proxy = ExtensionProxy {
             extension,
+            // This will eventually make it into state, we can change this here if we want to enable new extensions by default.
+            enabled: false,
             _lib: Rc::clone(&self.lib),
         };
         self.extensions.insert(name.to_string(), proxy);

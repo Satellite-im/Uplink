@@ -4,7 +4,7 @@ use kit::{elements::button::Button, icons::Icon};
 
 // Exports the plugin using the registrar
 // You don't need to really worry about this but it is required.
-// Just change emojis to the name of your extension in alpha-numeric snake case.
+// Just change "emojis" to the name of your extension in alpha-numeric snake case.
 export_extension!(register);
 #[allow(improper_ctypes_definitions)]
 extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
@@ -32,7 +32,7 @@ impl Extension for ExampleExtension {
         include_str!("./style.css").to_string()
     }
 
-    fn render<'a>(&'a self, cx: Scope<'a>) -> Element<'a> {
+    fn render<'a>(&'a self, cx: &'a Scoped<'a>) -> Option<VNode<'a>> {
         let styles = self.stylesheet();
 
         cx.render(rsx! {
