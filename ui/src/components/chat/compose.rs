@@ -565,7 +565,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
     let dereffed = *cx.deref();
-    let extensions = &state.read().ui.extensions.values();
+    let extensions = state.read().ui.extensions.values();
 
     cx.render(rsx!(Chatbar {
         loading: is_loading,
