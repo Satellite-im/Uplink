@@ -9,6 +9,10 @@
 	&.active {
 		background-color: var(--secondary-dark);
 	}
+		
+	.info {
+		overflow-wrap: anywhere;
+	}
 	.image {
 		align-self: flex-start;
 	}
