@@ -451,6 +451,7 @@ fn app(cx: Scope) -> Element {
 
     // Automatically select the best implementation for your platform.
     let inner = state.inner();
+
     use_future(cx, (), |_| async move {
         let (tx, mut rx) = mpsc::unbounded();
         let mut watcher = match RecommendedWatcher::new(
@@ -633,7 +634,6 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("received warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().process_warp_event(evt);
@@ -652,7 +652,6 @@ fn app(cx: Scope) -> Element {
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
-            //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
                 match inner.try_borrow_mut() {
@@ -661,7 +660,6 @@ fn app(cx: Scope) -> Element {
                             continue;
                         }
                         if state.write().decrement_toasts() {
-                            //println!("decrement toasts");
                             needs_update.set(true);
                         }
                     }
@@ -716,7 +714,6 @@ fn app(cx: Scope) -> Element {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
-                //println!("window manager received command");
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
@@ -859,7 +856,6 @@ fn app(cx: Scope) -> Element {
                     state.write().chats.all = all_chats;
                     state.write().account.identity = own_id;
                     state.write().chats.initialized = true;
-                    //println!("{:#?}", state.read().chats);
                     needs_update.set(true);
                 }
                 Err(e) => {

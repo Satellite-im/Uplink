@@ -451,9 +451,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 .collect::<Vec<_>>()
         });
 
-    //println!("active chat: {:?}", &active_chat_id);
-    //println!("users typing: {:?}", &users_typing);
-
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
         //to_owned![];
         async move {
