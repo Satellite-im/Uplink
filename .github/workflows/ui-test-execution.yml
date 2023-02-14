@@ -155,6 +155,7 @@ jobs:
 
   publish:
     needs: test
+    if: always()
     runs-on: ubuntu-latest
 
     steps:
@@ -169,7 +170,6 @@ jobs:
 
       - name: Publish Test Results 📢
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
         with:
           junit_files: "junit-results/*.xml"
           check_name: "UI Automated Test Results on MacOS"
