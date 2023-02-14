@@ -370,14 +370,15 @@ async fn set_thumbnail_if_file_is_video(
         .arg(file_path)
         .arg("-vf")
         .arg("select=eq(pict_type\\,I)")
-        .arg("-fps_mode")
-        .arg("vfr")
         .arg("-q:v")
         .arg("2")
         .arg("-f")
         .arg("image2")
+        .arg("-update")
+        .arg("1")
         .arg(path.clone())
         .stdout(Stdio::piped())
+        .stderr(Stdio::null()) // redirect stderr to /dev/null
         .spawn()?;
 
     if let Some(mut child) = output.stdout {
