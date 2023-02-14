@@ -1,4 +1,5 @@
 use std::{
+    ops::Deref,
     rc::Rc,
     time::{Duration, Instant},
 };
@@ -563,6 +564,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let msg_valid =
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
+    let dereffed = *cx.deref();
+    let extensions = &state.read().ui.extensions.values();
+
     cx.render(rsx!(Chatbar {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
@@ -628,8 +632,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     text: get_local_text("uplink.send"),
                 })),
             },
-            for proxy in state.read().ui.extensions.values() {
-                rsx!(proxy.extension.render(cx))
+            for proxy in extensions {
+                rsx!(proxy.extension.render(dereffed))
             }
         )),
         with_replying_to: data
