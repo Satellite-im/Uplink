@@ -43,6 +43,8 @@ pub async fn convert_message_event(
             message_id,
         } => {
             let message = messaging.get_message(conversation_id, message_id).await?;
+
+            // Return the event.
             MessageEvent::Received {
                 conversation_id,
                 message,

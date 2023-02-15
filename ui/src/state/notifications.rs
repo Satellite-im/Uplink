@@ -1,12 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    config::Configuration,
-    utils::{notifications::set_badge, sounds::Sounds},
-};
+use crate::{config::Configuration, utils::notifications::set_badge};
 
 // This kind is used to determine which notification kind to add to. It can also be used for querying specific notification counts.
-pub enum NotificaitonKind {
+pub enum NotificationKind {
     FriendRequest,
     Message,
     Settings,
@@ -54,34 +51,28 @@ impl Notifications {
     }
 
     // Adds notification(s) to the specified kind.
-    pub fn increment(&mut self, kind: NotificaitonKind, count: u32) {
+    pub fn increment(&mut self, kind: NotificationKind, count: u32) {
         match kind {
-            NotificaitonKind::FriendRequest => self.friends += count,
-            NotificaitonKind::Message => self.messages += count,
-            NotificaitonKind::Settings => self.settings += count,
+            NotificationKind::FriendRequest => self.friends += count,
+            NotificationKind::Message => self.messages += count,
+            NotificationKind::Settings => self.settings += count,
         };
 
         // Update the badge any time notifications are added.
         let _ = set_badge(self.total());
-
-        // Plays the notification sound.
-        let config = Configuration::load_or_default();
-        if config.notifications.enabled {
-            crate::utils::sounds::Play(Sounds::Notification);
-        }
     }
 
     // Removes notification(s) from the specified kind.
     // Prevent underflow using saturating_sub()
-    pub fn decrement(&mut self, kind: NotificaitonKind, count: u32) {
+    pub fn decrement(&mut self, kind: NotificationKind, count: u32) {
         match kind {
-            NotificaitonKind::FriendRequest => {
+            NotificationKind::FriendRequest => {
                 self.friends = self.friends.saturating_sub(count);
             }
-            NotificaitonKind::Message => {
+            NotificationKind::Message => {
                 self.messages = self.messages.saturating_sub(count);
             }
-            NotificaitonKind::Settings => {
+            NotificationKind::Settings => {
                 self.settings = self.settings.saturating_sub(count);
             }
         };
@@ -91,11 +82,11 @@ impl Notifications {
     }
 
     // Sets a notification count for the specified kind.
-    pub fn set(&mut self, kind: NotificaitonKind, count: u32) {
+    pub fn set(&mut self, kind: NotificationKind, count: u32) {
         match kind {
-            NotificaitonKind::FriendRequest => self.friends = count,
-            NotificaitonKind::Message => self.messages = count,
-            NotificaitonKind::Settings => self.settings = count,
+            NotificationKind::FriendRequest => self.friends = count,
+            NotificationKind::Message => self.messages = count,
+            NotificationKind::Settings => self.settings = count,
         };
 
         // Update the badge with new possible totals.
@@ -103,20 +94,20 @@ impl Notifications {
     }
 
     // Returns the total count for a given notification kind.
-    pub fn get(&self, kind: NotificaitonKind) -> u32 {
+    pub fn get(&self, kind: NotificationKind) -> u32 {
         match kind {
-            NotificaitonKind::FriendRequest => self.friends,
-            NotificaitonKind::Message => self.messages,
-            NotificaitonKind::Settings => self.settings,
+            NotificationKind::FriendRequest => self.friends,
+            NotificationKind::Message => self.messages,
+            NotificationKind::Settings => self.settings,
         }
     }
 
     // Clears all notifications for the specified kind.
-    pub fn clear_kind(&mut self, kind: NotificaitonKind) {
+    pub fn clear_kind(&mut self, kind: NotificationKind) {
         match kind {
-            NotificaitonKind::FriendRequest => self.friends = 0,
-            NotificaitonKind::Message => self.messages = 0,
-            NotificaitonKind::Settings => self.settings = 0,
+            NotificationKind::FriendRequest => self.friends = 0,
+            NotificationKind::Message => self.messages = 0,
+            NotificationKind::Settings => self.settings = 0,
         };
         // Upadte the badge with new possible totals.
         let _ = set_badge(self.total());
