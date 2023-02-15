@@ -360,17 +360,19 @@ fn set_thumbnail_if_file_is_video(
     let temp_path = temp_dir.path().join(file_stem);
 
     let output = Command::new("ffmpeg")
-        .arg("-i")
-        .arg(file_path)
-        .arg("-vf")
-        .arg("select=eq(pict_type\\,I)")
-        .arg("-q:v")
-        .arg("2")
-        .arg("-f")
-        .arg("image2")
-        .arg("-update")
-        .arg("1")
-        .arg(&temp_path)
+        .args([
+            "-i",
+            &file_path.to_string_lossy().to_string(),
+            "-vf",
+            "select=eq(pict_type\\,I)",
+            "-q:v",
+            "2",
+            "-f",
+            "image2",
+            "-update",
+            "1",
+            &temp_path.to_string_lossy().to_string(),
+        ])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()?;
