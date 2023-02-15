@@ -111,36 +111,29 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "icon",
                     onclick: move |_| emit_press(&cx),
-                    if thumbnail.is_empty() {
-                        rsx!(IconElement {
-                            icon: Icon::Document,
-                        })
-                    } else {
-                        if is_video {
-                            rsx!(
-                                div {
-                                    position: "relative",
-                                    img {
-                                        class: "thumbnail-container",
-                                        src: "{thumbnail}",
-                                    },
-                                    div {
-                                        class: "play-button",
-                                        Button {
-                                            icon: Icon::Play,
-                                            appearance: Appearance::Transparent,
-                                            small: true,
-                                        }
-                                    }
-                                }
-                        )
+                    div {
+                        position: "relative",
+                        if thumbnail.is_empty() {
+                            rsx!(IconElement {
+                                icon: Icon::Document,
+                            })
                         } else {
                             rsx!(img {
                                 class: "thumbnail-container",
                                 src: "{thumbnail}",
                             })
                         }
-                    }
+                        if is_video {
+                            rsx!(div {
+                                class: "play-button",
+                                Button {
+                                    icon: Icon::Play,
+                                    appearance: Appearance::Transparent,
+                                    small: true,
+                                }
+                            })
+                        }
+                    },
                 },
                 with_rename.then(|| rsx! (
                     Input {
