@@ -19,6 +19,7 @@ pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
+use shared::language::get_local_text;
 pub use ui::{Theme, ToastNotification, UI};
 
 use crate::{
@@ -772,7 +773,29 @@ impl State {
         match event {
             MultiPassEvent::None => {}
             MultiPassEvent::FriendRequestReceived(identity) => {
-                self.friends.incoming_requests.insert(identity);
+                self.friends.incoming_requests.insert(identity.clone());
+
+                self.mutate(Action::AddNotification(
+                    notifications::NotificationKind::FriendRequest,
+                    1,
+                ));
+
+                // TODO: Get state available in this scope.
+                // Dispatch notifications only when we're not already focused on the application.
+                let notifications_enabled = self
+                    .configuration
+                    .config
+                    .notifications
+                    .friends_notifications;
+
+                if !self.ui.metadata.focused && notifications_enabled {
+                    crate::utils::notifications::push_notification(
+                        get_local_text("friends.new-request"),
+                        format!("{} sent a request.", identity.username()),
+                        Some(crate::utils::sounds::Sounds::Notification),
+                        notify_rust::Timeout::Milliseconds(4),
+                    );
+                }
             }
             MultiPassEvent::FriendRequestSent(identity) => {
                 self.friends.outgoing_requests.insert(identity);
@@ -834,6 +857,41 @@ impl State {
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
+
+                self.mutate(Action::AddNotification(
+                    notifications::NotificationKind::Message,
+                    1,
+                ));
+
+                // TODO: Get state available in this scope.
+                // Dispatch notifications only when we're not already focused on the application.
+                let notifications_enabled = self
+                    .configuration
+                    .config
+                    .notifications
+                    .messages_notifications;
+                let should_play_sound = self.chats.active != Some(conversation_id)
+                    && self.configuration.config.audiovideo.message_sounds;
+                let should_dispatch_notification =
+                    notifications_enabled && !self.ui.metadata.focused;
+
+                // This should be called if we have notifications enabled for new messages
+                if should_dispatch_notification {
+                    let sound = if self.configuration.config.audiovideo.message_sounds {
+                        Some(crate::utils::sounds::Sounds::Notification)
+                    } else {
+                        None
+                    };
+                    crate::utils::notifications::push_notification(
+                        get_local_text("friends.new-request"),
+                        format!("{} sent a request.", "NOT YET IMPL"),
+                        sound,
+                        notify_rust::Timeout::Milliseconds(4),
+                    );
+                // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
+                } else if should_play_sound {
+                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+                }
             }
             MessageEvent::Sent {
                 conversation_id,

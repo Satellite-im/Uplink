@@ -8,6 +8,7 @@
 	padding: var(--padding-less) var(--padding);
 	width: fit-content;
 	align-self: flex-end;
+	overflow-wrap: anywhere;
 	.context-wrap {
 		align-self: flex-end;
 	}

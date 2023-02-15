@@ -78,7 +78,8 @@ pub async fn handle_raygun_cmd(
                     .await;
                 let _ = rsp.send(r);
             }
-            Err(_e) => {
+            Err(e) => {
+                log::error!("failed to initialize conversations: {}", e);
                 // do nothing. will cancel the channel
                 // could happen if warp isn't available yet
             }
