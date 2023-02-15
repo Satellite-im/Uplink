@@ -71,6 +71,7 @@ pub struct StaticArgs {
     pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
+    pub tesseract_path: PathBuf,
     // seconds
     pub typing_indicator_refresh: u64,
     // seconds
@@ -79,20 +80,23 @@ pub struct StaticArgs {
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
-    let uplink_path = match args.path {
+    let uplink_container = match args.path {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+    let uplink_path = uplink_container.join("uplink");
+    let warp_path = uplink_path.join("warp");
     StaticArgs {
         uplink_path: uplink_path.clone(),
-        themes_path: uplink_path.join("themes"),
+        themes_path: uplink_container.join("themes"),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         config_path: uplink_path.join("Config.json"),
-        warp_path: uplink_path.join("warp"),
+        warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
+        tesseract_path: warp_path.join("tesseract.json"),
         use_mock: args.with_mock,
     }
 });
@@ -155,6 +159,8 @@ enum LogProfile {
     Debug,
     /// print everything including tracing logs to the terminal
     Trace,
+    /// like trace but include warp logs
+    Trace2,
 }
 
 #[derive(Debug, Parser)]
@@ -174,7 +180,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.uplink_path;
+    let themes_dest = &STATIC_ARGS.themes_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -205,6 +211,12 @@ fn main() {
                 LevelFilter::Debug
             }
             LogProfile::Trace => {
+                logger::set_display_trace(true);
+                logger::set_write_to_stdout(true);
+                LevelFilter::Trace
+            }
+            LogProfile::Trace2 => {
+                logger::set_display_warp(true);
                 logger::set_display_trace(true);
                 logger::set_write_to_stdout(true);
                 LevelFilter::Trace
@@ -482,12 +494,12 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                log::trace!("FOCUS CHANGED {:?}", *focused);
+                //log::trace!("FOCUS CHANGED {:?}", *focused);
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().ui.metadata.focused = *focused;
                         //crate::utils::sounds::Play(Sounds::Notification);
-                        needs_update.set(true);
+                        //needs_update.set(true);
                     }
                     Err(e) => {
                         log::error!("{e}");
@@ -647,6 +659,7 @@ fn app(cx: Scope) -> Element {
                 rsp: tx,
             })) {
                 log::error!("failed to initialize Friends {}", e);
+                tokio::time::sleep(Duration::from_secs(1)).await;
                 return;
             }
 
@@ -737,12 +750,16 @@ fn app(cx: Scope) -> Element {
                     }))
                 {
                     log::error!("failed to init RayGun: {}", e);
-                    return;
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
 
                 match rx.await {
                     Ok(r) => break r,
-                    Err(_e) => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
+                    Err(e) => {
+                        log::error!("comamnd canceled: {}", e);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
+                    }
                 }
             };
 

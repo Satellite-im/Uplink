@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use chrono::{DateTime, Utc};
 use isolang::Language;
 use timeago::{languages::boxup, English};
@@ -11,9 +13,9 @@ pub fn format_timestamp_timeago(datetime: DateTime<Utc>, active_language: String
         None => timeago::Formatter::with_language(boxup(English)),
     };
     let now = Utc::now();
-    let duration = now
-        .signed_duration_since(datetime)
-        .to_std()
-        .expect("duration should be positive");
+    let duration = match now.signed_duration_since(datetime).to_std() {
+        Ok(duration) => duration,
+        Err(_) => Duration::from_millis(1),
+    };
     formatter.convert(duration)
 }
