@@ -38,6 +38,7 @@ enum ChanCmd {
     OpenDirectory(String),
     BackToPreviousDirectory(Directory),
     UploadFiles(Vec<PathBuf>),
+    RenameItem { old_name: String, new_name: String },
 }
 
 #[derive(PartialEq, Props)]
@@ -191,6 +192,34 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                             Err(e) => {
                                 log::error!("failed to add new files into uplink storage: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::RenameItem { old_name, new_name } => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
+                                old_name,
+                                new_name,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to rename item {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    "failed to update uplink storage with renamed item: {}",
+                                    e
+                                );
                                 continue;
                             }
                         }

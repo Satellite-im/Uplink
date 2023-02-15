@@ -50,9 +50,9 @@ pub enum ConstellationCmd {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "RenameItems {{ item: {item:?}, new_name: {new_name} }} ")]
-    RenameItems {
-        item: Item,
+    #[display(fmt = "RenameItems {{ old_name: {old_name}, new_name: {new_name} }} ")]
+    RenameItem {
+        old_name: String,
         new_name: String,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
@@ -86,24 +86,22 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = upload_files(warp_storage, files_path).await;
             let _ = rsp.send(r);
         }
-        ConstellationCmd::RenameItems {
-            item,
+        ConstellationCmd::RenameItem {
+            old_name,
             new_name,
             rsp,
         } => {
-            let r = rename_item(item, new_name, warp_storage).await;
+            let r = rename_item(old_name, new_name, warp_storage).await;
             let _ = rsp.send(r);
         }
     }
 }
 
 async fn rename_item(
-    item: Item,
+    old_name: String,
     new_name: String,
     warp_storage: &mut warp_storage,
 ) -> Result<uplink_storage, Error> {
-    let old_name = item.name();
-
     if let Err(error) = warp_storage.rename(&old_name, &new_name).await {
         log::error!("Failed to rename item: {error}");
     }
