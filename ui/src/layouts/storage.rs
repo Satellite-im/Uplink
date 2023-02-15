@@ -376,6 +376,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx!(File {
                             text: file.name(),
                             aria_label: file.name(),
+                            thumbnail: file.thumbnail(),
                         })
                     }),
                 },
