@@ -15,7 +15,7 @@ use crate::state::storage::Storage as uplink_storage;
 use crate::warp_runner::Storage as warp_storage;
 
 use warp::{
-    constellation::{directory::Directory, Progression},
+    constellation::{directory::Directory, item::Item, Progression},
     error::Error,
     logging::tracing::log,
     sync::RwLock,
@@ -50,6 +50,12 @@ pub enum ConstellationCmd {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(fmt = "RenameItems {{ item: {item:?}, new_name: {new_name} }} ")]
+    RenameItems {
+        item: Item,
+        new_name: String,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -80,7 +86,29 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = upload_files(warp_storage, files_path).await;
             let _ = rsp.send(r);
         }
+        ConstellationCmd::RenameItems {
+            item,
+            new_name,
+            rsp,
+        } => {
+            let r = rename_item(item, new_name, warp_storage).await;
+            let _ = rsp.send(r);
+        }
     }
+}
+
+async fn rename_item(
+    item: Item,
+    new_name: String,
+    warp_storage: &mut warp_storage,
+) -> Result<uplink_storage, Error> {
+    let old_name = item.name();
+
+    if let Err(error) = warp_storage.rename(&old_name, &new_name).await {
+        log::error!("Failed to rename item: {error}");
+    }
+
+    get_items_from_current_directory(warp_storage)
 }
 
 async fn create_new_directory(
