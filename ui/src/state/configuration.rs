@@ -65,4 +65,9 @@ impl Configuration {
         self.config.notifications.settings_notifications = settings_notifications;
         let _ = self.config.save();
     }
+
+    pub fn set_auto_enable_extensions(&mut self, enabled: bool) {
+        self.config.extensions.enable_automatically = enabled;
+        let _ = self.config.save();
+    }
 }

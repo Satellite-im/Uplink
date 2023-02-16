@@ -2,6 +2,8 @@ use extensions::*;
 use libloading::Library;
 use std::{collections::HashMap, ffi::OsStr, io, rc::Rc};
 
+use crate::config::Configuration;
+
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
     lib: Rc<Library>,
@@ -18,10 +20,11 @@ impl ExtensionRegistrar {
 
 impl extensions::ExtensionRegistrar for ExtensionRegistrar {
     fn register(&mut self, name: &str, extension: Box<dyn Extension>) {
+        // This will eventually make it into state, we set the default "enabled" state of the extension based on config settings.
+        let config = Configuration::load_or_default();
         let proxy = ExtensionProxy {
             extension,
-            // This will eventually make it into state, we can change this here if we want to enable new extensions by default.
-            enabled: false,
+            enabled: config.extensions.enable_automatically,
             _lib: Rc::clone(&self.lib),
         };
         self.extensions.insert(name.to_string(), proxy);

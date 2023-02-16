@@ -66,9 +66,9 @@ pub struct AudioVideo {
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Extensions {
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     pub enable: bool,
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     pub enable_automatically: bool,
 }
 
@@ -88,7 +88,7 @@ fn bool_true() -> bool {
 pub struct Notifications {
     #[serde(default = "bool_true")]
     pub enabled: bool,
-    #[serde(default)]
+    #[serde(default = "bool_true")]
     pub show_app_icon: bool,
     #[serde(default = "bool_true")]
     pub friends_notifications: bool,
