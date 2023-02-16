@@ -68,6 +68,8 @@ pub struct AudioVideo {
 pub struct Extensions {
     #[serde(default)]
     pub enable: bool,
+    #[serde(default)]
+    pub enable_automatically: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
