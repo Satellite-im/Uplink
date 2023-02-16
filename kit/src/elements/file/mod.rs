@@ -1,9 +1,10 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 use crate::{
-    elements::input::Input,
+    elements::input::{Input, Size},
     icons::{Icon, IconElement},
 };
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
@@ -25,14 +26,8 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_text(file_name: String) -> (String, String) {
+pub fn get_text(file_name: String, file_extension: String) -> (String, String) {
     let mut file_name_formatted = file_name.clone();
-    // don't append a '.' to a file name if it has no extension
-    let file_extension = std::path::Path::new(&file_name)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|s| format!(".{s}"))
-        .unwrap_or_default();
     let item = PathBuf::from(&file_name);
     let file_stem = item
         .file_stem()
@@ -70,9 +65,19 @@ pub fn emit_press(cx: &Scope<Props>) {
     }
 }
 
+pub fn get_file_extension(file_name: String) -> String {
+    // don't append a '.' to a file name if it has no extension
+    std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| format!(".{s}"))
+        .unwrap_or_default()
+}
+
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let (file_name, file_name_formatted) = get_text(cx.props.text.clone());
+    let file_extension = get_file_extension(cx.props.text.clone());
+    let (file_name, file_name_formatted) = get_text(cx.props.text.clone(), file_extension.clone());
     let aria_label = get_aria_label(&cx);
     let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
@@ -98,10 +103,17 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 with_rename.then(|| rsx! (
                     Input {
+                        id: Uuid::new_v4().to_string(),
                         disabled: disabled,
                         placeholder: placeholder,
+                        focus: true,
+                        max_length: 64,
+                        size: Size::Small,
                         // todo: use is_valid
-                        onreturn: move |(s, _is_valid)| emit(&cx, s)
+                        onreturn: move |(s, _is_valid)| {
+                            let new_name = format!("{}{}", s, file_extension);
+                            emit(&cx, new_name)
+                        }
                     }
                 )),
                 (!with_rename).then(|| rsx! (
@@ -140,7 +152,7 @@ mod test {
     #[test]
     fn test_get_text1() {
         let input = String::from("very_long_file_name.txt");
-        let (name, formatted) = get_text(input.clone());
+        let (name, formatted) = get_text(input.clone(), ".txt".to_owned());
         assert_eq!(input, name);
         assert_eq!(formatted, String::from("very_lo...me.txt"));
     }
@@ -148,7 +160,7 @@ mod test {
     #[test]
     fn test_get_text2() {
         let input = String::from("very_long_file_name");
-        let (name, formatted) = get_text(input.clone());
+        let (name, formatted) = get_text(input.clone(), "".to_owned());
         assert_eq!(input, name);
         assert_eq!(formatted, String::from("very_lo...me"));
     }
@@ -156,7 +168,7 @@ mod test {
     #[test]
     fn test_get_text3() {
         let input = String::from("name.txt");
-        let (name, formatted) = get_text(input.clone());
+        let (name, formatted) = get_text(input.clone(), ".txt".to_owned());
         assert_eq!(input, name);
         assert_eq!(formatted, input);
     }
@@ -164,7 +176,7 @@ mod test {
     #[test]
     fn test_get_text4() {
         let input = String::from("name");
-        let (name, formatted) = get_text(input.clone());
+        let (name, formatted) = get_text(input.clone(), "".to_owned());
         assert_eq!(input, name);
         assert_eq!(formatted, input);
     }

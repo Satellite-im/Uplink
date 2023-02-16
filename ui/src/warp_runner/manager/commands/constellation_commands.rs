@@ -15,7 +15,7 @@ use crate::state::storage::Storage as uplink_storage;
 use crate::warp_runner::Storage as warp_storage;
 
 use warp::{
-    constellation::{directory::Directory, item::Item, Progression},
+    constellation::{directory::Directory, Progression},
     error::Error,
     logging::tracing::log,
     sync::RwLock,
