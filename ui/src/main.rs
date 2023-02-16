@@ -91,17 +91,16 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
-    let uplink_path = uplink_container.join("uplink");
-    let warp_path = uplink_path.join("warp");
+    let warp_path = uplink_container.join("warp");
     StaticArgs {
-        uplink_path: uplink_path.clone(),
+        uplink_path: uplink_container.clone(),
         themes_path: uplink_container.join("themes"),
-        cache_path: uplink_path.join("state.json"),
-        extensions_path: uplink_path.join("extensions"),
-        mock_cache_path: uplink_path.join("mock-state.json"),
-        config_path: uplink_path.join("Config.json"),
+        cache_path: uplink_container.join("state.json"),
+        extensions_path: uplink_container.join("extensions"),
+        mock_cache_path: uplink_container.join("mock-state.json"),
+        config_path: uplink_container.join("Config.json"),
         warp_path: warp_path.clone(),
-        logger_path: uplink_path.join("debug.log"),
+        logger_path: uplink_container.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
@@ -188,7 +187,7 @@ struct Args {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
+    let themes_dest = &STATIC_ARGS.uplink_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
