@@ -4,7 +4,10 @@ use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::nav::Nav,
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        nav::Nav,
+    },
     elements::{
         button::Button,
         file::File,
@@ -293,6 +296,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         None => return
                                     };
                                     ch.send(ChanCmd::UploadFiles(files_local_path));
+                                    cx.needs_update();
                                 },
                             }
                         )
@@ -393,19 +397,56 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }),
                     directories_list.read().iter().map(|dir| {
                         let folder_name = dir.name();
-                        rsx!(Folder {
-                            text: dir.name(),
-                            aria_label: dir.name(),
-                            onpress: move |_| {
-                                ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
-                            }
-                        })
+                        let folder_name2 = dir.name();
+                        let is_renaming = use_state(cx, || false);
+                        rsx!(
+                            ContextMenu {
+                                id: dir.id().to_string(),
+                                items: cx.render(rsx!(
+                                    ContextItem {
+                                        icon: Icon::Pencil,
+                                        text: "Rename".to_owned(),
+                                        onpress: move |_| {
+                                            is_renaming.set(true);
+                                        }
+                                    })),
+                            Folder {
+                                text: dir.name(),
+                                aria_label: dir.name(),
+                                with_rename: **is_renaming,
+                                onrename: move |val| {
+                                    is_renaming.set(false);
+                                    ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                }
+                                onpress: move |_| {
+                                    ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
+                                }
+                        }})
                     }),
-                    files_list.read().iter().map(|file| {
-                        rsx!(File {
-                            text: file.name(),
-                            aria_label: file.name(),
-                        })
+                   files_list.read().iter().map(|file| {
+                        let is_renaming = use_state(cx, || false);
+                        let file_name = file.name();
+                        rsx!(
+                            ContextMenu {
+                                id: file.id().to_string(),
+                                items: cx.render(rsx!(
+                                    ContextItem {
+                                        icon: Icon::Pencil,
+                                        text: "Rename".to_owned(),
+                                        onpress: move |_| {
+                                            is_renaming.set(true);
+                                        }
+                                    })),
+                                        File {
+                                            text: file.name(),
+                                            aria_label: file.name(),
+                                            with_rename: **is_renaming,
+                                            onrename: move |val| {
+                                                is_renaming.set(false);
+                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                            }
+                                        }
+                      })
                     }),
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
