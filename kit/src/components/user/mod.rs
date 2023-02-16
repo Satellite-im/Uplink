@@ -1,4 +1,4 @@
-use std::time::Duration;
+use chrono::{DateTime, Utc};
 
 use dioxus::{
     core::Event,
@@ -16,7 +16,7 @@ pub struct Props<'a> {
     username: String,
     user_image: Element<'a>,
     subtext: String,
-    timestamp: Option<u64>,
+    timestamp: Option<DateTime<Utc>>,
     #[props(optional)]
     loading: Option<bool>,
     #[props(optional)]
@@ -29,11 +29,15 @@ pub struct Props<'a> {
 
 pub fn get_time_ago(cx: &Scope<Props>) -> String {
     let f = timeago::Formatter::new();
+    let current_time = Utc::now();
+    let c: chrono::Duration =
+        current_time - cx.props.timestamp.unwrap_or_else(|| current_time.clone());
+    let duration: std::time::Duration = match c.to_std() {
+        Ok(d) => d,
+        Err(_e) => std::time::Duration::ZERO,
+    };
 
-    match cx.props.timestamp {
-        Some(d) => f.convert(Duration::from_millis(d)),
-        None => "".into(),
-    }
+    f.convert(duration)
 }
 
 /// Generates the optional badge for the user.
