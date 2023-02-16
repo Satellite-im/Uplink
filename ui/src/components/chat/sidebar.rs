@@ -90,7 +90,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
+                        if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
                         }
                         use_router(cx).replace_route(r, None, None);

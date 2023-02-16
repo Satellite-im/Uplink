@@ -1,9 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use std::fs;
-
-use crate::STATIC_ARGS;
-
 /// A struct that represents the configuration of the application.
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct Configuration {
@@ -95,51 +91,4 @@ pub struct Notifications {
     // By default we leave this one off.
     #[serde(default)]
     pub settings_notifications: bool,
-}
-
-impl Configuration {
-    pub fn new() -> Self {
-        // Create a default configuration here
-        // For example:
-        Self {
-            developer: Developer {
-                ..Developer::default()
-            },
-            ..Self::default()
-        }
-    }
-
-    pub fn load() -> Self {
-        // Load the config from the specified path
-        match fs::read_to_string(&STATIC_ARGS.config_path) {
-            Ok(contents) => {
-                // Parse the config from the file contents using serde
-                match serde_json::from_str(&contents) {
-                    Ok(config) => config,
-                    Err(_) => Self::new(),
-                }
-            }
-            Err(_) => Self::new(),
-        }
-    }
-
-    pub fn load_or_default() -> Self {
-        // Try to load the config from the specified path
-        match fs::read_to_string(&STATIC_ARGS.config_path) {
-            Ok(contents) => {
-                // Parse the config from the file contents using serde
-                match serde_json::from_str(&contents) {
-                    Ok(config) => config,
-                    Err(_) => Self::new(),
-                }
-            }
-            Err(_) => Self::new(),
-        }
-    }
-
-    pub fn save(&self) -> Result<(), std::io::Error> {
-        let config_json = serde_json::to_string_pretty(self)?;
-        fs::write(&STATIC_ARGS.config_path, config_json)?;
-        Ok(())
-    }
 }

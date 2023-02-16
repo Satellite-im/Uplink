@@ -12,7 +12,6 @@ use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{
-    config::Configuration,
     warp_runner::{MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -62,9 +61,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
                 match res {
                     Ok(_) => {
-                        if Configuration::load_or_default().audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
-                        }
+                        // todo: shadow this in a file other than state.json
+                        crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
                         page.set(AuthPages::Success)
                     }
                     Err(err) => {

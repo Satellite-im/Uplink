@@ -52,7 +52,6 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
-pub mod config;
 pub mod layouts;
 pub mod logger;
 pub mod overlay;
@@ -68,7 +67,6 @@ pub struct StaticArgs {
     pub themes_path: PathBuf,
     pub cache_path: PathBuf,
     pub mock_cache_path: PathBuf,
-    pub config_path: PathBuf,
     pub warp_path: PathBuf,
     pub logger_path: PathBuf,
     pub tesseract_path: PathBuf,
@@ -91,7 +89,6 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         themes_path: uplink_container.join("themes"),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
-        config_path: uplink_path.join("Config.json"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
@@ -393,7 +390,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     // todo: delete this. it is just an example
-    if state.configuration.config.general.enable_overlay {
+    if state.configuration.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
@@ -824,7 +821,6 @@ fn get_logger(cx: Scope) -> Element {
     cx.render(rsx!(state
         .read()
         .configuration
-        .config
         .developer
         .developer_mode
         .then(|| rsx!(DebugLogger {}))))
@@ -848,7 +844,7 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let config = state.read().configuration.config.clone();
+    let config = state.read().configuration.clone();
 
     cx.render(rsx!(
         div {

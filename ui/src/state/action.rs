@@ -159,6 +159,32 @@ pub enum Action {
     MockSend(Uuid, Vec<String>),
     #[display(fmt = "ClearUnreads")]
     ClearUnreads(Chat),
+    #[display(fmt = "Config {_0}")]
+    Config(ConfigAction),
+}
+
+#[derive(Display)]
+pub enum ConfigAction {
+    #[display(fmt = "NotificationsEnabled {_0}")]
+    NotificationsEnabled(bool),
+    #[display(fmt = "Theme {_0}")]
+    Theme(String),
+    #[display(fmt = "OverlayEnabled {_0}")]
+    OverlayEnabled(bool),
+    #[display(fmt = "DevModeEnabled {_0}")]
+    DevModeEnabled(bool),
+    #[display(fmt = "InterfaceSoundsEnabled {_0}")]
+    InterfaceSoundsEnabled(bool),
+    #[display(fmt = "MediaSoundsEnabled {_0}")]
+    MediaSoundsEnabled(bool),
+    #[display(fmt = "MessageSoundsEnabled {_0}")]
+    MessageSoundsEnabled(bool),
+    #[display(fmt = "FriendsNotificationsEnabled {_0}")]
+    FriendsNotificationsEnabled(bool),
+    #[display(fmt = "MessagesNotificationsEnabled {_0}")]
+    MessagesNotificationsEnabled(bool),
+    #[display(fmt = "SettingsNotificationsEnabled {_0}")]
+    SettingsNotificationsEnabled(bool),
 }
 
 impl Action {

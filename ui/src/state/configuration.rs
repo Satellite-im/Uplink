@@ -1,68 +1,119 @@
 use serde::{Deserialize, Serialize};
 
-use crate::config::Configuration as Config;
+use super::action::ConfigAction;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+/// A struct that represents the configuration of the application.
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct Configuration {
+    /// General configuration options.
     #[serde(default)]
-    pub config: Config,
-    // We should allow for custom config options here in the future to support extension developers.
+    pub general: General,
+
+    /// Privacy-related configuration options.
+    #[serde(default)]
+    pub privacy: Privacy,
+
+    /// Audio and video-related configuration options.
+    #[serde(default)]
+    pub audiovideo: AudioVideo,
+
+    /// Extension-related configuration options.
+    #[serde(default)]
+    pub extensions: Extensions,
+
+    /// Developer-related configuration options.
+    #[serde(default)]
+    pub developer: Developer,
+
+    /// Notification-related configuration options.
+    #[serde(default)]
+    pub notifications: Notifications,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
+pub struct General {
+    #[serde(default)]
+    pub theme: String,
+    #[serde(default)]
+    pub show_splash: bool,
+    #[serde(default)]
+    pub enable_overlay: bool,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct Privacy {
+    #[serde(default)]
+    pub satellite_sync_nodes: bool,
+    #[serde(default)]
+    pub safer_file_scanning: bool,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct AudioVideo {
+    #[serde(default)]
+    pub noise_suppression: bool,
+    #[serde(default)]
+    pub call_timer: bool,
+    #[serde(default)]
+    pub interface_sounds: bool,
+    #[serde(default = "bool_true")]
+    pub message_sounds: bool,
+    #[serde(default = "bool_true")]
+    pub media_sounds: bool,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct Extensions {
+    #[serde(default)]
+    pub enable: bool,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct Developer {
+    #[serde(default)]
+    pub developer_mode: bool,
+}
+
+fn bool_true() -> bool {
+    true
+}
+
+// We may want to give the user the ability to pick and choose which notifications they want to see.
+// This is a good place to start.
+#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+pub struct Notifications {
+    #[serde(default = "bool_true")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub show_app_icon: bool,
+    #[serde(default = "bool_true")]
+    pub friends_notifications: bool,
+    #[serde(default = "bool_true")]
+    pub messages_notifications: bool,
+    // By default we leave this one off.
+    #[serde(default)]
+    pub settings_notifications: bool,
 }
 
 impl Configuration {
-    pub fn new() -> Self {
-        Self {
-            config: Config::load_or_default(),
+    pub fn handle_action(&mut self, action: ConfigAction) {
+        match action {
+            ConfigAction::NotificationsEnabled(enabled) => self.notifications.enabled = enabled,
+            ConfigAction::Theme(theme_name) => self.general.theme = theme_name,
+            ConfigAction::OverlayEnabled(overlay) => self.general.enable_overlay = overlay,
+            ConfigAction::DevModeEnabled(flag) => self.developer.developer_mode = flag,
+            ConfigAction::InterfaceSoundsEnabled(flag) => self.audiovideo.interface_sounds = flag,
+            ConfigAction::MediaSoundsEnabled(flag) => self.audiovideo.media_sounds = flag,
+            ConfigAction::MessageSoundsEnabled(flag) => self.audiovideo.message_sounds = flag,
+            ConfigAction::FriendsNotificationsEnabled(flag) => {
+                self.notifications.friends_notifications = flag
+            }
+            ConfigAction::MessagesNotificationsEnabled(flag) => {
+                self.notifications.messages_notifications = flag
+            }
+            ConfigAction::SettingsNotificationsEnabled(flag) => {
+                self.notifications.settings_notifications = flag
+            }
         }
-    }
-
-    pub fn set_notifications_enabled(&mut self, enabled: bool) {
-        self.config.notifications.enabled = enabled;
-        let _ = self.config.save();
-    }
-
-    pub fn set_theme(&mut self, theme_name: String) {
-        self.config.general.theme = theme_name;
-        let _ = self.config.save();
-    }
-
-    pub fn set_overlay(&mut self, overlay: bool) {
-        self.config.general.enable_overlay = overlay;
-        let _ = self.config.save();
-    }
-
-    pub fn set_developer_mode(&mut self, developer_mode: bool) {
-        self.config.developer.developer_mode = developer_mode;
-        let _ = self.config.save();
-    }
-
-    pub fn set_interface_sounds(&mut self, status: bool) {
-        self.config.audiovideo.interface_sounds = status;
-        let _ = self.config.save();
-    }
-
-    pub fn set_media_sounds(&mut self, status: bool) {
-        self.config.audiovideo.media_sounds = status;
-        let _ = self.config.save();
-    }
-
-    pub fn set_message_sounds(&mut self, status: bool) {
-        self.config.audiovideo.message_sounds = status;
-        let _ = self.config.save();
-    }
-
-    pub fn set_friends_notifications(&mut self, friends_notifications: bool) {
-        self.config.notifications.friends_notifications = friends_notifications;
-        let _ = self.config.save();
-    }
-
-    pub fn set_messages_notifications(&mut self, messages_notifications: bool) {
-        self.config.notifications.messages_notifications = messages_notifications;
-        let _ = self.config.save();
-    }
-
-    pub fn set_settings_notifications(&mut self, settings_notifications: bool) {
-        self.config.notifications.settings_notifications = settings_notifications;
-        let _ = self.config.save();
     }
 }

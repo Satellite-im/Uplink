@@ -8,7 +8,7 @@ use warp::logging::tracing::log;
 
 use crate::{
     components::settings::SettingSection,
-    state::{Action, State},
+    state::{action::ConfigAction, Action, State},
     utils::get_available_themes,
 };
 
@@ -28,9 +28,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
-                    active: state.read().configuration.config.general.enable_overlay,
+                    active: state.read().configuration.general.enable_overlay,
                     onflipped: move |e| {
-                        state.write().configuration.set_overlay(e);
+                        state.write().mutate(Action::Config(ConfigAction::OverlayEnabled(e)));
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }

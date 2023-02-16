@@ -45,7 +45,7 @@ use warp::{
     raygun::{self, Message, Reaction},
 };
 
-use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
+use self::{action::ActionHook, chats::Direction, ui::Call};
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
@@ -92,7 +92,7 @@ impl Clone for State {
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),
-            configuration: Configuration::new(),
+            configuration: self.configuration.clone(),
         }
     }
 }
@@ -114,10 +114,20 @@ impl State {
 
         match action {
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => self.ui.notifications.increment(kind, count),
-            Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
-            Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
-            Action::ClearAllNotifications => self.ui.notifications.clear_all(),
+            Action::AddNotification(kind, count) => {
+                self.ui
+                    .notifications
+                    .increment(&self.configuration, kind, count)
+            }
+            Action::RemoveNotification(kind, count) => {
+                self.ui
+                    .notifications
+                    .decrement(&self.configuration, kind, count)
+            }
+            Action::ClearNotification(kind) => {
+                self.ui.notifications.clear_kind(&self.configuration, kind)
+            }
+            Action::ClearAllNotifications => self.ui.notifications.clear_all(&self.configuration),
             Action::AddToastNotification(notification) => {
                 self.ui
                     .toast_notifications
@@ -198,6 +208,9 @@ impl State {
             Action::SetId(identity) => self.set_identity(&identity),
             Action::SetActiveMedia(id) => self.set_active_media(id),
             Action::DisableMedia => self.disable_media(),
+
+            // ===== Configuration =====
+            Action::Config(action) => self.configuration.handle_action(action),
         }
 
         let _ = self.save();
@@ -722,7 +735,7 @@ impl State {
     }
 
     /// Saves the current state to disk.
-    fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string_pretty(self)?;
         let path = if STATIC_ARGS.use_mock {
             &STATIC_ARGS.mock_cache_path
@@ -782,11 +795,7 @@ impl State {
 
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self
-                    .configuration
-                    .config
-                    .notifications
-                    .friends_notifications;
+                let notifications_enabled = self.configuration.notifications.friends_notifications;
 
                 if !self.ui.metadata.focused && notifications_enabled {
                     crate::utils::notifications::push_notification(
@@ -865,19 +874,15 @@ impl State {
 
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self
-                    .configuration
-                    .config
-                    .notifications
-                    .messages_notifications;
+                let notifications_enabled = self.configuration.notifications.messages_notifications;
                 let should_play_sound = self.chats.active != Some(conversation_id)
-                    && self.configuration.config.audiovideo.message_sounds;
+                    && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
 
                 // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
-                    let sound = if self.configuration.config.audiovideo.message_sounds {
+                    let sound = if self.configuration.audiovideo.message_sounds {
                         Some(crate::utils::sounds::Sounds::Notification)
                     } else {
                         None
