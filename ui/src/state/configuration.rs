@@ -46,6 +46,11 @@ impl Configuration {
         let _ = self.config.save();
     }
 
+    pub fn set_message_sounds(&mut self, status: bool) {
+        self.config.audiovideo.message_sounds = status;
+        let _ = self.config.save();
+    }
+
     pub fn set_friends_notifications(&mut self, friends_notifications: bool) {
         self.config.notifications.friends_notifications = friends_notifications;
         let _ = self.config.save();

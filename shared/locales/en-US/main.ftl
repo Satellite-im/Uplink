@@ -57,6 +57,7 @@ friends = Friends
     .accept = Accept
     .deny = Deny Request
     .request-sent = Friend Request Sent!
+    .new_request = New friend request.
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
 
@@ -113,6 +114,8 @@ settings-audio = Audio Settings
     .interface-sounds-description = When enabled, some additional sounds will play when you interact with the app.
     .media-sounds = Media Sounds
     .media-sounds-description = When enabled, media related events such as toggling microphone or headphones and other real time events, will play sounds.
+    .message-sounds = Message Sounds
+    .message-sounds-description = When enabled you will hear a notification when a new message is received.
 
 settings-files = Files Settings
     .local-sync = Local Sync
