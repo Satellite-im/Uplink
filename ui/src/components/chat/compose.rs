@@ -209,16 +209,16 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
-        (!state.read().ui.is_minimal_view()).then(|| rsx!(Button {
+        Button {
             icon: Icon::VideoCamera,
             disabled: data.is_none(),
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Top,
+                arrow_position: ArrowPosition::TopRight,
                 text: get_local_text("uplink.video-call"),
             })),
-        },))
+        },
     ))
 }
 

@@ -78,6 +78,8 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
             id: "unlock-layout",
             aria_label: "unlock-layout",
             Input {
+                id: "username-input".to_owned(),
+                focus: true,
                 is_password: false,
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),

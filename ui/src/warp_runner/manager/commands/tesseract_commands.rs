@@ -3,11 +3,8 @@ use futures::channel::oneshot;
 
 #[derive(Display)]
 pub enum TesseractCmd {
-    #[display(fmt = "KeyExists {{ {key} }} ")]
-    KeyExists {
-        key: String,
-        rsp: oneshot::Sender<bool>,
-    },
+    #[display(fmt = "AccountExists")]
+    AccountExists { rsp: oneshot::Sender<bool> },
 }
 
 impl std::fmt::Debug for TesseractCmd {
