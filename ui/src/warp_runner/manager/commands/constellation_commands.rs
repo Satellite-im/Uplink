@@ -6,6 +6,7 @@ use std::{
 
 use derive_more::Display;
 use futures::{channel::oneshot, StreamExt};
+use humansize::{format_size, DECIMAL};
 use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
@@ -247,18 +248,18 @@ async fn upload_files(
                                     (((current as f64) / (total as f64)) * 100.) as usize;
                                 if previous_percentage != current_percentage {
                                     previous_percentage = current_percentage;
+                                    let readable_current = format_size(current, DECIMAL);
                                     log::info!(
-                                        "{}% completed -> written {current} bytes",
+                                        "{}% completed -> written {readable_current}",
                                         (((current as f64) / (total as f64)) * 100.) as usize
                                     )
                                 }
                             }
                         }
                         Progression::ProgressComplete { name, total } => {
-                            log::info!(
-                                "{name} has been uploaded with {} MB",
-                                total.unwrap_or_default() / 1024 / 1024
-                            );
+                            let total = total.unwrap_or_default();
+                            let readable_total = format_size(total, DECIMAL);
+                            log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
                             name,
