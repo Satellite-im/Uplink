@@ -399,8 +399,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let folder_name = dir.name();
                         let folder_name2 = dir.name();
                         let is_renaming = use_state(cx, || false);
+                        let key = dir.id();
                         rsx!(
                             ContextMenu {
+                                key: "{key}-menu",
                                 id: dir.id().to_string(),
                                 items: cx.render(rsx!(
                                     ContextItem {
@@ -411,6 +413,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         }
                                     })),
                             Folder {
+                                key: "{key}-folder",
                                 text: dir.name(),
                                 aria_label: dir.name(),
                                 with_rename: **is_renaming,
@@ -426,27 +429,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                    files_list.read().iter().map(|file| {
                         let is_renaming = use_state(cx, || false);
                         let file_name = file.name();
-                        rsx!(
-                            ContextMenu {
-                                id: file.id().to_string(),
-                                items: cx.render(rsx!(
-                                    ContextItem {
-                                        icon: Icon::Pencil,
-                                        text: "Rename".to_owned(),
-                                        onpress: move |_| {
-                                            is_renaming.set(true);
-                                        }
-                                    })),
-                                        File {
-                                            text: file.name(),
-                                            aria_label: file.name(),
-                                            with_rename: **is_renaming,
-                                            onrename: move |val| {
-                                                is_renaming.set(false);
-                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                        let key = file.id();
+                        rsx!(ContextMenu {
+                                    key: "{key}-menu",
+                                    id: file.id().to_string(),
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::Pencil,
+                                            text: "Rename".to_owned(),
+                                            onpress: move |_| {
+                                                is_renaming.set(true);
                                             }
-                                        }
-                      })
+                                        })),
+                                            File {
+                                                key: "{key}-file",
+                                                text: file.name(),
+                                                aria_label: file.name(),
+                                                with_rename: **is_renaming,
+                                                onrename: move |val| {
+                                                    is_renaming.set(false);
+                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                }
+                                            }
+                          }
+                          )
                     }),
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
