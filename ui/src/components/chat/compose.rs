@@ -1,5 +1,4 @@
 use std::{
-    ops::Deref,
     rc::Rc,
     time::{Duration, Instant},
 };
@@ -641,6 +640,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     text: get_local_text("uplink.send"),
                 })),
             },
+            // Load extensions
             for node in ext_renders {
                 rsx!(node)
             }

@@ -82,7 +82,7 @@ pub trait Extension {
 
     fn stylesheet(&self) -> String;
 
-    fn render<'a>(&'a self, cx: &'a ScopeState) -> Element<'a>;
+    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
 }
 
 #[macro_export]
@@ -129,7 +129,7 @@ impl Extension for ExtensionProxy {
         self.extension.stylesheet()
     }
 
-    fn render<'a>(&'a self, cx: &'a ScopeState) -> Element<'a> {
+    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         self.extension.render(cx)
     }
 }
