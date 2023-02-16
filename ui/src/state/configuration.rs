@@ -96,6 +96,30 @@ pub struct Notifications {
 }
 
 impl Configuration {
+    pub fn new() -> Self {
+        // Create a default configuration here
+        // For example:
+        Self {
+            developer: Developer {
+                ..Developer::default()
+            },
+            audiovideo: AudioVideo {
+                message_sounds: true,
+                media_sounds: true,
+                ..AudioVideo::default()
+            },
+            notifications: Notifications {
+                enabled: true,
+                friends_notifications: true,
+                messages_notifications: true,
+                ..Notifications::default()
+            },
+            ..Self::default()
+        }
+    }
+}
+
+impl Configuration {
     pub fn handle_action(&mut self, action: ConfigAction) {
         match action {
             ConfigAction::NotificationsEnabled(enabled) => self.notifications.enabled = enabled,

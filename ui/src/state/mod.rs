@@ -45,7 +45,7 @@ use warp::{
     raygun::{self, Message, Reaction},
 };
 
-use self::{action::ActionHook, chats::Direction, ui::Call};
+use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
@@ -755,7 +755,10 @@ impl State {
         let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
             Err(_) => {
-                return State::default();
+                return State {
+                    configuration: Configuration::new(),
+                    ..State::default()
+                };
             }
         };
         serde_json::from_str(&contents).unwrap_or_default()
