@@ -55,6 +55,7 @@ pub struct Options {
     pub disabled: bool,
     pub with_clear_btn: bool,
     pub with_label: Option<&'static str>,
+    pub react_to_esc_key: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -100,7 +101,7 @@ pub struct Props<'a> {
     #[props(optional)]
     onchange: Option<EventHandler<'a, (String, bool)>>,
     #[props(optional)]
-    onreturn: Option<EventHandler<'a, (String, bool)>>,
+    onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     #[props(optional)]
     reset: Option<UseState<bool>>,
 }
@@ -111,16 +112,16 @@ pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
     }
 }
 
-pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool) {
+pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
     if let Some(f) = &cx.props.onreturn {
-        f.call((s, is_valid));
+        f.call((s, is_valid, key_code));
     }
 }
 
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 pub fn submit(cx: &Scope<Props>, s: String) {
     if let Some(f) = &cx.props.onreturn {
-        f.call((s, true));
+        f.call((s, true, Code::Enter));
     }
 }
 
@@ -333,7 +334,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string(), *valid.current());
+                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                        } else if options.react_to_esc_key && evt.code() == Code::Escape {
+                            emit_return(&cx, "".to_owned(), true, evt.code());
                         }
                     }
                 }

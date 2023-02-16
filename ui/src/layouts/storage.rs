@@ -1,6 +1,6 @@
 use std::{path::PathBuf, time::Duration};
 
-use dioxus::prelude::*;
+use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -375,21 +375,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx!(
                         Folder {
                             with_rename: true,
-                            onrename: |val| {
+                            onrename: |(val, key_code)| {
                                 let new_name: String = val;
-                                if STATIC_ARGS.use_mock {
-                                    directories_list
-                                        .with_mut(|i| i.insert(0, Directory::new(&new_name)));
-                                        update_items_with_mock_data(
-                                            storage_state,
-                                            current_dir,
-                                            dirs_opened_ref,
-                                            directories_list,
-                                            files_list,
-                                        );
-                                } else {
-                                    ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                    ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                if key_code == Code::Enter {
+                                    if STATIC_ARGS.use_mock {
+                                        directories_list
+                                            .with_mut(|i| i.insert(0, Directory::new(&new_name)));
+                                            update_items_with_mock_data(
+                                                storage_state,
+                                                current_dir,
+                                                dirs_opened_ref,
+                                                directories_list,
+                                                files_list,
+                                            );
+                                    } else {
+                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                    }
                                 }
                                 add_new_folder.set(false);
                              }
@@ -417,9 +419,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 text: dir.name(),
                                 aria_label: dir.name(),
                                 with_rename: **is_renaming,
-                                onrename: move |val| {
+                                onrename: move |(val, key_code)| {
                                     is_renaming.set(false);
-                                    ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                    if key_code == Code::Enter {
+                                        ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                    }
                                 }
                                 onpress: move |_| {
                                     ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
@@ -446,11 +450,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 text: file.name(),
                                                 aria_label: file.name(),
                                                 with_rename: **is_renaming,
-                                                onrename: move |val| {
+                                                onrename: move |(val, key_code)| {
                                                     is_renaming.set(false);
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                    if key_code == Code::Enter {
+                                                        ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                    }
                                                 }
-                                            }
+                                    }
                           }
                           )
                     }),

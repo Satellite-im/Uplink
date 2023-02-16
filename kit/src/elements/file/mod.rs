@@ -1,10 +1,11 @@
 use std::{ffi::OsStr, path::PathBuf};
 
 use dioxus::prelude::*;
+use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
 use crate::{
-    elements::input::{Input, Size},
+    elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS},
     icons::{Icon, IconElement},
 };
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
@@ -19,7 +20,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
-    onrename: Option<EventHandler<'a, String>>,
+    onrename: Option<EventHandler<'a, (String, Code)>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
@@ -53,9 +54,9 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
 
-pub fn emit(cx: &Scope<Props>, s: String) {
+pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
     if let Some(f) = cx.props.onrename.as_ref() {
-        f.call(s)
+        f.call((s, key_code))
     }
 }
 
@@ -101,21 +102,43 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: Icon::Document,
                     },
                 },
-                with_rename.then(|| rsx! (
-                    Input {
-                        id: Uuid::new_v4().to_string(),
-                        disabled: disabled,
-                        placeholder: placeholder,
-                        focus: true,
-                        max_length: 64,
-                        size: Size::Small,
-                        // todo: use is_valid
-                        onreturn: move |(s, _is_valid)| {
-                            let new_name = format!("{}{}", s, file_extension);
-                            emit(&cx, new_name)
-                        }
+                with_rename.then(||
+                    {
+                    let chars_to_remove = vec!['\\', '/'];
+                    let mut special_chars = SPECIAL_CHARS.to_vec();
+                    special_chars = special_chars
+                        .iter()
+                        .filter(|&&c| !chars_to_remove.contains(&c))
+                        .cloned()
+                        .collect();
+                    rsx! (
+                        Input {
+                                id: Uuid::new_v4().to_string(),
+                                disabled: disabled,
+                                placeholder: placeholder,
+                                focus: true,
+                                max_length: 64,
+                                size: Size::Small,
+                                options: Options {
+                                    react_to_esc_key: true,
+                                    with_validation: Some(Validation {
+                                        alpha_numeric_only: true,
+                                        special_chars_allowed: Some(special_chars),
+                                        ..Validation::default()
+                                    }),
+                                    ..Options::default()
+                                }
+                                // todo: use is_valid
+                                onreturn: move |(s, _is_valid, key_code)| {
+                                    if _is_valid  {
+                                        let new_name = format!("{}{}", s, file_extension);
+                                        emit(&cx, new_name, key_code)
+                                    }
+                                }
+                            }
+                        )
                     }
-                )),
+                  ),
                 (!with_rename).then(|| rsx! (
                     label {
                         class: "file-name",

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
 use crate::{
@@ -21,7 +22,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
-    onrename: Option<EventHandler<'a, String>>,
+    onrename: Option<EventHandler<'a, (String, Code)>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
@@ -48,9 +49,9 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
 
-pub fn emit(cx: &Scope<Props>, s: String) {
+pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
     if let Some(f) = cx.props.onrename.as_ref() {
-        f.call(s)
+        f.call((s, key_code))
     }
 }
 
@@ -106,6 +107,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 max_length: 64,
                                 size: Size::Small,
                                 options: Options {
+                                    react_to_esc_key: true,
                                     with_validation: Some(Validation {
                                         alpha_numeric_only: true,
                                         special_chars_allowed: Some(special_chars),
@@ -114,9 +116,9 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     ..Options::default()
                                 }
                                 // todo: use is_valid
-                                onreturn: move |(s, _is_valid)| {
+                                onreturn: move |(s, _is_valid, key_code)| {
                                     if _is_valid {
-                                        emit(&cx, s);
+                                        emit(&cx, s, key_code);
                                     }
                                 }
                             }
