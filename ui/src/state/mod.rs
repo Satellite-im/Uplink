@@ -211,7 +211,7 @@ impl State {
             Action::DisableMedia => self.disable_media(),
 
             // ===== Configuration =====
-            Action::Config(action) => self.configuration.handle_action(action),
+            Action::Config(action) => self.configuration.mutate(action),
         }
 
         let _ = self.save();

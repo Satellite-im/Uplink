@@ -165,26 +165,26 @@ pub enum Action {
 
 #[derive(Display)]
 pub enum ConfigAction {
-    #[display(fmt = "NotificationsEnabled {_0}")]
-    NotificationsEnabled(bool),
-    #[display(fmt = "Theme {_0}")]
-    Theme(String),
-    #[display(fmt = "OverlayEnabled {_0}")]
-    OverlayEnabled(bool),
-    #[display(fmt = "DevModeEnabled {_0}")]
-    DevModeEnabled(bool),
-    #[display(fmt = "InterfaceSoundsEnabled {_0}")]
-    InterfaceSoundsEnabled(bool),
-    #[display(fmt = "MediaSoundsEnabled {_0}")]
-    MediaSoundsEnabled(bool),
-    #[display(fmt = "MessageSoundsEnabled {_0}")]
-    MessageSoundsEnabled(bool),
-    #[display(fmt = "FriendsNotificationsEnabled {_0}")]
-    FriendsNotificationsEnabled(bool),
-    #[display(fmt = "MessagesNotificationsEnabled {_0}")]
-    MessagesNotificationsEnabled(bool),
-    #[display(fmt = "SettingsNotificationsEnabled {_0}")]
-    SettingsNotificationsEnabled(bool),
+    #[display(fmt = "SetNotificationsEnabled {_0}")]
+    SetNotificationsEnabled(bool),
+    #[display(fmt = "SetTheme {_0}")]
+    SetTheme(String),
+    #[display(fmt = "SetOverlayEnabled {_0}")]
+    SetOverlayEnabled(bool),
+    #[display(fmt = "SetDevModeEnabled {_0}")]
+    SetDevModeEnabled(bool),
+    #[display(fmt = "SetInterfaceSoundsEnabled {_0}")]
+    SetInterfaceSoundsEnabled(bool),
+    #[display(fmt = "SetMediaSoundsEnabled {_0}")]
+    SetMediaSoundsEnabled(bool),
+    #[display(fmt = "SetMessageSoundsEnabled {_0}")]
+    SetMessageSoundsEnabled(bool),
+    #[display(fmt = "SetFriendsNotificationsEnabled {_0}")]
+    SetFriendsNotificationsEnabled(bool),
+    #[display(fmt = "SetMessagesNotificationsEnabled {_0}")]
+    SetMessagesNotificationsEnabled(bool),
+    #[display(fmt = "SetSettingsNotificationsEnabled {_0}")]
+    SetSettingsNotificationsEnabled(bool),
 }
 
 impl Action {

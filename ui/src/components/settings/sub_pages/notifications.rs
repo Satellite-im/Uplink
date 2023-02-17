@@ -38,7 +38,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
-                        state.write().mutate(Action::Config(ConfigAction::NotificationsEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetNotificationsEnabled(e)));
                     }
                 }
             },
@@ -54,7 +54,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                             if state.read().configuration.audiovideo.interface_sounds {
                                 crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                             }
-                            state.write().mutate(Action::Config(ConfigAction::FriendsNotificationsEnabled(e)));
+                            state.write().mutate(Action::Config(ConfigAction::SetFriendsNotificationsEnabled(e)));
                         }
                     }
                 },
@@ -68,7 +68,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                             if state.read().configuration.audiovideo.interface_sounds {
                                 crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                             }
-                            state.write().mutate(Action::Config(ConfigAction::MessagesNotificationsEnabled(e)));
+                            state.write().mutate(Action::Config(ConfigAction::SetMessagesNotificationsEnabled(e)));
                         }
                     }
                 },
@@ -82,7 +82,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                             if state.read().configuration.audiovideo.interface_sounds {
                                 crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                             }
-                            state.write().mutate(Action::Config(ConfigAction::SettingsNotificationsEnabled(e)));
+                            state.write().mutate(Action::Config(ConfigAction::SetSettingsNotificationsEnabled(e)));
                         }
                     }
                 },

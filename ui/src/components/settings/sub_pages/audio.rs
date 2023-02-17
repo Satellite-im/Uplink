@@ -26,7 +26,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
-                        state.write().mutate(Action::Config(ConfigAction::InterfaceSoundsEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetInterfaceSoundsEnabled(e)));
                     }
                 }
             },
@@ -39,7 +39,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
-                        state.write().mutate(Action::Config(ConfigAction::MediaSoundsEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetMediaSoundsEnabled(e)));
                     }
                 }
             },
@@ -52,7 +52,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
-                        state.write().mutate(Action::Config(ConfigAction::MessageSoundsEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetMessageSoundsEnabled(e)));
                     }
                 }
             },

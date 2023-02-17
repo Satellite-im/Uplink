@@ -30,7 +30,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 Switch {
                     active: state.read().configuration.general.enable_overlay,
                     onflipped: move |e| {
-                        state.write().mutate(Action::Config(ConfigAction::OverlayEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetOverlayEnabled(e)));
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }

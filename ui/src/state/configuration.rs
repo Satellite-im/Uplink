@@ -143,23 +143,25 @@ impl Configuration {
 }
 
 impl Configuration {
-    pub fn handle_action(&mut self, action: ConfigAction) {
+    pub fn mutate(&mut self, action: ConfigAction) {
         let old_audiovideo = self.audiovideo;
         match action {
-            ConfigAction::NotificationsEnabled(enabled) => self.notifications.enabled = enabled,
-            ConfigAction::Theme(theme_name) => self.general.theme = theme_name,
-            ConfigAction::OverlayEnabled(overlay) => self.general.enable_overlay = overlay,
-            ConfigAction::DevModeEnabled(flag) => self.developer.developer_mode = flag,
-            ConfigAction::InterfaceSoundsEnabled(flag) => self.audiovideo.interface_sounds = flag,
-            ConfigAction::MediaSoundsEnabled(flag) => self.audiovideo.media_sounds = flag,
-            ConfigAction::MessageSoundsEnabled(flag) => self.audiovideo.message_sounds = flag,
-            ConfigAction::FriendsNotificationsEnabled(flag) => {
+            ConfigAction::SetNotificationsEnabled(enabled) => self.notifications.enabled = enabled,
+            ConfigAction::SetTheme(theme_name) => self.general.theme = theme_name,
+            ConfigAction::SetOverlayEnabled(overlay) => self.general.enable_overlay = overlay,
+            ConfigAction::SetDevModeEnabled(flag) => self.developer.developer_mode = flag,
+            ConfigAction::SetInterfaceSoundsEnabled(flag) => {
+                self.audiovideo.interface_sounds = flag
+            }
+            ConfigAction::SetMediaSoundsEnabled(flag) => self.audiovideo.media_sounds = flag,
+            ConfigAction::SetMessageSoundsEnabled(flag) => self.audiovideo.message_sounds = flag,
+            ConfigAction::SetFriendsNotificationsEnabled(flag) => {
                 self.notifications.friends_notifications = flag
             }
-            ConfigAction::MessagesNotificationsEnabled(flag) => {
+            ConfigAction::SetMessagesNotificationsEnabled(flag) => {
                 self.notifications.messages_notifications = flag
             }
-            ConfigAction::SettingsNotificationsEnabled(flag) => {
+            ConfigAction::SetSettingsNotificationsEnabled(flag) => {
                 self.notifications.settings_notifications = flag
             }
         }

@@ -35,7 +35,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
 
-                        state.write().mutate(Action::Config(ConfigAction::DevModeEnabled(value)));
+                        state.write().mutate(Action::Config(ConfigAction::SetDevModeEnabled(value)));
                     },
                 }
             },
