@@ -6,7 +6,7 @@ use notify_rust::Notification;
 pub fn push_notification(
     title: String,
     content: String,
-    notification_sound: Sounds,
+    notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
 ) {
     let summary = format!("Uplink - {title}");
@@ -15,8 +15,10 @@ pub fn push_notification(
         .body(&content)
         .timeout(timeout)
         .show();
-    // Play notification sound
-    Play(notification_sound);
+
+    if let Some(sound) = notification_sound {
+        Play(sound);
+    }
 }
 
 pub fn set_badge(count: u32) -> Result<(), String> {

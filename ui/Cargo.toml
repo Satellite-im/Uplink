@@ -6,11 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["transparent"] }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
+    "transparent",
+] }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 fermi = { git = "https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
 shared = { path = "../shared" }
@@ -18,10 +20,10 @@ tokio-util = { version = "0.7", features = ["full"] }
 arboard = "3.1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
 lipsum = "0.8.2"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
 rfd = "0.10.0"
 mime = "0.3.16"
 names = "0.14.0"
@@ -42,7 +44,7 @@ open = "3.2.0"
 wry = { version = "0.23.4" }
 derive_more = "0.99"
 colored = "2.0.0"
-
+tempfile = "3.0.7"
 fdlimit = "0.2"
 
 notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }
