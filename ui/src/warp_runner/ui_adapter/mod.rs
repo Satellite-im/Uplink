@@ -43,9 +43,13 @@ pub async fn did_to_identity(
             default.set_did_key(did.clone());
             let did_str = &did.to_string();
             // warning: assumes DIDs are very long. this can cause a panic if that ever changes
-            let start = &did_str[8..=10];
+            let start = did_str
+                .get(8..=10)
+                .ok_or(Error::OtherWithContext("DID too short".into()))?;
             let len = did_str.len();
-            let end = &did_str[len - 3..];
+            let end = did_str
+                .get(len - 3..)
+                .ok_or(Error::OtherWithContext("DID too short".into()))?;
             default.set_username(&format!("{start}...{end}"));
             default
         }
