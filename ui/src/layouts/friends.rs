@@ -17,7 +17,7 @@ use crate::{
             incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
         },
     },
-    state::{Action, State},
+    state::{ui, Action, State},
 };
 
 #[derive(PartialEq, Props)]
@@ -36,6 +36,8 @@ pub enum FriendRoute {
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
+
+    state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
         return MinimalFriendsLayout(cx);

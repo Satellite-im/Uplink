@@ -179,7 +179,12 @@ impl State {
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
             Action::CancelReply(chat) => self.cancel_reply(&chat),
-            Action::ClearUnreads(chat) => self.clear_unreads(&chat),
+            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearActiveUnreads => {
+                if let Some(id) = self.chats.active {
+                    self.clear_unreads(id);
+                }
+            }
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
@@ -312,10 +317,10 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to clear unreads on.
+    /// * `chat_id` - The chat to clear unreads on.
     ///
-    fn clear_unreads(&mut self, chat: &Chat) {
-        if let Some(chat) = self.chats.all.get_mut(&chat.id) {
+    fn clear_unreads(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
             chat.unreads = 0;
         }
     }
@@ -324,7 +329,7 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to remove.
+    /// * `chat_id` - The chat to remove.
     fn remove_sidebar_chat(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| *id != chat_id);
 
@@ -445,7 +450,9 @@ impl State {
             chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
 
-            if self.chats.active != Some(conversation_id) {
+            if self.ui.current_layout != ui::Layout::Compose
+                || self.chats.active != Some(conversation_id)
+            {
                 chat.unreads += 1;
             }
         }
