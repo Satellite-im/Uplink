@@ -192,7 +192,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     };
 
                     let val = unwrapped_message.value();
-                    let timestamp = unwrapped_message.date().timestamp_millis() as u64;
+                    let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
                         chat.unreads.to_string()
@@ -242,7 +242,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             User {
                                 username: participants_name,
                                 subtext: val.join("\n"),
-                                timestamp: timestamp,
+                                timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
                                     if participants.len() <= 2 {rsx! (
