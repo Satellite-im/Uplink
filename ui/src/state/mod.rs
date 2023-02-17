@@ -173,8 +173,8 @@ impl State {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
-                self.clear_unreads(&chat);
-                self.chats.all.entry(chat.id).or_insert(chat);
+                let chat = self.chats.all.entry(chat.id).or_insert(chat);
+                chat.unreads = 0;
             }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
@@ -444,6 +444,10 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
+
+            if self.chats.active != Some(conversation_id) {
+                chat.unreads += 1;
+            }
         }
     }
 
