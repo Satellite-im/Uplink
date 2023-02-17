@@ -1,14 +1,18 @@
 use std::{
     ffi::OsStr,
-    io::Cursor,
+    io::{Cursor, Read},
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 use derive_more::Display;
+
 use futures::{channel::oneshot, StreamExt};
 use image::io::Reader as ImageReader;
+use kit::elements::file::VIDEO_FILE_EXTENSIONS;
 use mime::*;
 use once_cell::sync::Lazy;
+use tempfile::TempDir;
 use tokio_util::io::ReaderStream;
 
 use crate::state::storage::Storage as uplink_storage;
@@ -300,8 +304,12 @@ async fn upload_files(
                     }
                 }
                 match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
-                    Ok(success) => log::info!("{:?}", success),
-                    Err(error) => log::error!("Error on update thumbnail: {:?}", error),
+                    Ok(_) => log::info!("Image Thumbnail uploaded"),
+                    Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
+                }
+                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path) {
+                    Ok(_) => log::info!("Video Thumbnail uploaded"),
+                    Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
                 }
                 log::info!("{:?} file uploaded!", filename);
             }
@@ -345,10 +353,78 @@ fn rename_if_duplicate(
     new_file_name
 }
 
+fn set_thumbnail_if_file_is_video(
+    warp_storage: &warp_storage,
+    filename_to_save: String,
+    file_path: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+
+    let file_extension = std::path::Path::new(&filename_to_save)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| format!(".{s}"))
+        .unwrap_or_default();
+
+    if !video_formats.iter().any(|f| f == &file_extension) {
+        log::warn!("It is not a video file!");
+        return Err(Box::from(Error::InvalidDataType));
+    };
+
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
+
+    let file_stem = file_path
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    let temp_dir = TempDir::new()?;
+
+    let temp_path = temp_dir.path().join(file_stem);
+
+    let output = Command::new("ffmpeg")
+        .args([
+            "-i",
+            &file_path.to_string_lossy().to_string(),
+            "-vf",
+            "select=eq(pict_type\\,I)",
+            "-q:v",
+            "2",
+            "-f",
+            "image2",
+            "-update",
+            "1",
+            &temp_path.to_string_lossy().to_string(),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    if let Some(mut child) = output.stdout {
+        let mut contents = vec![];
+
+        child.read_to_end(&mut contents)?;
+
+        let image = std::fs::read(temp_path)?;
+
+        let prefix = format!("data:{};base64,", IMAGE_JPEG.to_string());
+        let base64_image = base64::encode(&image);
+        let img = prefix + base64_image.as_str();
+        item.set_thumbnail(&img);
+        Ok(())
+    } else {
+        log::warn!("Failed to save thumbnail from a video file");
+        Err(Box::from(Error::InvalidConversion))
+    }
+}
+
 async fn set_thumbnail_if_file_is_image(
     warp_storage: &warp_storage,
     filename_to_save: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
@@ -364,6 +440,7 @@ async fn set_thumbnail_if_file_is_image(
         .extension()
         .and_then(OsStr::to_str)
         .map(|ext| ext.to_lowercase());
+
     let mime = match extension {
         Some(m) => match m.as_str() {
             "png" => IMAGE_PNG.to_string(),
@@ -386,7 +463,7 @@ async fn set_thumbnail_if_file_is_image(
         let base64_image = base64::encode(&file);
         let img = prefix + base64_image.as_str();
         item.set_thumbnail(&img);
-        Ok(format_args!("{} thumbnail updated with success!", item.name()).to_string())
+        Ok(())
     } else {
         log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))

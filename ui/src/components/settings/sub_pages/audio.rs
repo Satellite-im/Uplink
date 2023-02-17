@@ -41,6 +41,19 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                section_label: get_local_text("settings-audio.message-sounds"),
+                section_description: get_local_text("settings-audio.message-sounds-description"),
+                Switch {
+                    active: state.read().configuration.config.audiovideo.message_sounds,
+                    onflipped: move |e| {
+                        if state.read().configuration.config.audiovideo.interface_sounds {
+                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        }
+                        state.write().configuration.set_message_sounds(e);
+                    }
+                }
+            },
+            SettingSection {
                 section_label: get_local_text("settings-audio.call-timer"),
                 section_description: get_local_text("settings-audio.call-timer-description"),
                 Switch {}

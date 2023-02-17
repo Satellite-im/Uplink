@@ -30,6 +30,7 @@ pub async fn convert_multipass_event(
         }
         MultiPassEventKind::FriendRequestReceived { from } => {
             let identity = did_to_identity(&from, account).await?;
+
             //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
