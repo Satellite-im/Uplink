@@ -41,7 +41,12 @@ pub async fn did_to_identity(
         None => {
             let mut default: Identity = Default::default();
             default.set_did_key(did.clone());
-            default.set_username(&did.to_string()[0..7]);
+            let did_str = &did.to_string();
+            // warning: assumes DIDs are very long. this can cause a panic if that ever changes
+            let start = &did_str[8..=10];
+            let len = did_str.len();
+            let end = &did_str[len - 3..];
+            default.set_username(&format!("{start}...{end}"));
             default
         }
     };
