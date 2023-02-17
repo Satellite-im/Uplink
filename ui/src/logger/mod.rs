@@ -67,6 +67,11 @@ impl LogGlue {
     }
 }
 
+/// used only for debugging
+pub fn print() {
+    println!("{:#?}", LOGGER.read());
+}
+
 impl crate::log::Log for LogGlue {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
         metadata.level() <= self.max_level
@@ -102,13 +107,6 @@ impl Logger {
             .create(true)
             .append(true)
             .open(&logger_path);
-
-        let warp_path = STATIC_ARGS
-            .warp_path
-            .join("warp.log")
-            .to_string_lossy()
-            .to_string();
-        let _ = OpenOptions::new().create(true).append(true).open(warp_path);
 
         Self {
             save_to_file: false,
@@ -204,9 +202,6 @@ impl Logger {
 pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_max_level(level);
     log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
-    if level == LevelFilter::Trace {
-        set_display_warp(true);
-    }
     Ok(())
 }
 

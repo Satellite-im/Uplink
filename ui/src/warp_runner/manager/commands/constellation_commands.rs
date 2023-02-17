@@ -362,7 +362,7 @@ fn set_thumbnail_if_file_is_video(
     let output = Command::new("ffmpeg")
         .args([
             "-i",
-            &file_path.to_string_lossy().to_string(),
+            &file_path.to_string_lossy(),
             "-vf",
             "select=eq(pict_type\\,I)",
             "-q:v",
@@ -371,7 +371,7 @@ fn set_thumbnail_if_file_is_video(
             "image2",
             "-update",
             "1",
-            &temp_path.to_string_lossy().to_string(),
+            &temp_path.to_string_lossy(),
         ])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -384,8 +384,8 @@ fn set_thumbnail_if_file_is_video(
 
         let image = std::fs::read(temp_path)?;
 
-        let prefix = format!("data:{};base64,", IMAGE_JPEG.to_string());
-        let base64_image = base64::encode(&image);
+        let prefix = format!("data:{};base64,", IMAGE_JPEG);
+        let base64_image = base64::encode(image);
         let img = prefix + base64_image.as_str();
         item.set_thumbnail(&img);
         Ok(())
