@@ -49,6 +49,7 @@ derive_more = "0.99"
 colored = "2.0.0"
 notify = "5.1.0"
 
+tempfile = "3.0.7"
 fdlimit = "0.2"
 
 notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }

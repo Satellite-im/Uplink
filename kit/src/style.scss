@@ -18,10 +18,16 @@
 *::after {
     box-sizing: border-box;
 }
-
+p, label {
+    cursor: default;
+}
 /* Reapply the pointer cursor for anchor tags */
-a, button {
+a {
     cursor: revert;
+}
+
+button {
+	cursor: pointer;
 }
 
 /* Remove list styles (bullets/numbers) */

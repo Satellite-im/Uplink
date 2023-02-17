@@ -34,7 +34,6 @@ impl extensions::ExtensionRegistrar for ExtensionRegistrar {
 #[derive(Default)]
 pub struct AvailableExtensions {
     pub extensions: HashMap<String, ExtensionProxy>,
-    pub libraries: Vec<Rc<Library>>,
 }
 
 impl AvailableExtensions {
@@ -71,8 +70,6 @@ impl AvailableExtensions {
 
         // add all loaded extensions to the extensions map
         self.extensions.extend(registrar.extensions);
-        // and make sure AvailableExtensions keeps a reference to the library
-        self.libraries.push(library);
 
         Ok(())
     }
