@@ -447,6 +447,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         })),
                                             File {
                                                 key: "{key}-file",
+                                                thumbnail: file.thumbnail(),
                                                 text: file.name(),
                                                 aria_label: file.name(),
                                                 with_rename: **is_renaming,
