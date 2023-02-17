@@ -80,7 +80,7 @@ pub struct StaticArgs {
     /// contains the keypair used for IPFS
     pub tesseract_path: PathBuf,
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
-    /// state::configuration::Notifications is serialized and saved here
+    /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
     /// seconds
     pub typing_indicator_refresh: u64,
