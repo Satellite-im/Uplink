@@ -12,7 +12,7 @@ use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{
-    config::Configuration,
+    state::configuration::AudioVideo,
     warp_runner::{MultiPassCmd, WarpCmd},
     AuthPages, WARP_CMD_CH,
 };
@@ -44,6 +44,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
         to_owned![page];
         async move {
+            let config = AudioVideo::load_async().await;
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 //println!("auth got input");
@@ -63,9 +64,10 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 //println!("got response from warp");
                 match res {
                     Ok(_) => {
-                        if Configuration::load_or_default().audiovideo.interface_sounds {
+                        if config.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
                         }
+
                         page.set(AuthPages::Success);
                     }
                     // todo: notify user

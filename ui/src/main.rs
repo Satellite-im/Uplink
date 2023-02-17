@@ -52,7 +52,6 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 pub mod components;
-pub mod config;
 pub mod layouts;
 pub mod logger;
 pub mod overlay;
@@ -64,18 +63,30 @@ mod window_manager;
 
 #[derive(Debug)]
 pub struct StaticArgs {
+    /// Uplink stores its data with the following layout, starting at whatever the root folder is:
+    /// ./uplink ./uplink/warp ./themes
+    /// uplink_path is used for deleting all uplink data when a new account is created
     pub uplink_path: PathBuf,
+    /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
     pub themes_path: PathBuf,
+    /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
+    /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
     pub mock_cache_path: PathBuf,
-    pub config_path: PathBuf,
+    /// houses warp specific data
     pub warp_path: PathBuf,
+    /// a debug log which is only written to when the settings are enabled. otherwise logs are only sent to stdout
     pub logger_path: PathBuf,
+    /// contains the keypair used for IPFS
     pub tesseract_path: PathBuf,
-    // seconds
+    /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
+    /// part of state is serialized and saved here
+    pub login_config_path: PathBuf,
+    /// seconds
     pub typing_indicator_refresh: u64,
-    // seconds
+    /// seconds
     pub typing_indicator_timeout: u64,
+    /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -91,12 +102,12 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         themes_path: uplink_container.join("themes"),
         cache_path: uplink_path.join("state.json"),
         mock_cache_path: uplink_path.join("mock-state.json"),
-        config_path: uplink_path.join("Config.json"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
+        login_config_path: uplink_path.join("login_config.json"),
         use_mock: args.with_mock,
     }
 });
@@ -151,6 +162,8 @@ pub enum AuthPages {
     Success,
 }
 
+// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
+// enable tracing from modules besides Uplink
 #[derive(clap::Subcommand, Debug)]
 enum LogProfile {
     /// normal operation
@@ -393,7 +406,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     // todo: delete this. it is just an example
-    if state.configuration.config.general.enable_overlay {
+    if state.configuration.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
@@ -824,7 +837,6 @@ fn get_logger(cx: Scope) -> Element {
     cx.render(rsx!(state
         .read()
         .configuration
-        .config
         .developer
         .developer_mode
         .then(|| rsx!(DebugLogger {}))))
@@ -848,7 +860,7 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let config = state.read().configuration.config.clone();
+    let config = state.read().configuration.clone();
 
     cx.render(rsx!(
         div {

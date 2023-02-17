@@ -161,6 +161,32 @@ pub enum Action {
     ClearUnreads(Chat),
     #[display(fmt = "ClearActiveUnreads")]
     ClearActiveUnreads,
+    #[display(fmt = "Config {_0}")]
+    Config(ConfigAction),
+}
+
+#[derive(Display)]
+pub enum ConfigAction {
+    #[display(fmt = "SetNotificationsEnabled {_0}")]
+    SetNotificationsEnabled(bool),
+    #[display(fmt = "SetTheme {_0}")]
+    SetTheme(String),
+    #[display(fmt = "SetOverlayEnabled {_0}")]
+    SetOverlayEnabled(bool),
+    #[display(fmt = "SetDevModeEnabled {_0}")]
+    SetDevModeEnabled(bool),
+    #[display(fmt = "SetInterfaceSoundsEnabled {_0}")]
+    SetInterfaceSoundsEnabled(bool),
+    #[display(fmt = "SetMediaSoundsEnabled {_0}")]
+    SetMediaSoundsEnabled(bool),
+    #[display(fmt = "SetMessageSoundsEnabled {_0}")]
+    SetMessageSoundsEnabled(bool),
+    #[display(fmt = "SetFriendsNotificationsEnabled {_0}")]
+    SetFriendsNotificationsEnabled(bool),
+    #[display(fmt = "SetMessagesNotificationsEnabled {_0}")]
+    SetMessagesNotificationsEnabled(bool),
+    #[display(fmt = "SetSettingsNotificationsEnabled {_0}")]
+    SetSettingsNotificationsEnabled(bool),
 }
 
 impl Action {

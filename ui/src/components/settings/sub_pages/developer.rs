@@ -10,7 +10,7 @@ use warp::logging::tracing::log;
 use crate::{
     components::settings::SettingSection,
     logger,
-    state::{notifications::NotificationKind, Action, State},
+    state::{action::ConfigAction, notifications::NotificationKind, Action, State},
     utils::{notifications::push_notification, sounds::Sounds},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     STATIC_ARGS,
@@ -29,13 +29,13 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {
-                    active: state.read().configuration.config.developer.developer_mode,
+                    active: state.read().configuration.developer.developer_mode,
                     onflipped: move |value| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
+                        if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
 
-                        state.write().configuration.set_developer_mode(value);
+                        state.write().mutate(Action::Config(ConfigAction::SetDevModeEnabled(value)));
                     },
                 }
             },
@@ -118,7 +118,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 Switch {
                     active: logger::get_save_to_file(),
                     onflipped: move |value| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
+                        if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
                         }
                         logger::set_save_to_file(value);
