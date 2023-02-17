@@ -63,17 +63,30 @@ mod window_manager;
 
 #[derive(Debug)]
 pub struct StaticArgs {
+    /// Uplink stores its data with the following layout, starting at whatever the root folder is:
+    /// ./uplink ./uplink/warp ./themes
+    /// uplink_path is used for deleting all uplink data when a new account is created
     pub uplink_path: PathBuf,
+    /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
     pub themes_path: PathBuf,
+    /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
+    /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
     pub mock_cache_path: PathBuf,
+    /// houses warp specific data
     pub warp_path: PathBuf,
+    /// a debug log which is only written to when the settings are enabled. otherwise logs are only sent to stdout
     pub logger_path: PathBuf,
+    /// contains the keypair used for IPFS
     pub tesseract_path: PathBuf,
-    // seconds
+    /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
+    /// state::configuration::Notifications is serialized and saved here
+    pub login_config_path: PathBuf,
+    /// seconds
     pub typing_indicator_refresh: u64,
-    // seconds
+    /// seconds
     pub typing_indicator_timeout: u64,
+    /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
@@ -94,6 +107,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         typing_indicator_refresh: 5,
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
+        login_config_path: uplink_path.join("login_config.json"),
         use_mock: args.with_mock,
     }
 });
@@ -148,6 +162,8 @@ pub enum AuthPages {
     Success,
 }
 
+// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
+// enable tracing from modules besides Uplink
 #[derive(clap::Subcommand, Debug)]
 enum LogProfile {
     /// normal operation

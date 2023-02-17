@@ -1,4 +1,7 @@
 use serde::{Deserialize, Serialize};
+use warp::logging::tracing::log;
+
+use crate::STATIC_ARGS;
 
 use super::action::ConfigAction;
 
@@ -48,7 +51,7 @@ pub struct Privacy {
     pub safer_file_scanning: bool,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+#[derive(Debug, Deserialize, Serialize, Copy, Clone, Eq, PartialEq)]
 pub struct AudioVideo {
     #[serde(default)]
     pub noise_suppression: bool,
@@ -60,6 +63,30 @@ pub struct AudioVideo {
     pub message_sounds: bool,
     #[serde(default = "bool_true")]
     pub media_sounds: bool,
+}
+
+impl Default for AudioVideo {
+    fn default() -> Self {
+        Self {
+            noise_suppression: false,
+            call_timer: false,
+            interface_sounds: false,
+            message_sounds: true,
+            media_sounds: true,
+        }
+    }
+}
+
+impl AudioVideo {
+    pub async fn load_async() -> Self {
+        if let Ok(b) = tokio::fs::read(&STATIC_ARGS.login_config_path).await {
+            if let Ok(n) = serde_json::from_slice(&b) {
+                return n;
+            }
+        }
+
+        Self::default()
+    }
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
@@ -80,7 +107,7 @@ fn bool_true() -> bool {
 
 // We may want to give the user the ability to pick and choose which notifications they want to see.
 // This is a good place to start.
-#[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
+#[derive(Debug, Deserialize, Serialize, Copy, Clone, Eq, PartialEq)]
 pub struct Notifications {
     #[serde(default = "bool_true")]
     pub enabled: bool,
@@ -95,32 +122,29 @@ pub struct Notifications {
     pub settings_notifications: bool,
 }
 
-impl Configuration {
-    pub fn new() -> Self {
-        // Create a default configuration here
-        // For example:
+impl Default for Notifications {
+    fn default() -> Self {
         Self {
-            developer: Developer {
-                ..Developer::default()
-            },
-            audiovideo: AudioVideo {
-                message_sounds: true,
-                media_sounds: true,
-                ..AudioVideo::default()
-            },
-            notifications: Notifications {
-                enabled: true,
-                friends_notifications: true,
-                messages_notifications: true,
-                ..Notifications::default()
-            },
-            ..Self::default()
+            enabled: true,
+            show_app_icon: false,
+            friends_notifications: true,
+            messages_notifications: true,
+            settings_notifications: false,
         }
     }
 }
 
 impl Configuration {
+    pub fn new() -> Self {
+        // Create a default configuration here
+        // For example:
+        Self::default()
+    }
+}
+
+impl Configuration {
     pub fn handle_action(&mut self, action: ConfigAction) {
+        let old_audiovideo = self.audiovideo;
         match action {
             ConfigAction::NotificationsEnabled(enabled) => self.notifications.enabled = enabled,
             ConfigAction::Theme(theme_name) => self.general.theme = theme_name,
@@ -139,5 +163,43 @@ impl Configuration {
                 self.notifications.settings_notifications = flag
             }
         }
+
+        if self.audiovideo != old_audiovideo {
+            let contents = match serde_json::to_string(&self.audiovideo) {
+                Ok(c) => c,
+                Err(e) => {
+                    log::error!("failed to serialize audiovideo: {e}");
+                    return;
+                }
+            };
+            if let Err(e) = std::fs::write(&STATIC_ARGS.login_config_path, contents) {
+                log::error!("failed to save login_config: {e}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn deserialize_notifications_config() {
+        let empty_str = String::from("{}");
+        let serde_notifications: Notifications =
+            serde_json::from_str(&empty_str).expect("failed to deserialize empty string");
+        let default_notifications = Notifications::default();
+
+        assert_eq!(default_notifications, serde_notifications);
+    }
+
+    #[test]
+    fn deserialize_audiovideo_config() {
+        let empty_str = String::from("{}");
+        let serde_audiovideo: AudioVideo =
+            serde_json::from_str(&empty_str).expect("failed to deserialize empty string");
+        let default_audiovideo = AudioVideo::default();
+
+        assert_eq!(default_audiovideo, serde_audiovideo);
     }
 }

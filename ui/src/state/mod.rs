@@ -81,6 +81,7 @@ impl fmt::Debug for State {
     }
 }
 
+// todo: why is there clone impl which returns a mutated value?
 impl Clone for State {
     fn clone(&self) -> Self {
         State {
