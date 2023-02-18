@@ -37,9 +37,11 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_text(file_name: String, file_extension: String) -> (String, String) {
+pub fn get_text(file_name: String) -> (String, String) {
     let mut file_name_formatted = file_name.clone();
     let item = PathBuf::from(&file_name);
+    let file_extension = get_file_extension(file_name.clone());
+
     let file_stem = item
         .file_stem()
         .and_then(OsStr::to_str)
@@ -62,11 +64,7 @@ pub fn get_text(file_name: String, file_extension: String) -> (String, String) {
 
 pub fn is_video(file_name: String) -> bool {
     let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-    let file_extension = std::path::Path::new(&file_name)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|s| format!(".{s}"))
-        .unwrap_or_default();
+    let file_extension = get_file_extension(file_name);
 
     video_formats.iter().any(|f| f == &file_extension)
 }
@@ -99,7 +97,7 @@ pub fn get_file_extension(file_name: String) -> String {
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension = get_file_extension(cx.props.text.clone());
-    let (file_name, file_name_formatted) = get_text(cx.props.text.clone(), file_extension.clone());
+    let (file_name, file_name_formatted) = get_text(cx.props.text.clone());
     let aria_label = get_aria_label(&cx);
     let placeholder = file_name;
     let with_rename = cx.props.with_rename.unwrap_or_default();
@@ -172,8 +170,8 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     ..Options::default()
                                 }
                                 // todo: use is_valid
-                                onreturn: move |(s, _is_valid, key_code)| {
-                                    if _is_valid  {
+                                onreturn: move |(s, is_valid, key_code)| {
+                                    if is_valid  {
                                         let new_name = format!("{}{}", s, file_extension);
                                         emit(&cx, new_name, key_code)
                                     }
@@ -218,7 +216,7 @@ mod test {
     #[test]
     fn test_get_text1() {
         let input = String::from("very_long_file_name.txt");
-        let (name, formatted) = get_text(input.clone(), ".txt".to_owned());
+        let (name, formatted) = get_text(input.clone());
         assert_eq!(input, name);
         assert_eq!(formatted, String::from("very_lo...me.txt"));
     }
@@ -226,7 +224,7 @@ mod test {
     #[test]
     fn test_get_text2() {
         let input = String::from("very_long_file_name");
-        let (name, formatted) = get_text(input.clone(), "".to_owned());
+        let (name, formatted) = get_text(input.clone());
         assert_eq!(input, name);
         assert_eq!(formatted, String::from("very_lo...me"));
     }
@@ -234,7 +232,7 @@ mod test {
     #[test]
     fn test_get_text3() {
         let input = String::from("name.txt");
-        let (name, formatted) = get_text(input.clone(), ".txt".to_owned());
+        let (name, formatted) = get_text(input.clone());
         assert_eq!(input, name);
         assert_eq!(formatted, input);
     }
@@ -242,7 +240,7 @@ mod test {
     #[test]
     fn test_get_text4() {
         let input = String::from("name");
-        let (name, formatted) = get_text(input.clone(), "".to_owned());
+        let (name, formatted) = get_text(input.clone());
         assert_eq!(input, name);
         assert_eq!(formatted, input);
     }

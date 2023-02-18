@@ -335,6 +335,7 @@ fn rename_if_duplicate(
             .extension()
             .and_then(OsStr::to_str)
             .map(str::to_string);
+
         let file_stem = file_pathbuf
             .file_stem()
             .and_then(OsStr::to_str)
