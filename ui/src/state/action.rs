@@ -159,6 +159,8 @@ pub enum Action {
     MockSend(Uuid, Vec<String>),
     #[display(fmt = "ClearUnreads")]
     ClearUnreads(Chat),
+    #[display(fmt = "ClearActiveUnreads")]
+    ClearActiveUnreads,
     #[display(fmt = "Config {_0}")]
     Config(ConfigAction),
 }

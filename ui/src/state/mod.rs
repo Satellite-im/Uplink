@@ -184,13 +184,18 @@ impl State {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
-                self.clear_unreads(&chat);
-                self.chats.all.entry(chat.id).or_insert(chat);
+                let chat = self.chats.all.entry(chat.id).or_insert(chat);
+                chat.unreads = 0;
             }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
             Action::CancelReply(chat) => self.cancel_reply(&chat),
-            Action::ClearUnreads(chat) => self.clear_unreads(&chat),
+            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearActiveUnreads => {
+                if let Some(id) = self.chats.active {
+                    self.clear_unreads(id);
+                }
+            }
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
@@ -326,10 +331,10 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to clear unreads on.
+    /// * `chat_id` - The chat to clear unreads on.
     ///
-    fn clear_unreads(&mut self, chat: &Chat) {
-        if let Some(chat) = self.chats.all.get_mut(&chat.id) {
+    fn clear_unreads(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
             chat.unreads = 0;
         }
     }
@@ -338,7 +343,7 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to remove.
+    /// * `chat_id` - The chat to remove.
     fn remove_sidebar_chat(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| *id != chat_id);
 
@@ -458,6 +463,12 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
+
+            if self.ui.current_layout != ui::Layout::Compose
+                || self.chats.active != Some(conversation_id)
+            {
+                chat.unreads += 1;
+            }
         }
     }
 

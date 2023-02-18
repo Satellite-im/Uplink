@@ -25,7 +25,7 @@ use warp::{
 
 use crate::{
     components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    state::{storage::Storage, Action, State},
+    state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -48,6 +48,8 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    state.write_silent().ui.current_layout = ui::Layout::Storage;
+
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
