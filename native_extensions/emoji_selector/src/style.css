@@ -1,0 +1,11 @@
+#emoji_selector {
+  position: absolute;
+  background-color: var(--background);
+  height: 20rem;
+  width: 15rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  right: var(--padding);
+  bottom: calc(var(--height-input) + var(--padding-more));
+  overflow-y: scroll;
+}
