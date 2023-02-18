@@ -608,6 +608,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         },
         controls: cx.render(rsx!(
+            // Load extensions
+            for node in ext_renders {
+                rsx!(node)
+            },
             Button {
                 icon: Icon::ChevronDoubleRight,
                 disabled: is_loading,
@@ -640,10 +644,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     text: get_local_text("uplink.send"),
                 })),
             },
-            // Load extensions
-            for node in ext_renders {
-                rsx!(node)
-            }
         )),
         with_replying_to: data
             .map(|data| {

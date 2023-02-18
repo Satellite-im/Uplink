@@ -8,4 +8,34 @@
   right: var(--padding);
   bottom: calc(var(--height-input) + var(--padding-more));
   overflow-y: scroll;
+  display: inline-flex;
+  flex-direction: column;
+  padding: var(--gap-less);
+}
+
+#emoji_selector .label {
+  width: 100%;
+  margin-bottom: var(--gap);
+}
+
+#emoji_selector .emojis-container {
+  width: 100%;
+  display: inline-flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--gap);
+  gap: var(--gap-less);
+  justify-content: space-between;
+}
+
+#emoji_selector .emoji {
+  width: 25px;
+  height: 25px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+}
+
+#emoji_selector .emoji:hover {
+  cursor: pointer;
 }
