@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{collections::HashMap, path::PathBuf, time::Duration};
 
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
@@ -21,6 +21,7 @@ use kit::{
 use rfd::FileDialog;
 use shared::language::get_local_text;
 use tokio::time::sleep;
+use uuid::Uuid;
 use warp::{
     constellation::{directory::Directory, file::File},
     logging::tracing::log,
@@ -247,6 +248,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         });
     };
 
+    let is_renaming_map = use_ref(cx, HashMap::<Uuid, bool>::new);
+
     cx.render(rsx!(
         div {
             id: "files-layout",
@@ -431,9 +434,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }})
                     }),
                    files_list.read().iter().map(|file| {
-                        let is_renaming = use_state(cx, || false);
+                        is_renaming_map.write_silent().entry(file.id()).or_insert(false);
                         let file_name = file.name();
-                        let key = file.id();
+                        let key = file.id().clone();
+                        let key2 = file.id().clone();
                         rsx!(ContextMenu {
                                     key: "{key}-menu",
                                     id: file.id().to_string(),
@@ -442,7 +446,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             icon: Icon::Pencil,
                                             text: "Rename".to_owned(),
                                             onpress: move |_| {
-                                                is_renaming.set(true);
+                                                is_renaming_map.with_mut(|i| i.insert(key2, true));
                                             }
                                         })),
                                             File {
@@ -450,9 +454,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 thumbnail: file.thumbnail(),
                                                 text: file.name(),
                                                 aria_label: file.name(),
-                                                with_rename: **is_renaming,
+                                                with_rename: is_renaming_map.with(|i| i[&key2]),
                                                 onrename: move |(val, key_code)| {
-                                                    is_renaming.set(false);
+                                                    is_renaming_map.with_mut(|i| i.insert(key2, false));
                                                     if key_code == Code::Enter {
                                                         ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
                                                     }
