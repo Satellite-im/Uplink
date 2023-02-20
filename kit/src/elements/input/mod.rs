@@ -334,6 +334,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current());
+                            *val.write() = "".into();
                         }
                     }
                 }
