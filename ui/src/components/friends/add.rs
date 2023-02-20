@@ -81,7 +81,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(_) | Err(Error::FriendRequestExist) => {
-                        //send clear to input
                         request_sent.set(true);
                     }
                     Err(e) => match e {
@@ -145,6 +144,24 @@ pub fn AddFriend(cx: Scope) -> Element {
                         ..Options::default()
                     },
                     reset: request_sent.clone(),
+                    onreturn: move |_| {
+                        match DID::from_str(friend_input.get()) {
+                            Ok(did) => {
+                                if STATIC_ARGS.use_mock {
+                                    let mut ident = Identity::default();
+                                    ident.set_did_key(did);
+                                    state.write().mutate(Action::SendRequest(ident));
+                                    friend_input.set("".to_string());
+                                } else {
+                                    ch.send(did);
+                                    friend_input.set("".to_string());
+                                }
+                            },
+                            Err(e) => {
+                                log::error!("could not get did from str: {}", e);
+                            }
+                        }
+                    },
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
                         friend_input_valid.set(is_valid);
@@ -158,13 +175,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                     onpress: move |_| {
                         match DID::from_str(friend_input.get()) {
                             Ok(did) => {
-                                friend_input.set("".to_string());
                                 if STATIC_ARGS.use_mock {
                                     let mut ident = Identity::default();
                                     ident.set_did_key(did);
-                                    state.write().mutate(Action::SendRequest(ident))
+                                    state.write().mutate(Action::SendRequest(ident));
+                                    friend_input.set("".to_string());
                                 } else {
                                     ch.send(did);
+                                    friend_input.set("".to_string());
                                 }
                             },
                             Err(e) => {
