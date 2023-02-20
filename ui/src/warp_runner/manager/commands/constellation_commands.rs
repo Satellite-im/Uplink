@@ -54,6 +54,14 @@ pub enum ConstellationCmd {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(
+        fmt = "DownloadItems {{ file_name: {file_name:?}, local_path_to_save_file: {local_path_to_save_file:?} }} "
+    )]
+    DownloadFile {
+        file_name: String,
+        local_path_to_save_file: PathBuf,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -82,6 +90,14 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::UploadFiles { files_path, rsp } => {
             let r = upload_files(warp_storage, files_path).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::DownloadFile {
+            file_name,
+            local_path_to_save_file,
+            rsp,
+        } => {
+            let r = download_file(warp_storage, file_name, local_path_to_save_file).await;
             let _ = rsp.send(r);
         }
     }
@@ -442,4 +458,11 @@ async fn set_thumbnail_if_file_is_image(
         log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))
     }
+}
+
+async fn download_file(
+    warp_storage: &warp_storage,
+    file_name: String,
+    local_path_to_save_file: PathBuf,
+) {
 }
