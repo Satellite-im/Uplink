@@ -235,4 +235,39 @@ mod test {
         assert_eq!(input, name);
         assert_eq!(formatted, input);
     }
+
+    #[test]
+    fn test_get_file_extension1() {
+        let input = String::from("image.jpeg");
+        let file_extension = get_file_extension(input.clone());
+        assert_eq!(file_extension, ".jpeg");
+    }
+
+    #[test]
+    fn test_get_file_extension2() {
+        let input = String::from("image.png");
+        let file_extension = get_file_extension(input.clone());
+        assert_eq!(file_extension, ".png");
+    }
+
+    #[test]
+    fn test_get_file_extension3() {
+        let input = String::from("file.txt");
+        let file_extension = get_file_extension(input.clone());
+        assert_eq!(file_extension, ".txt");
+    }
+
+    #[test]
+    fn test_get_file_extension4() {
+        let input = String::from("file.txt.exe");
+        let file_extension = get_file_extension(input.clone());
+        assert_eq!(file_extension, ".exe");
+    }
+
+    #[test]
+    fn test_get_file_extension5() {
+        let input = String::from("file");
+        let file_extension = get_file_extension(input.clone());
+        assert_eq!(file_extension, "");
+    }
 }
