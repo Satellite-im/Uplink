@@ -38,6 +38,7 @@ enum ChanCmd {
     OpenDirectory(String),
     BackToPreviousDirectory(Directory),
     UploadFiles(Vec<PathBuf>),
+    DownloadFile((String, PathBuf)),
 }
 
 #[derive(PartialEq, Props)]
@@ -195,6 +196,27 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 log::error!("failed to add new files into uplink storage: {}", e);
                                 continue;
                             }
+                        }
+                    }
+                    ChanCmd::DownloadFile((file_name, local_path_to_save_file)) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::DownloadFile {
+                                file_name,
+                                local_path_to_save_file,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to download files {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+
+                        if let Err(error) = rsp {
+                            log::error!("failed to add new files into uplink storage: {}", error);
+                            continue;
                         }
                     }
                 }

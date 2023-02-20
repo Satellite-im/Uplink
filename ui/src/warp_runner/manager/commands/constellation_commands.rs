@@ -464,5 +464,10 @@ async fn download_file(
     warp_storage: &warp_storage,
     file_name: String,
     local_path_to_save_file: PathBuf,
-) {
+) -> Result<(), Error> {
+    warp_storage
+        .get(&file_name, &local_path_to_save_file.to_string_lossy())
+        .await?;
+    log::info!("{file_name} downloaded.");
+    Ok(())
 }
