@@ -3,7 +3,7 @@ use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
 use crate::{
-    elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS},
+    elements::input::{Input, Options, Size, SpecialCharsAction, Validation},
     icons::{Icon, IconElement},
 };
 
@@ -90,14 +90,6 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 },
                 with_rename.then(||
-                    {
-                    let chars_to_remove = vec!['\\', '/'];
-                    let mut special_chars = SPECIAL_CHARS.to_vec();
-                    special_chars = special_chars
-                        .iter()
-                        .filter(|&&c| !chars_to_remove.contains(&c))
-                        .cloned()
-                        .collect();
                         rsx! (
                             Input {
                                 id: Uuid::new_v4().to_string(),
@@ -110,7 +102,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     react_to_esc_key: true,
                                     with_validation: Some(Validation {
                                         alpha_numeric_only: true,
-                                        special_chars_allowed: Some(special_chars),
+                                        special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
@@ -123,7 +115,6 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             }
                     )
-                    }
                   ),
                 (!with_rename).then(|| rsx! (
                     label {
