@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use emojis::Group;
 use extensions::*;
 use kit::{
+    components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
     icons::Icon,
 };
@@ -16,41 +17,106 @@ extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
 pub struct EmojiSelector;
 
 impl EmojiSelector {
+    fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+        let mut routes_ = vec![];
+        routes_.push(Route {
+            to: "!void",
+            name: "Smileys & Emotion".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "People & Body".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Animals & Nature".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Travel & Places".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Activities".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Objects".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Symbols".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        routes_.push(Route {
+            to: "!void",
+            name: "Flags".to_owned(),
+            icon: Icon::Flag,
+            with_badge: None,
+            loading: None,
+        });
+        cx.render(rsx!(Nav { routes: routes_ }))
+    }
+
     fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        cx.render(rsx! {
+        cx.render(rsx! (
             div {
                 id: "emoji_selector",
-                emojis::Group::iter().map(|group| {
-                    let name: String = match group {
-                        Group::SmileysAndEmotion => "Smileys & Emotion".into(),
-                        Group::PeopleAndBody => "People & Body".into(),
-                        Group::AnimalsAndNature => "Animals & Nature".into(),
-                        Group::FoodAndDrink => "Food & Drink".into(),
-                        Group::TravelAndPlaces => "Travel & Places".into(),
-                        Group::Activities => "Activities".into(),
-                        Group::Objects => "Objects".into(),
-                        Group::Symbols => "Symbols".into(),
-                        Group::Flags => "Flags".into(),
-                    };
-                    rsx!(
-                        Label {
-                            text: name
-                        },
-                        div {
-                            class: "emojis-container",
-                            group.emojis().map(|emoji| {
-                                rsx!(
-                                    div {
-                                        class: "emoji",
-                                        emoji.as_str()
-                                    }
-                                )
-                            })
-                        }
-                    )
-                })
+                div {
+                    id: "scrolling",
+                    emojis::Group::iter().map(|group| {
+                        let name: String = match group {
+                            Group::SmileysAndEmotion => "Smileys & Emotion".into(),
+                            Group::PeopleAndBody => "People & Body".into(),
+                            Group::AnimalsAndNature => "Animals & Nature".into(),
+                            Group::FoodAndDrink => "Food & Drink".into(),
+                            Group::TravelAndPlaces => "Travel & Places".into(),
+                            Group::Activities => "Activities".into(),
+                            Group::Objects => "Objects".into(),
+                            Group::Symbols => "Symbols".into(),
+                            Group::Flags => "Flags".into(),
+                        };
+                        rsx!(
+                            Label {
+                                text: name
+                            },
+                            div {
+                                class: "emojis-container",
+                                group.emojis().map(|emoji| {
+                                    rsx!(
+                                        div {
+                                            class: "emoji",
+                                            emoji.as_str()
+                                        }
+                                    )
+                                })
+                            }
+                        )
+                    })
+                }
+                self.build_nav(&cx),
             }
-        })
+        ))
     }
 }
 
@@ -77,7 +143,7 @@ impl Extension for EmojiSelector {
         let styles = self.stylesheet();
         let display_selector = use_state(cx, || false);
 
-        cx.render(rsx! {
+        cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
             display_selector.then(|| self.render_selector(&cx)),
@@ -88,6 +154,6 @@ impl Extension for EmojiSelector {
                     display_selector.set(!display_selector.clone());
                 }
             }
-        })
+        ))
     }
 }

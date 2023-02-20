@@ -7,7 +7,6 @@
   border: 1px solid var(--border-color);
   right: var(--padding);
   bottom: calc(var(--height-input) + var(--padding-more));
-  overflow-y: scroll;
   display: inline-flex;
   flex-direction: column;
   padding: var(--gap-less);
@@ -27,6 +26,12 @@
   justify-content: space-between;
 }
 
+#emoji_selector #scrolling {
+  flex: 1;
+  min-height: 0;
+  overflow-y: scroll;
+}
+
 #emoji_selector .emoji {
   width: 25px;
   height: 25px;
@@ -34,6 +39,15 @@
   justify-content: center;
   align-items: center;
   font-size: 1.5rem;
+}
+
+#emoji_selector .nav {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: fit-content;
+  width: 100%;
+  gap: var(--gap);
+  padding: var(--gap-less);
 }
 
 #emoji_selector .emoji:hover {
