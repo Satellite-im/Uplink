@@ -254,7 +254,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         div {
             id: "files-layout",
             aria_label: "files-layout",
-            onclick: |_| check_true_value_in_renamig(is_renaming_map),
+            onclick: |_| check_true_value_in_renaming(is_renaming_map),
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
@@ -281,7 +281,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    check_true_value_in_renamig(is_renaming_map);
+                                    check_true_value_in_renaming(is_renaming_map);
                                     add_new_folder.set(!add_new_folder);
                                 },
                             },
@@ -296,7 +296,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 ))
                                 onpress: move |_| {
-                                    check_true_value_in_renamig(is_renaming_map);
+                                    check_true_value_in_renaming(is_renaming_map);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
                                         Some(path) => path,
                                         None => return
@@ -417,7 +417,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         icon: Icon::Pencil,
                                         text: get_local_text("files.rename"),
                                         onpress: move |_| {
-                                            check_true_value_in_renamig(is_renaming_map);
+                                            check_true_value_in_renaming(is_renaming_map);
                                             is_renaming_map.with_mut(|i| i.insert(key, true));
                                         }
                                     })),
@@ -433,7 +433,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 }
                                 onpress: move |_| {
-                                    check_true_value_in_renamig(is_renaming_map);
+                                    check_true_value_in_renaming(is_renaming_map);
                                     ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
                                 }
                         }})
@@ -450,7 +450,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             icon: Icon::Pencil,
                                             text: get_local_text("files.rename"),
                                             onpress: move |_| {
-                                                check_true_value_in_renamig(is_renaming_map);
+                                                check_true_value_in_renaming(is_renaming_map);
                                                 is_renaming_map.with_mut(|i| i.insert(key, true));
                                             }
                                         })),
@@ -502,7 +502,7 @@ fn update_items_with_mock_data(
     storage_state.set(Some(storage_mock));
 }
 
-fn check_true_value_in_renamig(is_renaming_map: &UseRef<HashMap<Uuid, bool>>) {
+fn check_true_value_in_renaming(is_renaming_map: &UseRef<HashMap<Uuid, bool>>) {
     if is_renaming_map.read().values().any(|&value| value == true) {
         for value in is_renaming_map.write().values_mut() {
             if *value {
