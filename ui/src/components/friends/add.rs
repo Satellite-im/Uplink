@@ -81,6 +81,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 let res = rx.await.expect("failed to get response from warp_runner");
                 match res {
                     Ok(_) | Err(Error::FriendRequestExist) => {
+                        //send clear to input
                         request_sent.set(true);
                     }
                     Err(e) => match e {
@@ -143,6 +144,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         // Use the default options for the remaining fields
                         ..Options::default()
                     },
+                    reset: request_sent.clone(),
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
                         friend_input_valid.set(is_valid);
