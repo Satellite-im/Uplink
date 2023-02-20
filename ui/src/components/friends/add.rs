@@ -156,6 +156,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                     onpress: move |_| {
                         match DID::from_str(friend_input.get()) {
                             Ok(did) => {
+                                friend_input.set("".to_string());
                                 if STATIC_ARGS.use_mock {
                                     let mut ident = Identity::default();
                                     ident.set_did_key(did);
