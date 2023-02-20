@@ -233,6 +233,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         }
     });
 
+    let is_renaming_map = use_ref(cx, HashMap::<Uuid, bool>::new);
+
     let first_render = use_state(cx, || true);
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
@@ -248,12 +250,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         });
     };
 
-    let is_renaming_map = use_ref(cx, HashMap::<Uuid, bool>::new);
-
     cx.render(rsx!(
         div {
             id: "files-layout",
             aria_label: "files-layout",
+            onclick: |_| check_true_value_in_renamig(is_renaming_map),
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
@@ -280,6 +281,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
+                                    check_true_value_in_renamig(is_renaming_map);
                                     add_new_folder.set(!add_new_folder);
                                 },
                             },
@@ -294,6 +296,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 ))
                                 onpress: move |_| {
+                                    check_true_value_in_renamig(is_renaming_map);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
                                         Some(path) => path,
                                         None => return
@@ -401,9 +404,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         })
                     }),
                     directories_list.read().iter().map(|dir| {
+                        is_renaming_map.write_silent().entry(dir.id()).or_insert(false);
                         let folder_name = dir.name();
                         let folder_name2 = dir.name();
-                        let is_renaming = use_state(cx, || false);
                         let key = dir.id();
                         rsx!(
                             ContextMenu {
@@ -412,23 +415,25 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 items: cx.render(rsx!(
                                     ContextItem {
                                         icon: Icon::Pencil,
-                                        text: "Rename".to_owned(),
+                                        text: get_local_text("files.rename"),
                                         onpress: move |_| {
-                                            is_renaming.set(true);
+                                            check_true_value_in_renamig(is_renaming_map);
+                                            is_renaming_map.with_mut(|i| i.insert(key, true));
                                         }
                                     })),
                             Folder {
                                 key: "{key}-folder",
                                 text: dir.name(),
                                 aria_label: dir.name(),
-                                with_rename: **is_renaming,
+                                with_rename: is_renaming_map.with(|i| i[&key]),
                                 onrename: move |(val, key_code)| {
-                                    is_renaming.set(false);
+                                    is_renaming_map.with_mut(|i| i.insert(key, false));
                                     if key_code == Code::Enter {
                                         ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                     }
                                 }
                                 onpress: move |_| {
+                                    check_true_value_in_renamig(is_renaming_map);
                                     ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
                                 }
                         }})
@@ -436,17 +441,17 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                    files_list.read().iter().map(|file| {
                         is_renaming_map.write_silent().entry(file.id()).or_insert(false);
                         let file_name = file.name();
-                        let key = file.id().clone();
-                        let key2 = file.id().clone();
+                        let key = file.id();
                         rsx!(ContextMenu {
                                     key: "{key}-menu",
                                     id: file.id().to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Pencil,
-                                            text: "Rename".to_owned(),
+                                            text: get_local_text("files.rename"),
                                             onpress: move |_| {
-                                                is_renaming_map.with_mut(|i| i.insert(key2, true));
+                                                check_true_value_in_renamig(is_renaming_map);
+                                                is_renaming_map.with_mut(|i| i.insert(key, true));
                                             }
                                         })),
                                             File {
@@ -454,9 +459,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 thumbnail: file.thumbnail(),
                                                 text: file.name(),
                                                 aria_label: file.name(),
-                                                with_rename: is_renaming_map.with(|i| i[&key2]),
+                                                with_rename: is_renaming_map.with(|i| i[&key]),
                                                 onrename: move |(val, key_code)| {
-                                                    is_renaming_map.with_mut(|i| i.insert(key2, false));
+                                                    is_renaming_map.with_mut(|i| i.insert(key, false));
                                                     if key_code == Code::Enter {
                                                         ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
                                                     }
@@ -495,4 +500,15 @@ fn update_items_with_mock_data(
         files: files_list.read().clone(),
     };
     storage_state.set(Some(storage_mock));
+}
+
+fn check_true_value_in_renamig(is_renaming_map: &UseRef<HashMap<Uuid, bool>>) {
+    if is_renaming_map.read().values().any(|&value| value == true) {
+        for value in is_renaming_map.write().values_mut() {
+            if *value {
+                *value = false;
+                break;
+            }
+        }
+    }
 }
