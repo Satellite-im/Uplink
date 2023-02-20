@@ -167,23 +167,20 @@ pub fn validate_alphanumeric(
         val.retain(|c| c != ':');
     }
 
-    match special_characters {
-        Some((action, chars)) => {
-            let mut special_chars_allowed = SPECIAL_CHARS.to_vec();
-            if action == SpecialCharsAction::Block {
-                special_chars_allowed = special_chars_allowed
-                    .iter()
-                    .filter(|&&c| !chars.contains(&c))
-                    .cloned()
-                    .collect();
-            } else {
-                special_chars_allowed = chars;
-            }
-            for s in special_chars_allowed {
-                val.retain(|c| c != s);
-            }
+    if let Some((action, chars)) = special_characters {
+        let mut special_chars_allowed = SPECIAL_CHARS.to_vec();
+        if action == SpecialCharsAction::Block {
+            special_chars_allowed = special_chars_allowed
+                .iter()
+                .filter(|&&c| !chars.contains(&c))
+                .cloned()
+                .collect();
+        } else {
+            special_chars_allowed = chars;
         }
-        None => (),
+        for s in special_chars_allowed {
+            val.retain(|c| c != s);
+        }
     }
 
     if !val.chars().all(char::is_alphanumeric) {
