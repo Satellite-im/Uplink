@@ -65,6 +65,20 @@ pub enum Direction {
     Outgoing,
 }
 
+impl Chats {
+    pub fn active_chat_has_unreads(&self) -> bool {
+        let id = match self.active {
+            Some(c) => c,
+            None => return false,
+        };
+
+        match self.all.get(&id) {
+            Some(c) => c.unreads > 0,
+            None => false,
+        }
+    }
+}
+
 impl Serialize for Chats {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

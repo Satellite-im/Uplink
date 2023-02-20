@@ -90,7 +90,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
+                        if state.read().configuration.audiovideo.interface_sounds {
                             crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
                         }
                         use_router(cx).replace_route(r, None, None);
@@ -192,7 +192,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     };
 
                     let val = unwrapped_message.value();
-                    let timestamp = unwrapped_message.date().timestamp_millis() as u64;
+                    let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
                         chat.unreads.to_string()
@@ -242,7 +242,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             User {
                                 username: participants_name,
                                 subtext: val.join("\n"),
-                                timestamp: timestamp,
+                                timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
                                     if participants.len() <= 2 {rsx! (

@@ -15,23 +15,46 @@ use std::collections::{HashMap, VecDeque};
 use warp::{
     crypto::DID,
     error::Error,
+    logging::tracing::log,
+    multipass::identity::Identity,
     raygun::{self, Conversation, MessageOptions},
 };
 
 use crate::state::{self, chats};
 
+// this function is used in response to warp events. assuming that the DID from these events is valid.
+// Warp sends the Identity over. if the Identity has not been received yet, get_identity will fail for
+// a valid DID.
 pub async fn did_to_identity(
     did: &DID,
     account: &super::Account,
 ) -> Result<state::Identity, Error> {
-    account
-        .get_identity(did.clone().into())
-        .await
-        // if Ok, get the first item in the vector. 
-        // if the vector is empty, become Error::IdentityDoesntExist
-        .and_then(|v| v.first().cloned().ok_or(Error::IdentityDoesntExist))
-        // if Ok, convert from warp::Identity to state::Identity
-        .map(state::Identity::from)
+    let identity = match account.get_identity(did.clone().into()).await {
+        Ok(list) => list.first().cloned(),
+        Err(e) => {
+            log::warn!("multipass couldn't find identity {}: {}", did, e);
+            None
+        }
+    };
+    let identity = match identity {
+        Some(id) => id,
+        None => {
+            let mut default: Identity = Default::default();
+            default.set_did_key(did.clone());
+            let did_str = &did.to_string();
+            // warning: assumes DIDs are very long. this can cause a panic if that ever changes
+            let start = did_str
+                .get(8..=10)
+                .ok_or(Error::OtherWithContext("DID too short".into()))?;
+            let len = did_str.len();
+            let end = did_str
+                .get(len - 3..)
+                .ok_or(Error::OtherWithContext("DID too short".into()))?;
+            default.set_username(&format!("{start}...{end}"));
+            default
+        }
+    };
+    Ok(state::Identity::from(identity))
 }
 
 pub async fn dids_to_identity(
