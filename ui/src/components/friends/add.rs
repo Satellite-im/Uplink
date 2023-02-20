@@ -151,11 +151,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                                     let mut ident = Identity::default();
                                     ident.set_did_key(did);
                                     state.write().mutate(Action::SendRequest(ident));
-                                    friend_input.set("".to_string());
                                 } else {
                                     ch.send(did);
-                                    friend_input.set("".to_string());
                                 }
+                                friend_input.set(String::new());
                             },
                             Err(e) => {
                                 log::error!("could not get did from str: {}", e);
@@ -179,11 +178,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                                     let mut ident = Identity::default();
                                     ident.set_did_key(did);
                                     state.write().mutate(Action::SendRequest(ident));
-                                    friend_input.set("".to_string());
                                 } else {
                                     ch.send(did);
-                                    friend_input.set("".to_string());
                                 }
+                                friend_input.set(String::new());
                             },
                             Err(e) => {
                                 log::error!("could not get did from str: {}", e);
