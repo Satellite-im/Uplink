@@ -425,7 +425,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 key: "{key}-folder",
                                 text: dir.name(),
                                 aria_label: dir.name(),
-                                with_rename: is_renaming_map.with(|i| i[&key]),
+                                with_rename: is_renaming_map.with(|i| *i.get(&key).unwrap_or(&false)),
                                 onrename: move |(val, key_code)| {
                                     is_renaming_map.with_mut(|i| i.insert(key, false));
                                     if key_code == Code::Enter {
