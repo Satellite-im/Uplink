@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
@@ -480,8 +480,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             icon: Icon::ArrowDownCircle,
                                             text: "Download".to_owned(),
                                             onpress: move |_| {
-                                                let file_extension = get_file_extension(file_name2.clone());
-                                                let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_name2.clone()).add_filter("", &[&file_extension]).save_file() {
+
+                                                let file_extension = std::path::Path::new(&file_name2.clone())
+                                                .extension()
+                                                .and_then(OsStr::to_str)
+                                                .map(|s| format!("{s}"))
+                                                .unwrap_or_default();
+
+                                                let file_stem = PathBuf::from(&file_name2)
+                                                        .file_stem()
+                                                        .and_then(OsStr::to_str)
+                                                        .map(str::to_string)
+                                                        .unwrap_or_default();
+                                                let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                                                     Some(path) => path,
                                                     None => return,
                                                 };
