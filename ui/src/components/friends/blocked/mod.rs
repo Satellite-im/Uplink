@@ -1,7 +1,8 @@
-use crate::{
-    components::friends::friend::Friend,
+use crate::{components::friends::friend::Friend, utils::convert_status};
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
+use common::{
     state::{Action, State},
-    utils::convert_status,
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -14,9 +15,7 @@ use kit::{
         user_image::UserImage,
     },
     elements::label::Label,
-    icons::Icon,
 };
-use shared::language::get_local_text;
 use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]

@@ -23,7 +23,7 @@ use warp::sync::RwLock;
 
 use chrono::{DateTime, Local};
 
-use crate::STATIC_ARGS;
+use common::STATIC_ARGS;
 
 static LOGGER: Lazy<RwLock<Logger>> = Lazy::new(|| RwLock::new(Logger::load()));
 

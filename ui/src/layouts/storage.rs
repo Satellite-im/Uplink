@@ -1,5 +1,13 @@
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use common::language::get_local_text;
+use common::{
+    state::{storage::Storage, ui, Action, State},
+    warp_runner::{ConstellationCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
+};
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
@@ -15,11 +23,9 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::{Icon, IconElement},
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use shared::language::get_local_text;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
@@ -27,12 +33,7 @@ use warp::{
     logging::tracing::log,
 };
 
-use crate::{
-    components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    state::{storage::Storage, ui, Action, State},
-    warp_runner::{ConstellationCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
-};
+use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
 pub const ROOT_DIR_NAME: &str = "root";
 

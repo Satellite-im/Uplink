@@ -1,24 +1,22 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
     components::nav::Nav,
     elements::{button::Button, Appearance},
-    icons::Icon,
     layout::topbar::Topbar,
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
-use crate::{
-    components::{
-        chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-        friends::{
-            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
-        },
+use crate::components::{
+    chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+    friends::{
+        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
     },
-    state::{ui, Action, State},
 };
+use common::icons::outline::Shape as Icon;
+use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Props)]
 pub struct Props {

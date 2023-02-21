@@ -1,7 +1,7 @@
-use crate::{
-    elements::{button::Button, label::Label, Appearance},
-    icons::{Icon, IconElement},
-};
+use crate::elements::{button::Button, label::Label, Appearance};
+
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 
 use dioxus::prelude::*;
 use uuid::Uuid;

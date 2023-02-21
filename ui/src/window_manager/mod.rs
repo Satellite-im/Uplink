@@ -7,7 +7,7 @@ use tokio::sync::{
     Mutex,
 };
 
-use crate::state::{Action, State};
+use common::state::{Action, State};
 
 pub type WindowManagerCmdTx = UnboundedSender<WindowManagerCmd>;
 pub type WindowManagerCmdRx = Arc<Mutex<UnboundedReceiver<WindowManagerCmd>>>;
