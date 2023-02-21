@@ -31,6 +31,9 @@ pub struct Props<'a> {
     #[props(!optional)]
     in_reply_to: Option<String>,
 
+    // todo: does this need to be an option like the rest of 'em?
+    reactions: Vec<warp::raygun::Reaction>,
+
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     #[props(optional)]
     remote: Option<bool>,
@@ -45,11 +48,9 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
-    // todo: remove this. just for testing
-    let text = format!(
-        "{text}/{}",
-        cx.props.in_reply_to.clone().unwrap_or_default()
-    );
+    // todo: render reactions
+    // todo: render part of message being replied to
+
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
