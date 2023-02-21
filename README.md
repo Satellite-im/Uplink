@@ -61,14 +61,7 @@ cargo run --bin ui --profile=rapid
 | libgtk-dev | `sudo apt-get install libgtk-3-dev` |
 | libsoup-dev | `sudo apt install libsoup2.4-dev` |
 | protobuf| `sudo apt-get install protobuf-compiler` |
-| Tauri Deps | `sudo apt install libwebkit2gtk-4.0-dev \
-    build-essential \
-    curl \
-    wget \
-    libssl-dev \
-    libgtk-3-dev \
-    libayatana-appindicator3-dev \
-    librsvg2-dev` |
+| Tauri Deps | `sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 
 ## Contributing
 
