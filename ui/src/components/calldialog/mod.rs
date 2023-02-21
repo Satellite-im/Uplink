@@ -1,8 +1,7 @@
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
-use kit::{
-    elements::label::Label,
-    icons::{Icon, IconElement},
-};
+use kit::elements::label::Label;
 
 #[derive(Props)]
 pub struct Props<'a> {

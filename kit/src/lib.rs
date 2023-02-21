@@ -2,7 +2,6 @@ use components::indicator::{Platform, Status};
 
 pub mod components;
 pub mod elements;
-pub mod icons;
 pub mod layout;
 
 pub const STYLE: &str = include_str!("./compiled_styles.css");

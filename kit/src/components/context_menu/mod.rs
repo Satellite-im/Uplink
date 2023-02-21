@@ -1,11 +1,10 @@
-use crate::icons::{Icon, IconElement};
+use common::icons;
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
 use dioxus_desktop::use_window;
-use icons::outline::Shape;
 
 #[derive(Props)]
 pub struct ItemProps<'a> {
@@ -13,7 +12,7 @@ pub struct ItemProps<'a> {
     onpress: Option<EventHandler<'a, MouseEvent>>,
     text: String,
     #[props(optional)]
-    icon: Option<Icon>,
+    icon: Option<icons::outline::Shape>,
     #[props(optional)]
     danger: Option<bool>,
 }
@@ -38,9 +37,9 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             aria_label: "Context Item",
             onclick: move |e| emit(&cx, e),
             (cx.props.icon.is_some()).then(|| {
-                let icon = cx.props.icon.unwrap_or(Shape::Cog6Tooth);
+                let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
                 rsx! {
-                    IconElement { icon: icon }
+                    icons::Icon { icon: icon }
                 }
             }),
             div {"{cx.props.text}"}
@@ -79,7 +78,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 cx.props.devmode.is_some().then(|| rsx!(
                     hr {},
                     ContextItem {
-                        icon: Shape::CommandLine,
+                        icon: icons::outline::Shape::CommandLine,
                         text: String::from("Open Console"),
                         onpress: move |_| window.devtool(),
                     }

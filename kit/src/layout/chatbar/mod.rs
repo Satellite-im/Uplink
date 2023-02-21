@@ -1,16 +1,15 @@
 use dioxus::prelude::*;
 
-use crate::{
-    elements::{button::Button, input::Input, label::Label, Appearance},
-    icons::Icon,
-};
+use crate::elements::{button::Button, input::Input, label::Label, Appearance};
+
+use common::icons;
 
 pub type To = &'static str;
 
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
-    pub icon: Icon,
+    pub icon: icons::outline::Shape,
     pub name: &'static str,
 }
 
@@ -61,7 +60,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
             Button {
                 small: true,
                 appearance: Appearance::Secondary,
-                icon: Icon::XMark,
+                icon: icons::outline::Shape::XMark,
                 onpress: move |_| cx.props.onclose.call(()),
             },
             div {
@@ -97,7 +96,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             placeholder: cx.props.placeholder.clone(),
                             reset: hook.clone(),
                             onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
                         }
                     )
                 }
@@ -107,7 +106,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             disabled: cx.props.loading.unwrap_or_default(),
                             placeholder: cx.props.placeholder.clone(),
                             onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
                         }
                     )
                 }

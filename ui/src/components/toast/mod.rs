@@ -1,8 +1,8 @@
+use common::icons::outline::Shape as Icon;
+use common::state::State;
 use dioxus::prelude::*;
-use kit::{elements::Appearance, icons::Icon};
+use kit::elements::Appearance;
 use uuid::Uuid;
-
-use crate::state::State;
 
 #[derive(PartialEq, Props)]
 pub struct Props {

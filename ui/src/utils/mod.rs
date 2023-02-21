@@ -1,17 +1,15 @@
+use common::{
+    state::{self, Theme},
+    STATIC_ARGS,
+};
 use kit::components::indicator::{self, Status};
 use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
-use crate::{
-    state::{self, Theme},
-    STATIC_ARGS,
-};
 use kit::User as UserInfo;
 
 pub mod format_timestamp;
-pub mod notifications;
-pub mod sounds;
 
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];

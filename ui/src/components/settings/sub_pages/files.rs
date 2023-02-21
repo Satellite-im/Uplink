@@ -1,6 +1,6 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use kit::elements::{button::Button, switch::Switch};
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::components::settings::SettingSection;
@@ -26,7 +26,7 @@ pub fn FilesSettings(cx: Scope) -> Element {
                     text: get_local_text("settings-files.open-sync-folder"),
                     aria_label: "open-sync-folder-button".into(),
                     appearance: kit::elements::Appearance::Secondary,
-                    icon: kit::icons::Icon::FolderOpen,
+                    icon: common::icons::outline::Shape::FolderOpen,
                     onpress: |_| {
                     }
                 }

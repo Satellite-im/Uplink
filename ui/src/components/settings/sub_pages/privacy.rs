@@ -1,9 +1,7 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, Appearance},
-    icons::Icon,
-};
-use shared::language::get_local_text;
+use kit::elements::{button::Button, Appearance};
 use warp::logging::tracing::log;
 
 use crate::components::settings::SettingSection;

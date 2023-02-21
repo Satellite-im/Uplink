@@ -1,3 +1,5 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use kit::elements::{
     button::Button,
@@ -6,7 +8,6 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
-use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
 
 #[allow(non_snake_case)]
@@ -25,7 +26,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         ignore_colons: false,
         // The input should allow any special characters
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars_allowed: None,
+        special_chars: None,
     };
 
     let status_validation_options = Validation {
@@ -40,8 +41,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         // The input component validation is shared - if you need to allow just colons in, set this to true
         ignore_colons: false,
         // The input should allow any special characters
-        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars_allowed: None,
+        // if you need special chars, select action to allow or block and pass a vec! with each char necessary, mainly if alpha_numeric_only is true
+        special_chars: None,
     };
 
     let image_state = use_state(cx, String::new);
@@ -77,7 +78,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         };
                     },
                     Button {
-                        icon: kit::icons::Icon::Plus,
+                        icon: Icon::Plus,
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
@@ -93,7 +94,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 div {
                     class: "plus-button",
                     Button {
-                        icon: kit::icons::Icon::Plus,
+                        icon: Icon::Plus,
                         onpress: move |_| {
                             if let Err(error) = change_profile_image(image_state) {
                                 log::error!("Error to change profile avatar image {error}");

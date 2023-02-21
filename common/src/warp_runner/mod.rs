@@ -74,6 +74,12 @@ impl std::ops::Drop for WarpRunner {
     }
 }
 
+impl Default for WarpRunner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WarpRunner {
     pub fn new() -> Self {
         Self {

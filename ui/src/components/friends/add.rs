@@ -1,25 +1,24 @@
 use arboard::Clipboard;
 use std::str::FromStr;
 
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Validation},
-        label::Label,
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    input::{Input, Options, Validation},
+    label::Label,
 };
-use shared::language::get_local_text;
 use warp::error::Error;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::{
+use common::icons::outline::Shape as Icon;
+use common::{
     state::{Action, Identity, State, ToastNotification},
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
+
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
@@ -35,7 +34,7 @@ pub fn AddFriend(cx: Scope) -> Element {
         alpha_numeric_only: true,
         no_whitespace: true,
         ignore_colons: true,
-        special_chars_allowed: None,
+        special_chars: None,
     };
 
     if *request_sent.get() {

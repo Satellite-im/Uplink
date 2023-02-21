@@ -12,13 +12,13 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::Icon,
 };
 
-use shared::language::get_local_text;
+use crate::utils::format_timestamp::format_timestamp_timeago;
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
+use common::state::State;
 use warp::multipass::identity::Relationship;
-
-use crate::{state::State, utils::format_timestamp::format_timestamp_timeago};
 
 #[derive(Props)]
 pub struct Props<'a> {

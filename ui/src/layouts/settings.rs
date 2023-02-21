@@ -1,21 +1,19 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 
-use crate::{
-    components::{
-        chat::RouteInfo,
-        settings::{
-            sidebar::{Page, Sidebar},
-            sub_pages::{
-                audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-                files::FilesSettings, general::GeneralSettings,
-                notifications::NotificationSettings, privacy::PrivacySettings,
-                profile::ProfileSettings,
-            },
+use crate::components::{
+    chat::RouteInfo,
+    settings::{
+        sidebar::{Page, Sidebar},
+        sub_pages::{
+            audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
+            files::FilesSettings, general::GeneralSettings, notifications::NotificationSettings,
+            privacy::PrivacySettings, profile::ProfileSettings,
         },
     },
-    state::{ui, Action, State},
 };
+
+use common::state::{ui, Action, State};
 
 use kit::{components::nav::Nav, layout::topbar::Topbar};
 
