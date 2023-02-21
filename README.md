@@ -59,6 +59,8 @@ cargo run --bin ui --profile=rapid
 | pkg-config | `sudo apt-get install pkg-config` |
 | alsa-sys | `sudo apt install librust-alsa-sys-dev` |
 | libgtk-dev | `sudo apt-get install libgtk-3-dev` |
+| libsoup-dev | `sudo apt install libsoup2.4-dev` |
+| protobuf| `sudo apt-get install protobuf-compiler` |
 
 ## Contributing
 
