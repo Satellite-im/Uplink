@@ -54,7 +54,7 @@ cargo run --bin ui --profile=rapid
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
 | Build Essentials | `sudo apt install build-essential` |
 | pkg-config | `sudo apt-get install pkg-config` |
 | alsa-sys | `sudo apt install librust-alsa-sys-dev` |
