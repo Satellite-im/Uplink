@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
@@ -9,7 +10,6 @@ use kit::{
     icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-use shared::language::get_local_text;
 
 use crate::{components::chat::RouteInfo, state::State};
 

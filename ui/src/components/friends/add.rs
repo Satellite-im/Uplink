@@ -1,6 +1,7 @@
 use arboard::Clipboard;
 use std::str::FromStr;
 
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -11,7 +12,6 @@ use kit::{
     },
     icons::Icon,
 };
-use shared::language::get_local_text;
 use warp::error::Error;
 use warp::{crypto::DID, logging::tracing::log};
 

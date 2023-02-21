@@ -15,7 +15,7 @@ use kit::{
     icons::Icon,
 };
 
-use shared::language::get_local_text;
+use common::language::get_local_text;
 use warp::multipass::identity::Relationship;
 
 use crate::{state::State, utils::format_timestamp::format_timestamp_timeago};

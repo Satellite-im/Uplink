@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
+use common::language::get_local_text;
 use kit::{
     elements::{button::Button, switch::Switch, Appearance},
     icons::Icon,
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{

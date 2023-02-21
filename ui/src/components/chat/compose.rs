@@ -27,8 +27,8 @@ use kit::{
     },
 };
 
+use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
-use shared::language::get_local_text;
 use uuid::Uuid;
 use warp::{
     logging::tracing::log,

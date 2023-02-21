@@ -1,5 +1,6 @@
 use std::{path::PathBuf, time::Duration};
 
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
@@ -16,7 +17,6 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use shared::language::get_local_text;
 use tokio::time::sleep;
 use warp::{
     constellation::{directory::Directory, file::File},

@@ -1,3 +1,4 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -8,7 +9,6 @@ use kit::{
     },
     icons::Icon,
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
 use crate::{

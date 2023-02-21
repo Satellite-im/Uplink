@@ -18,7 +18,7 @@ use kit::{components::nav::Route as UIRoute, icons::Icon};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use shared::language::{change_language, get_local_text};
+use common::language::{change_language, get_local_text};
 use state::State;
 use std::collections::HashMap;
 use std::fs;

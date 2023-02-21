@@ -1,9 +1,9 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use kit::{
     elements::{button::Button, switch::Switch},
     icons::Icon,
 };
-use shared::language::get_local_text;
 
 use crate::{components::settings::SettingSection, state::State};
 

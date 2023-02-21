@@ -5,6 +5,7 @@ use crate::{
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -16,7 +17,6 @@ use kit::{
     elements::label::Label,
     icons::Icon,
 };
-use shared::language::get_local_text;
 use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]

@@ -1,3 +1,4 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use kit::elements::{
     button::Button,
@@ -6,7 +7,6 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
-use shared::language::get_local_text;
 use warp::{error::Error, logging::tracing::log};
 
 #[allow(non_snake_case)]

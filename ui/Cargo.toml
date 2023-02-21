@@ -15,7 +15,7 @@ dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da19
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 fermi = { git = "https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 kit = { path = "../kit" }
-shared = { path = "../shared" }
+common = { path = "../common" }
 extensions = { path = "../extensions" }
 tokio-util = { version = "0.7", features = ["full"] }
 arboard = "3.1.0"

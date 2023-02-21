@@ -1,6 +1,6 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
-use shared::language::get_local_text;
 
 pub type ValidationError = String;
 use crate::{

@@ -1,9 +1,9 @@
+use common::language::{change_language, get_available_languages, get_local_text};
 use dioxus::prelude::*;
 use kit::{
     elements::{button::Button, select::Select, switch::Switch},
     icons::Icon,
 };
-use shared::language::{change_language, get_available_languages, get_local_text};
 use warp::logging::tracing::log;
 
 use crate::{

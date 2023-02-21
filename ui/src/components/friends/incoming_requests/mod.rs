@@ -6,6 +6,7 @@ use crate::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use chrono::{Duration, Utc};
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -18,7 +19,6 @@ use kit::{
     icons::Icon,
 };
 use rand::Rng;
-use shared::language::get_local_text;
 use warp::{logging::tracing::log, multipass::identity::Relationship};
 
 enum ChanCmd {
