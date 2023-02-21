@@ -16,8 +16,10 @@ use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
 
+// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
+// enable tracing from modules besides Uplink
 #[derive(clap::Subcommand, Debug)]
-enum LogProfile {
+pub enum LogProfile {
     /// normal operation
     Normal,
     /// print everything but tracing logs to the terminal
@@ -30,7 +32,7 @@ enum LogProfile {
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
-struct Args {
+pub struct Args {
     /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
     #[clap(long)]
     path: Option<PathBuf>,
@@ -41,7 +43,7 @@ struct Args {
     with_mock: bool,
     /// configures log output
     #[command(subcommand)]
-    profile: Option<LogProfile>,
+    pub profile: Option<LogProfile>,
 }
 
 static_loader! {

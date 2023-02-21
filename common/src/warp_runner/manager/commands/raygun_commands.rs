@@ -37,6 +37,13 @@ pub enum RayGunCmd {
         msg: Vec<String>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "Reply {{ conv_id: {conv_id}, reply_to: {reply_to} }} ")]
+    Reply {
+        conv_id: Uuid,
+        reply_to: Uuid,
+        msg: Vec<String>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     // removes all direct conversations involving the recipient
     #[display(fmt = "RemoveDirectConvs {{ recipient: {recipient} }} ")]
     RemoveDirectConvs {
@@ -95,6 +102,15 @@ pub async fn handle_raygun_cmd(
         }
         RayGunCmd::SendMessage { conv_id, msg, rsp } => {
             let r = messaging.send(conv_id, None, msg).await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::Reply {
+            conv_id,
+            reply_to,
+            msg,
+            rsp,
+        } => {
+            let r = messaging.reply(conv_id, reply_to, msg).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::RemoveDirectConvs { recipient, rsp } => {

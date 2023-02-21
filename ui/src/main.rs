@@ -4,7 +4,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::{state, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -19,7 +19,7 @@ use kit::elements::Appearance;
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
 use uuid::Uuid;
 
@@ -89,36 +89,6 @@ pub enum AuthPages {
     Success,
 }
 
-// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
-// enable tracing from modules besides Uplink
-#[derive(clap::Subcommand, Debug)]
-enum LogProfile {
-    /// normal operation
-    Normal,
-    /// print everything but tracing logs to the terminal
-    Debug,
-    /// print everything including tracing logs to the terminal
-    Trace,
-    /// like trace but include warp logs
-    Trace2,
-}
-
-#[derive(Debug, Parser)]
-#[clap(name = "")]
-struct Args {
-    /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
-    #[clap(long)]
-    path: Option<PathBuf>,
-    #[clap(long)]
-    experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
-    #[clap(long, default_value_t = false)]
-    with_mock: bool,
-    /// configures log output
-    #[command(subcommand)]
-    profile: Option<LogProfile>,
-}
-
 fn copy_assets() {
     let themes_dest = &STATIC_ARGS.themes_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
@@ -143,7 +113,7 @@ fn main() {
     if fdlimit::raise_fd_limit().is_none() {}
 
     // configure logging
-    let args = Args::parse();
+    let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
