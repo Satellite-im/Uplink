@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::{
-    components::chat::{
-        compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
-    },
-    state::{Action, State},
+use crate::components::chat::{
+    compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
 };
+use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -17,6 +15,8 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     //println!("rendering Chat layout");
     let state = use_shared_state::<State>(cx)?;
     let first_render = use_state(cx, || true);
+
+    state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
     let is_mobile = state.read().ui.is_minimal_view();
     let show_sidebar = !state.read().ui.sidebar_hidden;

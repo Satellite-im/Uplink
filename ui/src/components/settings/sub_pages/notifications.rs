@@ -1,11 +1,12 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, switch::Switch},
-    icons::Icon,
-};
-use shared::language::get_local_text;
+use kit::elements::{button::Button, switch::Switch};
 
-use crate::{components::settings::SettingSection, state::State};
+use common::icons::outline::Shape as Icon;
+use common::sounds;
+use common::state::{action::ConfigAction, Action, State};
+
+use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn NotificationSettings(cx: Scope) -> Element {
@@ -30,28 +31,28 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-notifications.enabled"),
                 section_description: get_local_text("settings-notifications.enabled-description"),
                 Switch {
-                    active: state.read().configuration.config.notifications.enabled,
+                    active: state.read().configuration.notifications.enabled,
                     onflipped: move |e| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::Flip);
                         }
-                        state.write().configuration.set_notifications_enabled(e);
+                        state.write().mutate(Action::Config(ConfigAction::SetNotificationsEnabled(e)));
                     }
                 }
             },
             div {
-                class: format_args!("{}", if state.read().configuration.config.notifications.enabled { "enabled" } else { "disabled" }),
+                class: format_args!("{}", if state.read().configuration.notifications.enabled { "enabled" } else { "disabled" }),
                 SettingSection {
                     section_label: get_local_text("friends"),
                     section_description: get_local_text("settings-notifications.friends-description"),
                     Switch {
-                        active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.friends_notifications,
-                        disabled: !state.read().configuration.config.notifications.enabled,
+                        active: state.read().configuration.notifications.enabled && state.read().configuration.notifications.friends_notifications,
+                        disabled: !state.read().configuration.notifications.enabled,
                         onflipped: move |e| {
-                            if state.read().configuration.config.audiovideo.interface_sounds {
-                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            if state.read().configuration.audiovideo.interface_sounds {
+                               sounds::Play(sounds::Sounds::Flip);
                             }
-                            state.write().configuration.set_friends_notifications(e);
+                            state.write().mutate(Action::Config(ConfigAction::SetFriendsNotificationsEnabled(e)));
                         }
                     }
                 },
@@ -59,13 +60,13 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                     section_label: get_local_text("messages"),
                     section_description: get_local_text("settings-notifications.messages-description"),
                     Switch {
-                        active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.messages_notifications,
-                        disabled: !state.read().configuration.config.notifications.enabled,
+                        active: state.read().configuration.notifications.enabled && state.read().configuration.notifications.messages_notifications,
+                        disabled: !state.read().configuration.notifications.enabled,
                         onflipped: move |e| {
-                            if state.read().configuration.config.audiovideo.interface_sounds {
-                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            if state.read().configuration.audiovideo.interface_sounds {
+                                sounds::Play(sounds::Sounds::Flip);
                             }
-                            state.write().configuration.set_messages_notifications(e);
+                            state.write().mutate(Action::Config(ConfigAction::SetMessagesNotificationsEnabled(e)));
                         }
                     }
                 },
@@ -73,13 +74,13 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                     section_label: get_local_text("settings"),
                     section_description: get_local_text("settings-notifications.settings-description"),
                     Switch {
-                        active: state.read().configuration.config.notifications.enabled && state.read().configuration.config.notifications.settings_notifications,
-                        disabled: !state.read().configuration.config.notifications.enabled,
+                        active: state.read().configuration.notifications.enabled && state.read().configuration.notifications.settings_notifications,
+                        disabled: !state.read().configuration.notifications.enabled,
                         onflipped: move |e| {
-                            if state.read().configuration.config.audiovideo.interface_sounds {
-                                crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            if state.read().configuration.audiovideo.interface_sounds {
+                                sounds::Play(sounds::Sounds::Flip);
                             }
-                            state.write().configuration.set_settings_notifications(e);
+                            state.write().mutate(Action::Config(ConfigAction::SetSettingsNotificationsEnabled(e)));
                         }
                     }
                 },

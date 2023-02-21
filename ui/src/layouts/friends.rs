@@ -1,24 +1,22 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
     components::nav::Nav,
     elements::{button::Button, Appearance},
-    icons::Icon,
     layout::topbar::Topbar,
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
-use crate::{
-    components::{
-        chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-        friends::{
-            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
-        },
+use crate::components::{
+    chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+    friends::{
+        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
     },
-    state::{Action, State},
 };
+use common::icons::outline::Shape as Icon;
+use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -36,6 +34,8 @@ pub enum FriendRoute {
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
+
+    state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
         return MinimalFriendsLayout(cx);

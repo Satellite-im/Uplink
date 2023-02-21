@@ -2,11 +2,10 @@ use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
-use crate::{
-    elements::input::{Input, Options, Size, SpecialCharsAction, Validation},
-    icons::{Icon, IconElement},
-};
+use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validation};
 
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]

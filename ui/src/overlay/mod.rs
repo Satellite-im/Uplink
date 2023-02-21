@@ -1,11 +1,10 @@
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
 use dioxus_desktop::{tao::dpi::PhysicalPosition, use_window, LogicalSize, WindowBuilder};
-use kit::{
-    components::{
-        indicator::{Platform, Status},
-        user_image::UserImage,
-    },
-    icons::{Icon, IconElement},
+use kit::components::{
+    indicator::{Platform, Status},
+    user_image::UserImage,
 };
 
 use kit::STYLE as UIKIT_STYLES;

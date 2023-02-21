@@ -4,14 +4,13 @@ use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
-use crate::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Size, SpecialCharsAction, Validation},
-        Appearance,
-    },
-    icons::{Icon, IconElement},
+use crate::elements::{
+    button::Button,
+    input::{Input, Options, Size, SpecialCharsAction, Validation},
+    Appearance,
 };
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[

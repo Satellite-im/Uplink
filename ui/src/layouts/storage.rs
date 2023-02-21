@@ -1,5 +1,13 @@
 use std::{path::PathBuf, time::Duration};
 
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use common::language::get_local_text;
+use common::{
+    state::{storage::Storage, ui, Action, State},
+    warp_runner::{ConstellationCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
+};
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
@@ -15,11 +23,9 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::{Icon, IconElement},
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use shared::language::get_local_text;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
@@ -27,12 +33,7 @@ use warp::{
     logging::tracing::log,
 };
 
-use crate::{
-    components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    state::{storage::Storage, Action, State},
-    warp_runner::{ConstellationCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
-};
+use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
 pub const ROOT_DIR_NAME: &str = "root";
 
@@ -53,6 +54,8 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    state.write_silent().ui.current_layout = ui::Layout::Storage;
+
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);

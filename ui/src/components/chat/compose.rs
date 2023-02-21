@@ -20,15 +20,21 @@ use kit::{
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::Icon,
     layout::{
         chatbar::{Chatbar, Reply},
         topbar::Topbar,
     },
 };
 
+use common::icons::outline::Shape as Icon;
+use common::{
+    state::{self, ui, Action, Chat, Identity, State},
+    warp_runner::{RayGunCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
+};
+
+use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
-use shared::language::get_local_text;
 use uuid::Uuid;
 use warp::{
     logging::tracing::log,
@@ -37,13 +43,10 @@ use warp::{
 
 use crate::{
     components::media::player::MediaPlayer,
-    state::{self, Action, Chat, Identity, State},
     utils::{
         build_participants, build_user_from_identity, convert_status,
         format_timestamp::format_timestamp_timeago,
     },
-    warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
 };
 
 use super::sidebar::build_participants_names;
@@ -79,6 +82,11 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
+
+    state.write_silent().ui.current_layout = ui::Layout::Compose;
+    if state.read().chats.active_chat_has_unreads() {
+        state.write().mutate(Action::ClearActiveUnreads);
+    }
 
     cx.render(rsx!(
         div {
