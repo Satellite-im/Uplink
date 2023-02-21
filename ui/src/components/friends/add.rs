@@ -171,6 +171,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                     aria_label: "Add Someone Button".into()
                 },
                 Button {
+                    aria_label: "Copy ID".into()
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
                         id_ch.send(());

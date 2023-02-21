@@ -796,6 +796,7 @@ fn get_titlebar(cx: Scope) -> Element {
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
+                    aria_label: "device-phone-mobile-button".into(),
                     icon: Icon::DevicePhoneMobile,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -811,6 +812,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "device-tablet-button".into(),
                     icon: Icon::DeviceTablet,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -826,6 +828,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "computer-desktop-button".into(),
                     icon: Icon::ComputerDesktop,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -841,6 +844,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "command-line-button".into(),
                     icon: Icon::CommandLine,
                     appearance: Appearance::Transparent,
                     onpress: |_| {

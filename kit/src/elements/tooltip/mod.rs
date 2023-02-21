@@ -57,10 +57,11 @@ pub fn Tooltip(cx: Scope<Props>) -> Element {
 
     cx.render(rsx! {
         div {
+            aria_label: "tooltip",
             class: {
                 format_args!("tooltip hidden tooltip-{} tooltip-{}", &UUID, arrow_position)
             },
-            span { class: "tooltip-text", "{text}" }
+            span { aria_label: "tooltip-text", class: "tooltip-text", "{text}" }
         }
     })
 }
