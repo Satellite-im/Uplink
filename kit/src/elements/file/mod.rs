@@ -2,10 +2,9 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use dioxus::prelude::*;
 
-use crate::{
-    elements::{button::Button, input::Input, Appearance},
-    icons::{Icon, IconElement},
-};
+use crate::elements::{button::Button, input::Input, Appearance};
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[

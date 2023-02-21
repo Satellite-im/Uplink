@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::elements::input::Input;
-use crate::icons::Icon;
+use common::icons::outline::Shape as Icon;
 
 #[derive(Props)]
 pub struct Props<'a> {

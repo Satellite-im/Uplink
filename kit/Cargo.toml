@@ -12,10 +12,9 @@ dioxus-core =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da199171
 dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["transparent"] }
 dioxus-hooks =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
 dioxus-html =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-icons = { path="../icons" }
 timeago = "0.4.0"
 humansize = "2.0.0"
-shared = { path = "../shared" }
+common = { path = "../common" }
 
 derive_more = "0.99"
 

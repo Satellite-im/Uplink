@@ -1,11 +1,12 @@
-use crate::{
-    components::friends::friend::Friend,
+use crate::{components::friends::friend::Friend, utils::convert_status};
+use chrono::{Duration, Utc};
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
+use common::{
     state::{Action, State},
-    utils::convert_status,
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
-use chrono::{Duration, Utc};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -15,10 +16,8 @@ use kit::{
         user_image::UserImage,
     },
     elements::label::Label,
-    icons::Icon,
 };
 use rand::Rng;
-use shared::language::get_local_text;
 use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]

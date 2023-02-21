@@ -1,12 +1,10 @@
 use dioxus::prelude::*;
 
 use crate::UPLINK_ROUTES;
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus_router::use_router;
-use kit::{
-    elements::{button::Button, Appearance},
-    icons::Icon,
-};
-use shared::language::get_local_text;
+use kit::elements::{button::Button, Appearance};
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {

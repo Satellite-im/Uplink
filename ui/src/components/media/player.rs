@@ -2,22 +2,23 @@ use std::rc::Weak;
 
 use crate::{
     components::media::popout_player::{PopoutPlayer, PopoutPlayerProps},
-    state::{Action, State},
     window_manager::{WindowManagerCmd, WindowManagerCmdTx},
     UPLINK_ROUTES, WINDOW_CMD_CH,
 };
+use common::state::{Action, State};
 
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::*;
 
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 use kit::{
     elements::{
         button::Button,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
-    icons::{Icon, IconElement},
     layout::topbar::Topbar,
 };
 
