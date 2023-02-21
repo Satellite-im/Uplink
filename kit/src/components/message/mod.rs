@@ -27,6 +27,10 @@ pub struct Props<'a> {
     #[props(optional)]
     with_text: Option<String>,
 
+    // if Some, will contain part of the message being replied to
+    #[props(!optional)]
+    in_reply_to: Option<String>,
+
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     #[props(optional)]
     remote: Option<bool>,
@@ -41,6 +45,11 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
+    // todo: remove this. just for testing
+    let text = format!(
+        "{text}/{}",
+        cx.props.in_reply_to.clone().unwrap_or_default()
+    );
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);

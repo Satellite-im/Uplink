@@ -410,6 +410,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                         Message {
                                             remote: group.remote,
                                             with_text: message.inner.value().join("\n"),
+                                            in_reply_to: message.in_reply_to,
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                                         }
                                     }
@@ -606,7 +607,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         } else {
             let replying_to = state.read().chats.get_replying_to();
             if replying_to.is_some() {
-                // todo: cancel reply
+                state.write().mutate(Action::CancelReply(id));
             }
             msg_ch.send((msg, id, replying_to));
         }
@@ -648,7 +649,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             label: get_local_text("messages.replying"),
                             remote: our_did != msg.sender(),
                             onclose: move |_| {
-                                state.write().mutate(Action::CancelReply(active_chat.clone()))
+                                state.write().mutate(Action::CancelReply(active_chat.id.clone()))
                             },
                             message: msg.value().join("\n"),
                             UserImage {

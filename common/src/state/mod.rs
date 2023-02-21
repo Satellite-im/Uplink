@@ -189,7 +189,7 @@ impl State {
             }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
-            Action::CancelReply(chat) => self.cancel_reply(&chat),
+            Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
             Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
             Action::ClearActiveUnreads => {
                 if let Some(id) = self.chats.active {
@@ -325,8 +325,8 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to stop replying to.
-    fn cancel_reply(&mut self, chat: &Chat) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat.id) {
+    fn cancel_reply(&mut self, chat_id: Uuid) {
+        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
             c.replying_to = None;
         }
     }
