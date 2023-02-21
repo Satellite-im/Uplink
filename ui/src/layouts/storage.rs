@@ -374,11 +374,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 div {
                     class: "files-list",
-                    flex: if state.read().ui.sidebar_hidden {
-                        "1"
-                    } else {
-                        "0"
-                    },
                     aria_label: "files-list",
                     add_new_folder.then(|| {
                         rsx!(
