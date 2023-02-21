@@ -1,13 +1,16 @@
 use std::{path::PathBuf, time::Duration};
 
-use dioxus::prelude::*;
+use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
-    components::nav::Nav,
+    components::{
+        context_menu::{ContextItem, ContextMenu},
+        nav::Nav,
+    },
     elements::{
         button::Button,
-        file::File,
+        file::{get_file_extension, File},
         folder::Folder,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
@@ -18,6 +21,7 @@ use kit::{
 use rfd::FileDialog;
 use shared::language::get_local_text;
 use tokio::time::sleep;
+use uuid::Uuid;
 use warp::{
     constellation::{directory::Directory, file::File},
     logging::tracing::log,
@@ -39,6 +43,7 @@ enum ChanCmd {
     BackToPreviousDirectory(Directory),
     UploadFiles(Vec<PathBuf>),
     DownloadFile((String, PathBuf)),
+    RenameItem { old_name: String, new_name: String },
 }
 
 #[derive(PartialEq, Props)]
@@ -208,21 +213,51 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 rsp: tx,
                             },
                         )) {
-                            log::error!("failed to download files {}", e);
+                            log::error!("failed to download file {}", e);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
 
                         if let Err(error) = rsp {
-                            log::error!("failed to add new files into uplink storage: {}", error);
+                            log::error!("failed to dowload file: {}", error);
                             continue;
+                        }
+                    }
+                    ChanCmd::RenameItem { old_name, new_name } => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
+                                old_name,
+                                new_name,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to rename item {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    "failed to update uplink storage with renamed item: {}",
+                                    e
+                                );
+                                continue;
+                            }
                         }
                     }
                 }
             }
         }
     });
+
+    let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
 
     let first_render = use_state(cx, || true);
     if *first_render.get() && state.read().ui.is_minimal_view() {
@@ -243,6 +278,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         div {
             id: "files-layout",
             aria_label: "files-layout",
+            onclick: |_| is_renaming_map.with_mut(|i| *i = None),
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
@@ -269,6 +305,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
+                                    is_renaming_map.with_mut(|i| *i = None);
                                     add_new_folder.set(!add_new_folder);
                                 },
                             },
@@ -283,11 +320,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 ))
                                 onpress: move |_| {
+                                    is_renaming_map.with_mut(|i| *i = None);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
                                         Some(path) => path,
                                         None => return
                                     };
                                     ch.send(ChanCmd::UploadFiles(files_local_path));
+                                    cx.needs_update();
                                 },
                             }
                         )
@@ -366,21 +405,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx!(
                         Folder {
                             with_rename: true,
-                            onrename: |val| {
+                            onrename: |(val, key_code)| {
                                 let new_name: String = val;
-                                if STATIC_ARGS.use_mock {
-                                    directories_list
-                                        .with_mut(|i| i.insert(0, Directory::new(&new_name)));
-                                        update_items_with_mock_data(
-                                            storage_state,
-                                            current_dir,
-                                            dirs_opened_ref,
-                                            directories_list,
-                                            files_list,
-                                        );
-                                } else {
-                                    ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                    ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                if key_code == Code::Enter {
+                                    if STATIC_ARGS.use_mock {
+                                        directories_list
+                                            .with_mut(|i| i.insert(0, Directory::new(&new_name)));
+                                            update_items_with_mock_data(
+                                                storage_state,
+                                                current_dir,
+                                                dirs_opened_ref,
+                                                directories_list,
+                                                files_list,
+                                            );
+                                    } else {
+                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                    }
                                 }
                                 add_new_folder.set(false);
                              }
@@ -388,20 +429,81 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }),
                     directories_list.read().iter().map(|dir| {
                         let folder_name = dir.name();
-                        rsx!(Folder {
-                            text: dir.name(),
-                            aria_label: dir.name(),
-                            onpress: move |_| {
-                                ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
-                            }
-                        })
+                        let folder_name2 = dir.name();
+                        let key = dir.id();
+                        rsx!(
+                            ContextMenu {
+                                key: "{key}-menu",
+                                id: dir.id().to_string(),
+                                items: cx.render(rsx!(
+                                    ContextItem {
+                                        icon: Icon::Pencil,
+                                        text: get_local_text("files.rename"),
+                                        onpress: move |_| {
+                                            is_renaming_map.with_mut(|i| *i = Some(key));
+                                        }
+                                    })),
+                            Folder {
+                                key: "{key}-folder",
+                                text: dir.name(),
+                                aria_label: dir.name(),
+                                with_rename: *is_renaming_map.read() == Some(key),
+                                onrename: move |(val, key_code)| {
+                                    is_renaming_map.with_mut(|i| *i = None);
+                                    if key_code == Code::Enter {
+                                        ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                    }
+                                }
+                                onpress: move |_| {
+                                    is_renaming_map.with_mut(|i| *i = None);
+                                    ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
+                                }
+                        }})
                     }),
-                    files_list.read().iter().map(|file| {
-                        rsx!(File {
-                            text: file.name(),
-                            aria_label: file.name(),
-                            thumbnail: file.thumbnail(),
-                        })
+                   files_list.read().iter().map(|file| {
+                        let file_name = file.name();
+                        let file_name2 = file.name();
+
+                        let key = file.id();
+                        rsx!(ContextMenu {
+                                    key: "{key}-menu",
+                                    id: file.id().to_string(),
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::Pencil,
+                                            text: get_local_text("files.rename"),
+                                            onpress: move |_| {
+                                                is_renaming_map.with_mut(|i| *i = Some(key));
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::ArrowDownCircle,
+                                            text: "Download".to_owned(),
+                                            onpress: move |_| {
+                                                let file_extension = get_file_extension(file_name2.clone());
+                                                let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_name2.clone()).add_filter("", &[&file_extension]).save_file() {
+                                                    Some(path) => path,
+                                                    None => return,
+                                                };
+                                                ch.send(ChanCmd::DownloadFile((file_name2.clone(), file_path_buf)));
+                                            },
+                                        }
+                                    )),
+                                            File {
+                                                key: "{key}-file",
+                                                thumbnail: file.thumbnail(),
+                                                text: file.name(),
+                                                aria_label: file.name(),
+                                                with_rename: *is_renaming_map.read() == Some(key),
+                                                onrename: move |(val, key_code)| {
+                                                    is_renaming_map.with_mut(|i| *i = None);
+                                                    if key_code == Code::Enter {
+                                                        ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                    }
+                                                }
+                                    }
+                          }
+                          )
                     }),
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
