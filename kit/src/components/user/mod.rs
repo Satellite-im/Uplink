@@ -31,7 +31,7 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
     let f = timeago::Formatter::new();
     let current_time = Utc::now();
     let c: chrono::Duration =
-        current_time - cx.props.timestamp.unwrap_or_else(|| current_time.clone());
+        current_time - cx.props.timestamp.unwrap_or(current_time);
     let duration: std::time::Duration = match c.to_std() {
         // for the sidebar, don't want the timestamp to increment a few seconds every time the typing indicator comes over.
         // prevent this by rounding down and giving a duration in minutes only.

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::utils::notifications::set_badge;
+use crate::notifications::set_badge;
 
 use super::configuration::Configuration;
 

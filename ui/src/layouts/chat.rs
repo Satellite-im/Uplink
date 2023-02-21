@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::{
-    components::chat::{
-        compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
-    },
-    state::{ui, Action, State},
+use crate::components::chat::{
+    compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
 };
+use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Props)]
 pub struct Props {

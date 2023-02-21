@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
 
-use kit::{
-    elements::{
-        button::Button,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    icons::{Icon, IconElement},
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use kit::elements::{
+    button::Button,
+    tooltip::{ArrowPosition, Tooltip},
+    Appearance,
 };
 
 use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};

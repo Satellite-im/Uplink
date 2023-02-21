@@ -1,16 +1,11 @@
+use common::icons::outline::Shape as Icon;
+use common::language::{change_language, get_available_languages, get_local_text};
+use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, select::Select, switch::Switch},
-    icons::Icon,
-};
-use shared::language::{change_language, get_available_languages, get_local_text};
+use kit::elements::{button::Button, select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
-use crate::{
-    components::settings::SettingSection,
-    state::{action::ConfigAction, Action, State},
-    utils::get_available_themes,
-};
+use crate::{components::settings::SettingSection, utils::get_available_themes};
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {

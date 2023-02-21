@@ -1,14 +1,11 @@
 use dioxus::prelude::*;
 
-use crate::{
-    elements::{
-        button::Button,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    icons::Icon,
+use crate::elements::{
+    button::Button,
+    tooltip::{ArrowPosition, Tooltip},
+    Appearance,
 };
-
+use common::icons::outline::Shape as Icon;
 pub type To = &'static str;
 
 #[derive(Clone, PartialEq)]

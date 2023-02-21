@@ -1,5 +1,5 @@
+use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
