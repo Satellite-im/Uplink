@@ -1,11 +1,10 @@
 use dioxus::prelude::*;
 use uuid::Uuid;
 
-use crate::{
-    elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS},
-    icons::{Icon, IconElement},
-};
+use crate::elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS};
 
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]

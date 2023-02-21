@@ -1,15 +1,14 @@
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::action::ConfigAction;
+use common::state::Action;
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, switch::Switch},
-    icons::Icon,
-};
+use kit::elements::{button::Button, switch::Switch};
 
-use crate::{
-    components::settings::{ExtensionSetting, SettingSection},
-    state::State,
-    STATIC_ARGS,
-};
+use crate::components::settings::{ExtensionSetting, SettingSection};
+
+use common::sounds;
+use common::{state::State, STATIC_ARGS};
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings(cx: Scope) -> Element {
@@ -32,13 +31,13 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-extensions.auto-enable"),
                 section_description: get_local_text("settings-extensions.auto-enable-description"),
                 Switch {
-                    active: state.read().configuration.config.extensions.enable_automatically,
+                    active: state.read().configuration.extensions.enable_automatically,
                     onflipped: move |value| {
-                        if state.read().configuration.config.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::Flip);
                         }
 
-                        state.write().configuration.set_auto_enable_extensions(value);
+                        state.write().mutate(Action::Config(ConfigAction::SetAutoEnableExtensions(value)));
                     },
                 }
             },

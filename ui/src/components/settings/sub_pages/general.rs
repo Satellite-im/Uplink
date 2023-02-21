@@ -1,16 +1,11 @@
+use common::icons::outline::Shape as Icon;
 use common::language::{change_language, get_available_languages, get_local_text};
+use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, select::Select, switch::Switch},
-    icons::Icon,
-};
+use kit::elements::{button::Button, select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
-use crate::{
-    components::settings::SettingSection,
-    state::{Action, State},
-    utils::get_available_themes,
-};
+use crate::{components::settings::SettingSection, utils::get_available_themes};
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
@@ -28,9 +23,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
-                    active: state.read().configuration.config.general.enable_overlay,
+                    active: state.read().configuration.general.enable_overlay,
                     onflipped: move |e| {
-                        state.write().configuration.set_overlay(e);
+                        state.write().mutate(Action::Config(ConfigAction::SetOverlayEnabled(e)));
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }

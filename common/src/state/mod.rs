@@ -20,7 +20,6 @@ pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
-use std::path::{Path, PathBuf};
 pub use ui::{Theme, ToastNotification, UI};
 
 use crate::STATIC_ARGS;
@@ -83,6 +82,7 @@ impl fmt::Debug for State {
     }
 }
 
+// todo: why is there clone impl which returns a mutated value?
 impl Clone for State {
     fn clone(&self) -> Self {
         State {
@@ -94,7 +94,7 @@ impl Clone for State {
             hooks: Default::default(),
             settings: Default::default(),
             ui: Default::default(),
-            configuration: Configuration::new(),
+            configuration: self.configuration.clone(),
         }
     }
 }
@@ -117,10 +117,20 @@ impl State {
         match action {
             Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => self.ui.notifications.increment(kind, count),
-            Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
-            Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
-            Action::ClearAllNotifications => self.ui.notifications.clear_all(),
+            Action::AddNotification(kind, count) => {
+                self.ui
+                    .notifications
+                    .increment(&self.configuration, kind, count)
+            }
+            Action::RemoveNotification(kind, count) => {
+                self.ui
+                    .notifications
+                    .decrement(&self.configuration, kind, count)
+            }
+            Action::ClearNotification(kind) => {
+                self.ui.notifications.clear_kind(&self.configuration, kind)
+            }
+            Action::ClearAllNotifications => self.ui.notifications.clear_all(&self.configuration),
             Action::AddToastNotification(notification) => {
                 self.ui
                     .toast_notifications
@@ -176,13 +186,18 @@ impl State {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
                 self.set_active_chat(&chat);
-                self.clear_unreads(&chat);
-                self.chats.all.entry(chat.id).or_insert(chat);
+                let chat = self.chats.all.entry(chat.id).or_insert(chat);
+                chat.unreads = 0;
             }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
             Action::CancelReply(chat) => self.cancel_reply(&chat),
-            Action::ClearUnreads(chat) => self.clear_unreads(&chat),
+            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearActiveUnreads => {
+                if let Some(id) = self.chats.active {
+                    self.clear_unreads(id);
+                }
+            }
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
@@ -201,6 +216,9 @@ impl State {
             Action::SetId(identity) => self.set_identity(&identity),
             Action::SetActiveMedia(id) => self.set_active_media(id),
             Action::DisableMedia => self.disable_media(),
+
+            // ===== Configuration =====
+            Action::Config(action) => self.configuration.mutate(action),
         }
 
         let _ = self.save();
@@ -314,10 +332,10 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to clear unreads on.
+    /// * `chat_id` - The chat to clear unreads on.
     ///
-    fn clear_unreads(&mut self, chat: &Chat) {
-        if let Some(chat) = self.chats.all.get_mut(&chat.id) {
+    fn clear_unreads(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
             chat.unreads = 0;
         }
     }
@@ -326,7 +344,7 @@ impl State {
     ///
     /// # Arguments
     ///
-    /// * `chat` - The chat to remove.
+    /// * `chat_id` - The chat to remove.
     fn remove_sidebar_chat(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| *id != chat_id);
 
@@ -446,6 +464,12 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.sender());
             chat.messages.push_back(message);
+
+            if self.ui.current_layout != ui::Layout::Compose
+                || self.chats.active != Some(conversation_id)
+            {
+                chat.unreads += 1;
+            }
         }
     }
 
@@ -724,7 +748,7 @@ impl State {
     }
 
     /// Saves the current state to disk.
-    fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string_pretty(self)?;
         let path = if STATIC_ARGS.use_mock {
             &STATIC_ARGS.mock_cache_path
@@ -744,7 +768,10 @@ impl State {
         let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
             Err(_) => {
-                return State::default();
+                return State {
+                    configuration: Configuration::new(),
+                    ..State::default()
+                };
             }
         };
         serde_json::from_str(&contents).unwrap_or_default()
@@ -784,17 +811,13 @@ impl State {
 
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self
-                    .configuration
-                    .config
-                    .notifications
-                    .friends_notifications;
+                let notifications_enabled = self.configuration.notifications.friends_notifications;
 
                 if !self.ui.metadata.focused && notifications_enabled {
-                    crate::utils::notifications::push_notification(
+                    crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
                         format!("{} sent a request.", identity.username()),
-                        Some(crate::utils::sounds::Sounds::Notification),
+                        Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
                     );
                 }
@@ -867,24 +890,20 @@ impl State {
 
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self
-                    .configuration
-                    .config
-                    .notifications
-                    .messages_notifications;
+                let notifications_enabled = self.configuration.notifications.messages_notifications;
                 let should_play_sound = self.chats.active != Some(conversation_id)
-                    && self.configuration.config.audiovideo.message_sounds;
+                    && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
 
                 // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
-                    let sound = if self.configuration.config.audiovideo.message_sounds {
-                        Some(crate::utils::sounds::Sounds::Notification)
+                    let sound = if self.configuration.audiovideo.message_sounds {
+                        Some(crate::sounds::Sounds::Notification)
                     } else {
                         None
                     };
-                    crate::utils::notifications::push_notification(
+                    crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
                         format!("{} sent a request.", "NOT YET IMPL"),
                         sound,
@@ -892,7 +911,7 @@ impl State {
                     );
                 // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
                 } else if should_play_sound {
-                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+                    crate::sounds::Play(crate::sounds::Sounds::Notification);
                 }
             }
             MessageEvent::Sent {

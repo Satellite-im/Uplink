@@ -1,21 +1,21 @@
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::configuration::Configuration;
+use common::{
+    sounds,
+    warp_runner::{MultiPassCmd, WarpCmd},
+    WARP_CMD_CH,
+};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Validation},
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    input::{Input, Options, Validation},
 };
 use warp::logging::tracing::log;
 
-use crate::{
-    config::Configuration,
-    warp_runner::{MultiPassCmd, WarpCmd},
-    AuthPages, WARP_CMD_CH,
-};
+use crate::AuthPages;
 
 #[inline_props]
 #[allow(non_snake_case)]
@@ -44,6 +44,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
         to_owned![page];
         async move {
+            let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -61,9 +62,10 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
 
                 match res {
                     Ok(_) => {
-                        if Configuration::load_or_default().audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                        if config.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::On);
                         }
+
                         page.set(AuthPages::Success);
                     }
                     // todo: notify user

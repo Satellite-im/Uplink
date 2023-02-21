@@ -1,6 +1,7 @@
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use extensions::*;
-use kit::{elements::button::Button, icons::Icon};
+use kit::elements::button::Button;
 
 // Exports the plugin using the registrar
 // You don't need to really worry about this but it is required.

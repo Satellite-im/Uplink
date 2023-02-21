@@ -1,21 +1,19 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 
-use crate::{
-    components::{
-        chat::RouteInfo,
-        settings::{
-            sidebar::{Page, Sidebar},
-            sub_pages::{
-                audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
-                files::FilesSettings, general::GeneralSettings,
-                notifications::NotificationSettings, privacy::PrivacySettings,
-                profile::ProfileSettings,
-            },
+use crate::components::{
+    chat::RouteInfo,
+    settings::{
+        sidebar::{Page, Sidebar},
+        sub_pages::{
+            audio::AudioSettings, developer::DeveloperSettings, extensions::ExtensionSettings,
+            files::FilesSettings, general::GeneralSettings, notifications::NotificationSettings,
+            privacy::PrivacySettings, profile::ProfileSettings,
         },
     },
-    state::{Action, State},
 };
+
+use common::state::{ui, Action, State};
 
 use kit::{components::nav::Nav, layout::topbar::Topbar};
 
@@ -28,6 +26,8 @@ pub struct Props {
 pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::General);
+
+    state.write_silent().ui.current_layout = ui::Layout::Settings;
 
     let first_render = use_state(cx, || true);
     if *first_render.get() {

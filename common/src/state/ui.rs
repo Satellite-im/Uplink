@@ -1,4 +1,4 @@
-use crate::icons::Icon;
+use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::ExtensionProxy;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,21 @@ pub struct WindowMeta {
     pub width: u32,
     pub height: u32,
     pub minimal_view: bool, // We can use this to detect mobile or portrait mode
+}
+
+#[derive(Clone, Deserialize, Serialize, Eq, PartialEq)]
+pub enum Layout {
+    Welcome,
+    Compose,
+    Friends,
+    Settings,
+    Storage,
+}
+
+impl Default for Layout {
+    fn default() -> Self {
+        Self::Welcome
+    }
 }
 
 #[derive(Default, Deserialize, Serialize)]
@@ -36,6 +51,8 @@ pub struct UI {
     pub enable_overlay: bool,
     pub sidebar_hidden: bool,
     pub metadata: WindowMeta,
+    #[serde(skip)]
+    pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
@@ -196,7 +213,7 @@ pub struct ToastNotification {
     initial_time: u32,
     remaining_time: u32,
     #[serde(skip)]
-    icon: Option<Icon>,
+    pub icon: Option<Icon>,
 }
 
 impl ToastNotification {

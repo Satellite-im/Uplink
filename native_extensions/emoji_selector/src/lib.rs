@@ -1,10 +1,10 @@
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use emojis::Group;
 use extensions::*;
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
-    icons::Icon,
 };
 
 export_extension!(register);

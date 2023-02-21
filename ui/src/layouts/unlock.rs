@@ -1,21 +1,21 @@
-use common::language::get_local_text;
+use common::{language::get_local_text, state::configuration::Configuration};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Validation},
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    input::{Input, Options, Validation},
 };
 use warp::logging::tracing::log;
 
-use crate::{
-    config::Configuration,
+use common::icons::outline::Shape as Icon;
+use common::{
+    sounds,
     warp_runner::{MultiPassCmd, WarpCmd},
-    AuthPages, WARP_CMD_CH,
+    WARP_CMD_CH,
 };
+
+use crate::AuthPages;
 
 // todo: go to the auth page if no account has been created
 #[inline_props]
@@ -46,6 +46,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, page, can_create_new_account];
         async move {
+            let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -62,8 +63,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
                 match res {
                     Ok(_) => {
-                        if Configuration::load_or_default().audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                        if config.audiovideo.interface_sounds {
+                            sounds::Play(sounds::Sounds::On);
                         }
                         page.set(AuthPages::Success)
                     }

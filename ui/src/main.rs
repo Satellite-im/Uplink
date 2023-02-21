@@ -2,6 +2,10 @@
 
 use ::extensions::ExtensionProxy;
 use clap::Parser;
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use common::language::{change_language, get_local_text};
+use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -9,20 +13,17 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
-use futures::channel::{mpsc, oneshot};
+use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
-use kit::icons::IconElement;
-use kit::{components::nav::Route as UIRoute, icons::Icon};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use common::language::{change_language, get_local_text};
-use state::State;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
 use uuid::Uuid;
 
@@ -44,46 +45,24 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::state::ui::WindowMeta;
-use crate::state::Action;
-use crate::state::{friends, storage};
-use crate::warp_runner::{
-    ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
-};
+
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
+use common::{
+    state::{friends, storage, ui::WindowMeta, Action, State},
+    warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
+};
 use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-pub mod components;
-pub mod extensions;
-pub mod layouts;
-pub mod logger;
-pub mod overlay;
-pub mod testing;
-pub mod utils;
-mod warp_runner;
+mod components;
+mod extensions;
+mod layouts;
+mod logger;
+mod overlay;
+mod utils;
 mod window_manager;
-
-// allows the UI to send commands to Warp
-pub static WARP_CMD_CH: Lazy<WarpCmdChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    WarpCmdChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
-});
-
-// allows the UI to receive events to Warp
-// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    WarpEventChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
-});
 
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
@@ -140,7 +119,7 @@ fn main() {
     if fdlimit::raise_fd_limit().is_none() {}
 
     // configure logging
-    let args = Args::parse();
+    let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
@@ -358,7 +337,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
 
     // todo: delete this. it is just an example
-    if state.configuration.config.general.enable_overlay {
+    if state.configuration.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
@@ -393,7 +372,7 @@ fn app(cx: Scope) -> Element {
     let inner = state.inner();
 
     use_future(cx, (), |_| async move {
-        let (tx, mut rx) = mpsc::unbounded();
+        let (tx, mut rx) = futures::channel::mpsc::unbounded();
         let mut watcher = match RecommendedWatcher::new(
             move |res| {
                 let _ = tx.unbounded_send(res);
@@ -838,7 +817,6 @@ fn get_logger(cx: Scope) -> Element {
     cx.render(rsx!(state
         .read()
         .configuration
-        .config
         .developer
         .developer_mode
         .then(|| rsx!(DebugLogger {}))))
@@ -862,7 +840,7 @@ fn get_toasts(cx: Scope) -> Element {
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-    let config = state.read().configuration.config.clone();
+    let config = state.read().configuration.clone();
 
     cx.render(rsx!(
         div {

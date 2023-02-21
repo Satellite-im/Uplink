@@ -14,7 +14,7 @@ dioxus-hooks =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da19917
 dioxus-html =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
 timeago = "0.4.0"
 humansize = "2.0.0"
-shared = { path = "../shared" }
+common = { path = "../common" }
 
 derive_more = "0.99"
 

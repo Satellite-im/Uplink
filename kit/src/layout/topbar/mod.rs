@@ -1,9 +1,7 @@
+use common::icons;
 use dioxus::prelude::*;
 
-use crate::{
-    elements::{button::Button, Appearance},
-    icons::Icon,
-};
+use crate::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -42,7 +40,7 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             aria_label: "Topbar",
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
-                    icon: if currently_back { Icon::ChevronLeft } else { Icon::SidebarArrowLeft },
+                    icon: if currently_back { icons::outline::Shape::ChevronLeft } else { icons::outline::Shape::SidebarArrowLeft },
                     onpress: move |_| emit(&cx),
                     appearance: Appearance::Secondary
                 }

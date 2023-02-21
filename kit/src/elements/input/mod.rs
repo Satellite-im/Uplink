@@ -3,10 +3,10 @@ use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
 
 pub type ValidationError = String;
-use crate::{
-    elements::label::Label,
-    icons::{Icon, IconElement},
-};
+use crate::elements::label::Label;
+
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 
 /// This vector of special chars must be used to decide which char can or cannot be allowed in the input field.
 ///

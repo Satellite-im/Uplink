@@ -8,18 +8,21 @@ use kit::{
         user_image::UserImage,
     },
     elements::label::Label,
-    icons::Icon,
 };
 
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{
+    state::{Action, Chat, State},
+    warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
+    STATIC_ARGS, WARP_CMD_CH,
+};
 use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    state::{Action, Chat, State},
     utils::convert_status,
-    warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
-    STATIC_ARGS, UPLINK_ROUTES, WARP_CMD_CH,
+    UPLINK_ROUTES,
 };
 
 #[allow(clippy::large_enum_variant)]

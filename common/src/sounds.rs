@@ -8,12 +8,12 @@ pub enum Sounds {
     Off,
 }
 
-const ERROR: &[u8] = include_bytes!("./sounds/Error.ogg");
-const FLIP: &[u8] = include_bytes!("./sounds/Flip.ogg");
-const INTERACTION: &[u8] = include_bytes!("./sounds/Interaction.ogg");
-const NOTIFICATION: &[u8] = include_bytes!("./sounds/Notification.ogg");
-const ON: &[u8] = include_bytes!("./sounds/On.ogg");
-const OFF: &[u8] = include_bytes!("./sounds/Off.ogg");
+const ERROR: &[u8] = include_bytes!("sounds/Error.ogg");
+const FLIP: &[u8] = include_bytes!("sounds/Flip.ogg");
+const INTERACTION: &[u8] = include_bytes!("sounds/Interaction.ogg");
+const NOTIFICATION: &[u8] = include_bytes!("sounds/Notification.ogg");
+const ON: &[u8] = include_bytes!("sounds/On.ogg");
+const OFF: &[u8] = include_bytes!("sounds/Off.ogg");
 
 #[allow(non_snake_case)]
 pub fn Play(sound: Sounds) {

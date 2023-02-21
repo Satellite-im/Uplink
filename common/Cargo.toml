@@ -9,7 +9,6 @@ edition = "2021"
 unic-langid = "0.9.1"
 isolang = "2.2.0"
 fluent-templates = "0.8.0"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
 notify = "5.1.0"
 serde = "1.0.150"
 serde_json = "1.0.89"
@@ -28,8 +27,23 @@ image = "0.24.5"
 names = "0.14.0"
 titlecase = "2.2.1"
 substring = "1.4.5"
-extensions = { path = "../extensions" }
 icons = { path="../icons" }
+humansize = "2.0.0"
+
+extensions = { path="../extensions" }
+
+futures = "0.3"
+# do we really want to pull in all of tokio? 
+tokio = { version = "1.23.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full"] }
+
+mime = "0.3.16"
+tempfile = "3.0.7"
+
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
 dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [

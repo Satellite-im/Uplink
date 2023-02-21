@@ -41,6 +41,9 @@ wry = { version = "0.23.4" }
 derive_more = "0.99"
 colored = "2.0.0"
 notify = "5.1.0"
+rand = "0.8.4"
+notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }
+titlecase = "2.2.1"
 
 tempfile = "3.0.7"
 fdlimit = "0.2"
