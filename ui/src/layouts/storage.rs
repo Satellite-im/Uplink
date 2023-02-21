@@ -43,8 +43,14 @@ enum ChanCmd {
     OpenDirectory(String),
     BackToPreviousDirectory(Directory),
     UploadFiles(Vec<PathBuf>),
-    DownloadFile((String, PathBuf)),
-    RenameItem { old_name: String, new_name: String },
+    DownloadFile {
+        file_name: String,
+        local_path_to_save_file: PathBuf,
+    },
+    RenameItem {
+        old_name: String,
+        new_name: String,
+    },
 }
 
 #[derive(PartialEq, Props)]
@@ -204,7 +210,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         }
                     }
-                    ChanCmd::DownloadFile((file_name, local_path_to_save_file)) => {
+                    ChanCmd::DownloadFile {
+                        file_name,
+                        local_path_to_save_file,
+                    } => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -481,40 +490,40 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             icon: Icon::ArrowDownCircle,
                                             text: get_local_text("files.download"),
                                             onpress: move |_| {
-
-                                                let file_extension = std::path::Path::new(&file_name2.clone())
-                                                .extension()
-                                                .and_then(OsStr::to_str)
-                                                .map(|s| format!("{s}"))
-                                                .unwrap_or_default();
+                                                let file_extension = std::path::Path::new(&file_name2)
+                                                    .extension()
+                                                    .and_then(OsStr::to_str)
+                                                    .map(|s| format!("{s}"))
+                                                    .unwrap_or_default();
 
                                                 let file_stem = PathBuf::from(&file_name2)
                                                         .file_stem()
                                                         .and_then(OsStr::to_str)
                                                         .map(str::to_string)
                                                         .unwrap_or_default();
+
                                                 let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                                                     Some(path) => path,
                                                     None => return,
                                                 };
-                                                ch.send(ChanCmd::DownloadFile((file_name2.clone(), file_path_buf)));
+                                                ch.send(ChanCmd::DownloadFile { file_name: file_name2.clone(), local_path_to_save_file: file_path_buf } );
                                             },
                                         }
                                     )),
-                                            File {
-                                                key: "{key}-file",
-                                                thumbnail: file.thumbnail(),
-                                                text: file.name(),
-                                                aria_label: file.name(),
-                                                with_rename: *is_renaming_map.read() == Some(key),
-                                                onrename: move |(val, key_code)| {
-                                                    is_renaming_map.with_mut(|i| *i = None);
-                                                    if key_code == Code::Enter {
-                                                        ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
-                                                    }
-                                                }
+                                    File {
+                                        key: "{key}-file",
+                                        thumbnail: file.thumbnail(),
+                                        text: file.name(),
+                                        aria_label: file.name(),
+                                        with_rename: *is_renaming_map.read() == Some(key),
+                                        onrename: move |(val, key_code)| {
+                                            is_renaming_map.with_mut(|i| *i = None);
+                                            if key_code == Code::Enter {
+                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                            }
+                                        }
                                     }
-                          }
+                                }
                           )
                     }),
                 },
