@@ -649,7 +649,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             label: get_local_text("messages.replying"),
                             remote: our_did != msg.sender(),
                             onclose: move |_| {
-                                state.write().mutate(Action::CancelReply(active_chat.id.clone()))
+                                state.write().mutate(Action::CancelReply(active_chat.id))
                             },
                             message: msg.value().join("\n"),
                             UserImage {
