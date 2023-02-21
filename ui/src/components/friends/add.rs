@@ -163,6 +163,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                     },
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
+                        // .
                         friend_input_valid.set(is_valid);
                     },
                     aria_label: "Add Someone Input".into()
