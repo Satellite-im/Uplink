@@ -51,6 +51,15 @@ cargo run --bin ui --profile=rapid
 | Chocolatey | [Installation Guide](https://chocolatey.org/install) |
 | Rust | choco install rust |
 
+**Ubuntu WSL (Maybe also Ubuntu + Debian)**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
+| Build Essentials | `sudo apt install build-essential` |
+| pkg-config | `sudo apt-get install pkg-config` |
+| alsa-sys | `sudo apt install librust-alsa-sys-dev` |
+| libgtk-dev | `sudo apt-get install libgtk-3-dev` |
+
 ## Contributing
 
 All contributions are welcome! Please keep in mind we're still a relatively small team and any work done to make sure contributions don't cause bugs or issues in the application is much appreciated.
