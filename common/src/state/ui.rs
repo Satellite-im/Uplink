@@ -1,5 +1,6 @@
 use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
+use extensions::ExtensionProxy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
@@ -32,7 +33,7 @@ impl Default for Layout {
     }
 }
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct UI {
     pub notifications: Notifications,
     // stores information related to the current call
@@ -55,6 +56,8 @@ pub struct UI {
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
+    #[serde(skip)]
+    pub extensions: HashMap<String, ExtensionProxy>,
 }
 
 impl Drop for UI {
@@ -207,10 +210,10 @@ impl DebugLogger {
 pub struct ToastNotification {
     pub title: String,
     pub content: String,
-    #[serde(skip)]
-    pub icon: Option<Icon>,
     initial_time: u32,
     remaining_time: u32,
+    #[serde(skip)]
+    pub icon: Option<Icon>,
 }
 
 impl ToastNotification {

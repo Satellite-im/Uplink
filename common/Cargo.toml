@@ -28,6 +28,9 @@ names = "0.14.0"
 titlecase = "2.2.1"
 substring = "1.4.5"
 icons = { path="../icons" }
+humansize = "2.0.0"
+
+extensions = { path="../extensions" }
 
 futures = "0.3"
 # do we really want to pull in all of tokio? 

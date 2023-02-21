@@ -1,8 +1,8 @@
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::configuration::Configuration;
 use common::{
     sounds,
-    state::configuration::AudioVideo,
     warp_runner::{MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -44,10 +44,9 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, String)>| {
         to_owned![page];
         async move {
-            let config = AudioVideo::load_async().await;
+            let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
-                //println!("auth got input");
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
@@ -61,10 +60,9 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
 
                 let res = rx.await.expect("failed to get response from warp_runner");
 
-                //println!("got response from warp");
                 match res {
                     Ok(_) => {
-                        if config.interface_sounds {
+                        if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
 

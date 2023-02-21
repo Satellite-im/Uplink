@@ -459,9 +459,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 .collect::<Vec<_>>()
         });
 
-    //println!("active chat: {:?}", &active_chat_id);
-    //println!("users typing: {:?}", &users_typing);
-
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
         //to_owned![];
         async move {
@@ -490,6 +487,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // side A -> (typing indicator) -> side B
     // side B removes the typing indicator after a timeout
     // side A doesn't want to send too many typing indicators, say once every 4-5 seconds
+    // should we consider matching the timeout with the send frequency so we can closely match if a person is straight up typing for 5 mins straight.
 
     // tracks if the local participant is typing
     // re-sends typing indicator in response to the Refresh command
@@ -573,6 +571,18 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let msg_valid =
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
+    let extensions = &state.read().ui.extensions;
+
+    let ext_renders = {
+        let mut list = vec![];
+        let extensions = extensions.iter();
+        for (_, proxy) in extensions {
+            list.push(rsx!(proxy.extension.render(cx)));
+        }
+
+        list
+    };
+
     cx.render(rsx!(Chatbar {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
@@ -605,38 +615,44 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 msg_ch.send((msg, id));
             }
         },
-        controls: cx.render(rsx!(Button {
-            icon: Icon::ChevronDoubleRight,
-            disabled: is_loading,
-            appearance: Appearance::Secondary,
-            onpress: move |_| {
-                local_typing_ch.send(TypingIndicator::NotTyping);
+        controls: cx.render(rsx!(
+            // Load extensions
+//            for node in ext_renders {
+//                rsx!(node)
+//            },
+            Button {
+                icon: Icon::ChevronDoubleRight,
+                disabled: is_loading,
+                appearance: Appearance::Secondary,
+                onpress: move |_| {
+                    local_typing_ch.send(TypingIndicator::NotTyping);
 
-                let msg = input.read().clone();
-                // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-                input.write().clear();
-                should_clear_input.set(true);
+                    let msg = input.read().clone();
+                    // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+                    input.write().clear();
+                    should_clear_input.set(true);
 
-                if !msg_valid(&msg) {
-                    return;
-                }
+                    if !msg_valid(&msg) {
+                        return;
+                    }
 
-                let id = match active_chat_id {
-                    Some(i) => i,
-                    None => return,
-                };
+                    let id = match active_chat_id {
+                        Some(i) => i,
+                        None => return,
+                    };
 
-                if STATIC_ARGS.use_mock {
-                    state.write().mutate(Action::MockSend(id, msg));
-                } else {
-                    msg_ch.send((msg, id));
-                }
+                    if STATIC_ARGS.use_mock {
+                        state.write().mutate(Action::MockSend(id, msg));
+                    } else {
+                        msg_ch.send((msg, id));
+                    }
+                },
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: get_local_text("uplink.send"),
+                })),
             },
-            tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Bottom,
-                text: get_local_text("uplink.send"),
-            })),
-        },)),
+        )),
         with_replying_to: data
             .map(|data| {
                 let active_chat = data.active_chat.clone();

@@ -1,10 +1,11 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use ::extensions::ExtensionProxy;
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::{state, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -13,13 +14,16 @@ use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::path::Path;
 use std::time::Instant;
 use uuid::Uuid;
 
@@ -35,6 +39,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
+use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -51,11 +56,12 @@ use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-pub mod components;
-pub mod layouts;
-pub mod logger;
-pub mod overlay;
-pub mod utils;
+mod components;
+mod extensions;
+mod layouts;
+mod logger;
+mod overlay;
+mod utils;
 mod window_manager;
 
 // used to close the popout player, among other things
@@ -89,38 +95,8 @@ pub enum AuthPages {
     Success,
 }
 
-// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
-// enable tracing from modules besides Uplink
-#[derive(clap::Subcommand, Debug)]
-enum LogProfile {
-    /// normal operation
-    Normal,
-    /// print everything but tracing logs to the terminal
-    Debug,
-    /// print everything including tracing logs to the terminal
-    Trace,
-    /// like trace but include warp logs
-    Trace2,
-}
-
-#[derive(Debug, Parser)]
-#[clap(name = "")]
-struct Args {
-    /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
-    #[clap(long)]
-    path: Option<PathBuf>,
-    #[clap(long)]
-    experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
-    #[clap(long, default_value_t = false)]
-    with_mock: bool,
-    /// configures log output
-    #[command(subcommand)]
-    profile: Option<LogProfile>,
-}
-
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
+    let themes_dest = &STATIC_ARGS.uplink_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -143,7 +119,7 @@ fn main() {
     if fdlimit::raise_fd_limit().is_none() {}
 
     // configure logging
-    let args = Args::parse();
+    let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
@@ -316,6 +292,34 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
+fn get_extensions() -> HashMap<String, ExtensionProxy> {
+    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
+    // that updates when they have new info, i.e. state.
+    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
+    let mut extensions_library = AvailableExtensions::new();
+
+    for entry in paths {
+        let path = entry.unwrap().path();
+        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
+            log::debug!("Found extension: {:?}", path);
+            unsafe {
+                let loader = extensions_library.load(&path);
+                match loader {
+                    Ok(_) => {
+                        log::debug!("Loaded extension: {:?}", &path);
+                    }
+                    Err(e) => {
+                        log::error!("Error loading extension: {:?}", e);
+                    }
+                }
+            }
+        }
+    }
+    extensions_library.extensions
+}
+
 // called at the end of the auth flow
 #[inline_props]
 pub fn app_bootstrap(cx: Scope) -> Element {
@@ -351,6 +355,9 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     };
     state.ui.metadata = window_meta;
 
+    state.ui.extensions = get_extensions();
+    log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
+
     use_shared_state_provider(cx, || state);
 
     cx.render(rsx!(crate::app {}))
@@ -360,6 +367,57 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+
+    // Automatically select the best implementation for your platform.
+    let inner = state.inner();
+
+    use_future(cx, (), |_| async move {
+        let (tx, mut rx) = futures::channel::mpsc::unbounded();
+        let mut watcher = match RecommendedWatcher::new(
+            move |res| {
+                let _ = tx.unbounded_send(res);
+            },
+            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+        ) {
+            Ok(watcher) => watcher,
+            Err(e) => {
+                log::error!("{e}");
+                return;
+            }
+        };
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        if let Err(e) = watcher.watch(
+            STATIC_ARGS.extensions_path.as_path(),
+            RecursiveMode::Recursive,
+        ) {
+            log::error!("{e}");
+            return;
+        }
+
+        while let Some(event) = rx.next().await {
+            let event = match event {
+                Ok(event) => event,
+                Err(e) => {
+                    log::error!("{e}");
+                    continue;
+                }
+            };
+
+            log::debug!("{event:?}");
+            match inner.try_borrow_mut() {
+                Ok(state) => {
+                    state
+                        .write()
+                        .mutate(Action::RegisterExtensions(get_extensions()));
+                }
+                Err(e) => {
+                    log::error!("{e}");
+                }
+            }
+        }
+    });
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -495,7 +553,6 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("received warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().process_warp_event(evt);
@@ -514,7 +571,6 @@ fn app(cx: Scope) -> Element {
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
-            //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
                 match inner.try_borrow_mut() {
@@ -523,7 +579,6 @@ fn app(cx: Scope) -> Element {
                             continue;
                         }
                         if state.write().decrement_toasts() {
-                            //println!("decrement toasts");
                             needs_update.set(true);
                         }
                     }
@@ -578,7 +633,6 @@ fn app(cx: Scope) -> Element {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
-                //println!("window manager received command");
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
@@ -726,7 +780,6 @@ fn app(cx: Scope) -> Element {
                     state.write().chats.all = all_chats;
                     state.write().account.identity = own_id;
                     state.write().chats.initialized = true;
-                    //println!("{:#?}", state.read().chats);
                     needs_update.set(true);
                 }
                 Err(e) => {

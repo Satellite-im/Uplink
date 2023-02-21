@@ -91,7 +91,6 @@ pub async fn convert_message_event(
             },
         },
         _ => {
-            println!("evt received: {event:?}");
             todo!();
         }
     };

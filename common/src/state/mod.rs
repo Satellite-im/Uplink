@@ -22,13 +22,14 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 
+use crate::STATIC_ARGS;
+
 use crate::{
     testing::mock::generate_mock,
     warp_runner::{
         ui_adapter::{MessageEvent, MultiPassEvent, RayGunEvent},
         WarpEvent,
     },
-    STATIC_ARGS,
 };
 use either::Either;
 use serde::{Deserialize, Serialize};
@@ -114,6 +115,7 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
             // ===== Notifications =====
             Action::AddNotification(kind, count) => {
                 self.ui
@@ -232,7 +234,6 @@ impl State {
     ///
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
-        //println!("set-active-chat: {:#?}", chat);
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
             self.chats.in_sidebar.push(chat.id);

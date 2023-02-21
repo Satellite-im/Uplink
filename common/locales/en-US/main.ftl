@@ -102,6 +102,8 @@ settings-general = General Settings
 settings-extensions = Extension Settings
     .placeholder = Placeholder
     .open-extensions-folder = Open Extensions Folder
+    .auto-enable = Enable Automatically
+    .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase

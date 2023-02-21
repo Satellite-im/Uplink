@@ -80,8 +80,6 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    //println!("rendering chatbar");
-
     cx.render(rsx!(
         div {
             class: "chatbar",
