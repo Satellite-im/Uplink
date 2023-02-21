@@ -68,6 +68,7 @@ files = Files
     .free-space = Free Space:
     .total-space = Total Space:
     .rename = Rename
+    .download = Download
 
 settings = Settings
     .settings = Settings

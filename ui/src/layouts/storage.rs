@@ -10,7 +10,7 @@ use kit::{
     },
     elements::{
         button::Button,
-        file::{get_file_extension, File},
+        file::File,
         folder::Folder,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
@@ -478,7 +478,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         },
                                         ContextItem {
                                             icon: Icon::ArrowDownCircle,
-                                            text: "Download".to_owned(),
+                                            text: get_local_text("files.download"),
                                             onpress: move |_| {
 
                                                 let file_extension = std::path::Path::new(&file_name2.clone())
