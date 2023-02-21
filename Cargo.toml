@@ -1,5 +1,5 @@
 [workspace]
-members = ["./kit", "./ui", "./icons", "./extensions", "./extension_example", "./native_extensions/emoji_selector"]
+members = ["./kit", "./ui", "./icons", "./shared", "./extensions", "./extension_example", "./native_extensions/emoji_selector"]
 
 [profile.rapid]
 inherits = "dev"

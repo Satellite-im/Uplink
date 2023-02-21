@@ -11,6 +11,7 @@ pub mod storage;
 pub mod ui;
 
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
+use crate::language::get_local_text;
 pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
@@ -19,8 +20,10 @@ pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
-use shared::language::get_local_text;
+use std::path::{Path, PathBuf};
 pub use ui::{Theme, ToastNotification, UI};
+
+use crate::STATIC_ARGS;
 
 use crate::{
     testing::mock::generate_mock,
@@ -28,7 +31,6 @@ use crate::{
         ui_adapter::{MessageEvent, MultiPassEvent, RayGunEvent},
         WarpEvent,
     },
-    STATIC_ARGS,
 };
 use either::Either;
 use serde::{Deserialize, Serialize};

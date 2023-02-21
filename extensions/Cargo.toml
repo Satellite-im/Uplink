@@ -10,6 +10,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e2
 libloading = "0.7.4"
 warp = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
 derive_more = "0.99"
+ipc-channel = "0.16.0"
 
 [build-dependencies]
 rustc_version = "0.4.0"

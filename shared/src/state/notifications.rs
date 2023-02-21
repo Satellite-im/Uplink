@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{config::Configuration, utils::notifications::set_badge};
+use crate::{config::Configuration, notifications::set_badge};
 
 // This kind is used to determine which notification kind to add to. It can also be used for querying specific notification counts.
 pub enum NotificationKind {

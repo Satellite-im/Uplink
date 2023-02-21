@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use ipc_channel::ipc::IpcReceiver;
 use libloading::Library;
 use std::{fmt, rc::Rc};
 
@@ -131,5 +132,15 @@ impl Extension for ExtensionProxy {
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         self.extension.render(cx)
+    }
+}
+
+pub struct ExtIPC_API {
+    // pub state_proxy: State,
+}
+
+impl ExtIPC_API {
+    fn blacklist(&self) {
+        // self.state_proxy.account
     }
 }

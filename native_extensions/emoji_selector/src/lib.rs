@@ -20,62 +20,65 @@ impl EmojiSelector {
     fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         let mut routes_ = vec![];
         routes_.push(Route {
-            to: "!void",
+            to: "smileys_and_emotion",
             name: "Smileys & Emotion".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "people_and_body",
             name: "People & Body".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "animals_and_nature",
             name: "Animals & Nature".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "travel_and_places",
             name: "Travel & Places".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "activities",
             name: "Activities".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "objects",
             name: "Objects".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "symbols",
             name: "Symbols".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "!void",
+            to: "flags",
             name: "Flags".to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
-        cx.render(rsx!(Nav { routes: routes_ }))
+        cx.render(rsx!(Nav {
+            routes: routes_,
+            onnavigate: |_| {}
+        }))
     }
 
     fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {

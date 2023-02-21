@@ -1,6 +1,6 @@
+use crate::icons::Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::ExtensionProxy;
-use kit::icons::Icon;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
@@ -193,10 +193,10 @@ impl DebugLogger {
 pub struct ToastNotification {
     pub title: String,
     pub content: String,
-    #[serde(skip)]
-    pub icon: Option<Icon>,
     initial_time: u32,
     remaining_time: u32,
+    #[serde(skip)]
+    icon: Option<Icon>,
 }
 
 impl ToastNotification {
