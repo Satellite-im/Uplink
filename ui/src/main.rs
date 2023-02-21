@@ -1,6 +1,10 @@
 //#![deny(elided_lifetimes_in_paths)]
 
 use clap::Parser;
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
+use common::language::{change_language, get_local_text};
+use common::{state, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -9,14 +13,11 @@ use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use futures::channel::oneshot;
+use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
-use kit::icons::IconElement;
-use kit::{components::nav::Route as UIRoute, icons::Icon};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use shared::language::{change_language, get_local_text};
-use state::State;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -39,14 +40,13 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
-use crate::state::ui::WindowMeta;
-use crate::state::Action;
-use crate::state::{friends, storage};
-use crate::warp_runner::{
-    ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd, WarpCmdChannels, WarpEventChannels,
-};
+
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
+use common::{
+    state::{friends, storage, ui::WindowMeta, Action, State},
+    warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
+};
 use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
@@ -55,30 +55,8 @@ pub mod components;
 pub mod layouts;
 pub mod logger;
 pub mod overlay;
-pub mod state;
-pub mod testing;
 pub mod utils;
-mod warp_runner;
 mod window_manager;
-
-// allows the UI to send commands to Warp
-pub static WARP_CMD_CH: Lazy<WarpCmdChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    WarpCmdChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
-});
-
-// allows the UI to receive events to Warp
-// pretty sure the rx channel needs to be in a mutex in order for it to be a static mutable variable
-pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    WarpEventChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
-});
 
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {

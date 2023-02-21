@@ -1,21 +1,21 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
+use common::{
+    sounds,
+    state::configuration::AudioVideo,
+    warp_runner::{MultiPassCmd, WarpCmd},
+    WARP_CMD_CH,
+};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Validation},
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    input::{Input, Options, Validation},
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
-use crate::{
-    state::configuration::AudioVideo,
-    warp_runner::{MultiPassCmd, WarpCmd},
-    AuthPages, WARP_CMD_CH,
-};
+use crate::AuthPages;
 
 #[inline_props]
 #[allow(non_snake_case)]
@@ -65,7 +65,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 match res {
                     Ok(_) => {
                         if config.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                            sounds::Play(sounds::Sounds::On);
                         }
 
                         page.set(AuthPages::Success);

@@ -1,9 +1,7 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus::prelude::*;
-use kit::{
-    elements::{button::Button, switch::Switch},
-    icons::Icon,
-};
-use shared::language::get_local_text;
+use kit::elements::{button::Button, switch::Switch};
 
 use crate::components::settings::ExtensionSetting;
 

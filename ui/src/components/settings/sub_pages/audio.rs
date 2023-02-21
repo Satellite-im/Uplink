@@ -1,12 +1,11 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use kit::elements::switch::Switch;
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
-use crate::{
-    components::settings::SettingSection,
-    state::{action::ConfigAction, Action, State},
-};
+use crate::components::settings::SettingSection;
+use common::sounds;
+use common::state::{action::ConfigAction, Action, State};
 
 #[allow(non_snake_case)]
 pub fn AudioSettings(cx: Scope) -> Element {
@@ -24,7 +23,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     active: state.read().configuration.audiovideo.interface_sounds,
                     onflipped: move |e| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            sounds::Play(sounds::Sounds::Flip);
                         }
                         state.write().mutate(Action::Config(ConfigAction::SetInterfaceSoundsEnabled(e)));
                     }
@@ -37,7 +36,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     active: state.read().configuration.audiovideo.media_sounds,
                     onflipped: move |e| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                           sounds::Play(sounds::Sounds::Flip);
                         }
                         state.write().mutate(Action::Config(ConfigAction::SetMediaSoundsEnabled(e)));
                     }
@@ -50,7 +49,7 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     active: state.read().configuration.audiovideo.message_sounds,
                     onflipped: move |e| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Flip);
+                            sounds::Play(sounds::Sounds::Flip);
                         }
                         state.write().mutate(Action::Config(ConfigAction::SetMessageSoundsEnabled(e)));
                     }
