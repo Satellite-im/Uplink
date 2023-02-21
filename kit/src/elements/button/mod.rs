@@ -1,4 +1,3 @@
-use icons::IconButton;
 use uuid::Uuid;
 
 use dioxus::{
@@ -7,7 +6,10 @@ use dioxus::{
     prelude::*,
 };
 
-use crate::{elements::Appearance, get_script, icons::Icon};
+use crate::{elements::Appearance, get_script};
+
+use common::icons::outline::Shape as Icon;
+use common::icons::IconButton;
 
 const SCRIPT: &str = include_str!("./script.js");
 

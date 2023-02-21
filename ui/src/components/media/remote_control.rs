@@ -1,17 +1,15 @@
 use dioxus::prelude::*;
 
 use dioxus_desktop::use_window;
-use kit::{
-    elements::{
-        button::Button,
-        label::Label,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    label::Label,
+    tooltip::{ArrowPosition, Tooltip},
+    Appearance,
 };
 
-use crate::state::{Action, State};
+use common::icons::outline::Shape as Icon;
+use common::state::{Action, State};
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {

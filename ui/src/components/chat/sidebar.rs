@@ -1,3 +1,5 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
@@ -13,15 +15,14 @@ use kit::{
         input::{Input, Options},
         label::Label,
     },
-    icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-use shared::language::get_local_text;
 use warp::{logging::tracing::log, raygun::Message};
+
+use common::state::{Action, Identity, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    state::{Action, Identity, State},
     utils::{build_participants, convert_status},
     UPLINK_ROUTES,
 };
@@ -91,7 +92,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |r| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                            common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
                         use_router(cx).replace_route(r, None, None);
                     }

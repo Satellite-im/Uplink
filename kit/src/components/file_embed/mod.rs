@@ -1,6 +1,7 @@
 use crate::elements::button::Button;
 use crate::elements::Appearance;
-use crate::icons::{Icon, IconElement};
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 
 use dioxus::prelude::*;
 

@@ -1,17 +1,19 @@
 use std::str::FromStr;
 
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
+use common::sounds;
+use common::state::State;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
     elements::input::{Input, Options},
-    icons::Icon,
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-use shared::language::get_local_text;
 
-use crate::{components::chat::RouteInfo, state::State};
+use crate::components::chat::RouteInfo;
 
 pub enum Page {
     Audio,
@@ -147,7 +149,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     active: cx.props.route_info.active.clone(),
                     onnavigate: move |route| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                            sounds::Play(sounds::Sounds::Interaction);
                         }
                         use_router(cx).replace_route(route, None, None);
                     }
@@ -159,7 +161,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 bubble: true,
                 onnavigate: move |route| {
                     if state.read().configuration.audiovideo.interface_sounds {
-                        crate::utils::sounds::Play(crate::utils::sounds::Sounds::Interaction);
+                       sounds::Play(sounds::Sounds::Interaction);
                     }
                     emit(&cx, Page::from_str(route).unwrap());
                 }

@@ -1,7 +1,8 @@
 use derive_more::Display;
 use dioxus::prelude::*;
 
-use crate::icons::{Icon, IconElement};
+use common::icons::outline::Shape as Icon;
+use common::icons::Icon as IconElement;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Platform {

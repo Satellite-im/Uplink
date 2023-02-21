@@ -1,21 +1,22 @@
+use common::language::get_local_text;
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::{
-    elements::{
-        button::Button,
-        input::{Input, Options, Validation},
-    },
-    icons::Icon,
+use kit::elements::{
+    button::Button,
+    input::{Input, Options, Validation},
 };
-use shared::language::get_local_text;
 use warp::logging::tracing::log;
 
-use crate::{
+use common::icons::outline::Shape as Icon;
+use common::{
+    sounds,
     state::configuration::AudioVideo,
     warp_runner::{MultiPassCmd, WarpCmd},
-    AuthPages, WARP_CMD_CH,
+    WARP_CMD_CH,
 };
+
+use crate::AuthPages;
 
 // todo: go to the auth page if no account has been created
 #[inline_props]
@@ -64,7 +65,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 match res {
                     Ok(_) => {
                         if config.interface_sounds {
-                            crate::utils::sounds::Play(crate::utils::sounds::Sounds::On);
+                            sounds::Play(sounds::Sounds::On);
                         }
                         page.set(AuthPages::Success)
                     }
@@ -100,8 +101,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         // The input component validation is shared - if you need to allow just colons in, set this to true
         ignore_colons: false,
         // The input should allow any special characters
-        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars_allowed: None,
+        // if you need special chars, select action to allow or block and pass a vec! with each char necessary, mainly if alpha_numeric_only is true
+        special_chars: None,
     };
 
     // todo: use password_failed to display an error message

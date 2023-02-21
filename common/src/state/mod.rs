@@ -11,6 +11,7 @@ pub mod storage;
 pub mod ui;
 
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
+use crate::language::get_local_text;
 pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
@@ -19,7 +20,6 @@ pub use friends::Friends;
 pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
-use shared::language::get_local_text;
 pub use ui::{Theme, ToastNotification, UI};
 
 use crate::{
@@ -813,10 +813,10 @@ impl State {
                 let notifications_enabled = self.configuration.notifications.friends_notifications;
 
                 if !self.ui.metadata.focused && notifications_enabled {
-                    crate::utils::notifications::push_notification(
+                    crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
                         format!("{} sent a request.", identity.username()),
-                        Some(crate::utils::sounds::Sounds::Notification),
+                        Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
                     );
                 }
@@ -898,11 +898,11 @@ impl State {
                 // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
                     let sound = if self.configuration.audiovideo.message_sounds {
-                        Some(crate::utils::sounds::Sounds::Notification)
+                        Some(crate::sounds::Sounds::Notification)
                     } else {
                         None
                     };
-                    crate::utils::notifications::push_notification(
+                    crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
                         format!("{} sent a request.", "NOT YET IMPL"),
                         sound,
@@ -910,7 +910,7 @@ impl State {
                     );
                 // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
                 } else if should_play_sound {
-                    crate::utils::sounds::Play(crate::utils::sounds::Sounds::Notification);
+                    crate::sounds::Play(crate::sounds::Sounds::Notification);
                 }
             }
             MessageEvent::Sent {
