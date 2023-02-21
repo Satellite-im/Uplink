@@ -96,7 +96,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             placeholder: cx.props.placeholder.clone(),
                             reset: hook.clone(),
                             onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
                         }
                     )
                 }
@@ -106,7 +106,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             disabled: cx.props.loading.unwrap_or_default(),
                             placeholder: cx.props.placeholder.clone(),
                             onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _)| cx.props.onreturn.call(v),
+                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
                         }
                     )
                 }

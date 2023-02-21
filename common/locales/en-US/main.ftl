@@ -67,6 +67,7 @@ files = Files
     .upload = Upload
     .free-space = Free Space:
     .total-space = Total Space:
+    .rename = Rename
 
 settings = Settings
     .settings = Settings

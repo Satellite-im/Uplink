@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
+use dioxus_elements::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
-use crate::elements::input::{Input, Options, Size, Validation, SPECIAL_CHARS};
+use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validation};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -20,7 +21,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_rename: Option<bool>,
     #[props(optional)]
-    onrename: Option<EventHandler<'a, String>>,
+    onrename: Option<EventHandler<'a, (String, Code)>>,
     #[props(optional)]
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
@@ -47,9 +48,9 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
 
-pub fn emit(cx: &Scope<Props>, s: String) {
+pub fn emit(cx: &Scope<Props>, s: String, key_code: Code) {
     if let Some(f) = cx.props.onrename.as_ref() {
-        f.call(s)
+        f.call((s, key_code))
     }
 }
 
@@ -88,14 +89,6 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 },
                 with_rename.then(||
-                    {
-                    let chars_to_remove = vec!['\\', '/'];
-                    let mut special_chars = SPECIAL_CHARS.to_vec();
-                    special_chars = special_chars
-                        .iter()
-                        .filter(|&&c| !chars_to_remove.contains(&c))
-                        .cloned()
-                        .collect();
                         rsx! (
                             Input {
                                 id: Uuid::new_v4().to_string(),
@@ -105,22 +98,22 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 max_length: 64,
                                 size: Size::Small,
                                 options: Options {
+                                    react_to_esc_key: true,
                                     with_validation: Some(Validation {
                                         alpha_numeric_only: true,
-                                        special_chars_allowed: Some(special_chars),
+                                        special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
                                 }
                                 // todo: use is_valid
-                                onreturn: move |(s, _is_valid)| {
-                                    if _is_valid {
-                                        emit(&cx, s);
+                                onreturn: move |(s, is_valid, key_code)| {
+                                    if is_valid {
+                                        emit(&cx, s, key_code);
                                     }
                                 }
                             }
                     )
-                    }
                   ),
                 (!with_rename).then(|| rsx! (
                     label {

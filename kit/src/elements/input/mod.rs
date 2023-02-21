@@ -9,10 +9,12 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
 /// This vector of special chars must be used to decide which char can or cannot be allowed in the input field.
+/// Just use this if quantity of chars you want to block and allow are similar.
+/// If not, is best to use SpecialCharsAction to pass small vecs.
 ///
 /// ## Example:
 /// ```rust
-/// let chars_to_remove = vec!['\\', '/'];
+/// let chars_to_remove = vec!['\\', '/', ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_'];
 /// let mut special_chars = SPECIAL_CHARS.to_vec();
 /// special_chars = special_chars
 ///    .iter()
@@ -38,6 +40,12 @@ pub static SPECIAL_CHARS: &[char] = &[
     ';', ':', '\'', '\"', ',', '<', '>', '.', '/', '?', '~', '_',
 ];
 
+#[derive(PartialEq, Clone)]
+pub enum SpecialCharsAction {
+    Allow,
+    Block,
+}
+
 #[derive(Default, Clone)]
 pub struct Validation {
     pub max_length: Option<i32>,
@@ -45,7 +53,23 @@ pub struct Validation {
     pub alpha_numeric_only: bool,
     pub ignore_colons: bool,
     pub no_whitespace: bool,
-    pub special_chars_allowed: Option<Vec<char>>,
+    /// Decide if allow or block some chars, to keeping block any special char
+    /// just pass None as value
+    ///
+    /// ### Example
+    ///
+    /// ```rust
+    ///  options: Options {
+    ///        react_to_esc_key: true,
+    ///     with_validation: Some(Validation {
+    ///             alpha_numeric_only: true,
+    ///             special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
+    ///             ..Validation::default()
+    ///         }),
+    ///         ..Options::default()
+    ///     }
+    /// ```
+    pub special_chars: Option<(SpecialCharsAction, Vec<char>)>,
 }
 
 #[derive(Default, Clone)]
@@ -55,6 +79,7 @@ pub struct Options {
     pub disabled: bool,
     pub with_clear_btn: bool,
     pub with_label: Option<&'static str>,
+    pub react_to_esc_key: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -100,7 +125,7 @@ pub struct Props<'a> {
     #[props(optional)]
     onchange: Option<EventHandler<'a, (String, bool)>>,
     #[props(optional)]
-    onreturn: Option<EventHandler<'a, (String, bool)>>,
+    onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     #[props(optional)]
     reset: Option<UseState<bool>>,
 }
@@ -111,16 +136,16 @@ pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
     }
 }
 
-pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool) {
+pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
     if let Some(f) = &cx.props.onreturn {
-        f.call((s, is_valid));
+        f.call((s, is_valid, key_code));
     }
 }
 
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
 pub fn submit(cx: &Scope<Props>, s: String) {
     if let Some(f) = &cx.props.onreturn {
-        f.call((s, true));
+        f.call((s, true, Code::Enter));
     }
 }
 
@@ -135,16 +160,29 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 pub fn validate_alphanumeric(
     val: &str,
     ignore_colon: bool,
-    special_characters_allowed: Option<Vec<char>>,
+    special_characters: Option<(SpecialCharsAction, Vec<char>)>,
 ) -> Option<ValidationError> {
     let mut val = val.to_string();
     if ignore_colon {
         val.retain(|c| c != ':');
     }
-    let vec = special_characters_allowed.unwrap_or_default();
-    for s in vec {
-        val.retain(|c| c != s);
+
+    if let Some((action, chars)) = special_characters {
+        let mut special_chars_allowed = SPECIAL_CHARS.to_vec();
+        if action == SpecialCharsAction::Block {
+            special_chars_allowed = special_chars_allowed
+                .iter()
+                .filter(|&&c| !chars.contains(&c))
+                .cloned()
+                .collect();
+        } else {
+            special_chars_allowed = chars;
+        }
+        for s in special_chars_allowed {
+            val.retain(|c| c != s);
+        }
     }
+
     if !val.chars().all(char::is_alphanumeric) {
         return Some(get_local_text("warning-messages.only-alpha-chars"));
     }
@@ -213,15 +251,11 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
         && validate_alphanumeric(
             val,
             validation.ignore_colons,
-            validation.special_chars_allowed.clone(),
+            validation.special_chars.clone(),
         )
         .is_some()
     {
-        error = validate_alphanumeric(
-            val,
-            validation.ignore_colons,
-            validation.special_chars_allowed,
-        );
+        error = validate_alphanumeric(val, validation.ignore_colons, validation.special_chars);
     }
 
     if validation.no_whitespace && validate_no_whitespace(val).is_some() {
@@ -333,7 +367,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string(), *valid.current());
+                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                        } else if options.react_to_esc_key && evt.code() == Code::Escape {
+                            emit_return(&cx, "".to_owned(), true, evt.code());
                         }
                     }
                 }

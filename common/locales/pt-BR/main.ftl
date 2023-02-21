@@ -68,6 +68,7 @@ files = Files
     .upload = Carregar
     .free-space = Espaço Livre:
     .total-space = Espaço Total:
+    .rename = Renomear
 
 settings = Settings
     .settings = Configurações

@@ -34,7 +34,7 @@ pub fn AddFriend(cx: Scope) -> Element {
         alpha_numeric_only: true,
         no_whitespace: true,
         ignore_colons: true,
-        special_chars_allowed: None,
+        special_chars: None,
     };
 
     if *request_sent.get() {

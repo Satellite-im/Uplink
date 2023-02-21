@@ -53,6 +53,12 @@ pub enum ConstellationCmd {
         files_path: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(fmt = "RenameItems {{ old_name: {old_name}, new_name: {new_name} }} ")]
+    RenameItem {
+        old_name: String,
+        new_name: String,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -83,7 +89,27 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = upload_files(warp_storage, files_path).await;
             let _ = rsp.send(r);
         }
+        ConstellationCmd::RenameItem {
+            old_name,
+            new_name,
+            rsp,
+        } => {
+            let r = rename_item(old_name, new_name, warp_storage).await;
+            let _ = rsp.send(r);
+        }
     }
+}
+
+async fn rename_item(
+    old_name: String,
+    new_name: String,
+    warp_storage: &mut warp_storage,
+) -> Result<uplink_storage, Error> {
+    if let Err(error) = warp_storage.rename(&old_name, &new_name).await {
+        log::error!("Failed to rename item: {error}");
+    }
+
+    get_items_from_current_directory(warp_storage)
 }
 
 async fn create_new_directory(
@@ -308,6 +334,7 @@ fn rename_if_duplicate(
             .extension()
             .and_then(OsStr::to_str)
             .map(str::to_string);
+
         let file_stem = file_pathbuf
             .file_stem()
             .and_then(OsStr::to_str)
