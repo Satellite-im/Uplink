@@ -368,9 +368,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            *val.write() = "".into();
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());
-                            val.write() = "".into();
                         }
                     }
                 }
