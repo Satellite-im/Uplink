@@ -20,6 +20,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-notifications.grant-permissions"),
                 section_description: get_local_text("settings-notifications.grant-permissions-description"),
                 Button {
+                    aria_label: "grant-permissions-button".into(),
                     text: get_local_text("settings-notifications.grant-permissions"),
                     icon: Icon::Shield,
                     onpress: move |_| {

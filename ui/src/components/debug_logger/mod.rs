@@ -26,14 +26,17 @@ pub fn DebugLogger(cx: Scope) -> Element {
         style { STYLE }
         div {
             id: "debug_logger",
+            aria_label: "debug-logger",
             class: "debug-logger resize-vert-top",
             div {
                 class: "header",
+                aria_label: "debug-logger-header",
                 Label {
                     text: "Logger".into()
                 }
             },
             div {
+                aria_label: "debug-logger-body",
                 class: "body",
                 div {
                     logs_to_show.iter().map(|log| {
@@ -45,11 +48,14 @@ pub fn DebugLogger(cx: Scope) -> Element {
                         rsx!(
                             p {
                                 class: "item",
+                                aria_label: "debug-logger-item",
                                 span {
+                                    aria_label: "debug-logger-item-timestamp",
                                     class: "log-text muted",
                                     "〇 {log_datetime}"
                                 },
                                 span {
+                                    aria_label: "debug-logger-item-level",
                                     class: "log-text bold {log_level_string}",
                                     "{log_level}"
                                 },
@@ -58,6 +64,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                                     "»"
                                 }
                                 span {
+                                    aria_label: "debug-logger-item-text",
                                     id: "log_text",
                                     class: "log-text",
                                     " {log_message}"

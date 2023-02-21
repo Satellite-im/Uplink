@@ -58,7 +58,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: "Sends a test notification.".into(),
                 Button {
                     text: "Test Notifications".into(),
-                    aria_label: "open-codebase-button".into(),
+                    aria_label: "test-notification-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
