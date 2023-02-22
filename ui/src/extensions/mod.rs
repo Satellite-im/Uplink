@@ -2,7 +2,7 @@ use common::state::configuration::Configuration;
 use extensions::*;
 use libloading::Library;
 use std::{collections::HashMap, ffi::OsStr, io, rc::Rc};
-use warp::logging::tracing::log;
+
 
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,

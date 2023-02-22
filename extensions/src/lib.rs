@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use ipc_channel::ipc::IpcReceiver;
+
 use libloading::Library;
 use std::{fmt, rc::Rc};
 

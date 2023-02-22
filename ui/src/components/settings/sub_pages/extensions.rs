@@ -24,7 +24,7 @@ pub fn ExtensionSettings(cx: Scope) -> Element {
                 text: open_folder,
                 aria_label: "open-extensions-folder-button".into(),
                 onpress: move |_| {
-                    let _ = opener::open(STATIC_ARGS.extensions_path.to_owned());
+                    let _ = opener::open(&STATIC_ARGS.extensions_path);
                 }
             },
             SettingSection {

@@ -117,7 +117,7 @@ impl EmojiSelector {
                         )
                     })
                 }
-                self.build_nav(&cx),
+                self.build_nav(cx),
             }
         ))
     }
@@ -149,7 +149,7 @@ impl Extension for EmojiSelector {
         cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
-            display_selector.then(|| self.render_selector(&cx)),
+            display_selector.then(|| self.render_selector(cx)),
             // Render standard (required) button to toggle.
             Button {
                 icon: Icon::FaceSmile,
