@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
-use warp::multipass::identity::{Identity as WarpIdentity, IdentityStatus, Platform};
+use warp::{
+    crypto::DID,
+    multipass::identity::{Identity as WarpIdentity, IdentityStatus, Platform},
+};
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct Identity {
     identity: WarpIdentity,
@@ -58,6 +61,10 @@ impl Identity {
 
     pub fn platform(&self) -> Platform {
         self.platform
+    }
+
+    pub fn did(&self) -> DID {
+        self.identity.did_key()
     }
 }
 

@@ -37,6 +37,7 @@ use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
 use uuid::Uuid;
 use warp::{
+    crypto::DID,
     logging::tracing::log,
     raygun::{self, ReactionState},
 };
@@ -289,9 +290,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     ))
 }
 
+#[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     // contains the emoji reaction
     React((raygun::Message, String)),
+    DeleteMessage { conv_id: Uuid, msg_id: Uuid },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
@@ -333,6 +336,25 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         let res = rx.await.expect("command canceled");
                         if res.is_err() {
                             // failed to add/remove reaction
+                        }
+                    }
+                    MessagesCommand::DeleteMessage { conv_id, msg_id } => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteMessage {
+                                conv_id,
+                                msg_id,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if res.is_err() {
+                            // failed to delete message
                         }
                     }
                 }
@@ -384,8 +406,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();
                                 let message2 = message.clone();
+                                let message3 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
+                                let sender_is_self = message.inner.sender() == state.read().account.identity.did();
                                 rsx! (
                                     ContextMenu {
                                         id: format!("message-{}", message.inner.id()),
@@ -404,6 +428,14 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 onpress: move |_| {
                                                       // using "like" for now
                                                     ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
+                                                }
+                                            },
+                                            ContextItem {
+                                                icon: Icon::Trash,
+                                                text: get_local_text("messages.delete"),
+                                                should_render: sender_is_self,
+                                                onpress: move |_| {
+                                                    ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });
                                                 }
                                             },
                                         )),
