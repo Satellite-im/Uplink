@@ -17,7 +17,10 @@ use kit::{
     },
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-use warp::{logging::tracing::log, raygun::Message};
+use warp::{
+    logging::tracing::log,
+    raygun::{self},
+};
 
 use common::state::{Action, Identity, State};
 
@@ -177,7 +180,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     };
                     let without_me = state.read().get_without_me(&chat.participants);
                     let user = without_me.first();
-                    let default_message = Message::default();
                     let parsed_user = user.cloned().unwrap_or_default();
 
                     let platform = match parsed_user.platform() {
@@ -188,8 +190,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
-                        Some(m) => m,
-                        None => &default_message,
+                        Some(m) => m.inner.clone(),
+                        // conversation with no messages yet
+                        None => raygun::Message::default(),
                     };
 
                     let val = unwrapped_message.value();

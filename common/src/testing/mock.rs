@@ -23,6 +23,8 @@ use crate::state::{
     ToastNotification,
 };
 
+use crate::warp_runner::ui_adapter;
+
 const FRIEND_COUNT: usize = 20;
 
 pub fn generate_mock() -> State {
@@ -93,7 +95,7 @@ pub fn generate_mock() -> State {
 
 fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
     let default_id = Identity::default();
-    let mut messages = VecDeque::<Message>::new();
+    let mut messages = VecDeque::<ui_adapter::Message>::new();
 
     let mut rng = rand::thread_rng();
 
@@ -107,7 +109,10 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_reactions(vec![]);
         default_message.set_value(vec![lipsum(word_count)]);
 
-        messages.push_back(default_message);
+        messages.push_back(ui_adapter::Message {
+            inner: default_message,
+            in_reply_to: None,
+        });
     }
 
     Chat {
@@ -212,7 +217,7 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
     identities
 }
 
-fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> Message {
+fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> ui_adapter::Message {
     let lorem_ipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
 
@@ -247,7 +252,10 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> Mess
     default_message.set_replied(None);
     default_message.set_value(vec![text.into()]);
 
-    default_message
+    ui_adapter::Message {
+        inner: default_message,
+        in_reply_to: None,
+    }
 }
 
 fn generate_fake_storage() -> Storage {
