@@ -267,13 +267,13 @@ fn auth_page_manager(cx: Scope) -> Element {
     }))
 }
 
+#[allow(unused_assignments)]
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
-    let pre_release_text = get_local_text("uplink.pre-release");
-    let mut controls = None;
+    let mut controls: Option<VNode> = None;
 
     #[cfg(not(target_os = "macos"))]
     {
@@ -871,12 +871,13 @@ fn get_toasts(cx: Scope) -> Element {
     )))
 }
 
+#[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
 
-    let mut controls = None;
+    let mut controls: Option<VNode> = None;
 
     #[cfg(not(target_os = "macos"))]
     {
