@@ -14,6 +14,8 @@ pub struct Props<'a> {
     with_deny_btn: Option<Element<'a>>,
 }
 
+// todo: remove this
+#[allow(unused)]
 #[allow(non_snake_case)]
 pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let with_accept_btn = match cx.props.with_accept_btn.clone() {

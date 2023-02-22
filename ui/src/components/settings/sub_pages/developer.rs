@@ -11,11 +11,7 @@ use common::{
 use kit::elements::{button::Button, switch::Switch, Appearance};
 use warp::logging::tracing::log;
 
-use crate::{
-    components::settings::SettingSection,
-    logger,
-    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
-};
+use crate::{components::settings::SettingSection, logger};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
@@ -128,28 +124,4 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
             }
         }
     ))
-}
-
-pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx,
-}
-
-impl PartialEq for WindowDropHandler {
-    fn eq(&self, _other: &Self) -> bool {
-        false
-    }
-}
-
-impl WindowDropHandler {
-    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
-        Self { cmd_tx }
-    }
-}
-
-impl Drop for WindowDropHandler {
-    fn drop(&mut self) {
-        if let Err(e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
-            log::warn!("WindowDropHandler failed to send msg: {}", e);
-        }
-    }
 }
