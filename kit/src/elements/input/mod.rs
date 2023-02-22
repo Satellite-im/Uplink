@@ -279,17 +279,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
 
-    //let mut debug_reset = false;
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
         if *should_reset {
             val.write().clear();
             hook.set(false);
-            //debug_reset = true;
         }
     }
-
-    //println!("rendering input. reset is: {}", debug_reset);
 
     let valid = use_state(cx, || false);
     let min_len = options

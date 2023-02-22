@@ -22,6 +22,7 @@ use common::{
 #[allow(non_snake_case)]
 pub fn AddFriend(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let clear_input = use_state(cx, || false);
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
     let request_sent = use_state(cx, || false);
@@ -83,12 +84,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                         request_sent.set(true);
                     }
                     Err(e) => match e {
-                        Error::CannotSendSelfFriendRequest
-                        | Error::CannotSendFriendRequest
+                        Error::CannotSendFriendRequest
                         | Error::IdentityDoesntExist
                         | Error::BlockedByUser
                         | Error::InvalidIdentifierCondition
-                        | Error::PublicKeyIsBlocked => {
+                        | Error::CannotSendSelfFriendRequest => {
+                            log::warn!("add cannot add self: {}", e);
+                        }
+                        Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
                         }
                         _ => {
@@ -142,7 +145,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         // Use the default options for the remaining fields
                         ..Options::default()
                     },
-                    reset: request_sent.clone(),
+                    reset: clear_input.clone(),
                     onreturn: move |_| {
                         match DID::from_str(friend_input.get()) {
                             Ok(did) => {
@@ -153,7 +156,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 } else {
                                     ch.send(did);
                                 }
-                                friend_input.set(String::new());
                             },
                             Err(e) => {
                                 log::error!("could not get did from str: {}", e);
@@ -162,7 +164,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                     },
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
-                        // .
                         friend_input_valid.set(is_valid);
                     },
                     aria_label: "Add Someone Input".into()
@@ -181,12 +182,12 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 } else {
                                     ch.send(did);
                                 }
-                                friend_input.set(String::new());
                             },
                             Err(e) => {
                                 log::error!("could not get did from str: {}", e);
                             }
                         }
+                        clear_input.set(true);
                     },
                     aria_label: "Add Someone Button".into()
                 },
