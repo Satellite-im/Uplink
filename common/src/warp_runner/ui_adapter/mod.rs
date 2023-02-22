@@ -11,9 +11,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 
 use crate::state::{self, chats};
-use async_stream::stream;
-use futures::pin_mut;
-use futures_util::stream::StreamExt;
+use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use warp::{
@@ -114,13 +112,13 @@ pub async fn conversation_to_chat(
         .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
         .await?;
 
-    let s = stream! {
-        for msg in  messages.iter() {
-           yield convert_raygun_message(messaging, msg).await;
-        }
-    };
-    pin_mut!(s);
-    let messages = s.collect().await;
+    let messages = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
 
     Ok(chats::Chat {
         id: conv.id(),
