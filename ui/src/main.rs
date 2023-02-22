@@ -199,12 +199,16 @@ fn main() {
 
         window = window
             .with_has_shadow(true)
-            .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
             .with_menu(main_menu)
             .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        window = window.with_decorations(false);
     }
 
     let config = Config::default();
@@ -843,6 +847,41 @@ fn get_titlebar(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
 
+    let mut controls = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx!(
         div {
             id: "titlebar",
@@ -906,6 +945,9 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
+
+            controls,
+
         },
     ))
 }
