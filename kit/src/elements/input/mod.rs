@@ -289,8 +289,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     }
 
-    //println!("rendering input. reset is: {}", debug_reset);
-
     let valid = use_state(cx, || false);
     let min_len = options
         .with_validation

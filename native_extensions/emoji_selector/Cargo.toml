@@ -1,0 +1,15 @@
+[package]
+name = "emoji_selector"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+extensions = { path = "../../extensions" }
+common = { path = "../../common" }
+kit = { path = "../../kit" }
+emojis = "0.5.2"

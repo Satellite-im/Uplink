@@ -461,9 +461,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 .collect::<Vec<_>>()
         });
 
-    //println!("active chat: {:?}", &active_chat_id);
-    //println!("users typing: {:?}", &users_typing);
-
     let msg_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
@@ -504,6 +501,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // side A -> (typing indicator) -> side B
     // side B removes the typing indicator after a timeout
     // side A doesn't want to send too many typing indicators, say once every 4-5 seconds
+    // should we consider matching the timeout with the send frequency so we can closely match if a person is straight up typing for 5 mins straight.
 
     // tracks if the local participant is typing
     // re-sends typing indicator in response to the Refresh command
@@ -614,6 +612,13 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     };
 
+    // todo: filter out extensions not meant for this area
+    let extensions = &state.read().ui.extensions;
+    let _ext_renders: Vec<_> = extensions
+        .iter()
+        .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
+        .collect();
+
     cx.render(rsx!(Chatbar {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
@@ -625,16 +630,22 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         },
         onreturn: move |_| submit_fn(),
-        controls: cx.render(rsx!(Button {
-            icon: Icon::ChevronDoubleRight,
-            disabled: is_loading,
-            appearance: Appearance::Secondary,
-            onpress: move |_| submit_fn(),
-            tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Bottom,
-                text: get_local_text("uplink.send"),
-            })),
-        },)),
+        controls: cx.render(
+            // Load extensions
+            //            for node in ext_renders {
+            //                rsx!(node)
+            //            },
+            rsx!(Button {
+                icon: Icon::ChevronDoubleRight,
+                disabled: is_loading,
+                appearance: Appearance::Secondary,
+                onpress: move |_| submit_fn(),
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: get_local_text("uplink.send"),
+                })),
+            },)
+        ),
         with_replying_to: data
             .map(|data| {
                 let active_chat = data.active_chat.clone();

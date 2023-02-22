@@ -51,6 +51,18 @@ cargo run --bin ui --profile=rapid
 | Chocolatey | [Installation Guide](https://chocolatey.org/install) |
 | Rust | choco install rust |
 
+**Ubuntu WSL (Maybe also Ubuntu + Debian)**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
+| Build Essentials | `sudo apt install build-essential` |
+| pkg-config | `sudo apt-get install pkg-config` |
+| alsa-sys | `sudo apt install librust-alsa-sys-dev` |
+| libgtk-dev | `sudo apt-get install libgtk-3-dev` |
+| libsoup-dev | `sudo apt install libsoup2.4-dev` |
+| protobuf| `sudo apt-get install protobuf-compiler` |
+| Tauri Deps | `sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
+
 ## Contributing
 
 All contributions are welcome! Please keep in mind we're still a relatively small team and any work done to make sure contributions don't cause bugs or issues in the application is much appreciated.

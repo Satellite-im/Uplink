@@ -22,7 +22,6 @@ pub async fn convert_multipass_event(
     account: &mut super::super::Account,
     _messaging: &mut super::super::Messaging,
 ) -> Result<MultiPassEvent, Error> {
-    //println!("got {:?}", &event);
     let evt = match event {
         MultiPassEventKind::FriendRequestSent { to } => {
             let identity = did_to_identity(&to, account).await?;
@@ -30,8 +29,6 @@ pub async fn convert_multipass_event(
         }
         MultiPassEventKind::FriendRequestReceived { from } => {
             let identity = did_to_identity(&from, account).await?;
-
-            //println!("friend request received: {:#?}", identity);
             MultiPassEvent::FriendRequestReceived(identity)
         }
         MultiPassEventKind::IncomingFriendRequestClosed { did }

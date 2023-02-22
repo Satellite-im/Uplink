@@ -1,7 +1,10 @@
+use std::{collections::HashMap, rc::Weak};
+
 use derive_more::Display;
+
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
-use std::rc::Weak;
+use extensions::ExtensionProxy;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;
@@ -26,6 +29,9 @@ pub struct ActionHook {
 /// used exclusively by State::mutate
 #[derive(Display)]
 pub enum Action {
+    // Extensions
+    #[display(fmt = "RegisterExtensions")]
+    RegisterExtensions(HashMap<String, ExtensionProxy>),
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
@@ -187,6 +193,8 @@ pub enum ConfigAction {
     SetMessagesNotificationsEnabled(bool),
     #[display(fmt = "SetSettingsNotificationsEnabled {_0}")]
     SetSettingsNotificationsEnabled(bool),
+    #[display(fmt = "SetAutoEnableExtensions {_0}")]
+    SetAutoEnableExtensions(bool),
 }
 
 impl Action {

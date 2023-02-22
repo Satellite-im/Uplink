@@ -8,6 +8,7 @@ use std::{
 use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
+use humansize::{format_size, DECIMAL};
 use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
@@ -59,6 +60,14 @@ pub enum ConstellationCmd {
         new_name: String,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(
+        fmt = "DownloadItems {{ file_name: {file_name:?}, local_path_to_save_file: {local_path_to_save_file:?} }} "
+    )]
+    DownloadFile {
+        file_name: String,
+        local_path_to_save_file: PathBuf,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -87,6 +96,14 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::UploadFiles { files_path, rsp } => {
             let r = upload_files(warp_storage, files_path).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::DownloadFile {
+            file_name,
+            local_path_to_save_file,
+            rsp,
+        } => {
+            let r = download_file(warp_storage, file_name, local_path_to_save_file).await;
             let _ = rsp.send(r);
         }
         ConstellationCmd::RenameItem {
@@ -276,18 +293,18 @@ async fn upload_files(
                                     (((current as f64) / (total as f64)) * 100.) as usize;
                                 if previous_percentage != current_percentage {
                                     previous_percentage = current_percentage;
+                                    let readable_current = format_size(current, DECIMAL);
                                     log::info!(
-                                        "{}% completed -> written {current} bytes",
+                                        "{}% completed -> written {readable_current}",
                                         (((current as f64) / (total as f64)) * 100.) as usize
                                     )
                                 }
                             }
                         }
                         Progression::ProgressComplete { name, total } => {
-                            log::info!(
-                                "{name} has been uploaded with {} MB",
-                                total.unwrap_or_default() / 1024 / 1024
-                            );
+                            let total = total.unwrap_or_default();
+                            let readable_total = format_size(total, DECIMAL);
+                            log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
                             name,
@@ -468,4 +485,16 @@ async fn set_thumbnail_if_file_is_image(
         log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))
     }
+}
+
+async fn download_file(
+    warp_storage: &warp_storage,
+    file_name: String,
+    local_path_to_save_file: PathBuf,
+) -> Result<(), Error> {
+    warp_storage
+        .get(&file_name, &local_path_to_save_file.to_string_lossy())
+        .await?;
+    log::info!("{file_name} downloaded");
+    Ok(())
 }

@@ -68,6 +68,7 @@ files = Files
     .free-space = Free Space:
     .total-space = Total Space:
     .rename = Rename
+    .download = Download
 
 settings = Settings
     .settings = Settings
@@ -102,6 +103,8 @@ settings-general = General Settings
 settings-extensions = Extension Settings
     .placeholder = Placeholder
     .open-extensions-folder = Open Extensions Folder
+    .auto-enable = Enable Automatically
+    .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase

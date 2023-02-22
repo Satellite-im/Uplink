@@ -28,6 +28,9 @@ names = "0.14.0"
 titlecase = "2.2.1"
 substring = "1.4.5"
 icons = { path="../icons" }
+humansize = "2.0.0"
+
+extensions = { path="../extensions" }
 
 async-stream = "0.3.4"
 futures = "0.3"

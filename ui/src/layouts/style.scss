@@ -29,11 +29,12 @@
 
 #files-layout {
     .files-list {
+        overflow-y: scroll;
         display: inline-flex;
         padding: var(--gap);
         gap: var(--gap);
         flex-wrap: wrap;
-        flex: 0;
+        flex: 1;
     }
 
     .files-info {

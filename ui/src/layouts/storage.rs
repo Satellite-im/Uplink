@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -43,7 +43,14 @@ enum ChanCmd {
     OpenDirectory(String),
     BackToPreviousDirectory(Directory),
     UploadFiles(Vec<PathBuf>),
-    RenameItem { old_name: String, new_name: String },
+    DownloadFile {
+        file_name: String,
+        local_path_to_save_file: PathBuf,
+    },
+    RenameItem {
+        old_name: String,
+        new_name: String,
+    },
 }
 
 #[derive(PartialEq, Props)]
@@ -201,6 +208,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 log::error!("failed to add new files into uplink storage: {}", e);
                                 continue;
                             }
+                        }
+                    }
+                    ChanCmd::DownloadFile {
+                        file_name,
+                        local_path_to_save_file,
+                    } => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::DownloadFile {
+                                file_name,
+                                local_path_to_save_file,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to download file {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+
+                        if let Err(error) = rsp {
+                            log::error!("failed to dowload file: {}", error);
+                            continue;
                         }
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {
@@ -374,11 +405,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 div {
                     class: "files-list",
-                    flex: if state.read().ui.sidebar_hidden {
-                        "1"
-                    } else {
-                        "0"
-                    },
                     aria_label: "files-list",
                     add_new_folder.then(|| {
                         rsx!(
@@ -441,6 +467,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }),
                    files_list.read().iter().map(|file| {
                         let file_name = file.name();
+                        let file_name2 = file.name();
+
                         let key = file.id();
                         rsx!(ContextMenu {
                                     key: "{key}-menu",
@@ -452,21 +480,45 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             onpress: move |_| {
                                                 is_renaming_map.with_mut(|i| *i = Some(key));
                                             }
-                                        })),
-                                            File {
-                                                key: "{key}-file",
-                                                thumbnail: file.thumbnail(),
-                                                text: file.name(),
-                                                aria_label: file.name(),
-                                                with_rename: *is_renaming_map.read() == Some(key),
-                                                onrename: move |(val, key_code)| {
-                                                    is_renaming_map.with_mut(|i| *i = None);
-                                                    if key_code == Code::Enter {
-                                                        ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
-                                                    }
-                                                }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::ArrowDownCircle,
+                                            text: get_local_text("files.download"),
+                                            onpress: move |_| {
+                                                let file_extension = std::path::Path::new(&file_name2)
+                                                    .extension()
+                                                    .and_then(OsStr::to_str)
+                                                    .map(|s| format!("{s}"))
+                                                    .unwrap_or_default();
+
+                                                let file_stem = PathBuf::from(&file_name2)
+                                                        .file_stem()
+                                                        .and_then(OsStr::to_str)
+                                                        .map(str::to_string)
+                                                        .unwrap_or_default();
+
+                                                let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
+                                                    Some(path) => path,
+                                                    None => return,
+                                                };
+                                                ch.send(ChanCmd::DownloadFile { file_name: file_name2.clone(), local_path_to_save_file: file_path_buf } );
+                                            },
+                                        }
+                                    )),
+                                    File {
+                                        key: "{key}-file",
+                                        thumbnail: file.thumbnail(),
+                                        text: file.name(),
+                                        aria_label: file.name(),
+                                        with_rename: *is_renaming_map.read() == Some(key),
+                                        onrename: move |(val, key_code)| {
+                                            is_renaming_map.with_mut(|i| *i = None);
+                                            if key_code == Code::Enter {
+                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                            }
+                                        }
                                     }
-                          }
+                                }
                           )
                     }),
                 },

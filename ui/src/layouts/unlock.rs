@@ -1,4 +1,4 @@
-use common::language::get_local_text;
+use common::{language::get_local_text, state::configuration::Configuration};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -11,7 +11,6 @@ use warp::logging::tracing::log;
 use common::icons::outline::Shape as Icon;
 use common::{
     sounds,
-    state::configuration::AudioVideo,
     warp_runner::{MultiPassCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -47,7 +46,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, page, can_create_new_account];
         async move {
-            let config = AudioVideo::load_async().await;
+            let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -64,7 +63,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
                 match res {
                     Ok(_) => {
-                        if config.interface_sounds {
+                        if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
                         page.set(AuthPages::Success)
