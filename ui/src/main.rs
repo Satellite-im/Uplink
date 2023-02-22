@@ -208,7 +208,7 @@ fn main() {
 
     #[cfg(not(target_os = "macos"))]
     {
-        window = window.with_decorations(false);
+        window = window.with_decorations(false).with_transparent(true);
     }
 
     let config = Config::default();
@@ -273,20 +273,49 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     let desktop = use_window(cx);
     let theme = "";
     let pre_release_text = get_local_text("uplink.pre-release");
+    let mut controls = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
             div {
-                id: "pre-release",
-                aria_label: "pre-release",
+                id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
+                controls,
             },
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
@@ -867,7 +896,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     icon: Icon::Square2Stack,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
-                        desktop.close();
+                        desktop.set_maximized(!desktop.is_maximized());
                     }
                 },
                 Button {
