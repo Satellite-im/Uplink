@@ -151,8 +151,9 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
+// todo: remove this
+#[allow(unused)]
 #[allow(non_snake_case)]
-
 pub fn SkeletalFriend(cx: Scope) -> Element {
     cx.render(rsx!(
         div {

@@ -27,11 +27,15 @@ pub struct Props<'a> {
     #[props(optional)]
     with_text: Option<String>,
 
+    // todo: remove unused attribute
     // if Some, will contain part of the message being replied to
+    #[allow(unused)]
     #[props(!optional)]
     in_reply_to: Option<String>,
 
+    // todo: remove unused attribute
     // todo: does this need to be an option like the rest of 'em?
+    #[allow(unused)]
     reactions: Vec<warp::raygun::Reaction>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.

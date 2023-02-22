@@ -67,11 +67,6 @@ impl LogGlue {
     }
 }
 
-/// used only for debugging
-pub fn print() {
-    println!("{:#?}", LOGGER.read());
-}
-
 impl crate::log::Log for LogGlue {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
         metadata.level() <= self.max_level
@@ -227,14 +222,6 @@ pub fn get_save_to_file() -> bool {
 
 pub fn set_write_to_stdout(b: bool) {
     LOGGER.write().write_to_stdout = b;
-}
-
-pub fn set_max_logs(s: usize) {
-    LOGGER.write().max_logs = s;
-}
-
-pub fn get_logs_limit() -> usize {
-    LOGGER.read().max_logs
 }
 
 pub fn load_debug_log() -> Vec<String> {
