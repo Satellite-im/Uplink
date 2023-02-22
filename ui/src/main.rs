@@ -202,6 +202,7 @@ fn main() {
             .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
+            .with_menu(main_menu)
             .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
     }
@@ -211,7 +212,7 @@ fn main() {
     dioxus_desktop::launch_cfg(
         bootstrap,
         config
-            .with_window(window.with_menu(main_menu))
+            .with_window(window)
             .with_custom_index(
                 r#"
     <!doctype html>
