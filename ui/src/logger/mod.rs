@@ -141,6 +141,7 @@ impl Logger {
         if self.save_to_file {
             let mut file = OpenOptions::new()
                 .append(true)
+                .create(true)
                 .open(&self.log_file)
                 .unwrap();
 
