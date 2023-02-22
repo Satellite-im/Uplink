@@ -2,6 +2,7 @@ use common::state::configuration::Configuration;
 use extensions::*;
 use libloading::Library;
 use std::{collections::HashMap, ffi::OsStr, io, rc::Rc};
+use warp::logging::tracing::log;
 
 struct ExtensionRegistrar {
     extensions: HashMap<String, ExtensionProxy>,
@@ -48,11 +49,13 @@ impl AvailableExtensions {
     /// behaviour.
     pub unsafe fn load<P: AsRef<OsStr>>(&mut self, library_path: P) -> io::Result<()> {
         // load the library into memory
-        let library = Rc::new(Library::new(library_path).unwrap());
+        let library = Rc::new(
+            Library::new(library_path).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?,
+        );
 
         let extension_info = library
             .get::<unsafe extern "C" fn() -> *mut Core>(b"extension_entry")
-            .unwrap();
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
         let extension_info = &*extension_info();
 

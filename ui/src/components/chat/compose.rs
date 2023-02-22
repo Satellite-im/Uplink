@@ -573,7 +573,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     let extensions = &state.read().ui.extensions;
 
-    let ext_renders = {
+    let _ext_renders = {
         let mut list = vec![];
         let extensions = extensions.iter();
         for (_, proxy) in extensions {
@@ -617,9 +617,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         },
         controls: cx.render(rsx!(
             // Load extensions
-//            for node in ext_renders {
-//                rsx!(node)
-//            },
+            //            for node in ext_renders {
+            //                rsx!(node)
+            //            },
             Button {
                 icon: Icon::ChevronDoubleRight,
                 disabled: is_loading,
