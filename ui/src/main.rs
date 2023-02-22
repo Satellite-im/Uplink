@@ -22,9 +22,9 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 use std::time::Instant;
+use std::{fs, io};
 use uuid::Uuid;
 
 use std::sync::Arc;
@@ -292,16 +292,16 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> HashMap<String, ExtensionProxy> {
+fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
     // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
     // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
     // that updates when they have new info, i.e. state.
-    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
+    fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
     let mut extensions_library = AvailableExtensions::new();
 
     for entry in paths {
-        let path = entry.unwrap().path();
+        let path = entry?.path();
         if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
             log::debug!("Found extension: {:?}", path);
             unsafe {
@@ -317,7 +317,7 @@ fn get_extensions() -> HashMap<String, ExtensionProxy> {
             }
         }
     }
-    extensions_library.extensions
+    Ok(extensions_library.extensions)
 }
 
 // called at the end of the auth flow
@@ -355,7 +355,12 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     };
     state.ui.metadata = window_meta;
 
-    state.ui.extensions = get_extensions();
+    match get_extensions() {
+        Ok(ext) => state.ui.extensions = ext,
+        Err(e) => {
+            log::error!("failed to get extensions: {e}");
+        }
+    }
     log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
 
     use_shared_state_provider(cx, || state);
@@ -367,57 +372,6 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-
-    // Automatically select the best implementation for your platform.
-    let inner = state.inner();
-
-    use_future(cx, (), |_| async move {
-        let (tx, mut rx) = futures::channel::mpsc::unbounded();
-        let mut watcher = match RecommendedWatcher::new(
-            move |res| {
-                let _ = tx.unbounded_send(res);
-            },
-            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
-        ) {
-            Ok(watcher) => watcher,
-            Err(e) => {
-                log::error!("{e}");
-                return;
-            }
-        };
-
-        // Add a path to be watched. All files and directories at that path and
-        // below will be monitored for changes.
-        if let Err(e) = watcher.watch(
-            STATIC_ARGS.extensions_path.as_path(),
-            RecursiveMode::Recursive,
-        ) {
-            log::error!("{e}");
-            return;
-        }
-
-        while let Some(event) = rx.next().await {
-            let event = match event {
-                Ok(event) => event,
-                Err(e) => {
-                    log::error!("{e}");
-                    continue;
-                }
-            };
-
-            log::debug!("{event:?}");
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state
-                        .write()
-                        .mutate(Action::RegisterExtensions(get_extensions()));
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
-        }
-    });
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -789,6 +743,59 @@ fn app(cx: Scope) -> Element {
 
             *chats_init.write_silent() = true;
             needs_update.set(true);
+        }
+    });
+
+    // Automatically select the best implementation for your platform.
+    let inner = state.inner();
+    use_future(cx, (), |_| async move {
+        let (tx, mut rx) = futures::channel::mpsc::unbounded();
+        let mut watcher = match RecommendedWatcher::new(
+            move |res| {
+                let _ = tx.unbounded_send(res);
+            },
+            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+        ) {
+            Ok(watcher) => watcher,
+            Err(e) => {
+                log::error!("{e}");
+                return;
+            }
+        };
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        if let Err(e) = watcher.watch(
+            STATIC_ARGS.extensions_path.as_path(),
+            RecursiveMode::Recursive,
+        ) {
+            log::error!("{e}");
+            return;
+        }
+
+        while let Some(event) = rx.next().await {
+            let event = match event {
+                Ok(event) => event,
+                Err(e) => {
+                    log::error!("{e}");
+                    continue;
+                }
+            };
+
+            log::debug!("{event:?}");
+            match inner.try_borrow_mut() {
+                Ok(state) => match get_extensions() {
+                    Ok(ext) => {
+                        state.write().mutate(Action::RegisterExtensions(ext));
+                    }
+                    Err(e) => {
+                        log::error!("failed to get extensions: {e}");
+                    }
+                },
+                Err(e) => {
+                    log::error!("{e}");
+                }
+            }
         }
     });
 

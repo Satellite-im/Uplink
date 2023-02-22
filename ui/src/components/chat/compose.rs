@@ -37,7 +37,6 @@ use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
 use uuid::Uuid;
 use warp::{
-    crypto::DID,
     logging::tracing::log,
     raygun::{self, ReactionState},
 };
