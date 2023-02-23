@@ -459,7 +459,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let folder_name = dir.name();
                         let folder_name2 = dir.name();
                         let key = dir.id();
-                        let item = Item::from(dir);
+                        let dir2 = dir.clone();
                         rsx!(
                             ContextMenu {
                                 key: "{key}-menu",
@@ -476,6 +476,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         icon: Icon::Trash,
                                         text: "Delete".to_owned(),
                                         onpress: move |_| {
+                                            let item = Item::from(dir2.clone());
                                             ch.send(ChanCmd::DeleteItems(item));
                                         }
                                     },
@@ -500,7 +501,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                    files_list.read().iter().map(|file| {
                         let file_name = file.name();
                         let file_name2 = file.name();
-                        let item = Item::from(file);
+                        let file2 = file.clone();
                         let key = file.id();
                         rsx!(ContextMenu {
                                     key: "{key}-menu",
@@ -540,6 +541,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             icon: Icon::Trash,
                                             text: "Delete".to_owned(),
                                             onpress: move |_| {
+                                                let item = Item::from(file2.clone());
                                                 ch.send(ChanCmd::DeleteItems(item));
                                             }
                                         },

@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     ffi::OsStr,
     io::{Cursor, Read},
     path::{Path, PathBuf},
@@ -7,7 +8,7 @@ use std::{
 
 use derive_more::Display;
 
-use futures::{channel::oneshot, StreamExt};
+use futures::{channel::oneshot, FutureExt, StreamExt};
 use humansize::{format_size, DECIMAL};
 use image::io::Reader as ImageReader;
 use mime::*;
@@ -19,7 +20,7 @@ use crate::warp_runner::Storage as warp_storage;
 use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
 
 use warp::{
-    constellation::{directory::Directory, Progression},
+    constellation::{directory::Directory, item::Item, Progression},
     error::Error,
     logging::tracing::log,
     sync::RwLock,
@@ -68,6 +69,11 @@ pub enum ConstellationCmd {
         local_path_to_save_file: PathBuf,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "RemoveItems {{ item: {item:?} }} ")]
+    DeleteItems {
+        item: Item,
+        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -114,7 +120,38 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = rename_item(old_name, new_name, warp_storage).await;
             let _ = rsp.send(r);
         }
+        ConstellationCmd::DeleteItems { item, rsp } => {
+            let r = remove_items(warp_storage, item).await;
+            let _ = rsp.send(r);
+        }
     }
+}
+
+async fn remove_items(
+    warp_storage: &mut warp_storage,
+    item: Item,
+) -> Result<uplink_storage, Error> {
+    // if item.is_directory() {
+    //     let mut items = item.get_directory().unwrap().get_items();
+    //     items.sort_by(|a, b| {
+    //         let is_dir_cmp = a.is_directory().cmp(&b.is_directory());
+    //         if is_dir_cmp != Ordering::Equal {
+    //             return is_dir_cmp;
+    //         }
+    //         a.name().cmp(&b.name())
+    //     });
+
+    //     for item in items {
+    //         let fut = async move { remove_items(warp_storage.clone(), item).await };
+    //         (Box::pin(fut)).await?;
+    //     }
+    //     warp_storage.clone().remove(&item.name(), true).await?;
+    // } else {
+    //     warp_storage.remove(&item.name(), true).await?;
+    // }
+
+    warp_storage.remove(&item.name(), true).await?;
+    get_items_from_current_directory(warp_storage)
 }
 
 async fn rename_item(
