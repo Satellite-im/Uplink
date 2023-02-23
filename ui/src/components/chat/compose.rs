@@ -446,25 +446,22 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 }
                                             },
                                         )),
-                                        match message.in_reply_to {
-                                            Some(other_msg) => rsx!(
-                                                MessageReply {
-                                                    key: "{message_key}",
-                                                    with_text: message.inner.value().join("\n"),
-                                                    remote: group.remote,
-                                                    remote_message: group.remote,
-                                                    with_prefix: other_msg,
-                                                }
-                                            ),
-                                            None => rsx!(
-                                                Message {
-                                                    key: "{message_key}",
-                                                    remote: group.remote,
-                                                    with_text: message.inner.value().join("\n"),
-                                                    reactions: message.inner.reactions(),
-                                                    order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                                }
-                                            )
+                                       message.in_reply_to.map(|other_msg| rsx!(
+                                            MessageReply {
+                                                key: "reply-{message_key}",
+                                                with_text: other_msg,
+                                                remote: group.remote,
+                                                remote_message: group.remote,
+                                                // todo: translate this. possibly add the username 
+                                                with_prefix: "replying to: ".into(),
+                                            }
+                                        )),
+                                        Message {
+                                            key: "{message_key}",
+                                            remote: group.remote,
+                                            with_text: message.inner.value().join("\n"),
+                                            reactions: message.inner.reactions(),
+                                            order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                                         },
                                     }
                                 )
