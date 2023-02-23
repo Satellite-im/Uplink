@@ -617,9 +617,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         },
         controls: cx.render(rsx!(
             // Load extensions
-//            for node in ext_renders {
-//                rsx!(node)
-//            },
+            //            for node in ext_renders {
+            //                rsx!(node)
+            //            },
             Button {
                 icon: Icon::ChevronDoubleRight,
                 disabled: is_loading,

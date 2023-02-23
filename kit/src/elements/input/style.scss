@@ -10,14 +10,14 @@
 		opacity: 0.5;
 	}
 }
-input {
+textarea {
 	width: 100%;
 }
 .input {
 	height: var(--height-input);
 	background: var(--secondary);
 	border-radius: var(--border-radius);
-	display: inline-flex;
+	display: flex;
 	align-items: center;
 	gap: var(--gap);
 	padding: var(--padding-less);
@@ -25,14 +25,11 @@ input {
 	border: 1px solid var(--border-color);
 	color: var(--text-color);
 	transition: border-color var(--animation-time);
+	flex: 1;
 	.icon {
 		height: 100%;
 		display: inline-flex;
 		align-items: center;
-	}
-	input {
-		height: fit-content;
-		flex: 1;
 	}
 	svg {
 		transition: stroke var(--animation-time);

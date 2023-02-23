@@ -1,6 +1,7 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
-use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_elements::input;
+use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
 pub type ValidationError = String;
 use crate::elements::label::Label;
@@ -306,8 +307,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
+    let multiline = !cx.props.is_password.unwrap_or(false);
+
     let input_id = cx.props.id.clone();
-    let script = include_str!("./script.js").replace("UUID", &cx.props.id);
+    let script = include_str!("./script.js")
+        .replace("UUID", &cx.props.id)
+        .replace(
+            "var APPLY_FOCUS",
+            &format!("var APPLY_FOCUS = {}", &cx.props.focus),
+        );
 
     cx.render(rsx! (
         div {
@@ -333,10 +341,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 )),
-                cx.props.focus.then(|| rsx!(
-                    script { "{script}"},
-                )),
-                input {
+                script { "{script}"},
+                textarea {
+                    class: "input_textarea",
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
@@ -344,6 +351,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
+                    rows: 1,
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val.to_string();
@@ -365,9 +373,22 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            if !multiline || !evt.data.modifiers().contains(Modifiers::SHIFT) {
+                                emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());
+                        }
+                    },
+                    onkeypress: move |evt| {
+                        if evt.code() == Code::Enter {
+                            if multiline && evt.data.modifiers().contains(Modifiers::SHIFT) {
+                                let mut current_val = val.read().clone();
+                                current_val.push_str("\n");
+                                *val.write_silent() = current_val;
+                                valid.set(true);
+                                emit(&cx, val.read().to_string(), true);
+                            }
                         }
                     }
                 }

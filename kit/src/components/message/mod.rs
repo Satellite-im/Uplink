@@ -1,5 +1,4 @@
-use derive_more::Display;
-use dioxus::prelude::*;
+use {derive_more::Display, dioxus::prelude::*};
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -62,6 +61,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             },
             aria_label: "Message",
+            white_space: "pre-wrap",
             (cx.props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
