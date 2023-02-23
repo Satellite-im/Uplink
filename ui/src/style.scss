@@ -1,12 +1,12 @@
 
 
 html, body {
-    background-color: var(--background);
     height: 100%;
     margin: 0;
     overscroll-behavior-y: none;
     overscroll-behavior-x: none;
-    overflow: hidden;;
+    overflow: hidden;
+    border-radius: var(--border-radius);
 }
 #main, #app-wrap {
     height: 100%;
@@ -14,8 +14,13 @@ html, body {
     margin: 0;
     overscroll-behavior-x: none;
     overscroll-behavior-y: none;
+    overflow: hidden;
     display: inline-flex;
     flex-direction: column;
+}
+
+#app-wrap {
+    border: 1px solid var(--border-color);
 }
 
 :root {

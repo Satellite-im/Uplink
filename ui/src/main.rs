@@ -117,7 +117,6 @@ fn main() {
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
-
     // configure logging
     let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
@@ -248,6 +247,14 @@ fn bootstrap(cx: Scope) -> Element {
         width: 500.0,
         height: 300.0,
     });
+
+    #[cfg(target_os = "windows")]
+    {
+        #[allow(unused_imports)]
+        use raw_window_handle::HasRawWindowHandle;
+        window_vibrancy::apply_acrylic(&**desktop, None)
+            .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+    }
     cx.render(rsx!(crate::auth_page_manager {}))
 }
 
