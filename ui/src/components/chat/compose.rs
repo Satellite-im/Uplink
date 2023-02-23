@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
 };
@@ -37,6 +38,7 @@ use common::{
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
+use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
     logging::tracing::log,
@@ -462,6 +464,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             with_text: message.inner.value().join("\n"),
                                             reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                            attachments: message.inner.attachments().iter().map(|f| f.name()).collect(),
                                         },
                                     }
                                 )
@@ -499,6 +502,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let should_clear_input = use_state(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
+    let is_reply = active_chat_id
+        .and_then(|id| {
+            state
+                .read()
+                .chats
+                .all
+                .get(&id)
+                .map(|chat| chat.replying_to.is_some())
+        })
+        .unwrap_or(false);
+
+    let files_to_upload: &UseRef<Option<Vec<PathBuf>>> = use_ref(cx, || None);
+
     // todo: use this to render the typing indicator
     let users_typing = active_chat_id
         .and_then(|id| state.read().chats.all.get(&id).cloned())
@@ -513,7 +529,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let msg_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
-            //to_owned![];
+            to_owned![files_to_upload];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some((msg, conv_id, reply)) = rx.next().await {
@@ -525,12 +541,17 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             msg,
                             rsp: tx,
                         },
-                        None => RayGunCmd::SendMessage {
-                            conv_id,
-                            msg,
-                            rsp: tx,
-                        },
+                        None => {
+                            let attachments = files_to_upload.read().clone().unwrap_or_default();
+                            RayGunCmd::SendMessage {
+                                conv_id,
+                                msg,
+                                attachments,
+                                rsp: tx,
+                            }
+                        }
                     };
+                    *files_to_upload.write_silent() = None;
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
                         continue;
@@ -724,8 +745,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading,
+            disabled: is_loading || is_reply,
             appearance: Appearance::Primary,
+            onpress: move |_| {
+                *files_to_upload.write_silent() = FileDialog::new().set_directory(".").pick_files();
+            },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
                 text: get_local_text("files.upload"),
