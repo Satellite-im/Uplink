@@ -47,6 +47,11 @@ pub struct Props<'a> {
     // If not set, the default value of Order::Last will be used.
     #[props(optional)]
     order: Option<Order>,
+
+    // todo: remove this
+    #[allow(unused)]
+    #[props(optional)]
+    attachments: Option<Vec<String>>,
 }
 
 #[allow(non_snake_case)]
