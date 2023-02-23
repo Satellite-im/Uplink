@@ -352,8 +352,8 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         }
 
                         let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            // failed to delete message
+                        if let Err(e) = res {
+                            log::error!("failed to send message: {}", e);
                         }
                     }
                 }
@@ -436,6 +436,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             },
                                             ContextItem {
                                                 icon: Icon::Trash,
+                                                danger: true,
                                                 text: get_local_text("messages.delete"),
                                                 should_render: sender_is_self,
                                                 onpress: move |_| {
