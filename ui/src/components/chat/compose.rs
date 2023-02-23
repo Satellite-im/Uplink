@@ -12,6 +12,7 @@ use kit::{
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
+        message_typing::MessageTyping,
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
@@ -489,7 +490,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     // todo: use this to render the typing indicator
-    let _users_typing = active_chat_id
+    let users_typing = active_chat_id
         .and_then(|id| state.read().chats.all.get(&id).cloned())
         .map(|chat| {
             chat.participants
@@ -657,7 +658,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
         .collect();
 
-    cx.render(rsx!(Chatbar {
+    let chatbar = cx.render(rsx!(Chatbar {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         reset: should_clear_input.clone(),
@@ -720,7 +721,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 text: get_local_text("files.upload"),
             }))
         }))
-    }))
+    }));
+
+    // todo: make this look nice
+    let users_typing = users_typing.unwrap_or_default();
+    let is_typing = !users_typing.is_empty();
+    cx.render(rsx!(
+        is_typing.then(|| {
+            rsx!(MessageTyping {
+                user_image: None
+            })
+        })
+        chatbar,
+    ))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {
