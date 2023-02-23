@@ -1,4 +1,6 @@
-var APPLY_FOCUS
+var APPLY_FOCUS = $APPLY_FOCUS
+var MULTI_LINE = $MULTI_LINE
+
 if (APPLY_FOCUS) {
     var input_element = document.getElementById('UUID')
     input_element.focus()
@@ -6,14 +8,23 @@ if (APPLY_FOCUS) {
 
 var textareas = document.getElementsByClassName("input_textarea");
 for (let i = 0; i < textareas.length; i++) {
-    textareas[i].setAttribute("style", "height:" + (textareas[i].scrollHeight) + "px;overflow-y:hidden;")
-    textareas[i].addEventListener("input", function (e) {
-        this.style.height = "auto"
-        this.style.height = this.scrollHeight + "px"
-    });
-    textareas[i].addEventListener("keypress", function (e) {
+    var txt = textareas[i]
+    txt.addEventListener("input", e => updateHeight(txt))
+    txt.addEventListener("keypress", function (e) {
         if (e.key == "Enter") {
             e.preventDefault()
+            //Doing this in js instead of rust to properly update the textarea height
+            //Maybe someone else has an idea of updating the height via dioxus
+            if (MULTI_LINE && e.shiftKey) {
+                txt.value += "\n"
+                var inputEvent = new Event("input")
+                txt.dispatchEvent(inputEvent)
+            }
         }
     });
+}
+
+function updateHeight(e) {
+    e.style.height = "0px"
+    e.style.height = e.scrollHeight + "px"
 }

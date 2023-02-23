@@ -1,18 +1,32 @@
 .input-group {
 	display: inline-flex;
 	flex-direction: column;
+
 	.error {
 		margin-top: var(--gap);
 		color: var(--warning-light);
 	}
+
 	&.disabled {
 		cursor: not-allowed;
 		opacity: 0.5;
 	}
 }
+
 textarea {
 	width: 100%;
+	height: 125%;
+	max-height: 250px; //Maybe make max variable?
 }
+
+body::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 0px rgba(255, 255, 255, 0);
+}
+
+textarea::-webkit-scrollbar-thumb {
+	background-color: var(--primary);
+}
+
 .input {
 	height: var(--height-input);
 	background: var(--secondary);
@@ -26,37 +40,45 @@ textarea {
 	color: var(--text-color);
 	transition: border-color var(--animation-time);
 	flex: 1;
+
 	.icon {
 		height: 100%;
 		display: inline-flex;
 		align-items: center;
 	}
+
 	svg {
 		transition: stroke var(--animation-time);
 		fill: transparent;
 		stroke: var(--placeholder);
 	}
 }
+
 .input-success {
 	border: 1px solid var(--success-light);
+
 	.icon {
 		svg {
 			stroke: var(--success-light);
 		}
 	}
 }
+
 .input-warning {
 	border: 1px solid var(--warning-light);
+
 	.icon {
 		svg {
 			stroke: var(--warning-light);
 		}
 	}
 }
+
 .clear-btn {
 	height: 100%;
 	display: inline-flex;
 	align-items: center;
+
 	svg {
 		&:nth-of-type(1):hover {
 			stroke: var(--text-color-bright);
@@ -64,12 +86,15 @@ textarea {
 		}
 	}
 }
+
 ::-ms-input-placeholder {
 	color: var(--placeholder);
 }
+
 ::-webkit-input-placeholder {
 	color: var(--placeholder);
 }
+
 ::placeholder {
 	color: var(--placeholder) !important;
 }

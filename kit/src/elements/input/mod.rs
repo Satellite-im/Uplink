@@ -312,10 +312,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js")
         .replace("UUID", &cx.props.id)
-        .replace(
-            "var APPLY_FOCUS",
-            &format!("var APPLY_FOCUS = {}", &cx.props.focus),
-        );
+        .replace("$APPLY_FOCUS", &format!("{}", &cx.props.focus))
+        .replace("$MULTI_LINE", &format!("{}", &multiline));
 
     cx.render(rsx! (
         div {
@@ -351,7 +349,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     maxlength: "{max_length}",
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
-                    rows: 1,
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val.to_string();
@@ -378,17 +375,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());
-                        }
-                    },
-                    onkeypress: move |evt| {
-                        if evt.code() == Code::Enter {
-                            if multiline && evt.data.modifiers().contains(Modifiers::SHIFT) {
-                                let mut current_val = val.read().clone();
-                                current_val.push_str("\n");
-                                *val.write_silent() = current_val;
-                                valid.set(true);
-                                emit(&cx, val.read().to_string(), true);
-                            }
                         }
                     }
                 }
