@@ -472,8 +472,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             is_renaming_map.with_mut(|i| *i = Some(key));
                                         }
                                     },
+                                    hr {},
                                     ContextItem {
                                         icon: Icon::Trash,
+                                        danger: true,
                                         text: "Delete".to_owned(),
                                         onpress: move |_| {
                                             let item = Item::from(dir2.clone());
@@ -537,8 +539,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 ch.send(ChanCmd::DownloadFile { file_name: file_name2.clone(), local_path_to_save_file: file_path_buf } );
                                             },
                                         },
+                                        hr {},
                                         ContextItem {
                                             icon: Icon::Trash,
+                                            danger: true,
                                             text: "Delete".to_owned(),
                                             onpress: move |_| {
                                                 let item = Item::from(file2.clone());
