@@ -409,9 +409,14 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
+
+                                // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
+                                let context_key = format!("message-{}", message.inner.id());
+                                let message_key = message.inner.id().to_string();
                                 rsx! (
                                     ContextMenu {
-                                        id: format!("message-{}", message.inner.id()),
+                                        key: "{context_key}",
+                                        id: context_key,
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::ArrowLongLeft,
@@ -439,12 +444,13 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             },
                                         )),
                                         Message {
+                                            key: "{message_key}",
                                             remote: group.remote,
                                             with_text: message.inner.value().join("\n"),
                                             in_reply_to: message.in_reply_to,
                                             reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                        }
+                                        },
                                     }
                                 )
                             })
