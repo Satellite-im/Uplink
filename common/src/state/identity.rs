@@ -62,10 +62,6 @@ impl Identity {
     pub fn platform(&self) -> Platform {
         self.platform
     }
-
-    pub fn did(&self) -> DID {
-        self.identity.did_key()
-    }
 }
 
 impl Identity {

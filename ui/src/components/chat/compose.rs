@@ -408,7 +408,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let message3 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
-                                let sender_is_self = message.inner.sender() == state.read().account.identity.did();
+                                let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
                                 rsx! (
                                     ContextMenu {
                                         id: format!("message-{}", message.inner.id()),
