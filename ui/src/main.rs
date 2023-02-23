@@ -561,12 +561,12 @@ fn app(cx: Scope) -> Element {
                         let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
-                            minimal_view: size.width < 1200,
+                            minimal_view: size.width < 600,
                             ..metadata
                         };
                         if metadata != new_metadata {
+                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                             state.write().ui.metadata = new_metadata;
-                            state.write().ui.sidebar_hidden = size.width < 1200;
                             needs_update.set(true);
                         }
                     }
