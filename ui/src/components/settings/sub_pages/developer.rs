@@ -83,7 +83,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     }
                 }
             },
-
             SettingSection {
                 section_label: get_local_text("settings-developer.compress-download-cache"),
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),
@@ -93,6 +92,19 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
+                    }
+                }
+            },
+            SettingSection {
+                section_label: get_local_text("settings-developer.print-state"),
+                section_description: get_local_text("settings-developer.print-state-description"),
+                Button {
+                    text: get_local_text("settings-developer.print-state"),
+                    aria_label: "print-state-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::DocumentChartBar,
+                    onpress: move |_| {
+                        log::debug!("{:#?}", state.read());
                     }
                 }
             },
