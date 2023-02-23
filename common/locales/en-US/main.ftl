@@ -32,6 +32,7 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .delete = Delete
 
 favorites = Favorites
     .favorites = Favorites

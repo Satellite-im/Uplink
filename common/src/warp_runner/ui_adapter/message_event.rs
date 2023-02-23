@@ -18,6 +18,10 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         message: Message,
     },
+    Deleted {
+        conversation_id: Uuid,
+        message_id: Uuid,
+    },
     MessageReactionAdded {
         conversation_id: Uuid,
         message_id: Uuid,
@@ -63,6 +67,13 @@ pub async fn convert_message_event(
                 message: convert_raygun_message(messaging, &message).await,
             }
         }
+        MessageEventKind::MessageDeleted {
+            conversation_id,
+            message_id,
+        } => MessageEvent::Deleted {
+            conversation_id,
+            message_id,
+        },
         MessageEventKind::MessageReactionAdded {
             conversation_id,
             message_id,

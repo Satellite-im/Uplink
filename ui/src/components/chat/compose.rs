@@ -289,9 +289,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     ))
 }
 
+#[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     // contains the emoji reaction
     React((raygun::Message, String)),
+    DeleteMessage { conv_id: Uuid, msg_id: Uuid },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
@@ -333,6 +335,25 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         let res = rx.await.expect("command canceled");
                         if res.is_err() {
                             // failed to add/remove reaction
+                        }
+                    }
+                    MessagesCommand::DeleteMessage { conv_id, msg_id } => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteMessage {
+                                conv_id,
+                                msg_id,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to delete message: {}", e);
                         }
                     }
                 }
@@ -384,11 +405,18 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();
                                 let message2 = message.clone();
+                                let message3 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
+                                let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
+
+                                // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
+                                let context_key = format!("message-{}", message.inner.id());
+                                let message_key = message.inner.id().to_string();
                                 rsx! (
                                     ContextMenu {
-                                        id: format!("message-{}", message.inner.id()),
+                                        key: "{context_key}",
+                                        id: context_key,
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::ArrowLongLeft,
@@ -406,14 +434,24 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                     ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
                                                 }
                                             },
+                                            ContextItem {
+                                                icon: Icon::Trash,
+                                                danger: true,
+                                                text: get_local_text("messages.delete"),
+                                                should_render: sender_is_self,
+                                                onpress: move |_| {
+                                                    ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });
+                                                }
+                                            },
                                         )),
                                         Message {
+                                            key: "{message_key}",
                                             remote: group.remote,
                                             with_text: message.inner.value().join("\n"),
                                             in_reply_to: message.in_reply_to,
                                             reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                        }
+                                        },
                                     }
                                 )
                             })

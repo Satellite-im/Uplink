@@ -927,6 +927,14 @@ impl State {
                     chat.messages.push_back(message);
                 }
             }
+            MessageEvent::Deleted {
+                conversation_id,
+                message_id,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.messages.retain(|msg| msg.inner.id() != message_id);
+                }
+            }
             MessageEvent::MessageReactionAdded {
                 conversation_id,
                 message_id,
