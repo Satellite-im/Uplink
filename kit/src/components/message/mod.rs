@@ -28,12 +28,6 @@ pub struct Props<'a> {
     with_text: Option<String>,
 
     // todo: remove unused attribute
-    // if Some, will contain part of the message being replied to
-    #[allow(unused)]
-    #[props(!optional)]
-    in_reply_to: Option<String>,
-
-    // todo: remove unused attribute
     // todo: does this need to be an option like the rest of 'em?
     #[allow(unused)]
     reactions: Vec<warp::raygun::Reaction>,

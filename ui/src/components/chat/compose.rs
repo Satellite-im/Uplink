@@ -461,7 +461,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                     key: "{message_key}",
                                                     remote: group.remote,
                                                     with_text: message.inner.value().join("\n"),
-                                                    in_reply_to: message.in_reply_to,
                                                     reactions: message.inner.reactions(),
                                                     order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                                                 }
