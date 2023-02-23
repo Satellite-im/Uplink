@@ -353,7 +353,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
                         let res = rx.await.expect("command canceled");
                         if let Err(e) = res {
-                            log::error!("failed to send message: {}", e);
+                            log::error!("failed to delete message: {}", e);
                         }
                     }
                 }
