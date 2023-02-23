@@ -10,8 +10,10 @@ pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 
-use std::collections::{HashMap, VecDeque};
-
+use crate::state::{self, chats};
+use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use warp::{
     crypto::DID,
     error::Error,
@@ -20,7 +22,29 @@ use warp::{
     raygun::{self, Conversation, MessageOptions},
 };
 
-use crate::state::{self, chats};
+/// the UI needs additional information for message replies, namely the text of the message being replied to.
+/// fetch that before sending the message to the UI.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Message {
+    pub inner: warp::raygun::Message,
+    pub in_reply_to: Option<String>,
+}
+
+/// if a raygun::Message is in reply to another message, attempt to fetch part of the message text
+pub async fn convert_raygun_message(
+    messaging: &super::Messaging,
+    msg: &raygun::Message,
+) -> Message {
+    let reply: Option<raygun::Message> = match msg.replied() {
+        Some(id) => messaging.get_message(msg.conversation_id(), id).await.ok(),
+        None => None,
+    };
+
+    Message {
+        inner: msg.clone(),
+        in_reply_to: reply.and_then(|msg| msg.value().first().cloned()),
+    }
+}
 
 // this function is used in response to warp events. assuming that the DID from these events is valid.
 // Warp sends the Identity over. if the Identity has not been received yet, get_identity will fail for
@@ -84,10 +108,17 @@ pub async fn conversation_to_chat(
 
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let unreads = messaging.get_message_count(conv.id()).await?;
-    let messages: VecDeque<raygun::Message> = messaging
+    let messages = messaging
         .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
-        .await?
-        .into();
+        .await?;
+
+    let messages = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
 
     Ok(chats::Chat {
         id: conv.id(),

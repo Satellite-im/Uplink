@@ -22,9 +22,9 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 use std::time::Instant;
+use std::{fs, io};
 use uuid::Uuid;
 
 use std::sync::Arc;
@@ -117,7 +117,6 @@ fn main() {
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
-
     // configure logging
     let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
@@ -199,11 +198,16 @@ fn main() {
 
         window = window
             .with_has_shadow(true)
-            .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
+            .with_menu(main_menu)
             .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        window = window.with_decorations(false).with_transparent(true);
     }
 
     let config = Config::default();
@@ -211,7 +215,7 @@ fn main() {
     dioxus_desktop::launch_cfg(
         bootstrap,
         config
-            .with_window(window.with_menu(main_menu))
+            .with_window(window)
             .with_custom_index(
                 r#"
     <!doctype html>
@@ -243,6 +247,14 @@ fn bootstrap(cx: Scope) -> Element {
         width: 500.0,
         height: 300.0,
     });
+
+    #[cfg(target_os = "windows")]
+    {
+        #[allow(unused_imports)]
+        use raw_window_handle::HasRawWindowHandle;
+        window_vibrancy::apply_acrylic(&**desktop, None)
+            .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+    }
     cx.render(rsx!(crate::auth_page_manager {}))
 }
 
@@ -262,26 +274,55 @@ fn auth_page_manager(cx: Scope) -> Element {
     }))
 }
 
+#[allow(unused_assignments)]
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
-    let pre_release_text = get_local_text("uplink.pre-release");
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
             div {
-                id: "pre-release",
-                aria_label: "pre-release",
+                id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
+                controls,
             },
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
@@ -292,16 +333,16 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> HashMap<String, ExtensionProxy> {
+fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
     // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
     // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
     // that updates when they have new info, i.e. state.
-    fs::create_dir_all(&STATIC_ARGS.extensions_path).unwrap();
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path).expect("Directory is empty");
+    fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
     let mut extensions_library = AvailableExtensions::new();
 
     for entry in paths {
-        let path = entry.unwrap().path();
+        let path = entry?.path();
         if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
             log::debug!("Found extension: {:?}", path);
             unsafe {
@@ -317,7 +358,7 @@ fn get_extensions() -> HashMap<String, ExtensionProxy> {
             }
         }
     }
-    extensions_library.extensions
+    Ok(extensions_library.extensions)
 }
 
 // called at the end of the auth flow
@@ -355,7 +396,12 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     };
     state.ui.metadata = window_meta;
 
-    state.ui.extensions = get_extensions();
+    match get_extensions() {
+        Ok(ext) => state.ui.extensions = ext,
+        Err(e) => {
+            log::error!("failed to get extensions: {e}");
+        }
+    }
     log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
 
     use_shared_state_provider(cx, || state);
@@ -367,57 +413,6 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
-
-    // Automatically select the best implementation for your platform.
-    let inner = state.inner();
-
-    use_future(cx, (), |_| async move {
-        let (tx, mut rx) = futures::channel::mpsc::unbounded();
-        let mut watcher = match RecommendedWatcher::new(
-            move |res| {
-                let _ = tx.unbounded_send(res);
-            },
-            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
-        ) {
-            Ok(watcher) => watcher,
-            Err(e) => {
-                log::error!("{e}");
-                return;
-            }
-        };
-
-        // Add a path to be watched. All files and directories at that path and
-        // below will be monitored for changes.
-        if let Err(e) = watcher.watch(
-            STATIC_ARGS.extensions_path.as_path(),
-            RecursiveMode::Recursive,
-        ) {
-            log::error!("{e}");
-            return;
-        }
-
-        while let Some(event) = rx.next().await {
-            let event = match event {
-                Ok(event) => event,
-                Err(e) => {
-                    log::error!("{e}");
-                    continue;
-                }
-            };
-
-            log::debug!("{event:?}");
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state
-                        .write()
-                        .mutate(Action::RegisterExtensions(get_extensions()));
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
-        }
-    });
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -520,12 +515,12 @@ fn app(cx: Scope) -> Element {
                         let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
-                            minimal_view: size.width < 1200,
+                            minimal_view: size.width < 600,
                             ..metadata
                         };
                         if metadata != new_metadata {
+                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                             state.write().ui.metadata = new_metadata;
-                            state.write().ui.sidebar_hidden = size.width < 1200;
                             needs_update.set(true);
                         }
                     }
@@ -792,6 +787,59 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // Automatically select the best implementation for your platform.
+    let inner = state.inner();
+    use_future(cx, (), |_| async move {
+        let (tx, mut rx) = futures::channel::mpsc::unbounded();
+        let mut watcher = match RecommendedWatcher::new(
+            move |res| {
+                let _ = tx.unbounded_send(res);
+            },
+            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+        ) {
+            Ok(watcher) => watcher,
+            Err(e) => {
+                log::error!("{e}");
+                return;
+            }
+        };
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        if let Err(e) = watcher.watch(
+            STATIC_ARGS.extensions_path.as_path(),
+            RecursiveMode::Recursive,
+        ) {
+            log::error!("{e}");
+            return;
+        }
+
+        while let Some(event) = rx.next().await {
+            let event = match event {
+                Ok(event) => event,
+                Err(e) => {
+                    log::error!("{e}");
+                    continue;
+                }
+            };
+
+            log::debug!("{event:?}");
+            match inner.try_borrow_mut() {
+                Ok(state) => match get_extensions() {
+                    Ok(ext) => {
+                        state.write().mutate(Action::RegisterExtensions(ext));
+                    }
+                    Err(e) => {
+                        log::error!("failed to get extensions: {e}");
+                    }
+                },
+                Err(e) => {
+                    log::error!("{e}");
+                }
+            }
+        }
+    });
+
     cx.render(main_element)
 }
 
@@ -837,10 +885,46 @@ fn get_toasts(cx: Scope) -> Element {
     )))
 }
 
+#[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
+
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
 
     cx.render(rsx!(
         div {
@@ -905,6 +989,9 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
+
+            controls,
+
         },
     ))
 }

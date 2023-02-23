@@ -280,13 +280,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
 
-    //let mut debug_reset = false;
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
         if *should_reset {
             val.write().clear();
             hook.set(false);
-            //debug_reset = true;
         }
     }
 
@@ -372,6 +370,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::Enter {
                             if !multiline || !evt.data.modifiers().contains(Modifiers::SHIFT) {
                                 emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                                *val.write() = "".into();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());

@@ -15,6 +15,8 @@ pub struct ItemProps<'a> {
     icon: Option<icons::outline::Shape>,
     #[props(optional)]
     danger: Option<bool>,
+
+    should_render: Option<bool>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -26,6 +28,11 @@ pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
 
 #[allow(non_snake_case)]
 pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
+    let should_render = cx.props.should_render.unwrap_or(true);
+    if !should_render {
+        return None;
+    }
+
     let class = if cx.props.danger.is_some() {
         "context-item danger"
     } else {

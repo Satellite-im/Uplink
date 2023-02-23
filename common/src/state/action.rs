@@ -156,7 +156,7 @@ pub enum Action {
     StartReplying(Chat, Message),
     /// Clears the reply for a given chat
     #[display(fmt = "CancelReply")]
-    CancelReply(Chat),
+    CancelReply(Uuid),
     /// fakes sending a message to the specified chat
     /// for normal operation, warp sends a message, Uplink receives an event when that message was sent, and state is updated accordingly.
     /// for mock data, warp is not used and this is needed to fake sending a message

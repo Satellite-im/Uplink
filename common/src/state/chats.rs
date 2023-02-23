@@ -7,7 +7,7 @@ use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
 
-use crate::STATIC_ARGS;
+use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
 use super::identity::Identity;
 
@@ -25,7 +25,7 @@ pub struct Chat {
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     #[serde(default)]
-    pub messages: VecDeque<Message>,
+    pub messages: VecDeque<ui_adapter::Message>,
     // Unread count for this chat, should be cleared when we view the chat.
     #[serde(default)]
     pub unreads: u32,
@@ -76,6 +76,17 @@ impl Chats {
             Some(c) => c.unreads > 0,
             None => false,
         }
+    }
+    /// returns the UUID of the message being replied to by the active chat
+    pub fn get_replying_to(&self) -> Option<Uuid> {
+        self.active
+            .and_then(|id| self.all.get(&id).and_then(|chat| chat.get_replying_to()))
+    }
+}
+
+impl Chat {
+    pub fn get_replying_to(&self) -> Option<Uuid> {
+        self.replying_to.as_ref().map(|m| m.id())
     }
 }
 
