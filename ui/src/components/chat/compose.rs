@@ -12,6 +12,7 @@ use kit::{
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
+        message_reply::MessageReply,
         message_typing::MessageTyping,
         user_image::UserImage,
         user_image_group::UserImageGroup,
@@ -445,13 +446,26 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 }
                                             },
                                         )),
-                                        Message {
-                                            key: "{message_key}",
-                                            remote: group.remote,
-                                            with_text: message.inner.value().join("\n"),
-                                            in_reply_to: message.in_reply_to,
-                                            reactions: message.inner.reactions(),
-                                            order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                        match message.in_reply_to {
+                                            Some(other_msg) => rsx!(
+                                                MessageReply {
+                                                    key: "{message_key}",
+                                                    with_text: message.inner.value().join("\n"),
+                                                    remote: group.remote,
+                                                    remote_message: group.remote,
+                                                    with_prefix: other_msg,
+                                                }
+                                            ),
+                                            None => rsx!(
+                                                Message {
+                                                    key: "{message_key}",
+                                                    remote: group.remote,
+                                                    with_text: message.inner.value().join("\n"),
+                                                    in_reply_to: message.in_reply_to,
+                                                    reactions: message.inner.reactions(),
+                                                    order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                                }
+                                            )
                                         },
                                     }
                                 )
