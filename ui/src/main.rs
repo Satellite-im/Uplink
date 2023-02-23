@@ -117,7 +117,6 @@ fn main() {
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
-
     // configure logging
     let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
@@ -199,11 +198,16 @@ fn main() {
 
         window = window
             .with_has_shadow(true)
-            .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
+            .with_menu(main_menu)
             .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        window = window.with_decorations(false).with_transparent(true);
     }
 
     let config = Config::default();
@@ -211,7 +215,7 @@ fn main() {
     dioxus_desktop::launch_cfg(
         bootstrap,
         config
-            .with_window(window.with_menu(main_menu))
+            .with_window(window)
             .with_custom_index(
                 r#"
     <!doctype html>
@@ -243,6 +247,14 @@ fn bootstrap(cx: Scope) -> Element {
         width: 500.0,
         height: 300.0,
     });
+
+    #[cfg(target_os = "windows")]
+    {
+        #[allow(unused_imports)]
+        use raw_window_handle::HasRawWindowHandle;
+        window_vibrancy::apply_acrylic(&**desktop, None)
+            .expect("Unsupported platform! 'apply_blur' is only supported on Windows");
+    }
     cx.render(rsx!(crate::auth_page_manager {}))
 }
 
@@ -262,26 +274,55 @@ fn auth_page_manager(cx: Scope) -> Element {
     }))
 }
 
+#[allow(unused_assignments)]
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
-    let pre_release_text = get_local_text("uplink.pre-release");
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
             div {
-                id: "pre-release",
-                aria_label: "pre-release",
+                id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
+                controls,
             },
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
@@ -474,12 +515,12 @@ fn app(cx: Scope) -> Element {
                         let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
-                            minimal_view: size.width < 1200,
+                            minimal_view: size.width < 600,
                             ..metadata
                         };
                         if metadata != new_metadata {
+                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                             state.write().ui.metadata = new_metadata;
-                            state.write().ui.sidebar_hidden = size.width < 1200;
                             needs_update.set(true);
                         }
                     }
@@ -844,10 +885,46 @@ fn get_toasts(cx: Scope) -> Element {
     )))
 }
 
+#[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
+
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
 
     cx.render(rsx!(
         div {
@@ -912,6 +989,9 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
+
+            controls,
+
         },
     ))
 }
