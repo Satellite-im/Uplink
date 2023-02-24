@@ -6,9 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "aff8e57003fbdb766f0b24c4acb4178e319d7fad" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "e5f5e0ddf5d42c6abc1653911e83539899e1df2c" }
 derive_more = "0.99"
 ipc-channel = "0.16.0"
 
