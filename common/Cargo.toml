@@ -27,10 +27,10 @@ image = "0.24.5"
 names = "0.14.0"
 titlecase = "2.2.1"
 substring = "1.4.5"
-icons = { path="../icons" }
+icons = { path = "../icons" }
 humansize = "2.0.0"
 
-extensions = { path="../extensions" }
+extensions = { path = "../extensions" }
 
 futures = "0.3"
 # do we really want to pull in all of tokio? 
@@ -40,12 +40,12 @@ tokio-util = { version = "0.7", features = ["full"] }
 mime = "0.3.16"
 tempfile = "3.0.7"
 
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "a7e075238ee926919894cb27d743284ed3724dc2" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
     "transparent",
 ] }
