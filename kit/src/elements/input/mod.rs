@@ -156,7 +156,7 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
     None
 }
 
-// Default to requireing alpha-numeric inputs, unless ignore_colon override is set on the input field
+// Default to requiring alpha-numeric inputs, unless ignore_colon override is set on the input field
 pub fn validate_alphanumeric(
     val: &str,
     ignore_colon: bool,
