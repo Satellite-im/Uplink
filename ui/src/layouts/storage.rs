@@ -268,9 +268,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::DeleteItems { item, rsp: tx },
+                            ConstellationCmd::DeleteItems {
+                                item: item.clone(),
+                                rsp: tx,
+                            },
                         )) {
-                            log::error!("failed to delete items {}", e);
+                            log::error!("failed to delete items {}, item {:?}", e, item.name());
                             continue;
                         }
 
@@ -280,7 +283,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 storage_state.set(Some(storage));
                             }
                             Err(e) => {
-                                log::error!("failed to delete items: {}", e);
+                                log::error!("failed to delete items {}, item {:?}", e, item.name());
                                 continue;
                             }
                         }
