@@ -124,93 +124,102 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let _ = rsp.send(r);
         }
         ConstellationCmd::DeleteItems { item, rsp } => {
-            let r = delete_dir(warp_storage, item).await;
+            let r = delete_items(warp_storage, item).await;
             let _ = rsp.send(r);
         }
     }
 }
 
-async fn delete_dir(warp_storage: &mut warp_storage, item: Item) -> Result<uplink_storage, Error> {
-    let mut current_dirs_opened = get_directories_opened();
-    let first_dir = warp_storage.current_directory()?;
-    current_dirs_opened.push(first_dir.clone());
-
-    let mut stack = vec![item.clone()];
-    let mut dirs: Vec<Directory> = current_dirs_opened;
-    if item.is_directory() {
-        match warp_storage.select(&item.name()) {
-            Ok(_) => println!("Selected new dir: {:?}", item.name()),
-            Err(error) => log::error!("Error to select new dir {:?}", error),
+async fn delete_items(
+    warp_storage: &mut warp_storage,
+    item: Item,
+) -> Result<uplink_storage, Error> {
+    if item.is_file() {
+        let file_name = item.name();
+        match warp_storage.remove(&file_name, true).await {
+            Ok(_) => log::info!("File deleted: {:?}", file_name),
+            Err(error) => log::error!("Error to delete file {:?}, {:?}", file_name, error),
         };
-
-        dirs.push(warp_storage.current_directory()?);
+        return get_items_from_current_directory(warp_storage);
     };
 
-    while let Some(dir) = stack.last() {
-        if dir.is_file() {
-            let file_name = dir.name();
-            match warp_storage.remove(&file_name, true).await {
-                Ok(_) => log::info!("File deleted: {:?}", file_name),
-                Err(error) => log::error!("Error to delete file {:?}, {:?}", file_name, error),
-            };
-            stack.pop();
-        } else if let Some(last_dir) = dirs.clone().last() {
-            if last_dir.id() == first_dir.id() {
-                set_new_directory_opened(dirs.clone().as_mut(), last_dir.clone());
-                break;
-            };
+    let first_dir = warp_storage.current_directory()?;
+    let mut current_dirs_opened = get_directories_opened();
+    current_dirs_opened.push(first_dir.clone());
 
-            let dir_items = last_dir.get_items();
+    let mut dirs: Vec<Directory> = current_dirs_opened;
 
-            let is_there_file_yet = last_dir
-                .get_items()
-                .iter()
-                .any(|f| f.item_type() == ItemType::FileItem);
+    match warp_storage.select(&item.name()) {
+        Ok(_) => log::debug!("Selected new dir: {:?}.", item.name()),
+        Err(error) => log::error!("Error to select new dir: {:?}.", error),
+    };
+    dirs.push(warp_storage.current_directory()?);
 
-            let is_directory_yet = last_dir
-                .get_items()
-                .iter()
-                .any(|f| f.item_type() == ItemType::DirectoryItem);
+    while let Some(last_dir) = dirs.clone().last() {
+        if last_dir.id() == first_dir.id() {
+            set_new_directory_opened(dirs.as_mut(), last_dir.clone());
+            break;
+        };
 
-            if is_directory_yet {
-                for item in dir_items {
-                    if item.is_directory() {
-                        match warp_storage.select(&item.name()) {
-                            Ok(_) => log::info!("Selected new dir: {:?}", item.name()),
-                            Err(error) => log::error!("Error to select new dir {:?}", error),
-                        };
-                        dirs.push(item.get_directory().unwrap());
-                        break;
-                    }
+        let dir_items = last_dir.get_items();
+
+        let is_there_file_yet = last_dir
+            .get_items()
+            .iter()
+            .any(|f| f.item_type() == ItemType::FileItem);
+
+        let is_there_directory_yet = last_dir
+            .get_items()
+            .iter()
+            .any(|f| f.item_type() == ItemType::DirectoryItem);
+
+        if is_there_directory_yet {
+            for item in dir_items {
+                if item.is_directory() {
+                    match warp_storage.select(&item.name()) {
+                        Ok(_) => log::debug!("Selected new dir: {:?}.", item.name()),
+                        Err(error) => log::error!("Error to select new dir: {:?}.", error),
+                    };
+                    dirs.push(warp_storage.current_directory()?);
+                    break;
                 }
-                continue;
+            }
+            continue;
+        };
+
+        if !is_there_file_yet {
+            dirs.pop();
+            if let Some(previous_dir) = dirs.last() {
+                previous_dir.remove_item(&last_dir.name())?;
+                log::info!("Directory {:?} was removed.", &last_dir.name());
             };
 
-            if !is_there_file_yet {
-                dirs.pop();
-                if let Some(previous_dir) = dirs.last() {
-                    previous_dir.remove_item(&last_dir.name())?;
-                };
-
-                if let Err(error) = warp_storage.go_back() {
+            match warp_storage.go_back() {
+                Ok(_) => {
+                    log::debug!(
+                        "Selected new dir: {:?}",
+                        warp_storage.current_directory()?.name()
+                    );
+                }
+                Err(error) => {
                     log::error!("Error on go back a directory: {error}");
                     return Err(error);
-                };
-                continue;
-            }
-
-            for file in last_dir.get_items() {
-                if file.is_file() {
-                    match warp_storage.remove(&file.name(), true).await {
-                        Ok(_) => log::info!("File deleted: {:?}", file.name()),
-                        Err(error) => {
-                            log::error!("Error to delete this file: {:?}, {:?}", file.name(), error)
-                        }
-                    };
                 }
-            }
-        } else {
-            stack.pop();
+            };
+            continue;
+        }
+
+        for file in last_dir.get_items().iter().filter(|f| f.is_file()) {
+            match warp_storage.remove(&file.name(), true).await {
+                Ok(_) => log::info!(
+                    "File deleted: {:?}, on directory: {:?}.",
+                    file.name(),
+                    warp_storage.current_directory()?.name()
+                ),
+                Err(error) => {
+                    log::error!("Error to delete this file: {:?}, {:?}", file.name(), error)
+                }
+            };
         }
     }
     get_items_from_current_directory(warp_storage)
@@ -309,7 +318,6 @@ fn go_back_to_previous_directory(
     let mut current_dirs = get_directories_opened();
     loop {
         let current_dir = warp_storage.current_directory()?;
-        println!("Dir opened: {:?}", current_dir.name());
 
         current_dirs.remove(current_dirs.len() - 1);
 
