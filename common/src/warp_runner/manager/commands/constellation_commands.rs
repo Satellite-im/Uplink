@@ -1,7 +1,5 @@
 use std::{
-    cmp::Ordering,
     ffi::OsStr,
-    fs,
     io::{Cursor, Read},
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -9,7 +7,7 @@ use std::{
 
 use derive_more::Display;
 
-use futures::{channel::oneshot, FutureExt, StreamExt};
+use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
 use image::io::Reader as ImageReader;
 use mime::*;
@@ -132,116 +130,93 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
     }
 }
 
-// async fn remove_items(
-//     warp_storage: &mut warp_storage,
-//     item: Item,
-// ) -> Result<uplink_storage, Error> {
-//     let items_to_delete: Vec<String> = Vec::new();
-//     let mut stack = vec![""];
-//     let mut there_is_folder = true;
-//     if item.is_directory() {
-//         warp_storage.select(&item.name());
-//         let current_dir_path = warp_storage.get_path().to_string_lossy();
-//         let items_in_current_dir = item.get_directory().unwrap().get_items();
-
-//         items_in_current_dir.sort_by(|a, b| {
-//             let is_dir_cmp = a.is_directory().cmp(&b.is_directory());
-//             if is_dir_cmp != Ordering::Equal {
-//                 return is_dir_cmp;
-//             }
-//             a.name().cmp(&b.name())
-//         });
-
-//         while there_is_folder {
-//             // items_in_current_dir
-//             //     .iter()
-//             //     .map(|f| f.item_type() == ItemType::FileItem {});
-
-//             let current_dir_path = warp_storage.get_path().to_string_lossy();
-
-//             items_in_current_dir.sort_by(|a, b| {
-//                 let is_dir_cmp = a.is_directory().cmp(&b.is_directory());
-//                 if is_dir_cmp != Ordering::Equal {
-//                     return is_dir_cmp;
-//                 }
-//                 a.name().cmp(&b.name())
-//             });
-
-//             for item in items_in_current_dir {
-//                 if item.is_file() {
-//                     let file_name = item.get_file().unwrap().name();
-//                     let item_path_to_delete = format!("{:?}/{:?}", current_dir_path, file_name);
-//                     items_to_delete.push(item_path_to_delete);
-//                 } else {
-//                     warp_storage.select(&item.name());
-//                 }
-//             }
-//         }
-//     } else {
-//         warp_storage.remove(&item.name(), true).await?;
-//     }
-
-//     get_items_from_current_directory(warp_storage)
-// }
-
 async fn delete_dir(warp_storage: &mut warp_storage, item: Item) -> Result<uplink_storage, Error> {
+    let first_dir = warp_storage.current_directory()?;
+
     let mut stack = vec![item.clone()];
-    let mut path = if item.is_directory() {
-        PathBuf::from(item.name())
-    } else {
-        let mut path = PathBuf::new();
-        path.push(item.name());
-        path.pop();
-        path
+    let mut dirs: Vec<Directory> = vec![first_dir.clone()];
+    if item.is_directory() {
+        match warp_storage.select(&item.name()) {
+            Ok(_) => println!("Selected new dir: {:?}", item.name()),
+            Err(error) => log::error!("Error to select new dir {:?}", error),
+        };
+
+        let mut current_dirs = get_directories_opened();
+        let current_dir = warp_storage.current_directory()?;
+
+        set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
+
+        dirs.push(warp_storage.current_directory()?);
     };
 
     while let Some(dir) = stack.last() {
-        // println!("{:?}", stack);
         if dir.is_file() {
-            // delete file
             let file_name = dir.name();
-
             match warp_storage.remove(&file_name, true).await {
-                Ok(_) => println!("1 -File deleted: {:?}", file_name),
-                Err(error) => println!("1- error to delete this file {:?}", error),
+                Ok(_) => log::info!("File deleted: {:?}", file_name),
+                Err(error) => log::error!("Error to delete file {:?}, {:?}", file_name, error),
+            };
+            stack.pop();
+        } else if let Some(last_dir) = dirs.clone().last() {
+            let dir_items = last_dir.get_items();
+            let is_there_file_yet = last_dir
+                .get_items()
+                .iter()
+                .any(|f| f.item_type() == ItemType::FileItem);
+
+            let is_directory_yet = last_dir
+                .get_items()
+                .iter()
+                .any(|f| f.item_type() == ItemType::DirectoryItem);
+
+            if is_directory_yet {
+                for item in dir_items {
+                    if item.is_directory() {
+                        match warp_storage.select(&item.name()) {
+                            Ok(_) => log::info!("Selected new dir: {:?}", item.name()),
+                            Err(error) => log::error!("Error to select new dir {:?}", error),
+                        };
+
+                        let mut current_dirs = dirs.clone();
+                        let current_dir = warp_storage.current_directory()?;
+
+                        set_new_directory_opened(current_dirs.as_mut(), current_dir.clone());
+
+                        dirs.push(item.get_directory().unwrap());
+
+                        break;
+                    }
+                }
+                continue;
             };
 
-            stack.pop();
-        } else if let Some(entry) = dir.get_directory().unwrap().get_items().first() {
-            if entry.is_directory() {
-                println!("Entry Dir: {:?}", entry);
-
-                stack.push(entry.clone());
-                path.push(entry.name());
+            if !is_there_file_yet {
+                if dirs.len() == 1 {
+                    break;
+                };
+                dirs.pop();
+                let previous_dir = dirs.last().unwrap().clone();
+                previous_dir.remove_item(&last_dir.name())?;
+                if let Err(error) = warp_storage.go_back() {
+                    log::error!("Error on go back a directory: {error}");
+                    return Err(error);
+                };
                 continue;
             }
 
-            // delete file
-            let file_name = entry.name();
-
-            println!("Path2: {:?}", path);
-            println!("File name to delete inside folder: {:?}", file_name);
-
-            let current_dir_path = warp_storage.get_path();
-            if current_dir_path != path {
-                match warp_storage.select(&path.to_string_lossy()) {
-                    Ok(_) => println!("Selected new dir: {:?}", path),
-                    Err(error) => println!("Error to select new dir {:?}", error),
-                };
-            } else {
-                println!("Same directory yet");
+            let last_dir_items = last_dir.clone().get_items();
+            for file in last_dir_items {
+                if file.is_file() {
+                    match warp_storage.remove(&file.name(), true).await {
+                        Ok(_) => println!("File deleted: {:?}", file.name()),
+                        Err(error) => log::error!("Error to delete this file {:?}", error),
+                    };
+                }
             }
-            match warp_storage.remove(&file_name, true).await {
-                Ok(_) => println!("2- File deleted: {:?}", file_name),
-                Err(error) => println!("2- error to delete this file {:?}", error),
-            };
         } else {
-            // no more entries
             stack.pop();
-            path.pop();
         }
     }
-    println!("Is arring here");
     get_items_from_current_directory(warp_storage)
 }
 
