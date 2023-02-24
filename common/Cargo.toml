@@ -40,10 +40,10 @@ tokio-util = { version = "0.7", features = ["full"] }
 mime = "0.3.16"
 tempfile = "3.0.7"
 
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "7d167bb8f0c22feece4def37ae7e9c3996f2b21b" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "e5f5e0ddf5d42c6abc1653911e83539899e1df2c" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "e5f5e0ddf5d42c6abc1653911e83539899e1df2c" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "e5f5e0ddf5d42c6abc1653911e83539899e1df2c" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "e5f5e0ddf5d42c6abc1653911e83539899e1df2c" }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
