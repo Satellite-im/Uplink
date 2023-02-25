@@ -289,9 +289,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     ))
 }
 
+#[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     // contains the emoji reaction
     React((raygun::Message, String)),
+    DeleteMessage { conv_id: Uuid, msg_id: Uuid },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
@@ -333,6 +335,25 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         let res = rx.await.expect("command canceled");
                         if res.is_err() {
                             // failed to add/remove reaction
+                        }
+                    }
+                    MessagesCommand::DeleteMessage { conv_id, msg_id } => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteMessage {
+                                conv_id,
+                                msg_id,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to delete message: {}", e);
                         }
                     }
                 }
@@ -378,23 +399,30 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                     status: status
                                 }
                             )),
-                            timestamp: format_timestamp_timeago(last_message.date(), active_language),
+                            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
                             with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
                             remote: group.remote,
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();
                                 let message2 = message.clone();
+                                let message3 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
+                                let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
+
+                                // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
+                                let context_key = format!("message-{}", message.inner.id());
+                                let message_key = message.inner.id().to_string();
                                 rsx! (
                                     ContextMenu {
-                                        id: format!("message-{}", message.id()),
+                                        key: "{context_key}",
+                                        id: context_key,
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::ArrowLongLeft,
                                                 text: get_local_text("messages.reply"),
                                                 onpress: move |_| {
-                                                    state.write().mutate(Action::StartReplying(active_chat.clone(), reply_message.clone()));
+                                                    state.write().mutate(Action::StartReplying(active_chat.clone(), reply_message.inner.clone()));
                                                 }
                                             },
                                             ContextItem {
@@ -403,15 +431,27 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 //TODO: let the user pick a reaction
                                                 onpress: move |_| {
                                                       // using "like" for now
-                                                    ch.send(MessagesCommand::React((message2.clone(), "👍".into())));
+                                                    ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
+                                                }
+                                            },
+                                            ContextItem {
+                                                icon: Icon::Trash,
+                                                danger: true,
+                                                text: get_local_text("messages.delete"),
+                                                should_render: sender_is_self,
+                                                onpress: move |_| {
+                                                    ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });
                                                 }
                                             },
                                         )),
                                         Message {
+                                            key: "{message_key}",
                                             remote: group.remote,
-                                            with_text: message.value().join("\n"),
+                                            with_text: message.inner.value().join("\n"),
+                                            in_reply_to: message.in_reply_to,
+                                            reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                        }
+                                        },
                                     }
                                 )
                             })
@@ -459,28 +499,40 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 .collect::<Vec<_>>()
         });
 
-    let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(Vec<String>, Uuid)>| {
-        //to_owned![];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((msg, conv_id)) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::SendMessage {
-                    conv_id,
-                    msg,
-                    rsp: tx,
-                })) {
-                    log::error!("failed to send warp command: {}", e);
-                    continue;
-                }
+    let msg_ch = use_coroutine(
+        cx,
+        |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
+            //to_owned![];
+            async move {
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                while let Some((msg, conv_id, reply)) = rx.next().await {
+                    let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                    let cmd = match reply {
+                        Some(reply_to) => RayGunCmd::Reply {
+                            conv_id,
+                            reply_to,
+                            msg,
+                            rsp: tx,
+                        },
+                        None => RayGunCmd::SendMessage {
+                            conv_id,
+                            msg,
+                            rsp: tx,
+                        },
+                    };
+                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                        log::error!("failed to send warp command: {}", e);
+                        continue;
+                    }
 
-                let rsp = rx.await.expect("command canceled");
-                if let Err(e) = rsp {
-                    log::error!("failed to send message: {}", e);
+                    let rsp = rx.await.expect("command canceled");
+                    if let Err(e) = rsp {
+                        log::error!("failed to send message: {}", e);
+                    }
                 }
             }
-        }
-    });
+        },
+    );
 
     // typing indicator notes
     // consider side A, the local side, and side B, the remote side
@@ -571,17 +623,39 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let msg_valid =
         |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
 
-    let extensions = &state.read().ui.extensions;
+    let submit_fn = move || {
+        local_typing_ch.send(TypingIndicator::NotTyping);
 
-    let ext_renders = {
-        let mut list = vec![];
-        let extensions = extensions.iter();
-        for (_, proxy) in extensions {
-            list.push(rsx!(proxy.extension.render(cx)));
+        let msg = input.read().clone();
+        // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+        input.write().clear();
+        should_clear_input.set(true);
+
+        if !msg_valid(&msg) {
+            return;
         }
+        let id = match active_chat_id {
+            Some(i) => i,
+            None => return,
+        };
 
-        list
+        if STATIC_ARGS.use_mock {
+            state.write().mutate(Action::MockSend(id, msg));
+        } else {
+            let replying_to = state.read().chats.get_replying_to();
+            if replying_to.is_some() {
+                state.write().mutate(Action::CancelReply(id));
+            }
+            msg_ch.send((msg, id, replying_to));
+        }
     };
+
+    // todo: filter out extensions not meant for this area
+    let extensions = &state.read().ui.extensions;
+    let _ext_renders: Vec<_> = extensions
+        .iter()
+        .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
+        .collect();
 
     cx.render(rsx!(Chatbar {
         loading: is_loading,
@@ -593,66 +667,23 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
             }
         },
-        onreturn: move |_| {
-            local_typing_ch.send(TypingIndicator::NotTyping);
-
-            let msg = input.read().clone();
-            // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-            input.write().clear();
-            should_clear_input.set(true);
-
-            if !msg_valid(&msg) {
-                return;
-            }
-            let id = match active_chat_id {
-                Some(i) => i,
-                None => return,
-            };
-
-            if STATIC_ARGS.use_mock {
-                state.write().mutate(Action::MockSend(id, msg));
-            } else {
-                msg_ch.send((msg, id));
-            }
-        },
-        controls: cx.render(rsx!(
+        onreturn: move |_| submit_fn(),
+        controls: cx.render(
             // Load extensions
-//            for node in ext_renders {
-//                rsx!(node)
-//            },
-            Button {
+            //            for node in ext_renders {
+            //                rsx!(node)
+            //            },
+            rsx!(Button {
                 icon: Icon::ChevronDoubleRight,
                 disabled: is_loading,
                 appearance: Appearance::Secondary,
-                onpress: move |_| {
-                    local_typing_ch.send(TypingIndicator::NotTyping);
-
-                    let msg = input.read().clone();
-                    // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-                    input.write().clear();
-                    should_clear_input.set(true);
-
-                    if !msg_valid(&msg) {
-                        return;
-                    }
-
-                    let id = match active_chat_id {
-                        Some(i) => i,
-                        None => return,
-                    };
-
-                    if STATIC_ARGS.use_mock {
-                        state.write().mutate(Action::MockSend(id, msg));
-                    } else {
-                        msg_ch.send((msg, id));
-                    }
-                },
+                onpress: move |_| submit_fn(),
                 tooltip: cx.render(rsx!(Tooltip {
                     arrow_position: ArrowPosition::Bottom,
                     text: get_local_text("uplink.send"),
                 })),
-            },
-        )),
+            },)
+        ),
         with_replying_to: data
             .map(|data| {
                 let active_chat = data.active_chat.clone();
@@ -668,7 +699,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             label: get_local_text("messages.replying"),
                             remote: our_did != msg.sender(),
                             onclose: move |_| {
-                                state.write().mutate(Action::CancelReply(active_chat.clone()))
+                                state.write().mutate(Action::CancelReply(active_chat.id))
                             },
                             message: msg.value().join("\n"),
                             UserImage {

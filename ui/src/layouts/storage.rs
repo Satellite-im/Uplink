@@ -526,7 +526,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 let file_extension = std::path::Path::new(&file_name2)
                                                     .extension()
                                                     .and_then(OsStr::to_str)
-                                                    .map(|s| format!("{s}"))
+                                                    .map(|s| s.to_string())
                                                     .unwrap_or_default();
 
                                                 let file_stem = PathBuf::from(&file_name2)
