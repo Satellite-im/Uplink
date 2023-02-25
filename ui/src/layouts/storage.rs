@@ -479,7 +479,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     ContextItem {
                                         icon: Icon::Trash,
                                         danger: true,
-                                        text: "Delete".to_owned(),
+                                        text: get_local_text("uplink.delete"),
                                         onpress: move |_| {
                                             let item = Item::from(dir2.clone());
                                             ch.send(ChanCmd::DeleteItems(item));
@@ -546,7 +546,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
-                                            text: "Delete".to_owned(),
+                                            text: get_local_text("uplink.delete"),
                                             onpress: move |_| {
                                                 let item = Item::from(file2.clone());
                                                 ch.send(ChanCmd::DeleteItems(item));

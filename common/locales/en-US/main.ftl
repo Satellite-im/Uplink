@@ -18,6 +18,7 @@ uplink = Uplink
     .status = Status
     .characters = characters
     .exceeded = exceeded
+    .delete = Delete
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
@@ -32,7 +33,6 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
-    .delete = Delete
 
 favorites = Favorites
     .favorites = Favorites
