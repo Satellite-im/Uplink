@@ -92,6 +92,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         Input {
                             disabled: cx.props.loading.unwrap_or_default(),
                             placeholder: cx.props.placeholder.clone(),
+                            allow_line_breaks: true,
                             reset: hook.clone(),
                             onchange: move |(v, _)| cx.props.onchange.call(v),
                             onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
@@ -103,6 +104,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         Input {
                             disabled: cx.props.loading.unwrap_or_default(),
                             placeholder: cx.props.placeholder.clone(),
+                            allow_line_breaks: true,
                             onchange: move |(v, _)| cx.props.onchange.call(v),
                             onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
                         }

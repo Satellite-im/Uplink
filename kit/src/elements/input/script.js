@@ -24,7 +24,7 @@ for (let i = 0; i < textareas.length; i++) {
     });
 }
 
-function updateHeight(e) {
-    e.style.height = "0px"
-    e.style.height = e.scrollHeight + "px"
+function updateHeight(txt) {
+    txt.style.height = "0px"
+    txt.style.height = txt.scrollHeight + "px"
 }

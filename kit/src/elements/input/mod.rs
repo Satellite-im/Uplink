@@ -118,6 +118,8 @@ pub struct Props<'a> {
     #[props(optional)]
     is_password: Option<bool>,
     #[props(optional)]
+    allow_line_breaks: Option<bool>,
+    #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
     icon: Option<Icon>,
@@ -289,6 +291,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             //debug_reset = true;
         }
     }
+    let height_script = include_str!("./update_input_height.js");
+    dioxus_desktop::use_eval(cx)(height_script.to_string());
 
     let valid = use_state(cx, || false);
     let min_len = options
@@ -307,7 +311,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    let multiline = !cx.props.is_password.unwrap_or(false);
+    let multiline =
+        cx.props.allow_line_breaks.unwrap_or(false) && !cx.props.is_password.unwrap_or(false);
 
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js")
