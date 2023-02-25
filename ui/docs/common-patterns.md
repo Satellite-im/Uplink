@@ -57,7 +57,7 @@ Inside of the Action enum you'll want to add your new action. This action can be
 
 Inside of the `src/state/` directory you will see several different parts of the application state which are represented by modules. In most cases you can add a new mutation or getter to an existing module, but if you feel it's necessary you can create a new module. These files should be used to store any accompanying data you're adding to state for your new feature. You may only use a single getter or mutation, or a combination of both. Inside this same file you'll want to handle your new Action in the `mutate` fn where we match on all available actions. Here you call your new mutations when the action is called.  
 
-If you can, you should try to avoid writing your mutation functions or getters directly in the `mod.rs` file. Instead you should try to organize them into one of the exisitng files as an implementation of a given section within state. For example in the UI section of state (represented by the UI Struct). We have implemented custom getters and mutations here. This way the UI state provides it's own getters and mutations which are then used by the rest of the application. This is a good pattern to follow as it keeps the state layer clean and easy to read.
+If you can, you should try to avoid writing your mutation functions or getters directly in the `mod.rs` file. Instead you should try to organize them into one of the existing files as an implementation of a given section within state. For example in the UI section of state (represented by the UI Struct). We have implemented custom getters and mutations here. This way the UI state provides it's own getters and mutations which are then used by the rest of the application. This is a good pattern to follow as it keeps the state layer clean and easy to read.
 
 Getters can be added here as well but should not be used to mutate state. They should only be used to retrieve data from state or compute data based on state. Getters can be async.
 
@@ -65,7 +65,7 @@ Now inside of your component you can call your getters by importing state (`let 
 
 ### 5. Create a new layout
 
-Sometimes you're working on very big features and want to add a whole new "page" or layout in the application. These are located under the Layouts folder. Ideally layouts should contain minimal styling and use common orginization patterns to keep the layout clean and easy to read. You can find the layouts module here: `src/layouts/mod.rs`. Your layout may mutate or read state however it should leave all the interaction from the user to the component. The layout should only be responsible for rendering the component and any other elements that are required to make the layout work.
+Sometimes you're working on very big features and want to add a whole new "page" or layout in the application. These are located under the Layouts folder. Ideally layouts should contain minimal styling and use common organization patterns to keep the layout clean and easy to read. You can find the layouts module here: `src/layouts/mod.rs`. Your layout may mutate or read state however it should leave all the interaction from the user to the component. The layout should only be responsible for rendering the component and any other elements that are required to make the layout work.
 
 ## Other Common Patterns
 

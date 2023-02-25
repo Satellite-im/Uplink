@@ -746,7 +746,7 @@ fn app(cx: Scope) -> Element {
                 match rx.await {
                     Ok(r) => break r,
                     Err(e) => {
-                        log::error!("comamnd canceled: {}", e);
+                        log::error!("command canceled: {}", e);
                         tokio::time::sleep(std::time::Duration::from_secs(1)).await
                     }
                 }

@@ -48,7 +48,7 @@ pub fn emit(cx: &Scope<Props>, to: &To) {
     }
 }
 
-/// Gets the appearence for a nav button based on the active route
+/// Gets the appearance for a nav button based on the active route
 pub fn get_appearance(active_route: &Route, route: &Route) -> Appearance {
     if active_route.to == route.to {
         Appearance::Primary

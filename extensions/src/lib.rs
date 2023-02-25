@@ -13,7 +13,7 @@ pub static FILE_EXT: &str = "so";
 #[cfg(target_os = "windows")]
 pub static FILE_EXT: &str = "dll";
 
-// Represents where the extensions main render mthod should execute.
+// Represents where the extensions main render method should execute.
 // Note that some extension types will NOT render in some locations.
 pub enum Location {
     Chatbar,

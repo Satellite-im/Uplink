@@ -34,7 +34,7 @@ cargo run --bin ui --profile=rapid
 ---
 
 
-## Dependancy List
+## Dependency List
 
 **MacOS M1+**
 | Dep  | Install Command                                                  |
