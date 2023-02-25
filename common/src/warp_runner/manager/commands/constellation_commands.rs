@@ -134,6 +134,7 @@ async fn delete_items(
     warp_storage: &mut warp_storage,
     item: Item,
 ) -> Result<uplink_storage, Error> {
+    // If is file, just a small function solve it
     if item.is_file() {
         let file_name = item.name();
         match warp_storage.remove(&file_name, true).await {
@@ -142,7 +143,7 @@ async fn delete_items(
         };
         return get_items_from_current_directory(warp_storage);
     };
-
+    // Code keeps here just if item is a directory
     let first_dir = warp_storage.current_directory()?;
     let mut current_dirs_opened = get_directories_opened();
     current_dirs_opened.push(first_dir.clone());
@@ -173,6 +174,8 @@ async fn delete_items(
             .iter()
             .any(|f| f.item_type() == ItemType::DirectoryItem);
 
+        // If there is a sub directory yet
+        // Select it and keep loop
         if is_there_directory_yet {
             for item in dir_items {
                 if item.is_directory() {
@@ -187,6 +190,10 @@ async fn delete_items(
             continue;
         };
 
+        // No more files, it pop current dir on dirs variable
+        // And remove current dir.
+        //
+        // After it, back to previous dir and keep loop verifying other files and sub dirs.
         if !is_there_file_yet {
             dirs.pop();
             if let Some(previous_dir) = dirs.last() {
@@ -209,6 +216,7 @@ async fn delete_items(
             continue;
         }
 
+        // If code arrives here, just run into files inside that dir and delete all of them.
         for file in last_dir.get_items().iter().filter(|f| f.is_file()) {
             match warp_storage.remove(&file.name(), true).await {
                 Ok(_) => log::info!(
