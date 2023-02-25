@@ -25,6 +25,8 @@ static_loader! {
     };
 }
 
+// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
+// enable tracing from modules besides Uplink
 #[derive(clap::Subcommand, Debug)]
 pub enum LogProfile {
     /// normal operation

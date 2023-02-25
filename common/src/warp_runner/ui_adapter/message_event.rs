@@ -6,14 +6,21 @@ use warp::{
     raygun::{self, MessageEventKind},
 };
 
+use super::Message;
+use crate::warp_runner::ui_adapter::convert_raygun_message;
+
 pub enum MessageEvent {
     Received {
         conversation_id: Uuid,
-        message: raygun::Message,
+        message: Message,
     },
     Sent {
         conversation_id: Uuid,
-        message: raygun::Message,
+        message: Message,
+    },
+    Deleted {
+        conversation_id: Uuid,
+        message_id: Uuid,
     },
     MessageReactionAdded {
         conversation_id: Uuid,
@@ -47,7 +54,7 @@ pub async fn convert_message_event(
             // Return the event.
             MessageEvent::Received {
                 conversation_id,
-                message,
+                message: convert_raygun_message(messaging, &message).await,
             }
         }
         MessageEventKind::MessageSent {
@@ -57,9 +64,16 @@ pub async fn convert_message_event(
             let message = messaging.get_message(conversation_id, message_id).await?;
             MessageEvent::Sent {
                 conversation_id,
-                message,
+                message: convert_raygun_message(messaging, &message).await,
             }
         }
+        MessageEventKind::MessageDeleted {
+            conversation_id,
+            message_id,
+        } => MessageEvent::Deleted {
+            conversation_id,
+            message_id,
+        },
         MessageEventKind::MessageReactionAdded {
             conversation_id,
             message_id,

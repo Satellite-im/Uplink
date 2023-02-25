@@ -32,6 +32,7 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .delete = Delete
 
 favorites = Favorites
     .favorites = Favorites
@@ -156,6 +157,8 @@ settings-developer = Developer Settings
     .open-debug-logger = Open debug logger
     .save-logs-to-file = Save logs in a file
     .save-logs-to-file-description = Enabling this option, logs will be saved in a file and will be persistent.
+    .print-state = Print State 
+    .print-state-description = Display State in the debug logger 
 
 media-player = Media Player 
     .enable-camera = Enable Camera 

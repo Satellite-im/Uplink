@@ -11,7 +11,7 @@ pub mod storage;
 pub mod ui;
 
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
-use crate::language::get_local_text;
+use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
@@ -191,7 +191,7 @@ impl State {
             }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
-            Action::CancelReply(chat) => self.cancel_reply(&chat),
+            Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
             Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
             Action::ClearActiveUnreads => {
                 if let Some(id) = self.chats.active {
@@ -207,6 +207,10 @@ impl State {
                 m.set_conversation_id(id);
                 m.set_sender(sender);
                 m.set_value(msg);
+                let m = ui_adapter::Message {
+                    inner: m,
+                    in_reply_to: None,
+                };
                 self.add_msg_to_chat(id, m);
             }
 
@@ -322,8 +326,8 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to stop replying to.
-    fn cancel_reply(&mut self, chat: &Chat) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat.id) {
+    fn cancel_reply(&mut self, chat_id: Uuid) {
+        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
             c.replying_to = None;
         }
     }
@@ -460,9 +464,9 @@ impl State {
         self.ui.toggle_silenced();
     }
 
-    fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: raygun::Message) {
+    fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            chat.typing_indicator.remove(&message.sender());
+            chat.typing_indicator.remove(&message.inner.sender());
             chat.messages.push_back(message);
 
             if self.ui.current_layout != ui::Layout::Compose
@@ -532,7 +536,7 @@ impl State {
             return vec![];
         }
         let mut message_groups = Vec::new();
-        let current_sender = chat.messages[0].sender();
+        let current_sender = chat.messages[0].inner.sender();
         let mut current_group = MessageGroup {
             remote: self.has_friend_with_did(&current_sender),
             sender: current_sender,
@@ -540,11 +544,11 @@ impl State {
         };
 
         for message in chat.messages.clone() {
-            if message.sender() != current_group.sender {
+            if message.inner.sender() != current_group.sender {
                 message_groups.push(current_group);
                 current_group = MessageGroup {
-                    remote: self.has_friend_with_did(&message.sender()),
-                    sender: message.sender(),
+                    remote: self.has_friend_with_did(&message.inner.sender()),
+                    sender: message.inner.sender(),
                     messages: Vec::new(),
                 };
             }
@@ -672,12 +676,12 @@ impl State {
         };
 
         for msg in &mut conv.messages {
-            if msg.id() != message_id {
+            if msg.inner.id() != message_id {
                 continue;
             }
 
             let mut has_emoji = false;
-            for reaction in msg.reactions_mut() {
+            for reaction in msg.inner.reactions_mut() {
                 if !reaction.emoji().eq(&emoji) {
                     continue;
                 }
@@ -691,7 +695,7 @@ impl State {
                 let mut r = Reaction::default();
                 r.set_emoji(&emoji);
                 r.set_users(vec![user.clone()]);
-                msg.reactions_mut().push(r);
+                msg.inner.reactions_mut().push(r);
             }
         }
     }
@@ -707,11 +711,11 @@ impl State {
         };
 
         for msg in &mut conv.messages {
-            if msg.id() != message_id {
+            if msg.inner.id() != message_id {
                 continue;
             }
 
-            for reaction in msg.reactions_mut() {
+            for reaction in msg.inner.reactions_mut() {
                 if !reaction.emoji().eq(&emoji) {
                     continue;
                 }
@@ -719,7 +723,7 @@ impl State {
                 users.retain(|id| id != &user);
                 reaction.set_users(users);
             }
-            msg.reactions_mut().retain(|r| !r.users().is_empty());
+            msg.inner.reactions_mut().retain(|r| !r.users().is_empty());
         }
     }
 
@@ -923,6 +927,14 @@ impl State {
                     chat.messages.push_back(message);
                 }
             }
+            MessageEvent::Deleted {
+                conversation_id,
+                message_id,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.messages.retain(|msg| msg.inner.id() != message_id);
+                }
+            }
             MessageEvent::MessageReactionAdded {
                 conversation_id,
                 message_id,
@@ -971,7 +983,7 @@ pub struct MessageGroup {
 // Define a struct to represent a message that has been placed into a group.
 #[derive(Clone)]
 pub struct GroupedMessage {
-    pub message: Message,
+    pub message: ui_adapter::Message,
     pub is_first: bool,
     pub is_last: bool,
 }

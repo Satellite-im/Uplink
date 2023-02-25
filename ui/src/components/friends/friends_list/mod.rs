@@ -277,6 +277,8 @@ pub fn Friends(cx: Scope) -> Element {
     ))
 }
 
+// todo: remove this
+#[allow(unused)]
 #[allow(non_snake_case)]
 pub fn FriendsSkeletal(cx: Scope) -> Element {
     cx.render(rsx!(

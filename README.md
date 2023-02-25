@@ -48,8 +48,8 @@ cargo run --bin ui --profile=rapid
 **Windows 10+**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
-| Chocolatey | [Installation Guide](https://chocolatey.org/install) |
-| Rust | choco install rust |
+| Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
+| Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-win64.zip) |
 
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
 | Dep  | Install Command                                                  |
