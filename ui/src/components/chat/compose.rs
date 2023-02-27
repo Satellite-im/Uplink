@@ -434,7 +434,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 text: get_local_text("messages.react"),
                                                 //TODO: let the user pick a reaction
                                                 onpress: move |_| {
-                                                      // using "like" for now
+                                                    // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+                                                    // todo: allow emoji extension instead
+                                                    // using "like" for now
                                                     ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
                                                 }
                                             },
@@ -464,7 +466,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             with_text: message.inner.value().join("\n"),
                                             reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                            attachments: message.inner.attachments().iter().map(|f| f.name()).collect(),
+                                            attachments: message.inner.attachments(),
                                         },
                                     }
                                 )

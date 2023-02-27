@@ -1,5 +1,10 @@
+use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
+use humansize::{format_size, DECIMAL};
+use warp::constellation::file::File;
+
+use crate::elements::button;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -45,7 +50,7 @@ pub struct Props<'a> {
     // todo: remove this
     #[allow(unused)]
     #[props(optional)]
-    attachments: Option<Vec<String>>,
+    attachments: Option<Vec<File>>,
 }
 
 #[allow(non_snake_case)]
@@ -57,6 +62,16 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
+
+    let attachment_list = cx.props.attachments.iter().map(|vec| {
+        vec.iter().map(|file| {
+            let key = file.id();
+            rsx!(Attachment {
+                key: "{key}",
+                file: file.clone(),
+            })
+        })
+    });
 
     cx.render(rsx! (
         div {
@@ -87,6 +102,44 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     "{text}"
                 }
             ))
+            attachment_list.map(|list| {
+                rsx!(div { list })
+            })
         }
     ))
+}
+
+#[derive(PartialEq, Eq, Props)]
+pub struct AttachmentProps {
+    file: File,
+}
+
+#[allow(non_snake_case)]
+pub fn Attachment(cx: Scope<AttachmentProps>) -> Element {
+    let size = format_size(cx.props.file.size(), DECIMAL);
+    let name = cx.props.file.name();
+    cx.render(rsx! {
+        div {
+            class: "attachment-embed",
+            div {
+                class: "embed-icon",
+                common::icons::Icon {
+                    icon: Icon::Document,
+                },
+                h2 {
+                    "{name}"
+                }
+            }
+            div {
+                class: "embed-details",
+                p {
+                    "{size}"
+                },
+                button::Button {
+                    icon: Icon::DocumentArrowDown,
+                    text: String::new(),
+                }
+            }
+        }
+    })
 }
