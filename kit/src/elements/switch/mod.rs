@@ -41,6 +41,7 @@ pub fn Switch<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             },
             aria_label: "Switch Slider",
             input {
+                aria_label: "switch-slider-value",
                 disabled: "{disabled}",
                 "type": "checkbox",
                 checked: "{checked_state}",

@@ -11,11 +11,7 @@ use common::{
 use kit::elements::{button::Button, switch::Switch, Appearance};
 use warp::logging::tracing::log;
 
-use crate::{
-    components::settings::SettingSection,
-    logger,
-    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
-};
+use crate::{components::settings::SettingSection, logger};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
@@ -58,7 +54,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 section_description: "Sends a test notification.".into(),
                 Button {
                     text: "Test Notifications".into(),
-                    aria_label: "open-codebase-button".into(),
+                    aria_label: "test-notification-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
@@ -87,7 +83,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     }
                 }
             },
-
             SettingSection {
                 section_label: get_local_text("settings-developer.compress-download-cache"),
                 section_description: get_local_text("settings-developer.compress-download-cache-description"),
@@ -97,6 +92,19 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
+                    }
+                }
+            },
+            SettingSection {
+                section_label: get_local_text("settings-developer.print-state"),
+                section_description: get_local_text("settings-developer.print-state-description"),
+                Button {
+                    text: get_local_text("settings-developer.print-state"),
+                    aria_label: "print-state-button".into(),
+                    appearance: Appearance::Secondary,
+                    icon: Icon::DocumentChartBar,
+                    onpress: move |_| {
+                        log::debug!("{:#?}", state.read());
                     }
                 }
             },
@@ -128,28 +136,4 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
             }
         }
     ))
-}
-
-pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx,
-}
-
-impl PartialEq for WindowDropHandler {
-    fn eq(&self, _other: &Self) -> bool {
-        false
-    }
-}
-
-impl WindowDropHandler {
-    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
-        Self { cmd_tx }
-    }
-}
-
-impl Drop for WindowDropHandler {
-    fn drop(&mut self) {
-        if let Err(e) = self.cmd_tx.send(WindowManagerCmd::CloseDebugLogger) {
-            log::warn!("WindowDropHandler failed to send msg: {}", e);
-        }
-    }
 }

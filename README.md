@@ -34,7 +34,7 @@ cargo run --bin ui --profile=rapid
 ---
 
 
-## Dependancy List
+## Dependency List
 
 **MacOS M1+**
 | Dep  | Install Command                                                  |
@@ -48,8 +48,20 @@ cargo run --bin ui --profile=rapid
 **Windows 10+**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
-| Chocolatey | [Installation Guide](https://chocolatey.org/install) |
-| Rust | choco install rust |
+| Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
+| Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-win64.zip) |
+
+**Ubuntu WSL (Maybe also Ubuntu + Debian)**
+| Dep  | Install Command                                                  |
+|------|------------------------------------------------------------------|
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
+| Build Essentials | `sudo apt install build-essential` |
+| pkg-config | `sudo apt-get install pkg-config` |
+| alsa-sys | `sudo apt install librust-alsa-sys-dev` |
+| libgtk-dev | `sudo apt-get install libgtk-3-dev` |
+| libsoup-dev | `sudo apt install libsoup2.4-dev` |
+| protobuf| `sudo apt-get install protobuf-compiler` |
+| Tauri Deps | `sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 
 ## Contributing
 

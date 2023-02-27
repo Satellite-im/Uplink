@@ -1,7 +1,10 @@
+use std::{collections::HashMap, rc::Weak};
+
 use derive_more::Display;
+
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
-use std::rc::Weak;
+use extensions::ExtensionProxy;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;
@@ -26,6 +29,9 @@ pub struct ActionHook {
 /// used exclusively by State::mutate
 #[derive(Display)]
 pub enum Action {
+    // Extensions
+    #[display(fmt = "RegisterExtensions")]
+    RegisterExtensions(HashMap<String, ExtensionProxy>),
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
@@ -150,7 +156,7 @@ pub enum Action {
     StartReplying(Chat, Message),
     /// Clears the reply for a given chat
     #[display(fmt = "CancelReply")]
-    CancelReply(Chat),
+    CancelReply(Uuid),
     /// fakes sending a message to the specified chat
     /// for normal operation, warp sends a message, Uplink receives an event when that message was sent, and state is updated accordingly.
     /// for mock data, warp is not used and this is needed to fake sending a message
@@ -187,6 +193,8 @@ pub enum ConfigAction {
     SetMessagesNotificationsEnabled(bool),
     #[display(fmt = "SetSettingsNotificationsEnabled {_0}")]
     SetSettingsNotificationsEnabled(bool),
+    #[display(fmt = "SetAutoEnableExtensions {_0}")]
+    SetAutoEnableExtensions(bool),
 }
 
 impl Action {

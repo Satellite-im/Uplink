@@ -22,11 +22,14 @@
 		/* overflow scroll adds padding that disrupt the grab handle resizer.
 			this keeps functionality but hides scroller
 		*/
-		::-webkit-scrollbar {
-			display: none;
-		}
-		-ms-overflow-style: none;  /* IE and Edge */
-		scrollbar-width: none;  /* Firefox */
+
+		// TODO: This is not working, it actually removes the scroll functionality entirely. (at least on Mac)
+		// ::-webkit-scrollbar {
+		// 	display: none;
+		// }
+		// -ms-overflow-style: none;  /* IE and Edge */
+		// scrollbar-width: none;  /* Firefox */
+		overflow-y: scroll;
 	}
 
 

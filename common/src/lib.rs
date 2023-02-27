@@ -1,4 +1,3 @@
-pub mod config;
 pub mod language;
 pub mod notifications;
 pub mod sounds;
@@ -16,8 +15,20 @@ use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
 
+static_loader! {
+    static LOCALES = {
+        locales: "./locales",
+        fallback_language: "en-US",
+        // Removes unicode isolating marks around arguments, you typically
+        // should only set to false when testing.
+        customise: |bundle| bundle.set_use_isolating(false),
+    };
+}
+
+// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
+// enable tracing from modules besides Uplink
 #[derive(clap::Subcommand, Debug)]
-enum LogProfile {
+pub enum LogProfile {
     /// normal operation
     Normal,
     /// print everything but tracing logs to the terminal
@@ -30,7 +41,7 @@ enum LogProfile {
 
 #[derive(Debug, Parser)]
 #[clap(name = "")]
-struct Args {
+pub struct Args {
     /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
     #[clap(long)]
     path: Option<PathBuf>,
@@ -41,17 +52,7 @@ struct Args {
     with_mock: bool,
     /// configures log output
     #[command(subcommand)]
-    profile: Option<LogProfile>,
-}
-
-static_loader! {
-    static LOCALES = {
-        locales: "./locales",
-        fallback_language: "en-US",
-        // Removes unicode isolating marks around arguments, you typically
-        // should only set to false when testing.
-        customise: |bundle| bundle.set_use_isolating(false),
-    };
+    pub profile: Option<LogProfile>,
 }
 
 #[derive(Debug)]
@@ -75,6 +76,8 @@ pub struct StaticArgs {
     /// the unlock and auth pages don't have access to State but need to know if they should play a notification.
     /// part of state is serialized and saved here
     pub login_config_path: PathBuf,
+    /// todo: document
+    pub extensions_path: PathBuf,
     /// seconds
     pub typing_indicator_refresh: u64,
     /// seconds
@@ -94,6 +97,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         uplink_path: uplink_path.clone(),
         themes_path: uplink_container.join("themes"),
         cache_path: uplink_path.join("state.json"),
+        extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),

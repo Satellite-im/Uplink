@@ -7,6 +7,9 @@ use std::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let version = rustc_version::version().unwrap();
+    println!("cargo:rustc-env=RUSTC_VERSION={}", version);
+
     #[cfg(windows)]
     {
         let mut res = winres::WindowsResource::new();

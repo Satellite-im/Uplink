@@ -77,22 +77,12 @@ impl Default for AudioVideo {
     }
 }
 
-impl AudioVideo {
-    pub async fn load_async() -> Self {
-        if let Ok(b) = tokio::fs::read(&STATIC_ARGS.login_config_path).await {
-            if let Ok(n) = serde_json::from_slice(&b) {
-                return n;
-            }
-        }
-
-        Self::default()
-    }
-}
-
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
 pub struct Extensions {
     #[serde(default)]
     pub enable: bool,
+    #[serde(default = "bool_true")]
+    pub enable_automatically: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, Copy, Clone)]
@@ -143,6 +133,16 @@ impl Configuration {
 }
 
 impl Configuration {
+    pub fn load_or_default() -> Self {
+        if let Ok(b) = std::fs::read(&STATIC_ARGS.login_config_path) {
+            if let Ok(n) = serde_json::from_slice(&b) {
+                return n;
+            }
+        }
+
+        Self::default()
+    }
+
     pub fn mutate(&mut self, action: ConfigAction) {
         let old_audiovideo = self.audiovideo;
         match action {
@@ -163,6 +163,9 @@ impl Configuration {
             }
             ConfigAction::SetSettingsNotificationsEnabled(flag) => {
                 self.notifications.settings_notifications = flag
+            }
+            ConfigAction::SetAutoEnableExtensions(flag) => {
+                self.extensions.enable_automatically = flag
             }
         }
 

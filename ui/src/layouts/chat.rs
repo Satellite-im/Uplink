@@ -12,7 +12,6 @@ pub struct Props {
 
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope<Props>) -> Element {
-    //println!("rendering Chat layout");
     let state = use_shared_state::<State>(cx)?;
     let first_render = use_state(cx, || true);
 

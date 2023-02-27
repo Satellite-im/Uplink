@@ -1,10 +1,11 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use ::extensions::ExtensionProxy;
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::{state, warp_runner, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -13,14 +14,17 @@ use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use fs_extra::dir::*;
 use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
+use std::{fs, io};
 use uuid::Uuid;
 
 use std::sync::Arc;
@@ -35,6 +39,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
+use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -51,11 +56,12 @@ use dioxus_router::*;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
-pub mod components;
-pub mod layouts;
-pub mod logger;
-pub mod overlay;
-pub mod utils;
+mod components;
+mod extensions;
+mod layouts;
+mod logger;
+mod overlay;
+mod utils;
 mod window_manager;
 
 // used to close the popout player, among other things
@@ -89,38 +95,8 @@ pub enum AuthPages {
     Success,
 }
 
-// note that Trace and Trace2 are both LevelFilter::Trace. higher trace levels like Trace2
-// enable tracing from modules besides Uplink
-#[derive(clap::Subcommand, Debug)]
-enum LogProfile {
-    /// normal operation
-    Normal,
-    /// print everything but tracing logs to the terminal
-    Debug,
-    /// print everything including tracing logs to the terminal
-    Trace,
-    /// like trace but include warp logs
-    Trace2,
-}
-
-#[derive(Debug, Parser)]
-#[clap(name = "")]
-struct Args {
-    /// The location to store the .uplink directory, within which a .warp, state.json, and other useful logs will be located
-    #[clap(long)]
-    path: Option<PathBuf>,
-    #[clap(long)]
-    experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
-    #[clap(long, default_value_t = false)]
-    with_mock: bool,
-    /// configures log output
-    #[command(subcommand)]
-    profile: Option<LogProfile>,
-}
-
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
+    let themes_dest = &STATIC_ARGS.uplink_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
@@ -141,9 +117,8 @@ fn main() {
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
-
     // configure logging
-    let args = Args::parse();
+    let args = common::Args::parse();
     let max_log_level = if let Some(profile) = args.profile {
         match profile {
             LogProfile::Debug => {
@@ -223,11 +198,16 @@ fn main() {
 
         window = window
             .with_has_shadow(true)
-            .with_title_hidden(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
+            .with_menu(main_menu)
             .with_titlebar_transparent(true);
         // .with_movable_by_window_background(true)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        window = window.with_decorations(false).with_transparent(true);
     }
 
     let config = Config::default();
@@ -235,7 +215,7 @@ fn main() {
     dioxus_desktop::launch_cfg(
         bootstrap,
         config
-            .with_window(window.with_menu(main_menu))
+            .with_window(window)
             .with_custom_index(
                 r#"
     <!doctype html>
@@ -267,6 +247,7 @@ fn bootstrap(cx: Scope) -> Element {
         width: 500.0,
         height: 300.0,
     });
+
     cx.render(rsx!(crate::auth_page_manager {}))
 }
 
@@ -286,26 +267,55 @@ fn auth_page_manager(cx: Scope) -> Element {
     }))
 }
 
+#[allow(unused_assignments)]
 #[inline_props]
 fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
-    let pre_release_text = get_local_text("uplink.pre-release");
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
             id: "app-wrap",
             div {
-                id: "pre-release",
-                aria_label: "pre-release",
+                id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
-                IconElement {
-                    icon: Icon::Beaker,
-                },
-                p {
-                    "{pre_release_text}",
-                }
+                controls,
             },
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
@@ -314,6 +324,34 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
             }
         }
     ))
+}
+
+fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
+    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
+    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
+    // that updates when they have new info, i.e. state.
+    fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
+    let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
+    let mut extensions_library = AvailableExtensions::new();
+
+    for entry in paths {
+        let path = entry?.path();
+        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
+            log::debug!("Found extension: {:?}", path);
+            unsafe {
+                let loader = extensions_library.load(&path);
+                match loader {
+                    Ok(_) => {
+                        log::debug!("Loaded extension: {:?}", &path);
+                    }
+                    Err(e) => {
+                        log::error!("Error loading extension: {:?}", e);
+                    }
+                }
+            }
+        }
+    }
+    Ok(extensions_library.extensions)
 }
 
 // called at the end of the auth flow
@@ -350,6 +388,14 @@ pub fn app_bootstrap(cx: Scope) -> Element {
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+
+    match get_extensions() {
+        Ok(ext) => state.ui.extensions = ext,
+        Err(e) => {
+            log::error!("failed to get extensions: {e}");
+        }
+    }
+    log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
 
     use_shared_state_provider(cx, || state);
 
@@ -462,12 +508,12 @@ fn app(cx: Scope) -> Element {
                         let new_metadata = WindowMeta {
                             height: size.height,
                             width: size.width,
-                            minimal_view: size.width < 1200,
+                            minimal_view: size.width < 600,
                             ..metadata
                         };
                         if metadata != new_metadata {
+                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                             state.write().ui.metadata = new_metadata;
-                            state.write().ui.sidebar_hidden = size.width < 1200;
                             needs_update.set(true);
                         }
                     }
@@ -495,7 +541,6 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                //println!("received warp event");
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         state.write().process_warp_event(evt);
@@ -514,7 +559,6 @@ fn app(cx: Scope) -> Element {
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
-            //println!("starting toast use_future");
             loop {
                 sleep(Duration::from_secs(1)).await;
                 match inner.try_borrow_mut() {
@@ -523,7 +567,6 @@ fn app(cx: Scope) -> Element {
                             continue;
                         }
                         if state.write().decrement_toasts() {
-                            //println!("decrement toasts");
                             needs_update.set(true);
                         }
                     }
@@ -578,7 +621,6 @@ fn app(cx: Scope) -> Element {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
-                //println!("window manager received command");
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
@@ -697,7 +739,7 @@ fn app(cx: Scope) -> Element {
                 match rx.await {
                     Ok(r) => break r,
                     Err(e) => {
-                        log::error!("comamnd canceled: {}", e);
+                        log::error!("command canceled: {}", e);
                         tokio::time::sleep(std::time::Duration::from_secs(1)).await
                     }
                 }
@@ -726,7 +768,6 @@ fn app(cx: Scope) -> Element {
                     state.write().chats.all = all_chats;
                     state.write().account.identity = own_id;
                     state.write().chats.initialized = true;
-                    //println!("{:#?}", state.read().chats);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -736,6 +777,59 @@ fn app(cx: Scope) -> Element {
 
             *chats_init.write_silent() = true;
             needs_update.set(true);
+        }
+    });
+
+    // Automatically select the best implementation for your platform.
+    let inner = state.inner();
+    use_future(cx, (), |_| async move {
+        let (tx, mut rx) = futures::channel::mpsc::unbounded();
+        let mut watcher = match RecommendedWatcher::new(
+            move |res| {
+                let _ = tx.unbounded_send(res);
+            },
+            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+        ) {
+            Ok(watcher) => watcher,
+            Err(e) => {
+                log::error!("{e}");
+                return;
+            }
+        };
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        if let Err(e) = watcher.watch(
+            STATIC_ARGS.extensions_path.as_path(),
+            RecursiveMode::Recursive,
+        ) {
+            log::error!("{e}");
+            return;
+        }
+
+        while let Some(event) = rx.next().await {
+            let event = match event {
+                Ok(event) => event,
+                Err(e) => {
+                    log::error!("{e}");
+                    continue;
+                }
+            };
+
+            log::debug!("{event:?}");
+            match inner.try_borrow_mut() {
+                Ok(state) => match get_extensions() {
+                    Ok(ext) => {
+                        state.write().mutate(Action::RegisterExtensions(ext));
+                    }
+                    Err(e) => {
+                        log::error!("failed to get extensions: {e}");
+                    }
+                },
+                Err(e) => {
+                    log::error!("{e}");
+                }
+            }
         }
     });
 
@@ -784,10 +878,46 @@ fn get_toasts(cx: Scope) -> Element {
     )))
 }
 
+#[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
+
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
 
     cx.render(rsx!(
         div {
@@ -796,6 +926,7 @@ fn get_titlebar(cx: Scope) -> Element {
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
+                    aria_label: "device-phone-mobile-button".into(),
                     icon: Icon::DevicePhoneMobile,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -811,6 +942,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "device-tablet-button".into(),
                     icon: Icon::DeviceTablet,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -826,6 +958,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "computer-desktop-button".into(),
                     icon: Icon::ComputerDesktop,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
@@ -841,6 +974,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 },
                 Button {
+                    aria_label: "command-line-button".into(),
                     icon: Icon::CommandLine,
                     appearance: Appearance::Transparent,
                     onpress: |_| {
@@ -848,6 +982,9 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
+
+            controls,
+
         },
     ))
 }

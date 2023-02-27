@@ -32,6 +32,7 @@
 }
 
 
+
 .nav.bubble {
     padding: 0 var(--gap);
 }
@@ -81,7 +82,8 @@
     display: inline-flex;
     flex-direction: column;
     border-bottom: 1px solid var(--border-color);
-
+    width: 100%;
+    
     .heading {
         display: inline-flex;
         border-bottom: 1px solid var(--border-color);

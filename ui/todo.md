@@ -17,10 +17,10 @@ We should try to finish this checklist before switching over to using this UI fo
   - [ ] Ability to push a new toast notification.
   - [x] Toast notification automatically dismisses after `n` seconds.
   - [ ] Hovering over toast notification should reset the dismiss timer.
-  - [ ] Clicking the `x` on the toast notification should dismiss it immediatly.
+  - [ ] Clicking the `x` on the toast notification should dismiss it immediately.
 - [ ] Calling Modal
   - [ ] Should be wired to state to appear when ui.incoming_call is set to some call.
-  - [ ] We should outline a struct to neatly contain info we need pretaining to an incoming call.
+  - [ ] We should outline a struct to neatly contain info we need pertaining to an incoming call.
 - [ ] Files
   - [ ] Files should be able to be dragged and dropped into a folder in order to move the file into the folder.
   - [ ] We should be able to drag and drop to re-organize the files page
@@ -36,7 +36,7 @@ We should try to finish this checklist before switching over to using this UI fo
 - [ ] Messaging
   - [ ] Add mock data to generate random replies to messages
   - [ ] Add mock data to generate random reactions to messages 
-  - [ ] Add mock data to include random attachements on messages
+  - [ ] Add mock data to include random attachments on messages
   - [ ] Add ability to "edit" messages.
   - [ ] Implement UI for afformentioned items.
 - [ ] Settings should be wired to config file and automatically update.
