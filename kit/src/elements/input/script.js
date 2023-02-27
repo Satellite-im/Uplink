@@ -6,25 +6,39 @@ if (APPLY_FOCUS) {
     input_element.focus()
 }
 
-var textareas = document.getElementsByClassName("input_textarea");
+var textareas = document.getElementsByClassName("input_textarea")
 for (let i = 0; i < textareas.length; i++) {
     var txt = textareas[i]
-    txt.addEventListener("input", e => updateHeight(txt))
-    txt.addEventListener("keypress", function (e) {
-        if (e.key == "Enter") {
-            e.preventDefault()
-            //Doing this in js instead of rust to properly update the textarea height
-            //Maybe someone else has an idea of updating the height via dioxus
-            if (MULTI_LINE && e.shiftKey) {
-                txt.value += "\n"
-                var inputEvent = new Event("input")
-                txt.dispatchEvent(inputEvent)
-            }
-        }
-    });
+    //Update the height on load
+    updateHeight(txt)
+    if (!txt.event_listener) {
+        txt.addEventListener("input", inputListener)
+        txt.addEventListener("keypress", keyPressListener);
+        txt.event_listener = true
+    }
 }
 
-function updateHeight(txt) {
-    txt.style.height = "0px"
-    txt.style.height = txt.scrollHeight + "px"
+function inputListener(e) {
+    updateHeight(this)
+}
+
+function updateHeight(element) {
+    element.style.height = "auto"
+    if (!element.value || MULTI_LINE)
+        element.style.height = "0px"
+    element.style.height = element.scrollHeight + "px"
+}
+
+function keyPressListener(e) {
+    if (e.key == "Enter") {
+        e.preventDefault()
+        //Doing this in js instead of rust to properly update the textarea height
+        //Maybe someone else has an idea of updating the height via dioxus
+        if (MULTI_LINE && e.shiftKey) {
+            this.value += "\n"
+            //Scheduling an input event to properly update scroll height and textarea height
+            var inputEvent = new Event("input")
+            this.dispatchEvent(inputEvent)
+        }
+    }
 }
