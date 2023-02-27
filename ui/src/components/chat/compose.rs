@@ -437,7 +437,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
-                                                text: get_local_text("messages.delete"),
+                                                text: get_local_text("uplink.delete"),
                                                 should_render: sender_is_self,
                                                 onpress: move |_| {
                                                     ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });

@@ -14,6 +14,7 @@ uplink = Uplink
     .search-placeholder = Procurar...
     .end = Finalizar
     .pre-release = Pré-lançamento
+    .delete = Deletar
     
 messages = Messages
     .new = Nova Mensagem
