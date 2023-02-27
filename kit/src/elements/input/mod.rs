@@ -310,7 +310,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .unwrap_or("text");
 
     let multiline =
-        cx.props.allow_line_breaks.unwrap_or(false) && !cx.props.is_password.unwrap_or(false);
+        cx.props.allow_line_breaks.unwrap_or_default() && !cx.props.is_password.unwrap_or_default();
 
     let input_id = cx.props.id.clone();
     let script = include_str!("./script.js")
