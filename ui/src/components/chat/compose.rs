@@ -297,7 +297,16 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 enum MessagesCommand {
     // contains the emoji reaction
     React((raygun::Message, String)),
-    DeleteMessage { conv_id: Uuid, msg_id: Uuid },
+    DeleteMessage {
+        conv_id: Uuid,
+        msg_id: Uuid,
+    },
+    DownloadAttachment {
+        conv_id: Uuid,
+        msg_id: Uuid,
+        file_name: String,
+        directory: String,
+    },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
@@ -360,6 +369,39 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             log::error!("failed to delete message: {}", e);
                         }
                     }
+                    MessagesCommand::DownloadAttachment {
+                        conv_id,
+                        msg_id,
+                        file_name,
+                        directory,
+                    } => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
+                                conv_id,
+                                msg_id,
+                                file_name,
+                                directory,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        match res {
+                            Ok(mut stream) => {
+                                while let Some(p) = stream.next().await {
+                                    log::debug!("{p:?}");
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("failed to download attachment: {}", e);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -410,6 +452,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let message = grouped_message.message.clone();
                                 let message2 = message.clone();
                                 let message3 = message.clone();
+                                let message4 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
@@ -467,6 +510,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             reactions: message.inner.reactions(),
                                             order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                                             attachments: message.inner.attachments(),
+                                            on_download: move |file_name| {
+                                                // todo: let the user pick the directory
+                                                ch.send(MessagesCommand::DownloadAttachment {conv_id: message4.inner.conversation_id(), msg_id: message4.inner.id(), file_name, directory: STATIC_ARGS.uplink_path.to_string_lossy().to_string() })
+                                            },
                                         },
                                     }
                                 )

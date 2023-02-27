@@ -3,6 +3,7 @@ use futures::channel::oneshot;
 use std::{collections::HashMap, path::PathBuf};
 use uuid::Uuid;
 use warp::{
+    constellation::ConstellationProgressStream,
     crypto::DID,
     error::Error,
     logging::tracing::log,
@@ -37,6 +38,14 @@ pub enum RayGunCmd {
         msg: Vec<String>,
         attachments: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "DownloadAttachment")]
+    DownloadAttachment {
+        conv_id: Uuid,
+        msg_id: Uuid,
+        file_name: String,
+        directory: String,
+        rsp: oneshot::Sender<Result<ConstellationProgressStream, warp::error::Error>>,
     },
     #[display(fmt = "DeleteMessage {{ conv_id: {conv_id}, msg_id: {msg_id} }} ")]
     DeleteMessage {
@@ -119,6 +128,17 @@ pub async fn handle_raygun_cmd(
                 messaging.attach(conv_id, attachments, msg).await
             };
 
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::DownloadAttachment {
+            conv_id,
+            msg_id,
+            file_name,
+            directory,
+            rsp,
+        } => {
+            let pb = PathBuf::from(directory).join(&file_name);
+            let r = messaging.download(conv_id, msg_id, file_name, pb).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::DeleteMessage {

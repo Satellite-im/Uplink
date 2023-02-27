@@ -51,6 +51,9 @@ pub struct Props<'a> {
     #[allow(unused)]
     #[props(optional)]
     attachments: Option<Vec<File>>,
+
+    /// called when an attachment is downloaded
+    on_download: EventHandler<'a, String>,
 }
 
 #[allow(non_snake_case)]
@@ -66,9 +69,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let attachment_list = cx.props.attachments.iter().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
+            let name = file.name();
             rsx!(Attachment {
                 key: "{key}",
                 file: file.clone(),
+                on_press: move |_| cx.props.on_download.call(name.clone()),
             })
         })
     });
@@ -109,15 +114,17 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     ))
 }
 
-#[derive(PartialEq, Eq, Props)]
-pub struct AttachmentProps {
+#[derive(Props)]
+pub struct AttachmentProps<'a> {
     file: File,
+    on_press: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
-pub fn Attachment(cx: Scope<AttachmentProps>) -> Element {
+pub fn Attachment<'a>(cx: Scope<'a, AttachmentProps<'a>>) -> Element<'a> {
     let size = format_size(cx.props.file.size(), DECIMAL);
     let name = cx.props.file.name();
+
     cx.render(rsx! {
         div {
             class: "attachment-embed",
@@ -138,6 +145,7 @@ pub fn Attachment(cx: Scope<AttachmentProps>) -> Element {
                 button::Button {
                     icon: Icon::DocumentArrowDown,
                     text: String::new(),
+                    onpress: move |_| cx.props.on_press.call(()),
                 }
             }
         }
