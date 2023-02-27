@@ -137,7 +137,7 @@ async fn delete_items(
     // If is file, just a small function solve it
     if item.is_file() {
         let file_name = item.name();
-        match warp_storage.remove(&file_name, true).await {
+        match warp_storage.remove(&file_name, false).await {
             Ok(_) => log::info!("File deleted: {:?}", file_name),
             Err(error) => log::error!("Error to delete file {:?}, {:?}", file_name, error),
         };
@@ -152,7 +152,10 @@ async fn delete_items(
 
     match warp_storage.select(&item.name()) {
         Ok(_) => log::debug!("Selected new dir: {:?}.", item.name()),
-        Err(error) => log::error!("Error to select new dir: {:?}.", error),
+        Err(error) => {
+            log::error!("Error to select new dir: {:?}.", error);
+            return Err(error);
+        }
     };
     dirs.push(warp_storage.current_directory()?);
 
@@ -181,7 +184,10 @@ async fn delete_items(
                 if item.is_directory() {
                     match warp_storage.select(&item.name()) {
                         Ok(_) => log::debug!("Selected new dir: {:?}.", item.name()),
-                        Err(error) => log::error!("Error to select new dir: {:?}.", error),
+                        Err(error) => {
+                            log::error!("Error to select new dir: {:?}.", error);
+                            return Err(error);
+                        }
                     };
                     dirs.push(warp_storage.current_directory()?);
                     break;
@@ -218,7 +224,7 @@ async fn delete_items(
 
         // If code arrives here, just run into files inside that dir and delete all of them.
         for file in last_dir.get_items().iter().filter(|f| f.is_file()) {
-            match warp_storage.remove(&file.name(), true).await {
+            match warp_storage.remove(&file.name(), false).await {
                 Ok(_) => log::info!(
                     "File deleted: {:?}, on directory: {:?}.",
                     file.name(),
