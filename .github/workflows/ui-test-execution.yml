@@ -126,6 +126,13 @@ jobs:
         working-directory: ./appium-tests
         run: npm run mac.ci
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: always()
+        with:
+          junit_files: "./appium-tests/test-report/*.xml"
+          check_name: "UI Automated Test Results on MacOS"
+
       - name: Upload Screenshots if tests failed 📷
         uses: actions/upload-artifact@v3
         if: failure()
@@ -145,31 +152,3 @@ jobs:
         if: failure()
         with:
           file-name: "desktop.jpg"
-
-      - name: Publish JUnit reports ⬆️
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: junit-results
-          path: ./appium-tests/test-report/*.xml
-
-  publish:
-    needs: test
-    if: always()
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout directory 🔖
-        uses: actions/checkout@v3
-
-      - name: Download JUnit results 🗳️
-        uses: actions/download-artifact@v3
-        with:
-          name: junit-results
-          path: ./junit-results
-
-      - name: Publish Test Results 📢
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          junit_files: "junit-results/*.xml"
-          check_name: "UI Automated Test Results on MacOS"
