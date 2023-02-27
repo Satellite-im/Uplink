@@ -108,7 +108,7 @@ impl Notifications {
             NotificationKind::Message => self.messages = 0,
             NotificationKind::Settings => self.settings = 0,
         };
-        // Upadte the badge with new possible totals.
+        // Update the badge with new possible totals.
         let _ = set_badge(self.total(config));
     }
 

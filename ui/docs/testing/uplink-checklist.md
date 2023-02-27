@@ -16,7 +16,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 
 ### **Registration / Login**
 **PIN Creation**
-- [ ] Limits PIN to a maximun of 6 characters.
+- [ ] Limits PIN to a maximum of 6 characters.
 - [ ] Requires PIN to be a minimum of 4 characters.
 - [ ] Shows error if User tries to enter with less than 4 characters. 
 - [ ] Shows error if User enters incorrect PIN. 
