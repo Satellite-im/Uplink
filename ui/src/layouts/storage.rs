@@ -230,7 +230,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let rsp = rx.await.expect("command canceled");
 
                         if let Err(error) = rsp {
-                            log::error!("failed to dowload file: {}", error);
+                            log::error!("failed to download file: {}", error);
                             continue;
                         }
                     }
