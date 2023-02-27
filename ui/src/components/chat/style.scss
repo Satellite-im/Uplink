@@ -57,6 +57,11 @@
                 justify-content: flex-start;
             }
         }
+
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
     }
 }
 

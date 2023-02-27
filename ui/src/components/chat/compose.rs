@@ -493,28 +493,31 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 }
                                             },
                                         )),
-                                       message.in_reply_to.map(|other_msg| rsx!(
+                                        div {
+                                            class: "msg-wrapper",
+                                            message.in_reply_to.map(|other_msg| rsx!(
                                             MessageReply {
-                                                key: "reply-{message_key}",
-                                                with_text: other_msg,
+                                                    key: "reply-{message_key}",
+                                                    with_text: other_msg,
+                                                    remote: group.remote,
+                                                    remote_message: group.remote,
+                                                    // todo: translate this. possibly add the username 
+                                                    with_prefix: "replying to: ".into(),
+                                                }
+                                            )),
+                                            Message {
+                                                key: "{message_key}",
                                                 remote: group.remote,
-                                                remote_message: group.remote,
-                                                // todo: translate this. possibly add the username 
-                                                with_prefix: "replying to: ".into(),
-                                            }
-                                        )),
-                                        Message {
-                                            key: "{message_key}",
-                                            remote: group.remote,
-                                            with_text: message.inner.value().join("\n"),
-                                            reactions: message.inner.reactions(),
-                                            order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                            attachments: message.inner.attachments(),
-                                            on_download: move |file_name| {
-                                                // todo: let the user pick the directory
-                                                ch.send(MessagesCommand::DownloadAttachment {conv_id: message4.inner.conversation_id(), msg_id: message4.inner.id(), file_name, directory: STATIC_ARGS.uplink_path.to_string_lossy().to_string() })
+                                                with_text: message.inner.value().join("\n"),
+                                                reactions: message.inner.reactions(),
+                                                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                                attachments: message.inner.attachments(),
+                                                on_download: move |file_name| {
+                                                    // todo: let the user pick the directory
+                                                    ch.send(MessagesCommand::DownloadAttachment {conv_id: message4.inner.conversation_id(), msg_id: message4.inner.id(), file_name, directory: STATIC_ARGS.uplink_path.to_string_lossy().to_string() })
+                                                },
                                             },
-                                        },
+                                       }
                                     }
                                 )
                             })
