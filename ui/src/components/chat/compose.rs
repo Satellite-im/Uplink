@@ -7,7 +7,7 @@ use std::{
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
-use humansize::{format_size, DECIMAL};
+
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -42,7 +42,6 @@ use dioxus_desktop::{use_eval, use_window};
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
-    constellation::file::File,
     logging::tracing::log,
     raygun::{self, ReactionState},
 };
@@ -838,7 +837,6 @@ fn Attachments(cx: Scope<AttachmentProps>) -> Element {
         .props
         .files
         .current()
-        .clone()
         .iter()
         .map(|x| x.to_string_lossy().to_string())
         .map(|file_name| {
