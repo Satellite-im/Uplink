@@ -111,7 +111,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
         if: always()
         with:
-          junit_files: "./test-report/*.xml"
+          junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on Windows"
 
       - name: Upload Screenshots if tests failed 📷
@@ -133,10 +133,3 @@ jobs:
         if: failure()
         with:
           file-name: "desktop.jpg"
-
-      - name: Publish JUnit reports ⬆️
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: junit-results
-          path: ./test-report/*.xml
