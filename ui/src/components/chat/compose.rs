@@ -7,6 +7,7 @@ use std::{
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
+use humansize::{format_size, DECIMAL};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -41,6 +42,7 @@ use dioxus_desktop::{use_eval, use_window};
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
+    constellation::file::File,
     logging::tracing::log,
     raygun::{self, ReactionState},
 };
@@ -565,7 +567,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         })
         .unwrap_or(false);
 
-    let files_to_upload: &UseRef<Option<Vec<PathBuf>>> = use_ref(cx, || None);
+    let files_to_upload: &UseState<Vec<PathBuf>> = use_state(cx, Vec::new);
 
     // todo: use this to render the typing indicator
     let users_typing = active_chat_id
@@ -594,7 +596,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             rsp: tx,
                         },
                         None => {
-                            let attachments = files_to_upload.read().clone().unwrap_or_default();
+                            let attachments = files_to_upload.current().to_vec();
                             RayGunCmd::SendMessage {
                                 conv_id,
                                 msg,
@@ -603,7 +605,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             }
                         }
                     };
-                    *files_to_upload.write_silent() = None;
+                    files_to_upload.set(vec![]);
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
                         continue;
@@ -800,7 +802,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             disabled: is_loading || is_reply,
             appearance: Appearance::Primary,
             onpress: move |_| {
-                *files_to_upload.write_silent() = FileDialog::new().set_directory(".").pick_files();
+                if let Some(v) = FileDialog::new().set_directory(".").pick_files() {
+                    files_to_upload.set(v);
+                }
             },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
@@ -819,7 +823,58 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             })
         })
         chatbar,
+        Attachments {files: files_to_upload.clone()}
     ))
+}
+
+#[derive(Props, PartialEq)]
+pub struct AttachmentProps {
+    files: UseState<Vec<PathBuf>>,
+}
+
+#[allow(non_snake_case)]
+fn Attachments(cx: Scope<AttachmentProps>) -> Element {
+    let attachments = cx.render(rsx!(cx
+        .props
+        .files
+        .current()
+        .clone()
+        .iter()
+        .map(|x| x.to_string_lossy().to_string())
+        .map(|file_name| {
+            rsx!(
+                div {
+                    class: "attachment-embed",
+                    div {
+                        class: "embed-icon",
+                        common::icons::Icon {
+                            icon: Icon::Document,
+                        },
+                        h2 {
+                            "{file_name}"
+                        }
+                    }
+                    div {
+                        class: "embed-details",
+                        Button {
+                            icon: Icon::DocumentMinus,
+                            text: String::new(),
+                            onpress: move |_| {
+                                cx.props.files.with_mut(|files| files.retain(|x| {
+                                     let s = x.to_string_lossy().to_string();
+                                    s != file_name
+                                }));
+                            },
+                        }
+                    }
+                }
+            )
+        })));
+
+    cx.render(rsx!(div {
+        id: "compose-attachments",
+        attachments
+    }))
 }
 
 fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {

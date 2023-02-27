@@ -121,7 +121,7 @@ pub struct AttachmentProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Attachment<'a>(cx: Scope<'a, AttachmentProps<'a>>) -> Element<'a> {
+fn Attachment<'a>(cx: Scope<'a, AttachmentProps<'a>>) -> Element<'a> {
     let size = format_size(cx.props.file.size(), DECIMAL);
     let name = cx.props.file.name();
 
