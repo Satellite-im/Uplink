@@ -72,7 +72,7 @@ pub enum ConstellationCmd {
         local_path_to_save_file: PathBuf,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "RemoveItems {{ item: {item:?} }} ")]
+    #[display(fmt = "DeleteItems {{ item: {item:?} }} ")]
     DeleteItems {
         item: Item,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
