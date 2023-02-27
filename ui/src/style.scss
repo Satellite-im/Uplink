@@ -36,6 +36,7 @@ html, body {
     justify-content: flex-end;
     user-select: none;
     cursor: pointer;
+    min-height: 1.6rem;
 
     .btn-wrap {
         height: var(--titlebar-height);
