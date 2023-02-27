@@ -96,7 +96,7 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.uplink_path;
+    let themes_dest = &STATIC_ARGS.themes_path;
     let themes_src = Path::new("ui").join("extra").join("themes");
 
     match create_all(themes_dest.clone(), false) {
