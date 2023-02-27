@@ -91,7 +91,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
-    let uplink_path = uplink_container.join("uplink");
+    let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
     StaticArgs {
         uplink_path: uplink_path.clone(),

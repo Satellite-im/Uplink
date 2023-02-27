@@ -18,6 +18,7 @@ uplink = Uplink
     .status = Mensagem de Status
     .characters = caracteres
     .exceeded = excedido
+    .delete = Deletar
 
 warning-messages = Warning Messages
     .please-enter-at-least = Por favor, insira pelo menos
