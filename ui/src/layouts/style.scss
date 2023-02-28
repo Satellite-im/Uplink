@@ -111,6 +111,26 @@
 }
 
 #unlock-layout {
+
+    .unlock-details {
+        width: 75%;
+        display: inline-flex;
+        flex-direction: column;
+        gap: var(--gap);
+
+        .label {
+            color: var(--text-color);
+        }
+        span {
+            color: var(--text-color-dark);
+            font-size: var(--text-size-less);
+            text-align: justify;
+        }
+    }
+
+    .input-group {
+        width: 100%;
+    }
     flex-direction: column;
     justify-content: center;
     align-items: center;

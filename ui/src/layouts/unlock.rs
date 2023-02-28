@@ -5,6 +5,7 @@ use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
+    label::Label,
 };
 use warp::logging::tracing::log;
 
@@ -109,44 +110,42 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
-            p {
-                class: "info",
-                aria_label: "unlock-warning-paragraph",
-                get_local_text("unlock.warning1")
-                br {},
+            div {
+                class: "unlock-details",
+                Label {
+                    text: get_local_text("unlock.enter-pin")
+                },
+                Input {
+                    id: "unlock-input".to_owned(),
+                    focus: true,
+                    is_password: true,
+                    icon: Icon::Key,
+                    aria_label: "pin-input".into(),
+                    disabled: false,
+                    placeholder: get_local_text("unlock.enter-pin"),
+                    options: Options {
+                        with_validation: Some(pin_validation),
+                        with_clear_btn: true,
+                        ..Default::default()
+                    }
+                    onchange: move |(val, is_valid): (String, bool)| {
+                        *pin.write_silent() = val.clone();
+                        let should_disable = !is_valid;
+                        if *button_disabled.get() != should_disable {
+                            button_disabled.set(should_disable);
+                        }
+                        if !should_disable {
+                            ch.send(val)
+                        }
+                    }
+                    onreturn: move |_| {
+                        if !*button_disabled.get() {
+                            page.set(AuthPages::CreateAccount);
+                        }
+                    }
+                },
                 span {
-                    aria_label: "unlock-warning-span",
-                    class: "warning",
-                    get_local_text("unlock.warning2")
-                }
-            },
-            Input {
-                id: "unlock-input".to_owned(),
-                focus: true,
-                is_password: true,
-                icon: Icon::Key,
-                aria_label: "pin-input".into(),
-                disabled: false,
-                placeholder: get_local_text("unlock.enter-pin"),
-                options: Options {
-                    with_validation: Some(pin_validation),
-                    with_clear_btn: true,
-                    ..Default::default()
-                }
-                onchange: move |(val, is_valid): (String, bool)| {
-                    *pin.write_silent() = val.clone();
-                    let should_disable = !is_valid;
-                    if *button_disabled.get() != should_disable {
-                        button_disabled.set(should_disable);
-                    }
-                    if !should_disable {
-                        ch.send(val)
-                    }
-                }
-                onreturn: move |_| {
-                    if !*button_disabled.get() {
-                        page.set(AuthPages::CreateAccount);
-                    }
+                    get_local_text("unlock.notice")
                 }
             },
             can_create_new_account.get().then(|| rsx!(

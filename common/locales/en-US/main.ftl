@@ -175,8 +175,8 @@ remote-controls = Remote Controls
     .end = End
 
 unlock = Unlock
-    .warning1 = Your password is used to encrypt your data. It is never sent to any server. You should use a strong password that you don't use anywhere else.
-    .warning2 = If you forget this password we cannot help you retrieve it.
+    .description = Enter your pin or password to unlock your account.
+    .notice = (this is used to encrypt all of the data Uplink stores on your computer when you're not using it so nobody can read your data.)
     .enter-pin = Enter Pin
     .create-account = Create Account
 
