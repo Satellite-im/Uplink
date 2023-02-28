@@ -797,7 +797,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             disabled: is_loading || is_reply,
             appearance: Appearance::Primary,
             onpress: move |_| {
-                if let Some(new_files) = FileDialog::new().set_directory(".").pick_files() {
+                if let Some(new_files) = FileDialog::new()
+                    .set_directory(dirs::home_dir().unwrap_or_default())
+                    .pick_files()
+                {
                     let mut new_files_to_upload: Vec<_> = files_to_upload
                         .current()
                         .iter()
