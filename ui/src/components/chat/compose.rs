@@ -502,8 +502,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                     with_text: other_msg,
                                                     remote: group.remote,
                                                     remote_message: group.remote,
-                                                    // todo: translate this. possibly add the username 
-                                                    with_prefix: "replying to: ".into(),
                                                 }
                                             )),
                                             Message {
@@ -812,13 +810,21 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }))
     }));
 
+    let platform = Platform::Headless;
+    let status = Status::Online;
+
     // todo: make this look nice
     let users_typing = users_typing.unwrap_or_default();
     let is_typing = !users_typing.is_empty();
     cx.render(rsx!(
         is_typing.then(|| {
             rsx!(MessageTyping {
-                user_image: None
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: platform,
+                        status: status
+                    }
+                ))
             })
         })
         chatbar,

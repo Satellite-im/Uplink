@@ -1,6 +1,7 @@
 .message-typing-wrap {
 	display: inline-flex;
 	gap: var(--gap);
+	padding: var(--padding-less);
 }
 .message-typing {
 	min-height: var(--height-input);

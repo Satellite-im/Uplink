@@ -1,12 +1,11 @@
 .message-reply {
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
-	min-height: var(--height-input);
+	min-height: calc(var(--height-input) / 1.25);
 	display: inline-flex;
 	align-items: center;
 	width: fit-content;
 	align-self: flex-end;
-	margin-top: calc(var(--gap) * 2);
 	position: relative;
 	.user-image {
 		transform: scale(0.75);
