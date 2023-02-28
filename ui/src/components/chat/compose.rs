@@ -709,8 +709,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
-    let msg_valid =
-        |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
+    let msg_valid = |msg: &[String]| {
+        (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
+            || !files_to_upload.current().is_empty()
+    };
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
