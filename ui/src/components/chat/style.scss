@@ -35,11 +35,6 @@
 #compose-attachments {
     display: inline-flex;
     flex-direction: row;
-
-    .attachment-embed {
-        display: inline-flex;
-        flex-direction: column;
-    }
 }
 
 #compose #messages {

@@ -567,16 +567,18 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     let files_to_upload: &UseState<Vec<PathBuf>> = use_state(cx, Vec::new);
 
-    // todo: use this to render the typing indicator
-    let users_typing = active_chat_id
+    // used to render the typing indicator
+    // for now it doesn't quite work for group messages
+    let is_typing = active_chat_id
         .and_then(|id| state.read().chats.all.get(&id).cloned())
         .map(|chat| {
             chat.participants
                 .iter()
                 .filter(|x| chat.typing_indicator.contains_key(&x.did_key()))
-                .map(|x| x.username())
-                .collect::<Vec<_>>()
-        });
+                .next()
+                .is_some()
+        })
+        .unwrap_or_default();
 
     let msg_ch = use_coroutine(
         cx,
@@ -821,9 +823,6 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let platform = Platform::Headless;
     let status = Status::Online;
 
-    // todo: make this look nice
-    let users_typing = users_typing.unwrap_or_default();
-    let is_typing = !users_typing.is_empty();
     cx.render(rsx!(
         is_typing.then(|| {
             rsx!(MessageTyping {
