@@ -172,7 +172,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         }
                     ))
-                })
+                }),
                 span {
                     get_local_text("unlock.notice")
                 }
