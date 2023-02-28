@@ -26,9 +26,10 @@ use crate::{AuthPages, UPLINK_ROUTES};
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering unlock layout");
-    let password_failed: &UseRef<Option<bool>> = use_ref(cx, || None);
     let button_disabled = use_state(cx, || true);
-    let can_create_new_account = use_state(cx, || false);
+
+    // todo: maybe use this later
+    let password_failed = use_state(cx, || false);
 
     // this will be needed later
     let account_exists = use_future(cx, (), |_| async move {
@@ -48,7 +49,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     });
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![password_failed, page, can_create_new_account];
+        to_owned![password_failed, page];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -72,20 +73,17 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                         page.set(AuthPages::Success)
                     }
-                    Err(err) => {
-                        can_create_new_account.set(true);
-                        match err {
-                            warp::error::Error::DecryptionError => {
-                                // wrong password
-                                password_failed.set(Some(true));
-                                log::warn!("decryption error");
-                            }
-                            _ => {
-                                // unexpected
-                                log::error!("LogIn failed: {}", err);
-                            }
+                    Err(err) => match err {
+                        warp::error::Error::DecryptionError => {
+                            // wrong password
+                            password_failed.set(true);
+                            log::warn!("decryption error");
                         }
-                    }
+                        _ => {
+                            // unexpected
+                            log::error!("LogIn failed: {}", err);
+                        }
+                    },
                 }
             }
         }
@@ -107,6 +105,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         // if you need special chars, select action to allow or block and pass a vec! with each char necessary, mainly if alpha_numeric_only is true
         special_chars: None,
     };
+
+    let account_exists = *account_exists.value().unwrap_or(&false);
 
     // todo: use password_failed to display an error message
     cx.render(rsx!(
@@ -152,10 +152,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 }
             },
             Button {
-                text: if account_exists {
-                    get_local_text("unlock.unlock-account")
-                } else {
-                    get_local_text("unlock.create-account")
+                text: match account_exists {
+                    true => get_local_text("unlock.unlock-account"),
+                    false => get_local_text("unlock.create-account"),
                 },
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
