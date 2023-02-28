@@ -1,5 +1,8 @@
-use common::{language::get_local_text, state::configuration::Configuration};
+use common::{
+    language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
+};
 use dioxus::prelude::*;
+use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::{
@@ -16,7 +19,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::AuthPages;
+use crate::{AuthPages, UPLINK_ROUTES};
 
 // todo: go to the auth page if no account has been created
 #[inline_props]
@@ -28,7 +31,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let can_create_new_account = use_state(cx, || false);
 
     // this will be needed later
-    /*let account_exists = use_future(cx, (), |_| async move {
+    let account_exists = use_future(cx, (), |_| async move {
         let warp_cmd_tx = WARP_CMD_CH.tx.clone();
         let (tx, rx) = oneshot::channel::<bool>();
         if let Err(e) =
@@ -42,7 +45,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         let exists = rx.await.unwrap_or(false);
         log::debug!("account_exists: {}", exists);
         exists
-    });*/
+    });
 
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![password_failed, page, can_create_new_account];
@@ -148,18 +151,24 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     get_local_text("unlock.notice")
                 }
             },
-            can_create_new_account.get().then(|| rsx!(
-                Button {
-                    text: get_local_text("unlock.create-account"),
-                    aria_label: "create-account-button".into(),
-                    appearance: kit::elements::Appearance::Primary,
-                    icon: Icon::Check,
-                    disabled: *button_disabled.get(),
-                    onpress: move |_| {
+            Button {
+                text: if account_exists {
+                    get_local_text("unlock.unlock-account")
+                } else {
+                    get_local_text("unlock.create-account")
+                },
+                aria_label: "create-account-button".into(),
+                appearance: kit::elements::Appearance::Primary,
+                icon: Icon::Check,
+                disabled: *button_disabled.get(),
+                onpress: move |_| {
+                    if account_exists {
+                        use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                    } else {
                         page.set(AuthPages::CreateAccount);
                     }
                 }
-            ))
+            }
         }
     ))
 }

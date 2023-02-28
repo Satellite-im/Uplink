@@ -179,6 +179,7 @@ unlock = Unlock
     .notice = (this is used to encrypt all of the data Uplink stores on your computer when you're not using it so nobody can read your data.)
     .enter-pin = Enter Pin
     .create-account = Create Account
+    .unlock-account = Unlock Account
 
 auth = Create Account 
     .enter-username = Enter Username
