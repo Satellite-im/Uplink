@@ -172,19 +172,27 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                 },
-                Button {
-                    text: match account_exists_bool {
-                        true => get_local_text("unlock.unlock-account"),
-                        false => get_local_text("unlock.create-account"),
-                    },
-                    aria_label: "create-account-button".into(),
-                    appearance: kit::elements::Appearance::Primary,
-                    icon: Icon::Check,
-                    disabled: *button_disabled.get() || account_exists_bool || !loaded.get(),
-                    onpress: move |_| {
-                        page.set(AuthPages::CreateAccount);
-                    }
+                if *loaded.get() {
+                    rsx!(Button {
+                        text: match account_exists_bool {
+                            true => get_local_text("unlock.unlock-account"),
+                            false => get_local_text("unlock.create-account"),
+                        },
+                        aria_label: "create-account-button".into(),
+                        appearance: kit::elements::Appearance::Primary,
+                        icon: Icon::Check,
+                        disabled: *button_disabled.get() || account_exists_bool,
+                        onpress: move |_| {
+                            page.set(AuthPages::CreateAccount);
+                        }
+                    })
+                } else {
+                    rsx!(Button {
+                        disabled: true,
+                        onpress: move |_| {}
+                    })
                 }
+
             },
 
         }
