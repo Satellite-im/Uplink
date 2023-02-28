@@ -569,15 +569,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
+    let my_id = state.read().account.identity.did_key();
     let is_typing = active_chat_id
         .and_then(|id| state.read().chats.all.get(&id).cloned())
-        .map(|chat| {
-            chat.participants
-                .iter()
-                .filter(|x| chat.typing_indicator.contains_key(&x.did_key()))
-                .next()
-                .is_some()
-        })
+        .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
         .unwrap_or_default();
 
     let msg_ch = use_coroutine(
