@@ -307,7 +307,7 @@ enum MessagesCommand {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: String,
+        directory: PathBuf,
     },
 }
 
@@ -513,8 +513,15 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                                                 attachments: message.inner.attachments(),
                                                 on_download: move |file_name| {
-                                                    // todo: let the user pick the directory
-                                                    ch.send(MessagesCommand::DownloadAttachment {conv_id: message4.inner.conversation_id(), msg_id: message4.inner.id(), file_name, directory: STATIC_ARGS.uplink_path.to_string_lossy().to_string() })
+                                                    if let Some(directory) = FileDialog::new()
+                                                    .set_directory(dirs::home_dir().unwrap_or_default())
+                                                    .pick_folder() {
+                                                        ch.send(MessagesCommand::DownloadAttachment {
+                                                            conv_id: message4.inner.conversation_id(),
+                                                            msg_id: message4.inner.id(),
+                                                            file_name, directory
+                                                        })
+                                                    }
                                                 },
                                             },
                                        }

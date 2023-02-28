@@ -44,7 +44,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: String,
+        directory: PathBuf,
         rsp: oneshot::Sender<Result<ConstellationProgressStream, warp::error::Error>>,
     },
     #[display(fmt = "DeleteMessage {{ conv_id: {conv_id}, msg_id: {msg_id} }} ")]
@@ -137,7 +137,7 @@ pub async fn handle_raygun_cmd(
             directory,
             rsp,
         } => {
-            let pb = PathBuf::from(directory).join(&file_name);
+            let pb = directory.join(&file_name);
             let r = messaging.download(conv_id, msg_id, file_name, pb).await;
             let _ = rsp.send(r);
         }
