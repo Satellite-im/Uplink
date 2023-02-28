@@ -31,13 +31,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let password_failed = use_state(cx, || false);
 
     let account_exists = use_state(cx, || true);
-    let ran_once = use_state(cx, || false);
+    let loaded = use_state(cx, || false);
 
     // this will be needed later
     use_future(cx, (), |_| {
-        to_owned![account_exists, ran_once];
+        to_owned![account_exists, loaded];
         async move {
-            if *ran_once.current() {
+            if *loaded.current() {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -53,7 +53,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             let exists = rx.await.unwrap_or(false);
             log::debug!("account_exists: {}", exists);
             account_exists.set(exists);
-            ran_once.set(true);
+            loaded.set(true);
         }
     });
 
@@ -124,16 +124,32 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             aria_label: "unlock-layout",
             div {
                 class: "unlock-details",
-                Label {
-                    text: get_local_text("unlock.enter-pin")
-                },
+                if *loaded.get() {
+                    rsx!(
+                        Label {
+                            text: get_local_text("unlock.enter-pin")
+                        },
+                        span {
+                            get_local_text("unlock.notice")
+                        }
+                    )
+                } else {
+                    rsx!(
+                        div {
+                            class: "skeletal-bars",
+                            div {
+                                class: "skeletal skeletal-bar",
+                            },
+                        }
+                    )
+                }
                 Input {
                     id: "unlock-input".to_owned(),
                     focus: true,
                     is_password: true,
                     icon: Icon::Key,
                     aria_label: "pin-input".into(),
-                    disabled: false,
+                    disabled: !loaded.get(),
                     placeholder: get_local_text("unlock.enter-pin"),
                     options: Options {
                         with_validation: Some(pin_validation),
@@ -156,25 +172,18 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                 },
-                ran_once.get().then(|| {
-                    cx.render(rsx!(
-                        Button {
-                            text: match account_exists_bool {
-                                true => get_local_text("unlock.unlock-account"),
-                                false => get_local_text("unlock.create-account"),
-                            },
-                            aria_label: "create-account-button".into(),
-                            appearance: kit::elements::Appearance::Primary,
-                            icon: Icon::Check,
-                            disabled: *button_disabled.get() || account_exists_bool,
-                            onpress: move |_| {
-                                page.set(AuthPages::CreateAccount);
-                            }
-                        }
-                    ))
-                }),
-                span {
-                    get_local_text("unlock.notice")
+                Button {
+                    text: match account_exists_bool {
+                        true => get_local_text("unlock.unlock-account"),
+                        false => get_local_text("unlock.create-account"),
+                    },
+                    aria_label: "create-account-button".into(),
+                    appearance: kit::elements::Appearance::Primary,
+                    icon: Icon::Check,
+                    disabled: *button_disabled.get() || account_exists_bool || !loaded.get(),
+                    onpress: move |_| {
+                        page.set(AuthPages::CreateAccount);
+                    }
                 }
             },
 
