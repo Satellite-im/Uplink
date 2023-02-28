@@ -30,21 +30,31 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     // todo: maybe use this later
     let password_failed = use_state(cx, || false);
 
-    // this will be needed later
-    let account_exists = use_future(cx, (), |_| async move {
-        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-        let (tx, rx) = oneshot::channel::<bool>();
-        if let Err(e) =
-            warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::AccountExists { rsp: tx }))
-        {
-            log::error!("failed to send warp command: {}", e);
-            // returning true will prevent the account from being created
-            return true;
-        }
+    let account_exists = use_state(cx, || true);
+    let ran_once = use_state(cx, || false);
 
-        let exists = rx.await.unwrap_or(false);
-        log::debug!("account_exists: {}", exists);
-        exists
+    // this will be needed later
+    use_future(cx, (), |_| {
+        to_owned![account_exists, ran_once];
+        async move {
+            if *ran_once.current() {
+                return;
+            }
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let (tx, rx) = oneshot::channel::<bool>();
+            if let Err(e) =
+                warp_cmd_tx.send(WarpCmd::Tesseract(TesseractCmd::AccountExists { rsp: tx }))
+            {
+                log::error!("failed to send warp command: {}", e);
+                // returning true will prevent the account from being created
+                return;
+            }
+
+            let exists = rx.await.unwrap_or(false);
+            log::debug!("account_exists: {}", exists);
+            account_exists.set(exists);
+            ran_once.set(true);
+        }
     });
 
     let ch = use_coroutine(cx, |mut rx| {
@@ -105,7 +115,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         special_chars: None,
     };
 
-    let account_exists = *account_exists.value().unwrap_or(&false);
+    let account_exists_bool = *account_exists.get();
 
     // todo: use password_failed to display an error message
     cx.render(rsx!(
@@ -141,28 +151,33 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                     onreturn: move |_| {
-                        if !*button_disabled.get() && !account_exists {
+                        if !*button_disabled.get() && !account_exists_bool {
                             page.set(AuthPages::CreateAccount);
                         }
                     }
                 },
+                ran_once.get().then(|| {
+                    cx.render(rsx!(
+                        Button {
+                            text: match account_exists_bool {
+                                true => get_local_text("unlock.unlock-account"),
+                                false => get_local_text("unlock.create-account"),
+                            },
+                            aria_label: "create-account-button".into(),
+                            appearance: kit::elements::Appearance::Primary,
+                            icon: Icon::Check,
+                            disabled: *button_disabled.get() || account_exists_bool,
+                            onpress: move |_| {
+                                page.set(AuthPages::CreateAccount);
+                            }
+                        }
+                    ))
+                })
                 span {
                     get_local_text("unlock.notice")
                 }
             },
-            Button {
-                text: match account_exists {
-                    true => get_local_text("unlock.unlock-account"),
-                    false => get_local_text("unlock.create-account"),
-                },
-                aria_label: "create-account-button".into(),
-                appearance: kit::elements::Appearance::Primary,
-                icon: Icon::Check,
-                disabled: *button_disabled.get() || account_exists,
-                onpress: move |_| {
-                    page.set(AuthPages::CreateAccount);
-                }
-            }
+
         }
     ))
 }
