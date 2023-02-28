@@ -1,4 +1,5 @@
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
+use std::time::Duration;
+use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -9,7 +10,9 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
+use dioxus_desktop::{use_window};
 use dioxus_router::*;
+use fermi::AtomRef;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -25,18 +28,24 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
+use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::item::Item;
+use warp::sync::RwLock;
 use warp::{
     constellation::{directory::Directory, file::File},
     logging::tracing::log,
 };
+use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
 pub const ROOT_DIR_NAME: &str = "root";
+
+pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
+    Lazy::new(|| RwLock::new(FileDropEvent::Cancelled));
 
 enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -85,6 +94,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state.write().storage = storage;
         storage_state.set(None);
     }
+
+    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![storage_state];
@@ -310,10 +321,45 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         });
     };
 
+    let script = include_str!("./storage.js");
+
     cx.render(rsx!(
         div {
             id: "files-layout",
             aria_label: "files-layout",
+            ondragover: move |_| {
+                let window = use_window(cx);
+                if let None = drag_event.read().clone() {
+                    cx.spawn({
+                        to_owned![drag_event, window, ch, script];
+                        async move {
+                            loop {
+                                let file_drop_event = get_drag_event();
+                                *drag_event.write_silent() = Some(file_drop_event.clone());
+                                match file_drop_event {
+                                    FileDropEvent::Hovered(_) => {
+                                        let script = script.replace("$IS_DRAGGING", &format!("{}", true));
+                                        window.eval(&script);
+                                    }
+                                    FileDropEvent::Dropped(files_local_path) => {
+                                        ch.send(ChanCmd::UploadFiles(files_local_path));
+                                        let script = script.replace("$IS_DRAGGING", &format!("{}", false));
+                                        window.eval(&script);
+                                        break;
+                                    }
+                                    _ => {
+                                        let script = script.replace("$IS_DRAGGING", &format!("{}", false));
+                                        window.eval(&script);
+                                        break;
+                                    }
+                                };
+                                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                            };
+                            *drag_event.write_silent() = None;
+                        }
+                    });
+                };               
+                },
             onclick: |_| is_renaming_map.with_mut(|i| *i = None),
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
@@ -599,4 +645,8 @@ fn update_items_with_mock_data(
         files: files_list.read().clone(),
     };
     storage_state.set(Some(storage_mock));
+}
+
+fn get_drag_event() -> FileDropEvent {
+    DRAG_EVENT.read().clone()
 }

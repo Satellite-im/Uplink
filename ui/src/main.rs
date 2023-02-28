@@ -43,7 +43,7 @@ use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -226,7 +226,8 @@ fn main() {
                     .to_string(),
             )
             .with_file_drop_handler(|_w, drag_event| {
-                log::debug!("Drag Event: {:?}", drag_event);
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
                 true
             }),
     )
