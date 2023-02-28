@@ -800,8 +800,15 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             disabled: is_loading || is_reply,
             appearance: Appearance::Primary,
             onpress: move |_| {
-                if let Some(v) = FileDialog::new().set_directory(".").pick_files() {
-                    files_to_upload.set(v);
+                if let Some(new_files) = FileDialog::new().set_directory(".").pick_files() {
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
                 }
             },
             tooltip: cx.render(rsx!(Tooltip {
