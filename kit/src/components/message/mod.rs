@@ -1,4 +1,4 @@
-use common::icons::outline::Shape as Icon;
+//use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
 use warp::constellation::file::File;
@@ -64,6 +64,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .map(|v| !v.is_empty())
         .unwrap_or(false);
 
+    // todo: pick an icon based on the file extension
     // there's some weirdness here to avoid more nesting. this should make the code easier to read overall
     let attachment_list = cx.props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
@@ -73,8 +74,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
-                remote: is_remote.clone(),
-                icon: Icon::Document,
+                remote: is_remote,
                 on_press: move |_| cx.props.on_download.call(name.clone()),
             })
         })

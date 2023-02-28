@@ -11,6 +11,7 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
+        file_embed::FileEmbed,
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
@@ -839,6 +840,7 @@ pub struct AttachmentProps {
 
 #[allow(non_snake_case)]
 fn Attachments(cx: Scope<AttachmentProps>) -> Element {
+    // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(cx
         .props
         .files
@@ -846,33 +848,19 @@ fn Attachments(cx: Scope<AttachmentProps>) -> Element {
         .iter()
         .map(|x| x.to_string_lossy().to_string())
         .map(|file_name| {
-            rsx!(
-                div {
-                    class: "attachment-embed",
-                    div {
-                        class: "embed-icon",
-                        common::icons::Icon {
-                            icon: Icon::Document,
-                        },
-                        h2 {
-                            "{file_name}"
-                        }
-                    }
-                    div {
-                        class: "embed-details",
-                        Button {
-                            icon: Icon::DocumentMinus,
-                            text: String::new(),
-                            onpress: move |_| {
-                                cx.props.files.with_mut(|files| files.retain(|x| {
-                                     let s = x.to_string_lossy().to_string();
-                                    s != file_name
-                                }));
-                            },
-                        }
-                    }
-                }
-            )
+            rsx!(FileEmbed {
+                filename: file_name.clone(),
+                remote: false,
+                button_icon: Icon::Trash,
+                on_press: move |_| {
+                    cx.props.files.with_mut(|files| {
+                        files.retain(|x| {
+                            let s = x.to_string_lossy().to_string();
+                            s != file_name
+                        })
+                    });
+                },
+            })
         })));
 
     cx.render(rsx!(div {

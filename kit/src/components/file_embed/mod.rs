@@ -14,7 +14,7 @@ pub struct Props<'a> {
     filename: String,
 
     // The size of the file in bytes
-    filesize: usize,
+    filesize: Option<usize>,
 
     // The type of the file (e.g. "PDF", "JPEG")
     kind: Option<String>,
@@ -23,25 +23,33 @@ pub struct Props<'a> {
     remote: Option<bool>,
 
     // The icon to use to represent the file
-    icon: Option<Icon>,
+    attachment_icon: Option<Icon>,
+
+    // used for the button. defaults to a download icon
+    button_icon: Option<Icon>,
 
     // called shen the icon is clicked
     on_press: EventHandler<'a, ()>,
 }
 
-pub fn get_icon(cx: &Scope<Props>) -> Icon {
-    // If the props include an icon, return it
-    // Otherwise, return a default icon (a question mark inside a circle)
-    cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
-}
-
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let filename = &cx.props.filename;
-    // if kind is omitted, don't want the file size to appear negative
-    let kind = format!("{} -", cx.props.kind.clone().unwrap_or_default());
-    let filesize = cx.props.filesize;
-    let filesize_str = format_size(filesize, DECIMAL);
+
+    // show one of the 3:
+    // kind
+    // kind - size
+    // size
+    let file_description = match cx.props.filesize {
+        Some(filesize) => {
+            let size = format_size(filesize, DECIMAL);
+            match cx.props.kind.as_ref() {
+                Some(kind) => format!("{kind} - {size}"),
+                None => size,
+            }
+        }
+        None => cx.props.kind.clone().unwrap_or_default(),
+    };
     let remote = cx.props.remote.unwrap_or_default();
 
     cx.render(rsx! (
@@ -57,7 +65,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "icon",
                 IconElement {
-                    icon: get_icon(&cx)
+                    icon: cx.props.attachment_icon.unwrap_or(Icon::QuestionMarkCircle)
                 },
             }
             div {
@@ -68,11 +76,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 p {
                     class: "meta",
-                    "{kind} {filesize_str}"
+                    "{file_description}"
                 }
             },
             Button {
-                icon: Icon::ArrowDown,
+                icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
                 appearance: Appearance::Primary,
                 onpress: move |_| cx.props.on_press.call(()),
             }
