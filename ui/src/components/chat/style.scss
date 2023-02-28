@@ -32,6 +32,11 @@
     flex-direction: column;
 }
 
+#compose-attachments {
+    display: inline-flex;
+    flex-direction: row;
+}
+
 #compose #messages {
     flex: 1;
     width: 100%;
@@ -56,6 +61,11 @@
             .context-wrap {
                 justify-content: flex-start;
             }
+        }
+
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
         }
     }
 }
