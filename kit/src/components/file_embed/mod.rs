@@ -8,27 +8,25 @@ use dioxus::prelude::*;
 use humansize::format_size;
 use humansize::DECIMAL;
 
-#[derive(PartialEq, Props)]
-pub struct Props {
+#[derive(Props)]
+pub struct Props<'a> {
     // The filename of the file
-    #[props(optional)]
-    filename: Option<String>,
+    filename: String,
 
     // The size of the file in bytes
-    #[props(optional)]
-    filesize: Option<u32>,
+    filesize: usize,
 
     // The type of the file (e.g. "PDF", "JPEG")
-    #[props(optional)]
     kind: Option<String>,
 
     // Whether the file is coming from a remote user, or we sent it.
-    #[props(optional)]
     remote: Option<bool>,
 
     // The icon to use to represent the file
-    #[props(optional)]
     icon: Option<Icon>,
+
+    // called shen the icon is clicked
+    on_press: EventHandler<'a, ()>,
 }
 
 pub fn get_icon(cx: &Scope<Props>) -> Icon {
@@ -38,10 +36,11 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
 }
 
 #[allow(non_snake_case)]
-pub fn FileEmbed(cx: Scope<Props>) -> Element {
-    let filename = cx.props.filename.clone().unwrap_or_default();
-    let kind = cx.props.kind.clone().unwrap_or_default();
-    let filesize = cx.props.filesize.unwrap_or_default();
+pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let filename = &cx.props.filename;
+    // if kind is omitted, don't want the file size to appear negative
+    let kind = format!("{} -", cx.props.kind.clone().unwrap_or_default());
+    let filesize = cx.props.filesize;
     let filesize_str = format_size(filesize, DECIMAL);
     let remote = cx.props.remote.unwrap_or_default();
 
@@ -69,12 +68,13 @@ pub fn FileEmbed(cx: Scope<Props>) -> Element {
                 },
                 p {
                     class: "meta",
-                    "{kind} - {filesize_str}"
+                    "{kind} {filesize_str}"
                 }
             },
             Button {
                 icon: Icon::ArrowDown,
                 appearance: Appearance::Primary,
+                onpress: move |_| cx.props.on_press.call(()),
             }
         }
     ))
