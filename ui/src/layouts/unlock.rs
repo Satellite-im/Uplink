@@ -2,7 +2,6 @@ use common::{
     language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
 };
 use dioxus::prelude::*;
-use dioxus_router::use_router;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::{
@@ -19,7 +18,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::{AuthPages, UPLINK_ROUTES};
+use crate::AuthPages;
 
 // todo: go to the auth page if no account has been created
 #[inline_props]
@@ -131,18 +130,18 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         with_clear_btn: true,
                         ..Default::default()
                     }
-                    onchange: move |(val, is_valid): (String, bool)| {
+                    onchange: move |(val, password_success): (String, bool)| {
                         *pin.write_silent() = val.clone();
-                        let should_disable = !is_valid;
-                        if *button_disabled.get() != should_disable {
-                            button_disabled.set(should_disable);
+                        let password_fail = !password_success;
+                        if *button_disabled.get() != password_fail {
+                            button_disabled.set(password_fail);
                         }
-                        if !should_disable {
+                        if password_success {
                             ch.send(val)
                         }
                     }
                     onreturn: move |_| {
-                        if !*button_disabled.get() {
+                        if !*button_disabled.get() && !account_exists {
                             page.set(AuthPages::CreateAccount);
                         }
                     }
@@ -159,13 +158,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 aria_label: "create-account-button".into(),
                 appearance: kit::elements::Appearance::Primary,
                 icon: Icon::Check,
-                disabled: *button_disabled.get(),
+                disabled: *button_disabled.get() || account_exists,
                 onpress: move |_| {
-                    if account_exists {
-                        use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
-                    } else {
-                        page.set(AuthPages::CreateAccount);
-                    }
+                    page.set(AuthPages::CreateAccount);
                 }
             }
         }
