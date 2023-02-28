@@ -545,6 +545,7 @@ struct TypingInfo {
     pub last_update: Instant,
 }
 
+// todo: display loading indicator if sending a message that takes a long time to upload attachments
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
