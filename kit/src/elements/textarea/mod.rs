@@ -1,14 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
-#[derive(Default, Clone)]
-pub struct Options {
-    pub disabled: bool,
-    pub with_clear_btn: bool,
-    pub with_label: Option<&'static str>,
-    pub react_to_esc_key: bool,
-}
-
 #[derive(Clone, Copy)]
 pub enum Size {
     Small,
@@ -70,7 +62,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let script = include_str!("./script.js")
         .replace("UUID", &cx.props.id)
-        .replace("$APPLY_FOCUS", &format!("{}", cx.props.focus))
         .replace("$MULTI_LINE", &format!("{}", true));
 
     cx.render(rsx! (
@@ -83,6 +74,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 textarea {
                     class: "input_textarea",
                     id: "{element_id}",
+                    // todo: troubleshoot this. it isn't working
+                    autofocus: cx.props.focus,
                     aria_label: "{element_label}",
                     disabled: "{loading}",
                     value: format_args!("{}", val.read()),

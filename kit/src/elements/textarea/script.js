@@ -1,10 +1,5 @@
-var APPLY_FOCUS = $APPLY_FOCUS;
-var MULTI_LINE = $MULTI_LINE;
 
-if (APPLY_FOCUS) {
-    var input_element = document.getElementById('UUID');
-    input_element.focus();
-}
+var MULTI_LINE = $MULTI_LINE;
 
 var textareas = document.getElementsByClassName("input_textarea")
 for (let i = 0; i < textareas.length; i++) {
