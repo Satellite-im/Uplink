@@ -106,6 +106,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             error.set(Some(UnlockError::InvalidPin));
                             log::warn!("decryption error");
                         }
+                        warp::error::Error::IdentityNotCreated => {
+                            // this is supposed to fail.
+                        }
                         _ => {
                             // unexpected
                             error.set(Some(UnlockError::Unknown));
