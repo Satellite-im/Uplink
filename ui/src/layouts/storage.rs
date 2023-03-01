@@ -1,3 +1,4 @@
+use std::sync::mpsc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
@@ -327,13 +328,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         });
     };
 
-    let upload_percentage: &UseState<String> = use_state(cx, || String::from("Uploading files"));
+    let upload_percentage: &UseRef<String> = use_ref(cx, || String::from("Uploading files"));
 
     cx.render(rsx!(
         div {
             id: "overlay-element",
             class: "overlay-element",
-            p {class: "overlay-text", "{upload_percentage}" },
+            p {class: "overlay-text", format!("{}", upload_percentage.read()) },
         },
         div {
             id: "files-layout",
@@ -359,7 +360,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         //     let string_log = log.to_string();
                                         //     let re = Regex::new(r"\d{2}% completed").unwrap();
                                         //     if let Some(progress_text) = re.find(&string_log) {
-                                        //         upload_percentage.set(progress_text.as_str().to_string());
+                                        //         *upload_percentage.write() = progress_text.as_str().to_string();
                                         //     }
                                         //     if string_log.contains("Get items from current directory worked!") {
                                         //         break;
@@ -375,7 +376,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 };
                                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                             };
-                            upload_percentage.set(String::from(""));
+                            // *upload_percentage.write() = String::from("");
                             *drag_event.write_silent() = None;
                         }
                     });
