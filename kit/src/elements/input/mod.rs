@@ -119,26 +119,27 @@ pub struct Props<'a> {
     reset: Option<UseState<bool>>,
 }
 
-pub fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
+fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
     if let Some(f) = &cx.props.onchange {
         f.call((s, is_valid));
     }
 }
 
-pub fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
+fn emit_return(cx: &Scope<Props>, s: String, is_valid: bool, key_code: Code) {
     if let Some(f) = &cx.props.onreturn {
         f.call((s, is_valid, key_code));
     }
 }
 
 // warning: this function wasn't used so I'm assuming it will only be called if the input is validated.
-pub fn submit(cx: &Scope<Props>, s: String) {
+#[allow(unused)]
+fn submit(cx: &Scope<Props>, s: String) {
     if let Some(f) = &cx.props.onreturn {
         f.call((s, true, Code::Enter));
     }
 }
 
-pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
+fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
     if val.contains(char::is_whitespace) {
         return Some(get_local_text("warning-messages.spaces-not-allowed"));
     }
@@ -146,7 +147,7 @@ pub fn validate_no_whitespace(val: &str) -> Option<ValidationError> {
 }
 
 // Default to requiring alpha-numeric inputs, unless ignore_colon override is set on the input field
-pub fn validate_alphanumeric(
+fn validate_alphanumeric(
     val: &str,
     ignore_colon: bool,
     special_characters: Option<(SpecialCharsAction, Vec<char>)>,

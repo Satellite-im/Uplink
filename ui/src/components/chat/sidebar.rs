@@ -198,7 +198,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         None => raygun::Message::default(),
                     };
 
-                    let val = unwrapped_message.value();
+                    let subtext_val = unwrapped_message.value().first().cloned().unwrap_or_default();
                     let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
@@ -248,7 +248,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             )),
                             User {
                                 username: participants_name,
-                                subtext: val.join("\n"),
+                                subtext: subtext_val,
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
