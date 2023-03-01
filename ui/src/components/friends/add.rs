@@ -103,13 +103,18 @@ pub fn AddFriend(cx: Scope) -> Element {
                         | Error::InvalidIdentifierCondition
                         | Error::CannotSendSelfFriendRequest => {
                             log::warn!("cannot add self: {}", e);
-                            error_toast.set(Some(String::from("cannot add self")));
+                            error_toast.set(Some(String::from(get_local_text(
+                                "friends.cannot-add-self",
+                            ))));
                         }
                         Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
-                            error_toast.set(Some(String::from("add friend failed")));
+                            error_toast
+                                .set(Some(String::from(get_local_text("friends.key-blocked"))));
                         }
                         _ => {
+                            error_toast
+                                .set(Some(String::from(get_local_text("friends.add-failed"))));
                             log::error!("add friend failed: {}", e);
                         }
                     },
