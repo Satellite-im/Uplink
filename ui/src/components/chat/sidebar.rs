@@ -212,7 +212,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
 
-                    let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).filter(|x| !x.is_empty()).next() {
+                    let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => String::new(),
