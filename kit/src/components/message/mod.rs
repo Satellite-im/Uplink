@@ -97,6 +97,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             },
             aria_label: "Message",
+            white_space: "pre-wrap",
             (cx.props.with_content.is_some()).then(|| rsx! (
                     div {
                     class: "content",
