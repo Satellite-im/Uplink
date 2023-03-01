@@ -31,7 +31,7 @@ impl UnlockError {
         match self {
             UnlockError::ValidationError => "Something is wrong with the pin you supplied.",
             UnlockError::InvalidPin => "Hmm, that pin didn't work.",
-            UnlockError::Unknown => "An unknown error occured.",
+            UnlockError::Unknown => "An unknown error occurred.",
         }
     }
 }
