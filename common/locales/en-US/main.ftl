@@ -41,7 +41,7 @@ favorites = Favorites
 
 friends = Friends
     .friends = Friends
-    .cta-text = No friends yet. Add some!
+    .cta-text = Things are better with friends.
     .add = Add Someone
     .placeholder = Username#0000...
     .block = Block

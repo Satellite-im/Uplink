@@ -7,9 +7,10 @@
   justify-content: center;
   align-items: center;
   cursor: default;
-  .logo {
+  .image {
     fill: var(--secondary);
-    width: calc(var(--sidebar-width) / 1.2);
+    min-width: var(--sidebar-width);
+    max-width: calc(var(--sidebar-width) * 1.5);
   }
   .muted {
     color: var(--text-color-muted);
