@@ -1,6 +1,5 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
-use dioxus_elements::input;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
 pub type ValidationError = String;

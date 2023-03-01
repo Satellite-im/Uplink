@@ -5,7 +5,6 @@ use warp::constellation::file::File;
 
 use crate::components::file_embed::FileEmbed;
 
-
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
     #[display(fmt = "message-first")]

@@ -273,6 +273,8 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     log::trace!("rendering auth wrapper");
     let desktop = use_window(cx);
     let theme = "";
+
+    #[allow(unused_mut)]
     let mut controls: Option<VNode> = None;
 
     #[cfg(not(target_os = "macos"))]
@@ -884,6 +886,7 @@ fn get_titlebar(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
 
+    #[allow(unused_mut)]
     let mut controls: Option<VNode> = None;
 
     #[cfg(not(target_os = "macos"))]
