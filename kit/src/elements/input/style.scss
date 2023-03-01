@@ -1,48 +1,23 @@
 .input-group {
 	display: inline-flex;
 	flex-direction: column;
-
 	.error {
 		margin-top: var(--gap);
 		color: var(--warning-light);
 	}
-
 	&.disabled {
 		cursor: not-allowed;
 		opacity: 0.5;
 	}
 }
-
-textarea {
+input {
 	width: 100%;
-	height: "auto";
-	max-height: 250px; //Maybe make max variable?
 }
-
-textarea::-webkit-scrollbar-track {
-	-webkit-box-shadow: inset 0 0 0px rgba(255, 255, 255, 0);
-}
-
-textarea::-webkit-scrollbar-thumb {
-	background-color: var(--primary);
-}
-
-//Hide horizontal scrollbar
-textarea::-webkit-scrollbar:horizontal {
-	height: 0;
-	width: 0;
-	display: none;
-}
-
-textarea::-webkit-scrollbar-thumb:horizontal {
-	display: none;
-}
-
 .input {
 	height: var(--height-input);
 	background: var(--secondary);
 	border-radius: var(--border-radius);
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	gap: var(--gap);
 	padding: var(--padding-less);
@@ -50,46 +25,41 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 	border: 1px solid var(--border-color);
 	color: var(--text-color);
 	transition: border-color var(--animation-time);
-	flex: 1;
-
 	.icon {
 		height: 100%;
 		display: inline-flex;
 		align-items: center;
 	}
-
+	input {
+		height: fit-content;
+		flex: 1;
+	}
 	svg {
 		transition: stroke var(--animation-time);
 		fill: transparent;
 		stroke: var(--placeholder);
 	}
 }
-
 .input-success {
 	border: 1px solid var(--success-light);
-
 	.icon {
 		svg {
 			stroke: var(--success-light);
 		}
 	}
 }
-
 .input-warning {
 	border: 1px solid var(--warning-light);
-
 	.icon {
 		svg {
 			stroke: var(--warning-light);
 		}
 	}
 }
-
 .clear-btn {
 	height: 100%;
 	display: inline-flex;
 	align-items: center;
-
 	svg {
 		&:nth-of-type(1):hover {
 			stroke: var(--text-color-bright);
@@ -97,15 +67,12 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 		}
 	}
 }
-
 ::-ms-input-placeholder {
 	color: var(--placeholder);
 }
-
 ::-webkit-input-placeholder {
 	color: var(--placeholder);
 }
-
 ::placeholder {
 	color: var(--placeholder) !important;
 }
