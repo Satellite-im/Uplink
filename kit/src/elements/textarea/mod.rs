@@ -7,12 +7,6 @@ use crate::elements::label::Label;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
-#[derive(PartialEq, Clone)]
-pub enum SpecialCharsAction {
-    Allow,
-    Block,
-}
-
 #[derive(Default, Clone)]
 pub struct Options {
     pub disabled: bool,
