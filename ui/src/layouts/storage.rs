@@ -28,6 +28,7 @@ use kit::{
 use rfd::FileDialog;
 use tokio::time::sleep;
 use uuid::Uuid;
+use warp::constellation::item::Item;
 use warp::{
     constellation::{directory::Directory, file::File},
     logging::tracing::log,
@@ -51,6 +52,7 @@ enum ChanCmd {
         old_name: String,
         new_name: String,
     },
+    DeleteItems(Item),
 }
 
 #[derive(PartialEq, Props)]
@@ -262,6 +264,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         }
                     }
+                    ChanCmd::DeleteItems(item) => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::DeleteItems {
+                                item: item.clone(),
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to delete items {}, item {:?}", e, item.name());
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!("failed to delete items {}, item {:?}", e, item.name());
+                                continue;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -436,6 +462,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         let folder_name = dir.name();
                         let folder_name2 = dir.name();
                         let key = dir.id();
+                        let dir2 = dir.clone();
                         rsx!(
                             ContextMenu {
                                 key: "{key}-menu",
@@ -447,7 +474,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         onpress: move |_| {
                                             is_renaming_map.with_mut(|i| *i = Some(key));
                                         }
-                                    })),
+                                    },
+                                    hr {},
+                                    ContextItem {
+                                        icon: Icon::Trash,
+                                        danger: true,
+                                        text: get_local_text("uplink.delete"),
+                                        onpress: move |_| {
+                                            let item = Item::from(dir2.clone());
+                                            ch.send(ChanCmd::DeleteItems(item));
+                                        }
+                                    },
+                                )),
                             Folder {
                                 key: "{key}-folder",
                                 text: dir.name(),
@@ -468,7 +506,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                    files_list.read().iter().map(|file| {
                         let file_name = file.name();
                         let file_name2 = file.name();
-
+                        let file2 = file.clone();
                         let key = file.id();
                         rsx!(ContextMenu {
                                     key: "{key}-menu",
@@ -503,7 +541,17 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 };
                                                 ch.send(ChanCmd::DownloadFile { file_name: file_name2.clone(), local_path_to_save_file: file_path_buf } );
                                             },
-                                        }
+                                        },
+                                        hr {},
+                                        ContextItem {
+                                            icon: Icon::Trash,
+                                            danger: true,
+                                            text: get_local_text("uplink.delete"),
+                                            onpress: move |_| {
+                                                let item = Item::from(file2.clone());
+                                                ch.send(ChanCmd::DeleteItems(item));
+                                            }
+                                        },
                                     )),
                                     File {
                                         key: "{key}-file",

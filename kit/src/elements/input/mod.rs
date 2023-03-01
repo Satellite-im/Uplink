@@ -1,6 +1,7 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
-use dioxus_html::input_data::keyboard_types::Code;
+use dioxus_elements::input;
+use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
 pub type ValidationError = String;
 use crate::elements::label::Label;
@@ -116,6 +117,8 @@ pub struct Props<'a> {
     aria_label: Option<String>,
     #[props(optional)]
     is_password: Option<bool>,
+    #[props(optional)]
+    allow_line_breaks: Option<bool>,
     #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
@@ -286,6 +289,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             hook.set(false);
         }
     }
+    let height_script = include_str!("./update_input_height.js");
+    dioxus_desktop::use_eval(cx)(height_script.to_string());
 
     let valid = use_state(cx, || false);
     let min_len = options
@@ -304,8 +309,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
+    let multiline =
+        cx.props.allow_line_breaks.unwrap_or_default() && !cx.props.is_password.unwrap_or_default();
+
     let input_id = cx.props.id.clone();
-    let script = include_str!("./script.js").replace("UUID", &cx.props.id);
+    let script = include_str!("./script.js")
+        .replace("UUID", &cx.props.id)
+        .replace("$APPLY_FOCUS", &format!("{}", &cx.props.focus))
+        .replace("$MULTI_LINE", &format!("{}", &multiline));
 
     cx.render(rsx! (
         div {
@@ -331,10 +342,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 )),
-                cx.props.focus.then(|| rsx!(
-                    script { "{script}"},
-                )),
-                input {
+                script { "{script}"},
+                textarea {
+                    class: "input_textarea",
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
@@ -363,8 +373,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
-                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
-                            *val.write() = "".into();
+                            if !multiline || !evt.data.modifiers().contains(Modifiers::SHIFT) {
+                                emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());
                         }

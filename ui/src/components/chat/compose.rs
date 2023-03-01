@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
 };
@@ -6,12 +7,16 @@ use std::{
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
+
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
+        file_embed::FileEmbed,
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
+        message_reply::MessageReply,
+        message_typing::MessageTyping,
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
@@ -35,6 +40,7 @@ use common::{
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window};
+use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
     logging::tracing::log,
@@ -293,7 +299,16 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 enum MessagesCommand {
     // contains the emoji reaction
     React((raygun::Message, String)),
-    DeleteMessage { conv_id: Uuid, msg_id: Uuid },
+    DeleteMessage {
+        conv_id: Uuid,
+        msg_id: Uuid,
+    },
+    DownloadAttachment {
+        conv_id: Uuid,
+        msg_id: Uuid,
+        file_name: String,
+        directory: PathBuf,
+    },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
@@ -356,6 +371,39 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             log::error!("failed to delete message: {}", e);
                         }
                     }
+                    MessagesCommand::DownloadAttachment {
+                        conv_id,
+                        msg_id,
+                        file_name,
+                        directory,
+                    } => {
+                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
+                                conv_id,
+                                msg_id,
+                                file_name,
+                                directory,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        match res {
+                            Ok(mut stream) => {
+                                while let Some(p) = stream.next().await {
+                                    log::debug!("{p:?}");
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("failed to download attachment: {}", e);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -406,6 +454,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let message = grouped_message.message.clone();
                                 let message2 = message.clone();
                                 let message3 = message.clone();
+                                let message4 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
                                 let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
@@ -430,28 +479,52 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 text: get_local_text("messages.react"),
                                                 //TODO: let the user pick a reaction
                                                 onpress: move |_| {
-                                                      // using "like" for now
+                                                    // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+                                                    // todo: allow emoji extension instead
+                                                    // using "like" for now
                                                     ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
                                                 }
                                             },
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
-                                                text: get_local_text("messages.delete"),
+                                                text: get_local_text("uplink.delete"),
                                                 should_render: sender_is_self,
                                                 onpress: move |_| {
                                                     ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });
                                                 }
                                             },
                                         )),
-                                        Message {
-                                            key: "{message_key}",
-                                            remote: group.remote,
-                                            with_text: message.inner.value().join("\n"),
-                                            in_reply_to: message.in_reply_to,
-                                            reactions: message.inner.reactions(),
-                                            order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                        },
+                                        div {
+                                            class: "msg-wrapper",
+                                            message.in_reply_to.map(|other_msg| rsx!(
+                                            MessageReply {
+                                                    key: "reply-{message_key}",
+                                                    with_text: other_msg,
+                                                    remote: group.remote,
+                                                    remote_message: group.remote,
+                                                }
+                                            )),
+                                            Message {
+                                                key: "{message_key}",
+                                                remote: group.remote,
+                                                with_text: message.inner.value().join("\n"),
+                                                reactions: message.inner.reactions(),
+                                                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                                                attachments: message.inner.attachments(),
+                                                on_download: move |file_name| {
+                                                    if let Some(directory) = FileDialog::new()
+                                                    .set_directory(dirs::home_dir().unwrap_or_default())
+                                                    .pick_folder() {
+                                                        ch.send(MessagesCommand::DownloadAttachment {
+                                                            conv_id: message4.inner.conversation_id(),
+                                                            msg_id: message4.inner.id(),
+                                                            file_name, directory
+                                                        })
+                                                    }
+                                                },
+                                            },
+                                       }
                                     }
                                 )
                             })
@@ -479,6 +552,7 @@ struct TypingInfo {
     pub last_update: Instant,
 }
 
+// todo: display loading indicator if sending a message that takes a long time to upload attachments
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
@@ -488,21 +562,31 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let should_clear_input = use_state(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
-    // todo: use this to render the typing indicator
-    let _users_typing = active_chat_id
+    let is_reply = active_chat_id
+        .and_then(|id| {
+            state
+                .read()
+                .chats
+                .all
+                .get(&id)
+                .map(|chat| chat.replying_to.is_some())
+        })
+        .unwrap_or(false);
+
+    let files_to_upload: &UseState<Vec<PathBuf>> = use_state(cx, Vec::new);
+
+    // used to render the typing indicator
+    // for now it doesn't quite work for group messages
+    let my_id = state.read().account.identity.did_key();
+    let is_typing = active_chat_id
         .and_then(|id| state.read().chats.all.get(&id).cloned())
-        .map(|chat| {
-            chat.participants
-                .iter()
-                .filter(|x| chat.typing_indicator.contains_key(&x.did_key()))
-                .map(|x| x.username())
-                .collect::<Vec<_>>()
-        });
+        .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
+        .unwrap_or_default();
 
     let msg_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
-            //to_owned![];
+            to_owned![files_to_upload];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some((msg, conv_id, reply)) = rx.next().await {
@@ -514,12 +598,17 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                             msg,
                             rsp: tx,
                         },
-                        None => RayGunCmd::SendMessage {
-                            conv_id,
-                            msg,
-                            rsp: tx,
-                        },
+                        None => {
+                            let attachments = files_to_upload.current().to_vec();
+                            RayGunCmd::SendMessage {
+                                conv_id,
+                                msg,
+                                attachments,
+                                rsp: tx,
+                            }
+                        }
                     };
+                    files_to_upload.set(vec![]);
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
                         continue;
@@ -620,8 +709,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
-    let msg_valid =
-        |msg: &[String]| !msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty());
+    let msg_valid = |msg: &[String]| {
+        (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
+            || !files_to_upload.current().is_empty()
+    };
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
@@ -657,7 +748,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
         .collect();
 
-    cx.render(rsx!(Chatbar {
+    let chatbar = cx.render(rsx!(Chatbar {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         reset: should_clear_input.clone(),
@@ -713,13 +804,82 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading,
+            disabled: is_loading || is_reply,
             appearance: Appearance::Primary,
+            onpress: move |_| {
+                if let Some(new_files) = FileDialog::new()
+                    .set_directory(dirs::home_dir().unwrap_or_default())
+                    .pick_files()
+                {
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
+                }
+            },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
                 text: get_local_text("files.upload"),
             }))
         }))
+    }));
+
+    let platform = Platform::Headless;
+    let status = Status::Online;
+
+    cx.render(rsx!(
+        is_typing.then(|| {
+            rsx!(MessageTyping {
+                user_image: cx.render(rsx!(
+                    UserImage {
+                        platform: platform,
+                        status: status
+                    }
+                ))
+            })
+        })
+        chatbar,
+        Attachments {files: files_to_upload.clone()}
+    ))
+}
+
+#[derive(Props, PartialEq)]
+pub struct AttachmentProps {
+    files: UseState<Vec<PathBuf>>,
+}
+
+#[allow(non_snake_case)]
+fn Attachments(cx: Scope<AttachmentProps>) -> Element {
+    // todo: pick an icon based on the file extension
+    let attachments = cx.render(rsx!(cx
+        .props
+        .files
+        .current()
+        .iter()
+        .map(|x| x.to_string_lossy().to_string())
+        .map(|file_name| {
+            rsx!(FileEmbed {
+                filename: file_name.clone(),
+                remote: false,
+                button_icon: Icon::Trash,
+                on_press: move |_| {
+                    cx.props.files.with_mut(|files| {
+                        files.retain(|x| {
+                            let s = x.to_string_lossy().to_string();
+                            s != file_name
+                        })
+                    });
+                },
+            })
+        })));
+
+    cx.render(rsx!(div {
+        id: "compose-attachments",
+        attachments
     }))
 }
 
