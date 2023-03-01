@@ -86,30 +86,13 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
             // apologies for the crappy code.
-            match &cx.props.reset {
-                Some(hook) => {
-                    rsx!(
-                        textarea::Input {
-                            disabled: cx.props.loading.unwrap_or_default(),
-                            placeholder: cx.props.placeholder.clone(),
-                            allow_line_breaks: true,
-                            reset: hook.clone(),
-                            onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
-                        }
-                    )
-                }
-                None => {
-                    rsx!(
-                        textarea::Input {
-                            disabled: cx.props.loading.unwrap_or_default(),
-                            placeholder: cx.props.placeholder.clone(),
-                            allow_line_breaks: true,
-                            onchange: move |(v, _)| cx.props.onchange.call(v),
-                            onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
-                        }
-                    )
-                }
+            textarea::Input {
+                loading: cx.props.loading.unwrap_or_default(),
+                placeholder: cx.props.placeholder.clone(),
+                reset: cx.props.reset.clone(),
+                focus: cx.props.with_replying_to.is_some(),
+                onchange: move |(v, _)| cx.props.onchange.call(v),
+                onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
             },
             cx.props.extensions.as_ref(),
             div {
