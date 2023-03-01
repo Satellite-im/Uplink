@@ -217,7 +217,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => String::new(),
                             [ file ] => file.name(),
-                            _ => format!("{participants_name} {}", get_local_text("sidebar.subtext"))
+                            _ => format!("{} {}", parsed_user.username(), get_local_text("sidebar.subtext"))
                         }
                     };
 
