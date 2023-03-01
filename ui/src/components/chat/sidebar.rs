@@ -198,7 +198,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         None => raygun::Message::default(),
                     };
 
-                    let subtext_val = unwrapped_message.value().first().cloned().unwrap_or_default();
                     let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
@@ -212,6 +211,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+
+                    let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).filter(|x| !x.is_empty()).next() {
+                        Some(v) => v.into(),
+                        _ => match &unwrapped_message.attachments()[..] {
+                            [] => String::new(),
+                            [ file ] => file.name(),
+                            _ => format!("{participants_name} {}", get_local_text("sidebar.subtext"))
+                        }
+                    };
 
                     // TODO:
                     // let _block_user_text = LOCALES
