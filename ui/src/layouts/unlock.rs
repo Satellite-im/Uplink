@@ -20,15 +20,32 @@ use common::{
 
 use crate::AuthPages;
 
+enum UnlockError {
+    ValidationError,
+    InvalidPin,
+    Unknown,
+}
+
+impl UnlockError {
+    fn as_str(&self) -> &'static str {
+        match self {
+            UnlockError::ValidationError => "Something is wrong with the pin you supplied.",
+            UnlockError::InvalidPin => "Hmm, that pin didn't work.",
+            UnlockError::Unknown => "An unknown error occured.",
+        }
+    }
+}
+
 // todo: go to the auth page if no account has been created
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
     log::trace!("rendering unlock layout");
-    let button_disabled = use_state(cx, || true);
+    let validation_failure: &UseState<Option<UnlockError>> =
+        use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
-    // todo: maybe use this later
-    let password_failed = use_state(cx, || false);
+    let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
+    let shown_error = use_state(cx, || "");
 
     let account_exists = use_state(cx, || true);
     let loaded = use_state(cx, || false);
@@ -58,7 +75,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     });
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![password_failed, page];
+        to_owned![error, page];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -80,16 +97,18 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
+
                         page.set(AuthPages::Success)
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
                             // wrong password
-                            password_failed.set(true);
+                            error.set(Some(UnlockError::InvalidPin));
                             log::warn!("decryption error");
                         }
                         _ => {
                             // unexpected
+                            error.set(Some(UnlockError::Unknown));
                             log::error!("LogIn failed: {}", err);
                         }
                     },
@@ -116,64 +135,78 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     };
 
     let account_exists_bool = *account_exists.get();
+    let loading = !loaded.get();
 
-    // todo: use password_failed to display an error message
     cx.render(rsx!(
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
-            div {
-                class: "unlock-details",
-                if *loaded.get() {
-                    rsx!(
+            if loading {
+                rsx!(
+                    div {
+                        class: "skeletal-bars",
+                        div {
+                            class: "skeletal skeletal-bar",
+                        },
+                    }
+                )
+            } else {
+                rsx! (
+                    div {
+                        class: "unlock-details",
                         Label {
                             text: get_local_text("unlock.enter-pin")
-                        },
+                        }
+                    },
+                    Input {
+                        id: "unlock-input".to_owned(),
+                        focus: true,
+                        is_password: true,
+                        icon: Icon::Key,
+                        aria_label: "pin-input".into(),
+                        disabled: !loaded.get(),
+                        placeholder: get_local_text("unlock.enter-pin"),
+                        options: Options {
+                            with_validation: Some(pin_validation),
+                            with_clear_btn: true,
+                            ..Default::default()
+                        }
+                        onchange: move |(val, validation_passed): (String, bool)| {
+                            *pin.write_silent() = val.clone();
+                            // Reset the error when the person changes the pin
+                            if !shown_error.get().is_empty() {
+                                shown_error.set("");
+                            }
+                            if validation_passed {
+                                ch.send(val);
+                                validation_failure.set(None);
+                            } else {
+                                validation_failure.set(Some(UnlockError::ValidationError));
+                            }
+                        }
+                        onreturn: move |_| {
+                            if let Some(validation_error) = validation_failure.get() {
+                                shown_error.set(validation_error.as_str());
+                            } else if let Some(e) = error.get() {
+                                shown_error.set(e.as_str());
+                            } else {
+                                page.set(AuthPages::CreateAccount);
+                            }
+                        }
+                    },
+                    (!shown_error.get().is_empty()).then(|| rsx!(
+                        span {
+                            class: "error",
+                            "{shown_error}"
+                        }
+                    )),
+                    div {
+                        class: "unlock-details",
                         span {
                             get_local_text("unlock.notice")
                         }
-                    )
-                } else {
-                    rsx!(
-                        div {
-                            class: "skeletal-bars",
-                            div {
-                                class: "skeletal skeletal-bar",
-                            },
-                        }
-                    )
-                }
-                Input {
-                    id: "unlock-input".to_owned(),
-                    focus: true,
-                    is_password: true,
-                    icon: Icon::Key,
-                    aria_label: "pin-input".into(),
-                    disabled: !loaded.get(),
-                    placeholder: get_local_text("unlock.enter-pin"),
-                    options: Options {
-                        with_validation: Some(pin_validation),
-                        with_clear_btn: true,
-                        ..Default::default()
                     }
-                    onchange: move |(val, password_success): (String, bool)| {
-                        *pin.write_silent() = val.clone();
-                        let password_fail = !password_success;
-                        if *button_disabled.get() != password_fail {
-                            button_disabled.set(password_fail);
-                        }
-                        if password_success {
-                            ch.send(val)
-                        }
-                    }
-                    onreturn: move |_| {
-                        if !*button_disabled.get() && !account_exists_bool {
-                            page.set(AuthPages::CreateAccount);
-                        }
-                    }
-                },
-                if *loaded.get() {
-                    rsx!(Button {
+                    Button {
                         text: match account_exists_bool {
                             true => get_local_text("unlock.unlock-account"),
                             false => get_local_text("unlock.create-account"),
@@ -181,20 +214,19 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         aria_label: "create-account-button".into(),
                         appearance: kit::elements::Appearance::Primary,
                         icon: Icon::Check,
-                        disabled: *button_disabled.get() || account_exists_bool,
+                        disabled: validation_failure.get().is_some(),
                         onpress: move |_| {
-                            page.set(AuthPages::CreateAccount);
+                            if let Some(validation_error) = validation_failure.get() {
+                                shown_error.set(validation_error.as_str());
+                            } else if let Some(e) = error.get() {
+                                shown_error.set(e.as_str());
+                            } else {
+                                page.set(AuthPages::CreateAccount);
+                            }
                         }
-                    })
-                } else {
-                    rsx!(Button {
-                        disabled: true,
-                        onpress: move |_| {}
-                    })
-                }
-
-            },
-
+                    }
+                )
+            }
         }
     ))
 }

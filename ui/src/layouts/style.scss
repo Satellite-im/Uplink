@@ -113,7 +113,6 @@
 #unlock-layout {
 
     .unlock-details {
-        width: 75%;
         display: inline-flex;
         flex-direction: column;
         gap: var(--gap);
@@ -126,6 +125,10 @@
             font-size: var(--text-size-less);
             text-align: justify;
         }
+    }
+    .error {
+        color: var(--danger);
+        align-self: flex-start;
     }
 
     .input-group {
