@@ -6,7 +6,7 @@ use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validatio
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-const MAX_LEN_TO_FORMAT_NAME: usize = 15;
+// const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -28,22 +28,6 @@ pub struct Props<'a> {
     loading: Option<bool>,
 }
 
-pub fn get_text(folder_name: String) -> (String, String) {
-    let mut folder_name_formatted = folder_name.clone();
-
-    if folder_name_formatted.len() > MAX_LEN_TO_FORMAT_NAME {
-        folder_name_formatted = match &folder_name_formatted.get(0..12) {
-            Some(name_sliced) => format!(
-                "{}...{}",
-                name_sliced,
-                &folder_name_formatted[folder_name_formatted.len() - 3..].to_string(),
-            ),
-            None => folder_name_formatted.clone(),
-        };
-    }
-    (folder_name, folder_name_formatted)
-}
-
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
@@ -63,9 +47,10 @@ pub fn emit_press(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let open = cx.props.open.unwrap_or_default();
-    let (folder_name, folder_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
+    // let (folder_name, folder_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
+    let folder_name = cx.props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(&cx);
-    let placeholder = folder_name;
+    let placeholder = folder_name.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let icon = if open { Icon::FolderOpen } else { Icon::Folder };
     let disabled = cx.props.disabled.unwrap_or_default();
@@ -82,7 +67,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 aria_label: "{aria_label}",
                 div {
-                    class: "icon",
+                    class: "icon alignment",
                     onclick: move |_| emit_press(&cx),
                     IconElement {
                         icon: icon,
@@ -106,7 +91,6 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     }),
                                     ..Options::default()
                                 }
-                                // todo: use is_valid
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid {
                                         emit(&cx, s, key_code);
@@ -117,8 +101,9 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                   ),
                 (!with_rename).then(|| rsx! (
                     label {
-                        class: "folder-name",
-                        "{folder_name_formatted}"
+                        class: "folder-name item-alignment",
+                        title: "{&folder_name}",
+                        "{folder_name}"
                     }
                 ))
             }
@@ -142,49 +127,4 @@ pub fn FolderSkeletal(cx: Scope) -> Element {
             }
         }
     ))
-}
-
-#[cfg(test)]
-mod test {
-    pub use super::*;
-
-    #[test]
-    fn test_get_text1() {
-        let input = String::from("very_long_folder_name_test");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, String::from("very_long_fo...est"));
-    }
-
-    #[test]
-    fn test_get_text2() {
-        let input = String::from("very_long_folder_name");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, String::from("very_long_fo...ame"));
-    }
-
-    #[test]
-    fn test_get_text3() {
-        let input = String::from("name.txt");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, input);
-    }
-
-    #[test]
-    fn test_get_text4() {
-        let input = String::from("name");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, input);
-    }
-
-    #[test]
-    fn test_get_text5() {
-        let input = String::from("very_long_folder_name_with_dot.exe");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, String::from("very_long_fo...exe"));
-    }
 }
