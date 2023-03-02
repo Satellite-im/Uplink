@@ -97,11 +97,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         request_sent.set(true);
                     }
                     Err(e) => match e {
-                        Error::CannotSendFriendRequest
-                        | Error::IdentityDoesntExist
-                        | Error::BlockedByUser
-                        | Error::InvalidIdentifierCondition
-                        | Error::CannotSendSelfFriendRequest => {
+                        Error::CannotSendSelfFriendRequest => {
                             log::warn!("cannot add self: {}", e);
                             error_toast.set(Some(String::from(get_local_text(
                                 "friends.cannot-add-self",
