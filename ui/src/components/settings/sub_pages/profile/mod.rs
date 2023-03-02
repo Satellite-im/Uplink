@@ -36,12 +36,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .unwrap_or_default();
     let username = state.read().account.identity.username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
-    let image_state = use_state(cx, || {
-        state.read().account.identity.graphics().profile_picture()
-    });
-    let banner_state = use_state(cx, || {
-        state.read().account.identity.graphics().profile_banner()
-    });
+    let image = state.read().account.identity.graphics().profile_picture();
+    let banner = state.read().account.identity.graphics().profile_banner();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -136,24 +132,24 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 div {
                     class: "profile-banner",
                     aria_label: "profile-banner",
-                    style: "background-image: url({banner_state});",
+                    style: "background-image: url({banner});",
                     onclick: move |_| {
-                        set_banner(banner_state.clone(), ch.clone());
+                        set_banner( ch.clone());
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
                 },
                 div {
                     class: "profile-picture",
                     aria_label: "profile-picture",
-                    style: "background-image: url({image_state});",
+                    style: "background-image: url({image});",
                     onclick: move |_| {
-                        set_profile_picture(image_state.clone(), ch.clone());
+                        set_profile_picture(ch.clone());
                     },
                     Button {
                         icon: Icon::Plus,
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
-                           set_profile_picture(image_state.clone(), ch.clone());
+                           set_profile_picture(ch.clone());
                         }
                     },
                 }
@@ -166,7 +162,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Button {
                         icon: Icon::Plus,
                         onpress: move |_| {
-                            set_profile_picture(image_state.clone(), ch.clone());
+                            set_profile_picture( ch.clone());
                         }
                     }
                 },
@@ -214,23 +210,29 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn set_profile_picture(hook: UseState<String>, ch: Coroutine<ChanCmd>) {
-    if let Err(e) = set_image(hook.clone()) {
-        log::error!("failed to set pfp: {e}");
-    } else {
-        ch.send(ChanCmd::Profile(hook.get().into()))
-    }
+fn set_profile_picture(ch: Coroutine<ChanCmd>) {
+    match set_image() {
+        Ok(img) => {
+            ch.send(ChanCmd::Profile(img));
+        }
+        Err(e) => {
+            log::error!("failed to set pfp: {e}");
+        }
+    };
 }
 
-fn set_banner(hook: UseState<String>, ch: Coroutine<ChanCmd>) {
-    if let Err(e) = set_image(hook.clone()) {
-        log::error!("failed to set banner: {e}");
-    } else {
-        ch.send(ChanCmd::Banner(hook.get().into()))
-    }
+fn set_banner(ch: Coroutine<ChanCmd>) {
+    match set_image() {
+        Ok(img) => {
+            ch.send(ChanCmd::Banner(img));
+        }
+        Err(e) => {
+            log::error!("failed to set banner: {e}");
+        }
+    };
 }
 
-fn set_image(hook: UseState<String>) -> Result<(), Box<dyn std::error::Error>> {
+fn set_image() -> Result<String, Box<dyn std::error::Error>> {
     let path = match FileDialog::new()
         .add_filter("image", &["jpg", "png", "jpeg", "svg"])
         .set_directory(".")
@@ -271,8 +273,7 @@ fn set_image(hook: UseState<String>) -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    hook.set(image);
-    Ok(())
+    Ok(image)
 }
 
 fn get_input_options(validation_options: Validation) -> Options {
