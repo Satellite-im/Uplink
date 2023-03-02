@@ -39,7 +39,7 @@
       right: 0;
       bottom: 0;
       background: rgba(0,0,0,.75);
-      pointer-events: none;
+      pointer-events: auto;
       z-index:1;
     }
 }
@@ -52,17 +52,17 @@
     z-index: 2;
     width: 285px;
     height: 200px;
-    padding: 5px;
+    padding-top: 6%;
     background-color: var(--primary-light);
     border-radius: 16px;
-    border: 3px dashed var(--text-color);
+    outline: 3px dashed var(--text-color);
     outline-offset: -16px;
 
     .overlay-text {
         z-index: 3;
         pointer-events: none;
         text-align: center;
-        margin-top: 20%;
+        margin-top: 2%;
         font-size: var(--text-size);
         color: var(--text-color);
       }

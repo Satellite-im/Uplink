@@ -33,10 +33,27 @@ use warp::{
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
 
+pub enum ThumbnailType {
+    Image,
+    Video,
+    None,
+}
+
+pub enum DuplicateNameStep {
+    Start,
+    Finished(String),
+}
+
+pub enum FileTransferStep {
+    DuplicateName(DuplicateNameStep),
+    Upload(String),
+    Thumbnail(ThumbnailType),
+}
+
 pub enum FileTransferProgress<T> {
     Error(warp::error::Error),
     Finished(T),
-    Step(String),
+    Step(FileTransferStep),
 }
 
 #[derive(Display)]
@@ -380,9 +397,13 @@ async fn upload_files(
 
         let original = filename.clone();
         let file = PathBuf::from(&original);
-
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
+            DuplicateNameStep::Start,
+        )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
-
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
+            DuplicateNameStep::Finished(filename.clone()),
+        )));
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
             Err(error) => {
@@ -430,9 +451,19 @@ async fn upload_files(
                                 if previous_percentage != current_percentage {
                                     previous_percentage = current_percentage;
                                     let readable_current = format_size(current, DECIMAL);
+                                    let percentage_number =
+                                        ((current as f64) / (total as f64)) * 100.;
+
+                                    let _ = tx.send(FileTransferProgress::Step(
+                                        FileTransferStep::Upload(format!(
+                                            "{}%",
+                                            percentage_number as usize
+                                        )),
+                                    ));
+
                                     log::info!(
                                         "{}% completed -> written {readable_current}",
-                                        (((current as f64) / (total as f64)) * 100.) as usize
+                                        percentage_number as usize
                                     )
                                 }
                             }
@@ -455,13 +486,38 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
-                    Ok(_) => log::info!("Image Thumbnail uploaded"),
-                    Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
-                }
-                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path) {
-                    Ok(_) => log::info!("Video Thumbnail uploaded"),
-                    Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
+
+                let image_thumb_uploaded =
+                    match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
+                        Ok(_) => {
+                            log::info!("Image Thumbnail uploaded");
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(ThumbnailType::Image),
+                            ));
+                            true
+                        }
+                        Err(error) => {
+                            log::error!("Error on update thumbnail for image: {:?}", error);
+                            false
+                        }
+                    };
+
+                if !image_thumb_uploaded {
+                    match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path)
+                    {
+                        Ok(_) => {
+                            log::info!("Video Thumbnail uploaded");
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(ThumbnailType::Video),
+                            ));
+                        }
+                        Err(error) => {
+                            log::error!("Error on update thumbnail for video: {:?}", error);
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(ThumbnailType::None),
+                            ));
+                        }
+                    };
                 }
                 log::info!("{:?} file uploaded!", filename);
             }
@@ -503,7 +559,6 @@ fn rename_if_duplicate(
             }
             _ => format!("{original} ({count_index_for_duplicate_filename})"),
         };
-
         log::info!("Duplicate name, changing file name to {}", new_file_name);
         count_index_for_duplicate_filename += 1;
     }

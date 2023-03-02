@@ -4,7 +4,7 @@ use std::{ffi::OsStr, path::PathBuf};
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::warp_runner::FileTransferProgress;
+use common::warp_runner::{FileTransferProgress, FileTransferStep, ThumbnailType, DuplicateNameStep};
 use common::{
     state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
@@ -43,7 +43,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
-use crate::logger::{self, Log};
+use crate::logger::{self};
 
 pub const ROOT_DIR_NAME: &str = "root";
 
@@ -206,6 +206,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
+                        let script2 = script.replace("$IS_DRAGGING", &format!("{}", true));
+                        window.eval(&script2);
+
                         let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
@@ -217,11 +220,65 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             log::error!("failed to upload files {}", e);
                             continue;
                         }
-
+                        let script_feedback = r#"
+                            const feedback_element = document.getElementById('overlay-text');
+                            feedback_element.textContent = '$TEXT';
+                        "#;
                         while let Some(msg) = rx.recv().await {
                             match msg {
-                                FileTransferProgress::Step(_) => {}
-                                FileTransferProgress::Finished(_) => {
+                                FileTransferProgress::Step(steps) => {
+                                    match steps {
+                                        FileTransferStep::DuplicateName(duplicate_name_step) => {
+                                                match duplicate_name_step {
+                                                    DuplicateNameStep::Start => {
+                                                        let script = script_feedback.replace("$TEXT",
+                                                            &format!("{}", "Renaming if duplicated"));
+                                                    window.eval(&script);
+                                                    },
+                                                    DuplicateNameStep::Finished(name) => {
+                                                        let script = script_feedback.replace("$TEXT",
+                                                                &format!("{}", name));
+                                                    window.eval(&script);
+                                                    },
+                                                }
+                                                sleep(Duration::from_millis(500)).await;
+                                        },
+                                        FileTransferStep::Upload(progress) => {
+                                            let script = script_feedback.replace("$TEXT",
+                                            &format!("{} {}", progress, "uploaded"));
+                                            window.eval(&script);
+
+                                        },
+                                        FileTransferStep::Thumbnail(thumb_type) => {
+                                            match thumb_type {
+                                                ThumbnailType::Image => {
+                                                    let script = script_feedback.replace("$TEXT",
+                                                        &format!("{}", "Image thumb uploaded"));
+                                                    window.eval(&script);
+                                                },
+                                                ThumbnailType::Video => {
+                                                    let script = script_feedback.replace("$TEXT",
+                                                    &format!("{}", "Video thumb uploaded"));
+                                                    window.eval(&script);
+                                                },
+                                                ThumbnailType::None => {
+                                                    let script = script_feedback.replace("$TEXT",
+                                                    &format!("{}", "No thumb uploaded"));
+                                                    window.eval(&script);
+                                                },
+                                            }
+                                            sleep(Duration::from_millis(500)).await;
+
+                                        }
+                                    };
+                                }
+                                FileTransferProgress::Finished(storage) => {
+                                    let script2 = script_feedback.replace("$TEXT",
+                                        &format!("{}", "Upload progress completed!"));
+                                        window.eval(&script2);
+                                    let script2 = script.replace("$IS_DRAGGING", &format!("{}", false));
+                                    window.eval(&script2);
+                                    storage_state.set(Some(storage));
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
@@ -229,19 +286,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 }
                             }
                         }
-
-                        /*let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                let script = script.replace("$IS_DRAGGING", &format!("{}", false));
-                                window.eval(&script);
-                                storage_state.set(Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to add new files into uplink storage: {}", e);
-                                continue;
-                            }
-                        }*/
                     }
                     ChanCmd::DownloadFile {
                         file_name,
@@ -375,7 +419,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                     FileDropEvent::Dropped(files_local_path) => {
                                         ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
-                                        show_user_feedback_when_upload_files(window.clone(), &script_feedback).await;
                                         break;
                                     }
                                     _ => {
@@ -689,10 +732,7 @@ async fn show_user_feedback_when_upload_files(window: DesktopContext, script_fee
         let re = Regex::new(r"\d{2}%").unwrap();
         if let Some(progress_text) = re.find(&string_log) {
             let script = script_feedback.replace("$TEXT",
-             &format!("{} {}", if progress_text.as_str().contains("00%") {"100%"} else {progress_text.as_str()}, "uploaded."));
-            window.eval(&script);
-        } else {
-            let script = script_feedback.replace("$TEXT", &string_log);
+             &format!("{} {}", if progress_text.as_str().contains("00%") {"99.9%"} else {progress_text.as_str()}, "uploaded."));
             window.eval(&script);
         }
         if string_log.contains("Get items from current directory worked!") {
