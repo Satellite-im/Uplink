@@ -74,14 +74,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                         },
                         Label {
-                            text: "Your New Profile".into()
+                            text: get_local_text("settings-profile.welcome")
                         },
                         p {
-                            "Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least."
+                            get_local_text("settings-profile.welcome-desc")
                         }
                         br {},
                         p {
-                            "First step, pick out a profile picture and maybe even a banner too!"
+                            get_local_text("settings-profile.welcome-cta")
                         }
                     }
                 },

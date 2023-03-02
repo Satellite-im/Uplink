@@ -87,7 +87,10 @@ settings-profile = Profile Settings
     .change-avatar = Change avatar
     .edit-button = Edit
     .save-button = Save
-
+    .welcome = Your new profile!
+    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
+    
 settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.
