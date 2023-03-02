@@ -6,7 +6,7 @@ use warp::sync::RwLock;
 
 use crate::LOCALES;
 
-const US_ENGLISH: (LanguageIdentifier, &str) = (langid!("en-US"), "English (USA)");
+pub const US_ENGLISH: (LanguageIdentifier, &str) = (langid!("en-US"), "English (USA)");
 const BR_PORTUGUESE: (LanguageIdentifier, &str) = (langid!("pt-BR"), "Português (Brasil)");
 const PT_PORTUGUESE: (LanguageIdentifier, &str) = (langid!("pt-PT"), "Português (Portugal)");
 const MX_SPANISH: (LanguageIdentifier, &str) = (langid!("es-MX"), "Español (México)");
