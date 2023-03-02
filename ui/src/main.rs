@@ -364,7 +364,6 @@ fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
 #[inline_props]
 pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
-    log::trace!("identity: {identity:#?}");
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {

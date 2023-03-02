@@ -41,7 +41,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
-        log::trace!("{ident:#?}");
         state
             .write()
             .account
