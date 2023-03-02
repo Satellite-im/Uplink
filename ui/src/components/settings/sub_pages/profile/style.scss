@@ -14,10 +14,13 @@
     padding: var(--gap);
     border-radius: var(--border-radius);
     flex-wrap: wrap;
-
+    max-width: calc(100% - (var(--gap) * 2));
+    
     .welcome {
-      max-width: calc(var(--width-sidebar) / 1.30);
-      min-width: 0; 
+      max-width: calc(var(--width-sidebar) - (var(--gap) * 2));
+      img {
+        width: 100%;
+      }
     }
     p {
       margin-top: var(--gap);
@@ -26,8 +29,9 @@
     .welcome-content {
       display: inline-flex;
       flex-direction: column;
-      max-width: calc(100% - (var(--sidebar-width) / 1.3));
-      min-width: var(--sidebar-width);
+      min-width: calc(var(--width-sidebar) / 2);
+      flex: 1;
+      
       .btn-wrap {
         justify-content: flex-end;
       }

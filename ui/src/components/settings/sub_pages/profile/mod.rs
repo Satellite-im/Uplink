@@ -60,9 +60,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             (!welcome_dismissed).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
-                    img {
+                    div {
                         class: "welcome",
-                        src: "./ui/extra/images/mascot/working.png"
+                        img {
+                            src: "./ui/extra/images/mascot/working.png"
+                        },
                     },
                     div {
                         class: "welcome-content",
