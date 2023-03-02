@@ -88,6 +88,10 @@ settings-profile = Profile Settings
     .change-avatar = Mudar avatar
     .edit-button = Editar
     .save-button = Salvar
+    .welcome = Your new profile!
+    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
+
 
 settings-general = General Settings
     .overlay = Sobreposição de Uplink

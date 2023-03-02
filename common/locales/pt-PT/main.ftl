@@ -72,7 +72,16 @@ settings = Settings
     .search-placeholder = Procurar configuração...
     .splash-screen = Tela de Abertura
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
-
+    
+settings-profile = Profile Settings
+    .change-banner = Change banner
+    .change-avatar = Change avatar
+    .edit-button = Edit
+    .save-button = Save
+    .welcome = Your new profile!
+    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
+    
 settings-extensions = SettingsExtensions 
     .placeholder = Espaço reservado
     .open-extensions-folder = Abrir pasta de extensões 
