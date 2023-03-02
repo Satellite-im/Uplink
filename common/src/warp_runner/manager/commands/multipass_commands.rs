@@ -170,9 +170,12 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::set_graphics_picture(pfp))
                 .await;
-            let id = warp.multipass.get_own_identity().await;
+
             let _ = match r {
-                Ok(_) => rsp.send(id),
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await;
+                    rsp.send(id)
+                }
                 Err(e) => {
                     log::error!("failed to get own identity: {e}");
                     rsp.send(Err(e))
@@ -184,9 +187,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::set_graphics_banner(banner))
                 .await;
-            let id = warp.multipass.get_own_identity().await;
             let _ = match r {
-                Ok(_) => rsp.send(id),
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await;
+                    rsp.send(id)
+                }
                 Err(e) => {
                     log::error!("failed to get own identity: {e}");
                     rsp.send(Err(e))

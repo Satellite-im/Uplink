@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "fa00c79f6ba53d1b3ba40f46dea3430be64b254e" }
+warp = { git = "https://github.com/Satellite-im/Warp", branch = "fix/mp-update-overridden" }
 derive_more = "0.99"
 ipc-channel = "0.16.0"
 
