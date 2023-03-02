@@ -77,7 +77,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: "Your New Profile".into()
                         },
                         p {
-                            "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
+                            "Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least."
                         }
                         br {},
                         p {
