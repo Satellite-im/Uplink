@@ -6,7 +6,6 @@ use crate::elements::input::{Input, Options, Size, SpecialCharsAction, Validatio
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-// const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -47,7 +46,6 @@ pub fn emit_press(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let open = cx.props.open.unwrap_or_default();
-    // let (folder_name, folder_name_formatted) = get_text(cx.props.text.clone().unwrap_or_default());
     let folder_name = cx.props.text.clone().unwrap_or_default();
     let aria_label = get_aria_label(&cx);
     let placeholder = folder_name.clone();

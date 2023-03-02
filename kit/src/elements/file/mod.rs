@@ -11,7 +11,6 @@ use crate::elements::{
 };
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-// const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
