@@ -197,18 +197,13 @@ pub fn Friends(cx: Scope) -> Element {
                                             // TODO: Wire this up to state
                                         },
                                         ContextItem {
-                                            icon: if favorite {Icon::XMark} else {Icon::Heart},
+                                            icon: if favorite {Icon::HeartSlash} else {Icon::Heart},
                                             text: get_local_text(if favorite {"favorites.remove"} else {"favorites.favorites"}),
                                             onpress: move |_| {
                                                 // can't favorite a non-existent conversation
                                                 // todo: don't even allow favoriting from the friends page unless there's a conversation
                                                 if let Some(c) = &chat {
-                                                    if favorite {
-                                                        state.write().mutate(Action::ToggleFavorite(c.clone()));
-                                                    }
-                                                    else {
-                                                        state.write().mutate(Action::Favorite(c.clone()));
-                                                    }
+                                                    state.write().mutate(Action::ToggleFavorite(c.clone()));
                                                 }
                                             }
                                         },
