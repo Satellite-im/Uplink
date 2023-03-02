@@ -49,7 +49,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = false;
+    let welcome_dismissed = use_state(&cx, || false);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     log::debug!("Profile settings page rendered.");
@@ -57,30 +57,35 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            div {
-                class: "new-profile-welcome",
-                img {
-                    class: "welcome",
-                    src: "./ui/extra/images/mascot/working.png"
-                },
+            (!welcome_dismissed).then(|| rsx!(
                 div {
-                    class: "welcome-content",
-                    Button {
-                        text: "Dismiss".into(),
-                        icon: Icon::XMark,
+                    class: "new-profile-welcome",
+                    img {
+                        class: "welcome",
+                        src: "./ui/extra/images/mascot/working.png"
                     },
-                    Label {
-                        text: "Your New Profile".into()
-                    },
-                    p {
-                        "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
+                    div {
+                        class: "welcome-content",
+                        Button {
+                            text: "Dismiss".into(),
+                            icon: Icon::XMark,
+                            onpress: move |_| {
+                                welcome_dismissed.set(true);
+                            }
+                        },
+                        Label {
+                            text: "Your New Profile".into()
+                        },
+                        p {
+                            "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
+                        }
+                        br {},
+                        p {
+                            "First step, pick out a profile picture and maybe even a banner too!"
+                        }
                     }
-                    br {},
-                    p {
-                        "First step, pick out a profile picture and maybe even a banner too!"
-                    }
-                }
-            },
+                },
+            ))
             div {
                 class: "profile-header",
                 aria_label: "profile-header",
