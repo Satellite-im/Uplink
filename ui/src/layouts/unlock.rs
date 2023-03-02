@@ -1,5 +1,6 @@
 use common::{
     language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
+    STATIC_ARGS,
 };
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -169,7 +170,10 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
-                            with_label: Some("Welcome back, UNKNOWN"), // TODO: Implement this.
+                            with_label: if STATIC_ARGS.cache_path.exists()
+                                {Some("Welcome back, UNKNOWN")}
+                            else
+                                {Some("Let's choose your password")}, // TODO: Implement this.
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {
