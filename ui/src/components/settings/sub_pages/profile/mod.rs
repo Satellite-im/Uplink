@@ -48,6 +48,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(cx, String::new);
     let banner_state = use_state(cx, String::new);
 
+    let welcome_dismissed = false;
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
     log::debug!("Profile settings page rendered.");
     cx.render(rsx!(
@@ -91,6 +93,26 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             div{
                 class: "profile-content",
                 aria_label: "profile-content",
+                div {
+                    class: "new-profile-welcome",
+                    img {
+                        class: "welcome",
+                        src: "./ui/extra/images/mascot/working.png"
+                    },
+                    div {
+                        class: "welcome-content",
+                        Button {
+                            text: "Dismiss".into(),
+                            icon: Icon::XMark,
+                        },
+                        Label {
+                            text: "Your New Profile".into()
+                        },
+                        p {
+                            "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
+                        }
+                    }
+                },
                 div {
                     class: "plus-button",
                     Button {
