@@ -190,7 +190,7 @@ fn main() {
         .with_title(title)
         .with_resizable(true)
         .with_inner_size(LogicalSize::new(950.0, 600.0))
-        .with_min_inner_size(LogicalSize::new(300.0, 500.0));
+        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
 
     #[cfg(target_os = "macos")]
     {
@@ -371,6 +371,7 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
 
     // todo: delete this. it is just an example
     if state.configuration.general.enable_overlay {
