@@ -1,3 +1,8 @@
+//! This was made for the chatbar but it turns out that a contenteditable div is more appropriate.
+//! this could be merged with kit/src/elements/input and make the input element use a textarea based on a property.
+//! that might helpful if a textarea needed to perform input validation.
+//! leaving this here for now, in case it is needed later.
+
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
