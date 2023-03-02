@@ -245,7 +245,7 @@ fn bootstrap(cx: Scope) -> Element {
     let desktop = use_window(cx);
     desktop.set_inner_size(LogicalSize {
         width: 500.0,
-        height: 300.0,
+        height: 350.0,
     });
 
     cx.render(rsx!(crate::auth_page_manager {}))
