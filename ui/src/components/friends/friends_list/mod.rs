@@ -164,6 +164,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let chat = state.read().get_chat_with_friend(&friend);
                             let chat2 = chat.clone();
                             let chat3 = chat.clone();
+                            let favorite = chat.clone().map(|c| state.read().is_favorite(&c)).unwrap_or_default();
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = friend.clone();
@@ -196,13 +197,18 @@ pub fn Friends(cx: Scope) -> Element {
                                             // TODO: Wire this up to state
                                         },
                                         ContextItem {
-                                            icon: Icon::Heart,
-                                            text: get_local_text("favorites.favorites"),
+                                            icon: if favorite {Icon::XMark} else {Icon::Heart},
+                                            text: get_local_text(if favorite {"favorites.remove"} else {"favorites.favorites"}),
                                             onpress: move |_| {
                                                 // can't favorite a non-existent conversation
                                                 // todo: don't even allow favoriting from the friends page unless there's a conversation
                                                 if let Some(c) = &chat {
-                                                    state.write().mutate(Action::Favorite(c.clone()));
+                                                    if favorite {
+                                                        state.write().mutate(Action::ToggleFavorite(c.clone()));
+                                                    }
+                                                    else {
+                                                        state.write().mutate(Action::Favorite(c.clone()));
+                                                    }
                                                 }
                                             }
                                         },
