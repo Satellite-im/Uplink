@@ -20,6 +20,7 @@
       max-width: calc(var(--width-sidebar) - (var(--gap) * 2));
       img {
         width: 100%;
+        pointer-events: none;
       }
     }
     p {
