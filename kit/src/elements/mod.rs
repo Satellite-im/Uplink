@@ -9,6 +9,7 @@ pub mod multiline;
 pub mod select;
 pub mod slider;
 pub mod switch;
+pub mod textarea;
 pub mod tooltip;
 
 #[derive(Clone, PartialEq, Eq, Copy, Display)]

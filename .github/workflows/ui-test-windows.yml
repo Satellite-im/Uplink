@@ -1,0 +1,135 @@
+name: UI Automated Tests on Windows 🧪
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache 🛠️
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install Rust 💿
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Setup cmake 🛠️
+        uses: jwlawson/actions-setup-cmake@v1.13
+
+      - name: Use cmake 💿
+        run: cmake --version
+
+      - name: Install Protobuf 💿
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{env.GITHUB_TOKEN}}
+
+      - name: Run cargo update 🌐
+        run: cargo update
+
+      - name: Run cargo clean 🧹
+        run: cargo clean
+
+      - name: Build app 🖥️
+        run: cargo build --release
+
+      - name: Upload Artifact ⬆️
+        uses: actions/upload-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: |
+            target/release/ui.exe
+
+  test-on-windows:
+    needs: build-windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: "./appium-tests"
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
+
+      - name: Install NPM dependencies 📦
+        run: |
+          cd appium-tests && npm install
+
+      - name: Install and Run Appium Server 💻
+        run: |
+          npm install -g appium@next
+          appium -v
+          appium driver install --source=npm appium-windows-driver
+          appium driver list
+          appium &>/dev/null &
+
+      - name: Delete cache folder before starting
+        run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
+        shell: powershell
+
+      - name: Run WebdriverIO tests on MacOS 🧪
+        working-directory: ./appium-tests
+        run: npm run windows.ci
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: always()
+        with:
+          junit_files: "./appium-tests/test-report/*.xml"
+          check_name: "UI Automated Test Results on Windows"
+
+      - name: Upload Screenshots if tests failed 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log if tests failed 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log
+          path: ./appium-tests/appium.log
+
+      - name: Take screenshot of GH runner if test execution fails 📷
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        if: failure()
+        with:
+          file-name: "desktop.jpg"
