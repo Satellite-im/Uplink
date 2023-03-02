@@ -131,7 +131,7 @@
     .unlock-details {
         display: inline-flex;
         flex-direction: column;
-        gap: var(--gap);
+        gap: var(--gap-less);
 
         .label {
             color: var(--text-color);
@@ -165,4 +165,11 @@
 
 .warning {
     color: var(--warning-light);
+}
+
+.idle {
+    max-width: 132px;
+    margin-bottom: -3rem;
+    z-index: 2;
+    align-self: flex-end;
 }

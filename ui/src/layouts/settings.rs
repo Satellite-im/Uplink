@@ -25,7 +25,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let to = use_state(cx, || Page::General);
+    let to = use_state(cx, || Page::Profile);
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
