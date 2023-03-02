@@ -1,3 +1,5 @@
+//! todo: use a contenteditable div for this. see the old version of uplink for an example (which didn't quite work right when rendering markdown)
+
 use dioxus::prelude::*;
 
 use crate::elements::input::Input;

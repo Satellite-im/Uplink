@@ -1,5 +1,5 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{icons::outline::Shape as Icon, state::Chat};
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
@@ -112,10 +112,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat_id| {
-                            let chat = match state.read().chats.all.get(&chat_id) {
+                            let chat: Chat = match state.read().chats.all.get(&chat_id) {
                                 Some(c) => c.clone(),
                                 None => return rsx!("") // should never happen but may if a friend request doesn't go through
                             };
+                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let without_me = state.read().get_without_me(&chat.participants);
@@ -149,6 +150,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     UserImageGroup {
                                         participants: build_participants(&chat.participants.clone()),
                                         with_username: participants_name,
+                                        typing: users_typing,
                                         onpress: move |_| {
                                             if state.read().ui.is_minimal_view() {
                                                 state.write().mutate(Action::SidebarHidden(true));
@@ -178,6 +180,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         Some(c) => c.clone(),
                         None => return rsx!("")
                     };
+                    let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
                     let without_me = state.read().get_without_me(&chat.participants);
                     let user = without_me.first();
                     let parsed_user = user.cloned().unwrap_or_default();
@@ -195,7 +198,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         None => raygun::Message::default(),
                     };
 
-                    let val = unwrapped_message.value();
                     let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
@@ -209,6 +211,21 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+
+                    let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                        Some(v) => v.into(),
+                        _ => match &unwrapped_message.attachments()[..] {
+                            [] => String::new(),
+                            [ file ] => file.name(),
+                            _ => match chat.participants.iter().find(|p| p.did_key() == unwrapped_message.sender()).map(|x| x.username()) {
+                                Some(name) => format!("{name} {}", get_local_text("sidebar.subtext")),
+                                None => {
+                                    log::error!("error calculating subtext for sidebar chat");
+                                    String::new()
+                                }
+                            }
+                        }
+                    };
 
                     // TODO:
                     // let _block_user_text = LOCALES
@@ -245,7 +262,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             )),
                             User {
                                 username: participants_name,
-                                subtext: val.join("\n"),
+                                subtext: subtext_val,
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
@@ -254,10 +271,12 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             platform: platform,
                                             status:  convert_status(&parsed_user.identity_status()),
                                             image: parsed_user.graphics().profile_picture(),
+                                            typing: users_typing,
                                         }
                                     )} else {rsx! (
                                         UserImageGroup {
-                                            participants: build_participants(&participants)
+                                            participants: build_participants(&participants),
+                                            typing: users_typing,
                                         }
                                     )}
                                 )),
