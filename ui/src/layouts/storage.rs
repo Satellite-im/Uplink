@@ -1,4 +1,3 @@
-use std::sync::mpsc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
@@ -11,7 +10,7 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window};
+use dioxus_desktop::{use_window, DesktopContext};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -334,7 +333,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         div {
             id: "overlay-element",
             class: "overlay-element",
-            p {class: "overlay-text", format!("{}", upload_percentage.read()) },
+            p {id: "overlay-text0", class: "overlay-text", format!("{}", "File name") },
+            p {id: "overlay-text", class: "overlay-text", format!("{}", upload_percentage.read()) },
         },
         div {
             id: "files-layout",
@@ -343,29 +343,25 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 if let None = drag_event.read().clone() {
                     let window = use_window(cx);
                     cx.spawn({
-                        to_owned![drag_event, window, ch, script, upload_percentage];
+                        to_owned![drag_event, window, ch, script];
                         async move {
+                            let script_feedback = r#"
+                                                const feedback_element = document.getElementById('overlay-text');
+                                                feedback_element.textContent = '$TEXT';
+                                            "#;
                             loop {
                                 let file_drop_event = get_drag_event();
                                 *drag_event.write_silent() = Some(file_drop_event.clone());
                                 match file_drop_event {
-                                    FileDropEvent::Hovered(_) => {
+                                    FileDropEvent::Hovered(files_local_path) => {
                                         let script = script.replace("$IS_DRAGGING", &format!("{}", true));
+                                        window.eval(&script);
+                                        let script = script_feedback.replace("$TEXT", &format!("{} {} files to upload!", "Drop ", files_local_path.len()));
                                         window.eval(&script);
                                     }
                                     FileDropEvent::Dropped(files_local_path) => {
-                                        ch.send(ChanCmd::UploadFiles(files_local_path));
-                                        // let mut log_ch = logger::subscribe();
-                                        // while let Some(log) = log_ch.recv().await {
-                                        //     let string_log = log.to_string();
-                                        //     let re = Regex::new(r"\d{2}% completed").unwrap();
-                                        //     if let Some(progress_text) = re.find(&string_log) {
-                                        //         *upload_percentage.write() = progress_text.as_str().to_string();
-                                        //     }
-                                        //     if string_log.contains("Get items from current directory worked!") {
-                                        //         break;
-                                        //     }
-                                        // };
+                                        ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
+                                        show_user_feedback_when_upload_files(window.clone(), &script_feedback).await;
                                         break;
                                     }
                                     _ => {
@@ -376,7 +372,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 };
                                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                             };
-                            // *upload_percentage.write() = String::from("");
                             *drag_event.write_silent() = None;
                         }
                     });
@@ -671,4 +666,23 @@ fn update_items_with_mock_data(
 
 fn get_drag_event() -> FileDropEvent {
     DRAG_EVENT.read().clone()
+}
+
+async fn show_user_feedback_when_upload_files(window: DesktopContext, script_feedback: &str) {
+    let mut log_ch = logger::subscribe();
+    while let Some(log) = log_ch.recv().await {
+        let string_log = log.to_string();
+        let re = Regex::new(r"\d{2}%").unwrap();
+        if let Some(progress_text) = re.find(&string_log) {
+            let script = script_feedback.replace("$TEXT",
+             &format!("{} {}", if progress_text.as_str().contains("00%") {"100%"} else {progress_text.as_str()}, "uploaded."));
+            window.eval(&script);
+        } else {
+            let script = script_feedback.replace("$TEXT", &string_log);
+            window.eval(&script);
+        }
+        if string_log.contains("Get items from current directory worked!") {
+            break;
+        }
+    };
 }
