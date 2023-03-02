@@ -13,6 +13,7 @@
     margin: var(--gap);
     padding: var(--gap);
     border-radius: var(--border-radius);
+    flex-wrap: wrap;
 
     .welcome {
       max-width: calc(var(--width-sidebar) / 1.30);
