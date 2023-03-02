@@ -28,13 +28,29 @@
 }
 
 #files-layout {
-    .files-list {
-        overflow-y: scroll;
-        display: inline-flex;
-        padding: var(--gap);
-        gap: var(--gap);
-        flex-wrap: wrap;
+    .file-parent {
         flex: 1;
+        min-width: 0;
+        height: 100%;
+        display: inline-flex;
+        flex-direction: column;
+        overflow: scroll;
+
+    }
+    // hide scrollbar to prevent issues with 6 pixel scrollbar
+    ::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+
+    .files-list {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+        padding: var(--files-grid-gap);
+        gap: var(--files-grid-gap);
     }
 
     .files-info {

@@ -1,3 +1,15 @@
+.alignment {
+	width: var(--icon-label-size-more);
+	height: var(--icon-label-size-more);
+	display: inline-flex;
+	align-content: center;
+	align-self: center;
+	cursor: pointer;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 .file-embed {
 	display: inline-flex;
 	gap: var(--gap);
