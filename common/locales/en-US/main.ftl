@@ -183,3 +183,6 @@ unlock = Unlock
 
 auth = Create Account 
     .enter-username = Enter Username
+
+sidebar = Sidebar 
+    .subtext = sent multiple attachments

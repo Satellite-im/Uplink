@@ -198,7 +198,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         None => raygun::Message::default(),
                     };
 
-                    let val = unwrapped_message.value();
                     let datetime = unwrapped_message.date();
 
                     let badge = if chat.unreads > 0 {
@@ -212,6 +211,21 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let participants = without_me.clone();
                     let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+
+                    let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
+                        Some(v) => v.into(),
+                        _ => match &unwrapped_message.attachments()[..] {
+                            [] => String::new(),
+                            [ file ] => file.name(),
+                            _ => match chat.participants.iter().find(|p| p.did_key() == unwrapped_message.sender()).map(|x| x.username()) {
+                                Some(name) => format!("{name} {}", get_local_text("sidebar.subtext")),
+                                None => {
+                                    log::error!("error calculating subtext for sidebar chat");
+                                    String::new()
+                                }
+                            }
+                        }
+                    };
 
                     // TODO:
                     // let _block_user_text = LOCALES
@@ -248,7 +262,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             )),
                             User {
                                 username: participants_name,
-                                subtext: val.join("\n"),
+                                subtext: subtext_val,
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
