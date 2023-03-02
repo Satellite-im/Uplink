@@ -69,7 +69,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "welcome-content",
                         Button {
-                            text: "Dismiss".into(),
+                            text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
                                 welcome_dismissed.set(true);

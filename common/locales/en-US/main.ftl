@@ -19,6 +19,7 @@ uplink = Uplink
     .characters = characters
     .exceeded = exceeded
     .delete = Delete
+    .dismiss = Dismiss
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least

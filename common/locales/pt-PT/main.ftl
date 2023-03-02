@@ -15,7 +15,8 @@ uplink = Uplink
     .end = Finalizar
     .pre-release = Pré-lançamento
     .delete = Deletar
-    
+    .dismiss = Dismiss
+
 messages = Messages
     .new = Nova Mensagem
     .replying = Responder a:
@@ -72,7 +73,7 @@ settings = Settings
     .search-placeholder = Procurar configuração...
     .splash-screen = Tela de Abertura
     .splash-screen-description = Desativar a tela de abertura pode acelerar o tempo de carregamento.
-    
+
 settings-profile = Profile Settings
     .change-banner = Change banner
     .change-avatar = Change avatar
