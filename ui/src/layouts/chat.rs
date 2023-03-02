@@ -17,13 +17,12 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
 
     state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
-    let is_mobile = state.read().ui.is_minimal_view();
-    let show_sidebar = !state.read().ui.sidebar_hidden;
+    let is_minimal_view = state.read().ui.is_minimal_view();
+    let sidebar_hidden = state.read().ui.sidebar_hidden;
     let show_welcome = state.read().chats.active.is_none();
-    let render_layout = !(is_mobile && show_sidebar);
 
-    if *first_render.get() && is_mobile {
-        state.write().mutate(Action::SidebarHidden(false));
+    if *first_render.get() && is_minimal_view {
+        state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
 
@@ -36,12 +35,8 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
-
-            render_layout.then(|| if show_welcome {
-                rsx!(Welcome {})
-            } else {
-                rsx!(Compose {})
-            })
+            show_welcome.then(|| rsx!(Welcome {})),
+            (!show_welcome && sidebar_hidden || !state.read().ui.is_minimal_view() && !show_welcome).then(|| rsx!(Compose {}))
         }
     ))
 }
