@@ -13,6 +13,7 @@ use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
+use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
 use crate::warp_runner::Storage as warp_storage;
@@ -31,6 +32,12 @@ use warp::{
 
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
+
+pub enum FileTransferProgress<T> {
+    Error(warp::error::Error),
+    Finished(T),
+    Step(String),
+}
 
 #[derive(Display)]
 pub enum ConstellationCmd {
@@ -56,7 +63,7 @@ pub enum ConstellationCmd {
     #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
     UploadFiles {
         files_path: Vec<PathBuf>,
-        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+        rsp: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
     },
     #[display(fmt = "RenameItems {{ old_name: {old_name}, new_name: {new_name} }} ")]
     RenameItem {
@@ -104,8 +111,7 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let _ = rsp.send(r);
         }
         ConstellationCmd::UploadFiles { files_path, rsp } => {
-            let r = upload_files(warp_storage, files_path).await;
-            let _ = rsp.send(r);
+            upload_files(warp_storage, files_path, rsp).await;
         }
         ConstellationCmd::DownloadFile {
             file_name,
@@ -352,8 +358,16 @@ fn go_back_to_previous_directory(
 async fn upload_files(
     warp_storage: &mut warp_storage,
     files_path: Vec<PathBuf>,
-) -> Result<uplink_storage, Error> {
-    let current_directory = warp_storage.current_directory()?;
+    // todo: send FileTransferProgress::Step until done
+    tx: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
+) {
+    let current_directory = match warp_storage.current_directory() {
+        Ok(d) => d,
+        Err(e) => {
+            let _ = tx.send(FileTransferProgress::Error(e));
+            return;
+        }
+    };
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -454,7 +468,11 @@ async fn upload_files(
             Err(error) => log::error!("Error when upload file: {:?}", error),
         }
     }
-    get_items_from_current_directory(warp_storage)
+    let ret = match get_items_from_current_directory(warp_storage) {
+        Ok(r) => FileTransferProgress::Finished(r),
+        Err(e) => FileTransferProgress::Error(e),
+    };
+    let _ = tx.send(ret);
 }
 
 fn rename_if_duplicate(

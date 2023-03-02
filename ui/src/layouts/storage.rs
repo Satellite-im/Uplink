@@ -4,6 +4,7 @@ use std::{ffi::OsStr, path::PathBuf};
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::warp_runner::FileTransferProgress;
 use common::{
     state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
@@ -30,6 +31,7 @@ use kit::{
 use once_cell::sync::Lazy;
 use regex::Regex;
 use rfd::FileDialog;
+use tokio::sync::mpsc;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::item::Item;
@@ -204,7 +206,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+                        let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::UploadFiles {
@@ -216,7 +218,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             continue;
                         }
 
-                        let rsp = rx.await.expect("command canceled");
+                        while let Some(msg) = rx.recv().await {
+                            match msg {
+                                FileTransferProgress::Step(_) => {}
+                                FileTransferProgress::Finished(_) => {
+                                    break;
+                                }
+                                FileTransferProgress::Error(_) => {
+                                    break;
+                                }
+                            }
+                        }
+
+                        /*let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
                                 let script = script.replace("$IS_DRAGGING", &format!("{}", false));
@@ -227,7 +241,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 log::error!("failed to add new files into uplink storage: {}", e);
                                 continue;
                             }
-                        }
+                        }*/
                     }
                     ChanCmd::DownloadFile {
                         file_name,
