@@ -46,6 +46,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             .account
             .identity
             .set_warp_identity(ident.clone());
+        if let Err(e) = state.write().save() {
+            log::error!("failed to save state: {e}");
+        }
         should_update.set(None);
     }
 

@@ -6,7 +6,10 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    multipass::identity::{self, IdentityUpdate},
+    multipass::{
+        self,
+        identity::{self, IdentityUpdate},
+    },
 };
 
 use crate::{
@@ -38,6 +41,12 @@ pub enum MultiPassCmd {
     #[display(fmt = "InitializeFriends")]
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
+    },
+    #[display(fmt = "RefreshFriends")]
+    RefreshFriends {
+        rsp: oneshot::Sender<
+            Result<HashMap<DID, multipass::identity::Identity>, warp::error::Error>,
+        >,
     },
     // may later want this to return the Identity rather than the DID.
     #[display(fmt = "GetOwnDid")]
@@ -128,6 +137,10 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = multipass_initialize_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
+        MultiPassCmd::RefreshFriends { rsp } => {
+            let r = multipass_refresh_friends(&mut warp.multipass).await;
+            let _ = rsp.send(r);
+        }
         MultiPassCmd::RemoveFriend { did, rsp } => {
             let r = warp.multipass.remove_friend(&did).await;
             let _ = rsp.send(r);
@@ -209,6 +222,26 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             };
         }
     }
+}
+
+async fn multipass_refresh_friends(
+    account: &mut Account,
+) -> Result<HashMap<DID, multipass::identity::Identity>, Error> {
+    let ids = account.list_friends().await?;
+    let mut friends = HashMap::new();
+    for id in ids {
+        if let Ok(ident) = account.get_identity(id.clone().into()).await {
+            if let Some(ident) = ident.first() {
+                friends.insert(ident.did_key(), ident.clone());
+            } else {
+                log::warn!("no identities for did {}", id.to_string());
+            }
+        } else {
+            log::warn!("didn't find friend {}", id.to_string());
+        }
+    }
+
+    Ok(friends)
 }
 
 async fn multipass_initialize_friends(
