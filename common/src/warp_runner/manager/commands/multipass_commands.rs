@@ -87,12 +87,12 @@ pub enum MultiPassCmd {
         banner: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "UpdateStatus {status:?} ")]
+    #[display(fmt = "UpdateStatus")]
     UpdateStatus {
         status: Option<String>,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "UpdateUsername {username} ")]
+    #[display(fmt = "UpdateUsername")]
     UpdateUsername {
         username: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,

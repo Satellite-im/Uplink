@@ -275,10 +275,7 @@ fn get_input_options(validation_options: Validation) -> Options {
     Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(validation_options),
-        // Do not replace spaces with underscores
-        replace_spaces_underscore: false,
-        // Show a clear button inside the input field
-        with_clear_btn: false,
+        clear_on_submit: false,
         // Use the default options for the remaining fields
         ..Options::default()
     }
