@@ -26,6 +26,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_input = use_state(cx, String::new);
     let friend_input_valid = use_state(cx, || false);
     let request_sent = use_state(cx, || false);
+    let error_toast: &UseState<Option<String>> = use_state(cx, || None);
     // used when copying the user's id to the clipboard
     let my_id: &UseState<Option<String>> = use_state(cx, || None);
     // Set up validation options for the input field
@@ -50,6 +51,18 @@ pub fn AddFriend(cx: Scope) -> Element {
         request_sent.set(false);
     }
 
+    if let Some(msg) = error_toast.get().clone() {
+        state
+            .write()
+            .mutate(Action::AddToastNotification(ToastNotification::init(
+                "".into(),
+                msg,
+                None,
+                5,
+            )));
+        error_toast.set(None);
+    }
+
     if let Some(id) = my_id.get().clone() {
         let mut clipboard = Clipboard::new().unwrap();
         clipboard.set_text(id).unwrap();
@@ -65,7 +78,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
-        to_owned![request_sent];
+        to_owned![request_sent, error_toast];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
@@ -84,17 +97,20 @@ pub fn AddFriend(cx: Scope) -> Element {
                         request_sent.set(true);
                     }
                     Err(e) => match e {
-                        Error::CannotSendFriendRequest
-                        | Error::IdentityDoesntExist
-                        | Error::BlockedByUser
-                        | Error::InvalidIdentifierCondition
-                        | Error::CannotSendSelfFriendRequest => {
-                            log::warn!("add cannot add self: {}", e);
+                        Error::CannotSendSelfFriendRequest => {
+                            log::warn!("cannot add self: {}", e);
+                            error_toast.set(Some(String::from(get_local_text(
+                                "friends.cannot-add-self",
+                            ))));
                         }
                         Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
+                            error_toast
+                                .set(Some(String::from(get_local_text("friends.key-blocked"))));
                         }
                         _ => {
+                            error_toast
+                                .set(Some(String::from(get_local_text("friends.add-failed"))));
                             log::error!("add friend failed: {}", e);
                         }
                     },
