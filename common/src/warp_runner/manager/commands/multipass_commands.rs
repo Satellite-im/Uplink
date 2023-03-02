@@ -2,7 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use derive_more::Display;
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, logging::tracing::log};
+use warp::{
+    crypto::DID,
+    error::Error,
+    logging::tracing::log,
+    multipass::identity::{self, IdentityUpdate},
+};
 
 use crate::{
     state::{self, friends},
@@ -70,6 +75,28 @@ pub enum MultiPassCmd {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+
+    // identity related commands
+    #[display(fmt = "UpdateProfilePicture")]
+    UpdateProfilePicture {
+        pfp: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateBanner ")]
+    UpdateBanner {
+        banner: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateStatus {status:?} ")]
+    UpdateStatus {
+        status: Option<String>,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateUsername {username} ")]
+    UpdateUsername {
+        username: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
 }
 
 // hide sensitive information from debug logs
@@ -124,6 +151,62 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::CancelRequest { did, rsp } => {
             let r = warp.multipass.close_request(&did).await;
             let _ = rsp.send(r);
+        }
+        MultiPassCmd::UpdateProfilePicture { pfp, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_graphics_picture(pfp))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateBanner { banner, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_graphics_banner(banner))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateStatus { status, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_status_message(status))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateUsername { username, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_username(username))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
         }
     }
 }
