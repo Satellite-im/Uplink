@@ -15,14 +15,18 @@
     border-radius: var(--border-radius);
 
     .welcome {
-      max-width: var(--width-sidebar);
+      max-width: calc(var(--width-sidebar) / 1.30);
+      min-width: 0; 
     }
     p {
-      padding: var(--gap);
+      margin-top: var(--gap);
+      color: var(--text-color);
     }
     .welcome-content {
       display: inline-flex;
       flex-direction: column;
+      max-width: calc(100% - (var(--sidebar-width) / 1.3));
+      min-width: var(--sidebar-width);
       .btn-wrap {
         justify-content: flex-end;
       }

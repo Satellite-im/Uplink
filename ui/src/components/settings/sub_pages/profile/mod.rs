@@ -57,6 +57,30 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             id: "settings-profile",
             aria_label: "settings-profile",
             div {
+                class: "new-profile-welcome",
+                img {
+                    class: "welcome",
+                    src: "./ui/extra/images/mascot/working.png"
+                },
+                div {
+                    class: "welcome-content",
+                    Button {
+                        text: "Dismiss".into(),
+                        icon: Icon::XMark,
+                    },
+                    Label {
+                        text: "Your New Profile".into()
+                    },
+                    p {
+                        "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
+                    }
+                    br {},
+                    p {
+                        "First step, pick out a profile picture and maybe even a banner too!"
+                    }
+                }
+            },
+            div {
                 class: "profile-header",
                 aria_label: "profile-header",
                 div {
@@ -93,26 +117,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             div{
                 class: "profile-content",
                 aria_label: "profile-content",
-                div {
-                    class: "new-profile-welcome",
-                    img {
-                        class: "welcome",
-                        src: "./ui/extra/images/mascot/working.png"
-                    },
-                    div {
-                        class: "welcome-content",
-                        Button {
-                            text: "Dismiss".into(),
-                            icon: Icon::XMark,
-                        },
-                        Label {
-                            text: "Your New Profile".into()
-                        },
-                        p {
-                            "Tell the world all about yourself, well tell them as much as you can while we're still under construciton, at least."
-                        }
-                    }
-                },
                 div {
                     class: "plus-button",
                     Button {
