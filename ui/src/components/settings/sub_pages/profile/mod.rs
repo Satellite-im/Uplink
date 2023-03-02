@@ -36,19 +36,21 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .unwrap_or_default();
     let username = state.read().account.identity.username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
-    let image_state = use_state(cx, String::new);
-    let banner_state = use_state(cx, String::new);
+    let image_state = use_state(cx, || {
+        state.read().account.identity.graphics().profile_picture()
+    });
+    let banner_state = use_state(cx, || {
+        state.read().account.identity.graphics().profile_banner()
+    });
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
+        log::trace!("{ident:#?}");
         state
             .write()
             .account
             .identity
             .set_warp_identity(ident.clone());
-        if let Err(e) = state.write().save() {
-            log::error!("failed to save state: {e}");
-        }
         should_update.set(None);
     }
 

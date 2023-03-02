@@ -50,7 +50,7 @@ use self::{action::ActionHook, chats::Direction, configuration::Configuration, u
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
-    #[serde(default)]
+    #[serde(skip)]
     pub account: account::Account,
     #[serde(default)]
     pub route: route::Route,

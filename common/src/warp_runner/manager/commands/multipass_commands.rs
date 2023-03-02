@@ -26,12 +26,12 @@ pub enum MultiPassCmd {
     CreateIdentity {
         username: String,
         passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "TryLogIn")]
     TryLogIn {
         passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "RequestFriend {{ did: {did} }} ")]
     RequestFriend {

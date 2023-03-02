@@ -27,6 +27,7 @@ use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
 use warp::crypto::DID;
+use warp::multipass;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -93,7 +94,7 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
 pub enum AuthPages {
     Unlock,
     CreateAccount,
-    Success,
+    Success(multipass::identity::Identity),
 }
 
 fn copy_assets() {
@@ -259,8 +260,10 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
-    cx.render(rsx!(match *page.current() {
-        AuthPages::Success => rsx!(app_bootstrap {}),
+    cx.render(rsx!(match &*page.current() {
+        AuthPages::Success(ident) => rsx!(app_bootstrap {
+            identity: ident.clone()
+        }),
         _ => rsx!(auth_wrapper {
             page: page.clone(),
             pin: pin.clone()
@@ -359,13 +362,16 @@ fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
 
 // called at the end of the auth flow
 #[inline_props]
-pub fn app_bootstrap(cx: Scope) -> Element {
+pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
+    log::trace!("identity: {identity:#?}");
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
         assert!(state.friends.initialized);
         assert!(state.chats.initialized);
+    } else {
+        state.account.identity = identity.clone().into();
     }
 
     // set the window to the normal size.
