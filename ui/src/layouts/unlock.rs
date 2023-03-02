@@ -1,5 +1,6 @@
 use common::{
     language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
+    STATIC_ARGS,
 };
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -7,7 +8,6 @@ use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
-    label::Label,
 };
 use warp::logging::tracing::log;
 
@@ -155,11 +155,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 )
             } else {
                 rsx! (
-                    div {
-                        class: "unlock-details",
-                        Label {
-                            text: get_local_text("unlock.enter-pin")
-                        }
+                    img {
+                        class: "idle",
+                        src: "./ui/extra/images/mascot/idle_alt.png"
                     },
                     Input {
                         id: "unlock-input".to_owned(),
@@ -172,6 +170,10 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
+                            with_label: if STATIC_ARGS.cache_path.exists()
+                                {Some("Welcome back, UNKNOWN")}
+                            else
+                                {Some("Let's choose your password")}, // TODO: Implement this.
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {

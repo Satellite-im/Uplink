@@ -29,7 +29,7 @@
     text-align: center;
     left: var(--gap);
     top: 2rem;
-    width: calc(var(--sidebar-width) - (var(--gap) * 2));
+    width: calc(var(--width-sidebar) - (var(--gap) * 2));
 
     .call-information {
         p {

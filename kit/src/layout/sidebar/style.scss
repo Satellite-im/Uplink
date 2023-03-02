@@ -1,8 +1,8 @@
 .sidebar {
 	display: inline-flex;
 	flex-direction: column;
-	width: var(--sidebar-width);
-	min-width: var(--sidebar-width);
+	width: var(--width-sidebar);
+	min-width: var(--width-sidebar);
 	height: 100%;
 	border-right: 1px solid var(--border-color);
 	transition: margin-left var(--animation-speed);
@@ -34,7 +34,7 @@
 
 
 	&.hidden {
-		margin-left: calc(var(--sidebar-width) * -1);
+		margin-left: calc(var(--width-sidebar) * -1);
 		border-right: none;
 	}
 }
