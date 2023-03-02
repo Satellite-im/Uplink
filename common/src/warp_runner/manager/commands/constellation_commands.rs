@@ -45,6 +45,7 @@ pub enum DuplicateNameStep {
 }
 
 pub enum FileTransferStep {
+    Start(String),
     DuplicateName(DuplicateNameStep),
     Upload(String),
     Thumbnail(ThumbnailType),
@@ -395,6 +396,10 @@ async fn upload_files(
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
 
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Start(
+            filename.clone(),
+        )));
+
         let original = filename.clone();
         let file = PathBuf::from(&original);
         let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
@@ -471,6 +476,9 @@ async fn upload_files(
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
+                            let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Upload(
+                                readable_total.clone(),
+                            )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
@@ -497,7 +505,7 @@ async fn upload_files(
                             true
                         }
                         Err(error) => {
-                            log::error!("Error on update thumbnail for image: {:?}", error);
+                            log::warn!("Not possible to update thumbnail for image: {:?}", error);
                             false
                         }
                     };
@@ -512,7 +520,7 @@ async fn upload_files(
                             ));
                         }
                         Err(error) => {
-                            log::error!("Error on update thumbnail for video: {:?}", error);
+                            log::warn!("Not possible to update thumbnail for video: {:?}", error);
                             let _ = tx.send(FileTransferProgress::Step(
                                 FileTransferStep::Thumbnail(ThumbnailType::None),
                             ));
