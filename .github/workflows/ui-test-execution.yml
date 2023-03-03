@@ -111,16 +111,14 @@ jobs:
 
       - name: Install and Run Appium Server 💻
         run: |
-          chmod +x ./appium-tests/scripts/run_appium_macos_server.sh
-          ./appium-tests/scripts/run_appium_macos_server.sh
+          npm install -g appium@next
+          appium -v
+          appium driver install mac2
+          appium driver list
+          appium &>/dev/null &
 
       - name: Validations before starting appium ✅
-        run: |
-          cd appium-tests/apps
-          ls -la
-          cd /Applications/
-          ls -la
-          rm -rf ~/.uplink
+        run: rm -rf ~/.uplink
 
       - name: Run WebdriverIO tests on MacOS 🧪
         working-directory: ./appium-tests

@@ -140,7 +140,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                         ContextItem {
-                                            icon: Icon::XMark,
+                                            icon: Icon::HeartSlash,
                                             text: get_local_text("favorites.remove"),
                                             onpress: move |_| {
                                                 state.write().mutate(Action::ToggleFavorite(remove_favorite.clone()));

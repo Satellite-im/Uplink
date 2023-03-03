@@ -3,7 +3,7 @@
     top: var(--gap);
     right: var(--gap);
     border-radius: var(--border-radius);
-    width: var(--sidebar-width);
+    width: var(--width-sidebar);
     min-height: var(--height-input);
     z-index: 1000;
     display: inline-flex;
@@ -22,7 +22,7 @@
         right: 0;
         margin-left: var(--gap);
         margin-right: var(--gap);
-        width: var(--sidebar-width - 20px);
+        width: var(--width-sidebar - 20px);
 
     }
 

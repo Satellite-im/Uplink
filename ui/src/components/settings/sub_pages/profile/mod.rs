@@ -36,6 +36,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .unwrap_or_default();
     let username = state.read().account.identity.username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
+    // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
+    let welcome_dismissed = use_state(&cx, || false);
     let image = state.read().account.identity.graphics().profile_picture();
     let banner = state.read().account.identity.graphics().profile_banner();
 
@@ -125,6 +127,37 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
+            (!welcome_dismissed).then(|| rsx!(
+                div {
+                    class: "new-profile-welcome",
+                    div {
+                        class: "welcome",
+                        img {
+                            src: "./ui/extra/images/mascot/working.png"
+                        },
+                    },
+                    div {
+                        class: "welcome-content",
+                        Button {
+                            text: get_local_text("uplink.dismiss"),
+                            icon: Icon::XMark,
+                            onpress: move |_| {
+                                welcome_dismissed.set(true);
+                            }
+                        },
+                        Label {
+                            text: get_local_text("settings-profile.welcome")
+                        },
+                        p {
+                            get_local_text("settings-profile.welcome-desc")
+                        }
+                        br {},
+                        p {
+                            get_local_text("settings-profile.welcome-cta")
+                        }
+                    }
+                },
+            ))
             div {
                 class: "profile-header",
                 aria_label: "profile-header",
