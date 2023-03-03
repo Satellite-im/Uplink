@@ -54,6 +54,11 @@ const FILE_NAME_SCRIPT: &str = r#"
     filename.textContent = '$FILE_NAME';
 "#;
 
+const ANIMATION_DASH_SCRIPT: &str = r#"
+    var dashElement = document.getElementById('dash-element')
+    dashElement.style.animation = "border-dance 0.5s infinite linear"
+"#;
+
 pub const ROOT_DIR_NAME: &str = "root";
 
 pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
@@ -216,7 +221,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
-                        let script = main_script.replace("$IS_DRAGGING", "true");
+                        let mut script = main_script.replace("$IS_DRAGGING", "true");
+                        script.push_str(&ANIMATION_DASH_SCRIPT);
                         window.eval(&script);
 
                         let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
@@ -290,6 +296,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     let mut script = main_script.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                     script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
                                     window.eval(&script);
                                     storage_state.set(Some(storage));
                                     break;
@@ -298,6 +305,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     let mut script = main_script.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                     script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
                                     window.eval(&script);
                                     break;
                                 }
@@ -406,6 +414,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         div {
             id: "overlay-element",
             class: "overlay-element",
+            div {id: "dash-element", class: "dash-background active-animation"},
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },

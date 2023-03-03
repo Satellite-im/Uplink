@@ -53,10 +53,8 @@
     width: 285px;
     height: 200px;
     padding-top: 6%;
+    border-radius: 12px;
     background-color: var(--primary-light);
-    border-radius: 16px;
-    outline: 3px dashed var(--text-color);
-    outline-offset: -16px;
 
     .overlay-text {
         z-index: 3;
@@ -67,6 +65,32 @@
         color: var(--text-color);
       }
   }
+
+.dash-background{
+    background: transparent;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+}
+
+.active-animation {
+    background-image: linear-gradient(90deg, var(--text-color) 50%, transparent 50%), linear-gradient(90deg, var(--text-color) 50%, transparent 50%), linear-gradient(0deg, var(--text-color) 50%, transparent 50%), linear-gradient(0deg, var(--text-color) 50%, transparent 50%);
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    background-size: 15px 3px, 15px 3px, 3px 15px, 3px 15px;
+    background-position: left top, right bottom, left bottom, right   top;
+    animation: border-dance 0s infinite linear;
+}
+
+@keyframes border-dance {
+    0% {
+        background-position: left top, right bottom, left bottom, right   top;
+    }
+    100% {
+        background-position: left 15px top, right 15px bottom , left bottom 15px , right   top 15px;
+    }
+}
 
 #files-layout {
     .files-list {
