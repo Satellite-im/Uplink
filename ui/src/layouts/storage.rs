@@ -1,6 +1,7 @@
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
+use common::STATIC_ARGS;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
@@ -394,28 +395,26 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     }
 
     if let Some(storage) = storage_state.get().clone() {
-        state.write().storage = storage.clone();
-        *directories_list.write_silent() = storage.directories.clone();
-        *files_list.write_silent() = storage.files.clone();
-        *current_dir.write_silent() = storage.current_dir.clone();
-        *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
+        if !STATIC_ARGS.use_mock {
+            *directories_list.write_silent() = storage.directories.clone();
+            *files_list.write_silent() = storage.files.clone();
+            *current_dir.write_silent() = storage.current_dir.clone();
+            *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
+        };
+        state.write().storage = storage;
         storage_state.set(None);
     }
 
 
-    use_future(cx, (), |_| {
-            to_owned![ch, directories_list, files_list];
+    if !STATIC_ARGS.use_mock {
+        use_future(cx, (), |_| {
+            to_owned![ch];
             async move {
-                loop {
-                    if !directories_list.read().is_empty() || !files_list.read().is_empty() {
-                        break;
-                    }
-                    sleep(Duration::from_millis(1000)).await;
-                    ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-                    println!("Looping");
-                }
+                sleep(Duration::from_millis(300)).await;
+                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
             }
-    });
+        });
+    };
 
     cx.render(rsx!(
         div {
@@ -588,8 +587,20 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
                                     if key_code == Code::Enter {
-                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                        if STATIC_ARGS.use_mock {
+                                            directories_list
+                                                .with_mut(|i| i.insert(0, Directory::new(&new_name)));
+                                                update_items_with_mock_data(
+                                                    storage_state,
+                                                    current_dir,
+                                                    dirs_opened_ref,
+                                                    directories_list,
+                                                    files_list,
+                                                );
+                                        } else {
+                                            ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                        }
                                     }
                                     add_new_folder.set(false);
                                  }
@@ -721,6 +732,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
+}
+
+fn update_items_with_mock_data(
+    storage_state: &UseState<Option<Storage>>,
+    current_dir: &UseRef<Directory>,
+    directories_opened: &UseRef<Vec<Directory>>,
+    directories_list: &UseRef<Vec<Directory>>,
+    files_list: &UseRef<Vec<File>>,
+) {
+    let storage_mock = Storage {
+        initialized: true,
+        directories_opened: directories_opened.read().clone(),
+        current_dir: current_dir.read().clone(),
+        directories: directories_list.read().clone(),
+        files: files_list.read().clone(),
+    };
+    storage_state.set(Some(storage_mock));
 }
 
 fn get_drag_event() -> FileDropEvent {
