@@ -927,6 +927,20 @@ impl State {
                     chat.messages.push_back(message);
                 }
             }
+            MessageEvent::Edited {
+                conversation_id,
+                message,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    if let Some(msg) = chat
+                        .messages
+                        .iter_mut()
+                        .find(|msg| msg.inner.id() == message.inner.id())
+                    {
+                        *msg = message;
+                    }
+                }
+            }
             MessageEvent::Deleted {
                 conversation_id,
                 message_id,
