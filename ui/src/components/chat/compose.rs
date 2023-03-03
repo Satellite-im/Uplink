@@ -539,7 +539,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                         })
                                                     }
                                                 },
-                                                on_edit: move |update| {
+                                                on_edit: move |_update| {
                                                     edit_msg.set(None);
                                                     // todo: send update
                                                 }

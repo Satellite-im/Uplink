@@ -95,7 +95,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         position: "relative",
                         if thumbnail.is_empty() {
-                            let file_extension = file_extension.clone().replace(".", "");
+                            let file_extension = file_extension.clone().replace('.', "");
                             rsx!(span {
                                 label {
                                     class: "file-type",
