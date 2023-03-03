@@ -319,11 +319,12 @@ async fn warp_initialization(
     let path = &STATIC_ARGS.warp_path;
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
+    config.ipfs_setting.agent_version = Some("Uplink".into());
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
 
-    let storage = warp_fs_ipfs::IpfsFileSystem::<warp_fs_ipfs::Persistent>::new(
+    let storage = warp_fs_ipfs::IpfsFileSystem::new(
         account.clone(),
         Some(FsIpfsConfig::production(path)),
     )
@@ -333,7 +334,7 @@ async fn warp_initialization(
     // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
     let rg_config = RgIpfsConfig::production(path);
 
-    let messaging = warp_rg_ipfs::IpfsMessaging::<warp_mp_ipfs::Persistent>::new(
+    let messaging = warp_rg_ipfs::IpfsMessaging::new(
         Some(rg_config),
         account.clone(),
         Some(storage.clone()),

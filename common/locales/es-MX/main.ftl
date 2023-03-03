@@ -19,6 +19,7 @@ uplink = Uplink
     .characters = Caracteres
     .exceeded = Excedido
     .delete = Borrar
+    .dismiss = Dismiss
 
 warning-messages = Warning Messages
     .please-enter-at-least = Por favor, ingrese al menos
@@ -84,6 +85,9 @@ settings-profile = Profile Settings
     .change-avatar = Cambiar avatar
     .edit-button = Editar
     .save-button = Guardar
+    .welcome = Your new profile!
+    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
 
 settings-general = General Settings
     .overlay = Superposición Uplink

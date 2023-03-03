@@ -774,7 +774,6 @@ impl State {
             Err(_) => {
                 return State {
                     configuration: Configuration::new(),
-                    settings: Settings::new(),
                     ..State::default()
                 };
             }

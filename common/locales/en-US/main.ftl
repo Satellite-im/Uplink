@@ -19,6 +19,7 @@ uplink = Uplink
     .characters = characters
     .exceeded = exceeded
     .delete = Delete
+    .dismiss = Dismiss
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
@@ -47,13 +48,16 @@ friends = Friends
     .block = Block
     .all = All Friends
     .remove = Unfriend
+    .cannot-add-self = Can't add yourself, silly!
     .incoming_requests = Incoming Requests
     .outgoing_requests = Outgoing Requests
     .cancel = Cancel Request
     .requested = Requested 
     .sent = Sent
     .requests = Requests
+    .add-failed = You are already friends!
     .pending = Pending
+    .key-blocked = Key Blocked
     .blocked = Blocked
     .accept = Accept
     .deny = Deny Request
@@ -87,7 +91,10 @@ settings-profile = Profile Settings
     .change-avatar = Change avatar
     .edit-button = Edit
     .save-button = Save
-
+    .welcome = Your new profile!
+    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
+    
 settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.

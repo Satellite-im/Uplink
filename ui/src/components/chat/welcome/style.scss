@@ -1,4 +1,5 @@
 #welcome {
+  overflow: hidden;
   display: inline-flex;
   flex-grow: 1;
   flex-direction: column;
@@ -11,7 +12,7 @@
     fill: var(--secondary);
     width: 100%;
     min-width: 0;
-    max-width: calc(var(--sidebar-width) * 1.5);
+    max-width: calc(var(--width-sidebar) * 1.5);
   }
   .muted {
     color: var(--text-color-muted);
