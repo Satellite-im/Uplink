@@ -68,13 +68,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     div {
                         class: "welcome-content",
-                        Button {
-                            text: get_local_text("uplink.dismiss"),
-                            icon: Icon::XMark,
-                            onpress: move |_| {
-                                welcome_dismissed.set(true);
-                            }
-                        },
                         Label {
                             text: get_local_text("settings-profile.welcome")
                         },
@@ -85,6 +78,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         p {
                             get_local_text("settings-profile.welcome-cta")
                         }
+                        span {
+                            class: "welcome-dismiss-button",
+                            Button {
+                                text: get_local_text("uplink.dismiss"),
+                                icon: Icon::XMark,
+                                onpress: move |_| {
+                                    welcome_dismissed.set(true);
+                                }
+                            },
+                        },
                     }
                 },
             ))
