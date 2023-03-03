@@ -6,3 +6,11 @@ pub struct Settings {
     #[serde(default)]
     pub language: String,
 }
+
+impl Settings {
+    pub fn new() -> Self {
+        Settings {
+            language: String::from("English (USA)"),
+        }
+    }
+}
