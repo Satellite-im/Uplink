@@ -210,6 +210,7 @@ impl State {
                 let m = ui_adapter::Message {
                     inner: m,
                     in_reply_to: None,
+                    key: Uuid::new_v4().to_string(),
                 };
                 self.add_msg_to_chat(id, m);
             }

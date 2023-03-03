@@ -492,8 +492,8 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
 
                                 // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
                                 let is_editing = edit_msg.get().map(|id| !group.remote && (id == message.inner.id())).unwrap_or(false);
-                                let context_key = format!("message-{}-{}", message.inner.id(), is_editing);
-                                let message_key = format!("{}-{:?}",message.inner.id(), is_editing);
+                                let context_key = format!("message-{}-{}", &message.key, is_editing);
+                                let message_key = format!("{}-{:?}", &message.key, is_editing);
                                 let msg_uuid = message.inner.id();
                                 rsx! (
                                     ContextMenu {
