@@ -321,12 +321,10 @@ async fn warp_initialization(
         .await
         .map(|mp| Box::new(mp) as Account)?;
 
-    let storage = warp_fs_ipfs::IpfsFileSystem::new(
-        account.clone(),
-        Some(FsIpfsConfig::production(path)),
-    )
-    .await
-    .map(|ct| Box::new(ct) as Storage)?;
+    let storage =
+        warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(FsIpfsConfig::production(path)))
+            .await
+            .map(|ct| Box::new(ct) as Storage)?;
 
     // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
     let rg_config = RgIpfsConfig::production(path);

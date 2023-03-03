@@ -39,6 +39,13 @@ pub enum RayGunCmd {
         attachments: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "EditMessage {{ conv_id: {conv_id} }} ")]
+    EditMessage {
+        conv_id: Uuid,
+        msg_id: Uuid,
+        msg: Vec<String>,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     #[display(fmt = "DownloadAttachment")]
     DownloadAttachment {
         conv_id: Uuid,
@@ -128,6 +135,15 @@ pub async fn handle_raygun_cmd(
                 messaging.attach(conv_id, attachments, msg).await
             };
 
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::EditMessage {
+            conv_id,
+            msg_id,
+            msg,
+            rsp,
+        } => {
+            let r = messaging.edit(conv_id, msg_id, msg).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::DownloadAttachment {

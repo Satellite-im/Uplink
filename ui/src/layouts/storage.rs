@@ -530,13 +530,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         .and_then(OsStr::to_str)
                                                         .map(|s| s.to_string())
                                                         .unwrap_or_default();
-    
+
                                                     let file_stem = PathBuf::from(&file_name2)
                                                             .file_stem()
                                                             .and_then(OsStr::to_str)
                                                             .map(str::to_string)
                                                             .unwrap_or_default();
-    
+
                                                     let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                                                         Some(path) => path,
                                                         None => return,

@@ -320,6 +320,7 @@ enum MessagesCommand {
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_messages");
     let state = use_shared_state::<State>(cx)?;
+    let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     let user = state.read().account.identity.did_key();
 
     let script = include_str!("./script.js");
@@ -468,6 +469,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
                                 let context_key = format!("message-{}", message.inner.id());
                                 let message_key = message.inner.id().to_string();
+                                let msg_uuid = message.inner.id();
                                 rsx! (
                                     ContextMenu {
                                         key: "{context_key}",
@@ -492,6 +494,13 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 }
                                             },
                                             ContextItem {
+                                                icon: Icon::Pencil,
+                                                text: get_local_text("messages.edit"),
+                                                onpress: move |_| {
+                                                    edit_msg.set(Some(msg_uuid));
+                                                }
+                                            },
+                                            ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
                                                 text: get_local_text("uplink.delete"),
@@ -513,6 +522,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             )),
                                             Message {
                                                 key: "{message_key}",
+                                                editing: &Some(message.inner.id()) == edit_msg.get(),
                                                 remote: group.remote,
                                                 with_text: message.inner.value().join("\n"),
                                                 reactions: message.inner.reactions(),
@@ -529,6 +539,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                         })
                                                     }
                                                 },
+                                                on_edit: move |update| {
+                                                    edit_msg.set(None);
+                                                    // todo: send update
+                                                }
                                             },
                                        }
                                     }
