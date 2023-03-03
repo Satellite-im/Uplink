@@ -617,7 +617,6 @@ fn app(cx: Scope) -> Element {
             loop {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
-                needs_update.set(true);
 
                 // fetch the identities for all friends to get changes in their status messages etc
                 let (tx, rx) = oneshot::channel::<Result<HashMap<DID, _>, warp::error::Error>>();
@@ -625,6 +624,7 @@ fn app(cx: Scope) -> Element {
                     warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RefreshFriends { rsp: tx }))
                 {
                     log::error!("failed to refresh Friends {e}");
+                    needs_update.set(true);
                     continue;
                 }
 
@@ -635,6 +635,11 @@ fn app(cx: Scope) -> Element {
                             for (id, friend_update) in update {
                                 if let Some(friend) = state.write().friends.all.get_mut(&id) {
                                     friend.set_warp_identity(friend_update);
+                                } else {
+                                    log::warn!(
+                                        "failed up update friend: {}",
+                                        friend_update.username()
+                                    );
                                 }
                             }
                         }
@@ -646,6 +651,8 @@ fn app(cx: Scope) -> Element {
                         log::error!("failed to refresh friends: {e}");
                     }
                 }
+
+                needs_update.set(true);
             }
         }
     });

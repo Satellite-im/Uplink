@@ -86,7 +86,7 @@ struct ComposeProps {
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     let state = use_shared_state::<State>(cx)?;
-    let data = get_compose_data(cx);
+    let data = get_compose_data(state.read().clone());
     let data2 = data.clone();
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
@@ -123,27 +123,42 @@ pub fn Compose(cx: Scope) -> Element {
     ))
 }
 
-fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
-    let state = use_shared_state::<State>(cx)?;
-
+fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
     // the Compose page shouldn't be called before chats is initialized. but check here anyway.
-    if !state.read().chats.initialized {
+    if !s.chats.initialized {
         return None;
     }
 
-    let s = state.read();
     let active_chat = match s.get_active_chat() {
         Some(c) => c,
         None => return None,
     };
     let message_groups = s.get_sort_messages(&active_chat);
+
+    // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
+    // this would be "fixed" the next time uplink starts up
     let other_participants = s.get_without_me(&active_chat.participants);
     let active_participant = other_participants
         .first()
         .cloned()
         .expect("chat should have at least 2 participants");
-    let subtext = active_participant.status_message().unwrap_or_default();
+
+    // friend status message and online status is updated in state.friends, not state.chats
+    // if the active participant isn't a friend, we could fall back to using the status message obtained from chats. however, it wouldn't be updated
+    let subtext = match s.friends.all.get(&active_participant.did_key()) {
+        Some(friend) => friend.status_message().unwrap_or_default(),
+        // todo: do we care about the status message of someone who isn't a friend? it won't be updated ever..
+        None => String::new(), //active_participant.status_message().unwrap_or_default(),
+    };
+
+    // for the background picture and platform, replace Identity with friend's identity
+    let active_participant = match s.friends.all.get(&active_participant.did_key()) {
+        Some(friend) => friend.clone(),
+        None => active_participant,
+    };
+
     let is_favorite = s.is_favorite(&active_chat);
+
     let first_image = active_participant.graphics().profile_picture();
     let other_participants_names = build_participants_names(&other_participants);
     let active_media = Some(active_chat.id) == s.chats.active_media;
@@ -244,6 +259,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         .map(|x| x.other_participants_names.clone())
         .unwrap_or_default();
     let subtext = data.as_ref().map(|x| x.subtext.clone()).unwrap_or_default();
+
     cx.render(rsx!(
         if let Some(data) = data {
             if data.other_participants.len() < 2 {rsx! (
