@@ -123,7 +123,7 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = if attachments.is_empty() {
-                messaging.send(conv_id, None, msg).await
+                messaging.send(conv_id, msg).await
             } else {
                 messaging.attach(conv_id, attachments, msg).await
             };
