@@ -11,7 +11,7 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window, DesktopContext};
+use dioxus_desktop::{use_window};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -29,7 +29,6 @@ use kit::{
     layout::topbar::Topbar,
 };
 use once_cell::sync::Lazy;
-use regex::Regex;
 use rfd::FileDialog;
 use tokio::sync::mpsc;
 use tokio::time::sleep;
@@ -43,7 +42,16 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
-use crate::logger::{self};
+
+const FEEDBACK_TEXT_SCRIPT: &str = r#"
+    const feedback_element = document.getElementById('overlay-text');
+    feedback_element.textContent = '$TEXT';
+"#;
+
+const FILE_NAME_SCRIPT: &str = r#"
+    const filename = document.getElementById('overlay-text0');
+    filename.textContent = '$FILE_NAME';
+"#;
 
 pub const ROOT_DIR_NAME: &str = "root";
 
@@ -100,11 +108,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
 
-    let script = include_str!("./storage.js");
+    let main_script = include_str!("./storage.js");
+
     let window = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, script, window];
+        to_owned![storage_state, main_script, window];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -206,8 +215,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
-                        let script2 = script.replace("$IS_DRAGGING", &format!("{}", true));
-                        window.eval(&script2);
+                        let script = main_script.replace("$IS_DRAGGING", "true");
+                        window.eval(&script);
 
                         let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
@@ -220,68 +229,73 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             log::error!("failed to upload files {}", e);
                             continue;
                         }
-                        let script_feedback = r#"
-                            const feedback_element = document.getElementById('overlay-text');
-                            feedback_element.textContent = '$TEXT';
-                        "#;
                         while let Some(msg) = rx.recv().await {
                             match msg {
                                 FileTransferProgress::Step(steps) => {
                                     match steps {
+                                        FileTransferStep::Start(name) => {
+                                            let mut script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Starting upload...");
+                                            script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME",&name));
+                                            window.eval(&script);
+                                            sleep(Duration::from_millis(100)).await;
+                                        },
                                         FileTransferStep::DuplicateName(duplicate_name_step) => {
                                                 match duplicate_name_step {
                                                     DuplicateNameStep::Start => {
-                                                        let script = script_feedback.replace("$TEXT",
-                                                            &format!("{}", "Renaming if duplicated"));
-                                                    window.eval(&script);
+                                                        let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Renaming if duplicated");
+                                                        window.eval(&script);
                                                     },
                                                     DuplicateNameStep::Finished(name) => {
-                                                        let script = script_feedback.replace("$TEXT",
-                                                                &format!("{}", name));
-                                                    window.eval(&script);
+                                                        let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&name);
+                                                        window.eval(&script);
                                                     },
                                                 }
-                                                sleep(Duration::from_millis(500)).await;
+                                                sleep(Duration::from_millis(100)).await;
                                         },
                                         FileTransferStep::Upload(progress) => {
-                                            let script = script_feedback.replace("$TEXT",
-                                            &format!("{} {}", progress, "uploaded"));
-                                            window.eval(&script);
+                                            if progress.contains("%") {
+                                                let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", progress, "uploaded"));
+                                                window.eval(&script);
+                                            } else {
+                                                let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", "Uploaded", progress));
+                                                window.eval(&script);
+                                            }
+                                            sleep(Duration::from_millis(3)).await;
 
                                         },
                                         FileTransferStep::Thumbnail(thumb_type) => {
                                             match thumb_type {
                                                 ThumbnailType::Image => {
-                                                    let script = script_feedback.replace("$TEXT",
-                                                        &format!("{}", "Image thumb uploaded"));
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Image thumb uploaded");
                                                     window.eval(&script);
                                                 },
                                                 ThumbnailType::Video => {
-                                                    let script = script_feedback.replace("$TEXT",
-                                                    &format!("{}", "Video thumb uploaded"));
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Video thumb uploaded");
                                                     window.eval(&script);
                                                 },
                                                 ThumbnailType::None => {
-                                                    let script = script_feedback.replace("$TEXT",
-                                                    &format!("{}", "No thumb uploaded"));
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","No thumb uploaded");
                                                     window.eval(&script);
                                                 },
                                             }
-                                            sleep(Duration::from_millis(500)).await;
+                                            sleep(Duration::from_millis(100)).await;
 
                                         }
                                     };
                                 }
                                 FileTransferProgress::Finished(storage) => {
-                                    let script2 = script_feedback.replace("$TEXT",
-                                        &format!("{}", "Upload progress completed!"));
-                                        window.eval(&script2);
-                                    let script2 = script.replace("$IS_DRAGGING", &format!("{}", false));
-                                    window.eval(&script2);
+                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
+                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
+                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    window.eval(&script);
                                     storage_state.set(Some(storage));
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
+                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
+                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
+                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    window.eval(&script);
                                     break;
                                 }
                             }
@@ -385,14 +399,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         });
     };
 
-    let upload_percentage: &UseRef<String> = use_ref(cx, || String::from("Uploading files"));
-
     cx.render(rsx!(
         div {
             id: "overlay-element",
-            class: "overlay-element",
-            p {id: "overlay-text0", class: "overlay-text", format!("{}", "File name") },
-            p {id: "overlay-text", class: "overlay-text", format!("{}", upload_percentage.read()) },
+            class: "overlay-element dashed-loading",
+            p {id: "overlay-text0", class: "overlay-text"},
+            p {id: "overlay-text", class: "overlay-text"}
         },
         div {
             id: "files-layout",
@@ -401,20 +413,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 if let None = drag_event.read().clone() {
                     let window = use_window(cx);
                     cx.spawn({
-                        to_owned![drag_event, window, ch, script];
+                        to_owned![drag_event, window, ch, main_script];
                         async move {
-                            let script_feedback = r#"
-                                                const feedback_element = document.getElementById('overlay-text');
-                                                feedback_element.textContent = '$TEXT';
-                                            "#;
                             loop {
                                 let file_drop_event = get_drag_event();
                                 *drag_event.write_silent() = Some(file_drop_event.clone());
                                 match file_drop_event {
                                     FileDropEvent::Hovered(files_local_path) => {
-                                        let script = script.replace("$IS_DRAGGING", &format!("{}", true));
-                                        window.eval(&script);
-                                        let script = script_feedback.replace("$TEXT", &format!("{} {} files to upload!", "Drop ", files_local_path.len()));
+                                        let mut script = main_script.replace("$IS_DRAGGING", "true");
+                                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} files to upload!", files_local_path.len())));
                                         window.eval(&script);
                                     }
                                     FileDropEvent::Dropped(files_local_path) => {
@@ -422,7 +429,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         break;
                                     }
                                     _ => {
-                                        let script = script.replace("$IS_DRAGGING", &format!("{}", false));
+                                        let script = main_script.replace("$IS_DRAGGING", "false");
                                         window.eval(&script);
                                         break;
                                     }
@@ -723,20 +730,4 @@ fn update_items_with_mock_data(
 
 fn get_drag_event() -> FileDropEvent {
     DRAG_EVENT.read().clone()
-}
-
-async fn show_user_feedback_when_upload_files(window: DesktopContext, script_feedback: &str) {
-    let mut log_ch = logger::subscribe();
-    while let Some(log) = log_ch.recv().await {
-        let string_log = log.to_string();
-        let re = Regex::new(r"\d{2}%").unwrap();
-        if let Some(progress_text) = re.find(&string_log) {
-            let script = script_feedback.replace("$TEXT",
-             &format!("{} {}", if progress_text.as_str().contains("00%") {"99.9%"} else {progress_text.as_str()}, "uploaded."));
-            window.eval(&script);
-        }
-        if string_log.contains("Get items from current directory worked!") {
-            break;
-        }
-    };
 }
