@@ -74,6 +74,12 @@ files = Files
     .total-space = Total Space:
     .rename = Rename
     .download = Download
+    .uploaded = Uploaded
+    .thumbnail-uploaded = Thumbnail Uploaded
+    .no-thumbnail = No Thumbnail
+    .renaming-duplicated = Renaming if Duplicated
+    .one-file-to-upload = File to Upload
+    .files-to-upload = Files to Upload
 
 settings = Settings
     .settings = Settings

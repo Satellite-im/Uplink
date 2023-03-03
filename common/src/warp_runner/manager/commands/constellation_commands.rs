@@ -33,22 +33,11 @@ use warp::{
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
 
-pub enum ThumbnailType {
-    Image,
-    Video,
-    None,
-}
-
-pub enum DuplicateNameStep {
-    Start,
-    Finished(String),
-}
-
 pub enum FileTransferStep {
     Start(String),
-    DuplicateName(DuplicateNameStep),
+    DuplicateName(Option<String>),
     Upload(String),
-    Thumbnail(ThumbnailType),
+    Thumbnail(Option<()>),
 }
 
 pub enum FileTransferProgress<T> {
@@ -403,11 +392,11 @@ async fn upload_files(
         let original = filename.clone();
         let file = PathBuf::from(&original);
         let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
-            DuplicateNameStep::Start,
+            None,
         )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
         let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
-            DuplicateNameStep::Finished(filename.clone()),
+            Some(filename.clone()),
         )));
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
@@ -500,7 +489,7 @@ async fn upload_files(
                         Ok(_) => {
                             log::info!("Image Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(ThumbnailType::Image),
+                                FileTransferStep::Thumbnail(Some(())),
                             ));
                             true
                         }
@@ -516,13 +505,13 @@ async fn upload_files(
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(ThumbnailType::Video),
+                                FileTransferStep::Thumbnail(Some(())),
                             ));
                         }
                         Err(error) => {
                             log::warn!("Not possible to update thumbnail for video: {:?}", error);
                             let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(ThumbnailType::None),
+                                FileTransferStep::Thumbnail(None),
                             ));
                         }
                     };

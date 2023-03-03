@@ -5,7 +5,7 @@ use common::STATIC_ARGS;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::warp_runner::{FileTransferProgress, FileTransferStep, ThumbnailType, DuplicateNameStep};
+use common::warp_runner::{FileTransferProgress, FileTransferStep};
 use common::{
     state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
@@ -234,53 +234,43 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 FileTransferProgress::Step(steps) => {
                                     match steps {
                                         FileTransferStep::Start(name) => {
-                                            let mut script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Starting upload...");
                                             let file_name_formatted = format_item_name(name);
-                                            script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted));
+                                            let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
                                             window.eval(&script);
                                             sleep(Duration::from_millis(100)).await;
                                         },
                                         FileTransferStep::DuplicateName(duplicate_name_step) => {
                                                 match duplicate_name_step {
-                                                    DuplicateNameStep::Start => {
-                                                        let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Renaming if duplicated");
+                                                    None => {
+                                                        let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.renaming-duplicated"));
                                                         window.eval(&script);
                                                     },
-                                                    DuplicateNameStep::Finished(name) => {
+                                                   Some(name) => {
                                                         let file_name_formatted = format_item_name(name);
                                                         let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
                                                         window.eval(&script);
                                                     },
                                                 }
-                                                sleep(Duration::from_millis(100)).await;
+                                                sleep(Duration::from_millis(200)).await;
                                         },
                                         FileTransferStep::Upload(progress) => {
-                                            if progress.contains("%") {
-                                                let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", progress, "uploaded"));
-                                                window.eval(&script);
-                                            } else {
-                                                let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", "Uploaded", progress));
-                                                window.eval(&script);
-                                            }
+                                            let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", progress, get_local_text("files.uploaded")));
+                                            window.eval(&script);
                                             sleep(Duration::from_millis(3)).await;
 
                                         },
                                         FileTransferStep::Thumbnail(thumb_type) => {
                                             match thumb_type {
-                                                ThumbnailType::Image => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Image thumb uploaded");
+                                                Some(_) => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.thumbnail-uploaded"));
                                                     window.eval(&script);
                                                 },
-                                                ThumbnailType::Video => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Video thumb uploaded");
-                                                    window.eval(&script);
-                                                },
-                                                ThumbnailType::None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","No thumb uploaded");
+                                                None => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.no-thumbnail"));
                                                     window.eval(&script);
                                                 },
                                             }
-                                            sleep(Duration::from_millis(100)).await;
+                                            sleep(Duration::from_millis(200)).await;
 
                                         }
                                     };
@@ -439,7 +429,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 match file_drop_event {
                                     FileDropEvent::Hovered(files_local_path) => {
                                         let mut script = main_script.replace("$IS_DRAGGING", "true");
-                                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} files to upload!", files_local_path.len())));
+                                        if files_local_path.len() > 1 {
+                                            script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.files-to-upload"))));
+                                        } else {
+                                            script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.one-file-to-upload"))));
+                                        }
                                         window.eval(&script);
                                     }
                                     FileDropEvent::Dropped(files_local_path) => {
