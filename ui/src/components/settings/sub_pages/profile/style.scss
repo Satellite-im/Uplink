@@ -7,7 +7,37 @@
     position: relative;
     margin-bottom: calc((var(--width-sidebar) / 6.3) / 2 + var(--gap));
   }
-
+  .new-profile-welcome {
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    margin: var(--gap);
+    padding: var(--gap);
+    border-radius: var(--border-radius);
+    flex-wrap: wrap;
+    max-width: calc(100% - (var(--gap) * 2));
+    
+    .welcome {
+      max-width: calc(var(--width-sidebar) - (var(--gap) * 2));
+      img {
+        width: 100%;
+        pointer-events: none;
+      }
+    }
+    p {
+      margin-top: var(--gap);
+      color: var(--text-color);
+    }
+    .welcome-content {
+      display: inline-flex;
+      flex-direction: column;
+      min-width: calc(var(--width-sidebar) / 2);
+      flex: 1;
+      
+      .btn-wrap {
+        justify-content: flex-end;
+      }
+    }
+  }
   .profile-banner {
     width: 100%;
     height: calc(var(--width-sidebar) / 3);

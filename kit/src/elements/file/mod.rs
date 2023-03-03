@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf};
+use std::ffi::OsStr;
 
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
@@ -11,7 +11,6 @@ use crate::elements::{
 };
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
@@ -34,31 +33,6 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<'a>>,
     #[props(optional)]
     loading: Option<bool>,
-}
-
-pub fn get_text(file_name: String) -> (String, String) {
-    let mut file_name_formatted = file_name.clone();
-    let item = PathBuf::from(&file_name);
-    let file_extension = get_file_extension(file_name.clone());
-
-    let file_stem = item
-        .file_stem()
-        .and_then(OsStr::to_str)
-        .map(str::to_string)
-        .unwrap_or_default();
-
-    if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
-        file_name_formatted = match &file_name.get(0..7) {
-            Some(name_sliced) => format!(
-                "{}...{}{}",
-                name_sliced,
-                &file_stem[file_stem.len() - 2..].to_string(),
-                file_extension
-            ),
-            None => file_name.clone(),
-        };
-    }
-    (file_name, file_name_formatted)
 }
 
 pub fn is_video(file_name: String) -> bool {
@@ -96,9 +70,9 @@ pub fn get_file_extension(file_name: String) -> String {
 #[allow(non_snake_case)]
 pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let file_extension = get_file_extension(cx.props.text.clone());
-    let (file_name, file_name_formatted) = get_text(cx.props.text.clone());
+    let file_name = cx.props.text.clone();
     let aria_label = get_aria_label(&cx);
-    let placeholder = file_name;
+    let placeholder = file_name.clone();
     let with_rename = cx.props.with_rename.unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
@@ -116,13 +90,20 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 aria_label: "{aria_label}",
                 div {
-                    class: "icon",
+                    class: "icon alignment",
                     onclick: move |_| emit_press(&cx),
                     div {
                         position: "relative",
                         if thumbnail.is_empty() {
-                            rsx!(IconElement {
+                            let file_extension = file_extension.clone().replace(".", "");
+                            rsx!(span {
+                                label {
+                                    class: "file-type",
+                                    "{file_extension}"
+                                },
+                                IconElement {
                                 icon: Icon::Document,
+                                }
                             })
                         } else {
                             rsx!(img {
@@ -172,8 +153,9 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                   ),
                 (!with_rename).then(|| rsx! (
                     label {
-                        class: "file-name",
-                        "{file_name_formatted}"
+                        class: "file-name item-alignment",
+                        title: "{&file_name}",
+                        "{file_name}"
                     }
                 ))
             }
@@ -185,7 +167,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 pub fn FileSkeletal(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
-            class: "file",
+            class: "file alignment",
             div {
                 class: "icon skeletal-svg",
                 IconElement {
@@ -202,38 +184,6 @@ pub fn FileSkeletal(cx: Scope) -> Element {
 #[cfg(test)]
 mod test {
     pub use super::*;
-
-    #[test]
-    fn test_get_text1() {
-        let input = String::from("very_long_file_name.txt");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, String::from("very_lo...me.txt"));
-    }
-
-    #[test]
-    fn test_get_text2() {
-        let input = String::from("very_long_file_name");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, String::from("very_lo...me"));
-    }
-
-    #[test]
-    fn test_get_text3() {
-        let input = String::from("name.txt");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, input);
-    }
-
-    #[test]
-    fn test_get_text4() {
-        let input = String::from("name");
-        let (name, formatted) = get_text(input.clone());
-        assert_eq!(input, name);
-        assert_eq!(formatted, input);
-    }
 
     #[test]
     fn test_get_file_extension1() {

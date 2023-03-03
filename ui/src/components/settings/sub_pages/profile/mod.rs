@@ -48,12 +48,46 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image_state = use_state(cx, String::new);
     let banner_state = use_state(cx, String::new);
 
+    // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
+    let welcome_dismissed = use_state(&cx, || false);
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
     log::debug!("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
+            (!welcome_dismissed).then(|| rsx!(
+                div {
+                    class: "new-profile-welcome",
+                    div {
+                        class: "welcome",
+                        img {
+                            src: "./ui/extra/images/mascot/working.png"
+                        },
+                    },
+                    div {
+                        class: "welcome-content",
+                        Button {
+                            text: get_local_text("uplink.dismiss"),
+                            icon: Icon::XMark,
+                            onpress: move |_| {
+                                welcome_dismissed.set(true);
+                            }
+                        },
+                        Label {
+                            text: get_local_text("settings-profile.welcome")
+                        },
+                        p {
+                            get_local_text("settings-profile.welcome-desc")
+                        }
+                        br {},
+                        p {
+                            get_local_text("settings-profile.welcome-cta")
+                        }
+                    }
+                },
+            ))
             div {
                 class: "profile-header",
                 aria_label: "profile-header",

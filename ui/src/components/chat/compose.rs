@@ -181,19 +181,25 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
     let active_chat = data.as_ref().map(|x| x.active_chat.clone());
     let active_chat2 = active_chat.clone();
+    let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
     cx.render(rsx!(
         Button {
-            icon: Icon::Heart,
+            icon: if favorite {
+                Icon::HeartSlash
+            } else {
+                Icon::Heart
+            },
             disabled: data.is_none(),
-            aria_label: "Add to Favorites".into(),
-            appearance: data
-                .as_ref()
-                .map(|data| if data.is_favorite {
-                    Appearance::Primary
-                } else {
-                    Appearance::Secondary
-                })
-                .unwrap_or(Appearance::Secondary),
+            aria_label: get_local_text(if favorite {
+                "favorites.remove"
+            } else {
+                "favorites.favorites"
+            }),
+            appearance: if favorite {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
                 text: get_local_text("favorites.add"),

@@ -190,7 +190,8 @@ fn main() {
         .with_title(title)
         .with_resizable(true)
         .with_inner_size(LogicalSize::new(950.0, 600.0))
-        .with_min_inner_size(LogicalSize::new(300.0, 500.0));
+        // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
+        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
 
     #[cfg(target_os = "macos")]
     {
@@ -245,7 +246,7 @@ fn bootstrap(cx: Scope) -> Element {
     let desktop = use_window(cx);
     desktop.set_inner_size(LogicalSize {
         width: 500.0,
-        height: 300.0,
+        height: 350.0,
     });
 
     cx.render(rsx!(crate::auth_page_manager {}))
@@ -370,7 +371,9 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
+    // Here we set the size larger, and bump up the min size in preperation for rendering the main app.
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
 
     // todo: delete this. it is just an example
     if state.configuration.general.enable_overlay {

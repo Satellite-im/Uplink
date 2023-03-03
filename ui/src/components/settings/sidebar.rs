@@ -122,7 +122,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         developer,
     ];
 
-    let active_route = routes[0].clone();
+    let active_route = routes[1].clone();
     let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
