@@ -29,6 +29,7 @@ warning-messages = Warning Messages
 
 messages = Messages
     .edit = Edit
+    .cancel-edit = Cancel Edit
     .new = New Message
     .replying = Replying to:
     .react = React

@@ -521,10 +521,18 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             ContextItem {
                                                 icon: Icon::Pencil,
                                                 text: get_local_text("messages.edit"),
-                                                should_render: !group.remote,
+                                                should_render: !group.remote && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
                                                 onpress: move |_| {
                                                     edit_msg.set(Some(msg_uuid));
                                                     log::debug!("editing msg {msg_uuid}");
+                                                }
+                                            },
+                                            ContextItem {
+                                                icon: Icon::Pencil,
+                                                text: get_local_text("messages.cancel-edit"),
+                                                should_render: !group.remote && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                                                onpress: move |_| {
+                                                    edit_msg.set(None);
                                                 }
                                             },
                                             ContextItem {
@@ -570,11 +578,13 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                     edit_msg.set(None);
                                                     let msg = update.split('\n').collect::<Vec<_>>();
                                                     let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                                                    if !is_valid {
-                                                        return;
-                                                    }
                                                     let msg = msg.iter().map(|x| x.to_string()).collect();
-                                                    ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                                                    if !is_valid {
+                                                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
+                                                    }
+                                                    else {
+                                                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                                                    }
                                                 }
                                             },
                                        }

@@ -94,8 +94,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         let is_valid = !val.read().trim().is_empty();
-                        if evt.code() == Code::Enter && !evt.data.modifiers().contains(Modifiers::SHIFT) && is_valid {
-                            cx.props.onreturn.call((val.read().to_string(), true, evt.code()));
+                        if evt.code() == Code::Enter && !evt.data.modifiers().contains(Modifiers::SHIFT) {
+                            cx.props.onreturn.call((val.read().to_string(), is_valid, evt.code()));
                         }
                     }
                 }
