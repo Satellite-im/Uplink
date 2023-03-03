@@ -1,0 +1,24 @@
+{
+    // Debug runs using breakpoints.
+    // Needs the CodeLLDB plugin for vsc
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "UI Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/ui",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "UI Debug With Mock",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/ui",
+            "args": [
+                "--with-mock"
+            ],
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}
