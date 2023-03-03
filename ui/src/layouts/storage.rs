@@ -8,13 +8,12 @@ use common::warp_runner::{FileTransferProgress, FileTransferStep, ThumbnailType,
 use common::{
     state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    WARP_CMD_CH,
 };
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::file;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -59,6 +58,8 @@ const ANIMATION_DASH_SCRIPT: &str = r#"
     dashElement.style.animation = "border-dance 0.5s infinite linear"
 "#;
 
+const MAX_LEN_TO_FORMAT_NAME: usize = 15;
+
 pub const ROOT_DIR_NAME: &str = "root";
 
 pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
@@ -101,16 +102,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let add_new_folder = use_state(cx, || false);
 
-    if let Some(storage) = storage_state.get().clone() {
-        if !STATIC_ARGS.use_mock {
-            *directories_list.write_silent() = storage.directories.clone();
-            *files_list.write_silent() = storage.files.clone();
-            *current_dir.write_silent() = storage.current_dir.clone();
-            *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
-        };
-        state.write().storage = storage;
-        storage_state.set(None);
-    }
+
 
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
 
@@ -242,7 +234,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     match steps {
                                         FileTransferStep::Start(name) => {
                                             let mut script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Starting upload...");
-                                            let (_, file_name_formatted) = file::get_text(name);
+                                            let file_name_formatted = format_item_name(name);
                                             script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted));
                                             window.eval(&script);
                                             sleep(Duration::from_millis(100)).await;
@@ -254,7 +246,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         window.eval(&script);
                                                     },
                                                     DuplicateNameStep::Finished(name) => {
-                                                        let (_, file_name_formatted) = file::get_text(name);
+                                                        let file_name_formatted = format_item_name(name);
                                                         let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
                                                         window.eval(&script);
                                                     },
@@ -400,15 +392,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
-    if !STATIC_ARGS.use_mock {
-        use_future(cx, (), |_| {
-            to_owned![ch];
+
+    if let Some(storage) = storage_state.get().clone() {
+        state.write().storage = storage.clone();
+        *directories_list.write_silent() = storage.directories.clone();
+        *files_list.write_silent() = storage.files.clone();
+        *current_dir.write_silent() = storage.current_dir.clone();
+        *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
+        storage_state.set(None);
+    }
+
+
+    use_future(cx, (), |_| {
+            to_owned![ch, directories_list, files_list];
             async move {
-                sleep(Duration::from_millis(300)).await;
-                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                loop {
+                    if !directories_list.read().is_empty() || !files_list.read().is_empty() {
+                        break;
+                    }
+                    sleep(Duration::from_millis(1000)).await;
+                    ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                    println!("Looping");
+                }
             }
-        });
-    };
+    });
 
     cx.render(rsx!(
         div {
@@ -555,6 +562,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 }
                             })
                         } else {
+                            let folder_name_formated = format_item_name(dir_name);
                             rsx!(div {
                                 class: "crumb",
                                 onclick: move |_| {
@@ -562,7 +570,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                                 aria_label: "crumb",
                                 p {
-                                    "{dir_name}"
+                                    "{folder_name_formated}"
                                 }
                             },)
                         }
@@ -580,20 +588,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
                                     if key_code == Code::Enter {
-                                        if STATIC_ARGS.use_mock {
-                                            directories_list
-                                                .with_mut(|i| i.insert(0, Directory::new(&new_name)));
-                                                update_items_with_mock_data(
-                                                    storage_state,
-                                                    current_dir,
-                                                    dirs_opened_ref,
-                                                    directories_list,
-                                                    files_list,
-                                                );
-                                        } else {
-                                            ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-                                        }
+                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                     }
                                     add_new_folder.set(false);
                                  }
@@ -727,23 +723,28 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
-fn update_items_with_mock_data(
-    storage_state: &UseState<Option<Storage>>,
-    current_dir: &UseRef<Directory>,
-    directories_opened: &UseRef<Vec<Directory>>,
-    directories_list: &UseRef<Vec<Directory>>,
-    files_list: &UseRef<Vec<File>>,
-) {
-    let storage_mock = Storage {
-        initialized: true,
-        directories_opened: directories_opened.read().clone(),
-        current_dir: current_dir.read().clone(),
-        directories: directories_list.read().clone(),
-        files: files_list.read().clone(),
-    };
-    storage_state.set(Some(storage_mock));
-}
-
 fn get_drag_event() -> FileDropEvent {
     DRAG_EVENT.read().clone()
+}
+
+fn format_item_name(file_name: String) -> String {
+    let mut file_name_formatted = file_name.clone();
+    let item = PathBuf::from(&file_name);
+
+    let file_stem = item
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
+        file_name_formatted = match &file_name.get(0..15) {
+            Some(name_sliced) => format!(
+                "{}...",
+                name_sliced,
+            ),
+            None => file_name.clone(),
+        };
+    }
+    file_name_formatted
 }
