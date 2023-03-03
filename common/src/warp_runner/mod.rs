@@ -324,6 +324,8 @@ async fn warp_initialization(
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
+    // prevents an error which is otherwise reproduced as follows: set the profile picture, set the profile banner, then update your status
+    config.store_setting.override_ipld = false;
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
