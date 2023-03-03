@@ -14,6 +14,7 @@ use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::elements::file;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -235,7 +236,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     match steps {
                                         FileTransferStep::Start(name) => {
                                             let mut script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT","Starting upload...");
-                                            script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME",&name));
+                                            let (_, file_name_formatted) = file::get_text(name);
+                                            script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted));
                                             window.eval(&script);
                                             sleep(Duration::from_millis(100)).await;
                                         },
@@ -246,7 +248,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         window.eval(&script);
                                                     },
                                                     DuplicateNameStep::Finished(name) => {
-                                                        let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&name);
+                                                        let (_, file_name_formatted) = file::get_text(name);
+                                                        let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
                                                         window.eval(&script);
                                                     },
                                                 }
@@ -402,7 +405,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     cx.render(rsx!(
         div {
             id: "overlay-element",
-            class: "overlay-element dashed-loading",
+            class: "overlay-element",
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
