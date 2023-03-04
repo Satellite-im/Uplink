@@ -123,7 +123,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         developer,
     ];
 
-    let active_route = routes[1].clone();
+    let active_route = routes[0].clone();
 
     cx.render(rsx!(
         ReusableSidebar {
