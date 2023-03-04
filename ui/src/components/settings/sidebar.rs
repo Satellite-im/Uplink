@@ -62,6 +62,13 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _ = use_shared_state::<State>(cx)?;
 
+    let profile = UIRoute {
+        to: "profile",
+        name: get_local_text("settings.profile"),
+        icon: Icon::User,
+        ..UIRoute::default()
+    };
+
     let general = UIRoute {
         to: "general",
         name: get_local_text("settings.general"),
@@ -69,12 +76,6 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ..UIRoute::default()
     };
 
-    let profile = UIRoute {
-        to: "profile",
-        name: get_local_text("settings.profile"),
-        icon: Icon::User,
-        ..UIRoute::default()
-    };
     let audio = UIRoute {
         to: "audio",
         name: get_local_text("settings.audio"),
@@ -112,8 +113,8 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         ..UIRoute::default()
     };
     let routes = vec![
-        general,
         profile,
+        general,
         privacy,
         audio,
         files,
