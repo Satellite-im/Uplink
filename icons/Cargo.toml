@@ -1,14 +1,13 @@
 [package]
 name = "icons"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-html =  { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus.workspace = true
+dioxus-html.workspace = true
 
 [build-dependencies]
-clap = { version = "~3", features = ["derive"] }
 heck = "~0.4"
 itertools = "~0.10"
 scraper = "~0.12"

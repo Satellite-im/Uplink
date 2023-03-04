@@ -1,15 +1,14 @@
 [package]
 name = "extensions"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "391de73496df9123adda184fc5a9ad9610a61874" }
-derive_more = "0.99"
+dioxus.workspace = true
+libloading.workspace = true
+derive_more.workspace = true
 ipc-channel = "0.16.0"
 
 [build-dependencies]
