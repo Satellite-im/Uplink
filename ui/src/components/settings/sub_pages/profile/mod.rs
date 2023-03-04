@@ -49,7 +49,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner_state = use_state(cx, String::new);
 
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = use_state(&cx, || false);
+    let welcome_dismissed = use_state(cx, || false);
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     log::debug!("Profile settings page rendered.");
