@@ -113,7 +113,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let window = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, main_script, window];
+        to_owned![storage_state, main_script, window, drag_event];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -277,6 +277,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     };
                                 }
                                 FileTransferProgress::Finished(storage) => {
+                                    *drag_event.write_silent() = None;
                                     let mut script = main_script.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                     script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
@@ -286,6 +287,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
+                                    *drag_event.write_silent() = None;
                                     let mut script = main_script.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                     script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
@@ -407,9 +409,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 #[cfg(not(target_os = "macos"))]
                 loop {
                     sleep(Duration::from_millis(100)).await;
-                    let file_drop_event = get_drag_event();
-                    if let FileDropEvent::Hovered(_) = file_drop_event.clone() {
-                        drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch).await;
+                    if let FileDropEvent::Hovered(_) = get_drag_event() {
+                        if let None = drag_event.with(|i| i.clone()) {
+                            drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch).await;
+                        }
                     }
                 }
             }
@@ -429,7 +432,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if let None = drag_event.read().clone() {
+                if let None = drag_event.with(|i| i.clone()) {
                     cx.spawn({
                         to_owned![drag_event, window, ch, main_script];
                         async move {
@@ -775,6 +778,8 @@ async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Opt
                     break;
                 }
                 _ => {
+                    println!("Canceled");
+                    *drag_event.write_silent() = None;
                     let script = main_script.replace("$IS_DRAGGING", "false");
                     window.eval(&script);
                     break;
@@ -782,5 +787,4 @@ async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Opt
             };
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         };
-        *drag_event.write_silent() = None;
 }
