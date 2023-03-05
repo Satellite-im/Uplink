@@ -11,8 +11,9 @@ use common::{
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
 };
+
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window};
+use dioxus_desktop::{use_window, DesktopContext};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -394,17 +395,27 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state.write().storage = storage;
         storage_state.set(None);
     }
-
+    let window = use_window(cx);
 
     if !STATIC_ARGS.use_mock {
         use_future(cx, (), |_| {
-            to_owned![ch];
+            to_owned![ch, main_script, window, drag_event];
             async move {
                 sleep(Duration::from_millis(300)).await;
                 ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                // ondragover function from div does not work on windows
+                #[cfg(not(target_os = "macos"))]
+                loop {
+                    sleep(Duration::from_millis(100)).await;
+                    let file_drop_event = get_drag_event();
+                    if let FileDropEvent::Hovered(_) = file_drop_event.clone() {
+                        drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch).await;
+                    }
+                }
             }
         });
     };
+
 
     cx.render(rsx!(
         div {
@@ -419,39 +430,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             aria_label: "files-layout",
             ondragover: move |_| {
                 if let None = drag_event.read().clone() {
-                    let window = use_window(cx);
                     cx.spawn({
                         to_owned![drag_event, window, ch, main_script];
                         async move {
-                            loop {
-                                let file_drop_event = get_drag_event();
-                                *drag_event.write_silent() = Some(file_drop_event.clone());
-                                match file_drop_event {
-                                    FileDropEvent::Hovered(files_local_path) => {
-                                        let mut script = main_script.replace("$IS_DRAGGING", "true");
-                                        if files_local_path.len() > 1 {
-                                            script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.files-to-upload"))));
-                                        } else {
-                                            script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.one-file-to-upload"))));
-                                        }
-                                        window.eval(&script);
-                                    }
-                                    FileDropEvent::Dropped(files_local_path) => {
-                                        ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
-                                        break;
-                                    }
-                                    _ => {
-                                        let script = main_script.replace("$IS_DRAGGING", "false");
-                                        window.eval(&script);
-                                        break;
-                                    }
-                                };
-                                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                            };
-                            *drag_event.write_silent() = None;
+                            drag_and_drop_function(&window, &drag_event, main_script, &ch).await;
                         }
                     });
-                };               
+                }
                 },
             onclick: |_| is_renaming_map.with_mut(|i| *i = None),
             ChatSidebar {
@@ -769,4 +754,33 @@ fn format_item_name(file_name: String) -> String {
         };
     }
     file_name_formatted
+}
+
+async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Option<FileDropEvent>>, main_script: String, ch: &Coroutine<ChanCmd>) {
+        *drag_event.write_silent() = Some(get_drag_event());
+        loop {
+            let file_drop_event = get_drag_event();
+            match file_drop_event {
+                FileDropEvent::Hovered(files_local_path) => {
+                    let mut script = main_script.replace("$IS_DRAGGING", "true");
+                    if files_local_path.len() > 1 {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.files-to-upload"))));
+                    } else {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.one-file-to-upload"))));
+                    }
+                    window.eval(&script);
+                }
+                FileDropEvent::Dropped(files_local_path) => {
+                    ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
+                    break;
+                }
+                _ => {
+                    let script = main_script.replace("$IS_DRAGGING", "false");
+                    window.eval(&script);
+                    break;
+                }
+            };
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        };
+        *drag_event.write_silent() = None;
 }
