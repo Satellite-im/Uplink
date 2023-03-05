@@ -778,7 +778,6 @@ async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Opt
                     break;
                 }
                 _ => {
-                    println!("Canceled");
                     *drag_event.write_silent() = None;
                     let script = main_script.replace("$IS_DRAGGING", "false");
                     window.eval(&script);
