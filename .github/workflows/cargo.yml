@@ -9,6 +9,8 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
       - name: Checkout sources
         uses: actions/checkout@v2
       - name: Run cargo checks
