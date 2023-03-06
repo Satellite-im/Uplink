@@ -401,7 +401,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     if !STATIC_ARGS.use_mock {
         use_future(cx, (), |_| {
+            #[cfg(not(target_os = "macos"))]
             to_owned![ch, main_script, window, drag_event];
+            #[cfg(target_os = "macos")]
+            to_owned![ch];
             async move {
                 sleep(Duration::from_millis(300)).await;
                 ch.send(ChanCmd::GetItemsFromCurrentDirectory);
