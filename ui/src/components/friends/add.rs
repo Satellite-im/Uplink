@@ -99,18 +99,18 @@ pub fn AddFriend(cx: Scope) -> Element {
                     Err(e) => match e {
                         Error::CannotSendSelfFriendRequest => {
                             log::warn!("cannot add self: {}", e);
-                            error_toast.set(Some(String::from(get_local_text(
+                            error_toast.set(Some(get_local_text(
                                 "friends.cannot-add-self",
-                            ))));
+                            )));
                         }
                         Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
                             error_toast
-                                .set(Some(String::from(get_local_text("friends.key-blocked"))));
+                                .set(Some(get_local_text("friends.key-blocked")));
                         }
                         _ => {
                             error_toast
-                                .set(Some(String::from(get_local_text("friends.add-failed"))));
+                                .set(Some(get_local_text("friends.add-failed")));
                             log::error!("add friend failed: {}", e);
                         }
                     },

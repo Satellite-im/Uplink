@@ -37,7 +37,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username = state.read().account.identity.username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = use_state(&cx, || false);
+    let welcome_dismissed = use_state(cx, || false);
     let image = state.read().account.identity.graphics().profile_picture();
     let banner = state.read().account.identity.graphics().profile_banner();
 

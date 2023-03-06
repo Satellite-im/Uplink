@@ -233,19 +233,17 @@ async fn multipass_refresh_friends(
     account: &mut Account,
 ) -> Result<HashMap<DID, multipass::identity::Identity>, Error> {
     let ids = account.list_friends().await?;
-    let mut friends = HashMap::new();
-    for id in ids {
-        if let Ok(ident) = account.get_identity(id.clone().into()).await {
-            if let Some(ident) = ident.first() {
-                friends.insert(ident.did_key(), ident.clone());
-            } else {
-                log::warn!("no identities for did {}", id.to_string());
-            }
-        } else {
-            log::warn!("didn't find friend {}", id.to_string());
-        }
-    }
 
+    let list = account
+        .get_identity(Identifier::did_keys(ids.clone()))
+        .await?;
+    let friends: HashMap<DID, identity::Identity> = list
+        .iter()
+        .map(|ident| (ident.did_key(), ident.clone()))
+        .collect();
+    if list.is_empty() {
+        log::warn!("No identities found");
+    }
     Ok(friends)
 }
 
