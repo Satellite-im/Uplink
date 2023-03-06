@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "391de73496df9123adda184fc5a9ad9610a61874" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "6e50802ba6e4d5c1ad10969d9a3a8aa176d47432" }
 derive_more = "0.99"
 ipc-channel = "0.16.0"
 
