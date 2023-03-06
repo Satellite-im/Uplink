@@ -1,6 +1,6 @@
 use std::{
     ffi::OsStr,
-    io::{Cursor, Read},
+    io::Read,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -9,15 +9,14 @@ use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
-use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
 use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
-use crate::warp_runner::Storage as warp_storage;
 use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
+use crate::{warp_runner::Storage as warp_storage, IMAGE_FILE_EXTENSIONS_AVAILABLE};
 
 use warp::{
     constellation::{
@@ -484,24 +483,38 @@ async fn upload_files(
                     }
                 }
 
-                let image_thumb_uploaded =
+                let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+                let image_formats = IMAGE_FILE_EXTENSIONS_AVAILABLE.to_vec();
+
+                let file_extension = std::path::Path::new(&filename)
+                    .extension()
+                    .and_then(OsStr::to_str)
+                    .map(|s| format!(".{s}"))
+                    .unwrap_or_default();
+
+                if image_formats.iter().any(|f| f == &file_extension) {
                     match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                         Ok(_) => {
                             log::info!("Image Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
                                 FileTransferStep::Thumbnail(Some(())),
                             ));
-                            true
                         }
                         Err(error) => {
-                            log::warn!("Not possible to update thumbnail for image: {:?}", error);
-                            false
+                            log::error!("Not possible to update thumbnail for image: {:?}", error);
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(None),
+                            ));
                         }
                     };
+                }
 
-                if !image_thumb_uploaded {
-                    match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path)
-                    {
+                if video_formats.iter().any(|f| f == &file_extension) {
+                    match set_thumbnail_if_file_is_video(
+                        warp_storage,
+                        filename.clone(),
+                        file_path.clone(),
+                    ) {
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
@@ -509,13 +522,14 @@ async fn upload_files(
                             ));
                         }
                         Err(error) => {
-                            log::warn!("Not possible to update thumbnail for video: {:?}", error);
+                            log::error!("Not possible to update thumbnail for video: {:?}", error);
                             let _ = tx.send(FileTransferProgress::Step(
                                 FileTransferStep::Thumbnail(None),
                             ));
                         }
                     };
                 }
+
                 log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
@@ -567,19 +581,6 @@ fn set_thumbnail_if_file_is_video(
     filename_to_save: String,
     file_path: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-
-    let file_extension = std::path::Path::new(&filename_to_save)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|s| format!(".{s}"))
-        .unwrap_or_default();
-
-    if !video_formats.iter().any(|f| f == &file_extension) {
-        log::warn!("It is not a video file!");
-        return Err(Box::from(Error::InvalidDataType));
-    };
-
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
@@ -638,11 +639,6 @@ async fn set_thumbnail_if_file_is_image(
         .current_directory()?
         .get_item(&filename_to_save)?;
     let file = warp_storage.get_buffer(&filename_to_save).await?;
-
-    // Guarantee that is an image that has been uploaded
-    ImageReader::new(Cursor::new(&file))
-        .with_guessed_format()?
-        .decode()?;
 
     // Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
     let extension = Path::new(&filename_to_save)

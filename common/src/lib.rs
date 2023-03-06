@@ -131,3 +131,5 @@ pub static WARP_EVENT_CH: Lazy<WarpEventChannels> = Lazy::new(|| {
 pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
 ];
+
+pub const IMAGE_FILE_EXTENSIONS_AVAILABLE: &[&str] = &[".png", ".jpg", ".jpeg", ".svg"];

@@ -397,7 +397,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state.write().storage = storage;
         storage_state.set(None);
     }
-    let window = use_window(cx);
 
     if !STATIC_ARGS.use_mock {
         use_future(cx, (), |_| {
@@ -413,7 +412,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 loop {
                     sleep(Duration::from_millis(100)).await;
                     if let FileDropEvent::Hovered(_) = get_drag_event() {
-                        if let None = drag_event.with(|i| i.clone()) {
+                        if drag_event.with(|i| i.clone()).is_none() {
                             drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch).await;
                         }
                     }
@@ -435,7 +434,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if let None = drag_event.with(|i| i.clone()) {
+                if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
                         to_owned![drag_event, window, ch, main_script];
                         async move {
@@ -741,7 +740,6 @@ fn get_drag_event() -> FileDropEvent {
 }
 
 fn format_item_name(file_name: String) -> String {
-    let mut file_name_formatted = file_name.clone();
     let item = PathBuf::from(&file_name);
 
     let file_stem = item
@@ -750,16 +748,17 @@ fn format_item_name(file_name: String) -> String {
         .map(str::to_string)
         .unwrap_or_default();
 
-    if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
-        file_name_formatted = match &file_name.get(0..15) {
-            Some(name_sliced) => format!(
-                "{}...",
-                name_sliced,
-            ),
-            None => file_name.clone(),
-        };
-    }
-    file_name_formatted
+    file_name
+        .get(0..15)
+        .map(|x| x.to_string())
+        .map(|x| {
+            if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
+                format!("{x}...")
+            } else {
+                x
+            }
+        })
+        .unwrap_or_else(|| file_name.clone())
 }
 
 async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Option<FileDropEvent>>, main_script: String, ch: &Coroutine<ChanCmd>) {
