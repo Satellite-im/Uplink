@@ -6,8 +6,12 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
-    constellation::Constellation, error::Error, logging::tracing::log, multipass::MultiPass,
-    raygun::RayGun, tesseract::Tesseract,
+    constellation::Constellation,
+    error::Error,
+    logging::tracing::log,
+    multipass::{self, MultiPass},
+    raygun::RayGun,
+    tesseract::Tesseract,
 };
 use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::MpIpfsConfig;
@@ -155,9 +159,9 @@ async fn handle_login(notify: Arc<Notify>) {
                         };
                         match warp.multipass.create_identity(Some(&username), None).await {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
-                                Ok(_) => match save_tesseract(&warp.tesseract) {
+                                Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
-                                        let _ = rsp.send(Ok(()));
+                                        let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }
                                     Err(e) => {
@@ -184,8 +188,8 @@ async fn handle_login(notify: Arc<Notify>) {
                             continue;
                         };
                         match wait_for_multipass(&mut warp, notify.clone()).await {
-                            Ok(_) => {
-                                let _ = rsp.send(Ok(()));
+                            Ok(ident) => {
+                                let _ = rsp.send(Ok(ident));
                                 break Some(warp);
                             },
                             Err(e) => {
@@ -216,11 +220,14 @@ async fn handle_login(notify: Arc<Notify>) {
     }
 }
 
-async fn wait_for_multipass(warp: &mut manager::Warp, notify: Arc<Notify>) -> Result<(), Error> {
+async fn wait_for_multipass(
+    warp: &mut manager::Warp,
+    notify: Arc<Notify>,
+) -> Result<multipass::identity::Identity, Error> {
     let multipass_init_done = async {
         loop {
             match warp.multipass.get_own_identity().await {
-                Ok(_) => return Ok(()),
+                Ok(ident) => return Ok(ident),
                 Err(e) => match e {
                     Error::MultiPassExtensionUnavailable => {
                         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
@@ -317,16 +324,16 @@ async fn warp_initialization(
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
+    // prevents an error which is otherwise reproduced as follows: set the profile picture, set the profile banner, then update your status
+    config.store_setting.override_ipld = false;
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
 
-    let storage = warp_fs_ipfs::IpfsFileSystem::new(
-        account.clone(),
-        Some(FsIpfsConfig::production(path)),
-    )
-    .await
-    .map(|ct| Box::new(ct) as Storage)?;
+    let storage =
+        warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(FsIpfsConfig::production(path)))
+            .await
+            .map(|ct| Box::new(ct) as Storage)?;
 
     // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
     let rg_config = RgIpfsConfig::production(path);
