@@ -1,25 +1,36 @@
 use std::collections::HashMap;
 
-use fluent_templates::{once_cell::sync::Lazy, LanguageIdentifier, Loader};
+use fluent_templates::{
+    lazy_static::lazy_static, once_cell::sync::Lazy, LanguageIdentifier, Loader,
+};
 use unic_langid::langid;
 use warp::sync::RwLock;
 
 use crate::LOCALES;
 
 pub const US_ENGLISH: (LanguageIdentifier, &str) = (langid!("en-US"), "English (USA)");
-const BR_PORTUGUESE: (LanguageIdentifier, &str) = (langid!("pt-BR"), "Português (Brasil)");
-const PT_PORTUGUESE: (LanguageIdentifier, &str) = (langid!("pt-PT"), "Português (Portugal)");
-const MX_SPANISH: (LanguageIdentifier, &str) = (langid!("es-MX"), "Español (México)");
+
+lazy_static! {
+    static ref LANGUAGES: HashMap<String, (LanguageIdentifier, &'static str)> = {
+        let mut map = HashMap::new();
+
+        let add = |map: &mut HashMap<String, (LanguageIdentifier, &'static str)>,
+                   lang: &(LanguageIdentifier, &'static str)| {
+            map.insert(lang.1.to_string(), lang.to_owned());
+        };
+
+        add(&mut map, &US_ENGLISH);
+        add(&mut map, &(langid!("pt-BR"), "Português (Brasil)"));
+        add(&mut map, &(langid!("pt-PT"), "Português (Portugal)"));
+        add(&mut map, &(langid!("es-MX"), "Español (México)"));
+        map
+    };
+}
+
 static APP_LANG: Lazy<RwLock<(LanguageIdentifier, &str)>> = Lazy::new(|| RwLock::new(US_ENGLISH));
 
 pub fn change_language(new_language: String) -> String {
-    let app_languages = HashMap::from([
-        (US_ENGLISH.1, US_ENGLISH),
-        (BR_PORTUGUESE.1, BR_PORTUGUESE),
-        (PT_PORTUGUESE.1, PT_PORTUGUESE),
-        (MX_SPANISH.1, MX_SPANISH),
-    ]);
-    let new_language_identifier = app_languages.get(new_language.as_str());
+    let new_language_identifier = LANGUAGES.get(&new_language);
 
     match new_language_identifier {
         Some(new_lang) => {
@@ -34,12 +45,9 @@ pub fn change_language(new_language: String) -> String {
 }
 
 pub fn get_available_languages() -> Vec<String> {
-    vec![
-        US_ENGLISH.1.to_string(),
-        BR_PORTUGUESE.1.to_string(),
-        PT_PORTUGUESE.1.to_string(),
-        MX_SPANISH.1.to_string(),
-    ]
+    let mut v: Vec<String> = LANGUAGES.keys().cloned().collect();
+    v.sort();
+    v
 }
 
 pub fn get_local_text(text: &str) -> String {
