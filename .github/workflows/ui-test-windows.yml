@@ -97,7 +97,6 @@ jobs:
           appium -v
           appium driver install --source=npm appium-windows-driver
           appium driver list
-          appium &>/dev/null &
 
       - name: Delete cache folder before starting
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
