@@ -8,7 +8,7 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, IdentityUpdate},
+        identity::{self, Identifier, IdentityUpdate},
     },
 };
 
