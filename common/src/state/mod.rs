@@ -33,6 +33,7 @@ use crate::{
 };
 use either::Either;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
@@ -58,9 +59,9 @@ pub struct State {
     #[serde(default)]
     pub route: route::Route,
     #[serde(default)]
-    pub chats: chats::Chats,
+    chats: chats::Chats,
     #[serde(default)]
-    pub friends: friends::Friends,
+    friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
     #[serde(default)]
@@ -71,6 +72,8 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
+    #[serde(skip)]
+    identities: HashMap<DID, identity::Identity>,
 }
 
 impl fmt::Debug for State {
@@ -98,6 +101,7 @@ impl Clone for State {
             settings: Default::default(),
             ui: Default::default(),
             configuration: self.configuration.clone(),
+            identities: HashMap::new(),
         }
     }
 }
@@ -111,6 +115,27 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
+    }
+
+    pub fn friends(&self) -> &friends::Friends {
+        &self.friends
+    }
+
+    pub fn chats(&self) -> &chats::Chats {
+        &self.chats
+    }
+
+    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
+        self.friends = friends;
+        self.friends.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
+    }
+    pub fn set_chats(&mut self, chats: chats::Chats, identities: HashSet<Identity>) {
+        self.chats = chats;
+        self.chats.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
 
     pub fn mutate(&mut self, action: Action) {

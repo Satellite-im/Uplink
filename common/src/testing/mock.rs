@@ -61,6 +61,19 @@ pub fn generate_mock() -> State {
     toast_notifications.clear();
 
     let storage = generate_fake_storage();
+    let mut id_map = HashMap::new();
+    for ident in identities {
+        id_map.insert(ident.did_key(), ident);
+    }
+    for ident in blocked_identities {
+        id_map.insert(ident.did_key(), ident);
+    }
+    for ident in incoming_requests {
+        id_map.insert(ident.did_key(), ident);
+    }
+    for ident in outgoing_requests {
+        id_map.insert(ident.did_key(), ident);
+    }
 
     State {
         account: Account {
@@ -81,14 +94,12 @@ pub fn generate_mock() -> State {
         storage,
         friends: Friends {
             initialized: true,
-            all: identities
-                .into_iter()
-                .map(|id| (id.did_key(), id))
-                .collect(),
-            blocked: HashSet::from_iter(blocked_identities.iter().cloned()),
-            incoming_requests: HashSet::from_iter(incoming_requests.iter().cloned()),
-            outgoing_requests: HashSet::from_iter(outgoing_requests.iter().cloned()),
+            all: HashSet::from_iter(identities.iter().map(|x| x.did_key())),
+            blocked: HashSet::from_iter(blocked_identities.iter().map(|x| x.did_key())),
+            incoming_requests: HashSet::from_iter(incoming_requests.iter().map(|x| x.did_key())),
+            outgoing_requests: HashSet::from_iter(outgoing_requests.iter().map(|x| x.did_key())),
         },
+        identities: id_map,
         ..Default::default()
     }
 }
@@ -117,7 +128,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
 
     Chat {
         id: conversation,
-        participants,
+        participants: HashSet::from_iter(participants.iter().map(|x| x.did_key())),
         messages,
         unreads: rng.gen_range(0..2),
         replying_to: None,

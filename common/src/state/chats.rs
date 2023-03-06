@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     time::Instant,
 };
 
@@ -8,8 +8,6 @@ use uuid::Uuid;
 use warp::{crypto::DID, raygun::Message};
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
-
-use super::identity::Identity;
 
 // warning: Chat implements Serialize
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -21,7 +19,7 @@ pub struct Chat {
     // Includes the list of participants within a given chat.
     // these don't need to be stored in state either
     #[serde(default)]
-    pub participants: Vec<Identity>,
+    pub participants: HashSet<DID>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     #[serde(default)]

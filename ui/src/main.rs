@@ -368,8 +368,8 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends.initialized);
-        assert!(state.chats.initialized);
+        assert!(state.friends().initialized);
+        assert!(state.chats().initialized);
     } else {
         state.account.identity = identity.clone().into();
     }
@@ -705,7 +705,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    state.write().friends = friends;
+                    state.write().set_friends(friends.0, friends.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -793,7 +793,7 @@ fn app(cx: Scope) -> Element {
             };
 
             log::trace!("init chats");
-            let (own_id, mut all_chats) = match res {
+            let chats = match res {
                 Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to initialize chats: {}", e);
@@ -803,18 +803,8 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    // for all_chats, fill in participants and messages.
-                    for (k, v) in &state.read().chats.all {
-                        // the # of unread chats defaults to the length of the conversation. but this number
-                        // is stored in state
-                        if let Some(chat) = all_chats.get_mut(k) {
-                            chat.unreads = v.unreads;
-                        }
-                    }
-
-                    state.write().chats.all = all_chats;
-                    state.write().account.identity = own_id;
-                    state.write().chats.initialized = true;
+                    state.write().account.identity = chats.0;
+                    state.write().set_chats(chats.1, chats.2);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -1067,7 +1057,7 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().friends().incoming_requests.len();
 
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,
