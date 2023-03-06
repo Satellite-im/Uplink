@@ -1,0 +1,23 @@
+# Based on https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
+
+on: [pull_request]
+
+name: Pull Request Workflow
+
+jobs:
+  check:
+    name: Cargo Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Run cargo checks
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - run: cargo clippy --no-deps -- -D warnings
+      - run: cargo fmt --check
+      - run: cargo test
