@@ -18,7 +18,7 @@ timeago = "0.4.0"
 humansize = "2.0.0"
 common = { path = "../common" }
 
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "391de73496df9123adda184fc5a9ad9610a61874" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "6e50802ba6e4d5c1ad10969d9a3a8aa176d47432" }
 
 derive_more = "0.99"
 
