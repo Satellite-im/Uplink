@@ -15,8 +15,8 @@ use tempfile::TempDir;
 use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
-use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
-use crate::{warp_runner::Storage as warp_storage, IMAGE_FILE_EXTENSIONS_AVAILABLE};
+use crate::warp_runner::Storage as warp_storage;
+use crate::{state::storage::Storage as uplink_storage, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
 
 use warp::{
     constellation::{
@@ -484,7 +484,7 @@ async fn upload_files(
                 }
 
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-                let image_formats = IMAGE_FILE_EXTENSIONS_AVAILABLE.to_vec();
+                let image_formats = IMAGE_EXTENSIONS.to_vec();
 
                 let file_extension = std::path::Path::new(&filename)
                     .extension()
