@@ -28,26 +28,17 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     log::trace!("rendering ProfileSettings");
 
     let state = use_shared_state::<State>(cx)?;
-    let user_status = state
-        .read()
-        .account
-        .identity
-        .status_message()
-        .unwrap_or_default();
-    let username = state.read().account.identity.username();
+    let user_status = state.read().status_message().unwrap_or_default();
+    let username = state.read().username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let welcome_dismissed = use_state(cx, || false);
-    let image = state.read().account.identity.graphics().profile_picture();
-    let banner = state.read().account.identity.graphics().profile_banner();
+    let image = state.read().graphics().profile_picture();
+    let banner = state.read().graphics().profile_banner();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
-        state
-            .write()
-            .account
-            .identity
-            .set_warp_identity(ident.clone());
+        state.write().set_warp_identity(ident.clone());
         should_update.set(None);
     }
 

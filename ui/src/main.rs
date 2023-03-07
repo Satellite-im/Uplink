@@ -373,7 +373,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         assert!(state.friends().initialized);
         assert!(state.chats().initialized);
     } else {
-        state.account.identity = identity.clone().into();
+        state.set_warp_identity(identity.clone());
     }
 
     // set the window to the normal size.
@@ -769,11 +769,7 @@ fn app(cx: Scope) -> Element {
             let res = loop {
                 let (tx, rx) = oneshot::channel::<
                     Result<
-                        (
-                            state::Identity,
-                            HashMap<Uuid, state::Chat>,
-                            HashSet<state::Identity>,
-                        ),
+                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
                         warp::error::Error,
                     >,
                 >();
@@ -807,8 +803,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    state.write().account.identity = chats.0;
-                    state.write().set_chats(chats.1, chats.2);
+                    state.write().set_chats(chats.0, chats.1);
                     needs_update.set(true);
                 }
                 Err(e) => {

@@ -31,14 +31,7 @@ pub enum RayGunCmd {
         // need to send over own identity because 'State' sets it to default
         #[allow(clippy::type_complexity)]
         rsp: oneshot::Sender<
-            Result<
-                (
-                    state::Identity,
-                    HashMap<Uuid, chats::Chat>,
-                    HashSet<state::Identity>,
-                ),
-                warp::error::Error,
-            >,
+            Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), warp::error::Error>,
         >,
     },
     #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
@@ -220,16 +213,8 @@ async fn raygun_initialize_conversations(
     stream_manager: &mut conv_stream::Manager,
     account: &Account,
     messaging: &mut Messaging,
-) -> Result<
-    (
-        state::Identity,
-        HashMap<Uuid, chats::Chat>,
-        HashSet<state::Identity>,
-    ),
-    Error,
-> {
+) -> Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), Error> {
     log::trace!("init convs with {} total", convs.len());
-    let own_identity = account.get_own_identity().await?;
     let mut all_chats = HashMap::new();
     let mut identities = HashSet::new();
     for conv in convs {
@@ -250,7 +235,7 @@ async fn raygun_initialize_conversations(
             }
         };
     }
-    Ok((state::Identity::from(own_identity), all_chats, identities))
+    Ok((all_chats, identities))
 }
 
 async fn raygun_remove_direct_convs(

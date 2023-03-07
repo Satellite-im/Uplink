@@ -56,7 +56,7 @@ use self::{action::ActionHook, configuration::Configuration, ui::Call};
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
     #[serde(skip)]
-    pub account: account::Account,
+    account: account::Account,
     #[serde(default)]
     pub route: route::Route,
     #[serde(default)]
@@ -205,6 +205,14 @@ impl State {
             .collect()
     }
 
+    pub fn set_account(&mut self, account: account::Account) {
+        self.account = account;
+    }
+
+    pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
+        self.account.identity.set_warp_identity(identity);
+    }
+
     pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
         self.friends = friends;
         self.friends.initialized = true;
@@ -230,6 +238,18 @@ impl State {
         self.account.identity.did_key()
     }
 
+    pub fn status_message(&self) -> Option<String> {
+        self.account.identity.status_message()
+    }
+
+    pub fn username(&self) -> String {
+        self.account.identity.username()
+    }
+
+    pub fn graphics(&self) -> warp::multipass::identity::Graphics {
+        self.account.identity.graphics()
+    }
+
     pub fn remove_self(&self, identities: &[Identity]) -> Vec<Identity> {
         identities
             .iter()
@@ -244,7 +264,6 @@ impl State {
             .map(|x| x.username())
             .collect::<Vec<String>>()
             .join(", ")
-            .to_string()
     }
 }
 

@@ -136,11 +136,7 @@ fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
 
     // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
     // this would be "fixed" the next time uplink starts up
-    let other_participants: Vec<Identity> = participants
-        .iter()
-        .filter(|x| x.did_key() != s.account.identity.did_key())
-        .cloned()
-        .collect();
+    let other_participants: Vec<Identity> = s.remove_self(&participants);
     let active_participant = other_participants
         .first()
         .cloned()
@@ -332,7 +328,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_messages");
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let user = state.read().account.identity.did_key();
+    let user = state.read().did_key();
 
     let script = include_str!("./script.js");
     use_eval(cx)(script.to_string());
@@ -494,7 +490,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let message4 = message.clone();
                                 let reply_message = grouped_message.message.clone();
                                 let active_chat = active_chat.clone();
-                                let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
+                                let sender_is_self = message.inner.sender() == state.read().did_key();
 
                                 // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
                                 let is_editing = edit_msg.get().map(|id| !group.remote && (id == message.inner.id())).unwrap_or(false);
@@ -646,7 +642,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
-    let my_id = state.read().account.identity.did_key();
+    let my_id = state.read().did_key();
     let is_typing = active_chat_id
         .and_then(|id| state.read().chats().all.get(&id).cloned())
         .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
@@ -848,7 +844,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             .map(|data| {
                 let active_chat = data.active_chat.clone();
                 cx.render(rsx!(active_chat.clone().replying_to.map(|msg| {
-                    let our_did = state.read().account.identity.did_key();
+                    let our_did = state.read().did_key();
                     let msg_owner = data.other_participants.first();
                     let (platform, status) = get_platform_and_status(msg_owner);
 
