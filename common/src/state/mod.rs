@@ -225,6 +225,27 @@ impl State {
             log::warn!("failed up update identity: {}", ident.username());
         }
     }
+
+    pub fn did_key(&self) -> DID {
+        self.account.identity.did_key()
+    }
+
+    pub fn remove_self(&self, identities: &[Identity]) -> Vec<Identity> {
+        identities
+            .iter()
+            .filter(|x| x.did_key() != self.account.identity.did_key())
+            .cloned()
+            .collect()
+    }
+
+    pub fn join_usernames(identities: &[Identity]) -> String {
+        identities
+            .iter()
+            .map(|x| x.username())
+            .collect::<Vec<String>>()
+            .join(", ")
+            .to_string()
+    }
 }
 
 // This code defines a number of methods for the State struct, which are used to mutate the state in a controlled manner.

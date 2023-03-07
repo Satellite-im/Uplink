@@ -1,5 +1,5 @@
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
-use common::{icons::outline::Shape as Icon, state::Chat};
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
@@ -22,7 +22,7 @@ use warp::{
     raygun::{self},
 };
 
-use common::state::{self, Action, Identity, State};
+use common::state::{self, Action, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
@@ -93,12 +93,12 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     div {
                         class: "vertically-scrollable",
                         favorites.iter().cloned().map(|chat| {
-                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
+                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
                             let chat_id = chat.id;
                             let participants = state.read().chat_participants(&chat);
-                            let participants_name: Vec<String> = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).map(|x| x.username()).collect();
+                            let other_participants: Vec<_> = state.read().remove_self(&participants);
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -127,7 +127,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     )),
                                     UserImageGroup {
                                         participants: build_participants(&participants.clone()),
-                                        with_username: participants_name.join(", ").to_string(),
+                                        with_username: State::join_usernames(&other_participants),
                                         typing: users_typing,
                                         onpress: move |_| {
                                             if state.read().ui.is_minimal_view() {
@@ -154,11 +154,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
                 sidebar_chats.iter().cloned().map(|chat| {
-                    let chat_id = chat.id;
-                    let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
+                    let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
                     let participants = state.read().chat_participants(&chat);
-                    let user: state::Identity = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).next().cloned().unwrap_or_default();
-                    let participants_name: Vec<String> = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).map(|x| x.username()).collect();
+                    let other_participants =  state.read().remove_self(&participants);
+                    let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                     let platform = match user.platform() {
                         warp::multipass::identity::Platform::Desktop => Platform::Desktop,
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
@@ -183,7 +182,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    let participants_name = participants_name.join(", ").to_string();
+                    let participants_name = State::join_usernames(&other_participants);
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),

@@ -150,12 +150,7 @@ fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
     let is_favorite = s.is_favorite(&active_chat);
 
     let first_image = active_participant.graphics().profile_picture();
-    let other_participants_names = other_participants
-        .iter()
-        .map(|x| x.username())
-        .collect::<Vec<String>>()
-        .join(", ")
-        .to_string();
+    let other_participants_names = State::join_usernames(&other_participants);
     let active_media = Some(active_chat.id) == s.chats().active_media;
 
     // TODO: Pending new message divider implementation
