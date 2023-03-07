@@ -21,6 +21,7 @@ pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
+use warp::multipass::identity::Platform;
 
 use crate::STATIC_ARGS;
 
@@ -1092,6 +1093,10 @@ impl State {
 
     pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
         self.account.identity.set_warp_identity(identity);
+    }
+
+    pub fn mock_own_platform(&mut self, platform: Platform) {
+        self.account.identity.set_platform(platform);
     }
 
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.

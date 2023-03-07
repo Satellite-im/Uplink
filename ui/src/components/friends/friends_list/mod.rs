@@ -182,11 +182,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let context_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
-                            let platform = match friend.platform() {
-                                warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                                warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                                _ => Platform::Headless //TODO: Unknown
-                            };
+                            let platform = friend.platform().into();
                             rsx!(
                                 ContextMenu {
                                     id: format!("{did}-friend-listing"),

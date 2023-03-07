@@ -61,11 +61,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
-                let platform = match blocked_user.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = blocked_user.platform().into();
                 let mut relationship = Relationship::default();
                 relationship.set_blocked(true);
                 rsx!(

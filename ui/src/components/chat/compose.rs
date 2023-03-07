@@ -158,11 +158,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     //     .lookup(&*APP_LANG.read(), "messages.new")
     //     .unwrap_or_default();
 
-    let platform = match active_participant.platform() {
-        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-        _ => Platform::Headless, //TODO: Unknown
-    };
+    let platform = active_participant.platform().into();
 
     let data = Rc::new(ComposeData {
         active_chat,
@@ -470,11 +466,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     let last_message = messages.last().unwrap().message.clone();
                     let sender = state.read().get_friend_identity(&group.sender);
                     let active_language = state.read().settings.language.clone();
-                    let platform = match sender.platform() {
-                        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                        _ => Platform::Headless //TODO: Unknown
-                    };
+                    let platform = sender.platform().into();
                     let status = convert_status(&sender.identity_status());
 
                     rsx!(

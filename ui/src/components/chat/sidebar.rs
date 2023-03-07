@@ -158,11 +158,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let participants = state.read().chat_participants(&chat);
                     let other_participants =  state.read().remove_self(&participants);
                     let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
-                    let platform = match user.platform() {
-                        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                        _ => Platform::Headless //TODO: Unknown (Matt: This represents bots and other platforms which are not using known UIs)
-                    };
+                    let platform = user.platform().into();
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {

@@ -28,6 +28,7 @@ use std::{fs, io};
 use uuid::Uuid;
 use warp::crypto::DID;
 use warp::multipass;
+use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -976,6 +977,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(true));
+                        state.write().mock_own_platform(Platform::Mobile);
                     }
                 },
                 Button {
@@ -992,6 +994,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Web);
                     }
                 },
                 Button {
@@ -1008,6 +1011,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Desktop);
                     }
                 },
                 Button {
