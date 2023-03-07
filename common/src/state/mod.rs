@@ -136,8 +136,7 @@ impl State {
         self.friends
             .all
             .iter()
-            .map(|did| self.identities.get(&did))
-            .flatten()
+            .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
     }
@@ -146,8 +145,7 @@ impl State {
         self.friends
             .incoming_requests
             .iter()
-            .map(|did| self.identities.get(&did))
-            .flatten()
+            .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
     }
@@ -156,8 +154,7 @@ impl State {
         self.friends
             .outgoing_requests
             .iter()
-            .map(|did| self.identities.get(&did))
-            .flatten()
+            .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
     }
@@ -166,8 +163,7 @@ impl State {
         self.friends
             .blocked
             .iter()
-            .map(|did| self.identities.get(&did))
-            .flatten()
+            .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
     }
@@ -180,8 +176,7 @@ impl State {
         self.chats
             .favorites
             .iter()
-            .map(|did| self.chats.all.get(&did))
-            .flatten()
+            .filter_map(|did| self.chats.all.get(did))
             .cloned()
             .collect()
     }
@@ -190,8 +185,7 @@ impl State {
         self.chats
             .in_sidebar
             .iter()
-            .map(|did| self.chats.all.get(&did))
-            .flatten()
+            .filter_map(|did| self.chats.all.get(did))
             .cloned()
             .collect()
     }
@@ -199,8 +193,7 @@ impl State {
     pub fn chat_participants(&self, chat: &Chat) -> Vec<Identity> {
         chat.participants
             .iter()
-            .map(|did| self.identities.get(did))
-            .flatten()
+            .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
     }

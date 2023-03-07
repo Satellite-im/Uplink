@@ -214,7 +214,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }
                     ChanCmd::UploadFiles(files_path) => {
                         let mut script = main_script.replace("$IS_DRAGGING", "true");
-                        script.push_str(&ANIMATION_DASH_SCRIPT);
+                        script.push_str(ANIMATION_DASH_SCRIPT);
                         window.eval(&script);
 
                         let (tx, mut rx) =
@@ -813,7 +813,7 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
+                ch.send(ChanCmd::UploadFiles(files_local_path));
                 break;
             }
             _ => {
