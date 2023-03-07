@@ -1,5 +1,6 @@
 use common::icons;
 use dioxus::prelude::*;
+use warp::logging::tracing::log;
 
 use crate::elements::{button::Button, Appearance};
 
@@ -32,6 +33,7 @@ pub fn emit(cx: &Scope<Props>) {
 
 #[allow(non_snake_case)]
 pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("rendering topbar");
     let currently_back = cx.props.with_currently_back.unwrap_or(false);
 
     cx.render(rsx!(
