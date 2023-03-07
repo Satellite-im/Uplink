@@ -216,7 +216,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }
                     ChanCmd::UploadFiles(files_path) => {
                         let mut script = main_script.replace("$IS_DRAGGING", "true");
-                        script.push_str(&ANIMATION_DASH_SCRIPT);
+                        script.push_str(ANIMATION_DASH_SCRIPT);
                         window.eval(&script);
 
                         let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
@@ -776,7 +776,7 @@ async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Opt
                     window.eval(&script);
                 }
                 FileDropEvent::Dropped(files_local_path) => {
-                    ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
+                    ch.send(ChanCmd::UploadFiles(files_local_path));
                     break;
                 }
                 _ => {
