@@ -9,6 +9,7 @@ mod raygun_event;
 pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
+use uuid::Uuid;
 
 use crate::state::{self, chats};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
@@ -28,6 +29,10 @@ use warp::{
 pub struct Message {
     pub inner: warp::raygun::Message,
     pub in_reply_to: Option<String>,
+    /// this field exists so that the UI can tell Dioxus when a message has been edited and thus
+    /// needs to be re-rendered. Before the addition of this field, the compose view was
+    /// using the message Uuid, but this doesn't change when a message is edited.
+    pub key: String,
 }
 
 /// if a raygun::Message is in reply to another message, attempt to fetch part of the message text
@@ -43,6 +48,7 @@ pub async fn convert_raygun_message(
     Message {
         inner: msg.clone(),
         in_reply_to: reply.and_then(|msg| msg.value().first().cloned()),
+        key: Uuid::new_v4().to_string(),
     }
 }
 
