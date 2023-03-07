@@ -2,7 +2,7 @@ use common::{
     state::{self, Theme},
     STATIC_ARGS,
 };
-use kit::components::indicator::{self, Status};
+use kit::components::indicator::{Status};
 use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;

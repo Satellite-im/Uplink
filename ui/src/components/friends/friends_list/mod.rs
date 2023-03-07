@@ -6,7 +6,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
