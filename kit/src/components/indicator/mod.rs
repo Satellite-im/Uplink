@@ -6,7 +6,7 @@ use common::icons::Icon as IconElement;
 
 use warp::multipass::identity::{self, IdentityStatus};
 
-#[derive(Eq, PartialEq, Clone, Copy, Display)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug, Display)]
 pub enum Platform {
     // The user is using a desktop computer
     #[display(fmt = "circle")]

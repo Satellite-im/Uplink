@@ -556,8 +556,12 @@ impl State {
         message_groups
     }
 
-    pub fn get_friend_identity(&self, did: &DID) -> Identity {
-        self.identities.get(did).cloned().unwrap_or_default()
+    pub fn get_identity(&self, did: &DID) -> Identity {
+        if self.account.identity.did_key() == *did {
+            self.account.identity.clone()
+        } else {
+            self.identities.get(did).cloned().unwrap_or_default()
+        }
     }
 
     pub fn get_friends_by_first_letter(

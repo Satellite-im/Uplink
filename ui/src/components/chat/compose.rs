@@ -464,7 +464,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     let messages = &group.messages;
                     let active_chat = data.active_chat.clone();
                     let last_message = messages.last().unwrap().message.clone();
-                    let sender = state.read().get_friend_identity(&group.sender);
+                    let sender = state.read().get_identity(&group.sender);
                     let active_language = state.read().settings.language.clone();
                     let platform = sender.platform().into();
                     let status = convert_status(&sender.identity_status());
