@@ -43,7 +43,9 @@ use dioxus_desktop::{use_eval, use_window};
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
+    crypto::DID,
     logging::tracing::log,
+    multipass::identity::{self, IdentityStatus},
     raygun::{self, ReactionState},
 };
 
@@ -646,10 +648,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
-    let is_typing = active_chat_id
-        .and_then(|id| state.read().chats().all.get(&id).cloned())
-        .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
+    let users_typing: Vec<DID> = data
+        .as_ref()
+        .map(|data| {
+            data.active_chat
+                .typing_indicator
+                .iter()
+                .filter(|(did, _)| *did != &my_id)
+                .map(|(did, _)| did.clone())
+                .collect()
+        })
         .unwrap_or_default();
+    let is_typing = !users_typing.is_empty();
+    let users_typing = state.read().get_identities(&users_typing);
 
     let msg_ch = use_coroutine(
         cx,
@@ -900,16 +911,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }))
     }));
 
-    let platform = Platform::Headless;
-    let status = Status::Online;
+    // todo: possibly show more if multiple users are typing
+    let (platform, status) = match users_typing.first() {
+        Some(u) => (u.platform(), u.identity_status()),
+        None => (identity::Platform::Unknown, IdentityStatus::Online),
+    };
 
     cx.render(rsx!(
         is_typing.then(|| {
             rsx!(MessageTyping {
                 user_image: cx.render(rsx!(
                     UserImage {
-                        platform: platform,
-                        status: status
+                        platform: platform.into(),
+                        status: status.into()
                     }
                 ))
             })

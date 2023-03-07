@@ -878,6 +878,7 @@ impl State {
                 conversation_id,
                 message,
             } => {
+                self.update_identity_status_hack(&message.inner.sender());
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
@@ -925,6 +926,7 @@ impl State {
                 conversation_id,
                 message,
             } => {
+                self.update_identity_status_hack(&message.inner.sender());
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     if let Some(msg) = chat
                         .messages
@@ -961,6 +963,7 @@ impl State {
                 conversation_id,
                 participant,
             } => {
+                self.update_identity_status_hack(&participant);
                 if !self.chats.in_sidebar.contains(&conversation_id) {
                     return;
                 }
@@ -1001,6 +1004,14 @@ impl State {
             ..Default::default()
         }
     }
+
+    pub fn get_identities(&self, ids: &[DID]) -> Vec<Identity> {
+        ids.iter()
+            .filter_map(|id| self.identities.get(id))
+            .cloned()
+            .collect()
+    }
+
     pub fn friends(&self) -> &friends::Friends {
         &self.friends
     }
@@ -1081,6 +1092,17 @@ impl State {
 
     pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
         self.account.identity.set_warp_identity(identity);
+    }
+
+    // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.
+    // this function checks if the friend is offline and if so, sets them to online. This may be incorrect, but should
+    // be corrected when the identity list is periodically updated
+    pub fn update_identity_status_hack(&mut self, id: &DID) {
+        if let Some(ident) = self.identities.get_mut(id) {
+            if ident.identity_status() == IdentityStatus::Offline {
+                ident.set_identity_status(IdentityStatus::Online);
+            }
+        };
     }
 
     pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {

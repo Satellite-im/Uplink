@@ -4,6 +4,8 @@ use dioxus::prelude::*;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
+use warp::multipass::identity::{self, IdentityStatus};
+
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Platform {
     // The user is using a desktop computer
@@ -35,6 +37,17 @@ impl Platform {
     }
 }
 
+impl From<identity::Platform> for Platform {
+    fn from(value: identity::Platform) -> Self {
+        match value {
+            identity::Platform::Desktop => Self::Desktop,
+            identity::Platform::Mobile => Self::Mobile,
+            identity::Platform::Web => Self::Tv,
+            identity::Platform::Unknown => Self::Headless,
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Status {
     // The user is currently online
@@ -52,6 +65,17 @@ pub enum Status {
     // The user has enabled do-not-disturb mode
     #[display(fmt = "do-not-disturb")]
     DoNotDisturb,
+}
+
+impl From<identity::IdentityStatus> for Status {
+    fn from(value: identity::IdentityStatus) -> Self {
+        match value {
+            IdentityStatus::Online => Self::Online,
+            IdentityStatus::Away => Self::Idle,
+            IdentityStatus::Busy => Self::DoNotDisturb,
+            IdentityStatus::Offline => Self::Offline,
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Props)]

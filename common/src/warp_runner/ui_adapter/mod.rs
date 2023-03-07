@@ -104,7 +104,7 @@ pub async fn did_to_identity(
 
 pub async fn dids_to_identity(
     dids: &[DID],
-    account: &mut super::Account,
+    account: &super::Account,
 ) -> Result<Vec<state::Identity>, Error> {
     let mut ret = Vec::new();
     ret.reserve(dids.len());
@@ -121,11 +121,8 @@ pub async fn conversation_to_chat(
     messaging: &mut super::Messaging,
 ) -> Result<ChatAdapter, Error> {
     // todo: should Chat::participants include self?
-    let mut identities = HashSet::new();
-    for id in conv.recipients() {
-        let identity = did_to_identity(&id, account).await?;
-        identities.insert(identity);
-    }
+    let identities = dids_to_identity(&conv.recipients(), account).await?;
+    let identities = HashSet::from_iter(identities.iter().cloned());
 
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let unreads = messaging.get_message_count(conv.id()).await?;
