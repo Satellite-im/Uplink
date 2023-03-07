@@ -1,4 +1,4 @@
-use common::icons::outline::Shape as Icon;
+use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use emojis::Group;
 use extensions::*;
@@ -96,6 +96,8 @@ impl EmojiSelector {
     }
 
     fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+        let state = use_shared_state::<State>(cx)?;
+
         cx.render(rsx! (
             div {
                 id: "emoji_selector",
@@ -113,8 +115,13 @@ impl EmojiSelector {
                                     rsx!(
                                         div {
                                             class: "emoji",
-                                            onclick: |_| {
-
+                                            onclick: move |_| {
+                                                // If we're on an active chat, append the emoji to the end of the chat message.
+                                                if let Some(c) = state.read().get_active_chat() {
+                                                    if let Some(mut draft) = c.draft {
+                                                        draft += &emoji.to_string();
+                                                    }
+                                                }
                                             },
                                             emoji.as_str()
                                         }
