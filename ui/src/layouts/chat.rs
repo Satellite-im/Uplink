@@ -36,7 +36,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
                 route_info: cx.props.route_info.clone()
             },
             show_welcome.then(|| rsx!(Welcome {})),
-            (!show_welcome && sidebar_hidden || !state.read().ui.is_minimal_view() && !show_welcome).then(|| rsx!(Compose {}))
+            (!show_welcome && (sidebar_hidden || !state.read().ui.is_minimal_view())).then(|| rsx!(Compose {}))
         }
     ))
 }

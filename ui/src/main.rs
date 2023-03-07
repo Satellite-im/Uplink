@@ -89,7 +89,8 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     settings: "/settings",
 };
 
-// serve as a sort of router while the user logs in
+// serve as a sort of router while the user logs in]
+#[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
     Unlock,

@@ -28,6 +28,8 @@ warning-messages = Warning Messages
     .spaces-not-allowed = Spaces are not allowed.
 
 messages = Messages
+    .edit = Edit
+    .cancel-edit = Cancel Edit
     .new = New Message
     .replying = Replying to:
     .react = React
