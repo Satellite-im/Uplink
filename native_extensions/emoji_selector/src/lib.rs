@@ -113,6 +113,9 @@ impl EmojiSelector {
                                     rsx!(
                                         div {
                                             class: "emoji",
+                                            onclick: |_| {
+
+                                            },
                                             emoji.as_str()
                                         }
                                     )

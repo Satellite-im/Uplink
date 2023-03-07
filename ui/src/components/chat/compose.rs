@@ -825,6 +825,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
+                state.write_silent().mutate(Action::SetChatDraft(*id, v));
             }
         },
         onreturn: move |_| submit_fn(),
