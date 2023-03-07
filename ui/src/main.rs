@@ -5,6 +5,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
+use common::state::identity;
 use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -21,7 +22,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
@@ -636,14 +637,7 @@ fn app(cx: Scope) -> Element {
                     Ok(update) => match inner.try_borrow_mut() {
                         Ok(state) => {
                             for (id, friend_update) in update {
-                                if let Some(friend) = state.write().friends.all.get_mut(&id) {
-                                    friend.set_warp_identity(friend_update);
-                                } else {
-                                    log::warn!(
-                                        "failed up update friend: {}",
-                                        friend_update.username()
-                                    );
-                                }
+                                state.write().update_identity(id, friend_update.into());
                             }
                         }
                         Err(e) => {
@@ -683,7 +677,9 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            let (tx, rx) = oneshot::channel::<
+                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+            >();
             if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
                 rsp: tx,
             })) {
@@ -771,7 +767,14 @@ fn app(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
                 let (tx, rx) = oneshot::channel::<
-                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                    Result<
+                        (
+                            state::Identity,
+                            HashMap<Uuid, state::Chat>,
+                            HashSet<state::Identity>,
+                        ),
+                        warp::error::Error,
+                    >,
                 >();
                 if let Err(e) =
                     warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {

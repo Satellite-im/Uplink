@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use derive_more::Display;
 use futures::channel::oneshot;

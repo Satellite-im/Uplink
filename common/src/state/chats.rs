@@ -42,7 +42,7 @@ pub struct Chats {
     #[serde(default)]
     pub initialized: bool,
     // All active chats from warp.
-    #[serde(default)]
+    #[serde(skip)]
     pub all: HashMap<Uuid, Chat>,
     // Chat to display / interact with currently.
     #[serde(default)]
@@ -57,10 +57,6 @@ pub struct Chats {
     // Favorite Chats
     #[serde(default)]
     pub favorites: Vec<Uuid>,
-}
-pub enum Direction {
-    Incoming,
-    Outgoing,
 }
 
 impl Chats {

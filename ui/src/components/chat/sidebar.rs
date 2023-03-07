@@ -22,7 +22,7 @@ use warp::{
     raygun::{self},
 };
 
-use common::state::{Action, Identity, State};
+use common::state::{self, Action, Identity, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
@@ -35,35 +35,16 @@ pub struct Props {
     route_info: RouteInfo,
 }
 
-pub fn build_participants_names(identities: &Vec<Identity>) -> String {
-    let mut participants_name = String::new();
-
-    // Iterate over the identities vector
-    for identity in identities {
-        // Create a string with the username of the current identity and a comma
-        let name = format!("{}, ", identity.username());
-        // Append the name string to the participants_name string
-        participants_name.push_str(&name);
-    }
-
-    // Remove the last two characters from the participants_name string (the trailing comma and space)
-    participants_name.pop();
-    participants_name.pop();
-
-    // Return the resulting participants_name string
-    participants_name
-}
-
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, favorites, active_media_chat) = if state.read().chats.initialized {
+    let (sidebar_chats, favorites, active_media_chat) = if state.read().chats().initialized {
         (
-            state.read().chats.in_sidebar.clone(),
-            state.read().chats.favorites.clone(),
+            state.read().chats_sidebar(),
+            state.read().chats_favorites(),
             state.read().get_active_chat(),
         )
     } else {
@@ -111,16 +92,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     },
                     div {
                         class: "vertically-scrollable",
-                        favorites.iter().cloned().map(|chat_id| {
-                            let chat: Chat = match state.read().chats.all.get(&chat_id) {
-                                Some(c) => c.clone(),
-                                None => return rsx!("") // should never happen but may if a friend request doesn't go through
-                            };
+                        favorites.iter().cloned().map(|chat| {
                             let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
                             let favorites_chat = chat.clone();
                             let remove_favorite = chat.clone();
-                            let without_me = state.read().get_without_me(&chat.participants);
-                            let participants_name = build_participants_names(&without_me);
+                            let chat_id = chat.id;
+                            let participants = state.read().chat_participants(&chat);
+                            let participants_name: Vec<String> = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).map(|x| x.username()).collect();
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -148,8 +126,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        participants: build_participants(&chat.participants.clone()),
-                                        with_username: participants_name,
+                                        participants: build_participants(&participants.clone()),
+                                        with_username: participants_name.join(", ").to_string(),
                                         typing: users_typing,
                                         onpress: move |_| {
                                             if state.read().ui.is_minimal_view() {
@@ -175,17 +153,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         text: get_local_text("uplink.chats"),
                     }
                 )),
-                sidebar_chats.iter().cloned().map(|chat_id| {
-                    let chat = match state.read().chats.all.get(&chat_id) {
-                        Some(c) => c.clone(),
-                        None => return rsx!("")
-                    };
+                sidebar_chats.iter().cloned().map(|chat| {
+                    let chat_id = chat.id;
                     let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().account.identity.did_key());
-                    let without_me = state.read().get_without_me(&chat.participants);
-                    let user = without_me.first();
-                    let parsed_user = user.cloned().unwrap_or_default();
-
-                    let platform = match parsed_user.platform() {
+                    let participants = state.read().chat_participants(&chat);
+                    let user: state::Identity = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).next().cloned().unwrap_or_default();
+                    let participants_name: Vec<String> = participants.iter().filter(|x| x.did_key() != state.read().account.identity.did_key()).map(|x| x.username()).collect();
+                    let platform = match user.platform() {
                         warp::multipass::identity::Platform::Desktop => Platform::Desktop,
                         warp::multipass::identity::Platform::Mobile => Platform::Mobile,
                         _ => Platform::Headless //TODO: Unknown (Matt: This represents bots and other platforms which are not using known UIs)
@@ -209,15 +183,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    let participants = without_me.clone();
-                    let participants_name = if participants.len() > 2 { build_participants_names(&participants) } else { parsed_user.username() };
+                    let participants_name = participants_name.join(", ").to_string();
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => String::new(),
                             [ file ] => file.name(),
-                            _ => match chat.participants.iter().find(|p| p.did_key() == unwrapped_message.sender()).map(|x| x.username()) {
+                            _ => match participants.iter().find(|p| p.did_key()  == unwrapped_message.sender()).map(|x| x.username()) {
                                 Some(name) => format!("{name} {}", get_local_text("sidebar.subtext")),
                                 None => {
                                     log::error!("error calculating subtext for sidebar chat");
@@ -269,8 +242,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status:  convert_status(&parsed_user.identity_status()),
-                                            image: parsed_user.graphics().profile_picture(),
+                                            status:  convert_status(&user.identity_status()),
+                                            image: user.graphics().profile_picture(),
                                             typing: users_typing,
                                         }
                                     )} else {rsx! (

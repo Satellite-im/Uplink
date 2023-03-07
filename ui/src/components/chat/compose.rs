@@ -55,8 +55,6 @@ use crate::{
     },
 };
 
-use super::sidebar::build_participants_names;
-
 struct ComposeData {
     active_chat: Chat,
     message_groups: Vec<state::MessageGroup>,
@@ -90,7 +88,7 @@ pub fn Compose(cx: Scope) -> Element {
     let data2 = data.clone();
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
-    if state.read().chats.active_chat_has_unreads() {
+    if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
@@ -125,7 +123,7 @@ pub fn Compose(cx: Scope) -> Element {
 
 fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
     // the Compose page shouldn't be called before chats is initialized. but check here anyway.
-    if !s.chats.initialized {
+    if !s.chats().initialized {
         return None;
     }
 
@@ -134,34 +132,31 @@ fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
         None => return None,
     };
     let message_groups = s.get_sort_messages(&active_chat);
+    let participants = s.chat_participants(&active_chat);
 
     // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
     // this would be "fixed" the next time uplink starts up
-    let other_participants = s.get_without_me(&active_chat.participants);
+    let other_participants: Vec<Identity> = participants
+        .iter()
+        .filter(|x| x.did_key() != s.account.identity.did_key())
+        .cloned()
+        .collect();
     let active_participant = other_participants
         .first()
         .cloned()
         .expect("chat should have at least 2 participants");
 
-    // friend status message and online status is updated in state.friends, not state.chats
-    // if the active participant isn't a friend, we could fall back to using the status message obtained from chats. however, it wouldn't be updated
-    let subtext = match s.friends.all.get(&active_participant.did_key()) {
-        Some(friend) => friend.status_message().unwrap_or_default(),
-        // todo: do we care about the status message of someone who isn't a friend? it won't be updated ever..
-        None => String::new(), //active_participant.status_message().unwrap_or_default(),
-    };
-
-    // for the background picture and platform, replace Identity with friend's identity
-    let active_participant = match s.friends.all.get(&active_participant.did_key()) {
-        Some(friend) => friend.clone(),
-        None => active_participant,
-    };
-
+    let subtext = active_participant.status_message().unwrap_or_default();
     let is_favorite = s.is_favorite(&active_chat);
 
     let first_image = active_participant.graphics().profile_picture();
-    let other_participants_names = build_participants_names(&other_participants);
-    let active_media = Some(active_chat.id) == s.chats.active_media;
+    let other_participants_names = other_participants
+        .iter()
+        .map(|x| x.username())
+        .collect::<Vec<String>>()
+        .join(", ")
+        .to_string();
+    let active_media = Some(active_chat.id) == s.chats().active_media;
 
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
@@ -588,7 +583,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         .and_then(|id| {
             state
                 .read()
-                .chats
+                .chats()
                 .all
                 .get(&id)
                 .map(|chat| chat.replying_to.is_some())
@@ -601,7 +596,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // for now it doesn't quite work for group messages
     let my_id = state.read().account.identity.did_key();
     let is_typing = active_chat_id
-        .and_then(|id| state.read().chats.all.get(&id).cloned())
+        .and_then(|id| state.read().chats().all.get(&id).cloned())
         .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
         .unwrap_or_default();
 
@@ -755,7 +750,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         if STATIC_ARGS.use_mock {
             state.write().mutate(Action::MockSend(id, msg));
         } else {
-            let replying_to = state.read().chats.get_replying_to();
+            let replying_to = state.read().chats().get_replying_to();
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(id));
             }
@@ -802,9 +797,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 let active_chat = data.active_chat.clone();
                 cx.render(rsx!(active_chat.clone().replying_to.map(|msg| {
                     let our_did = state.read().account.identity.did_key();
-                    let mut participants = data.active_chat.participants.clone();
-                    participants.retain(|p| p.did_key() == msg.sender());
-                    let msg_owner = participants.first();
+                    let msg_owner = data.other_participants.first();
                     let (platform, status) = get_platform_and_status(msg_owner);
 
                     rsx!(

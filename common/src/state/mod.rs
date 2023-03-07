@@ -47,7 +47,8 @@ use warp::{
     raygun::{self, Message, Reaction},
 };
 
-use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
+use self::storage::Storage;
+use self::{action::ActionHook, configuration::Configuration, ui::Call};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -106,6 +107,126 @@ impl Clone for State {
     }
 }
 
+impl State {
+    pub fn mock(
+        my_id: Identity,
+        identities: HashMap<DID, Identity>,
+        chats: chats::Chats,
+        friends: friends::Friends,
+        storage: Storage,
+    ) -> Self {
+        Self {
+            account: Account { identity: my_id },
+            settings: Settings {
+                language: "English (USA)".into(),
+            },
+            route: Route { active: "/".into() },
+            storage,
+            chats,
+            friends,
+            identities,
+            ..Default::default()
+        }
+    }
+    pub fn friends(&self) -> &friends::Friends {
+        &self.friends
+    }
+
+    pub fn friend_identities(&self) -> Vec<Identity> {
+        self.friends
+            .all
+            .iter()
+            .map(|did| self.identities.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn incoming_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .incoming_requests
+            .iter()
+            .map(|did| self.identities.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn outgoing_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .outgoing_requests
+            .iter()
+            .map(|did| self.identities.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn blocked_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .blocked
+            .iter()
+            .map(|did| self.identities.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn chats(&self) -> &chats::Chats {
+        &self.chats
+    }
+
+    pub fn chats_favorites(&self) -> Vec<Chat> {
+        self.chats
+            .favorites
+            .iter()
+            .map(|did| self.chats.all.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn chats_sidebar(&self) -> Vec<Chat> {
+        self.chats
+            .in_sidebar
+            .iter()
+            .map(|did| self.chats.all.get(&did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn chat_participants(&self, chat: &Chat) -> Vec<Identity> {
+        chat.participants
+            .iter()
+            .map(|did| self.identities.get(did))
+            .flatten()
+            .cloned()
+            .collect()
+    }
+
+    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
+        self.friends = friends;
+        self.friends.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
+    }
+    pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
+        self.chats.all = chats;
+        self.chats.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
+    }
+
+    pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
+        if let Some(friend) = self.identities.get_mut(&id) {
+            *friend = ident;
+        } else {
+            log::warn!("failed up update identity: {}", ident.username());
+        }
+    }
+}
+
 // This code defines a number of methods for the State struct, which are used to mutate the state in a controlled manner.
 // For example, the set_active_chat method sets the active chat in the State struct, and the toggle_favorite method adds or removes a chat from the user's favorites.
 //  These methods are used to update the relevant fields within the State struct in response to user actions or other events within the application.
@@ -115,27 +236,6 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
-    }
-
-    pub fn friends(&self) -> &friends::Friends {
-        &self.friends
-    }
-
-    pub fn chats(&self) -> &chats::Chats {
-        &self.chats
-    }
-
-    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
-        self.friends = friends;
-        self.friends.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
-    }
-    pub fn set_chats(&mut self, chats: chats::Chats, identities: HashSet<Identity>) {
-        self.chats = chats;
-        self.chats.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
 
     pub fn mutate(&mut self, action: Action) {
@@ -166,15 +266,11 @@ impl State {
             }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
-            Action::RequestAccepted(identity) => {
-                self.complete_request(Direction::Outgoing, &identity)
-            }
-            Action::CancelRequest(identity) => self.cancel_request(Direction::Outgoing, &identity),
-            Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
-            Action::AcceptRequest(identity) => {
-                self.complete_request(Direction::Incoming, &identity)
-            }
-            Action::DenyRequest(identity) => self.cancel_request(Direction::Incoming, &identity),
+            Action::RequestAccepted(identity) => self.complete_request(&identity),
+            Action::CancelRequest(identity) => self.cancel_request(&identity),
+            //Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
+            Action::AcceptRequest(identity) => self.complete_request(&identity),
+            Action::DenyRequest(identity) => self.cancel_request(&identity),
             Action::RemoveFriend(friend) => self.remove_friend(&friend.did_key()),
             Action::Block(identity) => self.block(&identity),
             Action::Unblock(identity) => self.unblock(&identity),
@@ -397,57 +493,44 @@ impl State {
         self.settings.language = string.to_string();
     }
 
-    fn cancel_request(&mut self, direction: Direction, identity: &Identity) {
-        match direction {
-            Direction::Outgoing => {
-                self.friends.outgoing_requests.remove(identity);
-            }
-            Direction::Incoming => {
-                self.friends.incoming_requests.remove(identity);
-            }
-        }
+    fn cancel_request(&mut self, identity: &Identity) {
+        self.friends.outgoing_requests.remove(&identity.did_key());
+        self.friends.incoming_requests.remove(&identity.did_key());
     }
 
-    fn complete_request(&mut self, direction: Direction, identity: &Identity) {
-        match direction {
-            Direction::Outgoing => {
-                self.friends.outgoing_requests.remove(identity);
-                self.friends
-                    .all
-                    .insert(identity.did_key(), identity.clone());
-            }
-            Direction::Incoming => {
-                self.friends.incoming_requests.remove(identity);
-                self.friends
-                    .all
-                    .insert(identity.did_key(), identity.clone());
-            }
-        }
+    fn complete_request(&mut self, identity: &Identity) {
+        self.friends.outgoing_requests.remove(&identity.did_key());
+        self.friends.incoming_requests.remove(&identity.did_key());
+        self.friends.all.insert(identity.did_key());
+        // should already be in self.identities
+        self.identities.insert(identity.did_key(), identity.clone());
     }
 
     fn new_incoming_request(&mut self, identity: &Identity) {
-        self.friends.incoming_requests.insert(identity.clone());
+        self.friends.incoming_requests.insert(identity.did_key());
+        self.identities.insert(identity.did_key(), identity.clone());
     }
 
     fn new_outgoing_request(&mut self, identity: &Identity) {
-        self.friends.outgoing_requests.insert(identity.clone());
+        self.friends.outgoing_requests.insert(identity.did_key());
+        self.identities.insert(identity.did_key(), identity.clone());
     }
 
     fn block(&mut self, identity: &Identity) {
         // If the identity is not already blocked, add it to the blocked list
-        self.friends.blocked.insert(identity.clone());
+        self.friends.blocked.insert(identity.did_key());
 
         // Remove the identity from the outgoing requests list if they are present
-        self.friends.outgoing_requests.remove(identity);
-
-        self.friends.incoming_requests.remove(identity);
+        self.friends.outgoing_requests.remove(&identity.did_key());
+        self.friends.incoming_requests.remove(&identity.did_key());
+        self.identities.remove(&identity.did_key());
 
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
     }
 
     fn unblock(&mut self, identity: &Identity) {
-        self.friends.blocked.remove(identity);
+        self.friends.blocked.remove(&identity.did_key());
     }
 
     fn remove_friend(&mut self, did: &DID) {
@@ -462,7 +545,7 @@ impl State {
                 && chat
                     .participants
                     .iter()
-                    .any(|participant| participant.did_key() == *did)
+                    .any(|participant| participant == did)
         });
 
         // if no direct chat was found then return
@@ -539,23 +622,22 @@ impl State {
         self.chats
             .all
             .values()
-            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(friend))
+            .find(|chat| {
+                chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
+            })
             .cloned()
     }
 
-    pub fn get_without_me(&self, identities: &[Identity]) -> Vec<Identity> {
+    pub fn get_without_me(&self, identities: &[DID]) -> Vec<DID> {
         identities
             .iter()
-            .filter(|identity| identity.did_key() != self.account.identity.did_key())
+            .filter(|identity| **identity != self.account.identity.did_key())
             .cloned()
             .collect()
     }
 
     pub fn has_friend_with_did(&self, did: &DID) -> bool {
-        self.friends
-            .all
-            .values()
-            .any(|identity| identity.did_key() == *did)
+        self.friends.all.contains(did)
     }
 
     // Define a method for sorting a vector of messages.
@@ -597,7 +679,7 @@ impl State {
     }
 
     pub fn get_friend_identity(&self, did: &DID) -> Identity {
-        self.friends.all.get(did).cloned().unwrap_or_default()
+        self.identities.get(did).cloned().unwrap_or_default()
     }
 
     pub fn get_friends_by_first_letter(
@@ -834,7 +916,7 @@ impl State {
         match event {
             MultiPassEvent::None => {}
             MultiPassEvent::FriendRequestReceived(identity) => {
-                self.friends.incoming_requests.insert(identity.clone());
+                self.new_incoming_request(&identity);
 
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::FriendRequest,
@@ -855,27 +937,24 @@ impl State {
                 }
             }
             MultiPassEvent::FriendRequestSent(identity) => {
-                self.friends.outgoing_requests.insert(identity);
+                self.new_outgoing_request(&identity);
             }
             MultiPassEvent::FriendAdded(identity) => {
-                self.friends.incoming_requests.remove(&identity);
-                self.friends.outgoing_requests.remove(&identity);
-                self.friends.all.insert(identity.did_key(), identity);
+                self.complete_request(&identity);
             }
             MultiPassEvent::FriendRemoved(identity) => {
                 self.friends.all.remove(&identity.did_key());
             }
             MultiPassEvent::FriendRequestCancelled(identity) => {
-                self.friends.incoming_requests.remove(&identity);
-                self.friends.outgoing_requests.remove(&identity);
+                self.cancel_request(&identity);
             }
             MultiPassEvent::FriendOnline(identity) => {
-                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                if let Some(ident) = self.identities.get_mut(&identity.did_key()) {
                     ident.set_identity_status(IdentityStatus::Online);
                 }
             }
             MultiPassEvent::FriendOffline(identity) => {
-                if let Some(ident) = self.friends.all.get_mut(&identity.did_key()) {
+                if let Some(ident) = self.identities.get_mut(&identity.did_key()) {
                     ident.set_identity_status(IdentityStatus::Offline);
                 }
             }
@@ -891,10 +970,15 @@ impl State {
     fn process_raygun_event(&mut self, event: RayGunEvent) {
         match event {
             RayGunEvent::ConversationCreated(chat) => {
-                if !self.chats.in_sidebar.contains(&chat.id) {
-                    self.chats.in_sidebar.insert(0, chat.id);
+                if !self.chats.in_sidebar.contains(&chat.inner.id) {
+                    self.chats.in_sidebar.insert(0, chat.inner.id);
+                    self.identities.extend(
+                        chat.identities
+                            .iter()
+                            .map(|ident| (ident.did_key(), ident.clone())),
+                    );
                 }
-                self.chats.all.insert(chat.id, chat);
+                self.chats.all.insert(chat.inner.id, chat.inner);
             }
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);

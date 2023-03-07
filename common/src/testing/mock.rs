@@ -14,14 +14,12 @@ use titlecase::titlecase;
 use uuid::Uuid;
 use warp::{
     constellation::{directory::Directory, file::File},
+    crypto::DID,
     multipass::identity::{Graphics, IdentityStatus, Platform},
     raygun::Message,
 };
 
-use crate::state::{
-    storage::Storage, Account, Chat, Chats, Friends, Identity, Route, Settings, State,
-    ToastNotification,
-};
+use crate::state::{storage::Storage, Chat, Chats, Friends, Identity, State, ToastNotification};
 
 use crate::warp_runner::ui_adapter;
 
@@ -61,47 +59,37 @@ pub fn generate_mock() -> State {
     toast_notifications.clear();
 
     let storage = generate_fake_storage();
-    let mut id_map = HashMap::new();
-    for ident in identities {
+    let mut id_map: HashMap<DID, Identity> = HashMap::new();
+    for ident in identities.iter().cloned() {
         id_map.insert(ident.did_key(), ident);
     }
-    for ident in blocked_identities {
+    for ident in blocked_identities.iter().cloned() {
         id_map.insert(ident.did_key(), ident);
     }
-    for ident in incoming_requests {
+    for ident in incoming_requests.iter().cloned() {
         id_map.insert(ident.did_key(), ident);
     }
-    for ident in outgoing_requests {
+    for ident in outgoing_requests.iter().cloned() {
         id_map.insert(ident.did_key(), ident);
     }
 
-    State {
-        account: Account {
-            identity: me.clone(),
-        },
-        settings: Settings {
-            language: "English (USA)".into(),
-        },
-        route: Route { active: "/".into() },
-        chats: Chats {
-            initialized: true,
-            all: all_chats.clone(),
-            active: None,
-            active_media: None,
-            in_sidebar,
-            favorites: vec![],
-        },
-        storage,
-        friends: Friends {
-            initialized: true,
-            all: HashSet::from_iter(identities.iter().map(|x| x.did_key())),
-            blocked: HashSet::from_iter(blocked_identities.iter().map(|x| x.did_key())),
-            incoming_requests: HashSet::from_iter(incoming_requests.iter().map(|x| x.did_key())),
-            outgoing_requests: HashSet::from_iter(outgoing_requests.iter().map(|x| x.did_key())),
-        },
-        identities: id_map,
-        ..Default::default()
-    }
+    let chats = Chats {
+        initialized: true,
+        all: all_chats.clone(),
+        active: None,
+        active_media: None,
+        in_sidebar,
+        favorites: vec![],
+    };
+    let friends = Friends {
+        initialized: true,
+        all: HashSet::from_iter(identities.iter().map(|x| x.did_key())),
+        blocked: HashSet::from_iter(blocked_identities.iter().map(|x| x.did_key())),
+        incoming_requests: HashSet::from_iter(incoming_requests.iter().map(|x| x.did_key())),
+        outgoing_requests: HashSet::from_iter(outgoing_requests.iter().map(|x| x.did_key())),
+    };
+
+    State::mock(me.clone(), id_map, chats, friends, storage)
 }
 
 fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
