@@ -638,7 +638,7 @@ fn app(cx: Scope) -> Element {
                     Ok(update) => match inner.try_borrow_mut() {
                         Ok(state) => {
                             for (id, friend_update) in update {
-                                state.write().update_identity(id, friend_update.into());
+                                state.write().update_identity(id, friend_update);
                             }
                         }
                         Err(e) => {

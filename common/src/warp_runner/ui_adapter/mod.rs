@@ -19,7 +19,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    multipass::identity::Identity,
+    multipass::identity::{Identity, Platform},
     raygun::{self, Conversation, MessageOptions},
 };
 
@@ -72,7 +72,17 @@ pub async fn did_to_identity(
         }
     };
     let identity = match identity {
-        Some(id) => id,
+        Some(id) => {
+            let status = account
+                .identity_status(&id.did_key())
+                .await
+                .unwrap_or(warp::multipass::identity::IdentityStatus::Offline);
+            let platform = account
+                .identity_platform(&id.did_key())
+                .await
+                .unwrap_or(Platform::Unknown);
+            state::Identity::new(id, status, platform)
+        }
         None => {
             let mut default: Identity = Default::default();
             default.set_did_key(did.clone());
@@ -86,10 +96,10 @@ pub async fn did_to_identity(
                 .get(len - 3..)
                 .ok_or(Error::OtherWithContext("DID too short".into()))?;
             default.set_username(&format!("{start}...{end}"));
-            default
+            state::Identity::from(default)
         }
     };
-    Ok(state::Identity::from(identity))
+    Ok(identity)
 }
 
 pub async fn dids_to_identity(
