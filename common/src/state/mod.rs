@@ -109,163 +109,6 @@ impl Clone for State {
     }
 }
 
-impl State {
-    pub fn mock(
-        my_id: Identity,
-        identities: HashMap<DID, Identity>,
-        chats: chats::Chats,
-        friends: friends::Friends,
-        storage: Storage,
-    ) -> Self {
-        Self {
-            account: Account { identity: my_id },
-            settings: Settings {
-                language: "English (USA)".into(),
-            },
-            route: Route { active: "/".into() },
-            storage,
-            chats,
-            friends,
-            identities,
-            ..Default::default()
-        }
-    }
-    pub fn friends(&self) -> &friends::Friends {
-        &self.friends
-    }
-
-    pub fn friend_identities(&self) -> Vec<Identity> {
-        self.friends
-            .all
-            .iter()
-            .filter_map(|did| self.identities.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn incoming_fr_identities(&self) -> Vec<Identity> {
-        self.friends
-            .incoming_requests
-            .iter()
-            .filter_map(|did| self.identities.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn outgoing_fr_identities(&self) -> Vec<Identity> {
-        self.friends
-            .outgoing_requests
-            .iter()
-            .filter_map(|did| self.identities.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn blocked_fr_identities(&self) -> Vec<Identity> {
-        self.friends
-            .blocked
-            .iter()
-            .filter_map(|did| self.identities.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn chats(&self) -> &chats::Chats {
-        &self.chats
-    }
-
-    pub fn chats_favorites(&self) -> Vec<Chat> {
-        self.chats
-            .favorites
-            .iter()
-            .filter_map(|did| self.chats.all.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn chats_sidebar(&self) -> Vec<Chat> {
-        self.chats
-            .in_sidebar
-            .iter()
-            .filter_map(|did| self.chats.all.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn chat_participants(&self, chat: &Chat) -> Vec<Identity> {
-        chat.participants
-            .iter()
-            .filter_map(|did| self.identities.get(did))
-            .cloned()
-            .collect()
-    }
-
-    pub fn account(&self) -> &account::Account {
-        &self.account
-    }
-
-    pub fn set_account(&mut self, account: account::Account) {
-        self.account = account;
-    }
-
-    pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
-        self.account.identity.set_warp_identity(identity);
-    }
-
-    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
-        self.friends = friends;
-        self.friends.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
-    }
-    pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
-        self.chats.all = chats;
-        self.chats.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
-    }
-
-    pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
-        if let Some(friend) = self.identities.get_mut(&id) {
-            *friend = ident;
-        } else {
-            log::warn!("failed up update identity: {}", ident.username());
-        }
-    }
-
-    pub fn did_key(&self) -> DID {
-        self.account.identity.did_key()
-    }
-
-    pub fn status_message(&self) -> Option<String> {
-        self.account.identity.status_message()
-    }
-
-    pub fn username(&self) -> String {
-        self.account.identity.username()
-    }
-
-    pub fn graphics(&self) -> warp::multipass::identity::Graphics {
-        self.account.identity.graphics()
-    }
-
-    pub fn remove_self(&self, identities: &[Identity]) -> Vec<Identity> {
-        identities
-            .iter()
-            .filter(|x| x.did_key() != self.account.identity.did_key())
-            .cloned()
-            .collect()
-    }
-
-    pub fn join_usernames(identities: &[Identity]) -> String {
-        identities
-            .iter()
-            .map(|x| x.username())
-            .collect::<Vec<String>>()
-            .join(", ")
-    }
-}
-
 // This code defines a number of methods for the State struct, which are used to mutate the state in a controlled manner.
 // For example, the set_active_chat method sets the active chat in the State struct, and the toggle_favorite method adds or removes a chat from the user's favorites.
 //  These methods are used to update the relevant fields within the State struct in response to user actions or other events within the application.
@@ -1134,6 +977,163 @@ impl State {
                 }
             }
         }
+    }
+}
+
+impl State {
+    pub fn mock(
+        my_id: Identity,
+        identities: HashMap<DID, Identity>,
+        chats: chats::Chats,
+        friends: friends::Friends,
+        storage: Storage,
+    ) -> Self {
+        Self {
+            account: Account { identity: my_id },
+            settings: Settings {
+                language: "English (USA)".into(),
+            },
+            route: Route { active: "/".into() },
+            storage,
+            chats,
+            friends,
+            identities,
+            ..Default::default()
+        }
+    }
+    pub fn friends(&self) -> &friends::Friends {
+        &self.friends
+    }
+
+    pub fn friend_identities(&self) -> Vec<Identity> {
+        self.friends
+            .all
+            .iter()
+            .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn incoming_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .incoming_requests
+            .iter()
+            .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn outgoing_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .outgoing_requests
+            .iter()
+            .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn blocked_fr_identities(&self) -> Vec<Identity> {
+        self.friends
+            .blocked
+            .iter()
+            .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn chats(&self) -> &chats::Chats {
+        &self.chats
+    }
+
+    pub fn chats_favorites(&self) -> Vec<Chat> {
+        self.chats
+            .favorites
+            .iter()
+            .filter_map(|did| self.chats.all.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn chats_sidebar(&self) -> Vec<Chat> {
+        self.chats
+            .in_sidebar
+            .iter()
+            .filter_map(|did| self.chats.all.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn chat_participants(&self, chat: &Chat) -> Vec<Identity> {
+        chat.participants
+            .iter()
+            .filter_map(|did| self.identities.get(did))
+            .cloned()
+            .collect()
+    }
+
+    pub fn account(&self) -> &account::Account {
+        &self.account
+    }
+
+    pub fn set_account(&mut self, account: account::Account) {
+        self.account = account;
+    }
+
+    pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
+        self.account.identity.set_warp_identity(identity);
+    }
+
+    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
+        self.friends = friends;
+        self.friends.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
+    }
+    pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
+        self.chats.all = chats;
+        self.chats.initialized = true;
+        self.identities
+            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
+    }
+
+    pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
+        if let Some(friend) = self.identities.get_mut(&id) {
+            *friend = ident;
+        } else {
+            log::warn!("failed up update identity: {}", ident.username());
+        }
+    }
+
+    pub fn did_key(&self) -> DID {
+        self.account.identity.did_key()
+    }
+
+    pub fn status_message(&self) -> Option<String> {
+        self.account.identity.status_message()
+    }
+
+    pub fn username(&self) -> String {
+        self.account.identity.username()
+    }
+
+    pub fn graphics(&self) -> warp::multipass::identity::Graphics {
+        self.account.identity.graphics()
+    }
+
+    pub fn remove_self(&self, identities: &[Identity]) -> Vec<Identity> {
+        identities
+            .iter()
+            .filter(|x| x.did_key() != self.account.identity.did_key())
+            .cloned()
+            .collect()
+    }
+
+    pub fn join_usernames(identities: &[Identity]) -> String {
+        identities
+            .iter()
+            .map(|x| x.username())
+            .collect::<Vec<String>>()
+            .join(", ")
     }
 }
 
