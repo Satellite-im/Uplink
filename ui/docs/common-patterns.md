@@ -1,4 +1,4 @@
-# Guidelines
+# Guidelines 
 
 This document aims to provide guidelines for developers to follow when contributing to the project. It outlines common patterns and steps taken to complete common tasks such as adding a new component or creating a new feature which spans the renderer, state and warp.
 
