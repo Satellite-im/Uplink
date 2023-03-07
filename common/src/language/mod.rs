@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use fluent_templates::{
-    lazy_static::lazy_static, once_cell::sync::Lazy, LanguageIdentifier, Loader,
-};
+use fluent_templates::{once_cell::sync::Lazy, LanguageIdentifier, Loader};
 use unic_langid::langid;
 use warp::sync::RwLock;
 
@@ -10,22 +8,20 @@ use crate::LOCALES;
 
 pub const US_ENGLISH: (LanguageIdentifier, &str) = (langid!("en-US"), "English (USA)");
 
-lazy_static! {
-    static ref LANGUAGES: HashMap<String, (LanguageIdentifier, &'static str)> = {
-        let mut map = HashMap::new();
+static LANGUAGES: Lazy<HashMap<String, (LanguageIdentifier, &'static str)>> = Lazy::new(|| {
+    let mut map = HashMap::new();
 
-        let add = |map: &mut HashMap<String, (LanguageIdentifier, &'static str)>,
-                   lang: &(LanguageIdentifier, &'static str)| {
-            map.insert(lang.1.to_string(), lang.to_owned());
-        };
-
-        add(&mut map, &US_ENGLISH);
-        add(&mut map, &(langid!("pt-BR"), "Português (Brasil)"));
-        add(&mut map, &(langid!("pt-PT"), "Português (Portugal)"));
-        add(&mut map, &(langid!("es-MX"), "Español (México)"));
-        map
+    let add = |map: &mut HashMap<String, (LanguageIdentifier, &'static str)>,
+               lang: &(LanguageIdentifier, &'static str)| {
+        map.insert(lang.1.to_string(), lang.to_owned());
     };
-}
+
+    add(&mut map, &US_ENGLISH);
+    add(&mut map, &(langid!("pt-BR"), "Português (Brasil)"));
+    add(&mut map, &(langid!("pt-PT"), "Português (Portugal)"));
+    add(&mut map, &(langid!("es-MX"), "Español (México)"));
+    map
+});
 
 static APP_LANG: Lazy<RwLock<(LanguageIdentifier, &str)>> = Lazy::new(|| RwLock::new(US_ENGLISH));
 
