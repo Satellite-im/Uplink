@@ -116,7 +116,7 @@ fn render_route(cx: Scope<Props>, route: FriendRoute) -> Element {
 
 fn get_topbar<'a>(cx: Scope<'a, Props>, route: &'a UseState<FriendRoute>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().friends().incoming_requests.len();
 
     cx.render(rsx!(Topbar {
         with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,

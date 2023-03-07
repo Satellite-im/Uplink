@@ -105,8 +105,8 @@ pub enum Action {
     CancelRequest(Identity),
 
     /// Handle a new incoming friend request
-    #[display(fmt = "IncomingRequest")]
-    IncomingRequest(Identity),
+    // #[display(fmt = "IncomingRequest")]
+    // IncomingRequest(Identity),
     /// Accept an incoming friend request
     #[display(fmt = "AcceptRequest")]
     AcceptRequest(Identity),
