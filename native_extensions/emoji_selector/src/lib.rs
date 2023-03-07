@@ -16,6 +16,20 @@ extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EmojiSelector;
 
+fn group_to_str(group: emojis::Group) -> String {
+    match group {
+        Group::SmileysAndEmotion => "Smileys & Emotion".into(),
+        Group::PeopleAndBody => "People & Body".into(),
+        Group::AnimalsAndNature => "Animals & Nature".into(),
+        Group::FoodAndDrink => "Food & Drink".into(),
+        Group::TravelAndPlaces => "Travel & Places".into(),
+        Group::Activities => "Activities".into(),
+        Group::Objects => "Objects".into(),
+        Group::Symbols => "Symbols".into(),
+        Group::Flags => "Flags".into(),
+    }
+}
+
 impl EmojiSelector {
     fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         let mut routes_ = vec![];
@@ -29,42 +43,42 @@ impl EmojiSelector {
         routes_.push(Route {
             to: "people_and_body",
             name: "People & Body".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::Users,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "animals_and_nature",
             name: "Animals & Nature".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::Leaf,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "travel_and_places",
             name: "Travel & Places".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::BuildingStorefront,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "activities",
             name: "Activities".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::Basketball,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "objects",
             name: "Objects".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::Cake,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "symbols",
             name: "Symbols".to_owned(),
-            icon: Icon::Flag,
+            icon: Icon::CpuChip,
             with_badge: None,
             loading: None,
         });
@@ -88,17 +102,7 @@ impl EmojiSelector {
                 div {
                     id: "scrolling",
                     emojis::Group::iter().map(|group| {
-                        let name: String = match group {
-                            Group::SmileysAndEmotion => "Smileys & Emotion".into(),
-                            Group::PeopleAndBody => "People & Body".into(),
-                            Group::AnimalsAndNature => "Animals & Nature".into(),
-                            Group::FoodAndDrink => "Food & Drink".into(),
-                            Group::TravelAndPlaces => "Travel & Places".into(),
-                            Group::Activities => "Activities".into(),
-                            Group::Objects => "Objects".into(),
-                            Group::Symbols => "Symbols".into(),
-                            Group::Flags => "Flags".into(),
-                        };
+                        let name: String = group_to_str(group);
                         rsx!(
                             Label {
                                 text: name
