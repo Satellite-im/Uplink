@@ -284,13 +284,16 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
+
+    let reset_fn = || {
+        *val.write() = "".into();
+        error.set("".into());
+        valid.set(false);
+    };
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
         if *should_reset {
-            *val.write() = "".into();
-            emit(&cx, val.read().to_string(), false);
-            error.set("".into());
-            valid.set(false);
+            reset_fn();
             hook.set(false);
         }
     }
@@ -371,18 +374,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
                             if options.clear_on_submit {
-                            *val.write() = "".into();
-                            emit(&cx, val.read().to_string(), false);
-                            error.set("".into());
-                            valid.set(false);
+                                reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(&cx, "".to_owned(), true, evt.code());
+                            emit_return(&cx, "".to_owned(), *valid.current(), evt.code());
                             if options.clear_on_submit {
-                            *val.write() = "".into();
-                            emit(&cx, val.read().to_string(), false);
-                            error.set("".into());
-                            valid.set(false);
+                                reset_fn();
                            }
                         }
                     }
