@@ -8,7 +8,7 @@ use crate::STATIC_ARGS;
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Friends {
     // becomes true when the friends fields have been retrieved from Warp
-    #[serde(default)]
+    #[serde(skip)]
     pub initialized: bool,
     // All active friends.
     #[serde(default)]

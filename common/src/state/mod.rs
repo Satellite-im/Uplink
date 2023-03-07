@@ -922,7 +922,12 @@ impl State {
                 };
             }
         };
-        serde_json::from_str(&contents).unwrap_or_default()
+        let mut state: Self = serde_json::from_str(&contents).unwrap_or_default();
+        // not sure how these defaulted to true, but this should serve as additional
+        // protection in the future
+        state.friends.initialized = false;
+        state.chats.initialized = false;
+        state
     }
 
     fn load_mock() -> Self {

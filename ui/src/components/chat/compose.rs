@@ -85,7 +85,7 @@ struct ComposeProps {
 pub fn Compose(cx: Scope) -> Element {
     log::trace!("rendering compose");
     let state = use_shared_state::<State>(cx)?;
-    let data = get_compose_data(state.read().clone());
+    let data = get_compose_data(cx);
     let data2 = data.clone();
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
@@ -122,7 +122,9 @@ pub fn Compose(cx: Scope) -> Element {
     ))
 }
 
-fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
+fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
+    let state = use_shared_state::<State>(cx)?;
+    let s = state.read();
     // the Compose page shouldn't be called before chats is initialized. but check here anyway.
     if !s.chats().initialized {
         return None;
@@ -134,7 +136,6 @@ fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
     };
     let message_groups = s.get_sort_messages(&active_chat);
     let participants = s.chat_participants(&active_chat);
-
     // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
     // this would be "fixed" the next time uplink starts up
     let other_participants: Vec<Identity> = s.remove_self(&participants);
@@ -852,8 +853,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     } else {
                         data.other_participants
                             .iter()
-                            .filter(|x| x.did_key() == msg.sender())
-                            .next()
+                            .find(|x| x.did_key() == msg.sender())
                     };
                     let (platform, status) = get_platform_and_status(msg_owner);
 

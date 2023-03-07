@@ -39,7 +39,7 @@ pub struct Chat {
 // warning: Chats implements Serialize
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Chats {
-    #[serde(default)]
+    #[serde(skip)]
     pub initialized: bool,
     // All active chats from warp.
     #[serde(skip)]
