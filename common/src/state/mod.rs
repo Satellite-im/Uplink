@@ -125,6 +125,9 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::SetExtensionEnabled(extension, state) => {
+                self.set_extension_enabled(extension, state)
+            }
             Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
             // ===== Notifications =====
             Action::AddNotification(kind, count) => {
@@ -275,6 +278,20 @@ impl State {
         self.chats.active_media = None;
         self.ui.popout_player = false;
         self.ui.current_call = None;
+    }
+
+    fn set_extension_enabled(&mut self, extension: String, state: bool) {
+        let ext = self.ui.extensions.get_mut(&extension);
+        match ext {
+            Some(e) => e.enabled = state,
+            None => {
+                log::warn!(
+                    "Something went wrong toggling extension '{}' to '{}'.",
+                    extension,
+                    state
+                );
+            }
+        }
     }
 
     /// Adds a chat to the sidebar in the `State` struct.
