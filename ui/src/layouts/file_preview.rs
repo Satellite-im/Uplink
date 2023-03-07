@@ -21,13 +21,13 @@ enum FileFormat {
     Other,
 }
 
-pub fn get_file_format(file_name: String) -> bool {
-    // let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+// pub fn get_file_format(file_name: String) -> bool {
+//     // let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
 
-    // let file_extension = get_file_extension(file_name);
+//     // let file_extension = get_file_extension(file_name);
 
-    // video_formats.iter().any(|f| f == &file_extension)
-}
+//     // video_formats.iter().any(|f| f == &file_extension)
+// }
 
 #[inline_props]
 #[allow(non_snake_case)]
