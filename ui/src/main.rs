@@ -26,6 +26,8 @@ use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
+use warp::crypto::DID;
+use warp::multipass;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -43,7 +45,7 @@ use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -87,12 +89,13 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     settings: "/settings",
 };
 
-// serve as a sort of router while the user logs in
+// serve as a sort of router while the user logs in]
+#[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
     Unlock,
     CreateAccount,
-    Success,
+    Success(multipass::identity::Identity),
 }
 
 fn copy_assets() {
@@ -227,7 +230,8 @@ fn main() {
                     .to_string(),
             )
             .with_file_drop_handler(|_w, drag_event| {
-                log::debug!("Drag Event: {:?}", drag_event);
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
                 true
             }),
     )
@@ -259,8 +263,10 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
-    cx.render(rsx!(match *page.current() {
-        AuthPages::Success => rsx!(app_bootstrap {}),
+    cx.render(rsx!(match &*page.current() {
+        AuthPages::Success(ident) => rsx!(app_bootstrap {
+            identity: ident.clone()
+        }),
         _ => rsx!(auth_wrapper {
             page: page.clone(),
             pin: pin.clone()
@@ -359,19 +365,21 @@ fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
 
 // called at the end of the auth flow
 #[inline_props]
-pub fn app_bootstrap(cx: Scope) -> Element {
+pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
         assert!(state.friends.initialized);
         assert!(state.chats.initialized);
+    } else {
+        state.account.identity = identity.clone().into();
     }
 
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
-    // Here we set the size larger, and bump up the min size in preperation for rendering the main app.
+    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
     desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
 
@@ -605,15 +613,51 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // periodically refresh message timestamps
+    // periodically refresh message timestamps and friend's status messages
+    let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             loop {
+                // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
+
+                // fetch the identities for all friends to get changes in their status messages etc
+                let (tx, rx) = oneshot::channel::<Result<HashMap<DID, _>, warp::error::Error>>();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RefreshFriends { rsp: tx }))
                 {
+                    log::error!("failed to refresh Friends {e}");
                     needs_update.set(true);
+                    continue;
                 }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(update) => match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            for (id, friend_update) in update {
+                                if let Some(friend) = state.write().friends.all.get_mut(&id) {
+                                    friend.set_warp_identity(friend_update);
+                                } else {
+                                    log::warn!(
+                                        "failed up update friend: {}",
+                                        friend_update.username()
+                                    );
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("failed to refresh friends: {e}");
+                    }
+                }
+
+                needs_update.set(true);
             }
         }
     });

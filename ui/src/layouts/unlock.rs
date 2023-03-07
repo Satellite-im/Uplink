@@ -9,7 +9,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
 };
-use warp::logging::tracing::log;
+use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
 use common::{
@@ -80,7 +80,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) =
+                    oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::TryLogIn {
                     passphrase: password,
@@ -93,12 +94,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 let res = rx.await.expect("failed to get response from warp_runner");
 
                 match res {
-                    Ok(_) => {
+                    Ok(ident) => {
                         if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
 
-                        page.set(AuthPages::Success)
+                        page.set(AuthPages::Success(ident))
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {

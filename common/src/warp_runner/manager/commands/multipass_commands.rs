@@ -2,7 +2,15 @@ use std::collections::{HashMap, HashSet};
 
 use derive_more::Display;
 use futures::channel::oneshot;
-use warp::{crypto::DID, error::Error, logging::tracing::log};
+use warp::{
+    crypto::DID,
+    error::Error,
+    logging::tracing::log,
+    multipass::{
+        self,
+        identity::{self, Identifier, IdentityUpdate},
+    },
+};
 
 use crate::{
     state::{self, friends},
@@ -18,12 +26,12 @@ pub enum MultiPassCmd {
     CreateIdentity {
         username: String,
         passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "TryLogIn")]
     TryLogIn {
         passphrase: String,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
     #[display(fmt = "RequestFriend {{ did: {did} }} ")]
     RequestFriend {
@@ -33,6 +41,12 @@ pub enum MultiPassCmd {
     #[display(fmt = "InitializeFriends")]
     InitializeFriends {
         rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
+    },
+    #[display(fmt = "RefreshFriends")]
+    RefreshFriends {
+        rsp: oneshot::Sender<
+            Result<HashMap<DID, multipass::identity::Identity>, warp::error::Error>,
+        >,
     },
     // may later want this to return the Identity rather than the DID.
     #[display(fmt = "GetOwnDid")]
@@ -70,6 +84,28 @@ pub enum MultiPassCmd {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+
+    // identity related commands
+    #[display(fmt = "UpdateProfilePicture")]
+    UpdateProfilePicture {
+        pfp: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateBanner ")]
+    UpdateBanner {
+        banner: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateStatus")]
+    UpdateStatus {
+        status: Option<String>,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateUsername")]
+    UpdateUsername {
+        username: String,
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
 }
 
 // hide sensitive information from debug logs
@@ -101,6 +137,10 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = multipass_initialize_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
+        MultiPassCmd::RefreshFriends { rsp } => {
+            let r = multipass_refresh_friends(&mut warp.multipass).await;
+            let _ = rsp.send(r);
+        }
         MultiPassCmd::RemoveFriend { did, rsp } => {
             let r = warp.multipass.remove_friend(&did).await;
             let _ = rsp.send(r);
@@ -125,7 +165,86 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = warp.multipass.close_request(&did).await;
             let _ = rsp.send(r);
         }
+        MultiPassCmd::UpdateProfilePicture { pfp, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_graphics_picture(pfp))
+                .await;
+
+            let _ = match r {
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await;
+                    rsp.send(id)
+                }
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateBanner { banner, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_graphics_banner(banner))
+                .await;
+            let _ = match r {
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await;
+                    rsp.send(id)
+                }
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateStatus { status, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_status_message(status))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::UpdateUsername { username, rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::set_username(username))
+                .await;
+            let id = warp.multipass.get_own_identity().await;
+            let _ = match r {
+                Ok(_) => rsp.send(id),
+                Err(e) => {
+                    log::error!("failed to get own identity: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
     }
+}
+
+async fn multipass_refresh_friends(
+    account: &mut Account,
+) -> Result<HashMap<DID, multipass::identity::Identity>, Error> {
+    let ids = account.list_friends().await?;
+
+    let list = account
+        .get_identity(Identifier::did_keys(ids.clone()))
+        .await?;
+    let friends: HashMap<DID, identity::Identity> = list
+        .iter()
+        .map(|ident| (ident.did_key(), ident.clone()))
+        .collect();
+    if list.is_empty() {
+        log::warn!("No identities found");
+    }
+    Ok(friends)
 }
 
 async fn multipass_initialize_friends(
