@@ -749,10 +749,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
 
     // todo: filter out extensions not meant for this area
     let extensions = &state.read().ui.extensions;
-    let _ext_renders: Vec<_> = extensions
+    let ext_renders = extensions
         .iter()
+        .filter(|(_, e)| e.enabled)
         .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
-        .collect();
+        .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {
         loading: is_loading,
@@ -765,12 +766,12 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         },
         onreturn: move |_| submit_fn(),
-        controls: cx.render(
+        controls: cx.render(rsx!(
             // Load extensions
-            //            for node in ext_renders {
-            //                rsx!(node)
-            //            },
-            rsx!(Button {
+            for node in ext_renders {
+                rsx!(node)
+            },
+            Button {
                 icon: Icon::ChevronDoubleRight,
                 disabled: is_loading,
                 appearance: Appearance::Secondary,
@@ -779,8 +780,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                     arrow_position: ArrowPosition::Bottom,
                     text: get_local_text("uplink.send"),
                 })),
-            },)
-        ),
+            }
+        )),
         with_replying_to: data
             .map(|data| {
                 let active_chat = data.active_chat.clone();

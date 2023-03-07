@@ -32,6 +32,8 @@ pub enum Action {
     // Extensions
     #[display(fmt = "RegisterExtensions")]
     RegisterExtensions(HashMap<String, ExtensionProxy>),
+    #[display(fmt = "SetExtensionEnabled")]
+    SetExtensionEnabled(String, bool),
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),

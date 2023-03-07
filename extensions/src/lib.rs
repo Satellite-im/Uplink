@@ -135,12 +135,6 @@ impl Extension for ExtensionProxy {
     }
 }
 
-pub struct ExtIpcAPI {
-    // pub state_proxy: State,
-}
+pub struct StateProxy {}
 
-impl ExtIpcAPI {
-    pub fn blacklist(&self) {
-        // self.state_proxy.account
-    }
-}
+impl StateProxy {}
