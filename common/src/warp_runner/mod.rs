@@ -26,7 +26,7 @@ mod manager;
 pub mod ui_adapter;
 
 pub use manager::commands::{FileTransferProgress, FileTransferStep};
-pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -64,6 +64,10 @@ pub enum WarpCmd {
     RayGun(RayGunCmd),
     #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
+    // these commands may not actually be warp commands, but just require a long running
+    // async task, executed separately from the UI
+    #[display(fmt = "Other {{ {_0} }} ")]
+    Other(OtherCmd),
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp

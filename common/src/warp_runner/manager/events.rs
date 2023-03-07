@@ -113,6 +113,9 @@ pub async fn handle_warp_command(
     log::debug!("WARP CMD: {}", &cmd);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
+        WarpCmd::Other(cmd) => {
+            todo!()
+        }
         WarpCmd::Tesseract(_cmd) => {
             // not accepted at this stage of the program. do nothing and drop the rsp channel
         }
