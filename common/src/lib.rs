@@ -136,3 +136,5 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
     ".png", ".jpg", ".jpeg", ".svg", ".heic", ".tiff", ".gif", ".webp", ".apng", ".avif", ".ico",
     ".bmp", ".svgz",
 ];
+
+pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];

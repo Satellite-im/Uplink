@@ -661,7 +661,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                        files_list.read().iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
-                            let file_name3 = file.name();
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
