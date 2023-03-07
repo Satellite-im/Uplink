@@ -321,11 +321,17 @@ enum MessagesCommand {
         file_name: String,
         directory: PathBuf,
     },
+    EditMessage {
+        conv_id: Uuid,
+        msg_id: Uuid,
+        msg: Vec<String>,
+    },
 }
 
 fn get_messages(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_messages");
     let state = use_shared_state::<State>(cx)?;
+    let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     let user = state.read().account.identity.did_key();
 
     let script = include_str!("./script.js");
@@ -334,10 +340,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         //to_owned![];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     MessagesCommand::React((message, emoji)) => {
-                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                         let (tx, rx) = futures::channel::oneshot::channel();
 
                         let mut reactions = message.reactions();
@@ -365,7 +371,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         }
                     }
                     MessagesCommand::DeleteMessage { conv_id, msg_id } => {
-                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteMessage {
@@ -389,7 +394,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                         file_name,
                         directory,
                     } => {
-                        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
@@ -414,6 +418,27 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                             Err(e) => {
                                 log::error!("failed to download attachment: {}", e);
                             }
+                        }
+                    }
+                    MessagesCommand::EditMessage {
+                        conv_id,
+                        msg_id,
+                        msg,
+                    } => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::EditMessage {
+                            conv_id,
+                            msg_id,
+                            msg,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to edit message: {}", e);
                         }
                     }
                 }
@@ -472,8 +497,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                 let sender_is_self = message.inner.sender() == state.read().account.identity.did_key();
 
                                 // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
-                                let context_key = format!("message-{}", message.inner.id());
-                                let message_key = message.inner.id().to_string();
+                                let is_editing = edit_msg.get().map(|id| !group.remote && (id == message.inner.id())).unwrap_or(false);
+                                let context_key = format!("message-{}-{}", &message.key, is_editing);
+                                let message_key = format!("{}-{:?}", &message.key, is_editing);
+                                let msg_uuid = message.inner.id();
                                 rsx! (
                                     ContextMenu {
                                         key: "{context_key}",
@@ -498,6 +525,23 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 }
                                             },
                                             ContextItem {
+                                                icon: Icon::Pencil,
+                                                text: get_local_text("messages.edit"),
+                                                should_render: !group.remote && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                                                onpress: move |_| {
+                                                    edit_msg.set(Some(msg_uuid));
+                                                    log::debug!("editing msg {msg_uuid}");
+                                                }
+                                            },
+                                            ContextItem {
+                                                icon: Icon::Pencil,
+                                                text: get_local_text("messages.cancel-edit"),
+                                                should_render: !group.remote && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                                                onpress: move |_| {
+                                                    edit_msg.set(None);
+                                                }
+                                            },
+                                            ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
                                                 text: get_local_text("uplink.delete"),
@@ -519,6 +563,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                             )),
                                             Message {
                                                 key: "{message_key}",
+                                                editing: is_editing,
                                                 remote: group.remote,
                                                 with_text: message.inner.value().join("\n"),
                                                 reactions: message.inner.reactions(),
@@ -535,6 +580,18 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                         })
                                                     }
                                                 },
+                                                on_edit: move |update: String| {
+                                                    edit_msg.set(None);
+                                                    let msg = update.split('\n').collect::<Vec<_>>();
+                                                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
+                                                    let msg = msg.iter().map(|x| x.to_string()).collect();
+                                                    if !is_valid {
+                                                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
+                                                    }
+                                                    else {
+                                                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                                                    }
+                                                }
                                             },
                                        }
                                     }

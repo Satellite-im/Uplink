@@ -25,6 +25,7 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
+pub use manager::commands::{FileTransferProgress, FileTransferStep};
 pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;

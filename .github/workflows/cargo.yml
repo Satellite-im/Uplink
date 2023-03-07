@@ -9,6 +9,8 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     steps:
+      - name: Install libwebkit2gtk
+        run: sudo apt-get install -y libwebkit2gtk-4.0-37
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
       - name: Checkout sources

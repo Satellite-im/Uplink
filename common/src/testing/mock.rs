@@ -111,6 +111,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         messages.push_back(ui_adapter::Message {
             inner: default_message,
             in_reply_to: None,
+            key: Uuid::new_v4().to_string(),
         });
     }
 
@@ -254,6 +255,7 @@ fn generate_fake_message(conversation_id: Uuid, identities: &[Identity]) -> ui_a
     ui_adapter::Message {
         inner: default_message,
         in_reply_to: None,
+        key: Uuid::new_v4().to_string(),
     }
 }
 
