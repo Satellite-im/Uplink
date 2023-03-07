@@ -73,7 +73,9 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
-    #[serde(skip)]
+
+    // let's persist these for now.
+    #[serde(default)]
     identities: HashMap<DID, identity::Identity>,
 }
 
@@ -196,6 +198,10 @@ impl State {
             .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
+    }
+
+    pub fn account(&self) -> &account::Account {
+        &self.account
     }
 
     pub fn set_account(&mut self, account: account::Account) {
@@ -557,7 +563,9 @@ impl State {
         // Remove the identity from the outgoing requests list if they are present
         self.friends.outgoing_requests.remove(&identity.did_key());
         self.friends.incoming_requests.remove(&identity.did_key());
-        self.identities.remove(&identity.did_key());
+
+        // still want the username to appear in the blocked list
+        //self.identities.remove(&identity.did_key());
 
         // Remove the identity from the friends list if they are present
         self.remove_friend(&identity.did_key());
@@ -660,14 +668,6 @@ impl State {
                 chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
             })
             .cloned()
-    }
-
-    pub fn get_without_me(&self, identities: &[DID]) -> Vec<DID> {
-        identities
-            .iter()
-            .filter(|identity| **identity != self.account.identity.did_key())
-            .cloned()
-            .collect()
     }
 
     pub fn has_friend_with_did(&self, did: &DID) -> bool {

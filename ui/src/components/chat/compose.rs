@@ -58,6 +58,7 @@ use crate::{
 struct ComposeData {
     active_chat: Chat,
     message_groups: Vec<state::MessageGroup>,
+    my_id: Identity,
     other_participants: Vec<Identity>,
     active_participant: Identity,
     subtext: String,
@@ -164,6 +165,7 @@ fn get_compose_data(s: State) -> Option<Rc<ComposeData>> {
         active_chat,
         message_groups,
         other_participants,
+        my_id: s.account().identity.clone(),
         active_participant,
         subtext,
         is_favorite,
@@ -845,7 +847,14 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 let active_chat = data.active_chat.clone();
                 cx.render(rsx!(active_chat.clone().replying_to.map(|msg| {
                     let our_did = state.read().did_key();
-                    let msg_owner = data.other_participants.first();
+                    let msg_owner = if data.my_id.did_key() == msg.sender() {
+                        Some(&data.my_id)
+                    } else {
+                        data.other_participants
+                            .iter()
+                            .filter(|x| x.did_key() == msg.sender())
+                            .next()
+                    };
                     let (platform, status) = get_platform_and_status(msg_owner);
 
                     rsx!(
