@@ -215,13 +215,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),
                         _ => match &unwrapped_message.attachments()[..] {
-                            [] => String::new(),
+                            [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
                             _ => match chat.participants.iter().find(|p| p.did_key() == unwrapped_message.sender()).map(|x| x.username()) {
                                 Some(name) => format!("{name} {}", get_local_text("sidebar.subtext")),
                                 None => {
                                     log::error!("error calculating subtext for sidebar chat");
-                                    String::new()
+                                    // Still return default message
+                                    get_local_text("sidebar.chat-new")
                                 }
                             }
                         }

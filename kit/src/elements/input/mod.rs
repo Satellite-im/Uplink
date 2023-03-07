@@ -72,14 +72,29 @@ pub struct Validation {
     pub special_chars: Option<(SpecialCharsAction, Vec<char>)>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Options {
     pub with_validation: Option<Validation>,
     pub replace_spaces_underscore: bool,
     pub disabled: bool,
     pub with_clear_btn: bool,
+    pub clear_on_submit: bool,
     pub with_label: Option<&'static str>,
     pub react_to_esc_key: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            with_validation: None,
+            replace_spaces_underscore: false,
+            disabled: false,
+            with_clear_btn: false,
+            clear_on_submit: true,
+            with_label: None,
+            react_to_esc_key: false,
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -354,9 +369,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
-                            *val.write() = "".into();
+                            if options.clear_on_submit {
+                                 *val.write() = "".into();
+                            }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), true, evt.code());
+                            if options.clear_on_submit {
+                                *val.write() = "".into();
+                           }
                         }
                     }
                 }

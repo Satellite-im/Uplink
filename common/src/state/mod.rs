@@ -48,9 +48,12 @@ use warp::{
 
 use self::{action::ActionHook, chats::Direction, configuration::Configuration, ui::Call};
 
+// todo: create an Identity cache and only store UUID in state.friends and state.chats
+// store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
+// the HashSet would be used to determine when to evict an identity. (they are not participating in any conversations and are not a friend)
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
-    #[serde(default)]
+    #[serde(skip)]
     pub account: account::Account,
     #[serde(default)]
     pub route: route::Route,
@@ -213,6 +216,7 @@ impl State {
                 let m = ui_adapter::Message {
                     inner: m,
                     in_reply_to: None,
+                    key: Uuid::new_v4().to_string(),
                 };
                 self.add_msg_to_chat(id, m);
             }
@@ -942,6 +946,20 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
+                }
+            }
+            MessageEvent::Edited {
+                conversation_id,
+                message,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    if let Some(msg) = chat
+                        .messages
+                        .iter_mut()
+                        .find(|msg| msg.inner.id() == message.inner.id())
+                    {
+                        *msg = message;
+                    }
                 }
             }
             MessageEvent::Deleted {
