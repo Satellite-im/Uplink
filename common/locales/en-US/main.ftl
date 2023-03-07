@@ -28,6 +28,8 @@ warning-messages = Warning Messages
     .spaces-not-allowed = Spaces are not allowed.
 
 messages = Messages
+    .edit = Edit
+    .cancel-edit = Cancel Edit
     .new = New Message
     .replying = Replying to:
     .react = React
@@ -74,6 +76,12 @@ files = Files
     .total-space = Total Space:
     .rename = Rename
     .download = Download
+    .uploaded = Uploaded
+    .thumbnail-uploaded = Thumbnail Uploaded
+    .no-thumbnail = No Thumbnail
+    .renaming-duplicated = Renaming if Duplicated
+    .one-file-to-upload = File to Upload
+    .files-to-upload = Files to Upload
 
 settings = Settings
     .settings = Settings
@@ -193,3 +201,4 @@ auth = Create Account
 
 sidebar = Sidebar 
     .subtext = sent multiple attachments
+    .chat-new = No messages sent yet, send one!

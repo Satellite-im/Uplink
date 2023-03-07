@@ -18,6 +18,10 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         message: Message,
     },
+    Edited {
+        conversation_id: Uuid,
+        message: Message,
+    },
     Deleted {
         conversation_id: Uuid,
         message_id: Uuid,
@@ -104,6 +108,16 @@ pub async fn convert_message_event(
                 participant: did_key,
             },
         },
+        MessageEventKind::MessageEdited {
+            conversation_id,
+            message_id,
+        } => {
+            let message = messaging.get_message(conversation_id, message_id).await?;
+            MessageEvent::Edited {
+                conversation_id,
+                message: convert_raygun_message(messaging, &message).await,
+            }
+        }
         _ => {
             todo!();
         }

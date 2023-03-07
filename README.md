@@ -44,12 +44,18 @@ cargo run --bin ui --profile=rapid
 | Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh |
 | cmake | brew install cmake |
 | Protoc | brew install protobuf |
+| ffmpeg | brew install ffmpeg |
+
+a. For it works, we need to install ffmpeg -> brew install ffmpeg for macOS
+And for windows, I followed steps on this site here
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
 | Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
 | Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-win64.zip) |
+| ffmpeg | [Installation Guide](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
+
 
 **Ubuntu WSL (Maybe also Ubuntu + Debian)**
 | Dep  | Install Command                                                  |
@@ -62,6 +68,7 @@ cargo run --bin ui --profile=rapid
 | libsoup-dev | `sudo apt install libsoup2.4-dev` |
 | protobuf| `sudo apt-get install protobuf-compiler` |
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
+| ffmpeg| `sudo apt-get install ffmpeg` |
 
 ## Contributing
 

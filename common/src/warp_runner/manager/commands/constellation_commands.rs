@@ -1,6 +1,6 @@
 use std::{
     ffi::OsStr,
-    io::{Cursor, Read},
+    io::Read,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -9,14 +9,14 @@ use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
-use image::io::Reader as ImageReader;
 use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
+use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
 use crate::warp_runner::Storage as warp_storage;
-use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
+use crate::{state::storage::Storage as uplink_storage, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
 
 use warp::{
     constellation::{
@@ -31,6 +31,19 @@ use warp::{
 
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
+
+pub enum FileTransferStep {
+    Start(String),
+    DuplicateName(Option<String>),
+    Upload(String),
+    Thumbnail(Option<()>),
+}
+
+pub enum FileTransferProgress<T> {
+    Error(warp::error::Error),
+    Finished(T),
+    Step(FileTransferStep),
+}
 
 #[derive(Display)]
 pub enum ConstellationCmd {
@@ -56,7 +69,7 @@ pub enum ConstellationCmd {
     #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
     UploadFiles {
         files_path: Vec<PathBuf>,
-        rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
+        rsp: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
     },
     #[display(fmt = "RenameItems {{ old_name: {old_name}, new_name: {new_name} }} ")]
     RenameItem {
@@ -104,8 +117,7 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let _ = rsp.send(r);
         }
         ConstellationCmd::UploadFiles { files_path, rsp } => {
-            let r = upload_files(warp_storage, files_path).await;
-            let _ = rsp.send(r);
+            upload_files(warp_storage, files_path, rsp).await;
         }
         ConstellationCmd::DownloadFile {
             file_name,
@@ -352,8 +364,16 @@ fn go_back_to_previous_directory(
 async fn upload_files(
     warp_storage: &mut warp_storage,
     files_path: Vec<PathBuf>,
-) -> Result<uplink_storage, Error> {
-    let current_directory = warp_storage.current_directory()?;
+    // todo: send FileTransferProgress::Step until done
+    tx: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
+) {
+    let current_directory = match warp_storage.current_directory() {
+        Ok(d) => d,
+        Err(e) => {
+            let _ = tx.send(FileTransferProgress::Error(e));
+            return;
+        }
+    };
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -364,11 +384,19 @@ async fn upload_files(
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
 
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Start(
+            filename.clone(),
+        )));
+
         let original = filename.clone();
         let file = PathBuf::from(&original);
-
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
+            None,
+        )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
-
+        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
+            Some(filename.clone()),
+        )));
         let tokio_file = match tokio::fs::File::open(&local_path).await {
             Ok(file) => file,
             Err(error) => {
@@ -416,9 +444,19 @@ async fn upload_files(
                                 if previous_percentage != current_percentage {
                                     previous_percentage = current_percentage;
                                     let readable_current = format_size(current, DECIMAL);
+                                    let percentage_number =
+                                        ((current as f64) / (total as f64)) * 100.;
+
+                                    let _ = tx.send(FileTransferProgress::Step(
+                                        FileTransferStep::Upload(format!(
+                                            "{}%",
+                                            percentage_number as usize
+                                        )),
+                                    ));
+
                                     log::info!(
                                         "{}% completed -> written {readable_current}",
-                                        (((current as f64) / (total as f64)) * 100.) as usize
+                                        percentage_number as usize
                                     )
                                 }
                             }
@@ -426,6 +464,9 @@ async fn upload_files(
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
+                            let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Upload(
+                                readable_total.clone(),
+                            )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
@@ -441,20 +482,64 @@ async fn upload_files(
                         }
                     }
                 }
-                match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
-                    Ok(_) => log::info!("Image Thumbnail uploaded"),
-                    Err(error) => log::error!("Error on update thumbnail for image: {:?}", error),
+
+                let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
+                let image_formats = IMAGE_EXTENSIONS.to_vec();
+
+                let file_extension = std::path::Path::new(&filename)
+                    .extension()
+                    .and_then(OsStr::to_str)
+                    .map(|s| format!(".{s}"))
+                    .unwrap_or_default();
+
+                if image_formats.iter().any(|f| f == &file_extension) {
+                    match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
+                        Ok(_) => {
+                            log::info!("Image Thumbnail uploaded");
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(Some(())),
+                            ));
+                        }
+                        Err(error) => {
+                            log::error!("Not possible to update thumbnail for image: {:?}", error);
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(None),
+                            ));
+                        }
+                    };
                 }
-                match set_thumbnail_if_file_is_video(warp_storage, filename.clone(), file_path) {
-                    Ok(_) => log::info!("Video Thumbnail uploaded"),
-                    Err(error) => log::error!("Error on update thumbnail for video: {:?}", error),
+
+                if video_formats.iter().any(|f| f == &file_extension) {
+                    match set_thumbnail_if_file_is_video(
+                        warp_storage,
+                        filename.clone(),
+                        file_path.clone(),
+                    ) {
+                        Ok(_) => {
+                            log::info!("Video Thumbnail uploaded");
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(Some(())),
+                            ));
+                        }
+                        Err(error) => {
+                            log::error!("Not possible to update thumbnail for video: {:?}", error);
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(None),
+                            ));
+                        }
+                    };
                 }
+
                 log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
         }
     }
-    get_items_from_current_directory(warp_storage)
+    let ret = match get_items_from_current_directory(warp_storage) {
+        Ok(r) => FileTransferProgress::Finished(r),
+        Err(e) => FileTransferProgress::Error(e),
+    };
+    let _ = tx.send(ret);
 }
 
 fn rename_if_duplicate(
@@ -485,7 +570,6 @@ fn rename_if_duplicate(
             }
             _ => format!("{original} ({count_index_for_duplicate_filename})"),
         };
-
         log::info!("Duplicate name, changing file name to {}", new_file_name);
         count_index_for_duplicate_filename += 1;
     }
@@ -497,19 +581,6 @@ fn set_thumbnail_if_file_is_video(
     filename_to_save: String,
     file_path: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-
-    let file_extension = std::path::Path::new(&filename_to_save)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|s| format!(".{s}"))
-        .unwrap_or_default();
-
-    if !video_formats.iter().any(|f| f == &file_extension) {
-        log::warn!("It is not a video file!");
-        return Err(Box::from(Error::InvalidDataType));
-    };
-
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
@@ -568,11 +639,6 @@ async fn set_thumbnail_if_file_is_image(
         .current_directory()?
         .get_item(&filename_to_save)?;
     let file = warp_storage.get_buffer(&filename_to_save).await?;
-
-    // Guarantee that is an image that has been uploaded
-    ImageReader::new(Cursor::new(&file))
-        .with_guessed_format()?
-        .decode()?;
 
     // Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
     let extension = Path::new(&filename_to_save)
