@@ -1,3 +1,4 @@
+use std::rc::Weak;
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::icons::outline::Shape as Icon;
@@ -9,6 +10,7 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -34,7 +36,10 @@ use warp::{
     logging::tracing::log,
 };
 
+use crate::WINDOW_CMD_CH;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
+use crate::window_manager::{WindowManagerCmdTx, WindowManagerCmd};
 
 pub const ROOT_DIR_NAME: &str = "root";
 
@@ -508,7 +513,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                        files_list.read().iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
+                            let file_name3 = file.name();
                             let file2 = file.clone();
+                            let file3 = file.clone();
                             let key = file.id();
                             rsx!(ContextMenu {
                                         key: "{key}-menu",
@@ -559,6 +566,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             key: "{key}-file",
                                             thumbnail: file.thumbnail(),
                                             text: file.name(),
+                                            onpress: move |_| {
+                                                let window = use_window(cx);
+                                                let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                                                let popout = VirtualDom::new_with_props(FilePreview, FilePreviewProps{
+                                                    _drop_handler: drop_handler,
+                                                    file: file3.clone(),
+                                                });
+                                                let window = window.new_window(popout, Default::default());
+                                                if let Some(wv) = Weak::upgrade(&window) {
+                                                    let id = wv.window().id();
+                                                    state.write().mutate(Action::SetPopout(id));
+                                                }
+                                            },
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
                                             onrename: move |(val, key_code)| {
@@ -603,4 +623,28 @@ fn update_items_with_mock_data(
         files: files_list.read().clone(),
     };
     storage_state.set(Some(storage_mock));
+}
+
+pub struct WindowDropHandler {
+    cmd_tx: WindowManagerCmdTx,
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
+        Self { cmd_tx }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::ClosePopout) {
+            // todo: log error
+        }
+    }
 }
