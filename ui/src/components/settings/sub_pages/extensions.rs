@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::extensions::browser::browser::ExtensionsBrowser;
+use crate::extensions::browser::ExtensionsBrowser;
 
 #[allow(non_snake_case)]
 pub fn ExtensionSettings(cx: Scope) -> Element {
