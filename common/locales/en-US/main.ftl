@@ -201,3 +201,4 @@ auth = Create Account
 
 sidebar = Sidebar 
     .subtext = sent multiple attachments
+    .chat-new = No messages sent yet, send one!
