@@ -103,13 +103,12 @@ mod test {
 
     #[test]
     fn test_get_pretty_name1() {
-        let r = get_pretty_name("pretty/name1.scss");
-        assert_eq!(r, String::from("name1"));
-    }
-
-    #[test]
-    fn test_get_pretty_name_windows() {
-        let r = get_pretty_name("c:\\pretty\\name2.scss");
-        assert_eq!(r, String::from("name2"));
+        if cfg!(windows) {
+            let r = get_pretty_name("c:\\pretty\\name2.scss");
+            assert_eq!(r, String::from("name2"));
+        } else {
+            let r = get_pretty_name("pretty/name1.scss");
+            assert_eq!(r, String::from("name1"));
+        }
     }
 }

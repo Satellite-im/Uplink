@@ -92,6 +92,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
+                        // todo: send a command to warp runner.
                     }
                 }
             },
