@@ -126,7 +126,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        participants: build_participants(&participants.clone()),
+                                        participants: build_participants(&other_participants),
                                         with_username: State::join_usernames(&other_participants),
                                         typing: users_typing,
                                         onpress: move |_| {
