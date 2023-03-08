@@ -297,10 +297,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             hook.set(false);
         }
     }
-    let min_len = options
-        .with_validation
-        .map(|opt| opt.min_length.unwrap_or_default())
-        .unwrap_or_default();
+
     let apply_validation_class = should_validate;
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
@@ -352,23 +349,19 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
-                        let current_val = evt.value.clone();
-                        *val.write_silent() = current_val.to_string();
+                        let current_val = evt.value.clone().to_string();
+                        *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
                             let validation_result = validate(&cx, &current_val).unwrap_or_default();
-                            error.set(validation_result.clone());
-                            if !validation_result.is_empty() {
-                                valid.set(false);
-                                evt.stop_propagation();
-                            } else if current_val.len() >= min_len as usize {
-                                valid.set(true);
-                            }
+                            valid.set(validation_result.is_empty());
+                            error.set(validation_result);
+                            evt.stop_propagation();
                             *valid.current()
                         } else {
                             true
                         };
-                        emit(&cx, val.read().to_string(), is_valid);
+                        emit(&cx, current_val, is_valid);
                     },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
@@ -395,8 +388,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
-                            reset_fn();
-                            emit(&cx, val.read().to_string(), false);
+                            *val.write_silent() = String::new();
+                            if should_validate {
+                                let validation_result = validate(&cx, "").unwrap_or_default();
+                                valid.set(validation_result.is_empty());
+                                error.set(validation_result);
+                            }
                         },
                         IconElement {
                             icon: Icon::Backspace
