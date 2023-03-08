@@ -122,6 +122,9 @@ impl State {
         self.call_hooks(&action);
 
         match action {
+            Action::SetExtensionEnabled(extension, state) => {
+                self.set_extension_enabled(extension, state)
+            }
             Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
             // ===== Notifications =====
             Action::AddNotification(kind, count) => {
@@ -1009,6 +1012,19 @@ impl State {
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
         self.ui.current_call = Some(Call::new(None));
+    }
+    fn set_extension_enabled(&mut self, extension: String, state: bool) {
+        let ext = self.ui.extensions.get_mut(&extension);
+        match ext {
+            Some(e) => e.enabled = state,
+            None => {
+                log::warn!(
+                    "Something went wrong toggling extension '{}' to '{}'.",
+                    extension,
+                    state
+                );
+            }
+        }
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
