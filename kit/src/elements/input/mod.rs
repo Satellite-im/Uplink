@@ -349,6 +349,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     disabled: "{disabled}",
                     value: format_args!("{}", val.read()),
                     maxlength: "{max_length}",
+                    onblur: move |_| {
+                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                    },
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
