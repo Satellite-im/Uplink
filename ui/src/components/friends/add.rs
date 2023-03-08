@@ -46,7 +46,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 get_local_text("friends.request-sent"),
                 None,
-                5,
+                2,
             )));
         request_sent.set(false);
     }
@@ -58,7 +58,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 msg,
                 None,
-                5,
+                2,
             )));
         error_toast.set(None);
     }
@@ -72,7 +72,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 get_local_text("friends.copied-did"),
                 None,
-                5,
+                2,
             )));
         my_id.set(None);
     }

@@ -1,5 +1,5 @@
 use common::language::get_local_text;
-use common::state::State;
+use common::state::{State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -38,6 +38,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
         state.write().set_warp_identity(ident.clone());
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    "".into(),
+                    get_local_text("settings-profile.updated"),
+                    None,
+                    2,
+                ),
+            ));
         should_update.set(None);
     }
 
