@@ -496,7 +496,6 @@ impl State {
         fs::write(path, serialized)?;
         Ok(())
     }
-
     /// Loads the state from a file on disk, if it exists.
     pub fn load() -> Self {
         if STATIC_ARGS.use_mock {
@@ -519,7 +518,6 @@ impl State {
         state.chats.initialized = false;
         state
     }
-
     fn load_mock() -> Self {
         let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
             Ok(r) => r,
@@ -571,7 +569,6 @@ impl State {
             .cloned()
             .collect()
     }
-
     pub fn chat_participants(&self, chat: &Chat) -> Vec<Identity> {
         chat.participants
             .iter()
