@@ -1,8 +1,12 @@
+use std::io::Cursor;
+
 use common::{DOC_EXTENSIONS, IMAGE_EXTENSIONS};
 use dioxus::prelude::*;
 
 use common::icons::Icon as IconElement;
 use common::{icons::outline::Shape as Icon, VIDEO_FILE_EXTENSIONS};
+use dioxus_desktop::{use_window, LogicalSize};
+use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
 use kit::elements::{
     button::Button,
@@ -52,6 +56,22 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     // let cmd_tx = WINDOW_CMD_CH.tx.clone();
     let file_format = get_file_format(file.name());
     let thumbnail = file.thumbnail();
+    let has_thumbnail = !file.thumbnail().is_empty();
+    let desktop = use_window(cx);
+
+    if has_thumbnail {
+        let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
+        if let Ok(thumbnail_bytes) = base64::decode(base64_string) {
+            let cursor = Cursor::new(thumbnail_bytes);
+            let image_reader = ImageReader::with_format(cursor, image::ImageFormat::Jpeg);
+            let image_result = image_reader.decode();
+            if let Ok(image) = image_result {
+                let width = image.width();
+                let height = image.height();
+                desktop.set_inner_size(LogicalSize::new(width, height));
+            }
+        }
+    }
 
     cx.render(rsx! (
         div {
@@ -60,7 +80,7 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
             div {
                 class: "wrap",
                 {
-                if file_format == FileFormat::Image || file_format == FileFormat::Video {
+                if file_format != FileFormat::Other && has_thumbnail {
                         rsx!(img {
                             src: "{thumbnail}",
                             width: "100%",
