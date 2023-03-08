@@ -1,5 +1,5 @@
 
-
+  
 html, body {
     height: 100%;
     margin: 0;
@@ -7,6 +7,7 @@ html, body {
     overscroll-behavior-x: none;
     overflow: hidden;
     border-radius: var(--border-radius);
+    animation: spin 1 infinite;
 }
 #main, #app-wrap {
     height: 100%;

@@ -10,7 +10,6 @@
     flex-direction: row;
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
-    border: 1px solid var(--border-color);
     padding: var(--gap);
     align-items: center;
     gap: var(--gap);
@@ -45,7 +44,7 @@
             width: var(--height-input);
             height: var(--height-input);
             fill: transparent;
-            stroke: var(--text-color-dark);
+            stroke: var(--text-color-bright);
         }
     }
 
