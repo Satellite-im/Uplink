@@ -20,6 +20,10 @@ impl Size {
     }
 }
 
+pub fn get_value(cx: &Scope<Props>) -> String {
+    cx.props.value.clone().unwrap_or_default()
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     #[props(default = "".to_owned())]
@@ -42,11 +46,17 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     #[props(!optional)]
     reset: Option<UseState<bool>>,
+    #[props(optional)]
+    value: Option<String>,
 }
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let val = use_ref(cx, || cx.props.default_text.clone());
+
+    if !get_value(&cx).is_empty() {
+        val.set(get_value(&cx));
+    }
 
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();

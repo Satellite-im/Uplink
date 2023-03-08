@@ -127,7 +127,10 @@ pub struct Props<'a> {
     aria_label: Option<String>,
     is_password: Option<bool>,
     disabled: Option<bool>,
+    #[props(optional)]
     icon: Option<Icon>,
+    #[props(optional)]
+    value: Option<String>,
     options: Option<Options>,
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
@@ -233,6 +236,10 @@ pub fn get_text(cx: &Scope<Props>) -> String {
     cx.props.default_text.clone().unwrap_or_default()
 }
 
+pub fn get_value(cx: &Scope<Props>) -> String {
+    cx.props.value.clone().unwrap_or_default()
+}
+
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
@@ -284,6 +291,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
+
+    if !get_value(&cx).is_empty() {
+        val.set(get_value(&cx));
+    }
 
     let reset_fn = || {
         *val.write() = "".into();

@@ -6,6 +6,10 @@ use common::icons;
 
 pub type To = &'static str;
 
+pub fn get_value(cx: &Scope<Props>) -> String {
+    cx.props.value.clone().unwrap_or_default()
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
@@ -30,6 +34,8 @@ pub struct Props<'a> {
     extensions: Option<Element<'a>>,
     #[props(optional)]
     controls: Option<Element<'a>>,
+    #[props(optional)]
+    value: Option<String>,
     #[props(optional)]
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
@@ -91,6 +97,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 placeholder: cx.props.placeholder.clone(),
                 reset: cx.props.reset.clone(),
                 focus: cx.props.with_replying_to.is_some(),
+                value: get_value(&cx),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
                 onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
             },
