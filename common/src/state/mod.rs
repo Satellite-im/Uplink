@@ -361,6 +361,7 @@ impl State {
                 message,
             } => {
                 self.update_identity_status_hack(&message.inner.sender());
+                let id = self.identities.get(&message.inner.sender()).cloned();
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
@@ -384,9 +385,17 @@ impl State {
                     } else {
                         None
                     };
+                    let text = match id {
+                        Some(id) => format!(
+                            "{} {}",
+                            id.username(),
+                            get_local_text("messages.user-sent-message"),
+                        ),
+                        None => get_local_text("messages.unknown-sent-message"),
+                    };
                     crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
-                        format!("{} sent a request.", "NOT YET IMPL"),
+                        text,
                         sound,
                         notify_rust::Timeout::Milliseconds(4),
                     );
