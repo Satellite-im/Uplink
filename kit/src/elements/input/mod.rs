@@ -349,7 +349,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
-                        let current_val = evt.value.clone().to_string();
+                        let current_val = evt.value.clone();
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
