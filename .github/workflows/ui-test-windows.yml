@@ -35,12 +35,6 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Setup cmake 🛠️
-        uses: jwlawson/actions-setup-cmake@v1.13
-
-      - name: Use cmake 💿
-        run: cmake --version
-
       - name: Install Protobuf 💿
         uses: arduino/setup-protoc@v1
         with:
