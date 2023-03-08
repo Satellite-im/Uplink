@@ -12,7 +12,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -60,11 +59,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let mut rng = rand::thread_rng();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
-                let platform = match friend.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
