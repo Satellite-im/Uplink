@@ -689,6 +689,21 @@ impl State {
 
         needs_update
     }
+
+    /// Sets the draft on a given chat to some contents.
+    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
+        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
+            c.draft = Some(value);
+        }
+    }
+
+    /// Clears the given chats draft message
+    fn clear_chat_draft(&mut self, chat_id: &Uuid) {
+        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
+            c.draft = None;
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
