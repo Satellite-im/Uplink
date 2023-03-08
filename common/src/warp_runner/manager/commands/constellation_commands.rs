@@ -15,8 +15,8 @@ use tempfile::TempDir;
 use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
-use crate::warp_runner::Storage as warp_storage;
 use crate::{state::storage::Storage as uplink_storage, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
+use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
 
 use warp::{
     constellation::{
@@ -485,6 +485,7 @@ async fn upload_files(
 
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
                 let image_formats = IMAGE_EXTENSIONS.to_vec();
+                let doc_formats = DOC_EXTENSIONS.to_vec();
 
                 let file_extension = std::path::Path::new(&filename)
                     .extension()
@@ -523,6 +524,30 @@ async fn upload_files(
                         }
                         Err(error) => {
                             log::error!("Not possible to update thumbnail for video: {:?}", error);
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(None),
+                            ));
+                        }
+                    };
+                }
+
+                if doc_formats.iter().any(|f| f == &file_extension) {
+                    match set_thumbnail_if_file_is_document(
+                        warp_storage,
+                        filename.clone(),
+                        file_path.clone(),
+                    ) {
+                        Ok(_) => {
+                            log::info!("Document Thumbnail uploaded");
+                            let _ = tx.send(FileTransferProgress::Step(
+                                FileTransferStep::Thumbnail(Some(())),
+                            ));
+                        }
+                        Err(error) => {
+                            log::error!(
+                                "Not possible to update thumbnail for document: {:?}",
+                                error
+                            );
                             let _ = tx.send(FileTransferProgress::Step(
                                 FileTransferStep::Thumbnail(None),
                             ));
@@ -627,6 +652,59 @@ fn set_thumbnail_if_file_is_video(
         Ok(())
     } else {
         log::warn!("Failed to save thumbnail from a video file");
+        Err(Box::from(Error::InvalidConversion))
+    }
+}
+
+fn set_thumbnail_if_file_is_document(
+    warp_storage: &warp_storage,
+    filename_to_save: String,
+    file_path: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
+
+    let file_stem = file_path
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    let temp_dir = TempDir::new()?;
+    let temp_path = temp_dir.path().join(file_stem);
+
+    let output = Command::new("pdftoppm")
+        .args([
+            "-jpeg",
+            "-singlefile",
+            "-scale-to",
+            "500",
+            "-r",
+            "600",
+            "-f",
+            "1",
+            "-l",
+            "1",
+            &file_path.to_string_lossy(),
+            &temp_path.to_string_lossy(),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    if let Some(_) = output.stdout {
+        let path_2 = format!("{}.jpg", temp_path.to_string_lossy());
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        let image = std::fs::read(path_2)?;
+
+        let prefix = format!("data:{};base64,", IMAGE_JPEG);
+        let base64_image = base64::encode(image);
+        let img = prefix + base64_image.as_str();
+        item.set_thumbnail(&img);
+        Ok(())
+    } else {
+        log::warn!("Failed to save thumbnail from a document file");
         Err(Box::from(Error::InvalidConversion))
     }
 }
