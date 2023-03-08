@@ -922,8 +922,8 @@ impl State {
                     let text = match id {
                         Some(id) => format!(
                             "{} {}",
+                            id.username(),
                             get_local_text("messages.user-sent-message"),
-                            id.username()
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
