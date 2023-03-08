@@ -38,7 +38,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
-        state.write().set_warp_identity(ident.clone());
+        state.write().set_own_identity(ident.clone().into());
         should_update.set(None);
     }
 
