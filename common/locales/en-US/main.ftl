@@ -36,6 +36,8 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .user-sent-message = sent you a message.
+    .unknown-sent-message = someone sent you a message.
 
 favorites = Favorites
     .favorites = Favorites

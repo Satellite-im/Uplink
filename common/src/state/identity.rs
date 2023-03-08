@@ -55,6 +55,13 @@ impl core::ops::DerefMut for Identity {
 }
 
 impl Identity {
+    pub fn new(identity: WarpIdentity, status: IdentityStatus, platform: Platform) -> Self {
+        Self {
+            identity,
+            status,
+            platform,
+        }
+    }
     pub fn identity_status(&self) -> IdentityStatus {
         self.status
     }

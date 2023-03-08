@@ -2,7 +2,7 @@ use common::{
     state::{self, Theme},
     STATIC_ARGS,
 };
-use kit::components::indicator::{self, Status};
+use kit::components::indicator::Status;
 use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
@@ -66,11 +66,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     for identity in identities {
         // For each identity, create a new UserInfo object and set its fields
         // to the corresponding values from the identity object
-        let platform = match identity.platform() {
-            warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
-            warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
-            _ => indicator::Platform::Headless, //TODO: Unknown
-        };
+        let platform = identity.platform().into();
         user_info.push(UserInfo {
             platform,
             status: convert_status(&identity.identity_status()),
@@ -84,11 +80,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
 }
 
 pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
-    let platform = match identity.platform() {
-        warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
-        warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
-        _ => indicator::Platform::Headless, //TODO: Unknown
-    };
+    let platform = identity.platform().into();
     UserInfo {
         platform,
         status: convert_status(&identity.identity_status()),
@@ -103,13 +95,12 @@ mod test {
 
     #[test]
     fn test_get_pretty_name1() {
-        let r = get_pretty_name("pretty/name1.scss");
-        assert_eq!(r, String::from("name1"));
-    }
-
-    #[test]
-    fn test_get_pretty_name_windows() {
-        let r = get_pretty_name("c:\\pretty\\name2.scss");
-        assert_eq!(r, String::from("name2"));
+        if cfg!(windows) {
+            let r = get_pretty_name("c:\\pretty\\name2.scss");
+            assert_eq!(r, String::from("name2"));
+        } else {
+            let r = get_pretty_name("pretty/name1.scss");
+            assert_eq!(r, String::from("name1"));
+        }
     }
 }

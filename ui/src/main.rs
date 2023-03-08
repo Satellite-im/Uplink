@@ -28,6 +28,7 @@ use std::{fs, io};
 use uuid::Uuid;
 use warp::crypto::DID;
 use warp::multipass;
+use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -373,7 +374,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         assert!(state.friends().initialized);
         assert!(state.chats().initialized);
     } else {
-        state.set_warp_identity(identity.clone());
+        state.set_own_identity(identity.clone().into());
     }
 
     // set the window to the normal size.
@@ -638,7 +639,7 @@ fn app(cx: Scope) -> Element {
                     Ok(update) => match inner.try_borrow_mut() {
                         Ok(state) => {
                             for (id, friend_update) in update {
-                                state.write().update_identity(id, friend_update.into());
+                                state.write().update_identity(id, friend_update);
                             }
                         }
                         Err(e) => {
@@ -976,6 +977,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(true));
+                        state.write().mock_own_platform(Platform::Mobile);
                     }
                 },
                 Button {
@@ -992,6 +994,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Web);
                     }
                 },
                 Button {
@@ -1008,6 +1011,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Desktop);
                     }
                 },
                 Button {
