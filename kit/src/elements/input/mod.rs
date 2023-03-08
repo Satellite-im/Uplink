@@ -370,28 +370,33 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         };
                         emit(&cx, val.read().to_string(), is_valid);
                     },
+                    // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            if *valid.current() {
+                                 valid.set(false);
+                            }
                             if options.clear_on_submit {
                                 reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), *valid.current(), evt.code());
+                            if *valid.current() {
+                                valid.set(false);
+                           }
                             if options.clear_on_submit {
                                 reset_fn();
                            }
                         }
                     }
-                }
+                },
                 (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
-                            *val.write() = "".into();
+                            reset_fn();
                             emit(&cx, val.read().to_string(), false);
-                            error.set("".into());
-                            valid.set(false);
                         },
                         IconElement {
                             icon: Icon::Backspace
