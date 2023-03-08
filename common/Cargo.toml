@@ -29,6 +29,8 @@ titlecase = "2.2.1"
 substring = "1.4.5"
 icons = { path = "../icons" }
 humansize = "2.0.0"
+zip = "0.6.4"
+walkdir = "2.3.2"
 
 extensions = { path = "../extensions" }
 
