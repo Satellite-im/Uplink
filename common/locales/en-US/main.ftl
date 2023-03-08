@@ -36,6 +36,8 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .user-sent-message = sent you a message.
+    .unknown-sent-message = someone sent you a message.
 
 favorites = Favorites
     .favorites = Favorites
@@ -121,6 +123,9 @@ settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically
     .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
+    .banner = Extensions are compiled and downloaded from our server(s). For added security you can compile extensions from source and place in the `extensions` folder.
+    .open-folder = Extensions are compiled and downloaded from our centralized server. You can optionally build and bundle extensions locally on your own for added security.
+    .open-folder-description = Open the local directory containing your installed extensions.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
