@@ -32,7 +32,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username = state.read().username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = use_state(cx, || false);
     let image = state.read().graphics().profile_picture();
     let banner = state.read().graphics().profile_banner();
 
@@ -118,7 +117,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (!welcome_dismissed).then(|| rsx!(
+            (state.read().ui.show_settings_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
@@ -133,7 +132,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                welcome_dismissed.set(true);
+                                state.write().ui.show_settings_welcome = false;
+                                let _ = state.write().save();
                             }
                         },
                         Label {
