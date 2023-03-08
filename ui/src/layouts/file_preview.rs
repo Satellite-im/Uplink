@@ -1,24 +1,15 @@
 use std::io::Cursor;
 
-use common::{DOC_EXTENSIONS, IMAGE_EXTENSIONS};
+use common::{DOC_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
 use dioxus::prelude::*;
 
-use common::icons::Icon as IconElement;
-use common::{icons::outline::Shape as Icon, VIDEO_FILE_EXTENSIONS};
 use dioxus_desktop::{use_window, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
-use kit::elements::{
-    button::Button,
-    file::is_video,
-    tooltip::{ArrowPosition, Tooltip},
-    Appearance,
-};
 use warp::constellation::file::File;
 
-use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
-
 use super::storage::WindowDropHandler;
+const STYLE: &str = include_str!("./style.scss");
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum FileFormat {
@@ -85,6 +76,7 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     }
 
     cx.render(rsx! (
+        style { STYLE },
         div {
             id: "video-poped-out",
             class: "popout-player",
@@ -92,12 +84,28 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
                 class: "wrap",
                 {
                 if file_format != FileFormat::Other && has_thumbnail {
-                        rsx!(img {
-                            src: "{thumbnail}",
-                            width: "100%",
-                        })
+                    rsx!{
+                        div {
+                            img {
+                                src: "{thumbnail}",
+                                width: "100%",
+                        },
+                            p {
+                                class: "thumbnail-text",
+                                format!("{}", match file_format {
+                                    FileFormat::Video => "Video thumb",
+                                    FileFormat::Image => "Image thumb",
+                                    FileFormat::Document => "First page thumb",
+                                    _ => "No thumb",
+                                }),
+                            }
+                        }
+                        }
                     } else {
-                        rsx!(div{})
+                        rsx!(div{
+                            h3 {"There is no preview thumb for this file"}
+
+                        })
                     }
                 }
             },
