@@ -21,7 +21,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
@@ -370,10 +370,10 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends.initialized);
-        assert!(state.chats.initialized);
+        assert!(state.friends().initialized);
+        assert!(state.chats().initialized);
     } else {
-        state.account.identity = identity.clone().into();
+        state.set_warp_identity(identity.clone());
     }
 
     // set the window to the normal size.
@@ -638,14 +638,7 @@ fn app(cx: Scope) -> Element {
                     Ok(update) => match inner.try_borrow_mut() {
                         Ok(state) => {
                             for (id, friend_update) in update {
-                                if let Some(friend) = state.write().friends.all.get_mut(&id) {
-                                    friend.set_warp_identity(friend_update);
-                                } else {
-                                    log::warn!(
-                                        "failed up update friend: {}",
-                                        friend_update.username()
-                                    );
-                                }
+                                state.write().update_identity(id, friend_update.into());
                             }
                         }
                         Err(e) => {
@@ -685,7 +678,9 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            let (tx, rx) = oneshot::channel::<
+                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+            >();
             if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
                 rsp: tx,
             })) {
@@ -707,7 +702,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    state.write().friends = friends;
+                    state.write().set_friends(friends.0, friends.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -773,7 +768,10 @@ fn app(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
                 let (tx, rx) = oneshot::channel::<
-                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                    Result<
+                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
+                        warp::error::Error,
+                    >,
                 >();
                 if let Err(e) =
                     warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
@@ -795,7 +793,7 @@ fn app(cx: Scope) -> Element {
             };
 
             log::trace!("init chats");
-            let (own_id, mut all_chats) = match res {
+            let chats = match res {
                 Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to initialize chats: {}", e);
@@ -805,18 +803,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    // for all_chats, fill in participants and messages.
-                    for (k, v) in &state.read().chats.all {
-                        // the # of unread chats defaults to the length of the conversation. but this number
-                        // is stored in state
-                        if let Some(chat) = all_chats.get_mut(k) {
-                            chat.unreads = v.unreads;
-                        }
-                    }
-
-                    state.write().chats.all = all_chats;
-                    state.write().account.identity = own_id;
-                    state.write().chats.initialized = true;
+                    state.write().set_chats(chats.0, chats.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -1069,7 +1056,7 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().friends().incoming_requests.len();
 
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,

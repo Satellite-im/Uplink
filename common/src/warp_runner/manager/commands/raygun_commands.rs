@@ -1,6 +1,9 @@
 use derive_more::Display;
 use futures::channel::oneshot;
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 use uuid::Uuid;
 use warp::{
     constellation::ConstellationProgressStream,
@@ -12,7 +15,11 @@ use warp::{
 
 use crate::{
     state::{self, chats},
-    warp_runner::{conv_stream, ui_adapter::conversation_to_chat, Account, Messaging},
+    warp_runner::{
+        conv_stream,
+        ui_adapter::{conversation_to_chat, ChatAdapter},
+        Account, Messaging,
+    },
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -24,13 +31,13 @@ pub enum RayGunCmd {
         // need to send over own identity because 'State' sets it to default
         #[allow(clippy::type_complexity)]
         rsp: oneshot::Sender<
-            Result<(state::Identity, HashMap<Uuid, chats::Chat>), warp::error::Error>,
+            Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), warp::error::Error>,
         >,
     },
     #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
     CreateConversation {
         recipient: DID,
-        rsp: oneshot::Sender<Result<chats::Chat, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<ChatAdapter, warp::error::Error>>,
     },
     #[display(fmt = "SendMessage {{ conv_id: {conv_id} }} ")]
     SendMessage {
@@ -206,28 +213,29 @@ async fn raygun_initialize_conversations(
     stream_manager: &mut conv_stream::Manager,
     account: &Account,
     messaging: &mut Messaging,
-) -> Result<(state::Identity, HashMap<Uuid, chats::Chat>), Error> {
+) -> Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), Error> {
     log::trace!("init convs with {} total", convs.len());
-    let own_identity = account.get_own_identity().await?;
     let mut all_chats = HashMap::new();
+    let mut identities = HashSet::new();
     for conv in convs {
         match conversation_to_chat(conv, account, messaging).await {
             Ok(chat) => {
-                if let Err(e) = stream_manager.add_stream(chat.id, messaging).await {
+                if let Err(e) = stream_manager.add_stream(chat.inner.id, messaging).await {
                     log::error!(
                         "failed to open conversation stream for conv {}: {}",
-                        chat.id,
+                        chat.inner.id,
                         e
                     );
                 }
-                let _ = all_chats.insert(chat.id, chat);
+                let _ = all_chats.insert(chat.inner.id, chat.inner);
+                identities.extend(chat.identities);
             }
             Err(e) => {
                 log::error!("failed to convert conversation to chat: {}", e);
             }
         };
     }
-    Ok((state::Identity::from(own_identity), all_chats))
+    Ok((all_chats, identities))
 }
 
 async fn raygun_remove_direct_convs(

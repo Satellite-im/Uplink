@@ -1,11 +1,11 @@
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
-use common::STATIC_ARGS;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::warp_runner::{FileTransferProgress, FileTransferStep};
+use common::STATIC_ARGS;
 use common::{
     state::{storage::Storage, ui, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
@@ -103,8 +103,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let dirs_opened_ref = use_ref(cx, || state.read().storage.directories_opened.clone());
 
     let add_new_folder = use_state(cx, || false);
-
-
 
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
 
@@ -216,10 +214,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     }
                     ChanCmd::UploadFiles(files_path) => {
                         let mut script = main_script.replace("$IS_DRAGGING", "true");
-                        script.push_str(&ANIMATION_DASH_SCRIPT);
+                        script.push_str(ANIMATION_DASH_SCRIPT);
                         window.eval(&script);
 
-                        let (tx, mut rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
+                        let (tx, mut rx) =
+                            mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::UploadFiles {
@@ -236,43 +235,64 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     match steps {
                                         FileTransferStep::Start(name) => {
                                             let file_name_formatted = format_item_name(name);
-                                            let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
+                                            let script = FILE_NAME_SCRIPT
+                                                .replace("$FILE_NAME", &file_name_formatted);
                                             window.eval(&script);
                                             sleep(Duration::from_millis(100)).await;
-                                        },
+                                        }
                                         FileTransferStep::DuplicateName(duplicate_name_step) => {
-                                                match duplicate_name_step {
-                                                    None => {
-                                                        let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.renaming-duplicated"));
-                                                        window.eval(&script);
-                                                    },
-                                                   Some(name) => {
-                                                        let file_name_formatted = format_item_name(name);
-                                                        let script = FILE_NAME_SCRIPT.replace("$FILE_NAME",&file_name_formatted);
-                                                        window.eval(&script);
-                                                    },
+                                            match duplicate_name_step {
+                                                None => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text(
+                                                            "files.renaming-duplicated",
+                                                        ),
+                                                    );
+                                                    window.eval(&script);
                                                 }
-                                                sleep(Duration::from_millis(200)).await;
-                                        },
+                                                Some(name) => {
+                                                    let file_name_formatted =
+                                                        format_item_name(name);
+                                                    let script = FILE_NAME_SCRIPT.replace(
+                                                        "$FILE_NAME",
+                                                        &file_name_formatted,
+                                                    );
+                                                    window.eval(&script);
+                                                }
+                                            }
+                                            sleep(Duration::from_millis(200)).await;
+                                        }
                                         FileTransferStep::Upload(progress) => {
-                                            let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&format!("{} {}", progress, get_local_text("files.uploaded")));
+                                            let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                "$TEXT",
+                                                &format!(
+                                                    "{} {}",
+                                                    progress,
+                                                    get_local_text("files.uploaded")
+                                                ),
+                                            );
                                             window.eval(&script);
                                             sleep(Duration::from_millis(3)).await;
-
-                                        },
+                                        }
                                         FileTransferStep::Thumbnail(thumb_type) => {
                                             match thumb_type {
                                                 Some(_) => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.thumbnail-uploaded"));
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text("files.thumbnail-uploaded"),
+                                                    );
                                                     window.eval(&script);
-                                                },
+                                                }
                                                 None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace("$TEXT",&get_local_text("files.no-thumbnail"));
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text("files.no-thumbnail"),
+                                                    );
                                                     window.eval(&script);
-                                                },
+                                                }
                                             }
                                             sleep(Duration::from_millis(200)).await;
-
                                         }
                                     };
                                 }
@@ -413,14 +433,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     sleep(Duration::from_millis(100)).await;
                     if let FileDropEvent::Hovered(_) = get_drag_event() {
                         if drag_event.with(|i| i.clone()).is_none() {
-                            drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch).await;
+                            drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch)
+                                .await;
                         }
                     }
                 }
             }
         });
     };
-
 
     cx.render(rsx!(
         div {
@@ -660,13 +680,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         .and_then(OsStr::to_str)
                                                         .map(|s| s.to_string())
                                                         .unwrap_or_default();
-
                                                     let file_stem = PathBuf::from(&file_name2)
-                                                            .file_stem()
-                                                            .and_then(OsStr::to_str)
-                                                            .map(str::to_string)
-                                                            .unwrap_or_default();
-
+                                                        .file_stem()
+                                                        .and_then(OsStr::to_str)
+                                                        .map(str::to_string)
+                                                        .unwrap_or_default();
                                                     let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                                                         Some(path) => path,
                                                         None => return,
@@ -761,31 +779,50 @@ fn format_item_name(file_name: String) -> String {
         .unwrap_or_else(|| file_name.clone())
 }
 
-async fn drag_and_drop_function(window: &DesktopContext, drag_event: &UseRef<Option<FileDropEvent>>, main_script: String, ch: &Coroutine<ChanCmd>) {
-        *drag_event.write_silent() = Some(get_drag_event());
-        loop {
-            let file_drop_event = get_drag_event();
-            match file_drop_event {
-                FileDropEvent::Hovered(files_local_path) => {
-                    let mut script = main_script.replace("$IS_DRAGGING", "true");
-                    if files_local_path.len() > 1 {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.files-to-upload"))));
-                    } else {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", &format!("{} {}!", files_local_path.len(), get_local_text("files.one-file-to-upload"))));
-                    }
-                    window.eval(&script);
+async fn drag_and_drop_function(
+    window: &DesktopContext,
+    drag_event: &UseRef<Option<FileDropEvent>>,
+    main_script: String,
+    ch: &Coroutine<ChanCmd>,
+) {
+    *drag_event.write_silent() = Some(get_drag_event());
+    loop {
+        let file_drop_event = get_drag_event();
+        match file_drop_event {
+            FileDropEvent::Hovered(files_local_path) => {
+                let mut script = main_script.replace("$IS_DRAGGING", "true");
+                if files_local_path.len() > 1 {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.files-to-upload")
+                        ),
+                    ));
+                } else {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.one-file-to-upload")
+                        ),
+                    ));
                 }
-                FileDropEvent::Dropped(files_local_path) => {
-                    ch.send(ChanCmd::UploadFiles(files_local_path.clone()));
-                    break;
-                }
-                _ => {
-                    *drag_event.write_silent() = None;
-                    let script = main_script.replace("$IS_DRAGGING", "false");
-                    window.eval(&script);
-                    break;
-                }
-            };
-            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                window.eval(&script);
+            }
+            FileDropEvent::Dropped(files_local_path) => {
+                ch.send(ChanCmd::UploadFiles(files_local_path));
+                break;
+            }
+            _ => {
+                *drag_event.write_silent() = None;
+                let script = main_script.replace("$IS_DRAGGING", "false");
+                window.eval(&script);
+                break;
+            }
         };
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
 }

@@ -283,16 +283,20 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
+    let valid = use_state(cx, || false);
 
+    let reset_fn = || {
+        *val.write() = "".into();
+        error.set("".into());
+        valid.set(false);
+    };
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
         if *should_reset {
-            val.write().clear();
+            reset_fn();
             hook.set(false);
         }
     }
-
-    let valid = use_state(cx, || false);
     let min_len = options
         .with_validation
         .map(|opt| opt.min_length.unwrap_or_default())
@@ -370,12 +374,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
                             if options.clear_on_submit {
-                                 *val.write() = "".into();
+                                reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(&cx, "".to_owned(), true, evt.code());
+                            emit_return(&cx, "".to_owned(), *valid.current(), evt.code());
                             if options.clear_on_submit {
-                                *val.write() = "".into();
+                                reset_fn();
                            }
                         }
                     }

@@ -32,6 +32,8 @@ pub enum Action {
     // Extensions
     #[display(fmt = "RegisterExtensions")]
     RegisterExtensions(HashMap<String, ExtensionProxy>),
+    #[display(fmt = "SetExtensionEnabled")]
+    SetExtensionEnabled(String, bool),
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
@@ -103,8 +105,8 @@ pub enum Action {
     CancelRequest(Identity),
 
     /// Handle a new incoming friend request
-    #[display(fmt = "IncomingRequest")]
-    IncomingRequest(Identity),
+    // #[display(fmt = "IncomingRequest")]
+    // IncomingRequest(Identity),
     /// Accept an incoming friend request
     #[display(fmt = "AcceptRequest")]
     AcceptRequest(Identity),

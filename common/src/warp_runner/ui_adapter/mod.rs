@@ -14,7 +14,7 @@ use uuid::Uuid;
 use crate::state::{self, chats};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use warp::{
     crypto::DID,
     error::Error,
@@ -33,6 +33,11 @@ pub struct Message {
     /// needs to be re-rendered. Before the addition of this field, the compose view was
     /// using the message Uuid, but this doesn't change when a message is edited.
     pub key: String,
+}
+
+pub struct ChatAdapter {
+    pub inner: chats::Chat,
+    pub identities: HashSet<state::identity::Identity>,
 }
 
 /// if a raygun::Message is in reply to another message, attempt to fetch part of the message text
@@ -104,12 +109,12 @@ pub async fn conversation_to_chat(
     conv: &Conversation,
     account: &super::Account,
     messaging: &mut super::Messaging,
-) -> Result<chats::Chat, Error> {
+) -> Result<ChatAdapter, Error> {
     // todo: should Chat::participants include self?
-    let mut participants = Vec::new();
+    let mut identities = HashSet::new();
     for id in conv.recipients() {
         let identity = did_to_identity(&id, account).await?;
-        participants.push(identity);
+        identities.insert(identity);
     }
 
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
@@ -126,12 +131,17 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
-    Ok(chats::Chat {
-        id: conv.id(),
-        participants,
-        messages,
-        unreads: unreads as u32,
-        replying_to: None,
-        typing_indicator: HashMap::new(),
-    })
+    let adapter = ChatAdapter {
+        inner: chats::Chat {
+            id: conv.id(),
+            participants: HashSet::from_iter(conv.recipients()),
+            messages,
+            unreads: unreads as u32,
+            replying_to: None,
+            typing_indicator: HashMap::new(),
+        },
+        identities,
+    };
+
+    Ok(adapter)
 }

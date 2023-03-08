@@ -1,27 +1,26 @@
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use warp::crypto::DID;
 
 use crate::STATIC_ARGS;
 
-use super::identity::Identity;
 // warning: Friends implements Serialize
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Friends {
     // becomes true when the friends fields have been retrieved from Warp
-    #[serde(default)]
+    #[serde(skip)]
     pub initialized: bool,
     // All active friends.
     #[serde(default)]
-    pub all: HashMap<DID, Identity>,
+    pub all: HashSet<DID>,
     // List of friends the user has blocked
     #[serde(default)]
-    pub blocked: HashSet<Identity>,
+    pub blocked: HashSet<DID>,
     // Friend requests, incoming and outgoing.
     #[serde(default)]
-    pub incoming_requests: HashSet<Identity>,
+    pub incoming_requests: HashSet<DID>,
     #[serde(default)]
-    pub outgoing_requests: HashSet<Identity>,
+    pub outgoing_requests: HashSet<DID>,
 }
 
 // don't skip friends data when using mock data
