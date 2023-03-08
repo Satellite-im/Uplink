@@ -63,12 +63,23 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
         let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
         if let Ok(thumbnail_bytes) = base64::decode(base64_string) {
             let cursor = Cursor::new(thumbnail_bytes);
-            let image_reader = ImageReader::with_format(cursor, image::ImageFormat::Jpeg);
-            let image_result = image_reader.decode();
-            if let Ok(image) = image_result {
-                let width = image.width();
-                let height = image.height();
-                desktop.set_inner_size(LogicalSize::new(width, height));
+            let mut img_format = image::ImageFormat::Jpeg;
+            if file.name().contains(".png") {
+                img_format = image::ImageFormat::Png;
+            }
+            let image_reader = ImageReader::with_format(cursor, img_format);
+            if let Ok(image) = image_reader.decode() {
+                let width = image.width() as f64;
+                let height = image.height() as f64;
+                if height > 800.0 || width > 800.0 {
+                    let scale_factor = desktop.scale_factor() + 0.5;
+                    desktop.set_inner_size(LogicalSize::new(
+                        width / scale_factor,
+                        height / scale_factor,
+                    ));
+                } else {
+                    desktop.set_inner_size(LogicalSize::new(width, height));
+                }
             }
         }
     }
