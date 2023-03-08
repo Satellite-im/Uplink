@@ -1,4 +1,7 @@
-use common::{icons::outline::Shape as Icon, state::State};
+use common::{
+    icons::outline::Shape as Icon,
+    state::{Action, State},
+};
 use dioxus::prelude::*;
 use emojis::Group;
 use extensions::*;
@@ -117,9 +120,10 @@ impl EmojiSelector {
                                             class: "emoji",
                                             onclick: move |_| {
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
-                                                if let Some(c) = state.read().get_active_chat() {
-                                                    if let Some(mut draft) = c.draft {
-                                                        draft += &emoji.to_string();
+                                                if let Some(c) = state.write().get_active_chat() {
+                                                    if let Some(draft) = c.draft {
+                                                        let new_draft = draft + &emoji.to_string();
+                                                        state.write().mutate(Action::SetChatDraft(c.id, new_draft));
                                                     }
                                                 }
                                             },
