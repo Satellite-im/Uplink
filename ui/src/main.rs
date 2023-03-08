@@ -374,7 +374,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         assert!(state.friends().initialized);
         assert!(state.chats().initialized);
     } else {
-        state.set_warp_identity(identity.clone());
+        state.set_own_identity(identity.clone().into());
     }
 
     // set the window to the normal size.

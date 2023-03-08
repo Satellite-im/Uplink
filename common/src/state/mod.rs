@@ -1,4 +1,3 @@
-pub mod account;
 pub mod action;
 pub mod chats;
 pub mod configuration;
@@ -12,7 +11,6 @@ pub mod ui;
 
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
-pub use account::Account;
 pub use action::Action;
 pub use chats::{Chat, Chats};
 use dioxus_desktop::tao::window::WindowId;
@@ -57,7 +55,7 @@ use self::{action::ActionHook, configuration::Configuration, ui::Call};
 #[derive(Default, Deserialize, Serialize)]
 pub struct State {
     #[serde(skip)]
-    account: account::Account,
+    id: DID,
     #[serde(default)]
     pub route: route::Route,
     #[serde(default)]
@@ -83,7 +81,7 @@ pub struct State {
 impl fmt::Debug for State {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("State")
-            .field("account", &self.account)
+            .field("id", &self.did_key())
             .field("route", &self.route)
             .field("chats", &self.chats)
             .field("friends", &self.friends)
@@ -96,7 +94,7 @@ impl fmt::Debug for State {
 impl Clone for State {
     fn clone(&self) -> Self {
         State {
-            account: self.account.clone(),
+            id: self.did_key(),
             route: self.route.clone(),
             chats: self.chats.clone(),
             friends: self.friends.clone(),
@@ -209,7 +207,7 @@ impl State {
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::Reply(_, _) => todo!(),
             Action::MockSend(id, msg) => {
-                let sender = self.account.identity.did_key();
+                let sender = self.did_key();
                 let mut m = raygun::Message::default();
                 m.set_conversation_id(id);
                 m.set_sender(sender);
@@ -225,7 +223,7 @@ impl State {
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
-            Action::SetId(identity) => self.set_identity(&identity),
+            Action::SetId(identity) => self.set_own_identity(identity),
             Action::SetActiveMedia(id) => self.set_active_media(id),
             Action::DisableMedia => self.disable_media(),
 
@@ -367,11 +365,6 @@ impl State {
         }
     }
 
-    /// Sets the user's identity.
-    fn set_identity(&mut self, identity: &Identity) {
-        self.account.identity = identity.clone();
-    }
-
     /// Sets the user's language.
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
@@ -479,7 +472,7 @@ impl State {
     /// Getters help retrieve data from state in common ways preventing reused code.
 
     pub fn is_me(&self, identity: &Identity) -> bool {
-        identity.did_key().to_string() == self.account.identity.did_key().to_string()
+        identity.did_key().to_string() == self.did_key().to_string()
     }
 
     /// Check if given chat is favorite on `State` struct.
@@ -557,11 +550,7 @@ impl State {
     }
 
     pub fn get_identity(&self, did: &DID) -> Identity {
-        if self.account.identity.did_key() == *did {
-            self.account.identity.clone()
-        } else {
-            self.identities.get(did).cloned().unwrap_or_default()
-        }
+        self.identities.get(did).cloned().unwrap_or_default()
     }
 
     pub fn get_friends_by_first_letter(
@@ -595,7 +584,6 @@ impl State {
     pub fn clear(&mut self) {
         self.chats = chats::Chats::default();
         self.friends = friends::Friends::default();
-        self.account = account::Account::default();
         self.settings = settings::Settings::default();
     }
 
@@ -658,7 +646,7 @@ impl State {
     }
 
     pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.account.identity.did_key();
+        let user = self.did_key();
         let conv = match self.chats.all.get_mut(&chat_id) {
             Some(c) => c,
             None => {
@@ -693,7 +681,7 @@ impl State {
     }
 
     pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.account.identity.did_key();
+        let user = self.did_key();
         let conv = match self.chats.all.get_mut(&chat_id) {
             Some(c) => c,
             None => {
@@ -991,13 +979,15 @@ impl State {
 impl State {
     pub fn mock(
         my_id: Identity,
-        identities: HashMap<DID, Identity>,
+        mut identities: HashMap<DID, Identity>,
         chats: chats::Chats,
         friends: friends::Friends,
         storage: Storage,
     ) -> Self {
+        let id = my_id.did_key();
+        identities.insert(my_id.did_key(), my_id);
         Self {
-            account: Account { identity: my_id },
+            id,
             settings: Settings {
                 language: "English (USA)".into(),
             },
@@ -1087,20 +1077,26 @@ impl State {
             .collect()
     }
 
-    pub fn account(&self) -> &account::Account {
-        &self.account
+    pub fn did_key(&self) -> DID {
+        self.id.clone()
     }
 
-    pub fn set_account(&mut self, account: account::Account) {
-        self.account = account;
+    pub fn set_own_identity(&mut self, identity: Identity) {
+        self.id = identity.did_key();
+        self.identities.insert(identity.did_key(), identity);
     }
 
-    pub fn set_warp_identity(&mut self, identity: warp::multipass::identity::Identity) {
-        self.account.identity.set_warp_identity(identity);
+    pub fn get_own_identity(&self) -> Identity {
+        self.identities
+            .get(&self.did_key())
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub fn mock_own_platform(&mut self, platform: Platform) {
-        self.account.identity.set_platform(platform);
+        if let Some(ident) = self.identities.get_mut(&self.did_key()) {
+            ident.set_platform(platform);
+        }
     }
 
     // identities are updated once a minute for friends. but if someone sends you a message, they should be seen as online.
@@ -1135,26 +1131,30 @@ impl State {
         }
     }
 
-    pub fn did_key(&self) -> DID {
-        self.account.identity.did_key()
-    }
-
     pub fn status_message(&self) -> Option<String> {
-        self.account.identity.status_message()
+        self.identities
+            .get(&self.did_key())
+            .and_then(|x| x.status_message())
     }
 
     pub fn username(&self) -> String {
-        self.account.identity.username()
+        self.identities
+            .get(&self.did_key())
+            .map(|x| x.username())
+            .unwrap_or_default()
     }
 
     pub fn graphics(&self) -> warp::multipass::identity::Graphics {
-        self.account.identity.graphics()
+        self.identities
+            .get(&self.did_key())
+            .map(|x| x.graphics())
+            .unwrap_or_default()
     }
 
     pub fn remove_self(&self, identities: &[Identity]) -> Vec<Identity> {
         identities
             .iter()
-            .filter(|x| x.did_key() != self.account.identity.did_key())
+            .filter(|x| x.did_key() != self.did_key())
             .cloned()
             .collect()
     }

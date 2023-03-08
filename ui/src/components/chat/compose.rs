@@ -164,7 +164,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         active_chat,
         message_groups,
         other_participants,
-        my_id: s.account().identity.clone(),
+        my_id: s.get_own_identity(),
         active_participant,
         subtext,
         is_favorite,
