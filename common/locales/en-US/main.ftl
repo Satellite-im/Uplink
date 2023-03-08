@@ -36,6 +36,8 @@ messages = Messages
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .user-sent-message = sent you a message.
+    .unknown-sent-message = someone sent you a message.
 
 favorites = Favorites
     .favorites = Favorites
@@ -100,6 +102,7 @@ settings-profile = Profile Settings
     .edit-button = Edit
     .save-button = Save
     .welcome = Your new profile!
+    .updated = Profile Updated!
     .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
     
