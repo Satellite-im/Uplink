@@ -130,7 +130,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
-                        if let Some(path) =  FileDialog::new().set_directory(".").pick_folder() {
+                        if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
                             ch.send(path);
                         };
                     }

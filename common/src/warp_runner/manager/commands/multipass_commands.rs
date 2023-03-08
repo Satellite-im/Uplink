@@ -8,7 +8,7 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, Identifier, IdentityUpdate},
+        identity::{self, IdentityUpdate},
     },
 };
 
@@ -43,9 +43,7 @@ pub enum MultiPassCmd {
     },
     #[display(fmt = "RefreshFriends")]
     RefreshFriends {
-        rsp: oneshot::Sender<
-            Result<HashMap<DID, multipass::identity::Identity>, warp::error::Error>,
-        >,
+        rsp: oneshot::Sender<Result<HashMap<DID, state::Identity>, warp::error::Error>>,
     },
     // may later want this to return the Identity rather than the DID.
     #[display(fmt = "GetOwnDid")]
@@ -230,17 +228,12 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
 
 async fn multipass_refresh_friends(
     account: &mut Account,
-) -> Result<HashMap<DID, multipass::identity::Identity>, Error> {
+) -> Result<HashMap<DID, state::Identity>, Error> {
     let ids = account.list_friends().await?;
+    let identities = dids_to_identity(&ids, account).await?;
+    let friends = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
 
-    let list = account
-        .get_identity(Identifier::did_keys(ids.clone()))
-        .await?;
-    let friends: HashMap<DID, identity::Identity> = list
-        .iter()
-        .map(|ident| (ident.did_key(), ident.clone()))
-        .collect();
-    if list.is_empty() {
+    if friends.is_empty() {
         log::warn!("No identities found");
     }
     Ok(friends)

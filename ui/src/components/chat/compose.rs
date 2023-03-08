@@ -43,7 +43,9 @@ use dioxus_desktop::{use_eval, use_window};
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
+    crypto::DID,
     logging::tracing::log,
+    multipass::identity::{self, IdentityStatus},
     raygun::{self, ReactionState},
 };
 
@@ -156,17 +158,13 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     //     .lookup(&*APP_LANG.read(), "messages.new")
     //     .unwrap_or_default();
 
-    let platform = match active_participant.platform() {
-        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-        _ => Platform::Headless, //TODO: Unknown
-    };
+    let platform = active_participant.platform().into();
 
     let data = Rc::new(ComposeData {
         active_chat,
         message_groups,
         other_participants,
-        my_id: s.account().identity.clone(),
+        my_id: s.get_own_identity(),
         active_participant,
         subtext,
         is_favorite,
@@ -466,13 +464,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     let messages = &group.messages;
                     let active_chat = data.active_chat.clone();
                     let last_message = messages.last().unwrap().message.clone();
-                    let sender = state.read().get_friend_identity(&group.sender);
+                    let sender = state.read().get_identity(&group.sender);
                     let active_language = state.read().settings.language.clone();
-                    let platform = match sender.platform() {
-                        warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                        warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                        _ => Platform::Headless //TODO: Unknown
-                    };
+                    let platform = sender.platform().into();
                     let status = convert_status(&sender.identity_status());
 
                     rsx!(
@@ -646,10 +640,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
-    let is_typing = active_chat_id
-        .and_then(|id| state.read().chats().all.get(&id).cloned())
-        .map(|chat| chat.typing_indicator.iter().any(|(id, _)| id != &my_id))
+    let users_typing: Vec<DID> = data
+        .as_ref()
+        .map(|data| {
+            data.active_chat
+                .typing_indicator
+                .iter()
+                .filter(|(did, _)| *did != &my_id)
+                .map(|(did, _)| did.clone())
+                .collect()
+        })
         .unwrap_or_default();
+    let is_typing = !users_typing.is_empty();
+    let users_typing = state.read().get_identities(&users_typing);
 
     let msg_ch = use_coroutine(
         cx,
@@ -901,16 +904,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }))
     }));
 
-    let platform = Platform::Headless;
-    let status = Status::Online;
+    // todo: possibly show more if multiple users are typing
+    let (platform, status) = match users_typing.first() {
+        Some(u) => (u.platform(), u.identity_status()),
+        None => (identity::Platform::Unknown, IdentityStatus::Online),
+    };
 
     cx.render(rsx!(
         is_typing.then(|| {
             rsx!(MessageTyping {
                 user_image: cx.render(rsx!(
                     UserImage {
-                        platform: platform,
-                        status: status
+                        platform: platform.into(),
+                        status: status.into()
                     }
                 ))
             })
