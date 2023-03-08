@@ -1,5 +1,5 @@
 use common::language::get_local_text;
-use common::state::State;
+use common::state::{State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -32,13 +32,22 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let username = state.read().username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = use_state(cx, || false);
     let image = state.read().graphics().profile_picture();
     let banner = state.read().graphics().profile_banner();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
         state.write().set_own_identity(ident.clone().into());
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    "".into(),
+                    get_local_text("settings-profile.updated"),
+                    None,
+                    2,
+                ),
+            ));
         should_update.set(None);
     }
 
@@ -118,7 +127,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (!welcome_dismissed).then(|| rsx!(
+            (state.read().ui.show_settings_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
@@ -133,7 +142,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                welcome_dismissed.set(true);
+                                state.write().ui.show_settings_welcome = false;
+                                let _ = state.write().save();
                             }
                         },
                         Label {
