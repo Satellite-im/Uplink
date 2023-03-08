@@ -72,9 +72,7 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
-
-    // let's persist these for now.
-    #[serde(default)]
+    #[serde(skip)]
     identities: HashMap<DID, identity::Identity>,
 }
 
