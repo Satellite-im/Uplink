@@ -77,23 +77,29 @@ pub fn Explore(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 pub fn Installed(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let metas: Vec<_> = state
+        .read()
+        .ui
+        .extensions
+        .values()
+        .map(|ext| (ext.enabled(), ext.details().meta.clone()))
+        .collect();
 
     cx.render(rsx!(
-            state.read().ui.extensions.values().map(|ext| {
-                let details = ext.extension.details();
+            metas.iter().cloned().map(|(enabled, meta)| {
                 rsx!(
                     ExtensionSetting {
-                        title: details.meta.pretty_name.to_owned(),
-                        author: details.meta.author.to_owned(),
-                        description: details.meta.description.to_owned(),
+                        title: meta.pretty_name.to_owned(),
+                        author: meta.author.to_owned(),
+                        description: meta.description.to_owned(),
                         Switch {
-                            active: ext.enabled,
+                            active: enabled,
                             onflipped: move |value| {
                                 if state.read().configuration.audiovideo.interface_sounds {
                                     sounds::Play(sounds::Sounds::Flip);
                                 }
 
-                                state.write().mutate(Action::SetExtensionEnabled(details.meta.name.to_owned(), value));
+                                state.write().mutate(Action::SetExtensionEnabled(meta.name.to_owned(), value));
                             }
                         }
                     }

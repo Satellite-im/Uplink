@@ -12,3 +12,4 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e2
 common = { path = "../common" }
 extensions = { path = "../extensions" }
 kit = { path = "../kit" }
+once_cell = "1.17.1"

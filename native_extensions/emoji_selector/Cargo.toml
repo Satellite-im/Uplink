@@ -19,3 +19,4 @@ extensions = { path = "../../extensions" }
 common = { path = "../../common" }
 kit = { path = "../../kit" }
 emojis = "0.5.2"
+once_cell = "1.17.1"

@@ -1,8 +1,11 @@
 use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use extensions::ExtensionProxy;
+use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, rc::Weak};
+use std::{
+    collections::{hash_map, HashMap, HashSet},
+    rc::Weak,
+};
 use uuid::Uuid;
 use wry::webview::WebView;
 
@@ -56,10 +59,43 @@ pub struct UI {
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
-    #[serde(skip)]
-    pub extensions: HashMap<String, ExtensionProxy>,
+    #[serde(default)]
+    pub extensions: Extensions,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
+}
+
+#[derive(Default, Deserialize, Serialize)]
+pub struct Extensions {
+    #[serde(default)]
+    enabled: HashSet<String>,
+    #[serde(skip)]
+    map: HashMap<String, UplinkExtension>,
+}
+
+impl Extensions {
+    pub fn enable(&mut self, name: String) {
+        self.enabled.insert(name.clone());
+        if let Some(ext) = self.map.get_mut(&name) {
+            ext.set_enabled(true)
+        }
+    }
+
+    pub fn disable(&mut self, name: String) {
+        self.enabled.remove(&name);
+        if let Some(ext) = self.map.get_mut(&name) {
+            ext.set_enabled(false)
+        }
+    }
+
+    pub fn insert(&mut self, name: String, mut extension: UplinkExtension) {
+        extension.set_enabled(self.enabled.contains(&name));
+        self.map.insert(name, extension);
+    }
+
+    pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
+        self.map.values()
+    }
 }
 
 fn bool_true() -> bool {

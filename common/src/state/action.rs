@@ -4,7 +4,7 @@ use derive_more::Display;
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
-use extensions::ExtensionProxy;
+use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;
@@ -31,7 +31,7 @@ pub struct ActionHook {
 pub enum Action {
     // Extensions
     #[display(fmt = "RegisterExtensions")]
-    RegisterExtensions(HashMap<String, ExtensionProxy>),
+    RegisterExtensions(HashMap<String, UplinkExtension>),
     #[display(fmt = "SetExtensionEnabled")]
     SetExtensionEnabled(String, bool),
     // UI

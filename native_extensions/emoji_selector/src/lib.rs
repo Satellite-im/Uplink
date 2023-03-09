@@ -5,19 +5,17 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
-use extensions::*;
+use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
 };
+use once_cell::sync::Lazy;
 
-export_extension!(register);
-#[allow(improper_ctypes_definitions)]
-extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
-    registrar.register("emoji_selector", Box::new(EmojiSelector));
-}
+// These two lines are all you need to use your Extension implementation as a shared library
+static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
+export_extension!(EXTENSION);
 
-#[derive(Debug, Clone, PartialEq)]
 pub struct EmojiSelector;
 
 fn group_to_str(group: emojis::Group) -> String {
