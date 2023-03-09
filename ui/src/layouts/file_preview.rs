@@ -2,13 +2,18 @@ use std::io::Cursor;
 
 use common::{DOC_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
 use dioxus::prelude::*;
-
-use dioxus_desktop::{use_window, LogicalSize};
-use image::io::Reader as ImageReader;
-use kit::elements::file::get_file_extension;
 use warp::constellation::file::File;
 
 use super::storage::WindowDropHandler;
+use dioxus_desktop::{use_window, LogicalSize};
+use image::io::Reader as ImageReader;
+use kit::elements::file::get_file_extension;
+const HTML: &str = "
+html, body {
+    background: var(--background);
+}
+";
+
 const STYLE: &str = include_str!("./style.scss");
 
 #[derive(Clone, PartialEq, Eq)]
@@ -45,6 +50,7 @@ pub fn get_file_format(file_name: String) -> FileFormat {
 #[allow(non_snake_case)]
 pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> Element {
     let file_format = get_file_format(file.name());
+    let file_name = file.name();
     let thumbnail = file.thumbnail();
     let has_thumbnail = !file.thumbnail().is_empty();
     let desktop = use_window(cx);
@@ -72,10 +78,11 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     }
 
     cx.render(rsx! (
+        style { HTML },
         style { STYLE },
         div {
             id: "video-poped-out",
-            class: "popout-player",
+            class: "file-preview",
             div {
                 class: "wrap",
                 {
@@ -92,14 +99,18 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
                                     FileFormat::Video => "Video thumb",
                                     FileFormat::Image => "Image thumb",
                                     FileFormat::Document => "First page thumb",
-                                    _ => "No thumb",
+                                    _ => "Thumb",
                                 }),
                             }
                         }
                         }
                     } else {
+                        let scale_factor = desktop.scale_factor() + 0.5;
+                        desktop.set_inner_size(LogicalSize::new(450.0 / scale_factor, 200.0 / scale_factor));
                         rsx!(div{
-                            h3 {"There is no preview thumb for this file"}
+                            h3 {" {file_name}"}
+                            p {
+                                "There is no preview thumb for this file"}
 
                         })
                     }

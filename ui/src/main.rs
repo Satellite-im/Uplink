@@ -487,7 +487,7 @@ fn app(cx: Scope) -> Element {
     let webview = desktop.webview.clone();
     let inner = state.inner();
     use_wry_event_handler(cx, {
-        to_owned![needs_update];
+        to_owned![needs_update, desktop];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
@@ -505,6 +505,21 @@ fn app(cx: Scope) -> Element {
                     }
                 }
             }
+            WryEvent::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => match inner.try_borrow_mut() {
+                Ok(state) => {
+                    state
+                        .write()
+                        .mutate(Action::ClearFilePreview(desktop.clone()));
+                    state.write().mutate(Action::ClearPopout(desktop.clone()));
+                    state
+                        .write()
+                        .mutate(Action::ClearDebugLogger(desktop.clone()));
+                }
+                Err(e) => log::error!("{e}"),
+            },
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
