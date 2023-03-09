@@ -1,6 +1,10 @@
 use dioxus::prelude::*;
 use std::path::PathBuf;
 
+// these help filling in Details
+pub static CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
+
 #[cfg(target_os = "macos")]
 pub static FILE_EXT: &str = "dylib";
 #[cfg(target_os = "linux")]
@@ -40,6 +44,7 @@ macro_rules! export_extension {
     };
 }
 
+// this might belong in Uplink
 /// This is used by Uplink to interact with shared libraries
 pub struct UplinkExtension {
     lib: libloading::Library,
@@ -100,6 +105,8 @@ pub struct Details {
     pub ext_type: Type,
     // Additional information about the extension
     pub meta: Meta,
+    pub cargo_version: &'static str,
+    pub rustc_version: &'static str,
 }
 
 // Represents where the extensions main render method should execute.

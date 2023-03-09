@@ -5,7 +5,9 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
-use extensions::{export_extension, Details, Extension, Location, Meta, Type};
+use extensions::{
+    export_extension, Details, Extension, Location, Meta, Type, CARGO_VERSION, RUSTC_VERSION,
+};
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
@@ -171,6 +173,8 @@ impl Extension for EmojiSelector {
                     "Browse the standard unicode library of emoji's and send them to friends.",
                 author: "Satellite <devs@satellite.im>",
             },
+            cargo_version: CARGO_VERSION,
+            rustc_version: RUSTC_VERSION,
         }
     }
 

@@ -26,6 +26,8 @@ impl Extension for ExampleExtension {
                 description: "Click me to make things a little orange.",
                 author: "Big Juice",
             },
+            cargo_version: CARGO_VERSION,
+            rustc_version: RUSTC_VERSION,
         }
     }
 

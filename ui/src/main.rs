@@ -346,6 +346,12 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, io::Error> {
 
         match UplinkExtension::new(path.clone()) {
             Ok(ext) => {
+                if ext.details().cargo_version != extensions::CARGO_VERSION
+                    || ext.details().rustc_version != extensions::RUSTC_VERSION
+                {
+                    log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.details().cargo_version, ext.details().rustc_version);
+                    continue;
+                }
                 log::debug!("Loaded extension: {:?}", &path);
                 extensions.insert(ext.details().meta.name.into(), ext);
             }
