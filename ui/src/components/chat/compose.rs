@@ -615,11 +615,11 @@ struct TypingInfo {
 }
 
 fn get_value(state: State, cx: Scope<ComposeProps>) -> String {
-    let mut draft = "";
+    let mut draft = String::from("");
 
     if let Some(chat) = state.get_active_chat() {
         if let Some(current_draft) = chat.draft {
-            draft = current_draft.into();
+            draft = current_draft;
         }
     }
 
