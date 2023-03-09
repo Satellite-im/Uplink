@@ -39,56 +39,56 @@ impl EmojiSelector {
         let mut routes_ = vec![];
         routes_.push(Route {
             to: "Smileys Emotion",
-            name: group_to_str(Group::SmileysAndEmotion).to_owned(),
+            name: group_to_str(Group::SmileysAndEmotion),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "People Body",
-            name: group_to_str(Group::PeopleAndBody).to_owned(),
+            name: group_to_str(Group::PeopleAndBody),
             icon: Icon::Users,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Animals Nature",
-            name: group_to_str(Group::AnimalsAndNature).to_owned(),
+            name: group_to_str(Group::AnimalsAndNature),
             icon: Icon::Leaf,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Travel Places",
-            name: group_to_str(Group::TravelAndPlaces).to_owned(),
+            name: group_to_str(Group::TravelAndPlaces),
             icon: Icon::BuildingStorefront,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Activities",
-            name: group_to_str(Group::Activities).to_owned(),
+            name: group_to_str(Group::Activities),
             icon: Icon::Basketball,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Objects",
-            name: group_to_str(Group::Objects).to_owned(),
+            name: group_to_str(Group::Objects),
             icon: Icon::Cake,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Symbols",
-            name: group_to_str(Group::Symbols).to_owned(),
+            name: group_to_str(Group::Symbols),
             icon: Icon::CpuChip,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
             to: "Flags",
-            name: group_to_str(Group::Flags).to_owned(),
+            name: group_to_str(Group::Flags),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
@@ -96,7 +96,7 @@ impl EmojiSelector {
         cx.render(rsx!(Nav {
             routes: routes_,
             onnavigate: move |r| {
-                let eval = use_eval(&cx);
+                let eval = use_eval(cx);
                 eval(format!("scrolltoId({})", r));
             }
         }))
@@ -139,7 +139,7 @@ impl EmojiSelector {
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
                                                 if let Some(c) = state.write().get_active_chat() {
                                                     if let Some(draft) = c.draft {
-                                                        let new_draft = draft + &emoji.to_string();
+                                                        let new_draft = draft + emoji.as_ref();
                                                         state.write().mutate(Action::SetChatDraft(c.id, new_draft));
                                                     }
                                                 }

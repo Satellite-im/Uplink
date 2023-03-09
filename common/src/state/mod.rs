@@ -690,16 +690,9 @@ impl State {
         needs_update
     }
 
-    /// Sets the draft on a given chat to some contents.
-    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
-            c.draft = Some(value);
-        }
-    }
-
     /// Clears the given chats draft message
     fn clear_chat_draft(&mut self, chat_id: &Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
             c.draft = None;
         }
     }
@@ -837,6 +830,12 @@ impl State {
         self.chats.active = Some(chat.id);
         if !self.chats.in_sidebar.contains(&chat.id) {
             self.chats.in_sidebar.push(chat.id);
+        }
+    }
+    /// Sets the draft on a given chat to some contents.
+    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+            c.draft = Some(value);
         }
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
