@@ -41,6 +41,8 @@ pub struct UI {
     pub current_call: Option<Call>,
     #[serde(skip)]
     pub current_debug_logger: Option<DebugLogger>,
+    #[serde(skip)]
+    pub current_file_preview: Option<FilePreview>,
     // false: the media player is anchored in place
     // true: the media player can move around
     #[serde(skip)]
@@ -90,6 +92,17 @@ impl UI {
         }
     }
 
+    fn take_file_preview_id(&mut self) -> Option<WindowId> {
+        match self.current_file_preview.take() {
+            Some(mut file_preview) => {
+                let id = file_preview.take_window_id();
+                self.current_file_preview = None;
+                id
+            }
+            None => None,
+        }
+    }
+
     pub fn get_meta(&self) -> WindowMeta {
         self.metadata.clone()
     }
@@ -112,6 +125,14 @@ impl UI {
     }
     pub fn clear_debug_logger(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_debug_logger_id() {
+            desktop_context.close_window(id);
+        };
+    }
+    pub fn set_file_preview(&mut self, id: WindowId) {
+        self.current_file_preview = Some(FilePreview::new(Some(id)));
+    }
+    pub fn clear_file_preview(&mut self, desktop_context: DesktopContext) {
+        if let Some(id) = self.take_file_preview_id() {
             desktop_context.close_window(id);
         };
     }
@@ -203,6 +224,24 @@ impl DebugLogger {
 
     pub fn take_window_id(&mut self) -> Option<WindowId> {
         self.debug_logger_window_id.take()
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct FilePreview {
+    #[serde(skip)]
+    pub file_preview_window_id: Option<WindowId>,
+}
+
+impl FilePreview {
+    pub fn new(file_preview_window_id: Option<WindowId>) -> Self {
+        Self {
+            file_preview_window_id,
+        }
+    }
+
+    pub fn take_window_id(&mut self) -> Option<WindowId> {
+        self.file_preview_window_id.take()
     }
 }
 

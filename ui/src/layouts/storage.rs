@@ -714,16 +714,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             thumbnail: file.thumbnail(),
                                             text: file.name(),
                                             onpress: move |_| {
-                                                let window = use_window(cx);
                                                 let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                                                let popout = VirtualDom::new_with_props(FilePreview, FilePreviewProps{
+                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps{
                                                     _drop_handler: drop_handler,
                                                     file: file3.clone(),
                                                 });
-                                                let window = window.new_window(popout, Default::default());
+                                                let window = window.new_window(file_preview, Default::default());
                                                 if let Some(wv) = Weak::upgrade(&window) {
                                                     let id = wv.window().id();
-                                                    state.write().mutate(Action::SetPopout(id));
+                                                    state.write().mutate(Action::SetFilePreview(id));
                                                 }
                                             },
                                             aria_label: file.name(),
@@ -790,7 +789,7 @@ impl WindowDropHandler {
 
 impl Drop for WindowDropHandler {
     fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::ClosePopout) {
+        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseFilePreview) {
             // todo: log error
         }
     }

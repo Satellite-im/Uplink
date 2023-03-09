@@ -72,6 +72,10 @@ pub enum Action {
     SetDebugLogger(WindowId),
     #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
+    #[display(fmt = "SetFilePreview")]
+    SetFilePreview(WindowId),
+    #[display(fmt = "ClearFilePreview")]
+    ClearFilePreview(DesktopContext),
 
     // Notifications
     #[display(fmt = "AddNotification")]

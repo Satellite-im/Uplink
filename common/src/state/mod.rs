@@ -180,6 +180,8 @@ impl State {
             // Development
             Action::SetDebugLogger(webview) => self.ui.set_debug_logger(webview),
             Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(window),
+            Action::SetFilePreview(webview) => self.ui.set_file_preview(webview),
+            Action::ClearFilePreview(window) => self.ui.clear_file_preview(window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),

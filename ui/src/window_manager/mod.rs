@@ -45,7 +45,7 @@ pub async fn handle_cmd(
         }
         WindowManagerCmd::CloseFilePreview => {
             if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearDebugLogger(desktop));
+                s.write().mutate(Action::ClearFilePreview(desktop));
             } else {
                 //todo: add logging
             }
