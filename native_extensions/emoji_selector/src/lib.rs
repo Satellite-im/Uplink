@@ -3,6 +3,7 @@ use common::{
     state::{Action, State},
 };
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::*;
 use kit::{
@@ -37,69 +38,84 @@ impl EmojiSelector {
     fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         let mut routes_ = vec![];
         routes_.push(Route {
-            to: "smileys_and_emotion",
-            name: "Smileys & Emotion".to_owned(),
+            to: "Smileys Emotion",
+            name: group_to_str(Group::SmileysAndEmotion).to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "people_and_body",
-            name: "People & Body".to_owned(),
+            to: "People Body",
+            name: group_to_str(Group::PeopleAndBody).to_owned(),
             icon: Icon::Users,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "animals_and_nature",
-            name: "Animals & Nature".to_owned(),
+            to: "Animals Nature",
+            name: group_to_str(Group::AnimalsAndNature).to_owned(),
             icon: Icon::Leaf,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "travel_and_places",
-            name: "Travel & Places".to_owned(),
+            to: "Travel Places",
+            name: group_to_str(Group::TravelAndPlaces).to_owned(),
             icon: Icon::BuildingStorefront,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "activities",
-            name: "Activities".to_owned(),
+            to: "Activities",
+            name: group_to_str(Group::Activities).to_owned(),
             icon: Icon::Basketball,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "objects",
-            name: "Objects".to_owned(),
+            to: "Objects",
+            name: group_to_str(Group::Objects).to_owned(),
             icon: Icon::Cake,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "symbols",
-            name: "Symbols".to_owned(),
+            to: "Symbols",
+            name: group_to_str(Group::Symbols).to_owned(),
             icon: Icon::CpuChip,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "flags",
-            name: "Flags".to_owned(),
+            to: "Flags",
+            name: group_to_str(Group::Flags).to_owned(),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         cx.render(rsx!(Nav {
             routes: routes_,
-            onnavigate: |_| {}
+            onnavigate: move |r| {
+                let eval = use_eval(&cx);
+                eval(format!("scrolltoId({})", r));
+            }
         }))
     }
 
     fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         let state = use_shared_state::<State>(cx)?;
+
+        let scroll_script = r#"
+            function scrolltoId(id){
+                var group = document.getElementById(id);
+                var emoji_scroller = document.getElementById("scrolling");
+
+                emoji_scroller.scrollTo({
+                    top: group.scrollTop,
+                    left: group.scrollLeft
+                });
+            }
+        "#;
 
         cx.render(rsx! (
             div {
@@ -114,6 +130,7 @@ impl EmojiSelector {
                             },
                             div {
                                 class: "emojis-container",
+                                id: "{group_to_str(group)}",
                                 group.emojis().map(|emoji| {
                                     rsx!(
                                         div {
@@ -136,7 +153,10 @@ impl EmojiSelector {
                     })
                 }
                 self.build_nav(cx),
-            }
+            },
+            script {
+                "{scroll_script}"
+            },
         ))
     }
 }
