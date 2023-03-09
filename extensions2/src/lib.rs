@@ -11,29 +11,29 @@ pub static FILE_EXT: &str = "dll";
 /// This is used by Uplink to interact with shared libraries
 pub struct Extension {
     lib: libloading::Library,
+    details: Details,
+    stylesheet: String,
 }
 
 impl Extension {
     pub fn new(location: &str) -> Result<Self, libloading::Error> {
         unsafe {
             let lib = libloading::Library::new(location)?;
-            Ok(Self { lib })
+            let details = lib.get::<unsafe extern "C" fn() -> Details>(b"details\0")?();
+            let stylesheet = lib.get::<unsafe extern "C" fn() -> CString>(b"stylesheet\0")?();
+            Ok(Self {
+                lib,
+                details,
+                stylesheet: stylesheet.to_string_lossy().to_string(),
+            })
         }
     }
-    pub fn details(&self) -> Result<Details, Box<dyn std::error::Error>> {
-        let res = unsafe {
-            self.lib
-                .get::<unsafe extern "C" fn() -> Details>(b"details\0")?()
-        };
-        Ok(res)
+    pub fn details(&self) -> &Details {
+        &self.details
     }
 
-    pub fn stylesheet(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let res = unsafe {
-            self.lib
-                .get::<unsafe extern "C" fn() -> CString>(b"stylesheet\0")?()
-        };
-        Ok(res.to_string_lossy().to_string())
+    pub fn stylesheet(&self) -> &str {
+        &self.stylesheet
     }
 
     // todo: can an element be converted to an HTML string and have the string be returned instead?
@@ -48,15 +48,6 @@ impl Extension {
             }
         }
     }
-}
-
-// Basic extension interface with the minimum required information.
-pub trait Extension2 {
-    fn details(&self) -> Details;
-
-    fn stylesheet(&self) -> String;
-
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
 }
 
 #[repr(C)]
