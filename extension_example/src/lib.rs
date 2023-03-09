@@ -1,5 +1,3 @@
-use std::ffi::CString;
-
 use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use extensions::*;
@@ -31,18 +29,12 @@ impl Extension for ExampleExtension {
         }
     }
 
-    fn stylesheet(&self) -> CString {
-        let s = include_str!("./style.css");
-        match CString::new(s) {
-            Ok(r) => r,
-            Err(_e) => {
-                CString::from_vec_with_nul("/*error encoding stylesheet*/\0".into()).unwrap()
-            }
-        }
+    fn stylesheet(&self) -> String {
+        include_str!("./style.css").into()
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        let styles = self.stylesheet().to_string_lossy().to_string();
+        let styles = self.stylesheet();
 
         cx.render(rsx! {
             style { "{styles}" },

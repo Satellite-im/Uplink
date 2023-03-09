@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use std::{ffi::CString, path::PathBuf};
+use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
 pub static FILE_EXT: &str = "dylib";
@@ -11,7 +11,7 @@ pub static FILE_EXT: &str = "dll";
 /// This must be implemented by an extension
 pub trait Extension {
     fn details(&self) -> Details;
-    fn stylesheet(&self) -> CString;
+    fn stylesheet(&self) -> String;
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
 }
 
@@ -28,7 +28,7 @@ macro_rules! export_extension {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn stylesheet() -> CString {
+        pub extern "C" fn stylesheet() -> String {
             $a.stylesheet()
         }
 
@@ -53,11 +53,11 @@ impl UplinkExtension {
         unsafe {
             let lib = libloading::Library::new(location)?;
             let details = lib.get::<unsafe extern "C" fn() -> Details>(b"details\0")?();
-            let stylesheet = lib.get::<unsafe extern "C" fn() -> CString>(b"stylesheet\0")?();
+            let stylesheet = lib.get::<unsafe extern "C" fn() -> String>(b"stylesheet\0")?();
             Ok(Self {
                 lib,
                 details,
-                stylesheet: stylesheet.to_string_lossy().to_string(),
+                stylesheet,
                 is_enabled: false,
             })
         }
