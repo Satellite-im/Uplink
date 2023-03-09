@@ -1,6 +1,10 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::{State, ToastNotification};
+use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
+use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -8,10 +12,83 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
+use warp::multipass;
 use warp::{error::Error, logging::tracing::log};
+
+#[derive(Clone)]
+enum ChanCmd {
+    Profile(String),
+    Banner(String),
+    Username(String),
+    Status(String),
+}
 
 #[allow(non_snake_case)]
 pub fn ProfileSettings(cx: Scope) -> Element {
+    log::trace!("rendering ProfileSettings");
+
+    let state = use_shared_state::<State>(cx)?;
+    let user_status = state.read().status_message().unwrap_or_default();
+    let username = state.read().username();
+    let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
+    // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
+    let image = state.read().graphics().profile_picture();
+    let banner = state.read().graphics().profile_banner();
+
+    if let Some(ident) = should_update.get() {
+        log::trace!("Updating ProfileSettings");
+        state.write().set_own_identity(ident.clone().into());
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    "".into(),
+                    get_local_text("settings-profile.updated"),
+                    None,
+                    2,
+                ),
+            ));
+        should_update.set(None);
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+        to_owned![should_update];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                // this is lazy but I can get away with it for now
+                let (tx, rx) = oneshot::channel();
+                let warp_cmd = match cmd {
+                    ChanCmd::Profile(pfp) => MultiPassCmd::UpdateProfilePicture { pfp, rsp: tx },
+                    ChanCmd::Banner(banner) => MultiPassCmd::UpdateBanner { banner, rsp: tx },
+                    ChanCmd::Username(username) => {
+                        MultiPassCmd::UpdateUsername { username, rsp: tx }
+                    }
+                    ChanCmd::Status(status) if status.is_empty() => MultiPassCmd::UpdateStatus {
+                        status: None,
+                        rsp: tx,
+                    },
+                    ChanCmd::Status(status) => MultiPassCmd::UpdateStatus {
+                        status: Some(status),
+                        rsp: tx,
+                    },
+                };
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(warp_cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let res = rx.await.expect("command cancelled");
+                match res {
+                    Ok(ident) => {
+                        should_update.set(Some(ident));
+                    }
+                    Err(e) => log::error!("failed to update identity: {e}"),
+                }
+            }
+        }
+    });
     // Set up validation options for the input field
     let username_validation_options = Validation {
         // The input should have a maximum length of 32
@@ -45,19 +122,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let image_state = use_state(cx, String::new);
-    let banner_state = use_state(cx, String::new);
-
-    // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let welcome_dismissed = use_state(&cx, || false);
-
     let change_banner_text = get_local_text("settings-profile.change-banner");
-    log::debug!("Profile settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (!welcome_dismissed).then(|| rsx!(
+            (state.read().ui.show_settings_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
@@ -72,7 +142,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                welcome_dismissed.set(true);
+                                state.write().ui.show_settings_welcome = false;
+                                let _ = state.write().save();
                             }
                         },
                         Label {
@@ -94,30 +165,24 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 div {
                     class: "profile-banner",
                     aria_label: "profile-banner",
-                    style: "background-image: url({banner_state});",
+                    style: "background-image: url({banner});",
                     onclick: move |_| {
-                        if let Err(error) = change_profile_image(banner_state) {
-                            log::error!("Error to change profile avatar image {error}");
-                        };
+                        set_banner( ch.clone());
                     },
                     p {class: "change-banner-text", "{change_banner_text}" },
                 },
                 div {
                     class: "profile-picture",
                     aria_label: "profile-picture",
-                    style: "background-image: url({image_state});",
+                    style: "background-image: url({image});",
                     onclick: move |_| {
-                        if let Err(error) = change_profile_image(image_state) {
-                            log::error!("Error to change profile avatar image {error}");
-                        };
+                        set_profile_picture(ch.clone());
                     },
                     Button {
                         icon: Icon::Plus,
                         aria_label: "add-picture-button".into(),
                         onpress: move |_| {
-                            if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
-                            };
+                           set_profile_picture(ch.clone());
                         }
                     },
                 }
@@ -130,9 +195,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Button {
                         icon: Icon::Plus,
                         onpress: move |_| {
-                            if let Err(error) = change_profile_image(image_state) {
-                                log::error!("Error to change profile avatar image {error}");
-                            };
+                            set_profile_picture( ch.clone());
                         }
                     }
                 },
@@ -142,10 +205,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         text: get_local_text("uplink.username"),
                     },
                     Input {
-                        placeholder: get_local_text("uplink.username"),
+                        placeholder:  get_local_text("uplink.username"),
+                        default_text: username,
                         aria_label: "username-input".into(),
-                        default_text: "Mock Username".into(),
                         options: get_input_options(username_validation_options),
+                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                            if !is_valid {
+                                return;
+                            }
+                            ch.send(ChanCmd::Username(v));
+                        },
                     },
                 },
                 div {
@@ -155,12 +224,18 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input {
                         placeholder: get_local_text("uplink.status"),
+                        default_text: user_status,
                         aria_label: "status-input".into(),
-                        default_text: "Mock status messages are so 2008.".into(),
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options(status_validation_options)
                         }
+                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                            if !is_valid {
+                                return;
+                            }
+                            ch.send(ChanCmd::Status(v));
+                        },
                     }
                 }
             }
@@ -168,7 +243,29 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn std::error::Error>> {
+fn set_profile_picture(ch: Coroutine<ChanCmd>) {
+    match set_image() {
+        Ok(img) => {
+            ch.send(ChanCmd::Profile(img));
+        }
+        Err(e) => {
+            log::error!("failed to set pfp: {e}");
+        }
+    };
+}
+
+fn set_banner(ch: Coroutine<ChanCmd>) {
+    match set_image() {
+        Ok(img) => {
+            ch.send(ChanCmd::Banner(img));
+        }
+        Err(e) => {
+            log::error!("failed to set banner: {e}");
+        }
+    };
+}
+
+fn set_image() -> Result<String, Box<dyn std::error::Error>> {
     let path = match FileDialog::new()
         .add_filter("image", &["jpg", "png", "jpeg", "svg"])
         .set_directory(".")
@@ -209,10 +306,7 @@ fn change_profile_image(image_state: &UseState<String>) -> Result<(), Box<dyn st
         }
     };
 
-    // TODO: Add upload picture to multipass here
-
-    image_state.set(image);
-    Ok(())
+    Ok(image)
 }
 
 fn get_input_options(validation_options: Validation) -> Options {
@@ -220,10 +314,7 @@ fn get_input_options(validation_options: Validation) -> Options {
     Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(validation_options),
-        // Do not replace spaces with underscores
-        replace_spaces_underscore: false,
-        // Show a clear button inside the input field
-        with_clear_btn: false,
+        clear_on_submit: false,
         // Use the default options for the remaining fields
         ..Options::default()
     }

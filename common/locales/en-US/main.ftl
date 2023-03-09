@@ -28,12 +28,16 @@ warning-messages = Warning Messages
     .spaces-not-allowed = Spaces are not allowed.
 
 messages = Messages
+    .edit = Edit
+    .cancel-edit = Cancel Edit
     .new = New Message
     .replying = Replying to:
     .react = React
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .user-sent-message = sent you a message.
+    .unknown-sent-message = someone sent you a message.
 
 favorites = Favorites
     .favorites = Favorites
@@ -74,6 +78,12 @@ files = Files
     .total-space = Total Space:
     .rename = Rename
     .download = Download
+    .uploaded = Uploaded
+    .thumbnail-uploaded = Thumbnail Uploaded
+    .no-thumbnail = No Thumbnail
+    .renaming-duplicated = Renaming if Duplicated
+    .one-file-to-upload = File to Upload
+    .files-to-upload = Files to Upload
 
 settings = Settings
     .settings = Settings
@@ -92,6 +102,7 @@ settings-profile = Profile Settings
     .edit-button = Edit
     .save-button = Save
     .welcome = Your new profile!
+    .updated = Profile Updated!
     .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
     
@@ -113,6 +124,9 @@ settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically
     .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
+    .banner = Extensions are compiled and downloaded from our server(s). For added security you can compile extensions from source and place in the `extensions` folder.
+    .open-folder = Extensions are compiled and downloaded from our centralized server. You can optionally build and bundle extensions locally on your own for added security.
+    .open-folder-description = Open the local directory containing your installed extensions.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
@@ -193,3 +207,4 @@ auth = Create Account
 
 sidebar = Sidebar 
     .subtext = sent multiple attachments
+    .chat-new = No messages sent yet, send one!

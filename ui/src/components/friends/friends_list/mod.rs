@@ -1,17 +1,18 @@
+use std::collections::HashMap;
+
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
 };
 
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{icons::outline::Shape as Icon, warp_runner::ui_adapter::ChatAdapter};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
@@ -37,7 +38,13 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
-    let friends_list = state.read().friends.all.clone();
+    let friends_list = HashMap::from_iter(
+        state
+            .read()
+            .friend_identities()
+            .iter()
+            .map(|id| (id.did_key(), id.clone())),
+    );
     let friends = State::get_friends_by_first_letter(friends_list);
     let router = use_router(cx);
 
@@ -65,7 +72,7 @@ pub fn Friends(cx: Scope) -> Element {
                             None => {
                                 // if not, create the chat
                                 let (tx, rx) =
-                                    oneshot::channel::<Result<Chat, warp::error::Error>>();
+                                    oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
                                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
                                     RayGunCmd::CreateConversation { recipient, rsp: tx },
                                 )) {
@@ -76,7 +83,7 @@ pub fn Friends(cx: Scope) -> Element {
                                 let rsp = rx.await.expect("command canceled");
 
                                 match rsp {
-                                    Ok(c) => c,
+                                    Ok(c) => c.inner,
                                     Err(e) => {
                                         log::error!("failed to create conversation: {}", e);
                                         continue;
@@ -174,11 +181,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let context_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
-                            let platform = match friend.platform() {
-                                warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                                warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                                _ => Platform::Headless //TODO: Unknown
-                            };
+                            let platform = friend.platform().into();
                             rsx!(
                                 ContextMenu {
                                     id: format!("{did}-friend-listing"),

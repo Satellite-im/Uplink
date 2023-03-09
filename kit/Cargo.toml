@@ -15,9 +15,7 @@ dioxus-html.workspace = true
 timeago.workspace = true
 humansize.workspace = true
 common = { path = "../common" }
-
 warp.workspace = true
-
 derive_more.workspace = true
 
 [dependencies.uuid]

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
-use warp::multipass::identity::{Identity as WarpIdentity, IdentityStatus, Platform};
+use warp::multipass::{
+    self,
+    identity::{Identity as WarpIdentity, IdentityStatus, Platform},
+};
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct Identity {
     identity: WarpIdentity,
@@ -52,6 +55,13 @@ impl core::ops::DerefMut for Identity {
 }
 
 impl Identity {
+    pub fn new(identity: WarpIdentity, status: IdentityStatus, platform: Platform) -> Self {
+        Self {
+            identity,
+            status,
+            platform,
+        }
+    }
     pub fn identity_status(&self) -> IdentityStatus {
         self.status
     }
@@ -68,5 +78,9 @@ impl Identity {
 
     pub fn set_platform(&mut self, platform: Platform) {
         self.platform = platform;
+    }
+
+    pub fn set_warp_identity(&mut self, ident: multipass::identity::Identity) {
+        self.identity = ident;
     }
 }

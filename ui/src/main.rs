@@ -21,11 +21,14 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
+use warp::crypto::DID;
+use warp::multipass;
+use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -43,7 +46,7 @@ use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -87,12 +90,13 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     settings: "/settings",
 };
 
-// serve as a sort of router while the user logs in
+// serve as a sort of router while the user logs in]
+#[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
     Unlock,
     CreateAccount,
-    Success,
+    Success(multipass::identity::Identity),
 }
 
 fn copy_assets() {
@@ -227,7 +231,8 @@ fn main() {
                     .to_string(),
             )
             .with_file_drop_handler(|_w, drag_event| {
-                log::debug!("Drag Event: {:?}", drag_event);
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
                 true
             }),
     )
@@ -259,8 +264,10 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
-    cx.render(rsx!(match *page.current() {
-        AuthPages::Success => rsx!(app_bootstrap {}),
+    cx.render(rsx!(match &*page.current() {
+        AuthPages::Success(ident) => rsx!(app_bootstrap {
+            identity: ident.clone()
+        }),
         _ => rsx!(auth_wrapper {
             page: page.clone(),
             pin: pin.clone()
@@ -359,19 +366,21 @@ fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
 
 // called at the end of the auth flow
 #[inline_props]
-pub fn app_bootstrap(cx: Scope) -> Element {
+pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends.initialized);
-        assert!(state.chats.initialized);
+        assert!(state.friends().initialized);
+        assert!(state.chats().initialized);
+    } else {
+        state.set_own_identity(identity.clone().into());
     }
 
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
-    // Here we set the size larger, and bump up the min size in preperation for rendering the main app.
+    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
     desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
 
@@ -605,15 +614,44 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // periodically refresh message timestamps
+    // periodically refresh message timestamps and friend's status messages
+    let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             loop {
+                // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
+
+                // fetch the identities for all friends to get changes in their status messages etc
+                let (tx, rx) = oneshot::channel::<Result<HashMap<DID, _>, warp::error::Error>>();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RefreshFriends { rsp: tx }))
                 {
+                    log::error!("failed to refresh Friends {e}");
                     needs_update.set(true);
+                    continue;
                 }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(update) => match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            for (id, friend_update) in update {
+                                state.write().update_identity(id, friend_update);
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("failed to refresh friends: {e}");
+                    }
+                }
+
+                needs_update.set(true);
             }
         }
     });
@@ -641,7 +679,9 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            let (tx, rx) = oneshot::channel::<
+                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+            >();
             if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
                 rsp: tx,
             })) {
@@ -663,7 +703,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    state.write().friends = friends;
+                    state.write().set_friends(friends.0, friends.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -729,7 +769,10 @@ fn app(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
                 let (tx, rx) = oneshot::channel::<
-                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                    Result<
+                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
+                        warp::error::Error,
+                    >,
                 >();
                 if let Err(e) =
                     warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
@@ -751,7 +794,7 @@ fn app(cx: Scope) -> Element {
             };
 
             log::trace!("init chats");
-            let (own_id, mut all_chats) = match res {
+            let chats = match res {
                 Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to initialize chats: {}", e);
@@ -761,18 +804,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    // for all_chats, fill in participants and messages.
-                    for (k, v) in &state.read().chats.all {
-                        // the # of unread chats defaults to the length of the conversation. but this number
-                        // is stored in state
-                        if let Some(chat) = all_chats.get_mut(k) {
-                            chat.unreads = v.unreads;
-                        }
-                    }
-
-                    state.write().chats.all = all_chats;
-                    state.write().account.identity = own_id;
-                    state.write().chats.initialized = true;
+                    state.write().set_chats(chats.0, chats.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -945,6 +977,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(true));
+                        state.write().mock_own_platform(Platform::Mobile);
                     }
                 },
                 Button {
@@ -961,6 +994,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Web);
                     }
                 },
                 Button {
@@ -977,6 +1011,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Desktop);
                     }
                 },
                 Button {
@@ -1025,7 +1060,7 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().friends().incoming_requests.len();
 
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,

@@ -46,7 +46,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 get_local_text("friends.request-sent"),
                 None,
-                5,
+                2,
             )));
         request_sent.set(false);
     }
@@ -58,7 +58,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 msg,
                 None,
-                5,
+                2,
             )));
         error_toast.set(None);
     }
@@ -72,7 +72,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                 "".into(),
                 get_local_text("friends.copied-did"),
                 None,
-                5,
+                2,
             )));
         my_id.set(None);
     }
@@ -99,18 +99,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                     Err(e) => match e {
                         Error::CannotSendSelfFriendRequest => {
                             log::warn!("cannot add self: {}", e);
-                            error_toast.set(Some(String::from(get_local_text(
-                                "friends.cannot-add-self",
-                            ))));
+                            error_toast.set(Some(get_local_text("friends.cannot-add-self")));
                         }
                         Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
-                            error_toast
-                                .set(Some(String::from(get_local_text("friends.key-blocked"))));
+                            error_toast.set(Some(get_local_text("friends.key-blocked")));
                         }
                         _ => {
-                            error_toast
-                                .set(Some(String::from(get_local_text("friends.add-failed"))));
+                            error_toast.set(Some(get_local_text("friends.add-failed")));
                             log::error!("add friend failed: {}", e);
                         }
                     },

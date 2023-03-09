@@ -16,6 +16,7 @@ fermi.workspace = true
 kit = { path = "../kit" }
 common = { path = "../common" }
 extensions = { path = "../extensions" }
+
 tokio-util.workspace = true
 arboard.workspace = true
 humansize.workspace = true
