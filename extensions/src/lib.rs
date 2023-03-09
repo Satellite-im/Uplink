@@ -17,6 +17,12 @@ pub trait Extension {
     fn details(&self) -> Details;
     fn stylesheet(&self) -> String;
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
+    fn rustc_version(&self) -> &'static str {
+        RUSTC_VERSION
+    }
+    fn cargo_version(&self) -> &'static str {
+        CARGO_VERSION
+    }
 }
 
 /// after defining a struct (say as a static variable) and implementing the Extension trait, call this: `export_extension!(<name of struct variable>); `
@@ -41,6 +47,18 @@ macro_rules! export_extension {
         pub extern "C" fn render<'a>(cx: &'a ScopeState) -> Element<'a> {
             $a.render(cx)
         }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn rustc_version() -> &'static str {
+            $a.rustc_version()
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn cargo_version() -> &'static str {
+            $a.cargo_version()
+        }
     };
 }
 
@@ -51,6 +69,8 @@ pub struct UplinkExtension {
     details: Details,
     stylesheet: String,
     is_enabled: bool,
+    rustc_version: &'static str,
+    cargo_version: &'static str,
 }
 
 impl UplinkExtension {
@@ -59,11 +79,17 @@ impl UplinkExtension {
             let lib = libloading::Library::new(location)?;
             let details = lib.get::<unsafe extern "C" fn() -> Details>(b"details\0")?();
             let stylesheet = lib.get::<unsafe extern "C" fn() -> String>(b"stylesheet\0")?();
+            let rustc_version =
+                lib.get::<unsafe extern "C" fn() -> &'static str>(b"rustc_version\0")?();
+            let cargo_version =
+                lib.get::<unsafe extern "C" fn() -> &'static str>(b"cargo_version\0")?();
             Ok(Self {
                 lib,
                 details,
                 stylesheet,
                 is_enabled: false,
+                rustc_version,
+                cargo_version,
             })
         }
     }
@@ -88,6 +114,14 @@ impl UplinkExtension {
         }
     }
 
+    pub fn rustc_version(&self) -> &'static str {
+        self.rustc_version
+    }
+
+    pub fn cargo_version(&self) -> &'static str {
+        self.cargo_version
+    }
+
     pub fn enabled(&self) -> bool {
         self.is_enabled
     }
@@ -105,8 +139,6 @@ pub struct Details {
     pub ext_type: Type,
     // Additional information about the extension
     pub meta: Meta,
-    pub cargo_version: &'static str,
-    pub rustc_version: &'static str,
 }
 
 // Represents where the extensions main render method should execute.
