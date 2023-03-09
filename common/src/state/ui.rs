@@ -1,6 +1,6 @@
 use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use extensions::ExtensionProxy;
+use extensions2::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Weak};
 use uuid::Uuid;
@@ -57,7 +57,7 @@ pub struct UI {
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
     #[serde(skip)]
-    pub extensions: HashMap<String, ExtensionProxy>,
+    pub extensions: HashMap<String, UplinkExtension>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
 }

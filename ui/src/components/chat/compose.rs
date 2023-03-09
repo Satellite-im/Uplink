@@ -823,8 +823,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .iter()
-        .filter(|(_, e)| e.enabled)
-        .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
+       // .filter(|(_, e)| e.enabled)
+        .map(|(_, ext)| rsx!(ext.render(cx)))
         .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {

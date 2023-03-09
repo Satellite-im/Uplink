@@ -15,7 +15,8 @@ dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da19
 ] }
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
 dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-extensions = { path = "../../extensions" }
+extensions2 = { path = "../../extensions2" }
 common = { path = "../../common" }
 kit = { path = "../../kit" }
 emojis = "0.5.2"
+once_cell = "1.17.1"

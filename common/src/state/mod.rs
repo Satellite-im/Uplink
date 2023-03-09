@@ -1038,8 +1038,9 @@ impl State {
         self.chats.active_media = Some(id);
         self.ui.current_call = Some(Call::new(None));
     }
-    fn set_extension_enabled(&mut self, extension: String, state: bool) {
-        let ext = self.ui.extensions.get_mut(&extension);
+    fn set_extension_enabled(&mut self, _extension: String, _state: bool) {
+        // todo: add this back
+        /*let ext = self.ui.extensions.get_mut(&extension);
         match ext {
             Some(e) => e.enabled = state,
             None => {
@@ -1049,7 +1050,7 @@ impl State {
                     state
                 );
             }
-        }
+        }*/
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;

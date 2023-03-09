@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use common::{
     icons::outline::Shape as Icon,
     state::{Action, State},
@@ -5,19 +7,17 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
-use extensions::*;
+use extensions2::{export_extension, Details, Extension, Location, Meta, Type};
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
 };
+use once_cell::sync::Lazy;
 
-export_extension!(register);
-#[allow(improper_ctypes_definitions)]
-extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
-    registrar.register("emoji_selector", Box::new(EmojiSelector));
-}
+// These two lines are all you need to use your Extension implementation as a shared library
+static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
+export_extension!(EXTENSION);
 
-#[derive(Debug, Clone, PartialEq)]
 pub struct EmojiSelector;
 
 fn group_to_str(group: emojis::Group) -> String {
@@ -176,12 +176,18 @@ impl Extension for EmojiSelector {
         }
     }
 
-    fn stylesheet(&self) -> String {
-        include_str!("./style.css").to_string()
+    fn stylesheet(&self) -> CString {
+        let s = include_str!("./style.css");
+        match CString::new(s) {
+            Ok(r) => r,
+            Err(_e) => {
+                CString::from_vec_with_nul("/*error encoding stylesheet*/\0".into()).unwrap()
+            }
+        }
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        let styles = self.stylesheet();
+        let styles = self.stylesheet().to_string_lossy().to_string();
         let display_selector = use_state(cx, || false);
 
         cx.render(rsx! (

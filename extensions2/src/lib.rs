@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use std::ffi::CString;
+use std::{ffi::CString, path::PathBuf};
 
 #[cfg(target_os = "macos")]
 pub static FILE_EXT: &str = "dylib";
@@ -48,7 +48,7 @@ pub struct UplinkExtension {
 }
 
 impl UplinkExtension {
-    pub fn new(location: &str) -> Result<Self, libloading::Error> {
+    pub fn new(location: PathBuf) -> Result<Self, libloading::Error> {
         unsafe {
             let lib = libloading::Library::new(location)?;
             let details = lib.get::<unsafe extern "C" fn() -> Details>(b"details\0")?();
@@ -112,6 +112,7 @@ pub enum Type {
 
 // Contains details about the extension for humans.
 #[repr(C)]
+#[derive(Clone)]
 pub struct Meta {
     pub name: &'static str,
     pub author: &'static str,

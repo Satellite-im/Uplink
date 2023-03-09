@@ -1,6 +1,5 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use ::extensions::ExtensionProxy;
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -12,6 +11,7 @@ use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
+use extensions2::UplinkExtension;
 use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -42,7 +42,6 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
-use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
@@ -336,32 +335,26 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
-    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
-    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
-    // that updates when they have new info, i.e. state.
+fn get_extensions() -> Result<HashMap<String, UplinkExtension>, io::Error> {
     fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
     let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
-    let mut extensions_library = AvailableExtensions::new();
+    let mut extensions = HashMap::new();
 
     for entry in paths {
         let path = entry?.path();
-        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
-            log::debug!("Found extension: {:?}", path);
-            unsafe {
-                let loader = extensions_library.load(&path);
-                match loader {
-                    Ok(_) => {
-                        log::debug!("Loaded extension: {:?}", &path);
-                    }
-                    Err(e) => {
-                        log::error!("Error loading extension: {:?}", e);
-                    }
-                }
+        log::debug!("Found extension: {:?}", path);
+
+        match UplinkExtension::new(path.clone()) {
+            Ok(ext) => {
+                log::debug!("Loaded extension: {:?}", &path);
+                extensions.insert(ext.details().meta.name.into(), ext);
+            }
+            Err(e) => {
+                log::error!("Error loading extension: {:?}", e);
             }
         }
     }
-    Ok(extensions_library.extensions)
+    Ok(extensions)
 }
 
 // called at the end of the auth flow
