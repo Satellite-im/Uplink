@@ -11,7 +11,7 @@ use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
-use extensions2::UplinkExtension;
+use extensions::UplinkExtension;
 use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -59,7 +59,7 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 mod components;
-mod extensions;
+mod extension_browser;
 mod layouts;
 mod logger;
 mod overlay;
@@ -406,7 +406,10 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
             log::error!("failed to get extensions: {e}");
         }
     }
-    log::debug!("Loaded {} extensions.", state.ui.extensions.values().len());
+    log::debug!(
+        "Loaded {} extensions.",
+        state.ui.extensions.values().count()
+    );
 
     use_shared_state_provider(cx, || state);
 

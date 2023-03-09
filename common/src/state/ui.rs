@@ -1,6 +1,6 @@
 use crate::icons::outline::Shape as Icon;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use extensions2::UplinkExtension;
+use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{hash_map, HashMap, HashSet},
@@ -94,7 +94,7 @@ impl Extensions {
     }
 
     pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
-        self.map.values().into_iter()
+        self.map.values()
     }
 }
 

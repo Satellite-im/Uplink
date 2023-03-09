@@ -1,19 +1,21 @@
+use std::ffi::CString;
+
 use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use extensions::*;
 use kit::elements::button::Button;
+use once_cell::sync::Lazy;
 
-// Exports the plugin using the registrar
-// You don't need to really worry about this but it is required.
-// Just change "emojis" to the name of your extension in alpha-numeric snake case.
-export_extension!(register);
-#[allow(improper_ctypes_definitions)]
-extern "C" fn register(registrar: &mut dyn ExtensionRegistrar) {
-    registrar.register("emojis", Box::new(ExampleExtension));
+// These two lines are all you need to use your Extension implementation as a shared library
+static EXTENSION: Lazy<ExampleExtension> = Lazy::new(ExampleExtension::new);
+export_extension!(EXTENSION);
+
+struct ExampleExtension {}
+impl ExampleExtension {
+    fn new() -> Self {
+        Self {}
+    }
 }
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ExampleExtension;
 
 impl Extension for ExampleExtension {
     fn details(&self) -> Details {
@@ -29,12 +31,18 @@ impl Extension for ExampleExtension {
         }
     }
 
-    fn stylesheet(&self) -> String {
-        include_str!("./style.css").to_string()
+    fn stylesheet(&self) -> CString {
+        let s = include_str!("./style.css");
+        match CString::new(s) {
+            Ok(r) => r,
+            Err(_e) => {
+                CString::from_vec_with_nul("/*error encoding stylesheet*/\0".into()).unwrap()
+            }
+        }
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        let styles = self.stylesheet();
+        let styles = self.stylesheet().to_string_lossy().to_string();
 
         cx.render(rsx! {
             style { "{styles}" },

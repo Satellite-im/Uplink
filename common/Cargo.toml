@@ -30,7 +30,7 @@ substring = "1.4.5"
 icons = { path = "../icons" }
 humansize = "2.0.0"
 
-extensions2 = { path = "../extensions2" }
+extensions = { path = "../extensions" }
 
 futures = "0.3"
 # do we really want to pull in all of tokio? 

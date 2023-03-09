@@ -7,7 +7,7 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
-use extensions2::{export_extension, Details, Extension, Location, Meta, Type};
+use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},

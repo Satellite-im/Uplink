@@ -4,7 +4,7 @@ use derive_more::Display;
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use either::Either;
-use extensions2::UplinkExtension;
+use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::raygun::Message;
 use wry::webview::WebView;

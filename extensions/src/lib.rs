@@ -1,10 +1,5 @@
 use dioxus::prelude::*;
-
-use libloading::Library;
-use std::{fmt, rc::Rc};
-
-pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
+use std::{ffi::CString, path::PathBuf};
 
 #[cfg(target_os = "macos")]
 pub static FILE_EXT: &str = "dylib";
@@ -13,41 +8,91 @@ pub static FILE_EXT: &str = "so";
 #[cfg(target_os = "windows")]
 pub static FILE_EXT: &str = "dll";
 
-// Represents where the extensions main render method should execute.
-// Note that some extension types will NOT render in some locations.
-pub enum Location {
-    Chatbar,
-    Replies,
-    Sidebar,
-    Settings,
+/// This must be implemented by an extension
+pub trait Extension {
+    fn details(&self) -> Details;
+    fn stylesheet(&self) -> CString;
+    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
 }
 
-// Right now IconLaunched is the only supported render mode. This will evolve over time.
-pub enum Type {
-    IconLaunched,
-    // InlineUI,
-    // Headless,
+/// after defining a struct (say as a static variable) and implementing the Extension trait, call this: `export_extension!(<name of struct variable>); `
+/// This should provide the needed library interface.
+#[macro_export]
+macro_rules! export_extension {
+    ($a:expr) => {
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn details() -> Details {
+            $a.details()
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn stylesheet() -> CString {
+            $a.stylesheet()
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn render<'a>(cx: &'a ScopeState) -> Element<'a> {
+            $a.render(cx)
+        }
+    };
 }
 
-#[derive(Default)]
-// Contains details about the extension for humans.
-pub struct Meta {
-    pub name: &'static str,
-    pub author: &'static str,
-    pub pretty_name: &'static str,
-    pub description: &'static str,
+/// This is used by Uplink to interact with shared libraries
+pub struct UplinkExtension {
+    lib: libloading::Library,
+    details: Details,
+    stylesheet: String,
+    is_enabled: bool,
 }
 
-pub trait ExtensionRegistrar {
-    fn register(&mut self, name: &str, function: Box<dyn Extension>);
+impl UplinkExtension {
+    pub fn new(location: PathBuf) -> Result<Self, libloading::Error> {
+        unsafe {
+            let lib = libloading::Library::new(location)?;
+            let details = lib.get::<unsafe extern "C" fn() -> Details>(b"details\0")?();
+            let stylesheet = lib.get::<unsafe extern "C" fn() -> CString>(b"stylesheet\0")?();
+            Ok(Self {
+                lib,
+                details,
+                stylesheet: stylesheet.to_string_lossy().to_string(),
+                is_enabled: false,
+            })
+        }
+    }
+    pub fn details(&self) -> &Details {
+        &self.details
+    }
+
+    pub fn stylesheet(&self) -> &str {
+        &self.stylesheet
+    }
+
+    // todo: can an element be converted to an HTML string and have the string be returned instead?
+    pub fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+        unsafe {
+            let res = self
+                .lib
+                .get::<unsafe extern "C" fn(cx: &'a ScopeState) -> Element<'a>>(b"render\0");
+            match res {
+                Ok(f) => f(cx),
+                Err(_) => None,
+            }
+        }
+    }
+
+    pub fn enabled(&self) -> bool {
+        self.is_enabled
+    }
+
+    pub fn set_enabled(&mut self, b: bool) {
+        self.is_enabled = b;
+    }
 }
 
-pub struct Core {
-    pub rustc_version: String,
-    pub core_version: String,
-    pub register: unsafe extern "C" fn(&mut dyn ExtensionRegistrar),
-}
-
+#[repr(C)]
 pub struct Details {
     // Location(s) the extension should be rendered.
     pub location: Location,
@@ -57,84 +102,30 @@ pub struct Details {
     pub meta: Meta,
 }
 
-impl Default for Details {
-    fn default() -> Self {
-        Self {
-            location: Location::Chatbar,
-            ext_type: Type::IconLaunched,
-            meta: Meta {
-                name: "basic",
-                author: "Unknown",
-                pretty_name: "Basic Extension",
-                description: "",
-            },
-        }
-    }
+// Represents where the extensions main render method should execute.
+// Note that some extension types will NOT render in some locations.
+#[repr(C)]
+pub enum Location {
+    Chatbar,
+    Replies,
+    Sidebar,
+    Settings,
 }
 
-pub enum Error {
-    Render { message: String },
-    Generic { message: String },
+// Right now IconLaunched is the only supported render mode. This will evolve over time.
+#[repr(C)]
+pub enum Type {
+    IconLaunched,
+    // InlineUI,
+    // Headless,
 }
 
-// Basic extension interface with the minimum required information.
-pub trait Extension {
-    fn details(&self) -> Details;
-
-    fn stylesheet(&self) -> String;
-
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
+// Contains details about the extension for humans.
+#[repr(C)]
+#[derive(Clone)]
+pub struct Meta {
+    pub name: &'static str,
+    pub author: &'static str,
+    pub pretty_name: &'static str,
+    pub description: &'static str,
 }
-
-#[macro_export]
-macro_rules! export_extension {
-    ($register:expr) => {
-        #[doc(hidden)]
-        #[no_mangle]
-        pub extern "C" fn extension_entry() -> *mut $crate::Core {
-            let core = $crate::Core {
-                rustc_version: $crate::RUSTC_VERSION.into(),
-                core_version: $crate::CORE_VERSION.into(),
-                register: $register,
-            };
-            Box::into_raw(Box::new(core)) as _
-        }
-    };
-}
-
-/// A proxy object which wraps an [`Extension`] and makes sure it can't outlive
-/// the library it came from.
-pub struct ExtensionProxy {
-    pub extension: Box<dyn Extension>,
-    pub enabled: bool,
-    pub _lib: Rc<Library>,
-}
-
-impl fmt::Display for ExtensionProxy {
-    // This trait requires `fmt` with this exact signature.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Write strictly the first element into the supplied output
-        // stream: `f`. Returns `fmt::Result` which indicates whether the
-        // operation succeeded or failed. Note that `write!` uses syntax which
-        // is very similar to `println!`.
-        write!(f, ".")
-    }
-}
-
-impl Extension for ExtensionProxy {
-    fn details(&self) -> Details {
-        self.extension.details()
-    }
-
-    fn stylesheet(&self) -> String {
-        self.extension.stylesheet()
-    }
-
-    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        self.extension.render(cx)
-    }
-}
-
-pub struct StateProxy {}
-
-impl StateProxy {}
