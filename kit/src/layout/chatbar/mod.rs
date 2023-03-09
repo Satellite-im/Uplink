@@ -6,10 +6,6 @@ use common::icons;
 
 pub type To = &'static str;
 
-pub fn get_value(cx: &Scope<Props>) -> String {
-    cx.props.value.clone().unwrap_or_default()
-}
-
 #[derive(Clone, PartialEq)]
 pub struct Route {
     pub to: To,
@@ -26,17 +22,11 @@ pub struct ReplyInfo<'a> {
 #[derive(Props)]
 pub struct Props<'a> {
     placeholder: String,
-    #[props(optional)]
     with_replying_to: Option<Element<'a>>,
-    #[props(optional)]
     with_file_upload: Option<Element<'a>>,
-    #[props(optional)]
     extensions: Option<Element<'a>>,
-    #[props(optional)]
     controls: Option<Element<'a>>,
-    #[props(optional)]
     value: Option<String>,
-    #[props(optional)]
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
@@ -46,7 +36,6 @@ pub struct Props<'a> {
 #[derive(Props)]
 pub struct ReplyProps<'a> {
     label: String,
-    #[props(optional)]
     remote: Option<bool>,
     message: String,
     onclose: EventHandler<'a>,
@@ -91,13 +80,12 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            // apologies for the crappy code.
             textarea::Input {
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
                 reset: cx.props.reset.clone(),
                 focus: cx.props.with_replying_to.is_some(),
-                value: get_value(&cx),
+                value: cx.props.value.clone().unwrap_or_default(),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
                 onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
             },

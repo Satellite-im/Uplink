@@ -614,13 +614,6 @@ struct TypingInfo {
     pub last_update: Instant,
 }
 
-fn get_value(state: State) -> Option<String> {
-    if let Some(chat) = state.get_active_chat() {
-        return chat.draft;
-    }
-    None
-}
-
 // todo: display loading indicator if sending a message that takes a long time to upload attachments
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
@@ -839,7 +832,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
                 state.write_silent().mutate(Action::SetChatDraft(*id, v));
             }
         },
-        value: get_value(state.read().clone()).unwrap_or_default(),
+        value: data
+            .as_ref()
+            .and_then(|d| d.active_chat.draft.clone())
+            .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         controls: cx.render(rsx!(
             // Load extensions

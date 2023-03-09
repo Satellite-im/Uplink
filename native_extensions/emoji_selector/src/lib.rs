@@ -101,6 +101,7 @@ impl EmojiSelector {
     }
 
     fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+        //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
 
         let scroll_script = r#"
@@ -135,12 +136,20 @@ impl EmojiSelector {
                                             class: "emoji",
                                             onclick: move |_| {
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
-                                                if let Some(c) = state.write().get_active_chat() {
-                                                    if let Some(draft) = c.draft {
-                                                        let new_draft = draft + emoji.as_ref();
+                                                let c =  match state.read().get_active_chat() {
+                                                    Some(c) => c,
+                                                    None => return
+                                                };
+                                                let draft: String = c.draft.unwrap_or_default();
+                                                let new_draft = format!("{draft}{emoji}");
+                                                match state.inner().try_borrow_mut() {
+                                                    Ok(state) => {
                                                         state.write().mutate(Action::SetChatDraft(c.id, new_draft));
                                                     }
-                                                }
+                                                    Err(_) => {
+                                                        println!("emoji selector: try_borrow_mut error")
+                                                    }
+                                                };
                                             },
                                             emoji.as_str()
                                         }
@@ -179,6 +188,7 @@ impl Extension for EmojiSelector {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+        //println!("render emoji");
         let styles = self.stylesheet();
         let display_selector = use_state(cx, || false);
 
