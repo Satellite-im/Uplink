@@ -13,9 +13,9 @@ dioxus-desktop = { workspace = true, features = ["transparent"] }
 raw-window-handle.workspace = true
 dioxus-core.workspace = true
 fermi.workspace = true
-kit = { path = "../kit" }
-common = { path = "../common" }
-extensions = { path = "../extensions" }
+kit.workspace = true
+common.workspace = true
+extensions.workspace = true
 
 tokio-util.workspace = true
 arboard.workspace = true

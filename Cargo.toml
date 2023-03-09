@@ -63,8 +63,12 @@ fdlimit = "0.2"
 once_cell = "1.13"
 
 futures = "0.3"
-tokio = { version = "1.23.0", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
 isolang = "2.2.0"
 clap = { version = "4.0.32", features = ["derive"] }
 fs_extra = "1.2.0"
 walkdir = "2"
+
+common = { path = "common" }
+extensions = { path = "extensions" }
+kit = { path = "kit" }

@@ -11,7 +11,5 @@ dioxus.workspace = true
 libloading.workspace = true
 derive_more.workspace = true
 
-ipc-channel = "0.16.0"
-
 [build-dependencies]
 rustc_version = "0.4.0"
