@@ -8,14 +8,46 @@ pub static FILE_EXT: &str = "so";
 #[cfg(target_os = "windows")]
 pub static FILE_EXT: &str = "dll";
 
+/// This must be implemented by an extension
+pub trait Extension {
+    fn details(&self) -> Details;
+    fn stylesheet(&self) -> CString;
+    fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a>;
+}
+
+/// after defining a struct (say as a static variable) and implementing the Extension trait, call this: `export_extension!(<name of struct variable>); `
+/// This should provide the needed library interface.
+#[macro_export]
+macro_rules! export_extension {
+    ($a:expr) => {
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn details() -> Details {
+            $a.details()
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn stylesheet() -> CString {
+            $a.stylesheet()
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn render(cx: &'a ScopeState) -> Element<'a> {
+            $a.render(cx)
+        }
+    };
+}
+
 /// This is used by Uplink to interact with shared libraries
-pub struct Extension {
+pub struct UplinkExtension {
     lib: libloading::Library,
     details: Details,
     stylesheet: String,
 }
 
-impl Extension {
+impl UplinkExtension {
     pub fn new(location: &str) -> Result<Self, libloading::Error> {
         unsafe {
             let lib = libloading::Library::new(location)?;
