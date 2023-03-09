@@ -82,18 +82,18 @@ pub fn Installed(cx: Scope) -> Element {
         .ui
         .extensions
         .values()
-        .map(|ext| ext.details().meta.clone())
+        .map(|ext| (ext.enabled(), ext.details().meta.clone()))
         .collect();
 
     cx.render(rsx!(
-            metas.iter().cloned().map(|meta| {
+            metas.iter().cloned().map(|(enabled, meta)| {
                 rsx!(
                     ExtensionSetting {
                         title: meta.pretty_name.to_owned(),
                         author: meta.author.to_owned(),
                         description: meta.description.to_owned(),
                         Switch {
-                            active: true, // todo: make configurable
+                            active: enabled,
                             onflipped: move |value| {
                                 if state.read().configuration.audiovideo.interface_sounds {
                                     sounds::Play(sounds::Sounds::Flip);

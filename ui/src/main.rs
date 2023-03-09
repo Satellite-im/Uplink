@@ -397,12 +397,16 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     state.ui.metadata = window_meta;
 
     match get_extensions() {
-        Ok(ext) => state.ui.extensions = ext,
+        Ok(ext) => {
+            for (name, extension) in ext {
+                state.ui.extensions.insert(name, extension);
+            }
+        }
         Err(e) => {
             log::error!("failed to get extensions: {e}");
         }
     }
-    log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
+    log::debug!("Loaded {} extensions.", state.ui.extensions.values().len());
 
     use_shared_state_provider(cx, || state);
 

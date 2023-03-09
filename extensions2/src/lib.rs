@@ -45,6 +45,7 @@ pub struct UplinkExtension {
     lib: libloading::Library,
     details: Details,
     stylesheet: String,
+    is_enabled: bool,
 }
 
 impl UplinkExtension {
@@ -57,6 +58,7 @@ impl UplinkExtension {
                 lib,
                 details,
                 stylesheet: stylesheet.to_string_lossy().to_string(),
+                is_enabled: false,
             })
         }
     }
@@ -79,6 +81,14 @@ impl UplinkExtension {
                 Err(_) => None,
             }
         }
+    }
+
+    pub fn enabled(&self) -> bool {
+        self.is_enabled
+    }
+
+    pub fn set_enabled(&mut self, b: bool) {
+        self.is_enabled = b;
     }
 }
 
