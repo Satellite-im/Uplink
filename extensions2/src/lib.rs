@@ -34,7 +34,7 @@ macro_rules! export_extension {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn render(cx: &'a ScopeState) -> Element<'a> {
+        pub extern "C" fn render<'a>(cx: &'a ScopeState) -> Element<'a> {
             $a.render(cx)
         }
     };
