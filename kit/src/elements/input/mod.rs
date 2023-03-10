@@ -1,6 +1,7 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
+use uuid::Uuid;
 
 pub type ValidationError = String;
 use crate::elements::label::Label;
@@ -78,6 +79,7 @@ pub struct Options {
     pub replace_spaces_underscore: bool,
     pub disabled: bool,
     pub with_clear_btn: bool,
+    pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
     pub with_label: Option<&'static str>,
     pub react_to_esc_key: bool,
@@ -90,6 +92,7 @@ impl Default for Options {
             replace_spaces_underscore: false,
             disabled: false,
             with_clear_btn: false,
+            clear_btn_icon: Icon::Backspace,
             clear_on_submit: true,
             with_label: None,
             react_to_esc_key: false,
@@ -313,8 +316,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    let input_id = cx.props.id.clone();
-    let script = include_str!("./script.js").replace("UUID", &cx.props.id);
+    //Element needs an id. Create a new one if an id wasn't specified
+    let input_id = if cx.props.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        cx.props.id.clone()
+    };
+    let script = include_str!("./script.js").replace("UUID", &input_id);
+    let script_clone = script.clone();
 
     cx.render(rsx! (
         div {
@@ -396,7 +405,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 },
-                (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
+                (options.with_clear_btn && !val.read().is_empty()).then(move || rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
@@ -406,9 +415,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }
+                            dioxus_desktop::use_eval(cx)(script_clone.to_string());
                         },
                         IconElement {
-                            icon: Icon::Backspace
+                            icon: options.clear_btn_icon
                         }
                     }
                 )),
