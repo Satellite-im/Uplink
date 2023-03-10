@@ -1,5 +1,7 @@
 use common::{
-    language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
+    language::get_local_text,
+    state::{configuration::Configuration, State},
+    warp_runner::TesseractCmd,
     STATIC_ARGS,
 };
 use dioxus::prelude::*;
@@ -142,7 +144,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let loading = !loaded.get();
 
     cx.render(rsx!(
+        style {update_theme_colors()},
         div {
+            class: "unlock-screen",
             id: "unlock-layout",
             aria_label: "unlock-layout",
             if loading {
@@ -213,26 +217,34 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                     Button {
-                        text: match account_exists_bool {
-                            true => get_local_text("unlock.unlock-account"),
-                            false => get_local_text("unlock.create-account"),
-                        },
-                        aria_label: "create-account-button".into(),
-                        appearance: kit::elements::Appearance::Primary,
-                        icon: Icon::Check,
-                        disabled: validation_failure.get().is_some(),
-                        onpress: move |_| {
-                            if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.as_str());
-                            } else if let Some(e) = error.get() {
-                                shown_error.set(e.as_str());
-                            } else {
-                                page.set(AuthPages::CreateAccount);
+                            text: match account_exists_bool {
+                                true => get_local_text("unlock.unlock-account"),
+                                false => get_local_text("unlock.create-account"),
+                            },
+                            aria_label: "create-account-button".into(),
+                            appearance: kit::elements::Appearance::Primary,
+                            icon: Icon::Check,
+                            disabled: validation_failure.get().is_some(),
+                            onpress: move |_| {
+                                if let Some(validation_error) = validation_failure.get() {
+                                    shown_error.set(validation_error.as_str());
+                                } else if let Some(e) = error.get() {
+                                    shown_error.set(e.as_str());
+                                } else {
+                                    page.set(AuthPages::CreateAccount);
+                                }
                             }
                         }
-                    }
                 )
             }
         }
     ))
+}
+
+fn update_theme_colors() -> String {
+    let state = State::load();
+    match state.ui.theme.clone() {
+        Some(theme) => theme.styles,
+        None => String::new(),
+    }
 }
