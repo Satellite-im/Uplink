@@ -3,6 +3,7 @@
 //! that might helpful if a textarea needed to perform input validation.
 
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
 #[derive(Clone, Copy)]
@@ -67,6 +68,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let script = include_str!("./script.js")
         .replace("UUID", &cx.props.id)
         .replace("$MULTI_LINE", &format!("{}", true));
+    let focus_script = include_str!("./focus.js").replace("UUID", &cx.props.id);
+    use_eval(cx)(focus_script.clone());
 
     cx.render(rsx! (
         div {
@@ -76,6 +79,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 height: cx.props.size.get_height(),
                 script { "{script}" },
                 textarea {
+                    key: "{element_id}",
                     class: "input_textarea",
                     id: "{element_id}",
                     // todo: troubleshoot this. it isn't working
@@ -101,5 +105,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             },
         }
+        script { focus_script },
     ))
 }

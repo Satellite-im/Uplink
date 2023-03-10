@@ -811,7 +811,10 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             msg_ch.send((msg, id, replying_to));
         }
     };
-
+    let id = match active_chat_id {
+        Some(i) => i,
+        None => uuid::Uuid::new_v4(),
+    };
     // todo: filter out extensions not meant for this area
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
@@ -821,6 +824,8 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {
+        key: "{id}",
+        id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         reset: should_clear_input.clone(),
