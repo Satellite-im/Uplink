@@ -208,7 +208,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         placeholder:  get_local_text("uplink.username"),
                         default_text: username,
                         aria_label: "username-input".into(),
-                        options: get_input_options(username_validation_options),
+                        options: Options {
+                            with_clear_btn: true,
+                            ..get_input_options(username_validation_options)
+                        },
                         onreturn: move |(v, is_valid, _): (String, bool, _)| {
                             if !is_valid {
                                 return;

@@ -78,6 +78,7 @@ pub struct Options {
     pub replace_spaces_underscore: bool,
     pub disabled: bool,
     pub with_clear_btn: bool,
+    pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
     pub with_label: Option<&'static str>,
     pub react_to_esc_key: bool,
@@ -90,6 +91,7 @@ impl Default for Options {
             replace_spaces_underscore: false,
             disabled: false,
             with_clear_btn: false,
+            clear_btn_icon: Icon::Backspace,
             clear_on_submit: true,
             with_label: None,
             react_to_esc_key: false,
@@ -396,7 +398,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         },
                         IconElement {
-                            icon: Icon::Backspace
+                            icon: options.clear_btn_icon
                         }
                     }
                 )),
