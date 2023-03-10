@@ -132,6 +132,8 @@ pub struct Props<'a> {
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     reset: Option<UseState<bool>>,
+    #[props(default = false)]
+    disable_onblur: bool,
 }
 
 fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -284,6 +286,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
+    let onblur_active = cx.props.disable_onblur;
 
     let reset_fn = || {
         *val.write() = "".into();
@@ -347,7 +350,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: format_args!("{}", val.read()),
                     maxlength: "{max_length}",
                     onblur: move |_| {
-                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                        if **valid && !onblur_active {
+                            emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                            if *valid.current() {
+                                valid.set(false);
+                           }
+                           if options.clear_on_submit {
+                               reset_fn();
+                           }
+                        }
                     },
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
