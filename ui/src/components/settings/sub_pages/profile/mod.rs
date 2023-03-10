@@ -107,7 +107,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                             _ => get_local_text("settings-profile.failed"),
                         };
-                        update_failed.set(Some(msg.into()));
+                        update_failed.set(Some(msg));
                     }
                 }
             }
