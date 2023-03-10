@@ -56,18 +56,15 @@ fn make_icons(src_dir: &PathBuf) -> Vec<Icon> {
             viewbox: svg.value().attr("viewBox").unwrap().to_string(),
             path: svg
                 .select(&path_sel)
-                .into_iter()
                 .map(|e| e.value().attr("d").unwrap().to_string())
                 .collect::<Vec<_>>()
                 .join(" "),
             clip_rule: svg
                 .select(&path_sel)
-                .into_iter()
                 .find_map(|e| e.value().attr("clip-rule"))
                 .map(|r| r.to_string()),
             fill_rule: svg
                 .select(&path_sel)
-                .into_iter()
                 .find_map(|e| e.value().attr("fill-rule"))
                 .map(|r| r.to_string()),
         });

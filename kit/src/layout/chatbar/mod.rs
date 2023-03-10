@@ -81,7 +81,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let id = cx.props.id.clone();
+    let id = &cx.props.id;
     cx.render(rsx!(
         div {
             class: "chatbar",
@@ -90,7 +90,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             // apologies for the crappy code.
             textarea::Input {
                 key: "{id}",
-                id: id,
+                id: id.clone(),
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
                 reset: cx.props.reset.clone(),
