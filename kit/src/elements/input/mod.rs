@@ -283,20 +283,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
+    let valid = use_state(cx, || false);
 
+    let reset_fn = || {
+        *val.write() = "".into();
+        error.set("".into());
+        valid.set(false);
+    };
     if let Some(hook) = &cx.props.reset {
         let should_reset = hook.get();
         if *should_reset {
-            val.write().clear();
+            reset_fn();
             hook.set(false);
         }
     }
 
-    let valid = use_state(cx, || false);
-    let min_len = options
-        .with_validation
-        .map(|opt| opt.min_length.unwrap_or_default())
-        .unwrap_or_default();
     let apply_validation_class = should_validate;
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
@@ -349,45 +350,50 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
-                        *val.write_silent() = current_val.to_string();
+                        *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
                             let validation_result = validate(&cx, &current_val).unwrap_or_default();
-                            error.set(validation_result.clone());
-                            if !validation_result.is_empty() {
-                                valid.set(false);
-                                evt.stop_propagation();
-                            } else if current_val.len() >= min_len as usize {
-                                valid.set(true);
-                            }
+                            valid.set(validation_result.is_empty());
+                            error.set(validation_result);
+                            evt.stop_propagation();
                             *valid.current()
                         } else {
                             true
                         };
-                        emit(&cx, val.read().to_string(), is_valid);
+                        emit(&cx, current_val, is_valid);
                     },
+                    // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            if *valid.current() {
+                                 valid.set(false);
+                            }
                             if options.clear_on_submit {
-                                 *val.write() = "".into();
+                                reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(&cx, "".to_owned(), true, evt.code());
+                            emit_return(&cx, "".to_owned(), *valid.current(), evt.code());
+                            if *valid.current() {
+                                valid.set(false);
+                           }
                             if options.clear_on_submit {
-                                *val.write() = "".into();
+                                reset_fn();
                            }
                         }
                     }
-                }
+                },
                 (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
-                            *val.write() = "".into();
-                            emit(&cx, val.read().to_string(), false);
-                            error.set("".into());
-                            valid.set(false);
+                            *val.write_silent() = String::new();
+                            if should_validate {
+                                let validation_result = validate(&cx, "").unwrap_or_default();
+                                valid.set(validation_result.is_empty());
+                                error.set(validation_result);
+                            }
                         },
                         IconElement {
                             icon: Icon::Backspace

@@ -60,6 +60,12 @@ pub struct UI {
     pub overlays: Vec<Weak<WebView>>,
     #[serde(skip)]
     pub extensions: HashMap<String, ExtensionProxy>,
+    #[serde(default = "bool_true")]
+    pub show_settings_welcome: bool,
+}
+
+fn bool_true() -> bool {
+    true
 }
 
 impl Drop for UI {

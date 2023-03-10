@@ -12,7 +12,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -28,7 +27,7 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn PendingFriends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
-    let friends_list = state.read().friends.incoming_requests.clone();
+    let friends_list = state.read().incoming_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         //to_owned![];
@@ -90,11 +89,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 let friend_clone_remove = friend.clone();
                 let friend_clone_ctx_accept = friend.clone();
                 let friend_clone_ctx_deny = friend.clone();
-                let platform = match friend.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),

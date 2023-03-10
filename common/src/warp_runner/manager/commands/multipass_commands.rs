@@ -8,16 +8,13 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, Identifier, IdentityUpdate},
+        identity::{self, IdentityUpdate},
     },
 };
 
 use crate::{
     state::{self, friends},
-    warp_runner::{
-        ui_adapter::{did_to_identity, dids_to_identity},
-        Account,
-    },
+    warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
 #[derive(Display)]
@@ -40,13 +37,13 @@ pub enum MultiPassCmd {
     },
     #[display(fmt = "InitializeFriends")]
     InitializeFriends {
-        rsp: oneshot::Sender<Result<friends::Friends, warp::error::Error>>,
+        rsp: oneshot::Sender<
+            Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+        >,
     },
     #[display(fmt = "RefreshFriends")]
     RefreshFriends {
-        rsp: oneshot::Sender<
-            Result<HashMap<DID, multipass::identity::Identity>, warp::error::Error>,
-        >,
+        rsp: oneshot::Sender<Result<HashMap<DID, state::Identity>, warp::error::Error>>,
     },
     // may later want this to return the Identity rather than the DID.
     #[display(fmt = "GetOwnDid")]
@@ -231,17 +228,12 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
 
 async fn multipass_refresh_friends(
     account: &mut Account,
-) -> Result<HashMap<DID, multipass::identity::Identity>, Error> {
+) -> Result<HashMap<DID, state::Identity>, Error> {
     let ids = account.list_friends().await?;
+    let identities = dids_to_identity(&ids, account).await?;
+    let friends = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
 
-    let list = account
-        .get_identity(Identifier::did_keys(ids.clone()))
-        .await?;
-    let friends: HashMap<DID, identity::Identity> = list
-        .iter()
-        .map(|ident| (ident.did_key(), ident.clone()))
-        .collect();
-    if list.is_empty() {
+    if friends.is_empty() {
         log::warn!("No identities found");
     }
     Ok(friends)
@@ -249,26 +241,28 @@ async fn multipass_refresh_friends(
 
 async fn multipass_initialize_friends(
     account: &mut Account,
-) -> Result<state::friends::Friends, Error> {
+) -> Result<(state::friends::Friends, HashSet<state::Identity>), Error> {
     let reqs = account.list_incoming_request().await?;
     log::trace!("init friends with {} total", reqs.len());
-    let idents = dids_to_identity(&reqs, account).await?;
-    let incoming_requests = HashSet::from_iter(idents.iter().cloned());
+    let incoming_requests = HashSet::from_iter(reqs.iter().cloned());
 
     let outgoing = account.list_outgoing_request().await?;
-    let idents = dids_to_identity(&outgoing, account).await?;
-    let outgoing_requests = HashSet::from_iter(idents.iter().cloned());
+    let outgoing_requests = HashSet::from_iter(outgoing.iter().cloned());
 
     let ids = account.block_list().await?;
-    let idents = dids_to_identity(&ids, account).await?;
-    let blocked = HashSet::from_iter(idents.iter().cloned());
+    let blocked = HashSet::from_iter(ids.iter().cloned());
 
     let ids = account.list_friends().await?;
-    let mut friends = HashMap::new();
-    for id in ids {
-        let ident = did_to_identity(&id, account).await?;
-        friends.insert(id, ident);
-    }
+    let friends = HashSet::from_iter(ids.iter().cloned());
+
+    let mut all_ids = Vec::new();
+    all_ids.extend(friends.clone());
+    all_ids.extend(blocked.clone());
+    all_ids.extend(incoming_requests.clone());
+    all_ids.extend(outgoing_requests.clone());
+
+    let identities = dids_to_identity(&all_ids, account).await?;
+    let ids = HashSet::from_iter(identities.iter().cloned());
 
     let ret = friends::Friends {
         initialized: true,
@@ -277,5 +271,5 @@ async fn multipass_initialize_friends(
         incoming_requests,
         outgoing_requests,
     };
-    Ok(ret)
+    Ok((ret, ids))
 }

@@ -12,7 +12,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -23,7 +22,7 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
-    let friends_list = state.read().friends.outgoing_requests.clone();
+    let friends_list = state.read().outgoing_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
         //to_owned![];
@@ -60,11 +59,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let mut rng = rand::thread_rng();
                 let friend_clone = friend.clone();
                 let friend_clone_clone = friend.clone();
-                let platform = match friend.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
