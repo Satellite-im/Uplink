@@ -146,7 +146,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     cx.render(rsx!(
         style {update_theme_colors()},
         div {
-            class: "unlock-screen",
             id: "unlock-layout",
             aria_label: "unlock-layout",
             if loading {
