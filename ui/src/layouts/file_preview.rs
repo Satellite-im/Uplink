@@ -6,7 +6,7 @@ use regex::Regex;
 use warp::constellation::file::File;
 
 use super::storage::WindowDropHandler;
-use dioxus_desktop::{use_window, LogicalSize};
+use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
@@ -69,68 +69,24 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     let thumbnail = file.thumbnail();
     let has_thumbnail = !file.thumbnail().is_empty();
     let desktop = use_window(cx);
+    let mut css_style = update_theme_colors(CSS_STYLE.to_string());
     let update_state: &UseRef<Option<()>> = use_ref(cx, || Some(()));
-    let mut css_style = CSS_STYLE.to_string();
-    let patterns = [
-        (
-            r"--background:\s*(?P<color>[^;]+)",
-            "$BACKGROUND_COLOR",
-            "#000000",
-        ),
-        (
-            r"--primary:\s*(?P<color>[^;]+)",
-            "$THUMB_BACKGROUND_COLOR",
-            "#4D4DFF",
-        ),
-        (
-            r"--text-color:\s*(?P<color>[^;]+)",
-            "$THUMB_TEXT_COLOR",
-            "rgb(247, 247, 253)",
-        ),
-    ];
+
     if update_state.read().is_some().clone() {
-        println!("Passing here - 1");
-
-        let state = State::load();
-        let theme_str = format!("{:?}", state.ui.theme);
-
-        for &(pattern, var_name, default_val) in &patterns {
-            let re = Regex::new(pattern).unwrap();
-            let color = re
-                .captures(theme_str.as_str())
-                .and_then(|captures| captures.name("color"))
-                .map(|m| m.as_str())
-                .unwrap_or(default_val);
-            css_style = css_style.replace(var_name, color);
-        }
+        css_style = update_theme_colors(css_style.clone());
         *update_state.write_silent() = None;
     }
 
     let first_render = use_state(cx, || true);
 
-    if has_thumbnail && *first_render.get() {
-        let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
-        let thumbnail_bytes = base64::decode(base64_string).ok()?;
-        let cursor = Cursor::new(thumbnail_bytes);
-        let img_format = if file.name().contains(".png") {
-            image::ImageFormat::Png
-        } else {
-            image::ImageFormat::Jpeg
-        };
-        let image_reader = ImageReader::with_format(cursor, img_format);
-        if let Ok(image) = image_reader.decode() {
-            let (mut width, mut height) = (image.width() as f64, image.height() as f64);
-            if height > 800.0 || width > 800.0 {
-                let scale_factor = desktop.scale_factor() + 0.5;
-                width /= scale_factor;
-                height /= scale_factor;
-            }
-            desktop.set_inner_size(LogicalSize::new(width, height));
-        }
-    } else if file_format != FileFormat::Other && *first_render.get() {
-        let scale_factor = desktop.scale_factor() + 0.5;
-        desktop.set_inner_size(LogicalSize::new(600.0 / scale_factor, 300.0 / scale_factor));
-    }
+    resize_window(
+        has_thumbnail,
+        *first_render.get(),
+        desktop,
+        &thumbnail,
+        file.clone(),
+        &file_format,
+    );
 
     if *first_render.get() {
         first_render.set(false);
@@ -203,4 +159,73 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
             },
         },
     ))
+}
+
+fn resize_window(
+    has_thumbnail: bool,
+    first_render: bool,
+    desktop: &DesktopContext,
+    thumbnail: &str,
+    file: File,
+    file_format: &FileFormat,
+) -> Option<()> {
+    if has_thumbnail && first_render {
+        let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
+        let thumbnail_bytes = base64::decode(base64_string).ok()?;
+        let cursor = Cursor::new(thumbnail_bytes);
+        let img_format = if file.name().contains(".png") {
+            image::ImageFormat::Png
+        } else {
+            image::ImageFormat::Jpeg
+        };
+        let image_reader = ImageReader::with_format(cursor, img_format);
+        if let Ok(image) = image_reader.decode() {
+            let (mut width, mut height) = (image.width() as f64, image.height() as f64);
+            if height > 800.0 || width > 800.0 {
+                let scale_factor = desktop.scale_factor() + 0.5;
+                width /= scale_factor;
+                height /= scale_factor;
+            }
+            desktop.set_inner_size(LogicalSize::new(width, height));
+        }
+    } else if first_render && file_format != &FileFormat::Other {
+        let scale_factor = desktop.scale_factor() + 0.5;
+        desktop.set_inner_size(LogicalSize::new(600.0 / scale_factor, 300.0 / scale_factor));
+    }
+    Some(())
+}
+
+fn update_theme_colors(mut css_style: String) -> String {
+    let patterns = [
+        (
+            r"--background:\s*(?P<color>[^;]+)",
+            "$BACKGROUND_COLOR",
+            "#000000",
+        ),
+        (
+            r"--primary:\s*(?P<color>[^;]+)",
+            "$THUMB_BACKGROUND_COLOR",
+            "#4D4DFF",
+        ),
+        (
+            r"--text-color:\s*(?P<color>[^;]+)",
+            "$THUMB_TEXT_COLOR",
+            "rgb(247, 247, 253)",
+        ),
+    ];
+
+    let state = State::load();
+    let theme_str = format!("{:?}", state.ui.theme);
+
+    for &(pattern, var_name, default_val) in &patterns {
+        let re = Regex::new(pattern).unwrap();
+        let color = re
+            .captures(theme_str.as_str())
+            .and_then(|captures| captures.name("color"))
+            .map(|m| m.as_str())
+            .unwrap_or(default_val);
+        css_style = css_style.replace(var_name, color);
+    }
+
+    css_style
 }
