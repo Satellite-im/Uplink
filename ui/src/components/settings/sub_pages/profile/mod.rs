@@ -5,6 +5,7 @@ use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -162,43 +163,58 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             div {
                 class: "profile-header",
                 aria_label: "profile-header",
-                div {
-                    class: "profile-banner",
-                    aria_label: "profile-banner",
-                    style: "background-image: url({banner});",
-                    onclick: move |_| {
-                        set_banner( ch.clone());
-                    },
-                    p {class: "change-banner-text", "{change_banner_text}" },
-                },
-                div {
-                    class: "profile-picture",
-                    aria_label: "profile-picture",
-                    style: "background-image: url({image});",
-                    onclick: move |_| {
-                        set_profile_picture(ch.clone());
-                    },
-                    Button {
-                        icon: Icon::Plus,
-                        aria_label: "add-picture-button".into(),
-                        onpress: move |_| {
-                           set_profile_picture(ch.clone());
+                ContextMenu {
+                    id: String::from("profile-banner-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            text: get_local_text("settings-profile.clear-banner"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::Banner(String::from('\0')));
+                            }
                         }
+                    )),
+                    div {
+                        class: "profile-banner",
+                        aria_label: "profile-banner",
+                        style: "background-image: url({banner});",
+                        onclick: move |_| {
+                            set_banner(ch.clone());
+                        },
+                        p {class: "change-banner-text", "{change_banner_text}" },
                     },
-                }
+                },
+                ContextMenu {
+                    id: String::from("profile-picture-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            text: get_local_text("settings-profile.clear-avatar"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::Profile(String::from('\0')));
+                            }
+                        }
+                    )),
+                    div {
+                        class: "profile-picture",
+                        aria_label: "profile-picture",
+                        style: "background-image: url({image});",
+                        onclick: move |_| {
+                            set_profile_picture(ch.clone());
+                        },
+                        Button {
+                            icon: Icon::Plus,
+                            aria_label: "add-picture-button".into(),
+                            onpress: move |_| {
+                               set_profile_picture(ch.clone());
+                            }
+                        },
+                    },
+                },
             },
             div{
                 class: "profile-content",
                 aria_label: "profile-content",
-                div {
-                    class: "plus-button",
-                    Button {
-                        icon: Icon::Plus,
-                        onpress: move |_| {
-                            set_profile_picture( ch.clone());
-                        }
-                    }
-                },
                 div {
                     class: "content-item",
                     Label {
