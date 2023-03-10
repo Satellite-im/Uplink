@@ -468,13 +468,20 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     let active_language = state.read().settings.language.clone();
                     let platform = sender.platform().into();
 
+                    // todo: investigate why updating one's profile picture affects their status. 
+                    // this is probably in warp but I'm not sure. 
+                    let mut sender_status = sender.identity_status().into();
+                    if !group.remote && sender_status == Status::Offline {
+                        sender_status = Status::Online;
+                    }
+
                     rsx!(
                         MessageGroup {
                             user_image: cx.render(rsx!(
                                 UserImage {
                                     image: sender.graphics().profile_picture(),
                                     platform: platform,
-                                    status: sender.identity_status().into()
+                                    status: sender_status,
                                 }
                             )),
                             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
