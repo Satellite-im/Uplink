@@ -85,6 +85,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: format_args!("{}", val.read()),
                     maxlength: "{element_max_length}",
                     placeholder: "{element_placeholder}",
+                    onblur: move |_| {
+                        let is_valid = !val.read().trim().is_empty();
+                        cx.props.onreturn.call((val.read().to_string(), is_valid, Code::Enter));
+                    },
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val;
