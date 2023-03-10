@@ -14,7 +14,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_fs_ipfs::config::FsIpfsConfig;
-use warp_mp_ipfs::config::MpIpfsConfig;
+use warp_mp_ipfs::config::{MpIpfsConfig, Discovery};
 use warp_rg_ipfs::config::RgIpfsConfig;
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
@@ -325,8 +325,6 @@ async fn warp_initialization(
     let mut config = MpIpfsConfig::production(path, experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
-    // prevents an error which is otherwise reproduced as follows: set the profile picture, set the profile banner, then update your status
-    config.store_setting.override_ipld = false;
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;
