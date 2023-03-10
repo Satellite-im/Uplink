@@ -615,7 +615,7 @@ struct TypingInfo {
 }
 
 // todo: display loading indicator if sending a message that takes a long time to upload attachments
-fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
+fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = cx.props.data.clone();
@@ -817,7 +817,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     let ext_renders = extensions
         .values()
         .filter(|ext| ext.enabled())
-        .map(|ext| rsx!(ext.render(cx)))
+        .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {

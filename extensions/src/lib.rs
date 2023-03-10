@@ -44,7 +44,7 @@ macro_rules! export_extension {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn render<'a>(cx: &'a ScopeState) -> Element<'a> {
+        pub extern "C" fn render(cx: &ScopeState) -> Element {
             $a.render(cx)
         }
 
@@ -106,7 +106,7 @@ impl UplinkExtension {
         unsafe {
             let res = self
                 .lib
-                .get::<unsafe extern "C" fn(cx: &'a ScopeState) -> Element<'a>>(b"render\0");
+                .get::<unsafe extern "C" fn(cx: &ScopeState) -> Element>(b"render\0");
             match res {
                 Ok(f) => f(cx),
                 Err(_) => None,
@@ -132,6 +132,7 @@ impl UplinkExtension {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct Details {
     // Location(s) the extension should be rendered.
     pub location: Location,
@@ -144,6 +145,7 @@ pub struct Details {
 // Represents where the extensions main render method should execute.
 // Note that some extension types will NOT render in some locations.
 #[repr(C)]
+#[derive(Clone)]
 pub enum Location {
     Chatbar,
     Replies,
@@ -153,6 +155,7 @@ pub enum Location {
 
 // Right now IconLaunched is the only supported render mode. This will evolve over time.
 #[repr(C)]
+#[derive(Clone)]
 pub enum Type {
     IconLaunched,
     // InlineUI,
