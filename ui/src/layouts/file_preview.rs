@@ -5,7 +5,6 @@ use common::{
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
-use regex::Regex;
 use warp::constellation::file::File;
 
 use super::storage::WindowDropHandler;
@@ -15,24 +14,7 @@ use kit::elements::file::get_file_extension;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
-const CSS_STYLE: &str = "
-html, body {
-    background: $BACKGROUND_COLOR;
-}
-
-.thumbnail-text {
-    position: absolute;
-    top: 0;
-    left: 12px;
-    background: $THUMB_BACKGROUND_COLOR;
-    border-radius: 3px;
-    padding: 1px;
-}
-
-.thumb-text {
-    color: $THUMB_TEXT_COLOR;
-}
-";
+const CSS_STYLE: &str = include_str!("./style.scss");
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum FileFormat {
@@ -72,11 +54,11 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     let thumbnail = file.thumbnail();
     let has_thumbnail = !file.thumbnail().is_empty();
     let desktop = use_window(cx);
-    let mut css_style = update_theme_colors(CSS_STYLE.to_string());
+    let mut css_style = update_theme_colors();
     let update_state: &UseRef<Option<()>> = use_ref(cx, || Some(()));
 
     if update_state.read().is_some().clone() {
-        css_style = update_theme_colors(css_style.clone());
+        css_style = update_theme_colors();
         *update_state.write_silent() = None;
     }
 
@@ -123,6 +105,7 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
 
     cx.render(rsx! (
         style { css_style },
+        style { CSS_STYLE },
         div {
             id: "video-poped-out",
             class: "file-preview",
@@ -198,37 +181,26 @@ fn resize_window(
     Some(())
 }
 
-fn update_theme_colors(mut css_style: String) -> String {
-    let patterns = [
-        (
-            r"--background:\s*(?P<color>[^;]+)",
-            "$BACKGROUND_COLOR",
-            "#000000",
-        ),
-        (
-            r"--primary:\s*(?P<color>[^;]+)",
-            "$THUMB_BACKGROUND_COLOR",
-            "#4D4DFF",
-        ),
-        (
-            r"--text-color:\s*(?P<color>[^;]+)",
-            "$THUMB_TEXT_COLOR",
-            "rgb(247, 247, 253)",
-        ),
-    ];
-
+fn update_theme_colors() -> String {
     let state = State::load();
-    let theme_str = format!("{:?}", state.ui.theme);
-
-    for &(pattern, var_name, default_val) in &patterns {
-        let re = Regex::new(pattern).unwrap();
-        let color = re
-            .captures(theme_str.as_str())
-            .and_then(|captures| captures.name("color"))
-            .map(|m| m.as_str())
-            .unwrap_or(default_val);
-        css_style = css_style.replace(var_name, color);
-    }
-
+    let mut css_style = state
+        .ui
+        .theme
+        .as_ref()
+        .map(|t| t.styles.clone())
+        .unwrap_or_default();
+    let background_style = if css_style.contains("--background") {
+        "background: var(--background);"
+    } else {
+        "background: #000000;"
+    };
+    css_style.push_str(&format!(
+        "
+             html, body {{
+                 {}
+             }}
+        ",
+        background_style
+    ));
     css_style
 }
