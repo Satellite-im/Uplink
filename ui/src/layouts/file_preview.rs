@@ -1,6 +1,9 @@
 use std::io::Cursor;
 
-use common::{state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS, VIDEO_FILE_EXTENSIONS};
+use common::{
+    language::get_local_text, state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS,
+    VIDEO_FILE_EXTENSIONS,
+};
 use dioxus::prelude::*;
 use regex::Regex;
 use warp::constellation::file::File;
@@ -136,10 +139,10 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
                             p {
                                 class: "thumbnail-text thumb-text",
                                 format!("{}", match file_format {
-                                    FileFormat::Video => "Video thumb",
-                                    FileFormat::Image => "Image thumb",
-                                    FileFormat::Document => "First page thumb",
-                                    _ => "Thumb",
+                                    FileFormat::Video => get_local_text("files.video-thumb"),
+                                    FileFormat::Image => get_local_text("files.image-thumb"),
+                                    FileFormat::Document => get_local_text("files.doc-thumb"),
+                                    _ => String::from("Thumb"),
                                 }),
                             }
                         }
@@ -151,7 +154,7 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
                                 " {file_name}"}
                             p {
                                 class: "thumb-text",
-                                "There is no preview thumb for this file"}
+                                get_local_text("files.no-thumbnail-preview")}
 
                         })
                     }
