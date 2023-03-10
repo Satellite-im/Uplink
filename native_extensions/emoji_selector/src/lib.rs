@@ -142,14 +142,7 @@ impl EmojiSelector {
                                                 };
                                                 let draft: String = c.draft.unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
-                                                match state.inner().try_borrow_mut() {
-                                                    Ok(state) => {
-                                                        state.write().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                    }
-                                                    Err(_) => {
-                                                        println!("emoji selector: try_borrow_mut error")
-                                                    }
-                                                };
+                                                state.write().mutate(Action::SetChatDraft(c.id, new_draft));
                                             },
                                             emoji.as_str()
                                         }
