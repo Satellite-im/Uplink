@@ -14,7 +14,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_fs_ipfs::config::FsIpfsConfig;
-use warp_mp_ipfs::config::{MpIpfsConfig, Discovery};
+use warp_mp_ipfs::config::MpIpfsConfig;
 use warp_rg_ipfs::config::RgIpfsConfig;
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
