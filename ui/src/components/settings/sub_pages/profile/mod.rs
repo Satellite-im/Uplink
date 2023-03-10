@@ -182,19 +182,33 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     }
                 },
-            ))
+            )),
             div {
                 class: "profile-header",
                 aria_label: "profile-header",
-                div {
-                    class: "profile-banner",
-                    aria_label: "profile-banner",
-                    style: "background-image: url({banner});",
-                    onclick: move |_| {
-                        set_banner(ch.clone());
+                // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
+                // ideally this ContextItem would appear when right clicking the profile-banner div.
+                ContextMenu {
+                    id: String::from("profile-banner-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            text: get_local_text("settings-profile.clear-banner"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::Banner(String::from('\0')));
+                            }
+                        }
+                    )),
+                    div {
+                        class: "profile-banner",
+                        aria_label: "profile-banner",
+                        style: "background-image: url({banner});",
+                        onclick: move |_| {
+                            set_banner(ch.clone());
+                        },
+                        p {class: "change-banner-text", "{change_banner_text}" },
                     },
-                    p {class: "change-banner-text", "{change_banner_text}" },
-                },
+                }
                 ContextMenu {
                     id: String::from("profile-picture-context-menu"),
                     items: cx.render(rsx!(
@@ -203,15 +217,6 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
                                 ch.send(ChanCmd::Profile(String::from('\0')));
-                            }
-                        },
-                        // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
-                        // ideally this ContextItem would appear when right clicking the profile-banner div.
-                        ContextItem {
-                            icon: Icon::Trash,
-                            text: get_local_text("settings-profile.clear-banner"),
-                            onpress: move |_| {
-                                ch.send(ChanCmd::Banner(String::from('\0')));
                             }
                         }
                     )),
