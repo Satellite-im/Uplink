@@ -30,7 +30,6 @@ pub struct Props<'a> {
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
-    reset: Option<UseState<bool>>,
 }
 
 #[derive(Props)]
@@ -80,10 +79,9 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            textarea::Input {
+            textarea::ControlledInput {
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
-                reset: cx.props.reset.clone(),
                 focus: cx.props.with_replying_to.is_some(),
                 value: cx.props.value.clone().unwrap_or_default(),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
