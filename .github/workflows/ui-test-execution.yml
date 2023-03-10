@@ -115,7 +115,6 @@ jobs:
           appium -v
           appium driver install mac2
           appium driver list
-          appium &>/dev/null &
 
       - name: Validations before starting appium ✅
         run: rm -rf ~/.uplink
