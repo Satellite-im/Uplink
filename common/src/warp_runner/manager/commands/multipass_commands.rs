@@ -184,7 +184,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     }
                 },
                 Err(e) => {
-                    log::error!("failed to get own identity: {e}");
+                    log::error!("failed to update profile picture: {e}");
                     rsp.send(Err(e))
                 }
             };
@@ -200,7 +200,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     rsp.send(id)
                 }
                 Err(e) => {
-                    log::error!("failed to get own identity: {e}");
+                    log::error!("failed to update banner: {e}");
                     rsp.send(Err(e))
                 }
             };
@@ -214,7 +214,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
-                    log::error!("failed to get own identity: {e}");
+                    log::error!("failed to update status: {e}");
                     rsp.send(Err(e))
                 }
             };
@@ -228,7 +228,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
-                    log::error!("failed to get own identity: {e}");
+                    log::error!("failed to update username: {e}");
                     rsp.send(Err(e))
                 }
             };

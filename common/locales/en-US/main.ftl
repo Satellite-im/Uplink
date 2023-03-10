@@ -26,6 +26,7 @@ warning-messages = Warning Messages
     .maximum-of = Maximum of
     .only-alpha-chars = Only alphanumeric characters are accepted.
     .spaces-not-allowed = Spaces are not allowed.
+    .error = Error
 
 messages = Messages
     .edit = Edit
@@ -97,11 +98,13 @@ settings = Settings
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings
+    .failed = Failed to update profile
     .change-banner = Change banner
     .change-avatar = Change avatar
     .clear-banner = Clear banner
     .clear-avatar = Clear avatar
     .edit-button = Edit
+    .too-large = Image too large
     .save-button = Save
     .welcome = Your new profile!
     .updated = Profile Updated!

@@ -32,6 +32,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let user_status = state.read().status_message().unwrap_or_default();
     let username = state.read().username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
+    let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().graphics().profile_picture();
     let banner = state.read().graphics().profile_banner();
@@ -52,8 +53,22 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         should_update.set(None);
     }
 
+    if let Some(msg) = update_failed.get() {
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    get_local_text("warning-messages.error"),
+                    msg.into(),
+                    Some(common::icons::outline::Shape::ExclamationTriangle),
+                    2,
+                ),
+            ));
+        update_failed.set(None);
+    }
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![should_update];
+        to_owned![should_update, update_failed];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -85,7 +100,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Ok(ident) => {
                         should_update.set(Some(ident));
                     }
-                    Err(e) => log::error!("failed to update identity: {e}"),
+                    Err(e) => {
+                        let msg = match e {
+                            warp::error::Error::InvalidLength { .. } => {
+                                get_local_text("settings-profile.too-large")
+                            }
+                            _ => get_local_text("settings-profile.failed"),
+                        };
+                        update_failed.set(Some(msg.into()));
+                    }
                 }
             }
         }
