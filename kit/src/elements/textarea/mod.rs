@@ -3,7 +3,6 @@
 //! that might helpful if a textarea needed to perform input validation.
 
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
 #[derive(Clone, Copy)]
@@ -56,8 +55,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             hook.set(false);
         }
     }
-    let height_script = include_str!("./update_input_height.js");
-    dioxus_desktop::use_eval(cx)(height_script.to_string());
 
     let element_id = &cx.props.id;
     let element_label = &cx.props.aria_label;
@@ -65,11 +62,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let element_max_length = cx.props.max_length;
     let element_placeholder = &cx.props.placeholder;
 
-    let script = include_str!("./script.js")
-        .replace("UUID", &cx.props.id)
-        .replace("$MULTI_LINE", &format!("{}", true));
-    let focus_script = include_str!("./focus.js").replace("UUID", &cx.props.id);
-    use_eval(cx)(focus_script.clone());
+    let eval = dioxus_desktop::use_eval(cx);
+    // only run this after the component has been mounted and when the id of the input changes
+    use_effect(cx, (&cx.props.id,), move |(id,)| {
+        to_owned![eval];
+        async move {
+            let height_script = include_str!("./update_input_height.js");
+            eval(height_script.to_string());
+            let script = include_str!("./script.js")
+                .replace("UUID", &id)
+                .replace("$MULTI_LINE", "true");
+            eval(script);
+            let focus_script = include_str!("./focus.js").replace("UUID", &id);
+            eval(focus_script);
+        }
+    });
 
     cx.render(rsx! (
         div {
@@ -77,7 +84,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "input",
                 height: cx.props.size.get_height(),
-                script { "{script}" },
                 textarea {
                     key: "{element_id}",
                     class: "input_textarea",
@@ -86,7 +92,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     autofocus: cx.props.focus,
                     aria_label: "{element_label}",
                     disabled: "{loading}",
-                    value: format_args!("{}", val.read()),
+                    value: "{val.read()}",
                     maxlength: "{element_max_length}",
                     placeholder: "{element_placeholder}",
                     oninput: move |evt| {
@@ -105,6 +111,5 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             },
         }
-        script { focus_script },
     ))
 }

@@ -1,5 +1,6 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
@@ -283,6 +284,14 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    // Input element needs an id. Create a new one if an id wasn't specified
+    let input_id = use_state(cx, || {
+        if cx.props.id.is_empty() {
+            Uuid::new_v4().to_string()
+        } else {
+            cx.props.id.clone()
+        }
+    });
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
@@ -316,14 +325,17 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    //Element needs an id. Create a new one if an id wasn't specified
-    let input_id = if cx.props.id.is_empty() {
-        Uuid::new_v4().to_string()
-    } else {
-        cx.props.id.clone()
-    };
-    let script = include_str!("./script.js").replace("UUID", &input_id);
-    let script_clone = script.clone();
+    // Run the script after the component is mounted.
+    let eval = use_eval(cx);
+    use_effect(cx, (&cx.props.focus, input_id), move |(focus, input_id)| {
+        to_owned![eval];
+        async move {
+            if focus {
+                let script = include_str!("./script.js").replace("UUID", &input_id);
+                eval(script);
+            }
+        }
+    });
 
     cx.render(rsx! (
         div {
@@ -349,14 +361,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 )),
-                cx.props.focus.then(|| rsx!(
-                    script { "{script}"},
-                )),
                 input {
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: format_args!("{}", val.read()),
+                    value: "{val.read()}",
                     maxlength: "{max_length}",
                     onblur: move |_| {
                         if onblur_active && *valid.current(){
@@ -415,7 +424,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }
-                            dioxus_desktop::use_eval(cx)(script_clone.to_string());
+                            // re-focus the input after clearing it
+                            let script = include_str!("./script.js").replace("UUID", input_id);
+                            dioxus_desktop::use_eval(cx)(script);
                         },
                         IconElement {
                             icon: options.clear_btn_icon
