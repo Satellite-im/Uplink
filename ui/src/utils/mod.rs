@@ -10,6 +10,7 @@ use walkdir::WalkDir;
 use kit::User as UserInfo;
 
 pub mod format_timestamp;
+pub mod lifecycle;
 
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
