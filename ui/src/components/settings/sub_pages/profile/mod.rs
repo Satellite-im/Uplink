@@ -5,6 +5,7 @@ use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -31,6 +32,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let user_status = state.read().status_message().unwrap_or_default();
     let username = state.read().username();
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
+    let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().graphics().profile_picture();
     let banner = state.read().graphics().profile_banner();
@@ -51,8 +53,22 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         should_update.set(None);
     }
 
+    if let Some(msg) = update_failed.get() {
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    get_local_text("warning-messages.error"),
+                    msg.into(),
+                    Some(common::icons::outline::Shape::ExclamationTriangle),
+                    2,
+                ),
+            ));
+        update_failed.set(None);
+    }
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![should_update];
+        to_owned![should_update, update_failed];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -84,7 +100,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Ok(ident) => {
                         should_update.set(Some(ident));
                     }
-                    Err(e) => log::error!("failed to update identity: {e}"),
+                    Err(e) => {
+                        let msg = match e {
+                            warp::error::Error::InvalidLength { .. } => {
+                                get_local_text("settings-profile.too-large")
+                            }
+                            _ => get_local_text("settings-profile.failed"),
+                        };
+                        update_failed.set(Some(msg));
+                    }
                 }
             }
         }
@@ -158,47 +182,64 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         }
                     }
                 },
-            ))
+            )),
             div {
                 class: "profile-header",
                 aria_label: "profile-header",
-                div {
-                    class: "profile-banner",
-                    aria_label: "profile-banner",
-                    style: "background-image: url({banner});",
-                    onclick: move |_| {
-                        set_banner( ch.clone());
-                    },
-                    p {class: "change-banner-text", "{change_banner_text}" },
-                },
-                div {
-                    class: "profile-picture",
-                    aria_label: "profile-picture",
-                    style: "background-image: url({image});",
-                    onclick: move |_| {
-                        set_profile_picture(ch.clone());
-                    },
-                    Button {
-                        icon: Icon::Plus,
-                        aria_label: "add-picture-button".into(),
-                        onpress: move |_| {
-                           set_profile_picture(ch.clone());
+                // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
+                // ideally this ContextItem would appear when right clicking the profile-banner div.
+                ContextMenu {
+                    id: String::from("profile-banner-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            text: get_local_text("settings-profile.clear-banner"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::Banner(String::from('\0')));
+                            }
                         }
+                    )),
+                    div {
+                        class: "profile-banner",
+                        aria_label: "profile-banner",
+                        style: "background-image: url({banner});",
+                        onclick: move |_| {
+                            set_banner(ch.clone());
+                        },
+                        p {class: "change-banner-text", "{change_banner_text}" },
                     },
                 }
+                ContextMenu {
+                    id: String::from("profile-picture-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            text: get_local_text("settings-profile.clear-avatar"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::Profile(String::from('\0')));
+                            }
+                        }
+                    )),
+                    div {
+                        class: "profile-picture",
+                        aria_label: "profile-picture",
+                        style: "background-image: url({image});",
+                        onclick: move |_| {
+                            set_profile_picture(ch.clone());
+                        },
+                        Button {
+                            icon: Icon::Plus,
+                            aria_label: "add-picture-button".into(),
+                            onpress: move |_| {
+                               set_profile_picture(ch.clone());
+                            }
+                        },
+                    },
+                },
             },
             div{
                 class: "profile-content",
                 aria_label: "profile-content",
-                div {
-                    class: "plus-button",
-                    Button {
-                        icon: Icon::Plus,
-                        onpress: move |_| {
-                            set_profile_picture( ch.clone());
-                        }
-                    }
-                },
                 div {
                     class: "content-item",
                     Label {
