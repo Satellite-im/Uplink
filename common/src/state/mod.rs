@@ -605,7 +605,6 @@ impl State {
         for (id, chat) in chats {
             if let Some(conv) = self.chats.all.get_mut(&id) {
                 conv.messages = chat.messages;
-                conv.participants = chat.participants;
             } else {
                 self.chats.all.insert(id, chat);
             }
