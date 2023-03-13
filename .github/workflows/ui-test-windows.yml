@@ -35,12 +35,6 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Setup cmake 🛠️
-        uses: jwlawson/actions-setup-cmake@v1.13
-
-      - name: Use cmake 💿
-        run: cmake --version
-
       - name: Install Protobuf 💿
         uses: arduino/setup-protoc@v1
         with:
@@ -97,7 +91,6 @@ jobs:
           appium -v
           appium driver install --source=npm appium-windows-driver
           appium driver list
-          appium &>/dev/null &
 
       - name: Delete cache folder before starting
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }

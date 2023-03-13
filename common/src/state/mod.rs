@@ -203,6 +203,9 @@ impl State {
                 let chat = self.chats.all.entry(chat.id).or_insert(chat);
                 chat.unreads = 0;
             }
+            Action::ClearActiveChat => {
+                self.clear_active_chat();
+            }
             Action::NewMessage(_, _) => todo!(),
             Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
             Action::CancelReply(chat_id) => self.cancel_reply(chat_id),

@@ -21,6 +21,7 @@ pub struct ReplyInfo<'a> {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    id: String,
     placeholder: String,
     with_replying_to: Option<Element<'a>>,
     with_file_upload: Option<Element<'a>>,
@@ -74,12 +75,15 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let id = &cx.props.id;
     cx.render(rsx!(
         div {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
             textarea::ControlledInput {
+                key: "{id}",
+                id: id.clone(),
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
                 focus: cx.props.with_replying_to.is_some(),
