@@ -5,6 +5,8 @@
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
+use crate::elements::tooltip::{ArrowPosition, Tooltip};
+
 #[derive(Clone, Copy)]
 pub enum Size {
     Small,
@@ -42,6 +44,10 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     #[props(!optional)]
     reset: Option<UseState<bool>>,
+    #[props(optional)]
+    is_disabled: Option<bool>,
+    #[props(optional)]
+    tooltip: Option<String>,
 }
 
 #[allow(non_snake_case)]
@@ -58,19 +64,17 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let element_id = &cx.props.id;
     let element_label = &cx.props.aria_label;
-    let loading = cx.props.loading;
     let element_max_length = cx.props.max_length;
     let element_placeholder = &cx.props.placeholder;
+    let disabled = cx.props.loading || cx.props.is_disabled.unwrap_or_default();
 
     let eval = dioxus_desktop::use_eval(cx);
     // only run this after the component has been mounted and when the id of the input changes
     use_effect(cx, (&cx.props.id,), move |(id,)| {
         to_owned![eval];
         async move {
-            let height_script = include_str!("./update_input_height.js");
-            eval(height_script.to_string());
             let script = include_str!("./script.js")
-                .replace("UUID", &id)
+                .replace("$UUID", &id)
                 .replace("$MULTI_LINE", "true");
             eval(script);
             let focus_script = include_str!("./focus.js").replace("UUID", &id);
@@ -78,23 +82,29 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
+    //This should run everytime the component is updated
+    let height_script = include_str!("./update_input_height.js");
+    eval(height_script.to_string());
+
     cx.render(rsx! (
         div {
-            class: format_args!("input-group {}", if cx.props.loading { "disabled" } else { " " }),
+            class: "input-group",
             div {
-                class: "input",
+                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: cx.props.size.get_height(),
                 textarea {
                     key: "{element_id}",
                     class: "input_textarea",
                     id: "{element_id}",
                     // todo: troubleshoot this. it isn't working
+                    // edit: autofocus does not work for input elements
+                    // see https://github.com/DioxusLabs/dioxus/issues/725
                     autofocus: cx.props.focus,
                     aria_label: "{element_label}",
-                    disabled: "{loading}",
+                    disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{element_max_length}",
-                    placeholder: "{element_placeholder}",
+                    placeholder: format_args!("{}", if cx.props.is_disabled.unwrap_or_default() {""} else {element_placeholder}),
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val;
@@ -110,6 +120,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             },
+            cx.props.tooltip.as_deref().filter(|s| cx.props.is_disabled.unwrap_or_default() && !s.is_empty()).map(|s| cx.render(rsx!(
+                Tooltip {
+                    arrow_position: ArrowPosition::None,
+                    text: s.to_string(),
+                }
+            )))
         }
     ))
 }

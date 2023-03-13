@@ -727,6 +727,22 @@ impl State {
             })
             .cloned()
     }
+    pub fn can_use_active_chat(&self) -> bool {
+        self.get_active_chat()
+            .map(|c| {
+                let participants = &c.participants;
+                if participants.len() == 2 {
+                    return c
+                        .participants
+                        .iter()
+                        .all(|e| e.eq(&self.did_key()) || self.has_friend_with_did(e));
+                }
+                // If more than 2 participants -> group chat
+                // Dont need to be friends with all in a group
+                true
+            })
+            .unwrap_or_default()
+    }
     // Define a method for sorting a vector of messages.
     pub fn get_sort_messages(&self, chat: &Chat) -> Vec<MessageGroup> {
         if chat.messages.is_empty() {

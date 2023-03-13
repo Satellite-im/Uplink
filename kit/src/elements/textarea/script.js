@@ -1,3 +1,27 @@
+(() => {
+    const input_group = document.getElementById("$UUID").parentNode.parentNode
+    // parent: input, parent of parent: input-group
+    const tooltip = input_group.getElementsByClassName("tooltip")[0]
+
+    if (tooltip != null) {
+        input_group.addEventListener("mouseover", function (e) {
+            tooltip.classList.remove("hidden")
+            tooltip.classList.add("visible")
+            tooltip.style.position = "fixed"
+            tooltip.style.left = e.clientX + "px"
+            tooltip.style.top = (e.clientY - 50) + "px"
+        })
+        input_group.addEventListener("mousemove", function (e) {
+            tooltip.style.position = "fixed"
+            tooltip.style.left = e.clientX + "px"
+            tooltip.style.top = (e.clientY - 50) + "px"
+        })
+        input_group.addEventListener("mouseout", function (e) {
+            tooltip.classList.remove("visible")
+            tooltip.classList.add("hidden")
+        })
+    }
+})()
 
 var MULTI_LINE = $MULTI_LINE;
 
