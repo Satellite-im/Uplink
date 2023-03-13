@@ -47,7 +47,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::{action::ActionHook, configuration::Configuration, ui::Call};
+use self::{action::ActionHook, ui::Call};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -56,19 +56,13 @@ use self::{action::ActionHook, configuration::Configuration, ui::Call};
 pub struct State {
     #[serde(skip)]
     id: DID,
-    #[serde(default)]
     pub route: route::Route,
-    #[serde(default)]
     chats: chats::Chats,
-    #[serde(default)]
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
-    #[serde(default)]
     pub settings: settings::Settings,
-    #[serde(default)]
     pub ui: ui::UI,
-    #[serde(default)]
     pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
@@ -523,13 +517,19 @@ impl State {
         let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
             Err(_) => {
-                return State {
-                    configuration: Configuration::new(),
-                    ..State::default()
-                };
+                log::info!("state.json not found. Initializing State with default values");
+                return State::default();
             }
         };
-        let mut state: Self = serde_json::from_str(&contents).unwrap_or_default();
+        let mut state: Self = match serde_json::from_str(&contents) {
+            Ok(s) => s,
+            Err(e) => {
+                log::error!(
+                    "state.json failed to deserialize: {e}. Initializing State with default values"
+                );
+                return State::default();
+            }
+        };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
@@ -595,7 +595,14 @@ impl State {
             .collect()
     }
     pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
-        self.chats.all = chats;
+        for (id, chat) in chats {
+            if let Some(conv) = self.chats.all.get_mut(&id) {
+                conv.messages = chat.messages;
+                conv.participants = chat.participants;
+            } else {
+                self.chats.all.insert(id, chat);
+            }
+        }
         self.chats.initialized = true;
         self.identities
             .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
