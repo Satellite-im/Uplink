@@ -129,9 +129,6 @@ pub enum Action {
     /// Removes the active chat
     #[display(fmt = "ClearActiveChat")]
     ClearActiveChat,
-    /// Adds a chat to the sidebar
-    #[display(fmt = "AddToSidebar")]
-    AddToSidebar(Chat),
     /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
     #[display(fmt = "RemoveFromSidebar")]
     RemoveFromSidebar(Uuid),

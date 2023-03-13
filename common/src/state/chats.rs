@@ -48,7 +48,7 @@ pub struct Chats {
     #[serde(skip)]
     pub active_media: Option<Uuid>, // TODO: in the future, this should probably be a vec of media streams or something
     // Chats to show in the sidebar
-    pub in_sidebar: Vec<Uuid>,
+    pub in_sidebar: VecDeque<Uuid>,
     // Favorite Chats
     pub favorites: Vec<Uuid>,
 }
