@@ -139,7 +139,9 @@ fn render_input<'a>(
     value: &str,
 ) -> Element<'a> {
     let height_script = include_str!("./update_input_height.js");
+    let focus_script = include_str!("./focus.js").replace("UUID", id);
     dioxus_desktop::use_eval(cx)(height_script.to_string());
+    dioxus_desktop::use_eval(cx)(focus_script.to_string());
 
     let script = include_str!("./script.js")
         .replace("UUID", id)
@@ -154,6 +156,7 @@ fn render_input<'a>(
                 height: "{size.get_height()}",
                 script { "{script}" },
                 textarea {
+                    key: "{element_id}",
                     class: "input_textarea",
                     id: "{id}",
                     // todo: troubleshoot this. it isn't working
@@ -178,5 +181,6 @@ fn render_input<'a>(
                 }
             },
         }
+        script { focus_script }
     ))
 }

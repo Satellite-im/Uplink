@@ -126,6 +126,9 @@ pub enum Action {
     /// Sets the active chat to a given chat
     #[display(fmt = "ChatWith")]
     ChatWith(Chat),
+    /// Removes the active chat
+    #[display(fmt = "ClearActiveChat")]
+    ClearActiveChat,
     /// Adds a chat to the sidebar
     #[display(fmt = "AddToSidebar")]
     AddToSidebar(Chat),

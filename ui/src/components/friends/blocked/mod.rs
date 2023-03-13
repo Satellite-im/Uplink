@@ -1,4 +1,4 @@
-use crate::{components::friends::friend::Friend, utils::convert_status};
+use crate::components::friends::friend::Friend;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
@@ -89,7 +89,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: convert_status(&blocked_user.identity_status()),
+                                    status: blocked_user.identity_status().into(),
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),
