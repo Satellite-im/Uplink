@@ -115,7 +115,7 @@ async fn handle_login(notify: Arc<Notify>) {
         .await
         .expect("failed to initialize tesseract");
 
-    let mut warp = match warp_initialization(tesseract, false).await {
+    let mut warp = match warp_initialization(tesseract).await {
         Ok(w) => w,
         Err(e) => {
             log::error!("warp init failed: {}", e);
@@ -144,7 +144,7 @@ async fn handle_login(notify: Arc<Notify>) {
                             let tesseract = init_tesseract(true)
                                 .await
                                 .expect("failed to initialize tesseract");
-                            warp = match warp_initialization(tesseract, false).await {
+                            warp = match warp_initialization(tesseract).await {
                                 Ok(w) => w,
                                 Err(e) => {
                                     log::error!("warp init failed: {}", e);
@@ -315,14 +315,11 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
 }
 
 // tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password
-async fn warp_initialization(
-    tesseract: Tesseract,
-    experimental: bool,
-) -> Result<manager::Warp, warp::error::Error> {
+async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
 
     let path = &STATIC_ARGS.warp_path;
-    let mut config = MpIpfsConfig::production(path, experimental);
+    let mut config = MpIpfsConfig::production(path, STATIC_ARGS.experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
