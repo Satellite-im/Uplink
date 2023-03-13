@@ -52,8 +52,7 @@ use warp::{
 use crate::{
     components::media::player::MediaPlayer,
     utils::{
-        build_participants, build_user_from_identity, convert_status,
-        format_timestamp::format_timestamp_timeago,
+        build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
 };
 
@@ -259,7 +258,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                 UserImage {
                     loading: false,
                     platform: data.platform,
-                    status: convert_status(&data.active_participant.identity_status()),
+                    status: data.active_participant.identity_status().into(),
                     image: data.first_image.clone(),
                 }
             )} else {rsx! (
@@ -331,8 +330,14 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     let user = state.read().did_key();
 
-    let script = include_str!("./script.js");
-    use_eval(cx)(script.to_string());
+    let eval = use_eval(cx);
+    use_effect(cx, (), move |_| {
+        to_owned![eval];
+        async move {
+            let script = include_str!("./script.js");
+            eval(script.to_string());
+        }
+    });
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         //to_owned![];
@@ -465,20 +470,28 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     let active_chat = data.active_chat.clone();
                     let last_message = messages.last().unwrap().message.clone();
                     let sender = state.read().get_identity(&group.sender);
+                    let sender_name = sender.username();
                     let active_language = state.read().settings.language.clone();
                     let platform = sender.platform().into();
-                    let status = convert_status(&sender.identity_status());
+
+                    // todo: investigate why updating one's profile picture affects their status. 
+                    // this is probably in warp but I'm not sure. 
+                    let mut sender_status = sender.identity_status().into();
+                    if !group.remote && sender_status == Status::Offline {
+                        sender_status = Status::Online;
+                    }
 
                     rsx!(
                         MessageGroup {
                             user_image: cx.render(rsx!(
                                 UserImage {
+                                    image: sender.graphics().profile_picture(),
                                     platform: platform,
-                                    status: status
+                                    status: sender_status,
                                 }
                             )),
                             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
-                            with_sender: if sender.username().is_empty() { get_local_text("messages.you") } else { sender.username()},
+                            with_sender: if sender_name.is_empty() { get_local_text("messages.you") } else { sender_name },
                             remote: group.remote,
                             messages.iter().map(|grouped_message| {
                                 let message = grouped_message.message.clone();

@@ -1,4 +1,4 @@
-use crate::{components::friends::friend::Friend, utils::convert_status};
+use crate::components::friends::friend::Friend;
 use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
@@ -91,7 +91,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: convert_status(&friend.identity_status()),
+                                    status: friend.identity_status().into(),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),

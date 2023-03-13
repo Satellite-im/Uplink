@@ -22,7 +22,6 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    utils::convert_status,
     UPLINK_ROUTES,
 };
 
@@ -248,7 +247,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: convert_status(&friend.identity_status()),
+                                                status: friend.identity_status().into(),
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),

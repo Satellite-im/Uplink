@@ -26,7 +26,7 @@ use common::state::{self, Action, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    utils::{build_participants, convert_status},
+    utils::build_participants,
     UPLINK_ROUTES,
 };
 
@@ -238,7 +238,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if participants.len() <= 2 {rsx! (
                                         UserImage {
                                             platform: platform,
-                                            status:  convert_status(&user.identity_status()),
+                                            status:  user.identity_status().into(),
                                             image: user.graphics().profile_picture(),
                                             typing: users_typing,
                                         }
