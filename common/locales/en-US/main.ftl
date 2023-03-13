@@ -39,7 +39,7 @@ messages = Messages
     .say-something-placeholder = Say Something...
     .user-sent-message = sent you a message.
     .unknown-sent-message = someone sent you a message.
-    .not-friends = You are not friends
+    .not-friends = You are not friends anymore
     
 favorites = Favorites
     .favorites = Favorites

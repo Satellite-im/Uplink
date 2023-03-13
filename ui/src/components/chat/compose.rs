@@ -836,7 +836,7 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
         .collect::<Vec<_>>();
 
-    let disabled = state.read().can_use_active_chat();
+    let disabled = !state.read().can_use_active_chat();
 
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
