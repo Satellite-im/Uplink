@@ -853,22 +853,22 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         },
         onreturn: move |_| submit_fn(),
-        controls: cx.render(rsx!(
+        extensions: cx.render(rsx!(
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
-            },
-            Button {
-                icon: Icon::ChevronDoubleRight,
-                disabled: is_loading || disabled,
-                appearance: Appearance::Secondary,
-                onpress: move |_| submit_fn(),
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("uplink.send"),
-                })),
             }
         )),
+        controls: cx.render(rsx!(Button {
+            icon: Icon::ChevronDoubleRight,
+            disabled: is_loading || disabled,
+            appearance: Appearance::Secondary,
+            onpress: move |_| submit_fn(),
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::Bottom,
+                text: get_local_text("uplink.send"),
+            })),
+        })),
         with_replying_to: data
             .filter(|_| !disabled)
             .map(|data| {
