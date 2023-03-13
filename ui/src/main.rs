@@ -656,6 +656,63 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            let mut stream = loop {
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::EventStream { rsp: tx }))
+                {
+                    log::error!("Failed to get event stream: {e}");
+                    needs_update.set(true);
+                    return;
+                }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(stream) => break stream,
+                    Err(e) if matches!(e, warp::error::Error::MultiPassExtensionUnavailable) => {
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    _ => return,
+                }
+            };
+
+            while let Some(warp::multipass::MultiPassEventKind::IdentityUpdate { did, .. }) =
+                stream.next().await
+            {
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetIdentity {
+                    did: did.clone(),
+                    rsp: tx,
+                })) {
+                    log::error!("Failed to get identity: {e}");
+                    continue;
+                }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(identity) => match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().update_identity(did, identity);
+                            needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("Failed to get identity: {e}");
+                    }
+                }
+            }
+        }
+    });
+
     // control child windows
     let inner = state.inner();
     use_future(cx, (), |_| {
