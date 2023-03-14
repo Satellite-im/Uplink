@@ -2,7 +2,6 @@ use std::{
     fs::File,
     io::{Read, Seek, Write},
     path::{Path, PathBuf},
-    thread,
 };
 use walkdir::WalkDir;
 use zip::{result::ZipError, write::FileOptions};
@@ -30,10 +29,9 @@ pub async fn handle_other_cmd(cmd: OtherCmd) {
 }
 
 async fn compress_folder(src: PathBuf, dest: PathBuf) -> Result<(), error::Error> {
-    let (tx, rx) = oneshot::channel::<Result<(), ZipError>>();
-    // I know that warp_runner is basically single threaded but still...put the blocking operation in a separate thread and await it
-    thread::spawn(move || {
-        let z = || {
+    // I know that warp_runner is basically single threaded but still...put the blocking operation in a separate task and await it
+    let handle = tokio::task::spawn_blocking(move || {
+        let z = || -> Result<(), ZipError> {
             let file = File::create(dest).unwrap();
             let prefix = src.to_string_lossy().to_string();
 
@@ -49,10 +47,9 @@ async fn compress_folder(src: PathBuf, dest: PathBuf) -> Result<(), error::Error
 
             Ok(())
         };
-        let r: Result<(), ZipError> = z();
-        let _ = tx.send(r);
+        z()
     });
-    let res = match rx.await {
+    let res = match handle.await {
         Ok(r) => r,
         Err(_) => {
             log::warn!("compress operation cancelled");
