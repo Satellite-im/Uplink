@@ -2,8 +2,9 @@ use std::rc::Weak;
 
 use crate::{
     components::media::popout_player::{PopoutPlayer, PopoutPlayerProps},
-    window_manager::{WindowManagerCmd, WindowManagerCmdTx},
-    UPLINK_ROUTES, WINDOW_CMD_CH,
+    utils::WindowDropHandler,
+    window_manager::WindowManagerCmd,
+    UPLINK_ROUTES,
 };
 use common::state::{Action, State};
 
@@ -90,20 +91,20 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     )),
                     onpress: move |_| {
                          if state.read().ui.popout_player {
-                             state.write().mutate(Action::ClearPopout(window.clone()));
+                             state.write().mutate(Action::ClearCallPopout(window.clone()));
                              return;
                          }
 
                         // close the PopoutPlayer on drop, if not already closed
                         // pass WindowDropHandler as a prop so that it doesn't get dropped when PopoutPlayer returns an Element
-                        let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
+                        let drop_handler = WindowDropHandler::new(WindowManagerCmd::ClosePopout);
                         let popout = VirtualDom::new_with_props(PopoutPlayer, PopoutPlayerProps{
                             _drop_handler: drop_handler
                         });
                         let window = window.new_window(popout, Default::default());
                         if let Some(wv) = Weak::upgrade(&window) {
                             let id = wv.window().id();
-                            state.write().mutate(Action::SetPopout(id));
+                            state.write().mutate(Action::SetCallPopout(id));
                         }
                     }
                 },
@@ -152,7 +153,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    state.write().mutate(Action::ClearPopout(window.clone()));
+                    state.write().mutate(Action::ClearCallPopout(window.clone()));
                     state.write().mutate(Action::DisableMedia);
                 }
             },
@@ -172,28 +173,4 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
             },
         }
     }))
-}
-
-pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx,
-}
-
-impl PartialEq for WindowDropHandler {
-    fn eq(&self, _other: &Self) -> bool {
-        false
-    }
-}
-
-impl WindowDropHandler {
-    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
-        Self { cmd_tx }
-    }
-}
-
-impl Drop for WindowDropHandler {
-    fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::ClosePopout) {
-            // todo: log error
-        }
-    }
 }

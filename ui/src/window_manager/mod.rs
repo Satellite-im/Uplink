@@ -17,6 +17,7 @@ pub struct WindowManagerCmdChannels {
     pub rx: WindowManagerCmdRx,
 }
 
+#[derive(Clone, Copy)]
 pub enum WindowManagerCmd {
     ClosePopout,
     CloseDebugLogger,
@@ -31,7 +32,7 @@ pub async fn handle_cmd(
     match cmd {
         WindowManagerCmd::ClosePopout => {
             if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearPopout(desktop));
+                s.write().mutate(Action::ClearCallPopout(desktop));
             } else {
                 //todo: add logging
             }

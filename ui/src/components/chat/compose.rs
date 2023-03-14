@@ -224,7 +224,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 if let Some(chat) = active_chat2.clone() {
                     state
                         .write_silent()
-                        .mutate(Action::ClearPopout(desktop.clone()));
+                        .mutate(Action::ClearCallPopout(desktop.clone()));
                     state.write_silent().mutate(Action::DisableMedia);
                     state.write().mutate(Action::SetActiveMedia(chat.id));
                 }

@@ -7,7 +7,6 @@ use common::{
 use dioxus::prelude::*;
 use warp::constellation::file::File;
 
-use super::storage::WindowDropHandler;
 use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
@@ -48,7 +47,7 @@ pub fn get_file_format(file_name: String) -> FileFormat {
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> Element {
+pub fn FilePreview(cx: Scope, file: File) -> Element {
     let file_format = get_file_format(file.name());
     let file_name = file.name();
     let thumbnail = file.thumbnail();
