@@ -464,12 +464,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
-            onkeydown: move |_| {
-                log::info!("onkeydown");
-            },
-            onkeypress: move |_| {
-                log::info!("onkeypress");
-            },
             div {
                 data.message_groups.iter().map(|group| {
                     let messages = &group.messages;
@@ -517,9 +511,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                     ContextMenu {
                                         key: "{context_key}",
                                         id: context_key,
-                                        on_mouseout: |e| {
-                                            //log::debug!("onmouseout: {e:?}");
-                                        },
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::ArrowLongLeft,
