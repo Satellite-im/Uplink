@@ -14,10 +14,7 @@ use warp::{
 
 use crate::{
     state::{self, friends},
-    warp_runner::{
-        ui_adapter::{did_to_identity, dids_to_identity},
-        Account,
-    },
+    warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
 #[derive(Display)]
@@ -57,11 +54,6 @@ pub enum MultiPassCmd {
     RemoveFriend {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
-    },
-    #[display(fmt = "GetIdentity {{ did: {did} }} ")]
-    GetIdentity {
-        did: DID,
-        rsp: oneshot::Sender<Result<state::Identity, warp::error::Error>>,
     },
     #[display(fmt = "Unblock {{ did: {did} }} ")]
     Unblock {
@@ -148,10 +140,6 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         }
         MultiPassCmd::RemoveFriend { did, rsp } => {
             let r = warp.multipass.remove_friend(&did).await;
-            let _ = rsp.send(r);
-        }
-        MultiPassCmd::GetIdentity { did, rsp } => {
-            let r = multipass_get_identity(&mut warp.multipass, did).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::Unblock { did, rsp } => {
@@ -259,10 +247,6 @@ async fn multipass_refresh_friends(
         log::warn!("No identities found");
     }
     Ok(friends)
-}
-
-async fn multipass_get_identity(account: &mut Account, did: DID) -> Result<state::Identity, Error> {
-    did_to_identity(&did, account).await
 }
 
 async fn multipass_initialize_friends(

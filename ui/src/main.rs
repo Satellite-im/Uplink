@@ -26,7 +26,6 @@ use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
-use warp::crypto::DID;
 use warp::multipass;
 use warp::multipass::identity::Platform;
 
