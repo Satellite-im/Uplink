@@ -464,6 +464,12 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
+            onkeydown: move |_| {
+                log::info!("onkeydown");
+            },
+            onkeypress: move |_| {
+                log::info!("onkeypress");
+            },
             div {
                 data.message_groups.iter().map(|group| {
                     let messages = &group.messages;
