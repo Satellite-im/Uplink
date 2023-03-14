@@ -18,6 +18,7 @@ pub struct WindowManagerCmdChannels {
 }
 
 #[derive(Clone, Copy)]
+#[allow(clippy::enum_variant_names)]
 pub enum WindowManagerCmd {
     ClosePopout,
     CloseDebugLogger,

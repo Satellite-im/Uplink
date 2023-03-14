@@ -42,7 +42,7 @@ pub fn get_file_format(file_name: String) -> FileFormat {
     if doc_formats.iter().any(|f| f == &file_extension) {
         return FileFormat::Document;
     }
-    return FileFormat::Other;
+    FileFormat::Other
 }
 
 #[inline_props]
@@ -56,7 +56,7 @@ pub fn FilePreview(cx: Scope, file: File) -> Element {
     let mut css_style = update_theme_colors();
     let update_state: &UseRef<Option<()>> = use_ref(cx, || Some(()));
 
-    if update_state.read().is_some().clone() {
+    if update_state.read().is_some() {
         css_style = update_theme_colors();
         *update_state.write_silent() = None;
     }
@@ -83,14 +83,17 @@ pub fn FilePreview(cx: Scope, file: File) -> Element {
             let fs_event_watcher_result = RecommendedWatcher::new(tx, Config::default());
             if let Ok(fs_event_watcher) = fs_event_watcher_result {
                 let mut watcher: RecommendedWatcher = fs_event_watcher;
-                if let Ok(_) = watcher.watch(
-                    STATIC_ARGS.cache_path.clone().as_path(),
-                    RecursiveMode::NonRecursive,
-                ) {
+                if watcher
+                    .watch(
+                        STATIC_ARGS.cache_path.clone().as_path(),
+                        RecursiveMode::NonRecursive,
+                    )
+                    .is_ok()
+                {
                     loop {
                         let mut event_processed = false;
                         tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-                        while let Ok(_) = rx.try_recv() {
+                        while rx.try_recv().is_ok() {
                             if update_state.read().is_none() && !event_processed {
                                 update_state.with_mut(|i| *i = Some(()));
                                 event_processed = true;

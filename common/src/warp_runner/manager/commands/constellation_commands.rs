@@ -693,7 +693,7 @@ fn set_thumbnail_if_file_is_document(
         .stderr(Stdio::null())
         .spawn()?;
 
-    if let Some(_) = output.stdout {
+    if output.stdout.is_some() {
         let path_2 = format!("{}.jpg", temp_path.to_string_lossy());
         std::thread::sleep(std::time::Duration::from_secs(1));
         let image = std::fs::read(path_2)?;

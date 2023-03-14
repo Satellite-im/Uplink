@@ -713,7 +713,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
                                             onpress: move |_| {
-                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps{ 
+                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
                                                     file: file3.clone()
                                                 });
                                                 let window = window.new_window(file_preview, Default::default());
