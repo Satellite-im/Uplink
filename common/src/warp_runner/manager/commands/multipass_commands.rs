@@ -9,7 +9,6 @@ use warp::{
     multipass::{
         self,
         identity::{self, IdentityUpdate},
-        MultiPassEventStream,
     },
 };
 
@@ -111,11 +110,6 @@ pub enum MultiPassCmd {
     UpdateUsername {
         username: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
-    },
-
-    #[display(fmt = "EventStream")]
-    EventStream {
-        rsp: oneshot::Sender<Result<MultiPassEventStream, warp::error::Error>>,
     },
 }
 
@@ -247,17 +241,6 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 Ok(_) => rsp.send(id),
                 Err(e) => {
                     log::error!("failed to update username: {e}");
-                    rsp.send(Err(e))
-                }
-            };
-        }
-
-        MultiPassCmd::EventStream { rsp } => {
-            let r = warp.multipass.subscribe().await;
-            let _ = match r {
-                Ok(_) => rsp.send(r),
-                Err(e) => {
-                    log::error!("failed to event stream: {e}");
                     rsp.send(Err(e))
                 }
             };
