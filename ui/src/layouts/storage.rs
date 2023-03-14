@@ -46,6 +46,8 @@ use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
+use crate::utils::WindowDropHandler;
+use crate::window_manager::WindowManagerCmd;
 
 const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
@@ -713,13 +715,16 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
                                             onpress: move |_| {
+                                                let key = Uuid::new_v4();
+                                                let drop_handler = WindowDropHandler::new(WindowManagerCmd::ForgetFilePreview(key));
                                                 let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
-                                                    file: file3.clone()
+                                                    file: file3.clone(),
+                                                    _drop_handler: drop_handler
                                                 });
                                                 let window = window.new_window(file_preview, Default::default());
                                                 if let Some(wv) = Weak::upgrade(&window) {
                                                     let id = wv.window().id();
-                                                    state.write().mutate(Action::AddFilePreview(id));
+                                                    state.write().mutate(Action::AddFilePreview(key, id));
                                                 }
                                             },
                                             onrename: move |(val, key_code)| {

@@ -75,11 +75,11 @@ pub enum Action {
     #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
     #[display(fmt = "AddFilePreview")]
-    AddFilePreview(WindowId),
+    AddFilePreview(Uuid, WindowId),
     #[display(fmt = "ForgetFilePreview")]
-    ForgetFilePreview(WindowId),
+    ForgetFilePreview(Uuid),
     #[display(fmt = "ClearFilePreview")]
-    ClearFilePreview(DesktopContext),
+    ClearFilePreviews(DesktopContext),
     #[display(fmt = "ClearAllPopoutWindows")]
     ClearAllPopoutWindows(DesktopContext),
     // Notifications

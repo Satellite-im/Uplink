@@ -8,6 +8,7 @@ use tokio::sync::{
 };
 
 use common::state::{Action, State};
+use uuid::Uuid;
 
 pub type WindowManagerCmdTx = UnboundedSender<WindowManagerCmd>;
 pub type WindowManagerCmdRx = Arc<Mutex<UnboundedReceiver<WindowManagerCmd>>>;
@@ -23,6 +24,7 @@ pub enum WindowManagerCmd {
     ClosePopout,
     CloseDebugLogger,
     CloseFilePreview,
+    ForgetFilePreview(Uuid),
 }
 
 pub async fn handle_cmd(
@@ -47,7 +49,14 @@ pub async fn handle_cmd(
         }
         WindowManagerCmd::CloseFilePreview => {
             if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearFilePreview(desktop));
+                s.write().mutate(Action::ClearFilePreviews(desktop));
+            } else {
+                //todo: add logging
+            }
+        }
+        WindowManagerCmd::ForgetFilePreview(id) => {
+            if let Ok(s) = state.try_borrow_mut() {
+                s.write().mutate(Action::ForgetFilePreview(id));
             } else {
                 //todo: add logging
             }

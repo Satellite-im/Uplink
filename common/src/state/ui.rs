@@ -59,7 +59,7 @@ pub struct UI {
     #[serde(skip)]
     pub overlays: Vec<Weak<WebView>>,
     #[serde(skip)]
-    pub file_preview: Vec<WindowId>,
+    pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(skip)]
     pub extensions: HashMap<String, ExtensionProxy>,
     #[serde(default = "bool_true")]
@@ -125,12 +125,12 @@ impl UI {
             desktop_context.close_window(id);
         };
     }
-    pub fn add_file_preview(&mut self, id: WindowId) {
-        self.file_preview.push(id);
+    pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
+        self.file_previews.insert(key, window_id);
     }
     pub fn clear_file_previews(&mut self, desktop_context: &DesktopContext) {
-        for id in self.file_preview.drain(..) {
-            desktop_context.close_window(id);
+        for (_, id) in self.file_previews.iter() {
+            desktop_context.close_window(*id);
         }
     }
 

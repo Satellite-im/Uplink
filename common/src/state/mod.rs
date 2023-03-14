@@ -183,9 +183,11 @@ impl State {
             // Development
             Action::SetDebugLogger(webview) => self.ui.set_debug_logger(webview),
             Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(&window),
-            Action::AddFilePreview(id) => self.ui.add_file_preview(id),
-            Action::ForgetFilePreview(id) => self.ui.file_preview.retain(|x| x != &id),
-            Action::ClearFilePreview(window) => self.ui.clear_file_previews(&window),
+            Action::AddFilePreview(id, window_id) => self.ui.add_file_preview(id, window_id),
+            Action::ForgetFilePreview(id) => {
+                let _ = self.ui.file_previews.remove(&id);
+            }
+            Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(Some(theme)),

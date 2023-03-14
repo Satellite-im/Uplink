@@ -13,6 +13,8 @@ use kit::elements::file::get_file_extension;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
+use crate::utils::WindowDropHandler;
+
 const CSS_STYLE: &str = include_str!("./style.scss");
 
 #[derive(Clone, PartialEq, Eq)]
@@ -47,7 +49,7 @@ pub fn get_file_format(file_name: String) -> FileFormat {
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn FilePreview(cx: Scope, file: File) -> Element {
+pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> Element {
     let file_format = get_file_format(file.name());
     let file_name = file.name();
     let thumbnail = file.thumbnail();
