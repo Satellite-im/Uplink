@@ -2,7 +2,6 @@ use common::{
     state::{self, Theme},
     STATIC_ARGS,
 };
-use kit::components::indicator::Status;
 use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
@@ -10,6 +9,7 @@ use walkdir::WalkDir;
 use kit::User as UserInfo;
 
 pub mod format_timestamp;
+pub mod lifecycle;
 
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
@@ -48,16 +48,6 @@ fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
     last.to_string_lossy().into()
 }
 
-// converts from Warp IdentityStatus to ui_kit Status
-pub fn convert_status(status: &warp::multipass::identity::IdentityStatus) -> Status {
-    match status {
-        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-    }
-}
-
 pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     // Create a vector of UserInfo objects to store the results
     let mut user_info: Vec<UserInfo> = vec![];
@@ -69,7 +59,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
         let platform = identity.platform().into();
         user_info.push(UserInfo {
             platform,
-            status: convert_status(&identity.identity_status()),
+            status: identity.identity_status().into(),
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -83,7 +73,7 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
     let platform = identity.platform().into();
     UserInfo {
         platform,
-        status: convert_status(&identity.identity_status()),
+        status: identity.identity_status().into(),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
     }
