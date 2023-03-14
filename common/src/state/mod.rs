@@ -816,9 +816,7 @@ impl State {
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Chat) {
         self.chats.active = Some(chat.id);
-        if !self.chats.in_sidebar.contains(&chat.id) {
-            self.chats.in_sidebar.push_front(chat.id);
-        }
+        self.send_chat_to_top_of_sidebar(chat.id);
     }
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
