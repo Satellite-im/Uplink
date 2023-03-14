@@ -185,6 +185,7 @@ impl State {
             Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(window),
             Action::SetFilePreview(webview) => self.ui.set_file_preview(webview),
             Action::ClearFilePreview(window) => self.ui.clear_file_preview(window),
+            Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),

@@ -78,7 +78,8 @@ pub enum Action {
     SetFilePreview(WindowId),
     #[display(fmt = "ClearFilePreview")]
     ClearFilePreview(DesktopContext),
-
+    #[display(fmt = "ClearAllPopoutWindows")]
+    ClearAllPopoutWindows(DesktopContext),
     // Notifications
     #[display(fmt = "AddNotification")]
     AddNotification(NotificationKind, u32),

@@ -47,6 +47,7 @@ pub struct UI {
     // true: the media player can move around
     #[serde(skip)]
     pub popout_player: bool,
+    pub popout_windows_id: Option<AllPopoutWindowsId>,
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
@@ -75,6 +76,17 @@ impl Drop for UI {
 }
 
 impl UI {
+    fn take_all_popout_ids(&mut self) -> Vec<Option<WindowId>> {
+        match self.popout_windows_id.take() {
+            Some(all_popout_windows_id) => {
+                let ids = all_popout_windows_id.popout_windows_id.clone();
+                self.popout_windows_id = Some(all_popout_windows_id);
+                ids
+            }
+            None => Vec::new(),
+        }
+    }
+
     fn take_popout_id(&mut self) -> Option<WindowId> {
         self.popout_player = false;
         match self.current_call.take() {
@@ -124,10 +136,18 @@ impl UI {
     }
     pub fn set_popout(&mut self, id: WindowId) {
         self.current_call = Some(Call::new(Some(id)));
+        self.popout_windows_id = Some(AllPopoutWindowsId::add_one(
+            self.popout_windows_id.clone(),
+            Some(id),
+        ));
         self.popout_player = true;
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
         self.current_debug_logger = Some(DebugLogger::new(Some(id)));
+        self.popout_windows_id = Some(AllPopoutWindowsId::add_one(
+            self.popout_windows_id.clone(),
+            Some(id),
+        ));
     }
     pub fn clear_debug_logger(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_debug_logger_id() {
@@ -136,11 +156,23 @@ impl UI {
     }
     pub fn set_file_preview(&mut self, id: WindowId) {
         self.current_file_preview = Some(FilePreview::new(Some(id)));
+        self.popout_windows_id = Some(AllPopoutWindowsId::add_one(
+            self.popout_windows_id.clone(),
+            Some(id),
+        ));
     }
     pub fn clear_file_preview(&mut self, desktop_context: DesktopContext) {
         if let Some(id) = self.take_file_preview_id() {
             desktop_context.close_window(id);
         };
+    }
+
+    pub fn clear_all_popout_windows(&mut self, desktop_context: DesktopContext) {
+        for id in self.take_all_popout_ids() {
+            if let Some(id) = id {
+                desktop_context.close_window(id);
+            };
+        }
     }
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
@@ -186,6 +218,28 @@ impl UI {
             x.silenced = !x.silenced;
             x
         });
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct AllPopoutWindowsId {
+    #[serde(skip)]
+    pub popout_windows_id: Vec<Option<WindowId>>,
+}
+
+impl AllPopoutWindowsId {
+    pub fn add_one(
+        all_popout_windows_id: Option<AllPopoutWindowsId>,
+        new_window_id: Option<WindowId>,
+    ) -> Self {
+        let mut windows_id = Vec::new();
+        if let Some(data) = all_popout_windows_id {
+            windows_id = data.popout_windows_id;
+        }
+        windows_id.push(new_window_id);
+        Self {
+            popout_windows_id: windows_id,
+        }
     }
 }
 

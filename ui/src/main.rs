@@ -513,11 +513,7 @@ fn app(cx: Scope) -> Element {
                 Ok(state) => {
                     state
                         .write()
-                        .mutate(Action::ClearFilePreview(desktop.clone()));
-                    state.write().mutate(Action::ClearPopout(desktop.clone()));
-                    state
-                        .write()
-                        .mutate(Action::ClearDebugLogger(desktop.clone()));
+                        .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
                 }
                 Err(e) => log::error!("{e}"),
             },
