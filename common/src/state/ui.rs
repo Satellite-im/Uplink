@@ -41,12 +41,10 @@ pub struct UI {
     pub current_call: Option<Call>,
     #[serde(skip)]
     pub current_debug_logger: Option<DebugLogger>,
-    #[serde(skip)]
-    pub current_file_preview: Option<FilePreview>,
     // false: the media player is anchored in place
     // true: the media player can move around
     #[serde(skip)]
-    pub popout_player: bool,
+    pub popout_media_player: bool,
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
@@ -78,7 +76,7 @@ impl Drop for UI {
 
 impl UI {
     fn take_call_popout_id(&mut self) -> Option<WindowId> {
-        self.popout_player = false;
+        self.popout_media_player = false;
         match self.current_call.take() {
             Some(mut call) => {
                 let id = call.take_window_id();
@@ -115,7 +113,7 @@ impl UI {
     }
     pub fn set_call_popout(&mut self, id: WindowId) {
         self.current_call = Some(Call::new(Some(id)));
-        self.popout_player = true;
+        self.popout_media_player = true;
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
         self.current_debug_logger = Some(DebugLogger::new(Some(id)));

@@ -1003,7 +1003,7 @@ impl State {
     /// Analogous to Hang Up
     fn disable_media(&mut self) {
         self.chats.active_media = None;
-        self.ui.popout_player = false;
+        self.ui.popout_media_player = false;
         self.ui.current_call = None;
     }
     pub fn has_toasts(&self) -> bool {

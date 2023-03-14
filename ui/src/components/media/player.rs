@@ -90,7 +90,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         }
                     )),
                     onpress: move |_| {
-                         if state.read().ui.popout_player {
+                         if state.read().ui.popout_media_player {
                              state.write().mutate(Action::ClearCallPopout(window.clone()));
                              return;
                          }
@@ -109,13 +109,13 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                     }
                 },
                 // don't render MediadPlayer if the video is popped out
-                state.read().ui.popout_player.then(|| rsx!(
+                state.read().ui.popout_media_player.then(|| rsx!(
                     span {
                         class: "popped-out",
                         video {}
                     }
                 )),
-                (!state.read().ui.popout_player).then(|| rsx!(
+                (!state.read().ui.popout_media_player).then(|| rsx!(
                     video {
                         src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
                         autoplay: "true",
