@@ -9,6 +9,18 @@ use warp::{crypto::DID, raygun::Message};
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
+// let (p = window_bottom) be an index into Chat.messages
+// show messages from (p - window_size) to (p + window_extra)
+// scroll up by window_extra (this allows an onmouseout event to trigger)
+pub struct ChatView {
+    // the idx of the message on the bottom of the screen
+    message_idx: usize,
+    // the number of messages to render in the window
+    window_size: usize,
+    // the number of messages to add outside the window, for scrolling purposes
+    window_extra: usize,
+}
+
 // warning: Chat implements Serialize
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct Chat {
