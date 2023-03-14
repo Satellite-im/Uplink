@@ -331,6 +331,9 @@ impl State {
             MultiPassEvent::Unblocked(identity) => {
                 self.unblock(&identity);
             }
+            MultiPassEvent::IdentityUpdate(identity) => {
+                self.update_identity(identity.did_key(), identity);
+            }
         }
     }
 
