@@ -512,7 +512,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                         key: "{context_key}",
                                         id: context_key,
                                         on_mouseout: |e| {
-                                            log::debug!("onmouseout: {e:?}");
+                                            //log::debug!("onmouseout: {e:?}");
                                         },
                                         items: cx.render(rsx!(
                                             ContextItem {
