@@ -358,14 +358,7 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
-                if self
-                    .chats
-                    .active
-                    .as_ref()
-                    .map(|x| x != &conversation_id)
-                    .unwrap_or(true)
-                    && self.chats.in_sidebar.contains(&conversation_id)
-                {
+                if self.chats.in_sidebar.contains(&conversation_id) {
                     self.send_chat_to_top_of_sidebar(conversation_id);
                 }
 
