@@ -576,6 +576,9 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                                                 on_edit: move |update: String| {
                                                     edit_msg.set(None);
                                                     let msg = update.split('\n').collect::<Vec<_>>();
+                                                    if message.inner.value() == msg {
+                                                        return;
+                                                    }
                                                     let is_valid = msg.iter().any(|x| !x.trim().is_empty());
                                                     let msg = msg.iter().map(|x| x.to_string()).collect();
                                                     if !is_valid {
