@@ -1,5 +1,6 @@
 use std::rc::Weak;
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
+use std::time::Duration;
+use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -45,8 +46,8 @@ use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
-use crate::window_manager::{WindowManagerCmd, WindowManagerCmdTx};
-use crate::WINDOW_CMD_CH;
+use crate::utils::WindowDropHandler;
+use crate::window_manager::WindowManagerCmd;
 
 const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
@@ -711,20 +712,21 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             key: "{key}-file",
                                             thumbnail: file.thumbnail(),
                                             text: file.name(),
+                                            aria_label: file.name(),
+                                            with_rename: *is_renaming_map.read() == Some(key),
                                             onpress: move |_| {
-                                                let drop_handler = WindowDropHandler::new(WINDOW_CMD_CH.tx.clone());
-                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps{
-                                                    _drop_handler: drop_handler,
+                                                let key = Uuid::new_v4();
+                                                let drop_handler = WindowDropHandler::new(WindowManagerCmd::ForgetFilePreview(key));
+                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
                                                     file: file3.clone(),
+                                                    _drop_handler: drop_handler
                                                 });
                                                 let window = window.new_window(file_preview, Default::default());
                                                 if let Some(wv) = Weak::upgrade(&window) {
                                                     let id = wv.window().id();
-                                                    state.write().mutate(Action::SetFilePreview(id));
+                                                    state.write().mutate(Action::AddFilePreview(key, id));
                                                 }
                                             },
-                                            aria_label: file.name(),
-                                            with_rename: *is_renaming_map.read() == Some(key),
                                             onrename: move |(val, key_code)| {
                                                 is_renaming_map.with_mut(|i| *i = None);
                                                 if key_code == Code::Enter {
@@ -767,30 +769,6 @@ fn update_items_with_mock_data(
         files: files_list.read().clone(),
     };
     storage_state.set(Some(storage_mock));
-}
-
-pub struct WindowDropHandler {
-    cmd_tx: WindowManagerCmdTx,
-}
-
-impl PartialEq for WindowDropHandler {
-    fn eq(&self, _other: &Self) -> bool {
-        false
-    }
-}
-
-impl WindowDropHandler {
-    pub fn new(cmd_tx: WindowManagerCmdTx) -> Self {
-        Self { cmd_tx }
-    }
-}
-
-impl Drop for WindowDropHandler {
-    fn drop(&mut self) {
-        if let Err(_e) = self.cmd_tx.send(WindowManagerCmd::CloseFilePreview) {
-            // todo: log error
-        }
-    }
 }
 
 fn get_drag_event() -> FileDropEvent {

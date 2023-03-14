@@ -9,9 +9,8 @@ use kit::elements::{
     Appearance,
 };
 
-use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
+use crate::{utils::WindowDropHandler, window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
-use super::player::WindowDropHandler;
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[inline_props]

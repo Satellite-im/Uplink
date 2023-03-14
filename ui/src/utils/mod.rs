@@ -8,6 +8,8 @@ use walkdir::WalkDir;
 
 use kit::User as UserInfo;
 
+use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
+
 pub mod format_timestamp;
 pub mod lifecycle;
 
@@ -76,6 +78,31 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         status: identity.identity_status().into(),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
+    }
+}
+
+pub struct WindowDropHandler {
+    cmd: WindowManagerCmd,
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd: WindowManagerCmd) -> Self {
+        Self { cmd }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        let cmd_tx = WINDOW_CMD_CH.tx.clone();
+        if let Err(_e) = cmd_tx.send(self.cmd) {
+            // todo: log error
+        }
     }
 }
 

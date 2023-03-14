@@ -7,12 +7,13 @@ use common::{
 use dioxus::prelude::*;
 use warp::constellation::file::File;
 
-use super::storage::WindowDropHandler;
 use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
+
+use crate::utils::WindowDropHandler;
 
 const CSS_STYLE: &str = include_str!("./style.scss");
 
@@ -43,12 +44,12 @@ pub fn get_file_format(file_name: String) -> FileFormat {
     if doc_formats.iter().any(|f| f == &file_extension) {
         return FileFormat::Document;
     }
-    return FileFormat::Other;
+    FileFormat::Other
 }
 
 #[inline_props]
 #[allow(non_snake_case)]
-pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> Element {
+pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> Element {
     let file_format = get_file_format(file.name());
     let file_name = file.name();
     let thumbnail = file.thumbnail();
@@ -57,7 +58,7 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
     let mut css_style = update_theme_colors();
     let update_state: &UseRef<Option<()>> = use_ref(cx, || Some(()));
 
-    if update_state.read().is_some().clone() {
+    if update_state.read().is_some() {
         css_style = update_theme_colors();
         *update_state.write_silent() = None;
     }
@@ -84,14 +85,17 @@ pub fn FilePreview(cx: Scope, _drop_handler: WindowDropHandler, file: File) -> E
             let fs_event_watcher_result = RecommendedWatcher::new(tx, Config::default());
             if let Ok(fs_event_watcher) = fs_event_watcher_result {
                 let mut watcher: RecommendedWatcher = fs_event_watcher;
-                if let Ok(_) = watcher.watch(
-                    STATIC_ARGS.cache_path.clone().as_path(),
-                    RecursiveMode::NonRecursive,
-                ) {
+                if watcher
+                    .watch(
+                        STATIC_ARGS.cache_path.clone().as_path(),
+                        RecursiveMode::NonRecursive,
+                    )
+                    .is_ok()
+                {
                     loop {
                         let mut event_processed = false;
                         tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-                        while let Ok(_) = rx.try_recv() {
+                        while rx.try_recv().is_ok() {
                             if update_state.read().is_none() && !event_processed {
                                 update_state.with_mut(|i| *i = Some(()));
                                 event_processed = true;

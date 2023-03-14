@@ -67,17 +67,19 @@ pub enum Action {
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
-    SetPopout(WindowId),
-    #[display(fmt = "ClearPopout")]
-    ClearPopout(DesktopContext),
+    SetCallPopout(WindowId),
+    #[display(fmt = "ClearCallPopout")]
+    ClearCallPopout(DesktopContext),
     #[display(fmt = "SetDebugLogger")]
     SetDebugLogger(WindowId),
     #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
-    #[display(fmt = "SetFilePreview")]
-    SetFilePreview(WindowId),
+    #[display(fmt = "AddFilePreview")]
+    AddFilePreview(Uuid, WindowId),
+    #[display(fmt = "ForgetFilePreview")]
+    ForgetFilePreview(Uuid),
     #[display(fmt = "ClearFilePreview")]
-    ClearFilePreview(DesktopContext),
+    ClearFilePreviews(DesktopContext),
     #[display(fmt = "ClearAllPopoutWindows")]
     ClearAllPopoutWindows(DesktopContext),
     // Notifications
