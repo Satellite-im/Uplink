@@ -2,7 +2,6 @@ use std::ffi::OsStr;
 
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
-use uuid::Uuid;
 
 use crate::elements::{
     button::Button,
@@ -129,7 +128,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 with_rename.then(||
                     rsx! (
                         Input {
-                                id: Uuid::new_v4().to_string(),
                                 disabled: disabled,
                                 placeholder: placeholder,
                                 focus: true,

@@ -6,6 +6,17 @@
     width: 100%;
     position: relative;
     margin-bottom: calc((var(--width-sidebar) / 6.3) / 2 + var(--gap));
+
+
+    #profile-banner-context-menu {
+      width: 100%;
+      height: 100%;  
+    }
+
+    .context-wrap:first-of-type {
+      width: 100%;
+      height: 100%;
+    }
   }
   .new-profile-welcome {
     border: 1px solid var(--border-color);

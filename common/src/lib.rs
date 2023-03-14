@@ -84,6 +84,8 @@ pub struct StaticArgs {
     pub typing_indicator_timeout: u64,
     /// used only for testing the UI. generates fake friends, conversations, and messages
     pub use_mock: bool,
+    /// Uses experimental configuration
+    pub experimental: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
@@ -106,6 +108,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
         use_mock: args.with_mock,
+        experimental: args.experimental_node,
     }
 });
 
