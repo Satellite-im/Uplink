@@ -33,7 +33,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
-    state::{group_messages, GroupedMessage, MessageGroup, MessageGrouper},
+    state::{group_messages, GroupedMessage, MessageGroup},
 };
 use common::{
     state::{self, ui, Action, Chat, Identity, State},
@@ -179,7 +179,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
-    let data = cx.props.data.clone();
+    let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
     let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
     cx.render(rsx!(
@@ -553,8 +553,9 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         },
         remote: group.remote,
         children: cx.render(rsx!(render_messages {
-            messages: &group.messages
-            is_remote: group.remote
+            messages: &group.messages,
+            active_chat_id: active_chat.id,
+            is_remote: group.remote,
         }))
     },))
 }
@@ -562,6 +563,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 #[derive(Props)]
 struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
+    active_chat_id: Uuid,
     is_remote: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
@@ -584,104 +586,110 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
-            items: cx.render(rsx!(
-                ContextItem {
-                    icon: Icon::ArrowLongLeft,
-                    text: get_local_text("messages.reply"),
-                    onpress: move |_| {
-                        state
-                            .write()
-                            .mutate(Action::StartReplying(&active_chat.id, &message));
-                    }
-                },
-                ContextItem {
-                    icon: Icon::FaceSmile,
-                    text: get_local_text("messages.react"),
-                    //TODO: let the user pick a reaction
-                    onpress: move |_| {
-                        // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
-                        // todo: allow emoji extension instead
-                        // using "like" for now
-                        ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Pencil,
-                    text: get_local_text("messages.edit"),
-                    should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
-                    onpress: move |_| {
-                        edit_msg.set(Some(msg_uuid));
-                        log::debug!("editing msg {msg_uuid}");
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Pencil,
-                    text: get_local_text("messages.cancel-edit"),
-                    should_render: !cx.props.is_remote,
-                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
-                    onpress: move |_| {
-                        edit_msg.set(None);
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Trash,
-                    danger: true,
-                    text: get_local_text("uplink.delete"),
-                    should_render: sender_is_self,
-                    onpress: move |_| {
-                        ch.send(MessagesCommand::DeleteMessage {
-                            conv_id: message.inner.conversation_id(),
-                            msg_id: message.inner.id(),
-                        });
-                    }
-                },
-                div {
-                    class: "msg-wrapper",
-                    message.in_reply_to.map(|other_msg| rsx!(
-                    MessageReply {
-                            key: "reply-{message_key}",
-                            with_text: other_msg,
-                            remote: cx.props.is_remote,
-                            remote_message: cx.props.is_remote,
-                        }
-                    )),
-                    Message {
-                        key: "{message_key}",
-                        editing: is_editing,
-                        remote: cx.props.is_remote,
-                        with_text: message.inner.value().join("\n"),
-                        reactions: message.inner.reactions(),
-                        order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                        attachments: message.inner.attachments(),
-                        on_download: move |file_name| {
-                            if let Some(directory) = FileDialog::new()
-                            .set_directory(dirs::home_dir().unwrap_or_default())
-                            .pick_folder() {
-                                ch.send(MessagesCommand::DownloadAttachment {
-                                    conv_id: message.inner.conversation_id(),
-                                    msg_id: message.inner.id(),
-                                    file_name, directory
-                                })
-                            }
-                        },
-                        on_edit: move |update: String| {
-                            edit_msg.set(None);
-                            let msg = update.split('\n').collect::<Vec<_>>();
-                            let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                            let msg = msg.iter().map(|x| x.to_string()).collect();
-                            if !is_valid {
-                                ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
-                            }
-                            else {
-                                ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
-                            }
-                        }
-                    },
-                }
-            )),// end context menu items
-        })// end context menu
+            children: cx.render(rsx!(render_message {})),
+            items: cx.render(rsx!("")) /*items: cx.render(rsx!(
+                                           ContextItem {
+                                               icon: Icon::ArrowLongLeft,
+                                               text: get_local_text("messages.reply"),
+                                               onpress: move |_| {
+                                                   state
+                                                       .write()
+                                                       .mutate(Action::StartReplying(&cx.props.active_chat_id, &message));
+                                               }
+                                           },
+                                           ContextItem {
+                                               icon: Icon::FaceSmile,
+                                               text: get_local_text("messages.react"),
+                                               //TODO: let the user pick a reaction
+                                               onpress: move |_| {
+                                                   // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+                                                   // todo: allow emoji extension instead
+                                                   // using "like" for now
+                                                  // ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
+                                               }
+                                           },
+                                           ContextItem {
+                                               icon: Icon::Pencil,
+                                               text: get_local_text("messages.edit"),
+                                               should_render: !cx.props.is_remote
+                                                   && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                                               onpress: move |_| {
+                                                   edit_msg.set(Some(msg_uuid));
+                                                   log::debug!("editing msg {msg_uuid}");
+                                               }
+                                           },
+                                           ContextItem {
+                                               icon: Icon::Pencil,
+                                               text: get_local_text("messages.cancel-edit"),
+                                               should_render: !cx.props.is_remote,
+                                                   && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                                               onpress: move |_| {
+                                                   edit_msg.set(None);
+                                               }
+                                           },
+                                           ContextItem {
+                                               icon: Icon::Trash,
+                                               danger: true,
+                                               text: get_local_text("uplink.delete"),
+                                               should_render: sender_is_self,
+                                               onpress: move |_| {
+                                                   /*ch.send(MessagesCommand::DeleteMessage {
+                                                       conv_id: message.inner.conversation_id(),
+                                                       msg_id: message.inner.id(),
+                                                   });*/
+                                               }
+                                           },
+                                       )), // end context menu items */
+        }) // end context menu
     }))) // end outer cx.render
+}
+
+fn render_message(cx: Scope) -> Element {
+    cx.render(rsx!(
+        "" /*div {
+               class: "msg-wrapper",
+               message.in_reply_to.map(|other_msg| rsx!(
+               MessageReply {
+                       key: "reply-{message_key}",
+                       with_text: other_msg,
+                       remote: cx.props.is_remote,
+                       remote_message: cx.props.is_remote,
+                   }
+               )),
+               Message {
+                   key: "{message_key}",
+                   editing: is_editing,
+                   remote: cx.props.is_remote,
+                   with_text: message.inner.value().join("\n"),
+                   reactions: message.inner.reactions(),
+                   order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                   attachments: message.inner.attachments(),
+                   on_download: move |file_name| {
+                       if let Some(directory) = FileDialog::new()
+                       .set_directory(dirs::home_dir().unwrap_or_default())
+                       .pick_folder() {
+                           ch.send(MessagesCommand::DownloadAttachment {
+                               conv_id: message.inner.conversation_id(),
+                               msg_id: message.inner.id(),
+                               file_name, directory
+                           })
+                       }
+                   },
+                   on_edit: move |update: String| {
+                       edit_msg.set(None);
+                       let msg = update.split('\n').collect::<Vec<_>>();
+                       let is_valid = msg.iter().any(|x| !x.trim().is_empty());
+                       let msg = msg.iter().map(|x| x.to_string()).collect();
+                       if !is_valid {
+                           ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
+                       }
+                       else {
+                           ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                       }
+                   }
+               },
+           }*/
+    ))
 }
 
 #[derive(Eq, PartialEq)]
@@ -704,7 +712,7 @@ struct TypingInfo {
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
-    let data = cx.props.data.clone();
+    let data = &cx.props.data;
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx, || false);
@@ -939,10 +947,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         )),
         with_replying_to: data
+            .as_ref()
             .map(|data| {
                 let active_chat = &data.active_chat;
 
-                cx.render(rsx!(active_chat.replying_to.map(|msg| {
+                cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
                     let our_did = state.read().did_key();
                     let msg_owner = if data.my_id.did_key() == msg.sender() {
                         Some(&data.my_id)
