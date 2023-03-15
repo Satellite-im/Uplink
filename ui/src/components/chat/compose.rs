@@ -338,7 +338,10 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
     let num_to_take = use_state(cx, || 10_usize);
-    let max_to_take = data.active_chat.messages.len();
+    let max_to_take = use_ref(cx, || data.active_chat.messages.len());
+    if *max_to_take.read() != data.active_chat.messages.len() {
+        *max_to_take.write_silent() = data.active_chat.messages.len();
+    }
 
     // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
     // to the bottom when the user selects the active chat
@@ -360,11 +363,11 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     //});
 
     use_future(cx, (), |_| {
-        to_owned![num_to_take];
+        to_owned![num_to_take, max_to_take];
         async move {
             loop {
                 tokio::time::sleep(Duration::from_millis(500)).await;
-                if *num_to_take.current() < max_to_take {
+                if *num_to_take.current() < *max_to_take.read() {
                     num_to_take.modify(|x| x.saturating_add(10));
                     //log::info!("num_to_take is now {}", *num_to_take.current());
                 }
