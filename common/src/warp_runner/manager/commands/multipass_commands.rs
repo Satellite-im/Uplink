@@ -169,7 +169,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let _ = match warp.multipass.get_own_identity().await {
                 Ok(mut my_id) => match warp
                     .multipass
-                    .update_identity(IdentityUpdate::set_graphics_picture(pfp.clone()))
+                    .update_identity(IdentityUpdate::Picture(pfp.clone()))
                     .await
                 {
                     Ok(_) => {
@@ -192,7 +192,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::UpdateBanner { banner, rsp } => {
             let r = warp
                 .multipass
-                .update_identity(IdentityUpdate::set_graphics_banner(banner))
+                .update_identity(IdentityUpdate::Banner(banner))
                 .await;
             let _ = match r {
                 Ok(_) => {
@@ -208,7 +208,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::UpdateStatus { status, rsp } => {
             let r = warp
                 .multipass
-                .update_identity(IdentityUpdate::set_status_message(status))
+                .update_identity(IdentityUpdate::StatusMessage(status))
                 .await;
             let id = warp.multipass.get_own_identity().await;
             let _ = match r {
@@ -222,7 +222,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::UpdateUsername { username, rsp } => {
             let r = warp
                 .multipass
-                .update_identity(IdentityUpdate::set_username(username))
+                .update_identity(IdentityUpdate::Username(username))
                 .await;
             let id = warp.multipass.get_own_identity().await;
             let _ = match r {

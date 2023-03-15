@@ -65,12 +65,12 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let id = format!("{}-context-menu", &cx.props.id);
+    let id = &cx.props.id;
     let window = use_window(cx);
 
     // Handles the hiding and showing of the context menu
     let eval = use_eval(cx);
-    use_effect(cx, (&id,), |(id,)| {
+    use_effect(cx, (id,), |(id,)| {
         to_owned![eval];
         async move {
             let script = include_str!("./context.js").replace("UUID", &id);
@@ -82,11 +82,11 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "context-wrap",
             div {
-                id: "{cx.props.id}",
+                id: "{id}",
                 &cx.props.children,
             },
             div {
-                id: "{id}",
+                id: "{id}-context-menu",
                 class: "context-menu hidden",
                 aria_label: "Context Menu",
                 &cx.props.items,
