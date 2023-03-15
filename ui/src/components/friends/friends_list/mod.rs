@@ -51,7 +51,7 @@ pub fn Friends(cx: Scope) -> Element {
 
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(&chat.id));
+        state.write().mutate(Action::ChatWith(&chat.id, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }

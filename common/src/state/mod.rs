@@ -172,10 +172,10 @@ impl State {
             Action::ClearTheme => self.set_theme(None),
 
             // ===== Chats =====
-            Action::ChatWith(chat) => {
+            Action::ChatWith(chat, should_move_to_top) => {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
-                self.set_active_chat(chat);
+                self.set_active_chat(chat, should_move_to_top);
             }
             Action::ClearActiveChat => {
                 self.clear_active_chat();
@@ -327,14 +327,7 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
-                if self
-                    .chats
-                    .active
-                    .as_ref()
-                    .map(|x| x != &conversation_id)
-                    .unwrap_or(true)
-                    && self.chats.in_sidebar.contains(&conversation_id)
-                {
+                if self.chats.in_sidebar.contains(&conversation_id) {
                     self.send_chat_to_top_of_sidebar(conversation_id);
                 }
 
@@ -385,6 +378,7 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
+                self.send_chat_to_top_of_sidebar(conversation_id);
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -754,15 +748,18 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to set as the active chat.
-    fn set_active_chat(&mut self, chat: &Uuid) {
+    fn set_active_chat(&mut self, chat: &Uuid, should_move_to_top: bool) {
         self.chats.active = Some(*chat);
-        if !self.chats.in_sidebar.contains(chat) {
+        if should_move_to_top {
+            self.send_chat_to_top_of_sidebar(*chat);
+        } else if !self.chats.in_sidebar.contains(chat) {
             self.chats.in_sidebar.push_front(*chat);
         }
         if let Some(chat) = self.chats.all.get_mut(chat) {
             chat.unreads = 0;
         }
     }
+
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
