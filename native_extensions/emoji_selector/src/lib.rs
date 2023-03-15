@@ -143,6 +143,8 @@ impl EmojiSelector {
                                                 let draft: String = c.draft.unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
                                                 state.write().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                .
+                                                display_selector.set(false);
                                             },
                                             emoji.as_str()
                                         }
