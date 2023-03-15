@@ -329,14 +329,22 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let user = state.read().did_key();
 
+    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
+    // to the bottom when the user selects the active chat
+    let active_chat = use_state(cx, || None);
+    let currently_active = state.read().chats().active;
+
     let num_to_take = use_state(cx, || 10_usize);
 
     let eval = use_eval(cx);
     use_effect(cx, (), move |_| {
-        to_owned![eval];
+        to_owned![eval, active_chat];
         async move {
-            let script = include_str!("./script.js");
-            eval(script.to_string());
+            if *active_chat.current() != currently_active {
+                active_chat.set(currently_active);
+                let script = include_str!("./script.js");
+                eval(script.to_string());
+            }
         }
     });
 
