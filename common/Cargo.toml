@@ -29,7 +29,8 @@ titlecase.workspace = true
 substring = "1.4.5"
 icons = { path = "../icons" }
 humansize.workspace = true
-
+zip = "0.6.4"
+walkdir.workspace = true
 extensions.workspace = true
 
 futures.workspace = true
