@@ -338,6 +338,9 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
     let num_to_take = use_state(cx, || 10_usize);
+
+    // this needs to be a hook so it can change inside of the use_future.
+    // it could be passed in as a dependency but then the wait would reset every time a message comes in.
     let max_to_take = use_ref(cx, || data.active_chat.messages.len());
     if *max_to_take.read() != data.active_chat.messages.len() {
         *max_to_take.write_silent() = data.active_chat.messages.len();
@@ -349,18 +352,12 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let active_chat = use_ref(cx, || None);
     let currently_active = Some(data.active_chat.id);
     let eval = use_eval(cx);
-    // use_effect is pretty cool. maybe leave this around as an example.
-    //use_effect(cx, (), move |_| {
-    //    to_owned![eval, active_chat];
-    //    async move {
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
         num_to_take.set(10_usize);
         let script = include_str!("./script.js");
         eval(script.to_string());
     }
-    //    }
-    //});
 
     use_future(cx, (), |_| {
         to_owned![num_to_take, max_to_take];
