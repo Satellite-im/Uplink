@@ -56,7 +56,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onchange,
         onreturn,
     } = &cx.props;
-    let val = use_ref(cx, || default_text.clone());
 
     render_input(
         cx,
@@ -69,7 +68,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         aria_label,
         onchange,
         onreturn,
-        val.clone(),
+        default_text.as_str(),
     )
 }
 
@@ -109,8 +108,6 @@ pub fn ControlledInput<'a>(cx: Scope<'a, ControlledInputProps<'a>>) -> Element<'
         value,
     } = &cx.props;
 
-    let val = use_ref(cx, || value.clone());
-
     render_input(
         cx,
         id,
@@ -122,7 +119,7 @@ pub fn ControlledInput<'a>(cx: Scope<'a, ControlledInputProps<'a>>) -> Element<'
         aria_label,
         onchange,
         onreturn,
-        val.clone(),
+        value.as_str(),
     )
 }
 
@@ -138,7 +135,7 @@ fn render_input<'a>(
     aria_label: &String,
     onchange: &'a EventHandler<'a, (String, bool)>,
     onreturn: &'a EventHandler<'a, (String, bool, Code)>,
-    value: UseRef<String>,
+    value: &str,
 ) -> Element<'a> {
     let height_script = include_str!("./update_input_height.js");
     let focus_script = include_str!("./focus.js").replace("UUID", id);
@@ -148,7 +145,7 @@ fn render_input<'a>(
     let script = include_str!("./script.js")
         .replace("UUID", id)
         .replace("$MULTI_LINE", &format!("{}", true));
-    let current_val = value.read().clone();
+    let current_val = value.to_string();
     let cv2 = current_val.clone();
 
     cx.render(rsx! (

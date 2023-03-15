@@ -763,13 +763,13 @@ impl UseText<'_> {
     }
 
     pub fn with_mut(&self, f: impl FnOnce(&mut Vec<String>)) {
-        f(&mut self.local_text.write_silent());
+        f(&mut self.local_text.write());
         if let Some(id) = &self.active_chat_id {
             self.typing_ch.send(TypingIndicator::Typing(*id));
             // TODO: Maybe we should debounce this in the future so we don't do it on EVERY keypress.
             if let Some(state) = self.state {
                 state
-                    .write_silent()
+                    .write()
                     .mutate(Action::SetChatDraft(*id, self.local_text.read().join("\n")));
             }
         }
