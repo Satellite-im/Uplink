@@ -73,10 +73,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.unblock"),
                                 onpress: move |_| {
+                                    let did = &unblock_user.did_key();
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::Unblock(unblock_user.clone()));
+                                        state.write().mutate(Action::Unblock(did));
                                     } else {
-                                        ch.send(unblock_user.clone().did_key());
+                                        ch.send(*did);
                                     }
                                 }
                             },
@@ -94,10 +95,11 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 }
                             )),
                             onremove: move |_| {
+                                let did = &unblock_user.did_key();
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::Unblock(unblock_user_clone.clone()));
+                                    state.write().mutate(Action::Unblock(&did));
                                 } else {
-                                    ch.send(unblock_user_clone.clone().did_key());
+                                    ch.send(*did);
                                 }
                             }
                         }

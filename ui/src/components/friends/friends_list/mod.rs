@@ -49,9 +49,9 @@ pub fn Friends(cx: Scope) -> Element {
 
     let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
 
-    if let Some(chat) = chat_with.get().clone() {
+    if let Some(chat) = chat_with.get().as_ref() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(chat));
+        state.write().mutate(Action::ChatWith(&chat.id));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -167,17 +167,11 @@ pub fn Friends(cx: Scope) -> Element {
                         },
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
-                            let chat = state.read().get_chat_with_friend(&friend);
-                            let chat2 = chat.clone();
-                            let chat3 = chat.clone();
-                            let favorite = chat.clone().map(|c| state.read().is_favorite(&c));
+                            let chat = &state.read().get_chat_with_friend(&friend);
+                            let favorite = chat.as_ref().map(|c| state.read().is_favorite(&c));
                             let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                            let remove_friend = friend.clone();
-                            let remove_friend_2 = friend.clone();
-                            let chat_with_friend = friend.clone();
-                            let block_friend = friend.clone();
-                            let block_friend_2 = friend.clone();
-                            let context_friend = friend.clone();
+                            let friend = &friend;
+                            let friend_did = &friend.did_key();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
                             let platform = friend.platform().into();
@@ -190,7 +184,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
-                                                ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
+                                                ch.send(ChanCmd::CreateConversation{recipient: friend.did_key(), chat: *chat});
                                             }
                                         },
                                         ContextItem {
@@ -205,8 +199,8 @@ pub fn Friends(cx: Scope) -> Element {
                                                 onpress: move |_| {
                                                     // can't favorite a non-existent conversation
                                                     // todo: don't even allow favoriting from the friends page unless there's a conversation
-                                                    if let Some(c) = &chat {
-                                                        state.write().mutate(Action::ToggleFavorite(c.clone()));
+                                                    if let Some(c) = chat {
+                                                        state.write().mutate(Action::ToggleFavorite(&c.id));
                                                     }
                                                 }
                                             })
@@ -218,10 +212,10 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                    state.write().mutate(Action::RemoveFriend(friend_did));
                                                 } else {
-                                                    ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
+                                                    ch.send(ChanCmd::RemoveFriend(*friend_did));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(*friend_did));
                                                 }
                                             }
                                         },
@@ -231,10 +225,10 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::Block(block_friend.clone()));
+                                                    state.write().mutate(Action::Block(friend_did));
                                                 } else {
-                                                    ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
+                                                    ch.send(ChanCmd::BlockFriend(*friend_did));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(*friend_did));
                                                 }
                                             }
                                         },
@@ -253,22 +247,22 @@ pub fn Friends(cx: Scope) -> Element {
                                         )),
                                         onchat: move |_| {
                                             // this works for mock data because the conversations already exist
-                                           ch.send(ChanCmd::CreateConversation{recipient: chat_with_friend.did_key(), chat: chat3.clone()});
+                                           ch.send(ChanCmd::CreateConversation{recipient: *friend_did, chat: *chat});
                                         },
                                         onremove: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                                state.write().mutate(Action::RemoveFriend(friend_did));
                                             } else {
-                                                ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
-                                                ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
+                                                ch.send(ChanCmd::RemoveFriend(*friend_did));
+                                                ch.send(ChanCmd::RemoveDirectConvs(*friend_did));
                                             }
                                         },
                                         onblock: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::Block(block_friend_2.clone()));
+                                                state.write().mutate(Action::Block(friend_did));
                                             } else {
-                                                ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
-                                                ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
+                                                ch.send(ChanCmd::BlockFriend(*friend_did));
+                                                ch.send(ChanCmd::RemoveDirectConvs(*friend_did));
                                             }
                                         }
                                     }

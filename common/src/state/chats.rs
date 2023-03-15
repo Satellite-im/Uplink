@@ -5,7 +5,7 @@ use std::{
 
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
-use warp::{crypto::DID, raygun::Message};
+use warp::{crypto::DID, raygun};
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
@@ -39,7 +39,7 @@ pub struct Chat {
     pub unreads: u32,
     // If a value exists, we will render the message we're replying to above the chatbar
     #[serde(skip)]
-    pub replying_to: Option<Message>,
+    pub replying_to: Option<raygun::Message>,
     // list of users currently typing.
     // (user id, last update time)
     #[serde(skip)]
@@ -79,14 +79,11 @@ impl Chats {
     }
     /// returns the UUID of the message being replied to by the active chat
     pub fn get_replying_to(&self) -> Option<Uuid> {
-        self.active
-            .and_then(|id| self.all.get(&id).and_then(|chat| chat.get_replying_to()))
-    }
-}
-
-impl Chat {
-    pub fn get_replying_to(&self) -> Option<Uuid> {
-        self.replying_to.as_ref().map(|m| m.id())
+        self.active.and_then(|id| {
+            self.all
+                .get(&id)
+                .and_then(|chat| chat.replying_to.as_ref().map(|msg| msg.id()))
+        })
     }
 }
 

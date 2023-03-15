@@ -54,11 +54,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 text: get_local_text("friends.outgoing_requests"),
             },
             friends_list.into_iter().map(|friend| {
-                let did = friend.did_key();
+                let did = &friend.did_key();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let mut rng = rand::thread_rng();
-                let friend_clone = friend.clone();
-                let friend_clone_clone = friend.clone();
                 let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
@@ -71,9 +69,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 text: get_local_text("friends.cancel"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::CancelRequest(friend_clone_clone.clone()));
+                                        state.write().mutate(Action::CancelRequest(did));
                                     } else {
-                                        ch.send(friend_clone_clone.did_key());
+                                        ch.send(*did);
                                     }
                                 }
                             },
@@ -97,9 +95,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             )),
                             onremove: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::CancelRequest(friend_clone.clone()));
+                                    state.write().mutate(Action::CancelRequest(did));
                                 } else {
-                                    ch.send(friend_clone.did_key());
+                                    ch.send(*did);
                                 }
                             }
                         }

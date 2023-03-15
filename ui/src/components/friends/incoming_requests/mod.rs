@@ -3,7 +3,7 @@ use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
-    state::{Action, Identity, State},
+    state::{Action, State},
     warp_runner::{MultiPassCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -17,11 +17,12 @@ use kit::{
     elements::label::Label,
 };
 use rand::Rng;
+use warp::crypto::DID;
 use warp::{logging::tracing::log, multipass::identity::Relationship};
 
 enum ChanCmd {
-    AcceptRequest(Identity),
-    DenyRequest(Identity),
+    AcceptRequest(DID),
+    DenyRequest(DID),
 }
 
 #[allow(non_snake_case)]
@@ -39,7 +40,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::AcceptRequest {
-                                did: identity.did_key(),
+                                did: identity,
                                 rsp: tx,
                             }))
                         {
@@ -56,7 +57,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::DenyRequest {
-                                did: identity.did_key(),
+                                did: identity,
                                 rsp: tx,
                             }))
                         {
@@ -82,13 +83,10 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 text: get_local_text("friends.incoming_requests"),
             },
             friends_list.into_iter().map(|friend| {
+                let friend = &friend;
                 let mut rng = rand::thread_rng();
-                let did = friend.did_key();
+                let did = &friend.did_key();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                let friend_clone_accept = friend.clone();
-                let friend_clone_remove = friend.clone();
-                let friend_clone_ctx_accept = friend.clone();
-                let friend_clone_ctx_deny = friend.clone();
                 let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
@@ -101,9 +99,9 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 text: get_local_text("friends.accept"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::AcceptRequest(friend_clone_ctx_accept.clone()));
+                                        state.write().mutate(Action::AcceptRequest(friend));
                                     } else {
-                                       ch.send(ChanCmd::AcceptRequest(friend_clone_ctx_accept.clone()));
+                                       ch.send(ChanCmd::AcceptRequest(*did));
                                     }
                                 }
                             },
@@ -113,9 +111,9 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 text: get_local_text("friends.deny"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::DenyRequest(friend_clone_ctx_deny.clone()));
+                                        state.write().mutate(Action::DenyRequest(did));
                                     } else {
-                                       ch.send(ChanCmd::DenyRequest(friend_clone_ctx_deny.clone()));
+                                       ch.send(ChanCmd::DenyRequest(*did));
                                     }
                                 }
                             }
@@ -139,17 +137,17 @@ pub fn PendingFriends(cx: Scope) -> Element {
                             )),
                             onaccept: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::AcceptRequest(friend_clone_accept.clone()));
+                                    state.write().mutate(Action::AcceptRequest(friend));
                                 } else {
-                                     ch.send(ChanCmd::AcceptRequest(friend_clone_accept.clone()));
+                                     ch.send(ChanCmd::AcceptRequest(*did));
                                 }
 
                             },
                             onremove: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::AcceptRequest(friend_clone_remove.clone()));
+                                    state.write().mutate(Action::AcceptRequest(friend));
                                 } else {
-                                    ch.send(ChanCmd::DenyRequest(friend_clone_remove.clone()));
+                                    ch.send(ChanCmd::DenyRequest(*did));
                                 }
                             }
                         }
