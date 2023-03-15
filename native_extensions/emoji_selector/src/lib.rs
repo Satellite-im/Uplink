@@ -100,10 +100,7 @@ impl EmojiSelector {
         }))
     }
 
-    fn render_selector<'a, F>(&self, cx: &'a ScopeState, hide_fn: F) -> Element<'a>
-    where
-        F: FnOnce(),
-    {
+    fn render_selector<'a>(&self, cx: &'a ScopeState, hide: &'a UseState<bool>) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
 
@@ -147,7 +144,7 @@ impl EmojiSelector {
                                                 let new_draft = format!("{draft}{emoji}");
                                                 state.write().mutate(Action::SetChatDraft(c.id, new_draft));
                                                 // Hide the selector when clicking an emoji
-                                               hide_fn();
+                                                hide.set(false)
                                             },
                                             emoji.as_str()
                                         }
@@ -193,9 +190,7 @@ impl Extension for EmojiSelector {
         cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
-            display_selector.then(|| self.render_selector(cx, || {
-                display_selector.set(false);
-            })),
+            display_selector.then(|| self.render_selector(cx, display_selector)),
             // Render standard (required) button to toggle.
             Button {
                 icon: Icon::FaceSmile,
