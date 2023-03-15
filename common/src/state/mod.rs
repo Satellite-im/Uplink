@@ -409,6 +409,7 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
+                self.send_chat_to_top_of_sidebar(conversation_id);
             }
             MessageEvent::Edited {
                 conversation_id,
