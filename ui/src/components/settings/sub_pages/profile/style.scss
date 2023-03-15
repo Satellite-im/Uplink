@@ -147,7 +147,17 @@
     gap: var(--gap-less);
   }
 
+  .profile-group-username {
+    display: inline-flex;
+  }
+
+  .profile-id-btn {
+    display: inline-flex;
+    margin: 0 var(--gap);
+  }
+
   .input-group {
+    width: 100%;
     .error {
       margin-left: var(--gap);
     }
