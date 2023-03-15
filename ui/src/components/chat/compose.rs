@@ -119,7 +119,16 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            get_messages{data: data.clone()},
+            match data.as_ref() {
+                None => rsx!(
+                    div {
+                        id: "messages",
+                        MessageGroupSkeletal {},
+                        MessageGroupSkeletal { alt: true }
+                    }
+                ),
+                Some(data) =>  rsx!(get_messages{data: data.clone()}),
+            },
             get_chatbar{data: data}
         }
     ))
@@ -324,15 +333,15 @@ enum MessagesCommand {
     },
 }
 
-fn get_messages(cx: Scope<ComposeProps>) -> Element {
+#[inline_props]
+fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
-    let state = use_shared_state::<State>(cx)?;
-    let user = state.read().did_key();
+    let user = data.my_id.did_key();
 
     // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
     // to the bottom when the user selects the active chat
     let active_chat = use_state(cx, || None);
-    let currently_active = state.read().chats().active;
+    let currently_active = Some(data.active_chat.id);
 
     let num_to_take = use_state(cx, || 10_usize);
 
@@ -468,50 +477,33 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
-    match cx.props.data.as_ref() {
-        None => {
-            cx.render(rsx!(
-                div {
-                    id: "messages",
-                    MessageGroupSkeletal {},
-                    MessageGroupSkeletal { alt: true }
-                }
-            ))
+    cx.render(rsx!(
+        div {
+            id: "messages",
+            div {
+                rsx!(render_message_groups{
+                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(),  &data.active_chat.messages),
+                    active_chat_id: data.active_chat.id,
+                })
+            }
         }
-        Some(data) => {
-            cx.render(rsx!(
-                div {
-                    id: "messages",
-                    div {
-                        cx.props.data.as_ref().map(|data| {
-                            group_messages(data.my_id.did_key(), *num_to_take.get(),  &data.active_chat.messages)
-                        }).map(|_groups| {
-                            rsx!(render_message_groups{ groups: _groups, active_chat: &data.active_chat })
-                        }),
-                    }
-                }
-            ))
-        }
-    }
+    ))
 }
 
 #[derive(Props)]
 struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
-    active_chat: &'a Chat,
+    active_chat_id: Uuid,
 }
 
+// attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
+// temporary location
 fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
     log::trace!("render message groups");
-    let AllMessageGroupsProps {
-        groups,
-        active_chat: _,
-    } = cx.props;
-
-    cx.render(rsx!(groups.iter().map(|_group| {
+    cx.render(rsx!(cx.props.groups.iter().map(|_group| {
         rsx!(render_message_group {
             group: _group,
-            active_chat: cx.props.active_chat
+            active_chat_id: cx.props.active_chat_id,
         })
     })))
 }
@@ -519,12 +511,15 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
 #[derive(Props)]
 struct MessageGroupProps<'a> {
     group: &'a MessageGroup<'a>,
-    active_chat: &'a Chat,
+    active_chat_id: Uuid,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let MessageGroupProps { group, active_chat } = cx.props;
+    let MessageGroupProps {
+        group,
+        active_chat_id: _,
+    } = cx.props;
 
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
@@ -554,7 +549,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         remote: group.remote,
         children: cx.render(rsx!(render_messages {
             messages: &group.messages,
-            active_chat_id: active_chat.id,
+            active_chat_id: cx.props.active_chat_id,
             is_remote: group.remote,
         }))
     },))
@@ -601,7 +596,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     onpress: move |_| {
                         state
                             .write()
-                            .mutate(Action::StartReplying(&cx.props.active_chat_id, &message));
+                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
                     }
                 },
                 ContextItem {

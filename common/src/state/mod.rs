@@ -900,7 +900,7 @@ impl State {
         self.unfavorite(direct_chat.id);
     }
     fn unblock(&mut self, identity: &DID) {
-        self.friends.blocked.remove(&identity);
+        self.friends.blocked.remove(identity);
     }
 }
 
@@ -1148,7 +1148,7 @@ pub fn group_messages<'a>(
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let to_skip = input.len().checked_sub(num).unwrap_or(0);
+    let to_skip = input.len().saturating_sub(num);
     // the most recent message appears last in the list.
     let iter = input.iter().skip(to_skip);
 
