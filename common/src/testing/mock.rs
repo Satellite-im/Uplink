@@ -44,7 +44,7 @@ pub fn generate_mock() -> State {
 
     // all_chats.insert(group_chat.id, group_chat);
 
-    let in_sidebar = vec![];
+    let in_sidebar = VecDeque::new();
     // in_sidebar.push(group_chat_sidebar.id);
     let mut toast_notifications = HashMap::new();
     toast_notifications.insert(
