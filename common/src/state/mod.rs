@@ -47,7 +47,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::{action::ActionHook, configuration::Configuration, ui::Call};
+use self::{action::ActionHook, ui::Call};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -56,19 +56,13 @@ use self::{action::ActionHook, configuration::Configuration, ui::Call};
 pub struct State {
     #[serde(skip)]
     id: DID,
-    #[serde(default)]
     pub route: route::Route,
-    #[serde(default)]
     chats: chats::Chats,
-    #[serde(default)]
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
-    #[serde(default)]
     pub settings: settings::Settings,
-    #[serde(default)]
     pub ui: ui::UI,
-    #[serde(default)]
     pub configuration: configuration::Configuration,
     #[serde(skip_serializing, skip_deserializing)]
     pub(crate) hooks: Vec<action::ActionHook>,
@@ -169,10 +163,6 @@ impl State {
             Action::SetOverlay(enabled) => self.toggle_overlay(enabled),
             // Sidebar
             Action::RemoveFromSidebar(chat_id) => self.remove_sidebar_chat(chat_id),
-            Action::AddToSidebar(chat) => {
-                self.add_chat_to_sidebar(chat.clone());
-                self.chats.all.entry(chat.id).or_insert(chat);
-            }
             Action::SidebarHidden(hidden) => self.ui.sidebar_hidden = hidden,
             // Navigation
             Action::Navigate(to) => self.set_active_route(to),
@@ -188,10 +178,10 @@ impl State {
             Action::ClearTheme => self.set_theme(None),
 
             // ===== Chats =====
-            Action::ChatWith(chat) => {
+            Action::ChatWith(chat, should_move_to_top) => {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
-                self.set_active_chat(&chat);
+                self.set_active_chat(&chat, should_move_to_top);
                 let chat = self.chats.all.entry(chat.id).or_insert(chat);
                 chat.unreads = 0;
             }
@@ -371,6 +361,10 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
+                if self.chats.in_sidebar.contains(&conversation_id) {
+                    self.send_chat_to_top_of_sidebar(conversation_id);
+                }
+
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::Message,
                     1,
@@ -418,6 +412,7 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
+                self.send_chat_to_top_of_sidebar(conversation_id);
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -523,13 +518,19 @@ impl State {
         let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
             Ok(r) => r,
             Err(_) => {
-                return State {
-                    configuration: Configuration::new(),
-                    ..State::default()
-                };
+                log::info!("state.json not found. Initializing State with default values");
+                return State::default();
             }
         };
-        let mut state: Self = serde_json::from_str(&contents).unwrap_or_default();
+        let mut state: Self = match serde_json::from_str(&contents) {
+            Ok(s) => s,
+            Err(e) => {
+                log::error!(
+                    "state.json failed to deserialize: {e}. Initializing State with default values"
+                );
+                return State::default();
+            }
+        };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
@@ -595,21 +596,16 @@ impl State {
             .collect()
     }
     pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
-        self.chats.all = chats;
+        for (id, chat) in chats {
+            if let Some(conv) = self.chats.all.get_mut(&id) {
+                conv.messages = chat.messages;
+            } else {
+                self.chats.all.insert(id, chat);
+            }
+        }
         self.chats.initialized = true;
         self.identities
             .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
-    }
-
-    /// Adds a chat to the sidebar in the `State` struct.
-    ///
-    /// # Arguments
-    ///
-    /// * `chat` - The chat to add to the sidebar.
-    fn add_chat_to_sidebar(&mut self, chat: Chat) {
-        if !self.chats.in_sidebar.contains(&chat.id) {
-            self.chats.in_sidebar.push(chat.id);
-        }
     }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
@@ -822,11 +818,17 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to set as the active chat.
-    fn set_active_chat(&mut self, chat: &Chat) {
+    fn set_active_chat(&mut self, chat: &Chat, should_move_to_top: bool) {
         self.chats.active = Some(chat.id);
-        if !self.chats.in_sidebar.contains(&chat.id) {
-            self.chats.in_sidebar.push(chat.id);
+        if should_move_to_top {
+            self.send_chat_to_top_of_sidebar(chat.id);
+        } else if !self.chats.in_sidebar.contains(&chat.id) {
+            self.chats.in_sidebar.push_front(chat.id);
         }
+    }
+    fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
+        self.chats.in_sidebar.retain(|id| id != &chat_id);
+        self.chats.in_sidebar.push_front(chat_id);
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Chat, message: &Message) {
