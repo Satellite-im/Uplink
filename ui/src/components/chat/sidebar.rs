@@ -111,7 +111,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 if state.read().ui.is_minimal_view() {
                                                     state.write().mutate(Action::SidebarHidden(true));
                                                 }
-                                                state.write().mutate(Action::ChatWith(favorites_chat.clone()));
+                                                state.write().mutate(Action::ChatWith(favorites_chat.clone(), false));
                                                 if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
                                                     use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
                                                 }
@@ -133,7 +133,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             if state.read().ui.is_minimal_view() {
                                                 state.write().mutate(Action::SidebarHidden(true));
                                             }
-                                            state.write().mutate(Action::ChatWith(chat.clone()));
+                                            state.write().mutate(Action::ChatWith(chat.clone(), false));
                                             if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
                                                 use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
                                             }
@@ -251,7 +251,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 )),
                                 with_badge: badge,
                                 onpress: move |_| {
-                                    state.write().mutate(Action::ChatWith(chat_with.clone()));
+                                    state.write().mutate(Action::ChatWith(chat_with.clone(), false));
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
                                         use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
                                     }

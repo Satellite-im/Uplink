@@ -178,10 +178,10 @@ impl State {
             Action::ClearTheme => self.set_theme(None),
 
             // ===== Chats =====
-            Action::ChatWith(chat) => {
+            Action::ChatWith(chat, should_move_to_top) => {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
-                self.set_active_chat(&chat);
+                self.set_active_chat(&chat, should_move_to_top);
                 let chat = self.chats.all.entry(chat.id).or_insert(chat);
                 chat.unreads = 0;
             }
@@ -814,9 +814,13 @@ impl State {
     /// # Arguments
     ///
     /// * `chat` - The chat to set as the active chat.
-    fn set_active_chat(&mut self, chat: &Chat) {
+    fn set_active_chat(&mut self, chat: &Chat, should_move_to_top: bool) {
         self.chats.active = Some(chat.id);
-        self.send_chat_to_top_of_sidebar(chat.id);
+        if should_move_to_top {
+            self.send_chat_to_top_of_sidebar(chat.id);
+        } else if !self.chats.in_sidebar.contains(&chat.id) {
+            self.chats.in_sidebar.push_front(chat.id);
+        }
     }
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
