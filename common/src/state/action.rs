@@ -3,7 +3,6 @@ use std::{collections::HashMap, rc::Weak};
 use derive_more::Display;
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use either::Either;
 use extensions::ExtensionProxy;
 use uuid::Uuid;
 use warp::crypto::DID;
@@ -17,7 +16,6 @@ use super::{
     notifications::NotificationKind,
     route::To,
     ui::{Theme, ToastNotification, WindowMeta},
-    State,
 };
 
 /// used exclusively by State::mutate

@@ -36,7 +36,7 @@ use common::{
     state::{group_messages, GroupedMessage, MessageGroup},
 };
 use common::{
-    state::{self, ui, Action, Chat, Identity, State},
+    state::{ui, Action, Chat, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -346,12 +346,12 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
             tokio::time::sleep(Duration::from_millis(2000)).await;
             if let Some(n) = num_to_take.get().checked_add(10) {
                 num_to_take.set(n);
-                log::info!("num_to_take is now {}", num_to_take.get());
+                log::info!("num_to_take is now {}", *num_to_take.current());
             }
         }
     });
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
+    let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         //to_owned![];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -460,15 +460,6 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
-    if cx.props.data.is_none() {
-        return cx.render(rsx!(
-            div {
-                id: "messages",
-                MessageGroupSkeletal {},
-                MessageGroupSkeletal { alt: true }
-            }
-        ));
-    };
     match cx.props.data.as_ref() {
         None => {
             cx.render(rsx!(
@@ -485,7 +476,7 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
                     id: "messages",
                     div {
                         cx.props.data.as_ref().map(|data| {
-                            group_messages(state.read().did_key(), *num_to_take.get(),  &data.active_chat.messages)
+                            group_messages(data.my_id.did_key(), *num_to_take.get(),  &data.active_chat.messages)
                         }).map(|_groups| {
                             rsx!(render_message_groups{ groups: _groups, active_chat: &data.active_chat })
                         }),
@@ -503,9 +494,10 @@ struct AllMessageGroupsProps<'a> {
 }
 
 fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+    log::trace!("render message groups");
     let AllMessageGroupsProps {
         groups,
-        active_chat,
+        active_chat: _,
     } = cx.props;
 
     cx.render(rsx!(groups.iter().map(|_group| {
@@ -570,6 +562,8 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
 
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
@@ -580,115 +574,143 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .map(|id| !cx.props.is_remote && (id == message.inner.id()))
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
-        let message_key = format!("{}-{:?}", &message.key, is_editing);
+        let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let msg_uuid = message.inner.id();
 
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
-            children: cx.render(rsx!(render_message {})),
-            items: cx.render(rsx!("")) /*items: cx.render(rsx!(
-                                           ContextItem {
-                                               icon: Icon::ArrowLongLeft,
-                                               text: get_local_text("messages.reply"),
-                                               onpress: move |_| {
-                                                   state
-                                                       .write()
-                                                       .mutate(Action::StartReplying(&cx.props.active_chat_id, &message));
-                                               }
-                                           },
-                                           ContextItem {
-                                               icon: Icon::FaceSmile,
-                                               text: get_local_text("messages.react"),
-                                               //TODO: let the user pick a reaction
-                                               onpress: move |_| {
-                                                   // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
-                                                   // todo: allow emoji extension instead
-                                                   // using "like" for now
-                                                  // ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
-                                               }
-                                           },
-                                           ContextItem {
-                                               icon: Icon::Pencil,
-                                               text: get_local_text("messages.edit"),
-                                               should_render: !cx.props.is_remote
-                                                   && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
-                                               onpress: move |_| {
-                                                   edit_msg.set(Some(msg_uuid));
-                                                   log::debug!("editing msg {msg_uuid}");
-                                               }
-                                           },
-                                           ContextItem {
-                                               icon: Icon::Pencil,
-                                               text: get_local_text("messages.cancel-edit"),
-                                               should_render: !cx.props.is_remote,
-                                                   && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
-                                               onpress: move |_| {
-                                                   edit_msg.set(None);
-                                               }
-                                           },
-                                           ContextItem {
-                                               icon: Icon::Trash,
-                                               danger: true,
-                                               text: get_local_text("uplink.delete"),
-                                               should_render: sender_is_self,
-                                               onpress: move |_| {
-                                                   /*ch.send(MessagesCommand::DeleteMessage {
-                                                       conv_id: message.inner.conversation_id(),
-                                                       msg_id: message.inner.id(),
-                                                   });*/
-                                               }
-                                           },
-                                       )), // end context menu items */
+            children: cx.render(rsx!(render_message {
+                message: grouped_message,
+                is_remote: cx.props.is_remote,
+                message_key: _message_key,
+                edit_msg: edit_msg.clone(),
+            })),
+            items: cx.render(rsx!(
+                ContextItem {
+                    icon: Icon::ArrowLongLeft,
+                    text: get_local_text("messages.reply"),
+                    onpress: move |_| {
+                        state
+                            .write()
+                            .mutate(Action::StartReplying(&cx.props.active_chat_id, &message));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::FaceSmile,
+                    text: get_local_text("messages.react"),
+                    //TODO: let the user pick a reaction
+                    onpress: move |_| {
+                        // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+                        // todo: allow emoji extension instead
+                        // using "like" for now
+                        ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                    onpress: move |_| {
+                        edit_msg.set(Some(msg_uuid));
+                        log::debug!("editing msg {msg_uuid}");
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.cancel-edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                    onpress: move |_| {
+                        edit_msg.set(None);
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Trash,
+                    danger: true,
+                    text: get_local_text("uplink.delete"),
+                    should_render: sender_is_self,
+                    onpress: move |_| {
+                        ch.send(MessagesCommand::DeleteMessage {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                        });
+                    }
+                },
+            )) // end of context menu items
         }) // end context menu
     }))) // end outer cx.render
 }
 
-fn render_message(cx: Scope) -> Element {
+#[derive(Props)]
+struct MessageProps<'a> {
+    message: &'a GroupedMessage<'a>,
+    is_remote: bool,
+    message_key: String,
+    edit_msg: UseState<Option<Uuid>>,
+}
+fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
+    //log::trace!("render message {}", &cx.props.message.message.key);
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+
+    let MessageProps {
+        message,
+        is_remote: _,
+        message_key,
+        edit_msg,
+    } = cx.props;
+    let grouped_message = message;
+    let message = grouped_message.message;
+    let is_editing = edit_msg
+        .get()
+        .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+        .unwrap_or(false);
+
     cx.render(rsx!(
-        "" /*div {
-               class: "msg-wrapper",
-               message.in_reply_to.map(|other_msg| rsx!(
-               MessageReply {
-                       key: "reply-{message_key}",
-                       with_text: other_msg,
-                       remote: cx.props.is_remote,
-                       remote_message: cx.props.is_remote,
-                   }
-               )),
-               Message {
-                   key: "{message_key}",
-                   editing: is_editing,
-                   remote: cx.props.is_remote,
-                   with_text: message.inner.value().join("\n"),
-                   reactions: message.inner.reactions(),
-                   order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                   attachments: message.inner.attachments(),
-                   on_download: move |file_name| {
-                       if let Some(directory) = FileDialog::new()
-                       .set_directory(dirs::home_dir().unwrap_or_default())
-                       .pick_folder() {
-                           ch.send(MessagesCommand::DownloadAttachment {
-                               conv_id: message.inner.conversation_id(),
-                               msg_id: message.inner.id(),
-                               file_name, directory
-                           })
-                       }
-                   },
-                   on_edit: move |update: String| {
-                       edit_msg.set(None);
-                       let msg = update.split('\n').collect::<Vec<_>>();
-                       let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                       let msg = msg.iter().map(|x| x.to_string()).collect();
-                       if !is_valid {
-                           ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
-                       }
-                       else {
-                           ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
-                       }
-                   }
-               },
-           }*/
+        div {
+            class: "msg-wrapper",
+            message.in_reply_to.as_ref().map(|other_msg| rsx!(
+            MessageReply {
+                    key: "reply-{message_key}",
+                    with_text: other_msg.to_string(),
+                    remote: cx.props.is_remote,
+                    remote_message: cx.props.is_remote,
+                }
+            )),
+            Message {
+                key: "{message_key}",
+                editing: is_editing,
+                remote: cx.props.is_remote,
+                with_text: message.inner.value().join("\n"),
+                reactions: message.inner.reactions(),
+                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                attachments: message.inner.attachments(),
+                on_download: move |file_name| {
+                    if let Some(directory) = FileDialog::new()
+                    .set_directory(dirs::home_dir().unwrap_or_default())
+                    .pick_folder() {
+                        ch.send(MessagesCommand::DownloadAttachment {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                            file_name, directory
+                        })
+                    }
+                },
+                on_edit: move |update: String| {
+                    edit_msg.set(None);
+                    let msg = update.split('\n').collect::<Vec<_>>();
+                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
+                    let msg = msg.iter().map(|x| x.to_string()).collect();
+                    if !is_valid {
+                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
+                    }
+                    else {
+                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                    }
+                }
+            },
+        }
     ))
 }
 

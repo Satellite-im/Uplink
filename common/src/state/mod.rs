@@ -30,7 +30,6 @@ use crate::{
         WarpEvent,
     },
 };
-use either::Either;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::{
@@ -1149,7 +1148,8 @@ pub fn group_messages<'a>(
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let iter = input.iter().take(num);
+    // the most recent message appears last in the list.
+    let iter = input.iter().skip(input.len() - num);
 
     for msg in iter {
         if let Some(group) = messages.iter_mut().last() {
