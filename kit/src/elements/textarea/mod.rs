@@ -95,6 +95,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: "{val.read()}",
                     maxlength: "{element_max_length}",
                     placeholder: "{element_placeholder}",
+                    onblur: move |_| {
+                        cx.props.onreturn.call((val.read().to_string(), false, Code::Enter));
+                    },
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val;

@@ -247,7 +247,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input {
                         placeholder:  get_local_text("uplink.username"),
-                        default_text: username,
+                        default_text: username.clone(),
                         aria_label: "username-input".into(),
                         options: Options {
                             with_clear_btn: true,
@@ -257,7 +257,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             if !is_valid {
                                 return;
                             }
-                            ch.send(ChanCmd::Username(v));
+                            if v != username {
+                                ch.send(ChanCmd::Username(v));
+                            }
                         },
                     },
                 },
@@ -268,7 +270,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     },
                     Input {
                         placeholder: get_local_text("uplink.status"),
-                        default_text: user_status,
+                        default_text: user_status.clone(),
                         aria_label: "status-input".into(),
                         options: Options {
                             with_clear_btn: true,
@@ -278,7 +280,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             if !is_valid {
                                 return;
                             }
-                            ch.send(ChanCmd::Status(v));
+                            if v != user_status {
+                                ch.send(ChanCmd::Status(v));
+                            }
                         },
                     }
                 }
