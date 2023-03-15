@@ -945,6 +945,16 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let input = use_chat_text(cx);
 
+    let value_in_draft = data
+        .as_ref()
+        .and_then(|d| d.active_chat.draft.clone())
+        .unwrap_or_default()
+        .lines()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>();
+    if input.read().clone() != value_in_draft {
+        input.set(value_in_draft);
+    }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     use_future(cx, &active_chat_id.clone(), |current_chat| async move {
