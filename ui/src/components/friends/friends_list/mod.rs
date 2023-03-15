@@ -22,7 +22,6 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    utils::convert_status,
     UPLINK_ROUTES,
 };
 
@@ -52,7 +51,7 @@ pub fn Friends(cx: Scope) -> Element {
 
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(chat));
+        state.write().mutate(Action::ChatWith(chat, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -248,7 +247,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: convert_status(&friend.identity_status()),
+                                                status: friend.identity_status().into(),
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),

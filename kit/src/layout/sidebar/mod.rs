@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -18,6 +19,15 @@ const SCRIPT: &str = include_str!("./script.js");
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let hidden = cx.props.hidden.unwrap_or(false);
 
+    // Run the script after the component is mounted
+    let eval = use_eval(cx);
+    use_effect(cx, (), |_| {
+        to_owned![eval];
+        async move {
+            eval(SCRIPT.to_string());
+        }
+    });
+
     cx.render(rsx!(
         div {
             class: {
@@ -36,6 +46,5 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             cx.props.with_nav.as_ref(),
         },
-        script { SCRIPT }
     ))
 }

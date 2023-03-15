@@ -124,11 +124,12 @@ pub enum Action {
     #[display(fmt = "UnFavorite")]
     UnFavorite(Uuid),
     /// Sets the active chat to a given chat
+    /// chat, should_move_to_top
     #[display(fmt = "ChatWith")]
-    ChatWith(Chat),
-    /// Adds a chat to the sidebar
-    #[display(fmt = "AddToSidebar")]
-    AddToSidebar(Chat),
+    ChatWith(Chat, bool),
+    /// Removes the active chat
+    #[display(fmt = "ClearActiveChat")]
+    ClearActiveChat,
     /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
     #[display(fmt = "RemoveFromSidebar")]
     RemoveFromSidebar(Uuid),
