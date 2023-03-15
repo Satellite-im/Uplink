@@ -51,7 +51,7 @@ pub fn Friends(cx: Scope) -> Element {
 
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(chat, true));
+        state.write().mutate(Action::ChatWith(&chat.id, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -206,7 +206,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                     // can't favorite a non-existent conversation
                                                     // todo: don't even allow favoriting from the friends page unless there's a conversation
                                                     if let Some(c) = &chat {
-                                                        state.write().mutate(Action::ToggleFavorite(c.clone()));
+                                                        state.write().mutate(Action::ToggleFavorite(&c.id));
                                                     }
                                                 }
                                             })
@@ -218,7 +218,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                    state.write().mutate(Action::RemoveFriend(&remove_friend.did_key()));
                                                 } else {
                                                     ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
@@ -231,7 +231,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::Block(block_friend.clone()));
+                                                    state.write().mutate(Action::Block(&block_friend.did_key()));
                                                 } else {
                                                     ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
@@ -257,7 +257,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         onremove: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                                state.write().mutate(Action::RemoveFriend(&remove_friend_2.did_key()));
                                             } else {
                                                 ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
@@ -265,7 +265,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         onblock: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::Block(block_friend_2.clone()));
+                                                state.write().mutate(Action::Block(&block_friend_2.did_key()));
                                             } else {
                                                 ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
