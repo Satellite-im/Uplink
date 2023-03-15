@@ -137,18 +137,18 @@ impl State {
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => self.complete_request(&identity),
-            Action::CancelRequest(identity) => self.cancel_request(&identity),
+            Action::CancelRequest(identity) => self.cancel_request(identity),
             //Action::IncomingRequest(identity) => self.new_incoming_request(&identity),
-            Action::AcceptRequest(identity) => self.complete_request(&identity),
-            Action::DenyRequest(identity) => self.cancel_request(&identity),
-            Action::RemoveFriend(friend) => self.remove_friend(&friend),
-            Action::Block(identity) => self.block(&identity),
-            Action::Unblock(identity) => self.unblock(&identity),
+            Action::AcceptRequest(identity) => self.complete_request(identity),
+            Action::DenyRequest(identity) => self.cancel_request(identity),
+            Action::RemoveFriend(friend) => self.remove_friend(friend),
+            Action::Block(identity) => self.block(identity),
+            Action::Unblock(identity) => self.unblock(identity),
 
             // ===== UI =====
             // Favorites
             Action::Favorite(chat) => self.favorite(&chat),
-            Action::ToggleFavorite(chat) => self.toggle_favorite(&chat),
+            Action::ToggleFavorite(chat) => self.toggle_favorite(chat),
             Action::UnFavorite(chat_id) => self.unfavorite(chat_id),
             // Language
             Action::SetLanguage(language) => self.set_language(&language),
@@ -175,12 +175,12 @@ impl State {
             Action::ChatWith(chat) => {
                 // warning: ensure that warp is used to get/create the chat which is passed in here
                 //todo: check if (for the side which created the conversation) a warp event comes in and consider using that instead
-                self.set_active_chat(&chat);
+                self.set_active_chat(chat);
             }
             Action::ClearActiveChat => {
                 self.clear_active_chat();
             }
-            Action::StartReplying(chat, message) => self.start_replying(&chat, &message),
+            Action::StartReplying(chat, message) => self.start_replying(chat, message),
             Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
             Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
             Action::ClearActiveUnreads => {
@@ -674,7 +674,7 @@ impl State {
     }
     /// Adds the given chat to the user's favorites.
     fn favorite(&mut self, chat: &Uuid) {
-        if !self.chats.favorites.contains(&chat) {
+        if !self.chats.favorites.contains(chat) {
             self.chats.favorites.push(*chat);
         }
     }
@@ -756,7 +756,7 @@ impl State {
     /// * `chat` - The chat to set as the active chat.
     fn set_active_chat(&mut self, chat: &Uuid) {
         self.chats.active = Some(*chat);
-        if !self.chats.in_sidebar.contains(&chat) {
+        if !self.chats.in_sidebar.contains(chat) {
             self.chats.in_sidebar.push_front(*chat);
         }
         if let Some(chat) = self.chats.all.get_mut(chat) {
@@ -769,7 +769,7 @@ impl State {
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat) {
+        if let Some(mut c) = self.chats.all.get_mut(chat) {
             c.replying_to = Some(message.inner.clone());
         }
     }
