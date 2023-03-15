@@ -351,10 +351,10 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
     use_future(cx, (), |_| {
         to_owned![num_to_take];
         async move {
-            tokio::time::sleep(Duration::from_millis(2000)).await;
+            tokio::time::sleep(Duration::from_millis(500)).await;
             if let Some(n) = num_to_take.get().checked_add(10) {
                 num_to_take.set(n);
-                log::info!("num_to_take is now {}", *num_to_take.current());
+                //log::info!("num_to_take is now {}", *num_to_take.current());
             }
         }
     });
