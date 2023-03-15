@@ -337,33 +337,37 @@ enum MessagesCommand {
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
+    let num_to_take = use_state(cx, || 10_usize);
+    let max_to_take = data.active_chat.messages.len();
 
     // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
     // to the bottom when the user selects the active chat
-    let active_chat = use_state(cx, || None);
+    // also must reset num_to_take when the active_chat changes
+    let active_chat = use_ref(cx, || None);
     let currently_active = Some(data.active_chat.id);
-
-    let num_to_take = use_state(cx, || 10_usize);
-
     let eval = use_eval(cx);
-    use_effect(cx, (), move |_| {
-        to_owned![eval, active_chat];
-        async move {
-            if *active_chat.current() != currently_active {
-                active_chat.set(currently_active);
-                let script = include_str!("./script.js");
-                eval(script.to_string());
-            }
-        }
-    });
+    // use_effect is pretty cool. maybe leave this around as an example.
+    //use_effect(cx, (), move |_| {
+    //    to_owned![eval, active_chat];
+    //    async move {
+    if *active_chat.read() != currently_active {
+        *active_chat.write_silent() = currently_active;
+        num_to_take.set(10_usize);
+        let script = include_str!("./script.js");
+        eval(script.to_string());
+    }
+    //    }
+    //});
 
     use_future(cx, (), |_| {
         to_owned![num_to_take];
         async move {
-            tokio::time::sleep(Duration::from_millis(500)).await;
-            if let Some(n) = num_to_take.get().checked_add(10) {
-                num_to_take.set(n);
-                //log::info!("num_to_take is now {}", *num_to_take.current());
+            loop {
+                tokio::time::sleep(Duration::from_millis(500)).await;
+                if *num_to_take.current() < max_to_take {
+                    num_to_take.modify(|x| x.saturating_add(10));
+                    //log::info!("num_to_take is now {}", *num_to_take.current());
+                }
             }
         }
     });
@@ -516,6 +520,7 @@ struct MessageGroupProps<'a> {
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+
     let MessageGroupProps {
         group,
         active_chat_id: _,
