@@ -100,7 +100,7 @@ impl EmojiSelector {
         }))
     }
 
-    fn render_selector<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
+    fn render_selector<'a>(&self, cx: &'a ScopeState, hide: &'a UseState<bool>) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
 
@@ -142,14 +142,9 @@ impl EmojiSelector {
                                                 };
                                                 let draft: String = c.draft.unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
-                                                match state.inner().try_borrow_mut() {
-                                                    Ok(state) => {
-                                                        state.write().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                    }
-                                                    Err(_) => {
-                                                        println!("emoji selector: try_borrow_mut error")
-                                                    }
-                                                };
+                                                state.write().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                // Hide the selector when clicking an emoji
+                                                hide.set(false)
                                             },
                                             emoji.as_str()
                                         }
@@ -195,7 +190,7 @@ impl Extension for EmojiSelector {
         cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
-            display_selector.then(|| self.render_selector(cx)),
+            display_selector.then(|| self.render_selector(cx, display_selector)),
             // Render standard (required) button to toggle.
             Button {
                 icon: Icon::FaceSmile,

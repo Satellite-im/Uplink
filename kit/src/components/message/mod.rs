@@ -156,7 +156,6 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     cx.render(rsx!(textarea::Input {
         focus: true,
         default_text: cx.props.text.clone(),
-        reset: None,
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid {
