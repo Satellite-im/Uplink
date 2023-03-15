@@ -49,7 +49,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn Tooltip(cx: Scope<Props>) -> Element {
     // You don't always need a UUID. It's used in this case because although the tooltip has generic styles, it needs a unique identifier for runtime actions.
-    let UUID: String = Uuid::new_v4().to_string();
+    let UUID = cx.use_hook(|| Uuid::new_v4().to_string());
 
     let arrow_position = get_arrow_position(&cx);
 

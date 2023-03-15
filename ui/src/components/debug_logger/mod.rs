@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use dioxus_desktop::use_eval;
 use kit::elements::label::Label;
 
 use crate::logger;
@@ -19,6 +20,15 @@ pub fn DebugLogger(cx: Scope) -> Element {
             while let Some(log) = log_ch.recv().await {
                 logs_to_show.with_mut(|x| x.push(log.to_string()));
             }
+        }
+    });
+
+    // Run the script after the component is mounted
+    let eval = use_eval(cx);
+    use_effect(cx, (), |_| {
+        to_owned![eval];
+        async move {
+            eval(SCRIPT.to_string());
         }
     });
 
@@ -75,6 +85,5 @@ pub fn DebugLogger(cx: Scope) -> Element {
                 }
             }
         },
-        script { SCRIPT }
     ))
 }

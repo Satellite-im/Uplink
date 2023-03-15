@@ -1,3 +1,7 @@
+use std::path::PathBuf;
+
+use common::warp_runner::{OtherCmd, WarpCmd};
+use common::WARP_CMD_CH;
 use dioxus::prelude::*;
 
 use common::icons::outline::Shape as Icon;
@@ -8,7 +12,10 @@ use common::{
     state::{action::ConfigAction, notifications::NotificationKind, Action, State},
     STATIC_ARGS,
 };
+use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::elements::{button::Button, switch::Switch, Appearance};
+use rfd::FileDialog;
 use warp::logging::tracing::log;
 
 use crate::{components::settings::SettingSection, logger};
@@ -17,6 +24,37 @@ use crate::{components::settings::SettingSection, logger};
 pub fn DeveloperSettings(cx: Scope) -> Element {
     log::debug!("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
+        //to_owned![];
+        async move {
+            while let Some(cmd) = rx.next().await {
+                let dest = cmd.join("uplink.zip");
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let compress_cmd = OtherCmd::CompressFolder {
+                    src: STATIC_ARGS.uplink_path.clone(),
+                    dest,
+                    rsp: tx,
+                };
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::Other(compress_cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let res = rx.await.expect("command canceled");
+                match res {
+                    Ok(_) => {
+                        log::debug!("cache export complete");
+                    }
+                    Err(e) => {
+                        log::error!("failed to download cache: {e}");
+                    }
+                };
+            }
+        }
+    });
 
     cx.render(rsx!(
         div {
@@ -92,7 +130,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
-                        // todo: send a command to warp runner.
+                        if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
+                            ch.send(path);
+                        };
                     }
                 }
             },

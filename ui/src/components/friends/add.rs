@@ -157,6 +157,7 @@ pub fn AddFriend(cx: Scope) -> Element {
                         // Use the default options for the remaining fields
                         ..Options::default()
                     },
+                    disable_onblur: true,
                     reset: clear_input.clone(),
                     onreturn: move |_| {
                         match DID::from_str(friend_input.get()) {

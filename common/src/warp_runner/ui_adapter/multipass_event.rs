@@ -15,6 +15,7 @@ pub enum MultiPassEvent {
     FriendOffline(state::Identity),
     Blocked(state::Identity),
     Unblocked(state::Identity),
+    IdentityUpdate(state::Identity),
 }
 
 pub async fn convert_multipass_event(
@@ -61,6 +62,10 @@ pub async fn convert_multipass_event(
         MultiPassEventKind::Unblocked { did } => {
             let identity = did_to_identity(&did, account).await?;
             MultiPassEvent::Unblocked(identity)
+        }
+        MultiPassEventKind::IdentityUpdate { did, .. } => {
+            let identity = did_to_identity(&did, account).await?;
+            MultiPassEvent::IdentityUpdate(identity)
         }
         _ => MultiPassEvent::None,
     };

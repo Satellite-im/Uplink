@@ -26,7 +26,7 @@ mod manager;
 pub mod ui_adapter;
 
 pub use manager::commands::{FileTransferProgress, FileTransferStep};
-pub use manager::{ConstellationCmd, MultiPassCmd, RayGunCmd, TesseractCmd};
+pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -64,6 +64,10 @@ pub enum WarpCmd {
     RayGun(RayGunCmd),
     #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
+    // these commands may not actually be warp commands, but just require a long running
+    // async task, executed separately from the UI
+    #[display(fmt = "Other {{ {_0} }} ")]
+    Other(OtherCmd),
 }
 
 /// Spawns a task which manages multiple streams, channels, and tasks related to warp
@@ -115,7 +119,7 @@ async fn handle_login(notify: Arc<Notify>) {
         .await
         .expect("failed to initialize tesseract");
 
-    let mut warp = match warp_initialization(tesseract, false).await {
+    let mut warp = match warp_initialization(tesseract).await {
         Ok(w) => w,
         Err(e) => {
             log::error!("warp init failed: {}", e);
@@ -144,7 +148,7 @@ async fn handle_login(notify: Arc<Notify>) {
                             let tesseract = init_tesseract(true)
                                 .await
                                 .expect("failed to initialize tesseract");
-                            warp = match warp_initialization(tesseract, false).await {
+                            warp = match warp_initialization(tesseract).await {
                                 Ok(w) => w,
                                 Err(e) => {
                                     log::error!("warp init failed: {}", e);
@@ -315,18 +319,13 @@ async fn init_tesseract(overwrite_old_account: bool) -> Result<Tesseract, Error>
 }
 
 // tesseract needs to be initialized before warp is initialized. need to call this function again once tesseract is unlocked by the password
-async fn warp_initialization(
-    tesseract: Tesseract,
-    experimental: bool,
-) -> Result<manager::Warp, warp::error::Error> {
+async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp::error::Error> {
     log::debug!("warp initialization");
 
     let path = &STATIC_ARGS.warp_path;
-    let mut config = MpIpfsConfig::production(path, experimental);
+    let mut config = MpIpfsConfig::production(path, STATIC_ARGS.experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
-    // prevents an error which is otherwise reproduced as follows: set the profile picture, set the profile banner, then update your status
-    config.store_setting.override_ipld = false;
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
         .map(|mp| Box::new(mp) as Account)?;

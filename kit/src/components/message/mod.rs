@@ -158,9 +158,12 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
         default_text: cx.props.text.clone(),
         reset: None,
         onchange: move |_| {},
-        onreturn: move |(s, _, _): (String, _, _)| {
-            log::debug!("editing message: {s}");
-            cx.props.on_enter.call(s);
+        onreturn: move |(s, is_valid, _): (String, bool, _)| {
+            if is_valid {
+                cx.props.on_enter.call(s);
+            } else {
+                cx.props.on_enter.call(cx.props.text.clone());
+            }
         }
     }))
 }

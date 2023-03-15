@@ -1,6 +1,8 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 use dioxus_html::input_data::keyboard_types::Code;
+use uuid::Uuid;
 
 pub type ValidationError = String;
 use crate::elements::label::Label;
@@ -78,6 +80,7 @@ pub struct Options {
     pub replace_spaces_underscore: bool,
     pub disabled: bool,
     pub with_clear_btn: bool,
+    pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
     pub with_label: Option<&'static str>,
     pub react_to_esc_key: bool,
@@ -90,6 +93,7 @@ impl Default for Options {
             replace_spaces_underscore: false,
             disabled: false,
             with_clear_btn: false,
+            clear_btn_icon: Icon::Backspace,
             clear_on_submit: true,
             with_label: None,
             react_to_esc_key: false,
@@ -135,6 +139,8 @@ pub struct Props<'a> {
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     reset: Option<UseState<bool>>,
+    #[props(default = false)]
+    disable_onblur: bool,
 }
 
 fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -285,12 +291,21 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    // Input element needs an id. Create a new one if an id wasn't specified
+    let input_id = use_state(cx, || {
+        if cx.props.id.is_empty() {
+            Uuid::new_v4().to_string()
+        } else {
+            cx.props.id.clone()
+        }
+    });
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || get_text(&cx));
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
+    let onblur_active = !cx.props.disable_onblur;
 
     if !get_value(&cx).is_empty() {
         val.set(get_value(&cx));
@@ -321,8 +336,17 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    let input_id = cx.props.id.clone();
-    let script = include_str!("./script.js").replace("UUID", &cx.props.id);
+    // Run the script after the component is mounted.
+    let eval = use_eval(cx);
+    use_effect(cx, (&cx.props.focus, input_id), move |(focus, input_id)| {
+        to_owned![eval];
+        async move {
+            if focus {
+                let script = include_str!("./script.js").replace("UUID", &input_id);
+                eval(script);
+            }
+        }
+    });
 
     cx.render(rsx! (
         div {
@@ -348,15 +372,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 )),
-                cx.props.focus.then(|| rsx!(
-                    script { "{script}"},
-                )),
                 input {
                     id: "{input_id}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
-                    value: format_args!("{}", val.read()),
+                    value: "{val.read()}",
                     maxlength: "{max_length}",
+                    onblur: move |_| {
+                        if onblur_active && *valid.current(){
+                            emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                            valid.set(false);
+                            if options.clear_on_submit {
+                                reset_fn();
+                            }
+                        }
+                    },
                     "type": "{typ}",
                     placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
@@ -373,6 +403,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             true
                         };
                         emit(&cx, current_val, is_valid);
+                    },
+                    onblur: move |_| {
+                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                        if *valid.current() {
+                                valid.set(false);
+                        }
+                        if options.clear_on_submit {
+                            reset_fn();
+                        }
                     },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
@@ -395,7 +434,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 },
-                (options.with_clear_btn && !val.read().is_empty()).then(|| rsx!(
+                (options.with_clear_btn && !val.read().is_empty()).then(move || rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
@@ -405,9 +444,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 valid.set(validation_result.is_empty());
                                 error.set(validation_result);
                             }
+                            // re-focus the input after clearing it
+                            let script = include_str!("./script.js").replace("UUID", input_id);
+                            dioxus_desktop::use_eval(cx)(script);
                         },
                         IconElement {
-                            icon: Icon::Backspace
+                            icon: options.clear_btn_icon
                         }
                     }
                 )),

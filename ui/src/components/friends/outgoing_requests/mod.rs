@@ -1,4 +1,4 @@
-use crate::{components::friends::friend::Friend, utils::convert_status};
+use crate::components::friends::friend::Friend;
 use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
@@ -55,10 +55,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
             },
             friends_list.into_iter().map(|friend| {
                 let did = friend.did_key();
+                let did2 = did.clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let mut rng = rand::thread_rng();
-                let friend_clone = friend.clone();
-                let friend_clone_clone = friend.clone();
                 let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
@@ -71,9 +70,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 text: get_local_text("friends.cancel"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::CancelRequest(friend_clone_clone.clone()));
+                                        state.write().mutate(Action::CancelRequest(&did));
                                     } else {
-                                        ch.send(friend_clone_clone.did_key());
+                                        ch.send(did.clone());
                                     }
                                 }
                             },
@@ -91,15 +90,15 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: convert_status(&friend.identity_status()),
+                                    status: friend.identity_status().into(),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),
                             onremove: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::CancelRequest(friend_clone.clone()));
+                                    state.write().mutate(Action::CancelRequest(&did2));
                                 } else {
-                                    ch.send(friend_clone.did_key());
+                                    ch.send(did2.clone());
                                 }
                             }
                         }

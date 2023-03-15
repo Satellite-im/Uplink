@@ -14,7 +14,9 @@ use crate::{
 };
 
 use super::{
-    commands::{handle_constellation_cmd, handle_multipass_cmd, handle_raygun_cmd},
+    commands::{
+        handle_constellation_cmd, handle_multipass_cmd, handle_other_cmd, handle_raygun_cmd,
+    },
     MultiPassCmd,
 };
 
@@ -113,6 +115,10 @@ pub async fn handle_warp_command(
     log::debug!("WARP CMD: {}", &cmd);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match cmd {
+        WarpCmd::Other(cmd) => {
+            // this one could be parallelized
+            handle_other_cmd(cmd).await;
+        }
         WarpCmd::Tesseract(_cmd) => {
             // not accepted at this stage of the program. do nothing and drop the rsp channel
         }

@@ -103,9 +103,7 @@ pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
 /// ```
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let UUID = Uuid::new_v4().to_string();
-
-    let script = get_script(SCRIPT, &UUID);
+    let UUID = &*cx.use_hook(|| Uuid::new_v4().to_string());
 
     let text = get_text(&cx);
     let aria_label = get_aria_label(&cx);
@@ -114,6 +112,17 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let appearance = get_appearance(&cx);
     let small = cx.props.small.unwrap_or_default();
     let text2 = text.clone();
+
+    let eval = dioxus_desktop::use_eval(cx);
+    // only run this after the component has been mounted
+    use_effect(cx, (UUID,), move |(UUID,)| {
+        to_owned![eval];
+        async move {
+            let script = get_script(SCRIPT, &UUID);
+            eval(script);
+        }
+    });
+
     cx.render(
         rsx!(
             div {
@@ -160,7 +169,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     (!text.is_empty()).then(|| rsx!( "{text2}" )),
                 }
             },
-            script{ "{script}" },
         )
     )
 }
