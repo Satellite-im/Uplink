@@ -404,7 +404,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
-                        if evt.code() == Code::Enter {
+                        if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
                             if *valid.current() {
                                  valid.set(false);
