@@ -608,13 +608,13 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             key: "{context_key}",
             id: context_key,
             on_mouseenter: move |_| {
-                if should_fetch_more {
-                    if *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation {
-                        cx.props
-                            .num_to_take
-                            .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
-                        //log::info!("lazy loading");
-                    }
+                if should_fetch_more
+                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
+                {
+                    cx.props
+                        .num_to_take
+                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
+                    //log::info!("lazy loading");
                 }
             },
             children: cx.render(rsx!(render_message {
