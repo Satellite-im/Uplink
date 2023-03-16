@@ -170,11 +170,17 @@ impl State {
             Action::Navigate(to) => self.set_active_route(to),
             // Generic UI
             Action::SetMeta(metadata) => self.ui.metadata = metadata,
-            Action::ClearPopout(window) => self.ui.clear_popout(window),
-            Action::SetPopout(webview) => self.ui.set_popout(webview),
+            Action::ClearCallPopout(window) => self.ui.clear_call_popout(&window),
+            Action::SetCallPopout(webview) => self.ui.set_call_popout(webview),
             // Development
             Action::SetDebugLogger(webview) => self.ui.set_debug_logger(webview),
-            Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(window),
+            Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(&window),
+            Action::AddFilePreview(id, window_id) => self.ui.add_file_preview(id, window_id),
+            Action::ForgetFilePreview(id) => {
+                let _ = self.ui.file_previews.remove(&id);
+            }
+            Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
+            Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),
@@ -514,13 +520,15 @@ impl State {
         state
     }
     fn load_mock() -> Self {
-        let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
-            Ok(r) => r,
-            Err(_) => {
-                return generate_mock();
-            }
-        };
-        serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
+        generate_mock()
+        // the following doesn't work anymore now that Identities are centralized
+        // let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
+        //     Ok(r) => r,
+        //     Err(_) => {
+        //         return generate_mock();
+        //     }
+        // };
+        // serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
     }
 }
 
@@ -959,7 +967,7 @@ impl State {
     /// Analogous to Hang Up
     fn disable_media(&mut self) {
         self.chats.active_media = None;
-        self.ui.popout_player = false;
+        self.ui.popout_media_player = false;
         self.ui.current_call = None;
     }
     pub fn has_toasts(&self) -> bool {

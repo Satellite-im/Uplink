@@ -1,3 +1,4 @@
+use std::rc::Weak;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
@@ -44,6 +45,9 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
+use crate::utils::WindowDropHandler;
+use crate::window_manager::WindowManagerCmd;
 
 const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
@@ -659,6 +663,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file2 = file.clone();
+                            let file3 = file.clone();
                             let key = file.id();
                             rsx!(ContextMenu {
                                         key: "{key}-menu",
@@ -709,6 +714,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             text: file.name(),
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
+                                            onpress: move |_| {
+                                                let key = Uuid::new_v4();
+                                                let drop_handler = WindowDropHandler::new(WindowManagerCmd::ForgetFilePreview(key));
+                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
+                                                    file: file3.clone(),
+                                                    _drop_handler: drop_handler
+                                                });
+                                                let window = window.new_window(file_preview, Default::default());
+                                                if let Some(wv) = Weak::upgrade(&window) {
+                                                    let id = wv.window().id();
+                                                    state.write().mutate(Action::AddFilePreview(key, id));
+                                                }
+                                            },
                                             onrename: move |(val, key_code)| {
                                                 is_renaming_map.with_mut(|i| *i = None);
                                                 if key_code == Code::Enter {

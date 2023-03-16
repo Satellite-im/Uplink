@@ -93,6 +93,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onclick: move |_| emit_press(&cx),
                     div {
                         position: "relative",
+                        padding_top: "5px",
                         if thumbnail.is_empty() {
                             let file_extension = file_extension.clone().replace('.', "");
                             rsx!(span {
@@ -107,6 +108,8 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             rsx!(img {
                                 class: "thumbnail-container",
+                                height: if is_video {"50px"} else {""},
+                                width: if is_video {"100px"} else {""},
                                 src: "{thumbnail}",
                             })
                         }
@@ -152,6 +155,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 (!with_rename).then(|| rsx! (
                     label {
                         class: "file-name item-alignment",
+                        padding_top: "8px",
                         title: "{&file_name}",
                         "{file_name}"
                     }

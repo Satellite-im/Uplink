@@ -191,6 +191,19 @@
     }
 }
 
+.thumbnail-text {
+    position: absolute;
+    top: 0;
+    left: 12px;
+    background: var(--primary);
+    border-radius: 3px;
+    padding: 1px;
+}
+
+.thumb-text {
+    color: var(--text-color);
+}
+
 #unlock-layout {
 
     .unlock-details {

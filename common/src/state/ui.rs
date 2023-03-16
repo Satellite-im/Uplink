@@ -47,7 +47,7 @@ pub struct UI {
     // false: the media player is anchored in place
     // true: the media player can move around
     #[serde(skip)]
-    pub popout_player: bool,
+    pub popout_media_player: bool,
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
@@ -61,6 +61,8 @@ pub struct UI {
     pub overlays: Vec<Weak<WebView>>,
     #[serde(default)]
     pub extensions: Extensions,
+    #[serde(skip)]
+    pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
 }
@@ -109,8 +111,8 @@ impl Drop for UI {
 }
 
 impl UI {
-    fn take_popout_id(&mut self) -> Option<WindowId> {
-        self.popout_player = false;
+    fn take_call_popout_id(&mut self) -> Option<WindowId> {
+        self.popout_media_player = false;
         match self.current_call.take() {
             Some(mut call) => {
                 let id = call.take_window_id();
@@ -140,22 +142,37 @@ impl UI {
         self.metadata.minimal_view
     }
 
-    pub fn clear_popout(&mut self, desktop_context: DesktopContext) {
-        if let Some(id) = self.take_popout_id() {
+    pub fn clear_call_popout(&mut self, desktop_context: &DesktopContext) {
+        if let Some(id) = self.take_call_popout_id() {
             desktop_context.close_window(id);
         };
     }
-    pub fn set_popout(&mut self, id: WindowId) {
+    pub fn set_call_popout(&mut self, id: WindowId) {
         self.current_call = Some(Call::new(Some(id)));
-        self.popout_player = true;
+        self.popout_media_player = true;
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
         self.current_debug_logger = Some(DebugLogger::new(Some(id)));
     }
-    pub fn clear_debug_logger(&mut self, desktop_context: DesktopContext) {
+    pub fn clear_debug_logger(&mut self, desktop_context: &DesktopContext) {
         if let Some(id) = self.take_debug_logger_id() {
             desktop_context.close_window(id);
         };
+    }
+    pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
+        self.file_previews.insert(key, window_id);
+    }
+    pub fn clear_file_previews(&mut self, desktop_context: &DesktopContext) {
+        for (_, id) in self.file_previews.iter() {
+            desktop_context.close_window(*id);
+        }
+    }
+
+    pub fn clear_all_popout_windows(&mut self, desktop_context: &DesktopContext) {
+        self.clear_file_previews(desktop_context);
+        self.clear_debug_logger(desktop_context);
+        self.clear_call_popout(desktop_context);
+        self.clear_overlays();
     }
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
@@ -245,6 +262,24 @@ impl DebugLogger {
 
     pub fn take_window_id(&mut self) -> Option<WindowId> {
         self.debug_logger_window_id.take()
+    }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct FilePreview {
+    #[serde(skip)]
+    pub file_preview_window_id: Option<WindowId>,
+}
+
+impl FilePreview {
+    pub fn new(file_preview_window_id: Option<WindowId>) -> Self {
+        Self {
+            file_preview_window_id,
+        }
+    }
+
+    pub fn take_window_id(&mut self) -> Option<WindowId> {
+        self.file_preview_window_id.take()
     }
 }
 
