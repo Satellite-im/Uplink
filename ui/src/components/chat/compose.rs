@@ -1,5 +1,4 @@
 use std::{
-    cell::Ref,
     path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
@@ -736,55 +735,6 @@ enum TypingIndicator {
     Refresh(Uuid),
 }
 
-fn use_chat_text(cx: Scope<ComposeProps>) -> UseText {
-    let input = use_ref(cx, Vec::new);
-    let active_chat_id = cx.props.data.as_ref().map(|d| d.active_chat.id);
-    let state = use_shared_state::<State>(cx);
-    let typing_ch = use_coroutine_handle::<TypingIndicator>(cx).unwrap();
-
-    UseText {
-        local_text: input,
-        active_chat_id,
-        state,
-        typing_ch,
-    }
-}
-
-#[derive(Copy, Clone)]
-struct UseText<'a> {
-    local_text: &'a UseRef<Vec<String>>,
-    active_chat_id: Option<Uuid>,
-    state: Option<UseSharedState<'a, State>>,
-    typing_ch: &'a Coroutine<TypingIndicator>,
-}
-
-impl UseText<'_> {
-    pub fn read(&self) -> Ref<'_, Vec<String>> {
-        self.local_text.read()
-    }
-
-    pub fn with_mut(&self, f: impl FnOnce(&mut Vec<String>)) {
-        f(&mut self.local_text.write());
-        if let Some(id) = &self.active_chat_id {
-            self.typing_ch.send(TypingIndicator::Typing(*id));
-            // TODO: Maybe we should debounce this in the future so we don't do it on EVERY keypress.
-            if let Some(state) = self.state {
-                state
-                    .write()
-                    .mutate(Action::SetChatDraft(*id, self.local_text.read().join("\n")));
-            }
-        }
-    }
-
-    pub fn set(&self, text: Vec<String>) {
-        self.with_mut(|v| *v = text);
-    }
-
-    pub fn clear(&self) {
-        self.with_mut(|v| v.clear());
-    }
-}
-
 #[derive(Clone)]
 struct TypingInfo {
     pub chat_id: Uuid,
@@ -796,8 +746,9 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
-    let active_chat_id = cx.props.data.as_ref().map(|d| d.active_chat.id);
     let is_loading = data.is_none();
+    let input = use_ref(cx, Vec::<String>::new);
+    let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     let is_reply = active_chat_id
         .and_then(|id| {
@@ -944,8 +895,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         }
     });
 
-    let input = use_chat_text(cx);
-
     let value_in_draft = data
         .as_ref()
         .and_then(|d| d.active_chat.draft.clone())
@@ -953,12 +902,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         .lines()
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-    if input.read().clone() != value_in_draft {
-        input.set(value_in_draft);
+    if *input.read() != value_in_draft {
+        *input.write_silent() = value_in_draft;
     }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
-    use_future(cx, &active_chat_id.clone(), |current_chat| async move {
+    use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
             if let Some(c) = current_chat {
@@ -977,7 +926,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
         let msg = input.read().clone();
         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-        input.clear();
+        input.write().clear();
+        if let Some(id) = active_chat_id {
+            state
+                .write()
+                .mutate(Action::SetChatDraft(id, String::new()));
+        }
 
         if !msg_valid(&msg) {
             return;
@@ -1015,7 +969,11 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         onchange: move |v: String| {
-            input.set(v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
+            *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+            if let Some(id) = &active_chat_id {
+                local_typing_ch.send(TypingIndicator::Typing(*id));
+                state.write_silent().mutate(Action::SetChatDraft(*id, v));
+            }
         },
         value: data
             .as_ref()
