@@ -178,11 +178,9 @@ fn render_input<'a>(
                     },
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
-                        if !current_val.trim().is_empty() {
-                            text_value_onchange.borrow_mut().clear();
-                            text_value_onchange.borrow_mut().push_str(&current_val);
-                            onchange.call((current_val, true));
-                        }
+                        text_value_onchange.borrow_mut().clear();
+                        text_value_onchange.borrow_mut().push_str(&current_val);
+                        onchange.call((current_val, true));
                     },
                     onkeyup: move |evt| {
                         let is_valid = !text_value_onreturn.borrow().trim().is_empty();
