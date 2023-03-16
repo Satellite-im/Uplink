@@ -494,7 +494,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             id: "messages",
             div {
                 rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE / 2,  &data.active_chat.messages),
+                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
                     active_chat_id: data.active_chat.id,
                     num_messages_in_conversation: data.active_chat.messages.len(),
                     num_to_take: num_to_take.clone()
@@ -590,15 +590,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    // if the user scrolls into an area to trigger fetching more messages, need to invalidate the rest of that area.
-    // hopefully if `on_mouseout` updates cx.props.num_to_take, prev_num_to_take won't be updated until
-    // render_messages is called again (with updated GroupedMessages)
-    let prev_chat_id = use_state(cx, || cx.props.active_chat_id);
-    let prev_num_to_take = use_ref(cx, || 0);
-    if *prev_num_to_take.read() != *cx.props.num_to_take.get() {
-        *prev_num_to_take.write_silent() = *cx.props.num_to_take.get();
-    }
-
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
@@ -615,20 +606,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let msg_uuid = message.inner.id();
 
-        let num_to_take = cx.props.num_to_take.clone();
-
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
             on_mouseout: move |_| {
                 if should_fetch_more {
-                    if *prev_chat_id.get() != cx.props.active_chat_id
-                        || *prev_num_to_take.read() == *num_to_take.get()
-                    {
-                        prev_chat_id.set(cx.props.active_chat_id);
-                        if *num_to_take.current() < cx.props.num_messages_in_conversation {
-                            num_to_take.modify(|x| x.saturating_add(20));
-                        }
+                    if *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation {
+                        cx.props
+                            .num_to_take
+                            .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
+                        //log::info!("lazy loading");
                     }
                 }
             },

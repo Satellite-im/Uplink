@@ -82,7 +82,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! {
         div {
             class: "context-wrap",
-            onmouseout: |e| {
+            onmouseenter: |e| {
                 cx.props.on_mouseout.as_ref().map(|f| f.call(e));
             },
             div {
