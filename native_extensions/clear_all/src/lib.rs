@@ -24,7 +24,7 @@ impl Extension for ClearAll {
             meta: Meta {
                 name: "clear_all",
                 pretty_name: "Clear All Notifications",
-                description: "Clears all notificaitons with a single click.",
+                description: "Clears all notifications with a single click.",
                 author: "Satellite <devs@satellite.im>",
             },
         }
