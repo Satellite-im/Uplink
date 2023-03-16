@@ -1139,6 +1139,8 @@ pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
     pub is_first: bool,
     pub is_last: bool,
+    // if the user scrolls over this message, more messages should be loaded
+    pub should_fetch_more: bool,
 }
 
 impl<'a> GroupedMessage<'a> {
@@ -1150,12 +1152,20 @@ impl<'a> GroupedMessage<'a> {
 pub fn group_messages<'a>(
     my_did: DID,
     num: usize,
+    when_to_fetch_more: usize,
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
     let to_skip = input.len().saturating_sub(num);
     // the most recent message appears last in the list.
     let iter = input.iter().skip(to_skip);
+    let mut need_to_fetch_more = when_to_fetch_more;
+
+    let mut need_more = || {
+        let r = need_to_fetch_more > 0;
+        need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
+        r
+    };
 
     for msg in iter {
         if let Some(group) = messages.iter_mut().last() {
@@ -1164,6 +1174,7 @@ pub fn group_messages<'a>(
                     message: msg,
                     is_first: false,
                     is_last: true,
+                    should_fetch_more: need_more(),
                 };
                 // I really hope last() is O(1) time
                 if let Some(g) = group.messages.iter_mut().last() {
@@ -1181,6 +1192,7 @@ pub fn group_messages<'a>(
             message: msg,
             is_first: true,
             is_last: true,
+            should_fetch_more: need_more(),
         };
         grp.messages.push(g);
         messages.push(grp);

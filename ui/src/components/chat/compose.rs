@@ -333,11 +333,18 @@ enum MessagesCommand {
     },
 }
 
+/// Lazy loading scheme:
+/// load DEFAULT_NUM_TO_TAKE messages to start.
+/// tell group_messages to flag the first X messages.
+/// if onmouseout triggers over any of those messages, load Y more.
+const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
-    let num_to_take = use_state(cx, || 10_usize);
+
+    let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
+    let prev_chat_id = use_ref(cx, || data.active_chat.id);
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
@@ -354,20 +361,19 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let eval = use_eval(cx);
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
-        num_to_take.set(10_usize);
-        let script = include_str!("./script.js");
-        eval(script.to_string());
+        num_to_take.set(DEFAULT_NUM_TO_TAKE);
     }
 
-    use_future(cx, (), |_| {
-        to_owned![num_to_take, max_to_take];
+    use_effect(cx, &data.active_chat.id, |id| {
+        to_owned![eval, prev_chat_id];
         async move {
-            loop {
-                tokio::time::sleep(Duration::from_millis(500)).await;
-                if *num_to_take.current() < *max_to_take.read() {
-                    num_to_take.modify(|x| x.saturating_add(10));
-                    //log::info!("num_to_take is now {}", *num_to_take.current());
-                }
+            // yes, this check seems like some nonsense. but it eliminates a jitter and if
+            // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
+            // switch to settings or whatnot, then come back to the chats view and not lose your place.
+            if *prev_chat_id.read() != id {
+                *prev_chat_id.write_silent() = id;
+                let script = include_str!("./script.js");
+                eval(script.to_string());
             }
         }
     });
@@ -486,8 +492,10 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             id: "messages",
             div {
                 rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(),  &data.active_chat.messages),
+                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
                     active_chat_id: data.active_chat.id,
+                    num_messages_in_conversation: data.active_chat.messages.len(),
+                    num_to_take: num_to_take.clone()
                 })
             }
         }
@@ -498,6 +506,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
 struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
     active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -508,6 +518,8 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
         rsx!(render_message_group {
             group: _group,
             active_chat_id: cx.props.active_chat_id,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
         })
     })))
 }
@@ -516,6 +528,8 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
 struct MessageGroupProps<'a> {
     group: &'a MessageGroup<'a>,
     active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -524,6 +538,8 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let MessageGroupProps {
         group,
         active_chat_id: _,
+        num_messages_in_conversation: _,
+        num_to_take: _,
     } = cx.props;
 
     let messages = &group.messages;
@@ -554,6 +570,8 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             messages: &group.messages,
             active_chat_id: cx.props.active_chat_id,
             is_remote: group.remote,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
         }))
     },))
 }
@@ -563,6 +581,8 @@ struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
     active_chat_id: Uuid,
     is_remote: bool,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -571,6 +591,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
+        let should_fetch_more = grouped_message.should_fetch_more;
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -586,6 +607,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
+            on_mouseenter: move |_| {
+                if should_fetch_more
+                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
+                {
+                    cx.props
+                        .num_to_take
+                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
+                    //log::info!("lazy loading");
+                }
+            },
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
