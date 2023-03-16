@@ -149,9 +149,10 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
-    let did_string = state.read().did_key().to_string();
+    let did_string = state.read().get_own_identity().did_key().to_string();
+
     let mut did_short = "#".to_string();
-    did_short.push_str(&did_string[did_string.chars().count() - 5..]);
+    did_short.push_str(&state.read().get_own_identity().short_id());
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
