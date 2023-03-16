@@ -337,8 +337,6 @@ enum MessagesCommand {
 /// load DEFAULT_NUM_TO_TAKE messages to start.
 /// tell group_messages to flag the first X messages.
 /// if onmouseout triggers over any of those messages, load Y more.
-/// if X is half of DEFAULT_NUM_TO_TAKE and Y = DEFAULT_NUM_TO_TAKE,
-/// it seems to work pretty good.
 const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
@@ -609,7 +607,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
-            on_mouseout: move |_| {
+            on_mouseenter: move |_| {
                 if should_fetch_more {
                     if *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation {
                         cx.props

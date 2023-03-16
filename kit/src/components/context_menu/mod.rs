@@ -61,7 +61,7 @@ pub struct Props<'a> {
     children: Element<'a>,
     #[props(optional)]
     devmode: Option<bool>,
-    on_mouseout: Option<EventHandler<'a, MouseEvent>>,
+    on_mouseenter: Option<EventHandler<'a, MouseEvent>>,
 }
 
 #[allow(non_snake_case)]
@@ -83,7 +83,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "context-wrap",
             onmouseenter: |e| {
-                cx.props.on_mouseout.as_ref().map(|f| f.call(e));
+                cx.props.on_mouseenter.as_ref().map(|f| f.call(e));
             },
             div {
                 id: "{id}",
