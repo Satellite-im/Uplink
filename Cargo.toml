@@ -47,6 +47,8 @@ either = "1.6.1"
 base64 = "0.20.0"
 timeago = "0.4.0"
 dirs = "4.0.0"
+regex = "1.6.1"
+image = "0.24.5"
 opener = "0.5.0"
 open = "3.2.0"
 wry = { version = "0.23.4" }

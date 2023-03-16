@@ -8,6 +8,8 @@
 	transition: background-color var(--animation-time);
 	align-self: flex-start;
 	margin: 5px;
+	border-radius: 12px;
+	transition: background-color 0.2s ease;
 	.icon {
 		svg {
 			transition: stroke var(--animation-time);
@@ -30,6 +32,11 @@
 			cursor: not-allowed;
 		}
 	}
+}
+
+.file:hover {
+	background-color: var(--secondary-light);
+	border-radius: 12px;
 }
 
 .thumbnail-container {
