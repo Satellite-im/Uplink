@@ -157,10 +157,10 @@ struct EditProps<'a> {
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
-    cx.render(rsx!(textarea::Input {
+    cx.render(rsx!(textarea::ControlledInput {
         id: cx.props.id.clone(),
         focus: true,
-        default_text: cx.props.text.clone(),
+        value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid {

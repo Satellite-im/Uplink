@@ -23,58 +23,6 @@ impl Size {
 }
 
 #[derive(Props)]
-pub struct Props<'a> {
-    #[props(default = "".to_owned())]
-    id: String,
-    #[props(default = false)]
-    focus: bool,
-    #[props(default = false)]
-    loading: bool,
-    #[props(default = "".to_owned())]
-    placeholder: String,
-    #[props(default = 1024)]
-    max_length: i32,
-    #[props(default = Size::Normal)]
-    size: Size,
-    #[props(default = "".to_owned())]
-    default_text: String,
-    #[props(default = "".to_owned())]
-    aria_label: String,
-    onchange: EventHandler<'a, (String, bool)>,
-    onreturn: EventHandler<'a, (String, bool, Code)>,
-}
-
-#[allow(non_snake_case)]
-pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let Props {
-        id,
-        focus,
-        loading,
-        placeholder,
-        max_length,
-        size,
-        default_text,
-        aria_label,
-        onchange,
-        onreturn,
-    } = &cx.props;
-
-    render_input(
-        cx,
-        id,
-        *focus,
-        *loading,
-        placeholder,
-        *max_length,
-        *size,
-        aria_label,
-        onchange,
-        onreturn,
-        default_text.as_str(),
-    )
-}
-
-#[derive(Props)]
 pub struct ControlledInputProps<'a> {
     #[props(default = "".to_owned())]
     id: String,
@@ -110,35 +58,6 @@ pub fn ControlledInput<'a>(cx: Scope<'a, ControlledInputProps<'a>>) -> Element<'
         value,
     } = &cx.props;
 
-    render_input(
-        cx,
-        id,
-        *focus,
-        *loading,
-        placeholder,
-        *max_length,
-        *size,
-        aria_label,
-        onchange,
-        onreturn,
-        value.as_str(),
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-fn render_input<'a>(
-    cx: &'a ScopeState,
-    id: &String,
-    focus: bool,
-    loading: bool,
-    placeholder: &String,
-    max_length: i32,
-    size: Size,
-    aria_label: &String,
-    onchange: &'a EventHandler<'a, (String, bool)>,
-    onreturn: &'a EventHandler<'a, (String, bool, Code)>,
-    value: &str,
-) -> Element<'a> {
     let height_script = include_str!("./update_input_height.js");
     let focus_script = include_str!("./focus.js").replace("UUID", id);
     dioxus_desktop::use_eval(cx)(height_script.to_string());
@@ -157,7 +76,7 @@ fn render_input<'a>(
 
     cx.render(rsx! (
         div {
-            class: format_args!("input-group {}", if loading { "disabled" } else { " " }),
+            class: format_args!("input-group {}", if *loading { "disabled" } else { " " }),
             div {
                 class: "input",
                 height: "{size.get_height()}",
@@ -167,7 +86,7 @@ fn render_input<'a>(
                     class: "input_textarea",
                     id: "{id}",
                     // todo: troubleshoot this. it isn't working
-                    autofocus: focus,
+                    autofocus: *focus,
                     aria_label: "{aria_label}",
                     disabled: "{loading}",
                     value: "{current_val}",
