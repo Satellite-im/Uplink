@@ -103,11 +103,12 @@
 
     }
     // hide scrollbar to prevent issues with 6 pixel scrollbar
-    ::-webkit-scrollbar {
+    .files-list::-webkit-scrollbar {
         display: none;
+        scrollbar-width: none;  /* Firefox */
     }
+
     -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
 
     .files-list {
         display: flex;
