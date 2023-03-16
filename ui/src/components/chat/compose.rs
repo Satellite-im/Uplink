@@ -686,6 +686,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             )),
             Message {
+                id: message_key.clone(),
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,

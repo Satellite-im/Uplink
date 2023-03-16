@@ -19,6 +19,8 @@ pub enum Order {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    // Message ID
+    id: String,
     // indicates that the message is being edited
     editing: bool,
 
@@ -117,6 +119,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if cx.props.editing {
                             rsx! (
                                 EditMsg{
+                                    id: cx.props.id.clone(),
                                     text: text.clone(),
                                     on_enter: move |update| {
                                         cx.props.on_edit.call(update);
@@ -146,6 +149,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 struct EditProps<'a> {
+    id: String,
     text: String,
     on_enter: EventHandler<'a, String>,
 }
@@ -154,6 +158,7 @@ struct EditProps<'a> {
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
     cx.render(rsx!(textarea::Input {
+        id: cx.props.id.clone(),
         focus: true,
         default_text: cx.props.text.clone(),
         onchange: move |_| {},
