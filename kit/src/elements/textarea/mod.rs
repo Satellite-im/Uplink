@@ -2,6 +2,8 @@
 //! this could be merged with kit/src/elements/input and make the input element use a textarea based on a property.
 //! that might helpful if a textarea needed to perform input validation.
 
+use std::{cell::RefCell, rc::Rc};
+
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
@@ -146,7 +148,12 @@ fn render_input<'a>(
         .replace("UUID", id)
         .replace("$MULTI_LINE", &format!("{}", true));
     let current_val = value.to_string();
+
     let cv2 = current_val.clone();
+
+    let text_value = Rc::new(RefCell::new(value.to_string()));
+    let text_value_onchange = Rc::clone(&text_value);
+    let text_value_onreturn = Rc::clone(&text_value);
 
     cx.render(rsx! (
         div {
@@ -172,13 +179,15 @@ fn render_input<'a>(
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         if !current_val.trim().is_empty() {
+                            text_value_onchange.borrow_mut().clear();
+                            text_value_onchange.borrow_mut().push_str(&current_val);
                             onchange.call((current_val, true));
                         }
                     },
                     onkeyup: move |evt| {
-                        let is_valid = !current_val.trim().is_empty();
+                        let is_valid = !text_value_onreturn.borrow().trim().is_empty();
                         if evt.code() == Code::Enter && !evt.data.modifiers().contains(Modifiers::SHIFT) {
-                            onreturn.call((current_val.clone(), is_valid, evt.code()));
+                            onreturn.call((text_value_onreturn.borrow().clone(), is_valid, evt.code()));
                         }
                     }
                 }
