@@ -66,6 +66,10 @@ files = Files
     .renaming-duplicated = Renomeando se Duplicado
     .one-file-to-upload = Ficheiro para Envio
     .files-to-upload = Ficheiros para Envio
+    .video-thumb = Thumbnail de vídeo
+    .image-thumb = Thumbnail de imagem
+    .doc-thumb = Thumbnail da primeira página
+    .no-thumbnail-preview = Não há thumbnail para visualização deste arquivo.
 
 settings = Settings
     .settings = Definições

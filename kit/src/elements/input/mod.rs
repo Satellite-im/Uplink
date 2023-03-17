@@ -393,6 +393,15 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         };
                         emit(&cx, current_val, is_valid);
                     },
+                    onblur: move |_| {
+                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
+                        if *valid.current() {
+                                valid.set(false);
+                        }
+                        if options.clear_on_submit {
+                            reset_fn();
+                        }
+                    },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter {

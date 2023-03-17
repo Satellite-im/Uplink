@@ -31,9 +31,12 @@ use kit::{
     },
 };
 
-use common::icons::outline::Shape as Icon;
 use common::{
-    state::{self, ui, Action, Chat, Identity, State},
+    icons::outline::Shape as Icon,
+    state::{group_messages, GroupedMessage, MessageGroup},
+};
+use common::{
+    state::{ui, Action, Chat, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -58,7 +61,6 @@ use crate::{
 
 struct ComposeData {
     active_chat: Chat,
-    message_groups: Vec<state::MessageGroup>,
     my_id: Identity,
     other_participants: Vec<Identity>,
     active_participant: Identity,
@@ -117,7 +119,16 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            get_messages{data: data.clone()},
+            match data.as_ref() {
+                None => rsx!(
+                    div {
+                        id: "messages",
+                        MessageGroupSkeletal {},
+                        MessageGroupSkeletal { alt: true }
+                    }
+                ),
+                Some(data) =>  rsx!(get_messages{data: data.clone()}),
+            },
             get_chatbar{data: data}
         }
     ))
@@ -135,7 +146,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         Some(c) => c,
         None => return None,
     };
-    let message_groups = s.get_sort_messages(&active_chat);
     let participants = s.chat_participants(&active_chat);
     // warning: if a friend changes their username, if state.friends is updated, the old username would still be in state.chats
     // this would be "fixed" the next time uplink starts up
@@ -161,7 +171,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
     let data = Rc::new(ComposeData {
         active_chat,
-        message_groups,
         other_participants,
         my_id: s.get_own_identity(),
         active_participant,
@@ -179,9 +188,8 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
-    let data = cx.props.data.clone();
-    let active_chat = data.as_ref().map(|x| x.active_chat.clone());
-    let active_chat2 = active_chat.clone();
+    let data = &cx.props.data;
+    let active_chat = data.as_ref().map(|x| &x.active_chat);
     let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
     cx.render(rsx!(
         Button {
@@ -206,8 +214,8 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 text: get_local_text("favorites.add"),
             })),
             onpress: move |_| {
-                if let Some(chat) = active_chat.clone() {
-                    state.write().mutate(Action::ToggleFavorite(chat));
+                if let Some(chat) = active_chat.as_ref() {
+                    state.write().mutate(Action::ToggleFavorite(&chat.id));
                 }
             }
         },
@@ -221,10 +229,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 text: get_local_text("uplink.call"),
             })),
             onpress: move |_| {
-                if let Some(chat) = active_chat2.clone() {
+                if let Some(chat) = active_chat.as_ref() {
                     state
                         .write_silent()
-                        .mutate(Action::ClearPopout(desktop.clone()));
+                        .mutate(Action::ClearCallPopout(desktop.clone()));
                     state.write_silent().mutate(Action::DisableMedia);
                     state.write().mutate(Action::SetActiveMedia(chat.id));
                 }
@@ -306,6 +314,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     // contains the emoji reaction
+    // conv id, msg id, emoji
     React((raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
@@ -324,22 +333,52 @@ enum MessagesCommand {
     },
 }
 
-fn get_messages(cx: Scope<ComposeProps>) -> Element {
+/// Lazy loading scheme:
+/// load DEFAULT_NUM_TO_TAKE messages to start.
+/// tell group_messages to flag the first X messages.
+/// if onmouseout triggers over any of those messages, load Y more.
+const DEFAULT_NUM_TO_TAKE: usize = 20;
+#[inline_props]
+fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
-    let state = use_shared_state::<State>(cx)?;
-    let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let user = state.read().did_key();
+    let user = data.my_id.did_key();
 
+    let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
+    let prev_chat_id = use_ref(cx, || data.active_chat.id);
+
+    // this needs to be a hook so it can change inside of the use_future.
+    // it could be passed in as a dependency but then the wait would reset every time a message comes in.
+    let max_to_take = use_ref(cx, || data.active_chat.messages.len());
+    if *max_to_take.read() != data.active_chat.messages.len() {
+        *max_to_take.write_silent() = data.active_chat.messages.len();
+    }
+
+    // don't scroll to the bottom again if new messages come in while the user is scrolling up. only scroll
+    // to the bottom when the user selects the active chat
+    // also must reset num_to_take when the active_chat changes
+    let active_chat = use_ref(cx, || None);
+    let currently_active = Some(data.active_chat.id);
     let eval = use_eval(cx);
-    use_effect(cx, (), move |_| {
-        to_owned![eval];
+    if *active_chat.read() != currently_active {
+        *active_chat.write_silent() = currently_active;
+        num_to_take.set(DEFAULT_NUM_TO_TAKE);
+    }
+
+    use_effect(cx, &data.active_chat.id, |id| {
+        to_owned![eval, prev_chat_id];
         async move {
-            let script = include_str!("./script.js");
-            eval(script.to_string());
+            // yes, this check seems like some nonsense. but it eliminates a jitter and if
+            // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
+            // switch to settings or whatnot, then come back to the chats view and not lose your place.
+            if *prev_chat_id.read() != id {
+                *prev_chat_id.write_silent() = id;
+                let script = include_str!("./script.js");
+                eval(script.to_string());
+            }
         }
     });
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
+    let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         //to_owned![];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -448,166 +487,270 @@ fn get_messages(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
-    let data = match &cx.props.data {
-        Some(d) => d.clone(),
-        None => {
-            return cx.render(rsx!(
-                div {
-                    id: "messages",
-                    MessageGroupSkeletal {},
-                    MessageGroupSkeletal { alt: true }
-                }
-            ))
-        }
-    };
-
     cx.render(rsx!(
         div {
             id: "messages",
             div {
-                data.message_groups.iter().map(|group| {
-                    let messages = &group.messages;
-                    let active_chat = data.active_chat.clone();
-                    let last_message = messages.last().unwrap().message.clone();
-                    let sender = state.read().get_identity(&group.sender);
-                    let sender_name = sender.username();
-                    let active_language = state.read().settings.language.clone();
-                    let platform = sender.platform().into();
-
-                    // todo: investigate why updating one's profile picture affects their status. 
-                    // this is probably in warp but I'm not sure. 
-                    let mut sender_status = sender.identity_status().into();
-                    if !group.remote && sender_status == Status::Offline {
-                        sender_status = Status::Online;
-                    }
-
-                    rsx!(
-                        MessageGroup {
-                            user_image: cx.render(rsx!(
-                                UserImage {
-                                    image: sender.graphics().profile_picture(),
-                                    platform: platform,
-                                    status: sender_status,
-                                }
-                            )),
-                            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
-                            with_sender: if sender_name.is_empty() { get_local_text("messages.you") } else { sender_name },
-                            remote: group.remote,
-                            messages.iter().map(|grouped_message| {
-                                let message = grouped_message.message.clone();
-                                let message2 = message.clone();
-                                let message3 = message.clone();
-                                let message4 = message.clone();
-                                let reply_message = grouped_message.message.clone();
-                                let active_chat = active_chat.clone();
-                                let sender_is_self = message.inner.sender() == state.read().did_key();
-
-                                // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
-                                let is_editing = edit_msg.get().map(|id| !group.remote && (id == message.inner.id())).unwrap_or(false);
-                                let context_key = format!("message-{}-{}", &message.key, is_editing);
-                                let message_key = format!("{}-{:?}", &message.key, is_editing);
-                                let msg_uuid = message.inner.id();
-                                rsx! (
-                                    ContextMenu {
-                                        key: "{context_key}",
-                                        id: context_key,
-                                        items: cx.render(rsx!(
-                                            ContextItem {
-                                                icon: Icon::ArrowLongLeft,
-                                                text: get_local_text("messages.reply"),
-                                                onpress: move |_| {
-                                                    state.write().mutate(Action::StartReplying(active_chat.clone(), reply_message.inner.clone()));
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::FaceSmile,
-                                                text: get_local_text("messages.react"),
-                                                //TODO: let the user pick a reaction
-                                                onpress: move |_| {
-                                                    // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
-                                                    // todo: allow emoji extension instead
-                                                    // using "like" for now
-                                                    ch.send(MessagesCommand::React((message2.inner.clone(), "👍".into())));
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::Pencil,
-                                                text: get_local_text("messages.edit"),
-                                                should_render: !group.remote && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
-                                                onpress: move |_| {
-                                                    edit_msg.set(Some(msg_uuid));
-                                                    log::debug!("editing msg {msg_uuid}");
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::Pencil,
-                                                text: get_local_text("messages.cancel-edit"),
-                                                should_render: !group.remote && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
-                                                onpress: move |_| {
-                                                    edit_msg.set(None);
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::Trash,
-                                                danger: true,
-                                                text: get_local_text("uplink.delete"),
-                                                should_render: sender_is_self,
-                                                onpress: move |_| {
-                                                    ch.send(MessagesCommand::DeleteMessage { conv_id: message3.inner.conversation_id(), msg_id: message3.inner.id() });
-                                                }
-                                            },
-                                        )),
-                                        div {
-                                            class: "msg-wrapper",
-                                            message.in_reply_to.map(|other_msg| rsx!(
-                                            MessageReply {
-                                                    key: "reply-{message_key}",
-                                                    with_text: other_msg,
-                                                    remote: group.remote,
-                                                    remote_message: group.remote,
-                                                }
-                                            )),
-                                            Message {
-                                                key: "{message_key}",
-                                                editing: is_editing,
-                                                remote: group.remote,
-                                                with_text: message.inner.value().join("\n"),
-                                                reactions: message.inner.reactions(),
-                                                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                                                attachments: message.inner.attachments(),
-                                                on_download: move |file_name| {
-                                                    if let Some(directory) = FileDialog::new()
-                                                    .set_directory(dirs::home_dir().unwrap_or_default())
-                                                    .pick_folder() {
-                                                        ch.send(MessagesCommand::DownloadAttachment {
-                                                            conv_id: message4.inner.conversation_id(),
-                                                            msg_id: message4.inner.id(),
-                                                            file_name, directory
-                                                        })
-                                                    }
-                                                },
-                                                on_edit: move |update: String| {
-                                                    edit_msg.set(None);
-                                                    let msg = update.split('\n').collect::<Vec<_>>();
-                                                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                                                    let msg = msg.iter().map(|x| x.to_string()).collect();
-                                                    if !is_valid {
-                                                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
-                                                    }
-                                                    else {
-                                                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
-                                                    }
-                                                }
-                                            },
-                                       }
-                                    }
-                                )
-                            })
-                        }
-                    )
+                rsx!(render_message_groups{
+                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
+                    active_chat_id: data.active_chat.id,
+                    num_messages_in_conversation: data.active_chat.messages.len(),
+                    num_to_take: num_to_take.clone()
                 })
             }
+        }
+    ))
+}
+
+#[derive(Props)]
+struct AllMessageGroupsProps<'a> {
+    groups: Vec<MessageGroup<'a>>,
+    active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
+}
+
+// attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
+// temporary location
+fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
+    log::trace!("render message groups");
+    cx.render(rsx!(cx.props.groups.iter().map(|_group| {
+        rsx!(render_message_group {
+            group: _group,
+            active_chat_id: cx.props.active_chat_id,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
+        })
+    })))
+}
+
+#[derive(Props)]
+struct MessageGroupProps<'a> {
+    group: &'a MessageGroup<'a>,
+    active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
+}
+
+fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+
+    let MessageGroupProps {
+        group,
+        active_chat_id: _,
+        num_messages_in_conversation: _,
+        num_to_take: _,
+    } = cx.props;
+
+    let messages = &group.messages;
+    let last_message = messages.last().unwrap().message;
+    let sender = state.read().get_identity(&group.sender);
+    let sender_name = sender.username();
+    let active_language = &state.read().settings.language;
+
+    let mut sender_status = sender.identity_status().into();
+    if !group.remote && sender_status == Status::Offline {
+        sender_status = Status::Online;
+    }
+
+    cx.render(rsx!(MessageGroup {
+        user_image: cx.render(rsx!(UserImage {
+            image: sender.graphics().profile_picture(),
+            platform: sender.platform().into(),
+            status: sender_status,
+        })),
+        timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
+        with_sender: if sender_name.is_empty() {
+            get_local_text("messages.you")
+        } else {
+            sender_name
         },
+        remote: group.remote,
+        children: cx.render(rsx!(render_messages {
+            messages: &group.messages,
+            active_chat_id: cx.props.active_chat_id,
+            is_remote: group.remote,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
+        }))
+    },))
+}
+
+#[derive(Props)]
+struct MessagesProps<'a> {
+    messages: &'a Vec<GroupedMessage<'a>>,
+    active_chat_id: Uuid,
+    is_remote: bool,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
+}
+fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
+
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+
+    cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
+        let should_fetch_more = grouped_message.should_fetch_more;
+        let message = &grouped_message.message;
+        let sender_is_self = message.inner.sender() == state.read().did_key();
+
+        // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
+        let is_editing = edit_msg
+            .get()
+            .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+            .unwrap_or(false);
+        let context_key = format!("message-{}-{}", &message.key, is_editing);
+        let _message_key = format!("{}-{:?}", &message.key, is_editing);
+        let msg_uuid = message.inner.id();
+
+        rsx!(ContextMenu {
+            key: "{context_key}",
+            id: context_key,
+            on_mouseenter: move |_| {
+                if should_fetch_more
+                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
+                {
+                    cx.props
+                        .num_to_take
+                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
+                    //log::info!("lazy loading");
+                }
+            },
+            children: cx.render(rsx!(render_message {
+                message: grouped_message,
+                is_remote: cx.props.is_remote,
+                message_key: _message_key,
+                edit_msg: edit_msg.clone(),
+            })),
+            items: cx.render(rsx!(
+                ContextItem {
+                    icon: Icon::ArrowLongLeft,
+                    text: get_local_text("messages.reply"),
+                    onpress: move |_| {
+                        state
+                            .write()
+                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::FaceSmile,
+                    text: get_local_text("messages.react"),
+                    //TODO: let the user pick a reaction
+                    onpress: move |_| {
+                        // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+                        // todo: allow emoji extension instead
+                        // using "like" for now
+                        ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                    onpress: move |_| {
+                        edit_msg.set(Some(msg_uuid));
+                        log::debug!("editing msg {msg_uuid}");
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.cancel-edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                    onpress: move |_| {
+                        edit_msg.set(None);
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Trash,
+                    danger: true,
+                    text: get_local_text("uplink.delete"),
+                    should_render: sender_is_self,
+                    onpress: move |_| {
+                        ch.send(MessagesCommand::DeleteMessage {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                        });
+                    }
+                },
+            )) // end of context menu items
+        }) // end context menu
+    }))) // end outer cx.render
+}
+
+#[derive(Props)]
+struct MessageProps<'a> {
+    message: &'a GroupedMessage<'a>,
+    is_remote: bool,
+    message_key: String,
+    edit_msg: UseState<Option<Uuid>>,
+}
+fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
+    //log::trace!("render message {}", &cx.props.message.message.key);
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+
+    let MessageProps {
+        message,
+        is_remote: _,
+        message_key,
+        edit_msg,
+    } = cx.props;
+    let grouped_message = message;
+    let message = grouped_message.message;
+    let is_editing = edit_msg
+        .get()
+        .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+        .unwrap_or(false);
+
+    cx.render(rsx!(
+        div {
+            class: "msg-wrapper",
+            message.in_reply_to.as_ref().map(|other_msg| rsx!(
+            MessageReply {
+                    key: "reply-{message_key}",
+                    with_text: other_msg.to_string(),
+                    remote: cx.props.is_remote,
+                    remote_message: cx.props.is_remote,
+                }
+            )),
+            Message {
+                key: "{message_key}",
+                editing: is_editing,
+                remote: cx.props.is_remote,
+                with_text: message.inner.value().join("\n"),
+                reactions: message.inner.reactions(),
+                order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
+                attachments: message.inner.attachments(),
+                on_download: move |file_name| {
+                    if let Some(directory) = FileDialog::new()
+                    .set_directory(dirs::home_dir().unwrap_or_default())
+                    .pick_folder() {
+                        ch.send(MessagesCommand::DownloadAttachment {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                            file_name, directory
+                        })
+                    }
+                },
+                on_edit: move |update: String| {
+                    edit_msg.set(None);
+                    let msg = update.split('\n').collect::<Vec<_>>();
+                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
+                    let msg = msg.iter().map(|x| x.to_string()).collect();
+                    if message.inner.value() == msg {
+                        return;
+                    }
+                    if !is_valid {
+                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
+                    }
+                    else {
+                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                    }
+                }
+            },
+        }
     ))
 }
 
@@ -631,7 +774,7 @@ struct TypingInfo {
 fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
-    let data = cx.props.data.clone();
+    let data = &cx.props.data;
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
     let should_clear_input = use_state(cx, || false);
@@ -866,9 +1009,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
             }
         )),
         with_replying_to: data
+            .as_ref()
             .map(|data| {
-                let active_chat = data.active_chat.clone();
-                cx.render(rsx!(active_chat.clone().replying_to.map(|msg| {
+                let active_chat = &data.active_chat;
+
+                cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
                     let our_did = state.read().did_key();
                     let msg_owner = if data.my_id.did_key() == msg.sender() {
                         Some(&data.my_id)

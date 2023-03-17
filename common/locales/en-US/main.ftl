@@ -85,6 +85,10 @@ files = Files
     .renaming-duplicated = Renaming if Duplicated
     .one-file-to-upload = File to Upload
     .files-to-upload = Files to Upload
+    .video-thumb = Video Thumb
+    .image-thumb = Image Thumb 
+    .doc-thumb = First Page Thumb
+    .no-thumbnail-preview = There is no preview thumb for this file
 
 settings = Settings
     .settings = Settings

@@ -96,7 +96,11 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 reset: cx.props.reset.clone(),
                 focus: cx.props.with_replying_to.is_some(),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
-                onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
+                onreturn: move |(v, is_valid, _)| {
+                    if is_valid {
+                        cx.props.onreturn.call(v);
+                    }
+                },
             },
             cx.props.extensions.as_ref(),
             div {
