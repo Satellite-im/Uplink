@@ -117,19 +117,42 @@ impl EmojiSelector {
     ) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
+        let mouse_over_emoji_selector = use_ref(cx, || false);
 
         let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
-
         cx.render(rsx! (
             div {
+                onmouseenter: |_| {
+                    #[cfg(not(target_os = "macos"))] 
+                    {
+                        *mouse_over_emoji_selector.write_silent() = true; 
+                    }
+                },
+                onmouseleave: |_| {
+                    #[cfg(not(target_os = "macos"))] 
+                    {
+                        *mouse_over_emoji_selector.write_silent() = false; 
+                        let eval = use_eval(cx);
+                        eval(focus_script.to_string());
+                    }
+                },
                 id: "emoji_selector",
                 tabindex: "0",
                 onblur: |_| {
-                    if *mouse_over_emoji_button.read() == false {
-                        hide.set(false);
+                    #[cfg(target_os = "macos")] 
+                    {
+                        if !*mouse_over_emoji_button.read() {
+                            hide.set(false);
+                        }
+                    }
+                    #[cfg(not(target_os = "macos"))] 
+                    {
+                        if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
+                            hide.set(false);
+                        }
                     }
                 },
                 div {
