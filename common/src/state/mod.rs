@@ -900,8 +900,6 @@ impl State {
             None => return,
         };
 
-        self.remove_sidebar_chat(direct_chat.id);
-
         // If the friend's direct chat is currently the active chat, clear the active chat
         if let Some(id) = self.chats.active {
             if id == direct_chat.id {
