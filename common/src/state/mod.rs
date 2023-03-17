@@ -639,6 +639,9 @@ impl State {
     }
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
+        if let Some(c) = self.chats.active {
+            self.chats.last_active = Some(c);
+        }
         self.chats.active = None;
     }
     pub fn clear_typing_indicator(&mut self, instant: Instant) -> bool {

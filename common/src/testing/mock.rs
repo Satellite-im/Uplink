@@ -80,6 +80,7 @@ pub fn generate_mock() -> State {
         active_media: None,
         in_sidebar,
         favorites: vec![],
+        last_active: None,
     };
     let friends = Friends {
         initialized: true,

@@ -30,6 +30,13 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
 
     state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
+    let chats = state.read().chats().clone();
+    if chats.active.is_none() {
+        if let Some(a) = chats.last_active {
+            state.write().mutate(Action::ChatWith(&a, false));
+        }
+    }
+
     let is_minimal_view = state.read().ui.is_minimal_view();
     let sidebar_hidden = state.read().ui.sidebar_hidden;
     let show_welcome = state.read().chats().active.is_none();

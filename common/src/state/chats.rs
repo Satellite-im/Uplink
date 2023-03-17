@@ -63,6 +63,8 @@ pub struct Chats {
     pub in_sidebar: VecDeque<Uuid>,
     // Favorite Chats
     pub favorites: Vec<Uuid>,
+    // The last active chat when one switches tab
+    pub last_active: Option<Uuid>,
 }
 
 impl Chats {
@@ -105,6 +107,7 @@ impl Serialize for Chats {
         state.skip_field("active_media")?;
         state.serialize_field("in_sidebar", &self.in_sidebar)?;
         state.serialize_field("favorites", &self.favorites)?;
+        state.serialize_field("last_active", &self.last_active)?;
 
         state.end()
     }
