@@ -903,7 +903,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
     if *input.read() != value_in_draft {
-        *input.write_silent() = value_in_draft;
+        input.with_mut(|v| *v = value_in_draft);
     }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
@@ -969,10 +969,10 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         onchange: move |v: String| {
-            *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+            input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                state.write().mutate(Action::SetChatDraft(*id, v));
             }
         },
         value: data
