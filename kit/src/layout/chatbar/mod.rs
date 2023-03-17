@@ -36,10 +36,10 @@ pub struct Props<'a> {
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
     reset: Option<UseState<bool>>,
-    #[props(optional)]
-    is_disabled: Option<bool>,
-    #[props(optional)]
-    tooltip: Option<String>,
+    #[props(default = false)]
+    is_disabled: bool,
+    #[props(default = "".to_owned())]
+    tooltip: String,
 }
 
 #[derive(Props)]
@@ -105,8 +105,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         cx.props.onreturn.call(v);
                     }
                 },
-                is_disabled: cx.props.is_disabled.unwrap_or_default(),
-                tooltip: cx.props.tooltip.clone().unwrap_or_default(),
+                is_disabled: cx.props.is_disabled,
+                tooltip: cx.props.tooltip.clone(),
             },
             cx.props.extensions.as_ref(),
             div {

@@ -44,10 +44,10 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, (String, bool, Code)>,
     #[props(!optional)]
     reset: Option<UseState<bool>>,
-    #[props(optional)]
-    is_disabled: Option<bool>,
-    #[props(optional)]
-    tooltip: Option<String>,
+    #[props(default = false)]
+    is_disabled: bool,
+    #[props(default = "".to_owned())]
+    tooltip: String,
 }
 
 #[allow(non_snake_case)]
@@ -66,7 +66,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let element_label = &cx.props.aria_label;
     let element_max_length = cx.props.max_length;
     let element_placeholder = &cx.props.placeholder;
-    let disabled = cx.props.loading || cx.props.is_disabled.unwrap_or_default();
+    let disabled = cx.props.loading || cx.props.is_disabled;
 
     let eval = dioxus_desktop::use_eval(cx);
     // only run this after the component has been mounted and when the id of the input changes
@@ -104,7 +104,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{element_max_length}",
-                    placeholder: format_args!("{}", if cx.props.is_disabled.unwrap_or_default() {""} else {element_placeholder}),
+                    placeholder: format_args!("{}", if cx.props.is_disabled {""} else {element_placeholder}),
                     onblur: move |_| {
                         cx.props.onreturn.call((val.read().to_string(), false, Code::Enter));
                     },
@@ -123,12 +123,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             },
-            cx.props.tooltip.as_deref().filter(|s| cx.props.is_disabled.unwrap_or_default() && !s.is_empty()).map(|s| cx.render(rsx!(
-                Tooltip {
-                    arrow_position: ArrowPosition::None,
-                    text: s.to_string(),
-                }
-            )))
+            if cx.props.is_disabled && !cx.props.tooltip.is_empty() {
+                cx.render(rsx!(
+                    Tooltip {
+                        arrow_position: ArrowPosition::None,
+                        text: cx.props.tooltip.clone(),
+                    }
+                ))
+            }
         }
     ))
 }
