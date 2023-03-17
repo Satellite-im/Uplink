@@ -93,9 +93,9 @@ impl EmojiSelector {
         });
 
         let scroll_script = r#"
-            var emoji_selector = document.getElementById('scrolling');
-            const targetElement = document.getElementById('$EMOJI_CONTAINER');
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var emoji_scrolling_element = document.getElementById('scrolling');
+            const emoji_group_element = document.getElementById('$EMOJI_CONTAINER');
+            emoji_group_element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         "#;
 
         cx.render(rsx!(Nav {
