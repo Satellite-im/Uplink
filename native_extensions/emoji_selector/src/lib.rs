@@ -100,7 +100,12 @@ impl EmojiSelector {
         }))
     }
 
-    fn render_selector<'a>(&self, cx: &'a ScopeState, hide: &'a UseState<bool>) -> Element<'a> {
+    fn render_selector<'a>(
+        &self,
+        cx: &'a ScopeState,
+        hide: &'a UseState<bool>,
+        mouse_over_emoji_button: &'a UseRef<bool>,
+    ) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
 
@@ -126,7 +131,9 @@ impl EmojiSelector {
                 id: "emoji_selector",
                 tabindex: "0",
                 onblur: |_| {
-                    hide.set(false);
+                    if *mouse_over_emoji_button.read() == false {
+                        hide.set(false);
+                    }
                 },
                 div {
                     id: "scrolling",
@@ -196,16 +203,25 @@ impl Extension for EmojiSelector {
         //println!("render emoji");
         let styles = self.stylesheet();
         let display_selector = use_state(cx, || false);
+        let mouse_over_emoji_button = use_ref(cx, || false);
 
         cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
-            display_selector.then(|| self.render_selector(cx, display_selector)),
-            // Render standard (required) button to toggle.
-            Button {
-                icon: Icon::FaceSmile,
-                onpress: move |_| {
-                    display_selector.set(!display_selector.clone());
+            display_selector.then(|| self.render_selector(cx, display_selector, mouse_over_emoji_button)),
+            div {
+                onmouseenter: |_| {
+                    *mouse_over_emoji_button.write_silent() = true;
+                },
+                onmouseleave: |_| {
+                    *mouse_over_emoji_button.write_silent() = false;
+                },
+                // Render standard (required) button to toggle.
+                Button {
+                    icon: Icon::FaceSmile,
+                    onpress: move |_| {
+                        display_selector.set(!display_selector.clone());
+                    }
                 }
             }
         ))
