@@ -36,28 +36,28 @@ impl EmojiSelector {
     fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         let mut routes_ = vec![];
         routes_.push(Route {
-            to: "Smileys Emotion",
+            to: "Smileys & Emotion",
             name: group_to_str(Group::SmileysAndEmotion),
             icon: Icon::Flag,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "People Body",
+            to: "People & Body",
             name: group_to_str(Group::PeopleAndBody),
             icon: Icon::Users,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "Animals Nature",
+            to: "Animals & Nature",
             name: group_to_str(Group::AnimalsAndNature),
             icon: Icon::Leaf,
             with_badge: None,
             loading: None,
         });
         routes_.push(Route {
-            to: "Travel Places",
+            to: "Travel & Places",
             name: group_to_str(Group::TravelAndPlaces),
             icon: Icon::BuildingStorefront,
             with_badge: None,
@@ -91,11 +91,20 @@ impl EmojiSelector {
             with_badge: None,
             loading: None,
         });
+
+        let scroll_script = r#"
+            var emoji_selector = document.getElementById('scrolling');
+            const targetElement = document.getElementById('$EMOJI_CONTAINER');
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        "#;
+
         cx.render(rsx!(Nav {
-            routes: routes_,
+            routes: routes_.clone(),
+            active: routes_[0].clone(),
             onnavigate: move |r| {
                 let eval = use_eval(cx);
-                eval(format!("scrolltoId({})", r));
+                let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
+                eval(scroll_script);
             }
         }))
     }
@@ -114,18 +123,6 @@ impl EmojiSelector {
             emoji_selector.focus();
         "#;
 
-        let scroll_script = r#"
-            function scrolltoId(id){
-                var group = document.getElementById(id);
-                var emoji_scroller = document.getElementById("scrolling");
-
-                emoji_scroller.scrollTo({
-                    top: group.scrollTop,
-                    left: group.scrollLeft
-                });
-            }
-        "#;
-
         cx.render(rsx! (
             div {
                 id: "emoji_selector",
@@ -140,12 +137,14 @@ impl EmojiSelector {
                     emojis::Group::iter().map(|group| {
                         let name: String = group_to_str(group);
                         rsx!(
-                            Label {
-                                text: name
-                            },
+                            div {
+                                id: "{group_to_str(group)}",
+                                Label {
+                                    text: name
+                                },
+                            }
                             div {
                                 class: "emojis-container",
-                                id: "{group_to_str(group)}",
                                 group.emojis().map(|emoji| {
                                     rsx!(
                                         div {
@@ -171,9 +170,6 @@ impl EmojiSelector {
                     })
                 }
                 self.build_nav(cx),
-            },
-            script {
-                "{scroll_script}"
             },
             script { focus_script },
         ))
