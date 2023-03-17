@@ -117,6 +117,7 @@ impl EmojiSelector {
     ) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
+        #[cfg(not(target_os = "macos"))]
         let mouse_over_emoji_selector = use_ref(cx, || false);
 
         let focus_script = r#"
