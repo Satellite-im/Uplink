@@ -49,7 +49,7 @@ use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
 
-const FEEDBACK_TEXT_SCRIPT: &str = r#"
+pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
     feedback_element.textContent = '$TEXT';
 "#;
@@ -771,7 +771,7 @@ fn update_items_with_mock_data(
     storage_state.set(Some(storage_mock));
 }
 
-fn get_drag_event() -> FileDropEvent {
+pub fn get_drag_event() -> FileDropEvent {
     DRAG_EVENT.read().clone()
 }
 
