@@ -103,13 +103,9 @@ html, body {
 
 /* width */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     opacity: 1;
-
-    &:hover {
-        width: 10px;
-    }
 }
 
 /* Track */
