@@ -232,7 +232,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 if let Some(chat) = active_chat.as_ref() {
                     state
                         .write_silent()
-                        .mutate(Action::ClearPopout(desktop.clone()));
+                        .mutate(Action::ClearCallPopout(desktop.clone()));
                     state.write_silent().mutate(Action::DisableMedia);
                     state.write().mutate(Action::SetActiveMedia(chat.id));
                 }
@@ -333,11 +333,18 @@ enum MessagesCommand {
     },
 }
 
+/// Lazy loading scheme:
+/// load DEFAULT_NUM_TO_TAKE messages to start.
+/// tell group_messages to flag the first X messages.
+/// if onmouseout triggers over any of those messages, load Y more.
+const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
-    let num_to_take = use_state(cx, || 10_usize);
+
+    let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
+    let prev_chat_id = use_ref(cx, || data.active_chat.id);
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
@@ -354,20 +361,19 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let eval = use_eval(cx);
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
-        num_to_take.set(10_usize);
-        let script = include_str!("./script.js");
-        eval(script.to_string());
+        num_to_take.set(DEFAULT_NUM_TO_TAKE);
     }
 
-    use_future(cx, (), |_| {
-        to_owned![num_to_take, max_to_take];
+    use_effect(cx, &data.active_chat.id, |id| {
+        to_owned![eval, prev_chat_id];
         async move {
-            loop {
-                tokio::time::sleep(Duration::from_millis(500)).await;
-                if *num_to_take.current() < *max_to_take.read() {
-                    num_to_take.modify(|x| x.saturating_add(10));
-                    //log::info!("num_to_take is now {}", *num_to_take.current());
-                }
+            // yes, this check seems like some nonsense. but it eliminates a jitter and if
+            // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
+            // switch to settings or whatnot, then come back to the chats view and not lose your place.
+            if *prev_chat_id.read() != id {
+                *prev_chat_id.write_silent() = id;
+                let script = include_str!("./script.js");
+                eval(script.to_string());
             }
         }
     });
@@ -486,8 +492,10 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             id: "messages",
             div {
                 rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(),  &data.active_chat.messages),
+                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
                     active_chat_id: data.active_chat.id,
+                    num_messages_in_conversation: data.active_chat.messages.len(),
+                    num_to_take: num_to_take.clone()
                 })
             }
         }
@@ -498,6 +506,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
 struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
     active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -508,6 +518,8 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
         rsx!(render_message_group {
             group: _group,
             active_chat_id: cx.props.active_chat_id,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
         })
     })))
 }
@@ -516,6 +528,8 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
 struct MessageGroupProps<'a> {
     group: &'a MessageGroup<'a>,
     active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -524,6 +538,8 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let MessageGroupProps {
         group,
         active_chat_id: _,
+        num_messages_in_conversation: _,
+        num_to_take: _,
     } = cx.props;
 
     let messages = &group.messages;
@@ -554,6 +570,8 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             messages: &group.messages,
             active_chat_id: cx.props.active_chat_id,
             is_remote: group.remote,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
         }))
     },))
 }
@@ -563,6 +581,8 @@ struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
     active_chat_id: Uuid,
     is_remote: bool,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -571,6 +591,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
+        let should_fetch_more = grouped_message.should_fetch_more;
         let message = &grouped_message.message;
         let sender_is_self = message.inner.sender() == state.read().did_key();
 
@@ -586,6 +607,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
+            on_mouseenter: move |_| {
+                if should_fetch_more
+                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
+                {
+                    cx.props
+                        .num_to_take
+                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
+                    //log::info!("lazy loading");
+                }
+            },
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
@@ -685,6 +716,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             )),
             Message {
+                id: message_key.clone(),
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
@@ -733,6 +765,7 @@ enum TypingIndicator {
     // resend the typing indicator
     Refresh(Uuid),
 }
+
 #[derive(Clone)]
 struct TypingInfo {
     pub chat_id: Uuid,
@@ -740,13 +773,12 @@ struct TypingInfo {
 }
 
 // todo: display loading indicator if sending a message that takes a long time to upload attachments
-fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
+fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
-    let should_clear_input = use_state(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     let is_reply = active_chat_id
@@ -894,9 +926,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
+    let value_in_draft = data
+        .as_ref()
+        .and_then(|d| d.active_chat.draft.clone())
+        .unwrap_or_default()
+        .lines()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>();
+    if *input.read() != value_in_draft {
+        input.with_mut(|v| *v = value_in_draft);
+    }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
-    use_future(cx, &active_chat_id.clone(), |current_chat| async move {
+    use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
             if let Some(c) = current_chat {
@@ -916,7 +958,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         let msg = input.read().clone();
         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
         input.write().clear();
-        should_clear_input.set(true);
+        if let Some(id) = active_chat_id {
+            state
+                .write()
+                .mutate(Action::SetChatDraft(id, String::new()));
+        }
 
         if !msg_valid(&msg) {
             return;
@@ -943,9 +989,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // todo: filter out extensions not meant for this area
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
-        .iter()
-        .filter(|(_, e)| e.enabled)
-        .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
+        .values()
+        .filter(|ext| ext.enabled())
+        .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {
@@ -953,13 +999,17 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
-        reset: should_clear_input.clone(),
         onchange: move |v: String| {
-            *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+            input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
+                state.write().mutate(Action::SetChatDraft(*id, v));
             }
         },
+        value: data
+            .as_ref()
+            .and_then(|d| d.active_chat.draft.clone())
+            .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         controls: cx.render(rsx!(
             // Load extensions

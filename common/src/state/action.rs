@@ -3,7 +3,7 @@ use std::{collections::HashMap, rc::Weak};
 use derive_more::Display;
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use extensions::ExtensionProxy;
+use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
 use wry::webview::WebView;
@@ -23,7 +23,7 @@ use super::{
 pub enum Action<'a> {
     // Extensions
     #[display(fmt = "RegisterExtensions")]
-    RegisterExtensions(HashMap<String, ExtensionProxy>),
+    RegisterExtensions(HashMap<String, UplinkExtension>),
     #[display(fmt = "SetExtensionEnabled")]
     SetExtensionEnabled(String, bool),
     // UI
@@ -59,14 +59,21 @@ pub enum Action<'a> {
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
-    SetPopout(WindowId),
-    #[display(fmt = "ClearPopout")]
-    ClearPopout(DesktopContext),
+    SetCallPopout(WindowId),
+    #[display(fmt = "ClearCallPopout")]
+    ClearCallPopout(DesktopContext),
     #[display(fmt = "SetDebugLogger")]
     SetDebugLogger(WindowId),
     #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
-
+    #[display(fmt = "AddFilePreview")]
+    AddFilePreview(Uuid, WindowId),
+    #[display(fmt = "ForgetFilePreview")]
+    ForgetFilePreview(Uuid),
+    #[display(fmt = "ClearFilePreview")]
+    ClearFilePreviews(DesktopContext),
+    #[display(fmt = "ClearAllPopoutWindows")]
+    ClearAllPopoutWindows(DesktopContext),
     // Notifications
     #[display(fmt = "AddNotification")]
     AddNotification(NotificationKind, u32),
@@ -140,6 +147,12 @@ pub enum Action<'a> {
     /// chat id, message id
     #[display(fmt = "StartReplying")]
     StartReplying(&'a Uuid, &'a ui_adapter::Message),
+    /// Sets a draft message for the chatbar for a given chat.
+    #[display(fmt = "SetChatDraft")]
+    SetChatDraft(Uuid, String),
+    /// Clears a drafted message from a given chat.
+    #[display(fmt = "ClearChatDraft")]
+    ClearChatDraft(Uuid),
     /// Clears the reply for a given chat
     #[display(fmt = "CancelReply")]
     CancelReply(Uuid),

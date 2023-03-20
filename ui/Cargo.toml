@@ -54,6 +54,8 @@ once_cell.workspace = true
 futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
 isolang.workspace = true
+regex.workspace = true
+image.workspace = true
 clap = { workspace = true, features = ["derive"] }
 fs_extra.workspace = true
 walkdir.workspace = true

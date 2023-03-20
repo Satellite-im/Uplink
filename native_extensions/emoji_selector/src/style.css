@@ -2,7 +2,7 @@
   position: absolute;
   background-color: var(--background);
   height: 20rem;
-  width: 15rem;
+  width: 20rem;
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   right: var(--padding);

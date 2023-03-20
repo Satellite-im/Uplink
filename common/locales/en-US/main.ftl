@@ -85,6 +85,10 @@ files = Files
     .renaming-duplicated = Renaming if Duplicated
     .one-file-to-upload = File to Upload
     .files-to-upload = Files to Upload
+    .video-thumb = Video Thumb
+    .image-thumb = Image Thumb 
+    .doc-thumb = First Page Thumb
+    .no-thumbnail-preview = There is no preview thumb for this file
 
 settings = Settings
     .settings = Settings
@@ -129,8 +133,7 @@ settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically
     .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
-    .banner = Extensions are compiled and downloaded from our server(s). For added security you can compile extensions from source and place in the `extensions` folder.
-    .open-folder = Extensions are compiled and downloaded from our centralized server. You can optionally build and bundle extensions locally on your own for added security.
+    .banner = Extensions are pre-compiled on external hardware. For added security you can compile extensions from source and place in the `extensions` folder.
     .open-folder-description = Open the local directory containing your installed extensions.
 
 settings-privacy = Settings Privacy 

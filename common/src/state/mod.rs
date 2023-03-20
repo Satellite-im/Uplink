@@ -110,10 +110,18 @@ impl State {
         log::debug!("state::mutate: {}", action);
 
         match action {
-            Action::SetExtensionEnabled(extension, state) => {
-                self.set_extension_enabled(extension, state)
+            Action::SetExtensionEnabled(extension, enabled) => {
+                if enabled {
+                    self.ui.extensions.enable(extension);
+                } else {
+                    self.ui.extensions.disable(extension);
+                }
             }
-            Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
+            Action::RegisterExtensions(extensions) => {
+                for (name, ext) in extensions {
+                    self.ui.extensions.insert(name, ext);
+                }
+            }
             // ===== Notifications =====
             Action::AddNotification(kind, count) => {
                 self.ui
@@ -162,11 +170,17 @@ impl State {
             Action::Navigate(to) => self.set_active_route(to),
             // Generic UI
             Action::SetMeta(metadata) => self.ui.metadata = metadata,
-            Action::ClearPopout(window) => self.ui.clear_popout(window),
-            Action::SetPopout(webview) => self.ui.set_popout(webview),
+            Action::ClearCallPopout(window) => self.ui.clear_call_popout(&window),
+            Action::SetCallPopout(webview) => self.ui.set_call_popout(webview),
             // Development
             Action::SetDebugLogger(webview) => self.ui.set_debug_logger(webview),
-            Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(window),
+            Action::ClearDebugLogger(window) => self.ui.clear_debug_logger(&window),
+            Action::AddFilePreview(id, window_id) => self.ui.add_file_preview(id, window_id),
+            Action::ForgetFilePreview(id) => {
+                let _ = self.ui.file_previews.remove(&id);
+            }
+            Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
+            Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(Some(theme)),
             Action::ClearTheme => self.set_theme(None),
@@ -188,6 +202,8 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
+            Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
+            Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
@@ -504,13 +520,15 @@ impl State {
         state
     }
     fn load_mock() -> Self {
-        let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
-            Ok(r) => r,
-            Err(_) => {
-                return generate_mock();
-            }
-        };
-        serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
+        generate_mock()
+        // the following doesn't work anymore now that Identities are centralized
+        // let contents = match fs::read_to_string(&STATIC_ARGS.mock_cache_path) {
+        //     Ok(r) => r,
+        //     Err(_) => {
+        //         return generate_mock();
+        //     }
+        // };
+        // serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
     }
 }
 
@@ -655,6 +673,14 @@ impl State {
 
         needs_update
     }
+
+    /// Clears the given chats draft message
+    fn clear_chat_draft(&mut self, chat_id: &Uuid) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+            c.draft = None;
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -763,6 +789,13 @@ impl State {
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
+    }
+
+    /// Sets the draft on a given chat to some contents.
+    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+            c.draft = Some(value);
+        }
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
@@ -934,7 +967,7 @@ impl State {
     /// Analogous to Hang Up
     fn disable_media(&mut self) {
         self.chats.active_media = None;
-        self.ui.popout_player = false;
+        self.ui.popout_media_player = false;
         self.ui.current_call = None;
     }
     pub fn has_toasts(&self) -> bool {
@@ -963,19 +996,6 @@ impl State {
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
         self.ui.current_call = Some(Call::new(None));
-    }
-    fn set_extension_enabled(&mut self, extension: String, state: bool) {
-        let ext = self.ui.extensions.get_mut(&extension);
-        match ext {
-            Some(e) => e.enabled = state,
-            None => {
-                log::warn!(
-                    "Something went wrong toggling extension '{}' to '{}'.",
-                    extension,
-                    state
-                );
-            }
-        }
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
@@ -1131,6 +1151,8 @@ pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
     pub is_first: bool,
     pub is_last: bool,
+    // if the user scrolls over this message, more messages should be loaded
+    pub should_fetch_more: bool,
 }
 
 impl<'a> GroupedMessage<'a> {
@@ -1142,12 +1164,20 @@ impl<'a> GroupedMessage<'a> {
 pub fn group_messages<'a>(
     my_did: DID,
     num: usize,
+    when_to_fetch_more: usize,
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
     let to_skip = input.len().saturating_sub(num);
     // the most recent message appears last in the list.
     let iter = input.iter().skip(to_skip);
+    let mut need_to_fetch_more = when_to_fetch_more;
+
+    let mut need_more = || {
+        let r = need_to_fetch_more > 0;
+        need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
+        r
+    };
 
     for msg in iter {
         if let Some(group) = messages.iter_mut().last() {
@@ -1156,6 +1186,7 @@ pub fn group_messages<'a>(
                     message: msg,
                     is_first: false,
                     is_last: true,
+                    should_fetch_more: need_more(),
                 };
                 // I really hope last() is O(1) time
                 if let Some(g) = group.messages.iter_mut().last() {
@@ -1173,6 +1204,7 @@ pub fn group_messages<'a>(
             message: msg,
             is_first: true,
             is_last: true,
+            should_fetch_more: need_more(),
         };
         grp.messages.push(g);
         messages.push(grp);

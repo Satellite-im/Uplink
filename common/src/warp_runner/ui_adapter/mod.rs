@@ -146,6 +146,7 @@ pub async fn conversation_to_chat(
             unreads: unreads as u32,
             replying_to: None,
             typing_indicator: HashMap::new(),
+            draft: None,
         },
         identities,
     };

@@ -17,8 +17,11 @@
 	align-content: center;
 	justify-content: center;
 	max-width: 100px;
+	padding-top: 8px;
 	align-self: flex-start;
 	margin: 5px;
+	border-radius: 12px;
+	transition: background-color 0.2s ease;
 	.icon {
 		width: var(--icon-size-more);
 		height: var(--icon-size-more);
@@ -47,6 +50,11 @@
 			cursor: not-allowed;
 		}
 	}
+}
+
+.folder:hover {
+	background-color: var(--secondary-light);
+	border-radius: 12px;
 }
 
 .folder-name {

@@ -23,11 +23,11 @@ timeago.workspace = true
 lipsum = "0.8.2"
 chrono.workspace = true
 rand.workspace = true
-image = "0.24.5"
+image.workspace = true
 names = "0.14.0"
 titlecase.workspace = true
 substring = "1.4.5"
-icons = { path = "../icons" }
+icons.workspace = true
 humansize.workspace = true
 zip = "0.6.4"
 walkdir.workspace = true
