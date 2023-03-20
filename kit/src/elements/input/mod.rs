@@ -294,6 +294,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || cx.props.default_text.clone().unwrap_or_default());
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
+    let min_length = cx.props.max_length.unwrap_or(0);
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
@@ -416,7 +417,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
-                            emit_return(&cx, "".to_owned(), *valid.current(), evt.code());
+                            emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
                             if *valid.current() {
                                 valid.set(false);
                            }
