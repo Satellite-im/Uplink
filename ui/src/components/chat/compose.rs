@@ -112,7 +112,15 @@ pub fn Compose(cx: Scope) -> Element {
                     cx.spawn({
                         to_owned![files_to_upload, drag_event, window, main_script];
                         async move {
-                            drag_and_drop_function(&window, &drag_event, main_script, files_to_upload).await;
+                           let new_files = drag_and_drop_function(&window, &drag_event, main_script).await;
+                            let mut new_files_to_upload: Vec<_> = files_to_upload
+                                .current()
+                                .iter()
+                                .filter(|file_name| !new_files.contains(file_name))
+                                .cloned()
+                                .collect();
+                            new_files_to_upload.extend(new_files);
+                            files_to_upload.set(new_files_to_upload);
                         }
                     });
                 }
@@ -1186,9 +1194,9 @@ async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
     main_script: String,
-    files_path_to_upload: UseState<Vec<PathBuf>>,
-) {
+) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event());
+    let mut new_files_to_upload = Vec::new();
     loop {
         let file_drop_event = get_drag_event();
         match file_drop_event {
@@ -1216,7 +1224,7 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                files_path_to_upload.set(files_local_path);
+                new_files_to_upload = files_local_path;
                 let mut script = main_script.replace("$IS_DRAGGING", "false");
                 script.push_str(ANIMATION_DASH_SCRIPT);
                 window.eval(&script);
@@ -1232,4 +1240,5 @@ async fn drag_and_drop_function(
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
     *drag_event.write_silent() = None;
+    new_files_to_upload
 }
