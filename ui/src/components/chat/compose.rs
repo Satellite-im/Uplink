@@ -44,6 +44,8 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
+#[cfg(not(target_os = "macos"))]
+use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -103,6 +105,29 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
+
+    #[cfg(not(target_os = "macos"))]
+    use_future(cx, (), |_| {
+        to_owned![files_to_upload, main_script, window, drag_event];
+        async move {
+            // ondragover function from div does not work on windows
+            loop {
+                sleep(Duration::from_millis(100)).await;
+                if let FileDropEvent::Hovered(_) = get_drag_event() {
+                    let new_files =
+                        drag_and_drop_function(&window, &drag_event, main_script.clone()).await;
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(
         div {
