@@ -59,7 +59,7 @@ const FILE_NAME_SCRIPT: &str = r#"
     filename.textContent = '$FILE_NAME';
 "#;
 
-const ANIMATION_DASH_SCRIPT: &str = r#"
+pub const ANIMATION_DASH_SCRIPT: &str = r#"
     var dashElement = document.getElementById('dash-element')
     dashElement.style.animation = "border-dance 0.5s infinite linear"
 "#;

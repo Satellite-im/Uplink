@@ -55,7 +55,7 @@ use wry::webview::FileDropEvent;
 
 use crate::{
     components::media::player::MediaPlayer,
-    layouts::storage::{get_drag_event, FEEDBACK_TEXT_SCRIPT},
+    layouts::storage::{get_drag_event, ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT},
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
@@ -1198,6 +1198,9 @@ async fn drag_and_drop_function(
             }
             FileDropEvent::Dropped(files_local_path) => {
                 state.set(files_local_path);
+                let mut script = main_script.replace("$IS_DRAGGING", "false");
+                script.push_str(ANIMATION_DASH_SCRIPT);
+                window.eval(&script);
                 break;
             }
             _ => {
