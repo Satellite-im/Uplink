@@ -1,11 +1,14 @@
+use arboard::Clipboard;
 use common::language::get_local_text;
-use common::state::{State, ToastNotification};
+use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
+use kit::elements::tooltip::Tooltip;
+use kit::elements::Appearance;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
@@ -146,6 +149,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         special_chars: None,
     };
 
+    let did_string = state.read().get_own_identity().did_key().to_string();
+
+    let mut did_short = "#".to_string();
+    did_short.push_str(&state.read().get_own_identity().short_id());
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
@@ -245,22 +253,49 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     Label {
                         text: get_local_text("uplink.username"),
                     },
-                    Input {
-                        placeholder:  get_local_text("uplink.username"),
-                        default_text: username.clone(),
-                        aria_label: "username-input".into(),
-                        options: Options {
-                            with_clear_btn: true,
-                            ..get_input_options(username_validation_options)
+                    div {
+                        class: "profile-group-username",
+                        Input {
+                            placeholder:  get_local_text("uplink.username"),
+                            default_text: username.clone(),
+                            aria_label: "username-input".into(),
+                            options: Options {
+                                with_clear_btn: true,
+                                ..get_input_options(username_validation_options)
+                            },
+                            onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                                if !is_valid {
+                                    return;
+                                }
+                                if v != username {
+                                    ch.send(ChanCmd::Username(v));
+                                }
+                            },
                         },
-                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
-                            if !is_valid {
-                                return;
+                        div {
+                            class: "profile-id-btn",
+                            Button {
+                                appearance: Appearance::SecondaryLess,
+                                text: did_short.to_string(),
+                                tooltip: cx.render(rsx!(
+                                    Tooltip{
+                                        text: get_local_text("settings-profile.copy-id")
+                                    }
+                                )),
+                                onpress: move |_| {
+                                    let mut clipboard = Clipboard::new().unwrap();
+                                    clipboard.set_text(did_string.clone()).unwrap();
+                                    state
+                                        .write()
+                                        .mutate(Action::AddToastNotification(ToastNotification::init(
+                                            "".into(),
+                                            get_local_text("friends.copied-did"),
+                                            None,
+                                            2,
+                                        )));
+                                }
                             }
-                            if v != username {
-                                ch.send(ChanCmd::Username(v));
-                            }
-                        },
+                        }
                     },
                 },
                 div {
