@@ -34,63 +34,64 @@ fn group_to_str(group: emojis::Group) -> String {
 
 impl EmojiSelector {
     fn build_nav<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        let mut routes_ = vec![];
-        routes_.push(Route {
-            to: "Smileys & Emotion",
-            name: group_to_str(Group::SmileysAndEmotion),
-            icon: Icon::Flag,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "People & Body",
-            name: group_to_str(Group::PeopleAndBody),
-            icon: Icon::Users,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Animals & Nature",
-            name: group_to_str(Group::AnimalsAndNature),
-            icon: Icon::Leaf,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Travel & Places",
-            name: group_to_str(Group::TravelAndPlaces),
-            icon: Icon::BuildingStorefront,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Activities",
-            name: group_to_str(Group::Activities),
-            icon: Icon::Basketball,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Objects",
-            name: group_to_str(Group::Objects),
-            icon: Icon::Cake,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Symbols",
-            name: group_to_str(Group::Symbols),
-            icon: Icon::CpuChip,
-            with_badge: None,
-            loading: None,
-        });
-        routes_.push(Route {
-            to: "Flags",
-            name: group_to_str(Group::Flags),
-            icon: Icon::Flag,
-            with_badge: None,
-            loading: None,
-        });
+        let routes_ = vec![
+            Route {
+                to: "Smileys & Emotion",
+                name: group_to_str(Group::SmileysAndEmotion),
+                icon: Icon::Flag,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "People & Body",
+                name: group_to_str(Group::PeopleAndBody),
+                icon: Icon::Users,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Animals & Nature",
+                name: group_to_str(Group::AnimalsAndNature),
+                icon: Icon::Leaf,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Travel & Places",
+                name: group_to_str(Group::TravelAndPlaces),
+                icon: Icon::BuildingStorefront,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Activities",
+                name: group_to_str(Group::Activities),
+                icon: Icon::Basketball,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Objects",
+                name: group_to_str(Group::Objects),
+                icon: Icon::Cake,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Symbols",
+                name: group_to_str(Group::Symbols),
+                icon: Icon::CpuChip,
+                with_badge: None,
+                loading: None,
+            },
+            Route {
+                to: "Flags",
+                name: group_to_str(Group::Flags),
+                icon: Icon::Flag,
+                with_badge: None,
+                loading: None,
+            },
+        ];
 
         let scroll_script = r#"
             var emoji_scrolling_element = document.getElementById('scrolling');
