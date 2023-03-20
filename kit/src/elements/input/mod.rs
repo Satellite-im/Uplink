@@ -131,7 +131,10 @@ pub struct Props<'a> {
     aria_label: Option<String>,
     is_password: Option<bool>,
     disabled: Option<bool>,
+    #[props(optional)]
     icon: Option<Icon>,
+    #[props(optional)]
+    value: Option<String>,
     options: Option<Options>,
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
@@ -235,10 +238,6 @@ pub fn get_icon(cx: &Scope<Props>) -> Icon {
     cx.props.icon.unwrap_or(Icon::QuestionMarkCircle)
 }
 
-pub fn get_text(cx: &Scope<Props>) -> String {
-    cx.props.default_text.clone().unwrap_or_default()
-}
-
 pub fn get_aria_label(cx: &Scope<Props>) -> String {
     cx.props.aria_label.clone().unwrap_or_default()
 }
@@ -293,12 +292,16 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
     let error = use_state(cx, || String::from(""));
-    let val = use_ref(cx, || get_text(&cx));
+    let val = use_ref(cx, || cx.props.default_text.clone().unwrap_or_default());
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
     let options = cx.props.options.clone().unwrap_or_default();
     let should_validate = options.with_validation.is_some();
     let valid = use_state(cx, || false);
     let onblur_active = !cx.props.disable_onblur;
+
+    if let Some(value) = &cx.props.value {
+        val.set(value.clone());
+    }
 
     let reset_fn = || {
         *val.write() = "".into();

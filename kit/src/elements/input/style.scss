@@ -16,13 +16,13 @@ input {
 	width: 100%;
 }
 .input {
-	height: var(--height-input);
+	min-height: var(--height-input);
 	background: var(--secondary);
 	border-radius: var(--border-radius);
 	display: flex;
 	align-items: center;
 	gap: var(--gap);
-	padding: var(--padding-less);
+	padding: 0 var(--padding-less);
 	font-size: var(--text-size);
 	border: 1px solid var(--border-color);
 	color: var(--text-color);

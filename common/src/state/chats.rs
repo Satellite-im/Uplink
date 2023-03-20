@@ -44,6 +44,8 @@ pub struct Chat {
     // (user id, last update time)
     #[serde(skip)]
     pub typing_indicator: HashMap<DID, Instant>,
+    #[serde(skip)]
+    pub draft: Option<String>,
 }
 
 // warning: Chats implements Serialize
@@ -77,6 +79,7 @@ impl Chats {
             None => false,
         }
     }
+
     /// returns the UUID of the message being replied to by the active chat
     pub fn get_replying_to(&self) -> Option<Uuid> {
         self.active.and_then(|id| {
