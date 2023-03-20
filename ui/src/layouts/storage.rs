@@ -569,7 +569,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 }
                             })
                         } else {
-                            let folder_name_formated = format_item_name(dir_name);
+                            let folder_name_formatted = format_item_name(dir_name);
                             rsx!(div {
                                 class: "crumb",
                                 onclick: move |_| {
@@ -577,7 +577,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                                 aria_label: "crumb",
                                 p {
-                                    "{folder_name_formated}"
+                                    "{folder_name_formatted}"
                                 }
                             },)
                         }
