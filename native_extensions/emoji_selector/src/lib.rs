@@ -97,12 +97,12 @@ impl EmojiSelector {
             const emoji_group_element = document.getElementById('$EMOJI_CONTAINER');
             emoji_group_element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         "#;
+        let eval = use_eval(cx);
 
         cx.render(rsx!(Nav {
             routes: routes_.clone(),
             active: routes_[0].clone(),
             onnavigate: move |r| {
-                let eval = use_eval(cx);
                 let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
                 eval(scroll_script);
             }
@@ -124,6 +124,7 @@ impl EmojiSelector {
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
+        let eval = use_eval(cx);
         cx.render(rsx! (
             div {
                 onmouseenter: |_| {
@@ -136,7 +137,6 @@ impl EmojiSelector {
                     #[cfg(not(target_os = "macos"))] 
                     {
                         *mouse_over_emoji_selector.write_silent() = false; 
-                        let eval = use_eval(cx);
                         eval(focus_script.to_string());
                     }
                 },
