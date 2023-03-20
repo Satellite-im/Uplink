@@ -1167,7 +1167,7 @@ async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
     main_script: String,
-    state: UseState<Vec<PathBuf>>,
+    files_path_to_upload: UseState<Vec<PathBuf>>,
 ) {
     *drag_event.write_silent() = Some(get_drag_event());
     loop {
@@ -1197,7 +1197,7 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                state.set(files_local_path);
+                files_path_to_upload.set(files_local_path);
                 let mut script = main_script.replace("$IS_DRAGGING", "false");
                 script.push_str(ANIMATION_DASH_SCRIPT);
                 window.eval(&script);
@@ -1212,4 +1212,5 @@ async fn drag_and_drop_function(
         };
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+    *drag_event.write_silent() = None;
 }
