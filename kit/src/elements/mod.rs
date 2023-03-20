@@ -24,6 +24,9 @@ pub enum Appearance {
     #[display(fmt = "secondary")]
     Secondary,
 
+    #[display(fmt = "secondary-less")]
+    SecondaryLess,
+
     #[display(fmt = "success")]
     Success,
 

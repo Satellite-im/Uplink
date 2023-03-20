@@ -744,6 +744,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             )),
             Message {
+                id: message_key.clone(),
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
@@ -792,6 +793,7 @@ enum TypingIndicator {
     // resend the typing indicator
     Refresh(Uuid),
 }
+
 #[derive(Clone)]
 struct TypingInfo {
     pub chat_id: Uuid,
@@ -799,13 +801,12 @@ struct TypingInfo {
 }
 
 // todo: display loading indicator if sending a message that takes a long time to upload attachments
-fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
+fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
-    let should_clear_input = use_state(cx, || false);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     let is_reply = active_chat_id
@@ -953,9 +954,19 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         }
     });
 
+    let value_in_draft = data
+        .as_ref()
+        .and_then(|d| d.active_chat.draft.clone())
+        .unwrap_or_default()
+        .lines()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>();
+    if *input.read() != value_in_draft {
+        input.with_mut(|v| *v = value_in_draft);
+    }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
-    use_future(cx, &active_chat_id.clone(), |current_chat| async move {
+    use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
             if let Some(c) = current_chat {
@@ -975,7 +986,11 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         let msg = input.read().clone();
         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
         input.write().clear();
-        should_clear_input.set(true);
+        if let Some(id) = active_chat_id {
+            state
+                .write()
+                .mutate(Action::SetChatDraft(id, String::new()));
+        }
 
         if !msg_valid(&msg) {
             return;
@@ -1002,9 +1017,9 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
     // todo: filter out extensions not meant for this area
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
-        .iter()
-        .filter(|(_, e)| e.enabled)
-        .map(|(_, proxy)| rsx!(proxy.extension.render(cx)))
+        .values()
+        .filter(|ext| ext.enabled())
+        .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
     let chatbar = cx.render(rsx!(Chatbar {
@@ -1012,13 +1027,17 @@ fn get_chatbar(cx: Scope<ComposeProps>) -> Element {
         id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
-        reset: should_clear_input.clone(),
         onchange: move |v: String| {
-            *input.write_silent() = v.lines().map(|x| x.to_string()).collect::<Vec<String>>();
+            input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
+                state.write().mutate(Action::SetChatDraft(*id, v));
             }
         },
+        value: data
+            .as_ref()
+            .and_then(|d| d.active_chat.draft.clone())
+            .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         controls: cx.render(rsx!(
             // Load extensions

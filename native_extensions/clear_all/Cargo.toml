@@ -1,5 +1,5 @@
 [package]
-name = "emoji_selector"
+name = "clear_all"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,11 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
-    "transparent",
-] }
 extensions = { path = "../../extensions" }
 common = { path = "../../common" }
 kit = { path = "../../kit" }
-emojis = "0.5.2"
 once_cell = "1.17.1"

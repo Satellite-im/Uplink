@@ -110,10 +110,18 @@ impl State {
         log::debug!("state::mutate: {}", action);
 
         match action {
-            Action::SetExtensionEnabled(extension, state) => {
-                self.set_extension_enabled(extension, state)
+            Action::SetExtensionEnabled(extension, enabled) => {
+                if enabled {
+                    self.ui.extensions.enable(extension);
+                } else {
+                    self.ui.extensions.disable(extension);
+                }
             }
-            Action::RegisterExtensions(extensions) => self.ui.extensions = extensions,
+            Action::RegisterExtensions(extensions) => {
+                for (name, ext) in extensions {
+                    self.ui.extensions.insert(name, ext);
+                }
+            }
             // ===== Notifications =====
             Action::AddNotification(kind, count) => {
                 self.ui
@@ -194,6 +202,8 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
+            Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
+            Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
@@ -663,6 +673,14 @@ impl State {
 
         needs_update
     }
+
+    /// Clears the given chats draft message
+    fn clear_chat_draft(&mut self, chat_id: &Uuid) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+            c.draft = None;
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -771,6 +789,13 @@ impl State {
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
+    }
+
+    /// Sets the draft on a given chat to some contents.
+    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
+        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+            c.draft = Some(value);
+        }
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
@@ -971,19 +996,6 @@ impl State {
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
         self.ui.current_call = Some(Call::new(None));
-    }
-    fn set_extension_enabled(&mut self, extension: String, state: bool) {
-        let ext = self.ui.extensions.get_mut(&extension);
-        match ext {
-            Some(e) => e.enabled = state,
-            None => {
-                log::warn!(
-                    "Something went wrong toggling extension '{}' to '{}'.",
-                    extension,
-                    state
-                );
-            }
-        }
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
