@@ -23,7 +23,7 @@ impl Size {
 }
 
 #[derive(Props)]
-pub struct ControlledInputProps<'a> {
+pub struct Props<'a> {
     #[props(default = "".to_owned())]
     id: String,
     #[props(default = false)]
@@ -44,8 +44,8 @@ pub struct ControlledInputProps<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn ControlledInput<'a>(cx: Scope<'a, ControlledInputProps<'a>>) -> Element<'a> {
-    let ControlledInputProps {
+pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let Props {
         id,
         focus,
         loading,

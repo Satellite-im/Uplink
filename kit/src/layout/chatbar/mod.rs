@@ -81,7 +81,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            textarea::ControlledInput {
+            textarea::Input {
                 key: "{controlled_input_id}",
                 id: controlled_input_id.clone(),
                 loading: cx.props.loading.unwrap_or_default(),
