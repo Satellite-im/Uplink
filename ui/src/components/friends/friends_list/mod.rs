@@ -1,17 +1,18 @@
+use std::collections::HashMap;
+
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
 };
 
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{icons::outline::Shape as Icon, warp_runner::ui_adapter::ChatAdapter};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
@@ -21,7 +22,6 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    utils::convert_status,
     UPLINK_ROUTES,
 };
 
@@ -37,7 +37,13 @@ enum ChanCmd {
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
-    let friends_list = state.read().friends.all.clone();
+    let friends_list = HashMap::from_iter(
+        state
+            .read()
+            .friend_identities()
+            .iter()
+            .map(|id| (id.did_key(), id.clone())),
+    );
     let friends = State::get_friends_by_first_letter(friends_list);
     let router = use_router(cx);
 
@@ -45,7 +51,7 @@ pub fn Friends(cx: Scope) -> Element {
 
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(chat));
+        state.write().mutate(Action::ChatWith(&chat.id, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -65,7 +71,7 @@ pub fn Friends(cx: Scope) -> Element {
                             None => {
                                 // if not, create the chat
                                 let (tx, rx) =
-                                    oneshot::channel::<Result<Chat, warp::error::Error>>();
+                                    oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
                                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
                                     RayGunCmd::CreateConversation { recipient, rsp: tx },
                                 )) {
@@ -76,7 +82,7 @@ pub fn Friends(cx: Scope) -> Element {
                                 let rsp = rx.await.expect("command canceled");
 
                                 match rsp {
-                                    Ok(c) => c,
+                                    Ok(c) => c.inner,
                                     Err(e) => {
                                         log::error!("failed to create conversation: {}", e);
                                         continue;
@@ -174,11 +180,7 @@ pub fn Friends(cx: Scope) -> Element {
                             let context_friend = friend.clone();
                             let mut relationship = Relationship::default();
                             relationship.set_friends(true);
-                            let platform = match friend.platform() {
-                                warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                                warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                                _ => Platform::Headless //TODO: Unknown
-                            };
+                            let platform = friend.platform().into();
                             rsx!(
                                 ContextMenu {
                                     id: format!("{did}-friend-listing"),
@@ -204,7 +206,7 @@ pub fn Friends(cx: Scope) -> Element {
                                                     // can't favorite a non-existent conversation
                                                     // todo: don't even allow favoriting from the friends page unless there's a conversation
                                                     if let Some(c) = &chat {
-                                                        state.write().mutate(Action::ToggleFavorite(c.clone()));
+                                                        state.write().mutate(Action::ToggleFavorite(&c.id));
                                                     }
                                                 }
                                             })
@@ -216,7 +218,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("uplink.remove"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::RemoveFriend(remove_friend.clone()));
+                                                    state.write().mutate(Action::RemoveFriend(&remove_friend.did_key()));
                                                 } else {
                                                     ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
@@ -229,7 +231,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             text: get_local_text("friends.block"),
                                             onpress: move |_| {
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::Block(block_friend.clone()));
+                                                    state.write().mutate(Action::Block(&block_friend.did_key()));
                                                 } else {
                                                     ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
                                                     ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
@@ -245,7 +247,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         user_image: cx.render(rsx! (
                                             UserImage {
                                                 platform: platform,
-                                                status: convert_status(&friend.identity_status()),
+                                                status: friend.identity_status().into(),
                                                 image: friend.graphics().profile_picture()
                                             }
                                         )),
@@ -255,7 +257,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         onremove: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::RemoveFriend(remove_friend_2.clone()));
+                                                state.write().mutate(Action::RemoveFriend(&remove_friend_2.did_key()));
                                             } else {
                                                 ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
@@ -263,7 +265,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         },
                                         onblock: move |_| {
                                             if STATIC_ARGS.use_mock {
-                                                state.write().mutate(Action::Block(block_friend_2.clone()));
+                                                state.write().mutate(Action::Block(&block_friend_2.did_key()));
                                             } else {
                                                 ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));

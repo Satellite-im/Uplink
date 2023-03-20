@@ -2,7 +2,6 @@ use std::ffi::OsStr;
 
 use dioxus::prelude::*;
 use dioxus_elements::input_data::keyboard_types::Code;
-use uuid::Uuid;
 
 use crate::elements::{
     button::Button,
@@ -94,8 +93,9 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onclick: move |_| emit_press(&cx),
                     div {
                         position: "relative",
+                        padding_top: "5px",
                         if thumbnail.is_empty() {
-                            let file_extension = file_extension.clone().replace(".", "");
+                            let file_extension = file_extension.clone().replace('.', "");
                             rsx!(span {
                                 label {
                                     class: "file-type",
@@ -108,6 +108,8 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             rsx!(img {
                                 class: "thumbnail-container",
+                                height: if is_video {"50px"} else {""},
+                                width: if is_video {"100px"} else {""},
                                 src: "{thumbnail}",
                             })
                         }
@@ -126,7 +128,6 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 with_rename.then(||
                     rsx! (
                         Input {
-                                id: Uuid::new_v4().to_string(),
                                 disabled: disabled,
                                 placeholder: placeholder,
                                 focus: true,
@@ -154,6 +155,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 (!with_rename).then(|| rsx! (
                     label {
                         class: "file-name item-alignment",
+                        padding_top: "8px",
                         title: "{&file_name}",
                         "{file_name}"
                     }

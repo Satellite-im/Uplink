@@ -1,4 +1,4 @@
-use crate::{components::friends::friend::Friend, utils::convert_status};
+use crate::components::friends::friend::Friend;
 use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
@@ -12,7 +12,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -23,7 +22,7 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 #[allow(non_snake_case)]
 pub fn OutgoingRequests(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
-    let friends_list = state.read().friends.outgoing_requests.clone();
+    let friends_list = state.read().outgoing_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
         //to_owned![];
@@ -56,15 +55,10 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
             },
             friends_list.into_iter().map(|friend| {
                 let did = friend.did_key();
+                let did2 = did.clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let mut rng = rand::thread_rng();
-                let friend_clone = friend.clone();
-                let friend_clone_clone = friend.clone();
-                let platform = match friend.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = friend.platform().into();
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
@@ -76,9 +70,9 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 text: get_local_text("friends.cancel"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::CancelRequest(friend_clone_clone.clone()));
+                                        state.write().mutate(Action::CancelRequest(&did));
                                     } else {
-                                        ch.send(friend_clone_clone.did_key());
+                                        ch.send(did.clone());
                                     }
                                 }
                             },
@@ -96,15 +90,15 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: convert_status(&friend.identity_status()),
+                                    status: friend.identity_status().into(),
                                     image: friend.graphics().profile_picture()
                                 }
                             )),
                             onremove: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::CancelRequest(friend_clone.clone()));
+                                    state.write().mutate(Action::CancelRequest(&did2));
                                 } else {
-                                    ch.send(friend_clone.did_key());
+                                    ch.send(did2.clone());
                                 }
                             }
                         }

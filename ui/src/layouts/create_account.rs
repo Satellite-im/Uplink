@@ -14,6 +14,7 @@ use kit::elements::{
     input::{Input, Options, Validation},
 };
 use warp::logging::tracing::log;
+use warp::multipass;
 
 use crate::AuthPages;
 
@@ -47,7 +48,8 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((username, passphrase)) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) =
+                    oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CreateIdentity {
                     username,
@@ -61,12 +63,12 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 let res = rx.await.expect("failed to get response from warp_runner");
 
                 match res {
-                    Ok(_) => {
+                    Ok(ident) => {
                         if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
 
-                        page.set(AuthPages::Success);
+                        page.set(AuthPages::Success(ident));
                     }
                     // todo: notify user
                     Err(e) => log::error!("create identity failed: {}", e),

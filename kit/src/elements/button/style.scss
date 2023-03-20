@@ -35,6 +35,13 @@
             background-color: var(--secondary-light);
         }
     }
+	&.appearance-secondary-less {
+		border-radius: var(--border-radius-less);
+        background-color: var(--secondary);
+        &:hover {
+            background-color: var(--secondary-light);
+        }
+    }
     &.appearance-success {
         background-color: var(--success);
         &:hover {

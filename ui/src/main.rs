@@ -1,6 +1,5 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use ::extensions::ExtensionProxy;
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -12,6 +11,7 @@ use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
+use extensions::UplinkExtension;
 use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -21,11 +21,13 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
+use warp::multipass;
+use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -39,11 +41,10 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
-use crate::extensions::AvailableExtensions;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::FilesLayout;
+use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -57,7 +58,7 @@ use dioxus_router::*;
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
 mod components;
-mod extensions;
+mod extension_browser;
 mod layouts;
 mod logger;
 mod overlay;
@@ -87,12 +88,13 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     settings: "/settings",
 };
 
-// serve as a sort of router while the user logs in
+// serve as a sort of router while the user logs in]
+#[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Eq)]
 pub enum AuthPages {
     Unlock,
     CreateAccount,
-    Success,
+    Success(multipass::identity::Identity),
 }
 
 fn copy_assets() {
@@ -227,7 +229,8 @@ fn main() {
                     .to_string(),
             )
             .with_file_drop_handler(|_w, drag_event| {
-                log::debug!("Drag Event: {:?}", drag_event);
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
                 true
             }),
     )
@@ -259,8 +262,10 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
-    cx.render(rsx!(match *page.current() {
-        AuthPages::Success => rsx!(app_bootstrap {}),
+    cx.render(rsx!(match &*page.current() {
+        AuthPages::Success(ident) => rsx!(app_bootstrap {
+            identity: ident.clone()
+        }),
         _ => rsx!(auth_wrapper {
             page: page.clone(),
             pin: pin.clone()
@@ -329,43 +334,45 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> Result<HashMap<String, ExtensionProxy>, io::Error> {
-    // load any extensions, we currently don't care to store the result of located extensions since they are stored by the librarian.
-    // We should however ensure we use the same librarian across the app so they should probably live in a globally accessible place
-    // that updates when they have new info, i.e. state.
+fn get_extensions() -> Result<HashMap<String, UplinkExtension>, io::Error> {
     fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
     let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
-    let mut extensions_library = AvailableExtensions::new();
+    let mut extensions = HashMap::new();
 
     for entry in paths {
         let path = entry?.path();
-        if path.extension().unwrap_or_default() == ::extensions::FILE_EXT {
-            log::debug!("Found extension: {:?}", path);
-            unsafe {
-                let loader = extensions_library.load(&path);
-                match loader {
-                    Ok(_) => {
-                        log::debug!("Loaded extension: {:?}", &path);
-                    }
-                    Err(e) => {
-                        log::error!("Error loading extension: {:?}", e);
-                    }
+        log::debug!("Found extension: {:?}", path);
+
+        match UplinkExtension::new(path.clone()) {
+            Ok(ext) => {
+                if ext.cargo_version() != extensions::CARGO_VERSION
+                    || ext.rustc_version() != extensions::RUSTC_VERSION
+                {
+                    log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
+                    continue;
                 }
+                log::debug!("Loaded extension: {:?}", &path);
+                extensions.insert(ext.details().meta.name.into(), ext);
+            }
+            Err(e) => {
+                log::error!("Error loading extension: {:?}", e);
             }
         }
     }
-    Ok(extensions_library.extensions)
+    Ok(extensions)
 }
 
 // called at the end of the auth flow
 #[inline_props]
-pub fn app_bootstrap(cx: Scope) -> Element {
+pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends.initialized);
-        assert!(state.chats.initialized);
+        assert!(state.friends().initialized);
+        assert!(state.chats().initialized);
+    } else {
+        state.set_own_identity(identity.clone().into());
     }
 
     // set the window to the normal size.
@@ -395,12 +402,19 @@ pub fn app_bootstrap(cx: Scope) -> Element {
     state.ui.metadata = window_meta;
 
     match get_extensions() {
-        Ok(ext) => state.ui.extensions = ext,
+        Ok(ext) => {
+            for (name, extension) in ext {
+                state.ui.extensions.insert(name, extension);
+            }
+        }
         Err(e) => {
             log::error!("failed to get extensions: {e}");
         }
     }
-    log::debug!("Loaded {} extensions.", state.ui.extensions.keys().len());
+    log::debug!(
+        "Loaded {} extensions.",
+        state.ui.extensions.values().count()
+    );
 
     use_shared_state_provider(cx, || state);
 
@@ -479,7 +493,7 @@ fn app(cx: Scope) -> Element {
     let webview = desktop.webview.clone();
     let inner = state.inner();
     use_wry_event_handler(cx, {
-        to_owned![needs_update];
+        to_owned![needs_update, desktop];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
@@ -497,6 +511,17 @@ fn app(cx: Scope) -> Element {
                     }
                 }
             }
+            WryEvent::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => match inner.try_borrow_mut() {
+                Ok(state) => {
+                    state
+                        .write()
+                        .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
+                }
+                Err(e) => log::error!("{e}"),
+            },
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
@@ -605,15 +630,14 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // periodically refresh message timestamps
+    // periodically refresh message timestamps and friend's status messages
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
             loop {
+                // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
-                {
-                    needs_update.set(true);
-                }
+                needs_update.set(true);
             }
         }
     });
@@ -641,7 +665,9 @@ fn app(cx: Scope) -> Element {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<friends::Friends, warp::error::Error>>();
+            let (tx, rx) = oneshot::channel::<
+                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+            >();
             if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
                 rsp: tx,
             })) {
@@ -663,7 +689,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    state.write().friends = friends;
+                    state.write().set_friends(friends.0, friends.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -729,7 +755,10 @@ fn app(cx: Scope) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
                 let (tx, rx) = oneshot::channel::<
-                    Result<(state::Identity, HashMap<Uuid, state::Chat>), warp::error::Error>,
+                    Result<
+                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
+                        warp::error::Error,
+                    >,
                 >();
                 if let Err(e) =
                     warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
@@ -751,7 +780,7 @@ fn app(cx: Scope) -> Element {
             };
 
             log::trace!("init chats");
-            let (own_id, mut all_chats) = match res {
+            let chats = match res {
                 Ok(r) => r,
                 Err(e) => {
                     log::error!("failed to initialize chats: {}", e);
@@ -761,18 +790,7 @@ fn app(cx: Scope) -> Element {
 
             match inner.try_borrow_mut() {
                 Ok(state) => {
-                    // for all_chats, fill in participants and messages.
-                    for (k, v) in &state.read().chats.all {
-                        // the # of unread chats defaults to the length of the conversation. but this number
-                        // is stored in state
-                        if let Some(chat) = all_chats.get_mut(k) {
-                            chat.unreads = v.unreads;
-                        }
-                    }
-
-                    state.write().chats.all = all_chats;
-                    state.write().account.identity = own_id;
-                    state.write().chats.initialized = true;
+                    state.write().set_chats(chats.0, chats.1);
                     needs_update.set(true);
                 }
                 Err(e) => {
@@ -945,6 +963,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(true));
+                        state.write().mock_own_platform(Platform::Mobile);
                     }
                 },
                 Button {
@@ -961,6 +980,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Web);
                     }
                 },
                 Button {
@@ -977,6 +997,7 @@ fn get_titlebar(cx: Scope) -> Element {
                             ..meta
                         }));
                         state.write().mutate(Action::SidebarHidden(false));
+                        state.write().mock_own_platform(Platform::Desktop);
                     }
                 },
                 Button {
@@ -1025,7 +1046,7 @@ fn get_call_dialog(_cx: Scope) -> Element {
 
 fn get_router(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends.incoming_requests.len();
+    let pending_friends = state.read().friends().incoming_requests.len();
 
     let chat_route = UIRoute {
         to: UPLINK_ROUTES.chat,

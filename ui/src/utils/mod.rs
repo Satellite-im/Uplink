@@ -2,14 +2,16 @@ use common::{
     state::{self, Theme},
     STATIC_ARGS,
 };
-use kit::components::indicator::{self, Status};
 use std::{fs, path::Path};
 use titlecase::titlecase;
 use walkdir::WalkDir;
 
 use kit::User as UserInfo;
 
+use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
+
 pub mod format_timestamp;
+pub mod lifecycle;
 
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
@@ -48,16 +50,6 @@ fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
     last.to_string_lossy().into()
 }
 
-// converts from Warp IdentityStatus to ui_kit Status
-pub fn convert_status(status: &warp::multipass::identity::IdentityStatus) -> Status {
-    match status {
-        warp::multipass::identity::IdentityStatus::Online => Status::Online,
-        warp::multipass::identity::IdentityStatus::Away => Status::Idle,
-        warp::multipass::identity::IdentityStatus::Busy => Status::DoNotDisturb,
-        warp::multipass::identity::IdentityStatus::Offline => Status::Offline,
-    }
-}
-
 pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     // Create a vector of UserInfo objects to store the results
     let mut user_info: Vec<UserInfo> = vec![];
@@ -66,14 +58,10 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     for identity in identities {
         // For each identity, create a new UserInfo object and set its fields
         // to the corresponding values from the identity object
-        let platform = match identity.platform() {
-            warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
-            warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
-            _ => indicator::Platform::Headless, //TODO: Unknown
-        };
+        let platform = identity.platform().into();
         user_info.push(UserInfo {
             platform,
-            status: convert_status(&identity.identity_status()),
+            status: identity.identity_status().into(),
             username: identity.username(),
             photo: identity.graphics().profile_picture(),
         })
@@ -84,16 +72,37 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
 }
 
 pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
-    let platform = match identity.platform() {
-        warp::multipass::identity::Platform::Desktop => indicator::Platform::Desktop,
-        warp::multipass::identity::Platform::Mobile => indicator::Platform::Mobile,
-        _ => indicator::Platform::Headless, //TODO: Unknown
-    };
+    let platform = identity.platform().into();
     UserInfo {
         platform,
-        status: convert_status(&identity.identity_status()),
+        status: identity.identity_status().into(),
         username: identity.username(),
         photo: identity.graphics().profile_picture(),
+    }
+}
+
+pub struct WindowDropHandler {
+    cmd: WindowManagerCmd,
+}
+
+impl PartialEq for WindowDropHandler {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+impl WindowDropHandler {
+    pub fn new(cmd: WindowManagerCmd) -> Self {
+        Self { cmd }
+    }
+}
+
+impl Drop for WindowDropHandler {
+    fn drop(&mut self) {
+        let cmd_tx = WINDOW_CMD_CH.tx.clone();
+        if let Err(_e) = cmd_tx.send(self.cmd) {
+            // todo: log error
+        }
     }
 }
 
@@ -103,13 +112,12 @@ mod test {
 
     #[test]
     fn test_get_pretty_name1() {
-        let r = get_pretty_name("pretty/name1.scss");
-        assert_eq!(r, String::from("name1"));
-    }
-
-    #[test]
-    fn test_get_pretty_name_windows() {
-        let r = get_pretty_name("c:\\pretty\\name2.scss");
-        assert_eq!(r, String::from("name2"));
+        if cfg!(windows) {
+            let r = get_pretty_name("c:\\pretty\\name2.scss");
+            assert_eq!(r, String::from("name2"));
+        } else {
+            let r = get_pretty_name("pretty/name1.scss");
+            assert_eq!(r, String::from("name1"));
+        }
     }
 }

@@ -27,6 +27,71 @@
     }
 }
 
+.hover-effect {
+    cursor: pointer;
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.75);
+      pointer-events: auto;
+      z-index:1;
+    }
+}
+
+.overlay-element {
+    position: absolute;
+    display: none;
+    bottom: 2%;
+    left: 8px;
+    z-index: 2;
+    width: 285px;
+    height: 200px;
+    padding-top: 6%;
+    border-radius: 12px;
+    background-color: var(--primary-light);
+
+    .overlay-text {
+        z-index: 3;
+        pointer-events: none;
+        text-align: center;
+        margin-top: 2%;
+        font-size: var(--text-size);
+        color: var(--text-color);
+      }
+  }
+
+.dash-background{
+    background: transparent;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+}
+
+.active-animation {
+    background-image: linear-gradient(90deg, var(--text-color) 50%, transparent 50%), linear-gradient(90deg, var(--text-color) 50%, transparent 50%), linear-gradient(0deg, var(--text-color) 50%, transparent 50%), linear-gradient(0deg, var(--text-color) 50%, transparent 50%);
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    background-size: 15px 3px, 15px 3px, 3px 15px, 3px 15px;
+    background-position: left top, right bottom, left bottom, right   top;
+    animation: border-dance 0s infinite linear;
+}
+
+@keyframes border-dance {
+    0% {
+        background-position: left top, right bottom, left bottom, right   top;
+    }
+    100% {
+        background-position: left 15px top, right 15px bottom , left bottom 15px , right   top 15px;
+    }
+}
+
 #files-layout {
     .file-parent {
         flex: 1;
@@ -38,11 +103,12 @@
 
     }
     // hide scrollbar to prevent issues with 6 pixel scrollbar
-    ::-webkit-scrollbar {
+    .files-list::-webkit-scrollbar {
         display: none;
+        scrollbar-width: none;  /* Firefox */
     }
+
     -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
 
     .files-list {
         display: flex;
@@ -124,6 +190,19 @@
             }
         }
     }
+}
+
+.thumbnail-text {
+    position: absolute;
+    top: 0;
+    left: 12px;
+    background: var(--primary);
+    border-radius: 3px;
+    padding: 1px;
+}
+
+.thumb-text {
+    color: var(--text-color);
 }
 
 #unlock-layout {

@@ -1,9 +1,9 @@
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
-use warp::constellation::file::File;
+use warp::{constellation::file::File, logging::tracing::log};
 
-use crate::components::file_embed::FileEmbed;
+use crate::{components::file_embed::FileEmbed, elements::textarea};
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -19,6 +19,11 @@ pub enum Order {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    // Message ID
+    id: String,
+    // indicates that the message is being edited
+    editing: bool,
+
     // An optional field that, if set to true, will add a CSS class of "loading" to the div element.
     loading: Option<bool>,
 
@@ -46,6 +51,9 @@ pub struct Props<'a> {
 
     /// called when an attachment is downloaded
     on_download: EventHandler<'a, String>,
+
+    /// called when editing is completed
+    on_edit: EventHandler<'a, String>,
 }
 
 #[allow(non_snake_case)]
@@ -104,12 +112,26 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     cx.props.with_content.as_ref(),
                 },
             )),
-            (cx.props.with_text.is_some()).then(|| rsx! (
-                p {
-                    class: "text",
-                    "{text}"
-                }
-            )),
+            (cx.props.with_text.is_some()).then(||
+                rsx! (
+                    p {
+                        class: "text",
+                        if cx.props.editing {
+                            rsx! (
+                                EditMsg{
+                                    id: cx.props.id.clone(),
+                                    text: text.clone(),
+                                    on_enter: move |update| {
+                                        cx.props.on_edit.call(update);
+                                    }
+                                }
+                            )
+                        } else {
+                            rsx! ("{text}")
+                        }
+                    }
+                )
+            ),
             has_attachments.then(|| {
                 rsx!(
                     div {
@@ -123,4 +145,29 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
         }
     ))
+}
+
+#[derive(Props)]
+struct EditProps<'a> {
+    id: String,
+    text: String,
+    on_enter: EventHandler<'a, String>,
+}
+
+#[allow(non_snake_case)]
+fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
+    log::trace!("rendering EditMsg");
+    cx.render(rsx!(textarea::Input {
+        id: cx.props.id.clone(),
+        focus: true,
+        value: cx.props.text.clone(),
+        onchange: move |_| {},
+        onreturn: move |(s, is_valid, _): (String, bool, _)| {
+            if is_valid {
+                cx.props.on_enter.call(s);
+            } else {
+                cx.props.on_enter.call(cx.props.text.clone());
+            }
+        }
+    }))
 }

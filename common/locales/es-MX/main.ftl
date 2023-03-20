@@ -68,6 +68,16 @@ files = Files
     .total-space = Espacio total:
     .rename = Rebautizar
     .download = Descarga
+    .uploaded = Subido
+    .thumbnail-uploaded = Thumbnail Subida
+    .no-thumbnail = Sin Thumbnail
+    .renaming-duplicated = Renombrar si Duplicado
+    .one-file-to-upload = Archivo para Subir
+    .files-to-upload = Archivos para Subir
+    .video-thumb = Thumbnail de video
+    .image-thumb = Thumbnail de imagen
+    .doc-thumb = Thumbnail de la primera página
+    .no-thumbnail-preview = No hay thumbnail de vista previa para este archivo
 
 settings = Settings
     .settings = Configuración

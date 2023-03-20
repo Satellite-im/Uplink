@@ -21,26 +21,21 @@ pub struct ReplyInfo<'a> {
 
 #[derive(Props)]
 pub struct Props<'a> {
+    id: String,
     placeholder: String,
-    #[props(optional)]
     with_replying_to: Option<Element<'a>>,
-    #[props(optional)]
     with_file_upload: Option<Element<'a>>,
-    #[props(optional)]
     extensions: Option<Element<'a>>,
-    #[props(optional)]
     controls: Option<Element<'a>>,
-    #[props(optional)]
+    value: Option<String>,
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
-    reset: Option<UseState<bool>>,
 }
 
 #[derive(Props)]
 pub struct ReplyProps<'a> {
     label: String,
-    #[props(optional)]
     remote: Option<bool>,
     message: String,
     onclose: EventHandler<'a>,
@@ -80,19 +75,25 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let controlled_input_id = &cx.props.id;
     cx.render(rsx!(
         div {
             class: "chatbar",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            // apologies for the crappy code.
             textarea::Input {
+                key: "{controlled_input_id}",
+                id: controlled_input_id.clone(),
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
-                reset: cx.props.reset.clone(),
                 focus: cx.props.with_replying_to.is_some(),
+                value: cx.props.value.clone().unwrap_or_default(),
                 onchange: move |(v, _)| cx.props.onchange.call(v),
-                onreturn: move |(v, _, _)| cx.props.onreturn.call(v),
+                onreturn: move |(v, is_valid, _)| {
+                    if is_valid {
+                        cx.props.onreturn.call(v);
+                    }
+                },
             },
             cx.props.extensions.as_ref(),
             div {

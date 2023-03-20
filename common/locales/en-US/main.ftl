@@ -26,14 +26,19 @@ warning-messages = Warning Messages
     .maximum-of = Maximum of
     .only-alpha-chars = Only alphanumeric characters are accepted.
     .spaces-not-allowed = Spaces are not allowed.
+    .error = Error
 
 messages = Messages
+    .edit = Edit
+    .cancel-edit = Cancel Edit
     .new = New Message
     .replying = Replying to:
     .react = React
     .reply = Reply
     .you = You
     .say-something-placeholder = Say Something...
+    .user-sent-message = sent you a message.
+    .unknown-sent-message = someone sent you a message.
 
 favorites = Favorites
     .favorites = Favorites
@@ -74,6 +79,16 @@ files = Files
     .total-space = Total Space:
     .rename = Rename
     .download = Download
+    .uploaded = Uploaded
+    .thumbnail-uploaded = Thumbnail Uploaded
+    .no-thumbnail = No Thumbnail
+    .renaming-duplicated = Renaming if Duplicated
+    .one-file-to-upload = File to Upload
+    .files-to-upload = Files to Upload
+    .video-thumb = Video Thumb
+    .image-thumb = Image Thumb 
+    .doc-thumb = First Page Thumb
+    .no-thumbnail-preview = There is no preview thumb for this file
 
 settings = Settings
     .settings = Settings
@@ -87,13 +102,19 @@ settings = Settings
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings
+    .failed = Failed to update profile
     .change-banner = Change banner
     .change-avatar = Change avatar
+    .clear-banner = Clear banner
+    .clear-avatar = Clear avatar
     .edit-button = Edit
+    .too-large = Image too large
     .save-button = Save
     .welcome = Your new profile!
+    .updated = Profile Updated!
     .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
+    .copy-id = Copy ID
     
 settings-general = General Settings
     .overlay = Uplink Overlay
@@ -113,6 +134,8 @@ settings-extensions = Extension Settings
     .open-extensions-folder = Open Extensions Folder
     .auto-enable = Enable Automatically
     .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
+    .banner = Extensions are pre-compiled on external hardware. For added security you can compile extensions from source and place in the `extensions` folder.
+    .open-folder-description = Open the local directory containing your installed extensions.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
@@ -193,3 +216,4 @@ auth = Create Account
 
 sidebar = Sidebar 
     .subtext = sent multiple attachments
+    .chat-new = No messages sent yet, send one!

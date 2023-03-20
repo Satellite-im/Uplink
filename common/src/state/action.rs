@@ -3,11 +3,12 @@ use std::{collections::HashMap, rc::Weak};
 use derive_more::Display;
 
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
-use either::Either;
-use extensions::ExtensionProxy;
+use extensions::UplinkExtension;
 use uuid::Uuid;
-use warp::raygun::Message;
+use warp::crypto::DID;
 use wry::webview::WebView;
+
+use crate::warp_runner::ui_adapter;
 
 use super::{
     chats::Chat,
@@ -15,23 +16,16 @@ use super::{
     notifications::NotificationKind,
     route::To,
     ui::{Theme, ToastNotification, WindowMeta},
-    State,
 };
-
-pub type Callback = Box<dyn Fn(&State, &Action)>;
-
-// Define a new struct to represent a hook that listens for a specific action type.
-pub struct ActionHook {
-    pub action_type: Either<Action, Vec<Action>>,
-    pub callback: Callback,
-}
 
 /// used exclusively by State::mutate
 #[derive(Display)]
-pub enum Action {
+pub enum Action<'a> {
     // Extensions
     #[display(fmt = "RegisterExtensions")]
-    RegisterExtensions(HashMap<String, ExtensionProxy>),
+    RegisterExtensions(HashMap<String, UplinkExtension>),
+    #[display(fmt = "SetExtensionEnabled")]
+    SetExtensionEnabled(String, bool),
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
@@ -65,14 +59,21 @@ pub enum Action {
     AddOverlay(Weak<WebView>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
-    SetPopout(WindowId),
-    #[display(fmt = "ClearPopout")]
-    ClearPopout(DesktopContext),
+    SetCallPopout(WindowId),
+    #[display(fmt = "ClearCallPopout")]
+    ClearCallPopout(DesktopContext),
     #[display(fmt = "SetDebugLogger")]
     SetDebugLogger(WindowId),
     #[display(fmt = "ClearDebugLogger")]
     ClearDebugLogger(DesktopContext),
-
+    #[display(fmt = "AddFilePreview")]
+    AddFilePreview(Uuid, WindowId),
+    #[display(fmt = "ForgetFilePreview")]
+    ForgetFilePreview(Uuid),
+    #[display(fmt = "ClearFilePreview")]
+    ClearFilePreviews(DesktopContext),
+    #[display(fmt = "ClearAllPopoutWindows")]
+    ClearAllPopoutWindows(DesktopContext),
     // Notifications
     #[display(fmt = "AddNotification")]
     AddNotification(NotificationKind, u32),
@@ -100,47 +101,42 @@ pub enum Action {
     RequestAccepted(Identity),
     /// Cancel an outgoing request
     #[display(fmt = "CancelRequest")]
-    CancelRequest(Identity),
+    CancelRequest(&'a DID),
 
-    /// Handle a new incoming friend request
-    #[display(fmt = "IncomingRequest")]
-    IncomingRequest(Identity),
     /// Accept an incoming friend request
     #[display(fmt = "AcceptRequest")]
-    AcceptRequest(Identity),
+    AcceptRequest(&'a Identity),
     /// Deny a incoming friend request
     #[display(fmt = "DenyRequest")]
-    DenyRequest(Identity),
+    DenyRequest(&'a DID),
 
     // Friends
     #[display(fmt = "RemoveFriend")]
-    RemoveFriend(Identity),
+    RemoveFriend(&'a DID),
     #[display(fmt = "Block")]
-    Block(Identity),
+    Block(&'a DID),
     #[display(fmt = "Unblock")]
-    Unblock(Identity),
+    Unblock(&'a DID),
     /// Handles the display of "favorite" chats
     #[display(fmt = "Favorite")]
-    Favorite(Chat),
+    Favorite(Uuid),
     #[display(fmt = "UnFavorite")]
     UnFavorite(Uuid),
     /// Sets the active chat to a given chat
+    /// chat, should_move_to_top
     #[display(fmt = "ChatWith")]
-    ChatWith(Chat),
-    /// Adds a chat to the sidebar
-    #[display(fmt = "AddToSidebar")]
-    AddToSidebar(Chat),
+    ChatWith(&'a Uuid, bool),
+    /// Removes the active chat
+    #[display(fmt = "ClearActiveChat")]
+    ClearActiveChat,
     /// Removes a chat from the sidebar, also removes the active chat if the chat being removed matches
     #[display(fmt = "RemoveFromSidebar")]
     RemoveFromSidebar(Uuid),
     /// Adds or removes a chat from the favorites page
     #[display(fmt = "ToggleFavorite")]
-    ToggleFavorite(Chat),
+    ToggleFavorite(&'a Uuid),
 
     // Messaging
-    /// Records a new message and plays associated notifications
-    #[display(fmt = "NewMessage")]
-    NewMessage(Chat, Message),
     /// React to a given message by ID
     /// conversation id, message id, reaction
     #[display(fmt = "AddReaction")]
@@ -148,12 +144,15 @@ pub enum Action {
     /// conversation id, message id, reaction
     #[display(fmt = "RemoveReaction")]
     RemoveReaction(Uuid, Uuid, String),
-    /// Reply to a given message by ID
-    #[display(fmt = "Reply")]
-    Reply(Chat, Message),
-    /// Prep the UI for a message reply.
+    /// chat id, message id
     #[display(fmt = "StartReplying")]
-    StartReplying(Chat, Message),
+    StartReplying(&'a Uuid, &'a ui_adapter::Message),
+    /// Sets a draft message for the chatbar for a given chat.
+    #[display(fmt = "SetChatDraft")]
+    SetChatDraft(Uuid, String),
+    /// Clears a drafted message from a given chat.
+    #[display(fmt = "ClearChatDraft")]
+    ClearChatDraft(Uuid),
     /// Clears the reply for a given chat
     #[display(fmt = "CancelReply")]
     CancelReply(Uuid),
@@ -195,10 +194,4 @@ pub enum ConfigAction {
     SetSettingsNotificationsEnabled(bool),
     #[display(fmt = "SetAutoEnableExtensions {_0}")]
     SetAutoEnableExtensions(bool),
-}
-
-impl Action {
-    pub fn compare_discriminant(&self, other: &Action) -> bool {
-        std::mem::discriminant(self) == std::mem::discriminant(other)
-    }
 }

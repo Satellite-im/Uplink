@@ -10,12 +10,12 @@
     flex-direction: row;
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
-    border: 1px solid var(--border-color);
     padding: var(--gap);
-    background: #6767953f;
     align-items: center;
     gap: var(--gap);
     user-select: none;
+    background: var(--primary);
+    color: var(--text-color);
 
     @media only screen and (max-width: 600px) {
         left: 0;
@@ -26,10 +26,8 @@
 
     }
 
-    color: var(--text-color);
-
     label {
-        color: var(--text-color-dark);
+        color: var(--text-color-bright) !important;
         user-select: none;
         pointer-events: none;
     }
@@ -46,7 +44,7 @@
             width: var(--height-input);
             height: var(--height-input);
             fill: transparent;
-            stroke: var(--text-color-dark);
+            stroke: var(--text-color-bright);
         }
     }
 

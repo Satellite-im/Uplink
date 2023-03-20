@@ -1,5 +1,7 @@
 use common::{
-    language::get_local_text, state::configuration::Configuration, warp_runner::TesseractCmd,
+    language::get_local_text,
+    state::{configuration::Configuration, State},
+    warp_runner::TesseractCmd,
     STATIC_ARGS,
 };
 use dioxus::prelude::*;
@@ -9,7 +11,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
 };
-use warp::logging::tracing::log;
+use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
 use common::{
@@ -80,7 +82,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(password) = rx.next().await {
-                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let (tx, rx) =
+                    oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::TryLogIn {
                     passphrase: password,
@@ -93,12 +96,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 let res = rx.await.expect("failed to get response from warp_runner");
 
                 match res {
-                    Ok(_) => {
+                    Ok(ident) => {
                         if config.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::On);
                         }
 
-                        page.set(AuthPages::Success)
+                        page.set(AuthPages::Success(ident))
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
@@ -141,6 +144,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let loading = !loaded.get();
 
     cx.render(rsx!(
+        style {update_theme_colors()},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -212,26 +216,34 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                     Button {
-                        text: match account_exists_bool {
-                            true => get_local_text("unlock.unlock-account"),
-                            false => get_local_text("unlock.create-account"),
-                        },
-                        aria_label: "create-account-button".into(),
-                        appearance: kit::elements::Appearance::Primary,
-                        icon: Icon::Check,
-                        disabled: validation_failure.get().is_some(),
-                        onpress: move |_| {
-                            if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.as_str());
-                            } else if let Some(e) = error.get() {
-                                shown_error.set(e.as_str());
-                            } else {
-                                page.set(AuthPages::CreateAccount);
+                            text: match account_exists_bool {
+                                true => get_local_text("unlock.unlock-account"),
+                                false => get_local_text("unlock.create-account"),
+                            },
+                            aria_label: "create-account-button".into(),
+                            appearance: kit::elements::Appearance::Primary,
+                            icon: Icon::Check,
+                            disabled: validation_failure.get().is_some(),
+                            onpress: move |_| {
+                                if let Some(validation_error) = validation_failure.get() {
+                                    shown_error.set(validation_error.as_str());
+                                } else if let Some(e) = error.get() {
+                                    shown_error.set(e.as_str());
+                                } else {
+                                    page.set(AuthPages::CreateAccount);
+                                }
                             }
                         }
-                    }
                 )
             }
         }
     ))
+}
+
+fn update_theme_colors() -> String {
+    let state = State::load();
+    match state.ui.theme.clone() {
+        Some(theme) => theme.styles,
+        None => String::new(),
+    }
 }

@@ -1,4 +1,4 @@
-use crate::{components::friends::friend::Friend, utils::convert_status};
+use crate::components::friends::friend::Friend;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
@@ -11,7 +11,6 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::Platform,
         user_image::UserImage,
     },
     elements::label::Label,
@@ -21,7 +20,7 @@ use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx).unwrap();
-    let block_list = state.read().friends.blocked.clone();
+    let block_list = state.read().blocked_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
         //to_owned![];
@@ -61,11 +60,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let unblock_user = blocked_user.clone();
                 let unblock_user_clone = unblock_user.clone();
-                let platform = match blocked_user.platform() {
-                    warp::multipass::identity::Platform::Desktop => Platform::Desktop,
-                    warp::multipass::identity::Platform::Mobile => Platform::Mobile,
-                    _ => Platform::Headless //TODO: Unknown
-                };
+                let platform = blocked_user.platform().into();
                 let mut relationship = Relationship::default();
                 relationship.set_blocked(true);
                 rsx!(
@@ -79,7 +74,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 text: get_local_text("friends.unblock"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
-                                        state.write().mutate(Action::Unblock(unblock_user.clone()));
+                                        state.write().mutate(Action::Unblock(&unblock_user.did_key()));
                                     } else {
                                         ch.send(unblock_user.clone().did_key());
                                     }
@@ -94,13 +89,13 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
-                                    status: convert_status(&blocked_user.identity_status()),
+                                    status: blocked_user.identity_status().into(),
                                     image: blocked_user.graphics().profile_picture()
                                 }
                             )),
                             onremove: move |_| {
                                 if STATIC_ARGS.use_mock {
-                                    state.write().mutate(Action::Unblock(unblock_user_clone.clone()));
+                                    state.write().mutate(Action::Unblock(&unblock_user_clone.did_key()));
                                 } else {
                                     ch.send(unblock_user_clone.clone().did_key());
                                 }

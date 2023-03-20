@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -8,15 +9,23 @@ use kit::elements::{
     Appearance,
 };
 
-use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
+use crate::{utils::WindowDropHandler, window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
-use super::player::WindowDropHandler;
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     let cmd_tx = WINDOW_CMD_CH.tx.clone();
+
+    // Run the script after the component is mounted
+    let eval = use_eval(cx);
+    use_effect(cx, (), |_| {
+        to_owned![eval];
+        async move {
+            eval(SCRIPT.to_string());
+        }
+    });
 
     cx.render(
         rsx! (
@@ -68,6 +77,5 @@ pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
                 }
             },
         },
-        script { "{SCRIPT}" }
     ))
 }
