@@ -103,7 +103,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     onkeyup: move |evt| {
                         let is_valid = !text_value_onreturn.borrow().trim().is_empty();
-                        if evt.code() == Code::Enter && !evt.data.modifiers().contains(Modifiers::SHIFT) {
+                        if(evt.code() == Code::Enter || evt.code() == Code::NumpadEnter) && !evt.data.modifiers().contains(Modifiers::SHIFT) {
                             onreturn.call((text_value_onreturn.borrow().clone(), is_valid, evt.code()));
                         }
                     }
