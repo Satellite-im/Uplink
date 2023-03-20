@@ -44,7 +44,7 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
@@ -106,7 +106,7 @@ pub fn Compose(cx: Scope) -> Element {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, main_script, window, drag_event];
         async move {
