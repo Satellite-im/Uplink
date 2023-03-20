@@ -1,4 +1,4 @@
-// This is a dioxus component which will alow browsing of the extension "marketplace".
+// This is a dioxus component which will allow browsing of the extension "marketplace".
 
 use common::state::action::ConfigAction;
 use common::state::Action;
