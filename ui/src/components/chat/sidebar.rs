@@ -56,7 +56,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             class: "searchbar-dropdown",
             cx.props.identities.get().iter().map(|(name, id)| {
                 rsx!(
-                    p {
+                    a {
                         onclick: move |_| {
                             cx.props.onclick.call(id.clone());
                         },
@@ -153,12 +153,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     select_friend(pair.1.clone());
                                 }
                             }
-                           
                             search_results.set(Vec::new());
                         },
                         onchange: move |(v, _): (String, _)| {
-                            let pairs = state.read().search_identities(&v);
-                            search_results.set(pairs);
+                            if v.is_empty() {
+                                search_results.set(Vec::new());
+                            } else {
+                                let pairs = state.read().search_identities(&v);
+                                search_results.set(pairs);
+                            }
                         },
                     }
                 }
