@@ -698,6 +698,11 @@ impl State {
             self.chats.favorites.push(*chat);
         }
     }
+    pub fn finished_loading_chat(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.has_more_messages = false;
+        }
+    }
     /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Option<Chat> {
         self.chats

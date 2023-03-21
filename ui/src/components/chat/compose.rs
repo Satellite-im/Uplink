@@ -356,8 +356,12 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         use_ref(cx, || None);
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
-        num_to_take.set(m.len());
-        state.write().prepend_messages_to_chat(id, m);
+        if m.is_empty() {
+            state.write().finished_loading_chat(id);
+        } else {
+            num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));
+            state.write().prepend_messages_to_chat(id, m);
+        }
     }
 
     // this needs to be a hook so it can change inside of the use_future.
@@ -536,7 +540,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                     groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
                     active_chat_id: data.active_chat.id,
                     num_messages_in_conversation: data.active_chat.messages.len(),
-                    num_to_take: num_to_take.clone()
+                    num_to_take: num_to_take.clone(),
+                    has_more: data.active_chat.has_more_messages,
                 })
             }
         }
@@ -549,6 +554,7 @@ struct AllMessageGroupsProps<'a> {
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    has_more: bool,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -561,6 +567,7 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
             active_chat_id: cx.props.active_chat_id,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
+            has_more: cx.props.has_more,
         })
     })))
 }
@@ -571,6 +578,7 @@ struct MessageGroupProps<'a> {
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    has_more: bool,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -581,6 +589,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         active_chat_id: _,
         num_messages_in_conversation: _,
         num_to_take: _,
+        has_more: _,
     } = cx.props;
 
     let messages = &group.messages;
@@ -611,6 +620,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             messages: &group.messages,
             active_chat_id: cx.props.active_chat_id,
             is_remote: group.remote,
+            has_more: cx.props.has_more,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
         }))
@@ -621,9 +631,10 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
     active_chat_id: Uuid,
-    is_remote: bool,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    is_remote: bool,
+    has_more: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -658,7 +669,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     // lazily render
                     if new_num_to_take < cx.props.num_messages_in_conversation {
                         cx.props.num_to_take.set(new_num_to_take);
-                    } else {
+                    } else if cx.props.has_more {
                         // lazily add more messages to conversation, then render
                         ch.send(MessagesCommand::FetchMore {
                             conv_id: cx.props.active_chat_id,
