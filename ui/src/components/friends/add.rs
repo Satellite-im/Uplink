@@ -6,7 +6,7 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::{
     button::Button,
-    input::{Input, Options, Validation},
+    input::{Input, Options, SpecialCharsAction, Validation},
     label::Label,
 };
 use warp::error::Error;
@@ -32,11 +32,11 @@ pub fn AddFriend(cx: Scope) -> Element {
     // Set up validation options for the input field
     let friend_validation = Validation {
         max_length: Some(56),
-        min_length: Some(56),
+        min_length: Some(9),
         alpha_numeric_only: true,
         no_whitespace: true,
         ignore_colons: true,
-        special_chars: None,
+        special_chars: Some((SpecialCharsAction::Allow, vec!['#'])),
     };
 
     if *request_sent.get() {
@@ -77,14 +77,14 @@ pub fn AddFriend(cx: Scope) -> Element {
         my_id.set(None);
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<String>| {
         to_owned![request_sent, error_toast];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(did) = rx.next().await {
+            while let Some(id) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
-                    did,
+                    id,
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
@@ -104,6 +104,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                         Error::PublicKeyIsBlocked => {
                             log::warn!("add friend failed: {}", e);
                             error_toast.set(Some(get_local_text("friends.key-blocked")));
+                        }
+                        Error::FriendExist => {
+                            log::warn!("add friend failed: {}", e);
+                            error_toast.set(Some(get_local_text("friends.add-existing-friend")));
                         }
                         _ => {
                             error_toast.set(Some(get_local_text("friends.add-failed")));
@@ -160,19 +164,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                     disable_onblur: true,
                     reset: clear_input.clone(),
                     onreturn: move |_| {
-                        match DID::from_str(friend_input.get()) {
-                            Ok(did) => {
-                                if STATIC_ARGS.use_mock {
-                                    let mut ident = Identity::default();
-                                    ident.set_did_key(did);
-                                    state.write().mutate(Action::SendRequest(ident));
-                                } else {
-                                    ch.send(did);
-                                }
-                            },
-                            Err(e) => {
-                                log::error!("could not get did from str: {}", e);
+                        if STATIC_ARGS.use_mock {
+                            if let Ok(did) = DID::from_str(friend_input.get()) {
+                                let mut ident = Identity::default();
+                                ident.set_did_key(did);
+                                state.write().mutate(Action::SendRequest(ident));
                             }
+                        } else {
+                            ch.send(friend_input.get().to_string());
                         }
                     },
                     onchange: |(s, is_valid)| {
@@ -186,19 +185,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                     text: get_local_text("uplink.add"),
                     disabled: !friend_input_valid.get(),
                     onpress: move |_| {
-                        match DID::from_str(friend_input.get()) {
-                            Ok(did) => {
-                                if STATIC_ARGS.use_mock {
-                                    let mut ident = Identity::default();
-                                    ident.set_did_key(did);
-                                    state.write().mutate(Action::SendRequest(ident));
-                                } else {
-                                    ch.send(did);
-                                }
-                            },
-                            Err(e) => {
-                                log::error!("could not get did from str: {}", e);
+                        if STATIC_ARGS.use_mock {
+                            if let Ok(did) = DID::from_str(friend_input.get()) {
+                                let mut ident = Identity::default();
+                                ident.set_did_key(did);
+                                state.write().mutate(Action::SendRequest(ident));
                             }
+                        } else {
+                            ch.send(friend_input.get().to_string());
                         }
                         clear_input.set(true);
                     },

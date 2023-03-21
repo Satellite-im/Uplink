@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use derive_more::Display;
 use futures::channel::oneshot;
@@ -8,7 +11,7 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, IdentityUpdate},
+        identity::{self, Identifier, IdentityUpdate},
     },
 };
 
@@ -30,9 +33,9 @@ pub enum MultiPassCmd {
         passphrase: String,
         rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "RequestFriend {{ did: {did} }} ")]
+    #[display(fmt = "RequestFriend {{ request: {id} }} ")]
     RequestFriend {
-        did: DID,
+        id: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "InitializeFriends")]
@@ -118,9 +121,28 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
             // do nothing and drop the rsp channel
         }
-        MultiPassCmd::RequestFriend { did, rsp } => {
-            let r = warp.multipass.send_request(&did).await;
-            let _ = rsp.send(r);
+        MultiPassCmd::RequestFriend { id, rsp } => {
+            // First attempt using a did
+            if let Ok(some) = DID::from_str(id.as_str()) {
+                let r = warp.multipass.send_request(&some).await;
+                let _ = rsp.send(r);
+                return;
+            }
+            let r = warp.multipass.get_identity(Identifier::Username(id)).await;
+            match r {
+                Ok(id) => {
+                    let mut r = Result::Err(Error::IdentityInvalid);
+                    if id.len() == 1 {
+                        r = warp.multipass.send_request(&id[0].did_key()).await;
+                    }
+                    let _ = rsp.send(r);
+                    ()
+                }
+                Err(err) => {
+                    let _ = rsp.send(Result::Err(err));
+                    ()
+                }
+            }
         }
         MultiPassCmd::GetOwnDid { rsp } => {
             let r = warp
