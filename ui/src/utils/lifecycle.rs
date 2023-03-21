@@ -1,11 +1,11 @@
-use dioxus::prelude::*;
+//use dioxus::prelude::*;
 
-pub fn use_on_unmount<F: FnOnce() + 'static>(cx: &ScopeState, on_unmount: F) -> &LifeCycle<F> {
-    cx.use_hook(|| LifeCycle {
-        on_unmount: Some(on_unmount),
-    })
-}
-
+// pub fn use_on_unmount<F: FnOnce() + 'static>(cx: &ScopeState, on_unmount: F) -> &LifeCycle<F> {
+//     cx.use_hook(|| LifeCycle {
+//         on_unmount: Some(on_unmount),
+//     })
+// }
+//
 pub struct LifeCycle<D: FnOnce()> {
     on_unmount: Option<D>,
 }
