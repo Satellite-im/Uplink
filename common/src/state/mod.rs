@@ -107,7 +107,10 @@ impl State {
     }
 
     pub fn mutate(&mut self, action: Action) {
-        log::debug!("state::mutate: {}", action);
+        // ignore noisy events
+        if !matches!(action, Action::SetChatDraft(_, _)) {
+            log::debug!("state::mutate: {}", action);
+        }
 
         match action {
             Action::SetExtensionEnabled(extension, enabled) => {
@@ -709,13 +712,11 @@ impl State {
             .active_media
             .and_then(|uuid| self.chats.all.get(&uuid))
     }
-    pub fn get_chat_with_friend(&self, friend: &Identity) -> Option<Chat> {
+    pub fn get_chat_with_friend(&self, friend: DID) -> Option<Chat> {
         self.chats
             .all
             .values()
-            .find(|chat| {
-                chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
-            })
+            .find(|chat| chat.participants.len() == 2 && chat.participants.contains(&friend))
             .cloned()
     }
 
@@ -1070,6 +1071,20 @@ impl State {
     pub fn set_own_identity(&mut self, identity: Identity) {
         self.id = identity.did_key();
         self.identities.insert(identity.did_key(), identity);
+    }
+    pub fn search_identities(&self, name_prefix: &str) -> Vec<(String, DID)> {
+        self.identities
+            .values()
+            .filter(|id| {
+                let un = id.username();
+                if un.len() < name_prefix.len() {
+                    false
+                } else {
+                    &un[..(name_prefix.len())] == name_prefix
+                }
+            })
+            .map(|id| (id.username(), id.did_key()))
+            .collect()
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {

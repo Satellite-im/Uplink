@@ -1,7 +1,11 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::warp_runner::ui_adapter::ChatAdapter;
+use common::warp_runner::{RayGunCmd, WarpCmd};
+use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_router::*;
+use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -18,11 +22,12 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 use warp::{
+    crypto::DID,
     logging::tracing::log,
     raygun::{self},
 };
 
-use common::state::{self, Action, State};
+use common::state::{self, Action, Chat, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
@@ -35,10 +40,69 @@ pub struct Props {
     route_info: RouteInfo,
 }
 
+#[derive(Props)]
+pub struct SearchProps<'a> {
+    // username, did
+    identities: UseState<Vec<(String, DID)>>,
+    onclick: EventHandler<'a, DID>,
+}
+fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
+    if cx.props.identities.get().is_empty() {
+        return None;
+    }
+
+    None
+}
+
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
+    let search_results = use_state(cx, Vec::<(String, DID)>::new);
+    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
+    let reset_searchbar = use_state(cx, || false);
+
+    if let Some(chat) = chat_with.get().clone() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(&chat.id, true));
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+        to_owned![chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(recipient) = rx.next().await {
+                // if not, create the chat
+                let (tx, rx) = oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                    recipient,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                let c = match rsp {
+                    Ok(c) => c.inner,
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+                chat_with.set(Some(c));
+            }
+        }
+    });
+
+    let select_friend = move |did: DID| {
+        if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
+            chat_with.set(Some(c));
+        } else {
+            ch.send(did);
+        }
+    };
 
     // todo: display a loading page if chats is not initialized
     let (sidebar_chats, favorites, active_media_chat) = if state.read().chats().initialized {
@@ -60,13 +124,25 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
-                        disabled: true,
+                        disabled: false,
                         aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
+                        reset: reset_searchbar.clone(),
                         options: Options {
                             with_clear_btn: true,
+                            react_to_esc_key: true,
                             ..Options::default()
-                        }
+                        },
+                        onreturn: move |_| {
+                            if let Some(pair) = search_results.get().first() {
+                                select_friend(pair.1.clone());
+                            }
+                            search_results.set(Vec::new());
+                        },
+                        onchange: move |(v, _): (String, _)| {
+                            let pairs = state.read().search_identities(&v);
+                            search_results.set(pairs);
+                        },
                     }
                 }
             ))
@@ -82,6 +158,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
+            search_friends{ identities: search_results.clone(), onclick: move |did| {
+                select_friend(did);
+                search_results.set(Vec::new());
+                reset_searchbar.set(true);
+            } },
             // Only display favorites if we have some.
             (!favorites.is_empty()).then(|| rsx!(
                 div {

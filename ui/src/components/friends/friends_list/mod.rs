@@ -167,7 +167,7 @@ pub fn Friends(cx: Scope) -> Element {
                         },
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
-                            let chat = state.read().get_chat_with_friend(&friend);
+                            let chat = state.read().get_chat_with_friend(friend.did_key());
                             let chat2 = chat.clone();
                             let chat3 = chat.clone();
                             let favorite = chat.clone().map(|c| state.read().is_favorite(&c));
