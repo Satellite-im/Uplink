@@ -832,15 +832,20 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                let new_files_to_upload = files_local_path
-                    .iter()
-                    .map(|p| {
-                        let mut path = PathBuf::new();
-                        path.push(decoded_path_string(p));
-                        path
-                    })
-                    .collect::<Vec<PathBuf>>();
-                ch.send(ChanCmd::UploadFiles(new_files_to_upload));
+                #[cfg(not(target_os = "linux"))]
+                ch.send(ChanCmd::UploadFiles(files_local_path));
+                #[cfg(target_os = "linux")]
+                {
+                    let new_files_to_upload = files_local_path
+                        .iter()
+                        .map(|p| {
+                            let mut path = PathBuf::new();
+                            path.push(decoded_path_string(p));
+                            path
+                        })
+                        .collect::<Vec<PathBuf>>();
+                    ch.send(ChanCmd::UploadFiles(new_files_to_upload));
+                }
                 break;
             }
             _ => {

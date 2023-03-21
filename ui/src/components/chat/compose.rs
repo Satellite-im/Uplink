@@ -1251,14 +1251,18 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                new_files_to_upload = files_local_path
-                    .iter()
-                    .map(|p| {
-                        let mut path = PathBuf::new();
-                        path.push(decoded_path_string(p));
-                        path
-                    })
-                    .collect::<Vec<PathBuf>>();
+                new_files_to_upload = files_local_path;
+                #[cfg(target_os = "linux")]
+                {
+                    new_files_to_upload = new_files_to_upload
+                        .iter()
+                        .map(|p| {
+                            let mut path = PathBuf::new();
+                            path.push(decoded_path_string(p));
+                            path
+                        })
+                        .collect::<Vec<PathBuf>>();
+                }
                 let mut script = main_script.replace("$IS_DRAGGING", "false");
                 script.push_str(ANIMATION_DASH_SCRIPT);
                 window.eval(&script);
