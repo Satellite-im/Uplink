@@ -1087,9 +1087,17 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     }));
 
     // todo: possibly show more if multiple users are typing
-    let (platform, status) = match users_typing.first() {
-        Some(u) => (u.platform(), u.identity_status()),
-        None => (identity::Platform::Unknown, IdentityStatus::Online),
+    let (platform, status, profile_picture) = match users_typing.first() {
+        Some(u) => (
+            u.platform(),
+            u.identity_status(),
+            u.graphics().profile_picture(),
+        ),
+        None => (
+            identity::Platform::Unknown,
+            IdentityStatus::Online,
+            String::new(),
+        ),
     };
 
     cx.render(rsx!(
@@ -1097,6 +1105,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             rsx!(MessageTyping {
                 user_image: cx.render(rsx!(
                     UserImage {
+                        image: profile_picture,
                         platform: platform.into(),
                         status: status.into()
                     }
