@@ -838,7 +838,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                         },
                         None => {
                             let attachments = files_to_upload.current().to_vec();
-                            println!("Attachments: {:?}", attachments);
                             RayGunCmd::SendMessage {
                                 conv_id,
                                 msg,
