@@ -20,7 +20,7 @@ use warp::{
     error::Error,
     logging::tracing::log,
     multipass::identity::{Identity, Platform},
-    raygun::{self, Conversation, MessageOptions},
+    raygun::{self, Conversation, MessageOptions, MessageStream, MessagesType},
 };
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
@@ -115,6 +115,37 @@ pub async fn dids_to_identity(
     Ok(ret)
 }
 
+pub async fn fetch_messages_from_chat(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+    to_skip: usize,
+    to_take: usize,
+) -> Result<Vec<Message>, Error> {
+    let total = to_take + to_skip;
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default()
+                .set_reverse()
+                .set_limit(total as i64)
+                .set_messages_type(MessagesType::Stream),
+        )
+        .await
+        .and_then(MessageStream::try_from)?;
+
+    let stream = messages.0.skip(to_skip);
+    let r = stream.collect::<Vec<raygun::Message>>().await;
+
+    let messages = FuturesOrdered::from_iter(
+        r.iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+
+    Ok(messages)
+}
+
 pub async fn conversation_to_chat(
     conv: &Conversation,
     account: &super::Account,
@@ -126,9 +157,20 @@ pub async fn conversation_to_chat(
 
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let unreads = messaging.get_message_count(conv.id()).await?;
+    let to_take = std::cmp::min(unreads, 20);
     let messages = messaging
-        .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
+        .get_messages(
+            conv.id(),
+            MessageOptions::default()
+                .set_reverse()
+                .set_limit(to_take as i64),
+        )
         .await?;
+
+    let messages = match messages {
+        raygun::Messages::List(m) => m,
+        _ => return Err(Error::OtherWithContext("invalid messages container".into())),
+    };
 
     let messages = FuturesOrdered::from_iter(
         messages
@@ -147,6 +189,7 @@ pub async fn conversation_to_chat(
             replying_to: None,
             typing_indicator: HashMap::new(),
             draft: None,
+            has_more_messages: unreads > to_take,
         },
         identities,
     };

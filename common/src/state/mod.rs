@@ -718,6 +718,18 @@ impl State {
             })
             .cloned()
     }
+    // assumes the messages are sorted by most recent to oldest
+    pub fn prepend_messages_to_chat(
+        &mut self,
+        conversation_id: Uuid,
+        mut messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            for message in messages.drain(..) {
+                chat.messages.push_front(message.clone());
+            }
+        }
+    }
 
     /// Check if given chat is favorite on `State` struct.
     ///

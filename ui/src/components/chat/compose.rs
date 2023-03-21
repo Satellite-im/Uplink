@@ -34,6 +34,7 @@ use kit::{
 use common::{
     icons::outline::Shape as Icon,
     state::{group_messages, GroupedMessage, MessageGroup},
+    warp_runner::ui_adapter,
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -331,6 +332,11 @@ enum MessagesCommand {
         msg_id: Uuid,
         msg: Vec<String>,
     },
+    FetchMore {
+        conv_id: Uuid,
+        new_len: usize,
+        current_len: usize,
+    },
 }
 
 /// Lazy loading scheme:
@@ -342,9 +348,17 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
+    let state = use_shared_state::<State>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
+    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
+        use_ref(cx, || None);
+
+    if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
+        num_to_take.set(m.len());
+        state.write().prepend_messages_to_chat(id, m);
+    }
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
@@ -379,7 +393,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     });
 
     let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        //to_owned![];
+        to_owned![newely_fetched_messages];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -480,6 +494,33 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                         let res = rx.await.expect("command canceled");
                         if let Err(e) = res {
                             log::error!("failed to edit message: {}", e);
+                        }
+                    }
+                    MessagesCommand::FetchMore {
+                        conv_id,
+                        new_len,
+                        current_len,
+                    } => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
+                                conv_id,
+                                new_len,
+                                current_len,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        match rx.await.expect("command canceled") {
+                            Ok(m) => {
+                                newely_fetched_messages.set(Some((conv_id, m)));
+                            }
+                            Err(e) => {
+                                log::error!("failed to fetch more message: {}", e);
+                            }
                         }
                     }
                 }
@@ -608,13 +649,23 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             key: "{context_key}",
             id: context_key,
             on_mouseenter: move |_| {
-                if should_fetch_more
-                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
-                {
-                    cx.props
+                if should_fetch_more {
+                    let new_num_to_take = cx
+                        .props
                         .num_to_take
-                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
-                    //log::info!("lazy loading");
+                        .get()
+                        .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
+                    // lazily render
+                    if new_num_to_take < cx.props.num_messages_in_conversation {
+                        cx.props.num_to_take.set(new_num_to_take);
+                    } else {
+                        // lazily add more messages to conversation, then render
+                        ch.send(MessagesCommand::FetchMore {
+                            conv_id: cx.props.active_chat_id,
+                            new_len: new_num_to_take,
+                            current_len: cx.props.num_messages_in_conversation,
+                        })
+                    }
                 }
             },
             children: cx.render(rsx!(render_message {
