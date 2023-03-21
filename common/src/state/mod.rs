@@ -46,7 +46,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::ui::Call;
+use self::ui::{Call, Layout};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -355,7 +355,7 @@ impl State {
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
                 let notifications_enabled = self.configuration.notifications.messages_notifications;
-                let should_play_sound = self.chats.active != Some(conversation_id)
+                let should_play_sound = self.ui.current_layout != Layout::Compose
                     && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
