@@ -855,7 +855,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         })
         .unwrap_or(false);
 
-    let files_to_upload: &UseState<Vec<PathBuf>> = &cx.props.upload_files.as_ref().unwrap();
+    let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages

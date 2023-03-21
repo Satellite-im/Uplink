@@ -131,13 +131,13 @@ impl EmojiSelector {
                 onmouseenter: |_| {
                     #[cfg(not(target_os = "macos"))] 
                     {
-                        *mouse_over_emoji_selector.write_silent() = true; 
+                        *mouse_over_emoji_selector.write_silent() = true;
                     }
                 },
                 onmouseleave: |_| {
                     #[cfg(not(target_os = "macos"))] 
                     {
-                        *mouse_over_emoji_selector.write_silent() = false; 
+                        *mouse_over_emoji_selector.write_silent() = false;
                         eval(focus_script.to_string());
                     }
                 },
