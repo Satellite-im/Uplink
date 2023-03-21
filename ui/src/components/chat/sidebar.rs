@@ -53,7 +53,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     // todo: make this show up
     cx.render(rsx!(
         div {
-            class: "dropdown",
+            class: "searchbar-dropdown",
             cx.props.identities.get().iter().map(|(name, id)| {
                 rsx!(
                     p {
@@ -147,10 +147,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             react_to_esc_key: true,
                             ..Options::default()
                         },
-                        onreturn: move |_| {
-                            if let Some(pair) = search_results.get().first() {
-                                select_friend(pair.1.clone());
+                        onreturn: move |(v, _, _): (String, _, _)| {
+                            if !v.is_empty() {
+                                 if let Some(pair) = search_results.get().first() {
+                                    select_friend(pair.1.clone());
+                                }
                             }
+                           
                             search_results.set(Vec::new());
                         },
                         onchange: move |(v, _): (String, _)| {
