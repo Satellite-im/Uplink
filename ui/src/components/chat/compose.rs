@@ -99,7 +99,7 @@ pub fn Compose(cx: Scope) -> Element {
     let data2 = data.clone();
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let main_script = include_str!("./overlay.js").replace("$ELEMENTID", "compose");
+    let overlay_script = include_str!("./overlay.js");
 
     let files_to_upload = use_state(cx, Vec::new);
 
@@ -110,14 +110,14 @@ pub fn Compose(cx: Scope) -> Element {
 
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
-        to_owned![files_to_upload, main_script, window, drag_event];
+        to_owned![files_to_upload, overlay_script, window, drag_event];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered(_) = get_drag_event() {
                     let new_files =
-                        drag_and_drop_function(&window, &drag_event, main_script.clone()).await;
+                        drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
                     let mut new_files_to_upload: Vec<_> = files_to_upload
                         .current()
                         .iter()
@@ -137,9 +137,9 @@ pub fn Compose(cx: Scope) -> Element {
             ondragover: move |_| {
                 if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
-                        to_owned![files_to_upload, drag_event, window, main_script];
+                        to_owned![files_to_upload, drag_event, window, overlay_script];
                         async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event, main_script).await;
+                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
                             let mut new_files_to_upload: Vec<_> = files_to_upload
                                 .current()
                                 .iter()
@@ -1220,7 +1220,7 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) 
 async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
-    main_script: String,
+    overlay_script: String,
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event());
     let mut new_files_to_upload = Vec::new();
@@ -1228,7 +1228,7 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered(files_local_path) => {
-                let mut script = main_script.replace("$IS_DRAGGING", "true");
+                let mut script = overlay_script.replace("$IS_DRAGGING", "true");
                 if files_local_path.len() > 1 {
                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                         "$TEXT",
@@ -1263,14 +1263,14 @@ async fn drag_and_drop_function(
                         })
                         .collect::<Vec<PathBuf>>();
                 }
-                let mut script = main_script.replace("$IS_DRAGGING", "false");
+                let mut script = overlay_script.replace("$IS_DRAGGING", "false");
                 script.push_str(ANIMATION_DASH_SCRIPT);
                 window.eval(&script);
                 break;
             }
             _ => {
                 *drag_event.write_silent() = None;
-                let script = main_script.replace("$IS_DRAGGING", "false");
+                let script = overlay_script.replace("$IS_DRAGGING", "false");
                 window.eval(&script);
                 break;
             }

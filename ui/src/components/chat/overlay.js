@@ -1,13 +1,13 @@
-var filesLayout = document.getElementById('$ELEMENTID')
+var chatLayout = document.getElementById('compose')
 
 var IS_DRAGGING = $IS_DRAGGING
 
 var overlayElement = document.getElementById('overlay-element')
 
 if (IS_DRAGGING) {
-  filesLayout.classList.add('hover-effect')
+  chatLayout.classList.add('hover-effect')
   overlayElement.style.display = 'block'
 } else {
-  filesLayout.classList.remove('hover-effect')
+  chatLayout.classList.remove('hover-effect')
   overlayElement.style.display = 'none'
 }

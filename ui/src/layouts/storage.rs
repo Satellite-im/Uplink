@@ -860,6 +860,7 @@ async fn drag_and_drop_function(
 }
 
 // Decodes the given path from an html encoded path
+#[cfg(target_os = "linux")]
 pub fn decoded_path_string(path: &Path) -> String {
     path.as_os_str().to_string_lossy().replace("%20", " ")
 }
