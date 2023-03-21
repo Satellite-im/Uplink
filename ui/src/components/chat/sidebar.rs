@@ -50,8 +50,22 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
         return None;
     }
-
-    None
+    // todo: make this show up
+    cx.render(rsx!(
+        div {
+            class: "dropdown",
+            cx.props.identities.get().iter().map(|(name, id)| {
+                rsx!(
+                    p {
+                        onclick: move |_| {
+                            cx.props.onclick.call(id.clone());
+                        },
+                        "{name}"
+                    }
+                )
+            })
+        }
+    ))
 }
 
 #[allow(non_snake_case)]
