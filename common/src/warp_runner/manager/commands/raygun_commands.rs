@@ -17,7 +17,7 @@ use crate::{
     state::{self, chats},
     warp_runner::{
         conv_stream,
-        ui_adapter::{conversation_to_chat, ChatAdapter},
+        ui_adapter::{conversation_to_chat},
         Account, Messaging,
     },
 };

@@ -50,7 +50,7 @@ pub fn Friends(cx: Scope) -> Element {
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    if let Some(id) = chat_with.get().clone() {
+    if let Some(id) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {

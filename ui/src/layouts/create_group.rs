@@ -34,7 +34,6 @@ pub fn create_group(cx: Scope<Props>) -> Element {
     let router = use_router(cx);
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    log::trace!("selected_friends: {:?}", selected_friends.current());
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let friends_list = HashMap::from_iter(
         state
@@ -44,7 +43,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             .map(|id| (id.did_key(), id.clone())),
     );
 
-    if let Some(id) = chat_with.get().clone() {
+    if let Some(id) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
@@ -61,7 +60,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
                 let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
-                log::info!("create dm with recipients: {:?}", recipients);
+
                 let (tx, rx) = oneshot::channel();
                 let cmd = match &recipients[..] {
                     [] => continue,
@@ -199,20 +198,15 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
         is_checked.set(new_value);
         let mut friends = cx.props.selected_friends.get().clone();
         if new_value {
-            log::info!("inserting into selected_friends: {}", friend_did);
             friends.insert(friend_did);
         } else {
             friends.remove(&friend_did);
         }
         cx.props.selected_friends.set(friends);
-        log::info!(
-            "new selected_friends: {:?}",
-            cx.props.selected_friends.current()
-        );
     };
 
-    let update_fn1 = update_fn.clone();
-    let update_fn2 = update_fn.clone();
+    let update_fn1 = update_fn;
+    let update_fn2 = update_fn;
 
     cx.render(rsx!(
         div {
