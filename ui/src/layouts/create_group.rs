@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -14,9 +10,11 @@ use dioxus_router::*;
 use kit::{
     components::user_image::UserImage,
     elements::{
+        button::Button,
         checkbox::Checkbox,
         input::{Input, Options},
         label::Label,
+        Appearance,
     },
 };
 use warp::{crypto::DID, logging::tracing::log};
@@ -26,7 +24,8 @@ pub struct Props {}
 
 pub fn create_group(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let selected_friends: Rc<RefCell<HashSet<DID>>> = Rc::new(RefCell::new(HashSet::new()));
+    let router = use_router(cx);
+    let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -34,7 +33,8 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             .iter()
             .map(|id| (id.did_key(), id.clone())),
     );
-    let friends = State::get_friends_by_first_letter(friends_list);
+
+    let _friends = State::get_friends_by_first_letter(friends_list);
     // todo: button to leave the view
     // todo: button to create the group chat
     cx.render(rsx!(
@@ -58,25 +58,82 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             Label {
                 text: get_local_text("friends.friends"),
             },
-            friends.into_iter().map(|(letter, sorted_friends)| {
-                let group_letter = letter.to_string();
-                // todo: put this in another function
-                rsx!(
-                    div {
-                        key: "friend-group-{group_letter}",
-                        sorted_friends.into_iter().map(|_friend| {rsx!(
-                            render_friend{friend: _friend}
-                        )})
-                    }
-                )
-            }),
+            render_friends {
+                friends: _friends,
+                selected_friends: selected_friends.clone()
+            }
+            div {
+                class: "button-container",
+                Button {
+                    text: "Create DM".into(),
+                    appearance: Appearance::Primary,
+                    onpress: move |_| {
+                        // todo
+                    },
+                }
+                Button {
+                    text: "Cancel".into(),
+                    appearance: Appearance::Primary,
+                    onpress: move |_| router.pop_route(),
+                }
+
+            }
         }
     ))
 }
 
-#[inline_props]
-fn render_friend(cx: Scope, friend: Identity) -> Element {
+#[derive(PartialEq, Props)]
+pub struct FriendsProps {
+    friends: BTreeMap<char, Vec<Identity>>,
+    selected_friends: UseState<HashSet<DID>>,
+}
+
+fn render_friends(cx: Scope<FriendsProps>) -> Element {
+    cx.render(rsx!(
+        div {
+            class: "friend-list vertically-scrollable",
+            cx.props.friends.iter().map(
+                |(letter, sorted_friends)| {
+                    let group_letter = letter.to_string();
+                    rsx!(
+                        div {
+                            key: "friend-group-{group_letter}",
+                            sorted_friends.iter().map(|_friend| {
+                                rsx!(
+                                render_friend{
+                                    friend: _friend.clone(),
+                                    selected_friends: cx.props.selected_friends.clone()
+                                }
+                            )})
+                        }
+                    )
+                }
+            ),
+        }
+    ))
+}
+
+#[derive(PartialEq, Props)]
+pub struct FriendProps {
+    friend: Identity,
+    selected_friends: UseState<HashSet<DID>>,
+}
+fn render_friend(cx: Scope<FriendProps>) -> Element {
     let is_checked = use_state(cx, || false);
+
+    let update_fn = || {
+        if *is_checked.get() {
+            cx.props
+                .selected_friends
+                .make_mut()
+                .remove(&cx.props.friend.did_key());
+        } else {
+            cx.props
+                .selected_friends
+                .make_mut()
+                .insert(cx.props.friend.did_key());
+        }
+    };
 
     cx.render(rsx!(
         div {
@@ -86,17 +143,19 @@ fn render_friend(cx: Scope, friend: Identity) -> Element {
                 // for some reason this onclick event doesn't trigger when clicking the checkbox.
                 // if it ever did, this event could be moved to a child element of this div
                 is_checked.with_mut(|v| *v = !*v);
+                update_fn();
             },
             UserImage {
-                platform: friend.platform().into(),
-                status: friend.identity_status().into(),
-                image: friend.graphics().profile_picture()
+                platform: cx.props.friend.platform().into(),
+                status: cx.props.friend.identity_status().into(),
+                image: cx.props.friend.graphics().profile_picture()
                 on_press: move |_| {
                     is_checked.with_mut(|v| *v = !*v);
+                    update_fn();
                 },
             },
             p {
-                friend.username(),
+                cx.props.friend.username(),
             },
             Checkbox{
                 disabled: false,
@@ -104,7 +163,7 @@ fn render_friend(cx: Scope, friend: Identity) -> Element {
                 height: "1em".into(),
                 is_checked: is_checked.clone(),
                 on_click: move |_| {
-
+                    update_fn();
                 }
             }
         }

@@ -34,13 +34,11 @@
         flex-direction: row;
         justify-content: flex-start;
         align-items: center;
-
-        input.select-friend {
-            border: 1px solid white; //var(--border-color);
-            width: 1em;
-            height: 1em;
-            color: var(--text-color);
-        }
+    }
+    .button-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
     }
 }
 

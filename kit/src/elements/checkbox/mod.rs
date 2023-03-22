@@ -29,7 +29,7 @@ pub fn Checkbox<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .unwrap_or_else(|| is_checked.clone());
     cx.render(rsx!(
             div {
-            class: "checkbox {disabled_class}",
+            class: "input-checkbox {disabled_class}",
             height: "{cx.props.height}",
             width: "{cx.props.width}",
             onclick: move |_| {
