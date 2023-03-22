@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
@@ -49,7 +50,7 @@ use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
 
-const FEEDBACK_TEXT_SCRIPT: &str = r#"
+pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
     feedback_element.textContent = '$TEXT';
 "#;
@@ -59,7 +60,7 @@ const FILE_NAME_SCRIPT: &str = r#"
     filename.textContent = '$FILE_NAME';
 "#;
 
-const ANIMATION_DASH_SCRIPT: &str = r#"
+pub const ANIMATION_DASH_SCRIPT: &str = r#"
     var dashElement = document.getElementById('dash-element')
     dashElement.style.animation = "border-dance 0.5s infinite linear"
 "#;
@@ -771,7 +772,7 @@ fn update_items_with_mock_data(
     storage_state.set(Some(storage_mock));
 }
 
-fn get_drag_event() -> FileDropEvent {
+pub fn get_drag_event() -> FileDropEvent {
     DRAG_EVENT.read().clone()
 }
 
@@ -831,7 +832,8 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                ch.send(ChanCmd::UploadFiles(files_local_path));
+                let new_files_to_upload = decoded_pathbufs(files_local_path);
+                ch.send(ChanCmd::UploadFiles(new_files_to_upload));
                 break;
             }
             _ => {
@@ -843,4 +845,17 @@ async fn drag_and_drop_function(
         };
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+}
+
+pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut paths = paths;
+    #[cfg(target_os = "linux")]
+    {
+        let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
+        paths = paths
+            .iter()
+            .map(|p| PathBuf::from(decode(p)))
+            .collect::<Vec<PathBuf>>();
+    }
+    paths
 }
