@@ -325,7 +325,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     let path = &STATIC_ARGS.warp_path;
     let mut config = MpIpfsConfig::production(path, STATIC_ARGS.experimental);
     config.ipfs_setting.portmapping = true;
-    config.ipfs_setting.agent_version = Some("Uplink".into());
+    config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
     config.store_setting.share_platform = true;
 
