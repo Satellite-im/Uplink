@@ -642,6 +642,47 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            loop {
+                // simply triggering an update will refresh the message timestamps
+                sleep(Duration::from_secs(5)).await;
+
+                // fetch the identities for all friends to get changes in their status messages etc
+                let (tx, rx) = oneshot::channel::<Result<HashMap<warp::crypto::DID, _>, warp::error::Error>>();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RefreshRequest { rsp: tx }))
+                {
+                    log::error!("failed to refresh request {e}");
+                    needs_update.set(true);
+                    continue;
+                }
+
+                let res = rx.await.expect("failed to get response from warp_runner");
+                match res {
+                    Ok(update) => match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            for (id, friend_update) in update {
+                                state.write().update_identity(id, friend_update);
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("failed to refresh request: {e}");
+                    }
+                }
+
+                needs_update.set(true);
+            }
+        }
+    });
+
     // control child windows
     let inner = state.inner();
     use_future(cx, (), |_| {

@@ -41,8 +41,8 @@ pub enum MultiPassCmd {
             Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
         >,
     },
-    #[display(fmt = "RefreshFriends")]
-    RefreshFriends {
+    #[display(fmt = "RefreshRequest")]
+    RefreshRequest {
         rsp: oneshot::Sender<Result<HashMap<DID, state::Identity>, warp::error::Error>>,
     },
     // may later want this to return the Identity rather than the DID.
@@ -134,8 +134,8 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = multipass_initialize_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
-        MultiPassCmd::RefreshFriends { rsp } => {
-            let r = multipass_refresh_friends(&mut warp.multipass).await;
+        MultiPassCmd::RefreshRequest { rsp } => {
+            let r = multipass_refresh_request(&mut warp.multipass).await;
             let _ = rsp.send(r);
         }
         MultiPassCmd::RemoveFriend { did, rsp } => {
@@ -236,17 +236,18 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
     }
 }
 
-async fn multipass_refresh_friends(
+async fn multipass_refresh_request(
     account: &mut Account,
 ) -> Result<HashMap<DID, state::Identity>, Error> {
-    let ids = account.list_friends().await?;
-    let identities = dids_to_identity(&ids, account).await?;
-    let friends = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
+    let outgoing = account.list_incoming_request().await.map(HashSet::<DID>::from_iter)?;
+    let incoming = account.list_outgoing_request().await.map(HashSet::<DID>::from_iter)?;
+    
+    let ids = Vec::from_iter(outgoing.iter().chain(incoming.iter()).cloned().collect::<HashSet<_>>());
 
-    if friends.is_empty() {
-        log::warn!("No identities found");
-    }
-    Ok(friends)
+    let identities = dids_to_identity(&ids, account).await?;
+    let list = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
+
+    Ok(list)
 }
 
 async fn multipass_initialize_friends(
