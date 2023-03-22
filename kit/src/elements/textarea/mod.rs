@@ -7,6 +7,8 @@ use std::{cell::RefCell, rc::Rc};
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 
+use crate::elements::tooltip::{ArrowPosition, Tooltip};
+
 #[derive(Clone, Copy)]
 pub enum Size {
     Small,
@@ -41,6 +43,10 @@ pub struct Props<'a> {
     onchange: EventHandler<'a, (String, bool)>,
     onreturn: EventHandler<'a, (String, bool, Code)>,
     value: String,
+    #[props(default = false)]
+    is_disabled: bool,
+    #[props(default = "".to_owned())]
+    tooltip: String,
 }
 
 #[allow(non_snake_case)]
@@ -56,6 +62,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onchange,
         onreturn,
         value,
+        is_disabled,
+        tooltip,
     } = &cx.props;
 
     let height_script = include_str!("./update_input_height.js");
@@ -64,9 +72,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     dioxus_desktop::use_eval(cx)(focus_script.to_string());
 
     let script = include_str!("./script.js")
-        .replace("UUID", id)
+        .replace("$UUID", id)
         .replace("$MULTI_LINE", &format!("{}", true));
     let current_val = value.to_string();
+    let disabled = *loading || *is_disabled;
 
     let cv2 = current_val.clone();
 
@@ -76,9 +85,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx! (
         div {
-            class: format_args!("input-group {}", if *loading { "disabled" } else { " " }),
+            class: "input-group",
             div {
-                class: "input",
+                class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: "{size.get_height()}",
                 script { "{script}" },
                 textarea {
@@ -88,10 +97,10 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     // todo: troubleshoot this. it isn't working
                     autofocus: *focus,
                     aria_label: "{aria_label}",
-                    disabled: "{loading}",
+                    disabled: "{disabled}",
                     value: "{current_val}",
                     maxlength: "{max_length}",
-                    placeholder: "{placeholder}",
+                    placeholder: format_args!("{}", if *is_disabled {""} else {placeholder}),
                     onblur: move |_| {
                         onreturn.call((cv2.to_string(), false, Code::Enter));
                     },
@@ -109,6 +118,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             },
+            if *is_disabled && !tooltip.is_empty() {
+                cx.render(rsx!(
+                    Tooltip {
+                        arrow_position: ArrowPosition::None,
+                        text: tooltip.clone(),
+                    }
+                ))
+            }
         }
         script { focus_script }
     ))

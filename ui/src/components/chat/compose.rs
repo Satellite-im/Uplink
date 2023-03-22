@@ -994,11 +994,15 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
+    let disabled = !state.read().can_use_active_chat();
+
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
+        is_disabled: disabled,
+        tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
             input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
@@ -1011,24 +1015,25 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .and_then(|d| d.active_chat.draft.clone())
             .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
-        controls: cx.render(rsx!(
+        extensions: cx.render(rsx!(
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
-            },
-            Button {
-                icon: Icon::ChevronDoubleRight,
-                disabled: is_loading,
-                appearance: Appearance::Secondary,
-                onpress: move |_| submit_fn(),
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("uplink.send"),
-                })),
             }
         )),
+        controls: cx.render(rsx!(Button {
+            icon: Icon::ChevronDoubleRight,
+            disabled: is_loading || disabled,
+            appearance: Appearance::Secondary,
+            onpress: move |_| submit_fn(),
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::Bottom,
+                text: get_local_text("uplink.send"),
+            })),
+        })),
         with_replying_to: data
             .as_ref()
+            .filter(|_| !disabled)
             .map(|data| {
                 let active_chat = &data.active_chat;
 
@@ -1062,9 +1067,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading || is_reply,
+            disabled: is_loading || is_reply || disabled,
             appearance: Appearance::Primary,
             onpress: move |_| {
+                if disabled {
+                    return;
+                }
                 if let Some(new_files) = FileDialog::new()
                     .set_directory(dirs::home_dir().unwrap_or_default())
                     .pick_files()

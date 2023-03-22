@@ -31,6 +31,10 @@ pub struct Props<'a> {
     loading: Option<bool>,
     onchange: EventHandler<'a, String>,
     onreturn: EventHandler<'a, String>,
+    #[props(default = false)]
+    is_disabled: bool,
+    #[props(default = "".to_owned())]
+    tooltip: String,
 }
 
 #[derive(Props)]
@@ -94,6 +98,8 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         cx.props.onreturn.call(v);
                     }
                 },
+                is_disabled: cx.props.is_disabled,
+                tooltip: cx.props.tooltip.clone(),
             },
             cx.props.extensions.as_ref(),
             div {
