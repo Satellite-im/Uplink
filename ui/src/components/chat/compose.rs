@@ -357,6 +357,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
+            log::debug!("finished loading chat: {id}");
             state.write().finished_loading_chat(id);
         } else {
             num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));

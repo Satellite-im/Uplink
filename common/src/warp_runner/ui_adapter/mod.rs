@@ -14,13 +14,13 @@ use uuid::Uuid;
 use crate::state::{self, chats};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
     multipass::identity::{Identity, Platform},
-    raygun::{self, Conversation, MessageOptions, MessageStream, MessagesType},
+    raygun::{self, Conversation, MessageOptions},
 };
 
 /// the UI needs additional information for message replies, namely the text of the message being replied to.
@@ -122,22 +122,20 @@ pub async fn fetch_messages_from_chat(
     to_take: usize,
 ) -> Result<Vec<Message>, Error> {
     let total = to_take + to_skip;
+    let max_messages = messaging.get_message_count(conv_id).await?;
+    let total = std::cmp::min(total, max_messages);
     let messages = messaging
-        .get_messages(
-            conv_id,
-            MessageOptions::default()
-                .set_reverse()
-                .set_limit(total as i64)
-                .set_messages_type(MessagesType::Stream),
-        )
-        .await
-        .and_then(MessageStream::try_from)?;
+        .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))
+        .await?;
 
-    let stream = messages.0.skip(to_skip);
-    let r = stream.collect::<Vec<raygun::Message>>().await;
+    let messages = match messages {
+        raygun::Messages::List(m) => m,
+        _ => return Err(Error::OtherWithContext("invalid messages container".into())),
+    };
 
     let messages = FuturesOrdered::from_iter(
-        r.iter()
+        messages
+            .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),
     )
     .collect()
@@ -159,12 +157,7 @@ pub async fn conversation_to_chat(
     let unreads = messaging.get_message_count(conv.id()).await?;
     let to_take = std::cmp::min(unreads, 20);
     let messages = messaging
-        .get_messages(
-            conv.id(),
-            MessageOptions::default()
-                .set_reverse()
-                .set_limit(to_take as i64),
-        )
+        .get_messages(conv.id(), MessageOptions::default().set_range(0..to_take))
         .await?;
 
     let messages = match messages {
@@ -172,7 +165,7 @@ pub async fn conversation_to_chat(
         _ => return Err(Error::OtherWithContext("invalid messages container".into())),
     };
 
-    let messages = FuturesOrdered::from_iter(
+    let messages: VecDeque<_> = FuturesOrdered::from_iter(
         messages
             .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),
@@ -180,6 +173,7 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
+    let has_more_messages = unreads > to_take;
     let adapter = ChatAdapter {
         inner: chats::Chat {
             id: conv.id(),
@@ -189,7 +183,7 @@ pub async fn conversation_to_chat(
             replying_to: None,
             typing_indicator: HashMap::new(),
             draft: None,
-            has_more_messages: unreads > to_take,
+            has_more_messages,
         },
         identities,
     };

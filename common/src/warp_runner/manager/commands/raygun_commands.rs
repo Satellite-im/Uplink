@@ -39,7 +39,9 @@ pub enum RayGunCmd {
         recipient: DID,
         rsp: oneshot::Sender<Result<ChatAdapter, warp::error::Error>>,
     },
-    #[display(fmt = "FetchMessages {{ conv_id: {conv_id} }} ")]
+    #[display(
+        fmt = "FetchMessages {{ conv_id: {conv_id}, req_len: {new_len}, current_len: {current_len} }} "
+    )]
     FetchMessages {
         conv_id: Uuid,
         // the total number of messages that should be in the conversation
