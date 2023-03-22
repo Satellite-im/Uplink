@@ -854,11 +854,7 @@ pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
         let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
         paths = paths
             .iter()
-            .map(|p| {
-                let mut path = PathBuf::new();
-                path.push(decode(p));
-                path
-            })
+            .map(|p| PathBuf::from(decode(p)))
             .collect::<Vec<PathBuf>>();
     }
     paths
