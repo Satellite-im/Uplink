@@ -37,7 +37,12 @@ pub enum RayGunCmd {
     #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
     CreateConversation {
         recipient: DID,
-        rsp: oneshot::Sender<Result<ChatAdapter, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
+    #[display(fmt = "CreateGroupConversation")]
+    CreateGroupConversation {
+        recipients: Vec<DID>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "SendMessage {{ conv_id: {conv_id} }} ")]
     SendMessage {
@@ -123,9 +128,14 @@ pub async fn handle_raygun_cmd(
         },
         RayGunCmd::CreateConversation { recipient, rsp } => {
             let r = match messaging.create_conversation(&recipient).await {
-                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    conversation_to_chat(&conv, account, messaging).await
-                }
+                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::CreateGroupConversation { recipients, rsp } => {
+            let r = match messaging.create_group_conversation(recipients).await {
+                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
                 Err(e) => Err(e),
             };
             let _ = rsp.send(r);

@@ -3,10 +3,13 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
-    state::{Identity, State},
+    state::{Action, Identity, State},
+    warp_runner::{RayGunCmd, WarpCmd},
+    WARP_CMD_CH,
 };
 use dioxus::prelude::*;
 use dioxus_router::*;
+use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::user_image::UserImage,
     elements::{
@@ -17,16 +20,21 @@ use kit::{
         Appearance,
     },
 };
+use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
+
+use crate::UPLINK_ROUTES;
 
 #[derive(PartialEq, Props)]
 pub struct Props {}
 
 pub fn create_group(cx: Scope<Props>) -> Element {
+    log::trace!("rendering create_group");
     let state = use_shared_state::<State>(cx)?;
     let router = use_router(cx);
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -35,9 +43,56 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             .map(|id| (id.did_key(), id.clone())),
     );
 
+    if let Some(id) = chat_with.get().clone() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(&id, true));
+        if state.read().ui.is_minimal_view() {
+            state.write().mutate(Action::SidebarHidden(true));
+        }
+        router.replace_route(UPLINK_ROUTES.chat, None, None);
+    }
+
     let _friends = State::get_friends_by_first_letter(friends_list);
-    // todo: button to leave the view
-    // todo: button to create the group chat
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
+        to_owned![selected_friends, chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while rx.next().await.is_some() {
+                let recipients: Vec<DID> = selected_friends.iter().cloned().collect();
+                log::info!("create dm with recipients: {:?}", recipients);
+                let (tx, rx) = oneshot::channel();
+                let cmd = match &recipients[..] {
+                    [] => continue,
+                    [recipient] => RayGunCmd::CreateConversation {
+                        recipient: recipient.clone(),
+                        rsp: tx,
+                    },
+                    _ => RayGunCmd::CreateGroupConversation {
+                        recipients,
+                        rsp: tx,
+                    },
+                };
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                let id = match rsp {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+                chat_with.set(Some(id));
+            }
+        }
+    });
+
     cx.render(rsx!(
         div {
             id: "create-group",
@@ -74,7 +129,8 @@ pub fn create_group(cx: Scope<Props>) -> Element {
                     text: "Create DM".into(),
                     appearance: Appearance::Primary,
                     onpress: move |_| {
-                        // todo
+                        log::info!("create dm button");
+                        ch.send(());
                     },
                 }
                 Button {
@@ -138,15 +194,14 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
 
     let update_fn = || {
         if *is_checked.get() {
-            cx.props
-                .selected_friends
-                .make_mut()
-                .remove(&cx.props.friend.did_key());
+            log::info!("inserting into selected_friends");
+            cx.props.selected_friends.with_mut(|x| {
+                x.insert(cx.props.friend.did_key());
+            });
         } else {
-            cx.props
-                .selected_friends
-                .make_mut()
-                .insert(cx.props.friend.did_key());
+            cx.props.selected_friends.with_mut(|x| {
+                x.remove(&cx.props.friend.did_key());
+            });
         }
     };
 
