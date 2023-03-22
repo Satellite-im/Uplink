@@ -20,7 +20,7 @@ pub struct Props<'a> {
     #[props(optional)]
     with_username: Option<String>,
     #[props(optional)]
-    onpress: Option<EventHandler<'a, MouseEvent>>,
+    on_press: Option<EventHandler<'a, MouseEvent>>,
     status: Status,
     platform: Platform,
 }
@@ -31,7 +31,7 @@ pub fn get_image(cx: &Scope<Props>) -> String {
 
 /// Tells the parent the user_image was interacted with.
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
-    match &cx.props.onpress {
+    match &cx.props.on_press {
         Some(f) => f.call(e),
         None => {}
     }
@@ -44,7 +44,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let platform = cx.props.platform;
     let typing = cx.props.typing.unwrap_or_default();
     let username = cx.props.with_username.clone().unwrap_or_default();
-    let pressable = cx.props.onpress.is_some();
+    let pressable = cx.props.on_press.is_some();
 
     let loading = cx.props.loading.unwrap_or_default();
 

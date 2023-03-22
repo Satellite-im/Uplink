@@ -4,12 +4,17 @@ use std::{
     rc::Rc,
 };
 
-use common::{icons::outline::Shape as Icon, language::get_local_text, state::State};
+use common::{
+    icons::outline::Shape as Icon,
+    language::get_local_text,
+    state::{Identity, State},
+};
 use dioxus::prelude::*;
 use dioxus_router::*;
 use kit::{
     components::user_image::UserImage,
     elements::{
+        checkbox::Checkbox,
         input::{Input, Options},
         label::Label,
     },
@@ -59,38 +64,8 @@ pub fn create_group(cx: Scope<Props>) -> Element {
                 rsx!(
                     div {
                         key: "friend-group-{group_letter}",
-                        sorted_friends.into_iter().map(|friend| {rsx!(
-                            div {
-                                class: "friend-container",
-                                aria_label: "Friend Container",
-                                onclick: move |_| {
-                                    log::info!("clicked row");
-                                },
-                                UserImage {
-                                    platform: friend.platform().into(),
-                                    status: friend.identity_status().into(),
-                                    image: friend.graphics().profile_picture()
-                                    onpress: move |_| {
-                                        log::info!("clicked userimage");
-                                    },
-                                },
-                                p {
-                                    friend.username(),
-                                },
-                                input {
-                                    id: "select-friend-{friend.did_key()}",
-                                    class: "select-friend",
-                                    "type": "checkbox",
-                                    disabled: false,
-                                    //checked: false,
-                                    oninput: move |_| {
-                                        log::info!("input checkbox");
-                                    },
-                                    onclick: move |_| {
-                                        log::info!("clicked checkbox");
-                                    },
-                                }
-                            }
+                        sorted_friends.into_iter().map(|_friend| {rsx!(
+                            render_friend{friend: _friend}
                         )})
                     }
                 )
@@ -99,5 +74,39 @@ pub fn create_group(cx: Scope<Props>) -> Element {
     ))
 }
 
-//#[inline_props]
-//fn render_friend(cx: Scope, friend: Identity) -> Element {}
+#[inline_props]
+fn render_friend(cx: Scope, friend: Identity) -> Element {
+    let is_checked = use_state(cx, || false);
+
+    cx.render(rsx!(
+        div {
+            class: "friend-container",
+            aria_label: "Friend Container",
+            onclick: move |_| {
+                // for some reason this onclick event doesn't trigger when clicking the checkbox.
+                // if it ever did, this event could be moved to a child element of this div
+                is_checked.with_mut(|v| *v = !*v);
+            },
+            UserImage {
+                platform: friend.platform().into(),
+                status: friend.identity_status().into(),
+                image: friend.graphics().profile_picture()
+                on_press: move |_| {
+                    is_checked.with_mut(|v| *v = !*v);
+                },
+            },
+            p {
+                friend.username(),
+            },
+            Checkbox{
+                disabled: false,
+                width: "1em".into(),
+                height: "1em".into(),
+                is_checked: is_checked.clone(),
+                on_click: move |_| {
+
+                }
+            }
+        }
+    ))
+}
