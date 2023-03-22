@@ -832,20 +832,8 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                #[cfg(not(target_os = "linux"))]
-                ch.send(ChanCmd::UploadFiles(files_local_path));
-                #[cfg(target_os = "linux")]
-                {
-                    let new_files_to_upload = files_local_path
-                        .iter()
-                        .map(|p| {
-                            let mut path = PathBuf::new();
-                            path.push(decoded_path_string(p));
-                            path
-                        })
-                        .collect::<Vec<PathBuf>>();
-                    ch.send(ChanCmd::UploadFiles(new_files_to_upload));
-                }
+                let new_files_to_upload = decoded_pathbufs(files_local_path);
+                ch.send(ChanCmd::UploadFiles(new_files_to_upload));
                 break;
             }
             _ => {
@@ -859,8 +847,19 @@ async fn drag_and_drop_function(
     }
 }
 
-// Decodes the given path from an html encoded path
-#[cfg(target_os = "linux")]
-pub fn decoded_path_string(path: &Path) -> String {
-    path.as_os_str().to_string_lossy().replace("%20", " ")
+pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut paths = paths;
+    #[cfg(target_os = "linux")]
+    {
+        let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
+        paths = paths
+            .iter()
+            .map(|p| {
+                let mut path = PathBuf::new();
+                path.push(decode(p));
+                path
+            })
+            .collect::<Vec<PathBuf>>();
+    }
+    paths
 }
