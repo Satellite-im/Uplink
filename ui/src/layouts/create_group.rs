@@ -191,6 +191,9 @@ pub struct FriendProps {
 }
 fn render_friend(cx: Scope<FriendProps>) -> Element {
     let is_checked = use_state(cx, || false);
+    if !*is_checked.current() && cx.props.selected_friends.current().contains(&cx.props.friend.did_key()) {
+        is_checked.set(true);
+    }
 
     let update_fn = || {
         let friend_did = cx.props.friend.did_key();

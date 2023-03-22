@@ -29,12 +29,16 @@
 
 #create-group {
     color: var(--text-color);
-    .friend-container {
+    .friend-list {
         display: inline-flex;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
+        flex-direction: column;
+        .friend-container {
+            display: inline-flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
     }
+   
     .button-container {
         display: inline-flex;
         flex-direction: row;
