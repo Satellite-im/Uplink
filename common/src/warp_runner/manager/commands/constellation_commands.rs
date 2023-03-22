@@ -518,9 +518,7 @@ async fn upload_files(
                         warp_storage,
                         filename.clone(),
                         file_path.clone(),
-                    )
-                    .await
-                    {
+                    ) {
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
@@ -606,6 +604,18 @@ fn rename_if_duplicate(
     new_file_name
 }
 
+async fn download_file(
+    warp_storage: &warp_storage,
+    file_name: String,
+    local_path_to_save_file: PathBuf,
+) -> Result<(), Error> {
+    warp_storage
+        .get(&file_name, &local_path_to_save_file.to_string_lossy())
+        .await?;
+    log::info!("{file_name} downloaded");
+    Ok(())
+}
+
 async fn set_thumbnail_for_image_file(
     warp_storage: &warp_storage,
     filename_to_save: String,
@@ -650,19 +660,7 @@ async fn set_thumbnail_for_image_file(
     }
 }
 
-async fn download_file(
-    warp_storage: &warp_storage,
-    file_name: String,
-    local_path_to_save_file: PathBuf,
-) -> Result<(), Error> {
-    warp_storage
-        .get(&file_name, &local_path_to_save_file.to_string_lossy())
-        .await?;
-    log::info!("{file_name} downloaded");
-    Ok(())
-}
-
-async fn set_thumbnail_for_video_file(
+fn set_thumbnail_for_video_file(
     warp_storage: &warp_storage,
     filename_to_save: String,
     file_path: PathBuf,
