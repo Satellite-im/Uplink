@@ -34,6 +34,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
     let router = use_router(cx);
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    log::trace!("selected_friends: {:?}", selected_friends.current());
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let friends_list = HashMap::from_iter(
         state
@@ -59,7 +60,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
-                let recipients: Vec<DID> = selected_friends.iter().cloned().collect();
+                let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
                 log::info!("create dm with recipients: {:?}", recipients);
                 let (tx, rx) = oneshot::channel();
                 let cmd = match &recipients[..] {
@@ -122,7 +123,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
                 friends: _friends,
                 name_prefix: friend_prefix.clone(),
                 selected_friends: selected_friends.clone()
-            }
+            },
             div {
                 class: "button-container",
                 Button {
@@ -193,47 +194,51 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
     let is_checked = use_state(cx, || false);
 
     let update_fn = || {
-        if *is_checked.get() {
-            log::info!("inserting into selected_friends");
-            cx.props.selected_friends.with_mut(|x| {
-                x.insert(cx.props.friend.did_key());
-            });
+        let friend_did = cx.props.friend.did_key();
+        let new_value = !*is_checked.get();
+        is_checked.set(new_value);
+        let mut friends = cx.props.selected_friends.get().clone();
+        if new_value {
+            log::info!("inserting into selected_friends: {}", friend_did);
+            friends.insert(friend_did);
         } else {
-            cx.props.selected_friends.with_mut(|x| {
-                x.remove(&cx.props.friend.did_key());
-            });
+            friends.remove(&friend_did);
         }
+        cx.props.selected_friends.set(friends);
+        log::info!(
+            "new selected_friends: {:?}",
+            cx.props.selected_friends.current()
+        );
     };
+
+    let update_fn1 = update_fn.clone();
+    let update_fn2 = update_fn.clone();
 
     cx.render(rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",
-            onclick: move |_| {
-                // for some reason this onclick event doesn't trigger when clicking the checkbox.
-                // if it ever did, this event could be moved to a child element of this div
-                is_checked.with_mut(|v| *v = !*v);
-                update_fn();
-            },
             UserImage {
                 platform: cx.props.friend.platform().into(),
                 status: cx.props.friend.identity_status().into(),
                 image: cx.props.friend.graphics().profile_picture()
                 on_press: move |_| {
-                    is_checked.with_mut(|v| *v = !*v);
                     update_fn();
                 },
             },
             p {
+                onclick: move |_| {
+                    update_fn1();
+                },
                 cx.props.friend.username(),
             },
             Checkbox{
                 disabled: false,
                 width: "1em".into(),
                 height: "1em".into(),
-                is_checked: is_checked.clone(),
+                is_checked: *is_checked.get(),
                 on_click: move |_| {
-                    update_fn();
+                    update_fn2();
                 }
             }
         }
