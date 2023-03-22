@@ -46,8 +46,8 @@ cargo run --bin ui --profile=rapid
 | Protoc | brew install protobuf |
 | ffmpeg | brew install ffmpeg |
 
-a. For it works, we need to install ffmpeg -> brew install ffmpeg for macOS
-And for windows, I followed the steps on this site here
+a. For it works, we need to install ffmpeg -> brew install ffmpeg for MacOS
+And for Windows, I followed the steps on this site here
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
