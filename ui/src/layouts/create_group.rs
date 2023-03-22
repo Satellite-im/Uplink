@@ -25,6 +25,7 @@ pub struct Props {}
 pub fn create_group(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_router(cx);
+    let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let friends_list = HashMap::from_iter(
         state
@@ -51,8 +52,12 @@ pub fn create_group(cx: Scope<Props>) -> Element {
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,
+                        react_to_esc_key: true,
                         ..Options::default()
-                    }
+                    },
+                    onchange: move |(v, _): (String, _)| {
+                        friend_prefix.set(v);
+                    },
                 }
             }
             Label {
@@ -60,6 +65,7 @@ pub fn create_group(cx: Scope<Props>) -> Element {
             },
             render_friends {
                 friends: _friends,
+                name_prefix: friend_prefix.clone(),
                 selected_friends: selected_friends.clone()
             }
             div {
@@ -85,10 +91,12 @@ pub fn create_group(cx: Scope<Props>) -> Element {
 #[derive(PartialEq, Props)]
 pub struct FriendsProps {
     friends: BTreeMap<char, Vec<Identity>>,
+    name_prefix: UseState<String>,
     selected_friends: UseState<HashSet<DID>>,
 }
 
 fn render_friends(cx: Scope<FriendsProps>) -> Element {
+    let name_prefix = cx.props.name_prefix.get();
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
@@ -98,7 +106,14 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                     rsx!(
                         div {
                             key: "friend-group-{group_letter}",
-                            sorted_friends.iter().map(|_friend| {
+                            sorted_friends.iter().filter(|friend| {
+                                let name = friend.username();
+                                if name.len() < name_prefix.len() {
+                                    false
+                                } else {
+                                    &name[..(name_prefix.len())] == name_prefix
+                                }
+                            } ).map(|_friend| {
                                 rsx!(
                                 render_friend{
                                     friend: _friend.clone(),
