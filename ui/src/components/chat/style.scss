@@ -21,6 +21,12 @@
 	}
 	-ms-overflow-style: none;  /* IE and Edge */
 	scrollbar-width: none;  /* Firefox */
+
+    .sidebar-chats-header {
+        display: inline-flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
 }
 
 

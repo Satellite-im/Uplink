@@ -27,6 +27,23 @@
     }
 }
 
+#create-group {
+    color: var(--text-color);
+    .friend-container {
+        display: inline-flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+
+        input.select-friend {
+            border: 1px solid white; //var(--border-color);
+            width: 1em;
+            height: 1em;
+            color: var(--text-color);
+        }
+    }
+}
+
 .hover-effect {
     cursor: pointer;
     &::before {
