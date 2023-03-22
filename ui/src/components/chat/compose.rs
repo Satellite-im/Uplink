@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
@@ -324,7 +325,7 @@ enum MessagesCommand {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: PathBuf,
+        file_path_to_download: PathBuf,
     },
     EditMessage {
         conv_id: Uuid,
@@ -433,7 +434,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                         conv_id,
                         msg_id,
                         file_name,
-                        directory,
+                        file_path_to_download,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
@@ -441,7 +442,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                                 conv_id,
                                 msg_id,
                                 file_name,
-                                directory,
+                                file_path_to_download,
                                 rsp: tx,
                             }))
                         {
@@ -725,13 +726,22 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
                 on_download: move |file_name| {
-                    if let Some(directory) = FileDialog::new()
-                    .set_directory(dirs::home_dir().unwrap_or_default())
-                    .pick_folder() {
+                    let file_extension = std::path::Path::new(&file_name)
+                        .extension()
+                        .and_then(OsStr::to_str)
+                        .map(|s| s.to_string())
+                        .unwrap_or_default();
+                    let file_stem = PathBuf::from(&file_name)
+                        .file_stem()
+                        .and_then(OsStr::to_str)
+                        .map(str::to_string)
+                        .unwrap_or_default();
+                    if let Some(file_path_to_download) = FileDialog::new()
+                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id: message.inner.conversation_id(),
                             msg_id: message.inner.id(),
-                            file_name, directory
+                            file_name, file_path_to_download
                         })
                     }
                 },
