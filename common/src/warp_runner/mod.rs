@@ -327,6 +327,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some("Uplink".into());
     config.store_setting.emit_online_event = true;
+    config.store_setting.share_platform = true;
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
