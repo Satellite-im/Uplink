@@ -65,6 +65,11 @@ use crate::{
     },
 };
 
+pub const SELECT_CHAT_BAR: &str = r#"
+    var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
+    chatBar.focus()
+"#;
+
 struct ComposeData {
     active_chat: Chat,
     my_id: Identity,
@@ -1251,6 +1256,7 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
+                *drag_event.write_silent() = None;
                 new_files_to_upload = files_local_path;
                 #[cfg(target_os = "linux")]
                 {
@@ -1265,6 +1271,8 @@ async fn drag_and_drop_function(
                 }
                 let mut script = overlay_script.replace("$IS_DRAGGING", "false");
                 script.push_str(ANIMATION_DASH_SCRIPT);
+                script.push_str(SELECT_CHAT_BAR);
+                window.set_focus();
                 window.eval(&script);
                 break;
             }
