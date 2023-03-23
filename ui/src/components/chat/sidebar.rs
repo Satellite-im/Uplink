@@ -25,6 +25,7 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 use uuid::Uuid;
+use warp::raygun::ConversationType;
 use warp::{
     crypto::DID,
     logging::tracing::log,
@@ -311,7 +312,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    let participants_name = State::join_usernames(&other_participants);
+                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name? 
+                    let participants_name = match chat.conversation_name {
+                        Some(name) => name,
+                        None => State::join_usernames(&other_participants)
+                    };
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),
@@ -368,7 +373,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
-                                    if participants.len() <= 2 {rsx! (
+                                    if chat.conversation_type == ConversationType::Direct {rsx! (
                                         UserImage {
                                             platform: platform,
                                             status:  user.identity_status().into(),
