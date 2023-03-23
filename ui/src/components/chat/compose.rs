@@ -52,7 +52,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::{self, IdentityStatus},
-    raygun::{self, ReactionState},
+    raygun::{self, ConversationType, ReactionState},
 };
 use wry::webview::FileDropEvent;
 
@@ -224,7 +224,10 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         .cloned()
         .expect("chat should have at least 2 participants");
 
-    let subtext = active_participant.status_message().unwrap_or_default();
+    let subtext = match active_chat.conversation_type {
+        ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
+        _ => String::new(),
+    };
     let is_favorite = s.is_favorite(&active_chat);
 
     let first_image = active_participant.graphics().profile_picture();
@@ -331,7 +334,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
     cx.render(rsx!(
         if let Some(data) = data {
-            if data.other_participants.len() < 2 {rsx! (
+            if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
                 UserImage {
                     loading: false,
                     platform: data.platform,

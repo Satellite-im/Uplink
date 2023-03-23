@@ -34,6 +34,7 @@ pub struct Chat {
     // these don't need to be stored in state either
     pub participants: HashSet<DID>,
     // this makes it easier to tell direct conversations from group conversations. There should be no group conversations with only 2 participants.
+    #[serde(default = "default_conversation_type")]
     pub conversation_type: ConversationType,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
@@ -95,6 +96,10 @@ impl Chats {
     }
 }
 
+fn default_conversation_type() -> ConversationType {
+    ConversationType::Direct
+}
+
 impl Serialize for Chats {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -124,9 +129,10 @@ impl Serialize for Chat {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Chat", 5)?;
+        let mut state = serializer.serialize_struct("Chat", 6)?;
         state.serialize_field("id", &self.id)?;
         state.serialize_field("participants", &self.participants)?;
+        state.serialize_field("conversation_type", &self.conversation_type)?;
 
         if STATIC_ARGS.use_mock {
             state.serialize_field("messages", &self.messages)?;
