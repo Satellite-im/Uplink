@@ -888,7 +888,11 @@ impl State {
         }
 
         for (_, list) in friends_by_first_letter.iter_mut() {
-            list.sort_by_key(|a| a.username())
+            list.sort_by(|a, b| {
+                a.username()
+                    .cmp(&b.username())
+                    .then(a.did_key().to_string().cmp(&b.did_key().to_string()))
+            })
         }
 
         friends_by_first_letter
