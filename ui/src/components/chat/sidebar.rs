@@ -1,5 +1,5 @@
 use common::language::get_local_text;
-use common::state::{self, Action, State};
+use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -45,8 +45,8 @@ pub struct Props {
 #[derive(Props)]
 pub struct SearchProps<'a> {
     // username, did
-    identities: UseState<Vec<(String, DID)>>,
-    onclick: EventHandler<'a, DID>,
+    identities: UseState<Vec<identity_search_result::Entry>>,
+    onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
@@ -56,13 +56,13 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
-            cx.props.identities.get().iter().map(|(name, id)| {
+            cx.props.identities.get().iter().map(|entry| {
                 rsx!(
                     a {
                         onclick: move |_| {
-                            cx.props.onclick.call(id.clone());
+                            cx.props.onclick.call(entry.id.clone());
                         },
-                        "{name}"
+                        "{entry.display_name}"
                     }
                 )
             })
@@ -74,7 +74,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
-    let search_results = use_state(cx, Vec::<(String, DID)>::new);
+    let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
@@ -112,11 +112,20 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         }
     });
 
-    let select_friend = move |did: DID| {
-        if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
-            chat_with.set(Some(c.id));
-        } else {
-            ch.send(did);
+    let select_entry = move |id: identity_search_result::Identifier| match id {
+        identity_search_result::Identifier::Did(did) => {
+            if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
+                chat_with.set(Some(c.id));
+            } else {
+                ch.send(did);
+            }
+        }
+        identity_search_result::Identifier::Uuid(id) => {
+            if let Some(c) = state.read().get_chat_by_id(id) {
+                chat_with.set(Some(c.id));
+            } else {
+                log::warn!("failed to select chat {id}");
+            }
         }
     };
 
@@ -151,8 +160,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         },
                         onreturn: move |(v, _, _): (String, _, _)| {
                             if !v.is_empty() {
-                                 if let Some(pair) = search_results.get().first() {
-                                    select_friend(pair.1.clone());
+                                 if let Some(entry) = search_results.get().first() {
+                                    select_entry(entry.id.clone());
                                 }
                             }
                             search_results.set(Vec::new());
@@ -161,8 +170,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
                             } else {
-                                let pairs = state.read().search_identities(&v);
-                                search_results.set(pairs);
+                                let mut friends = state.read().search_identities(&v);
+                                let chats = state.read().search_group_chats(&v);
+                                // todo: sort this somehow
+                                friends.extend(chats);
+                                search_results.set(friends);
                             }
                         },
                     }
@@ -180,8 +192,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
-            search_friends{ identities: search_results.clone(), onclick: move |did| {
-                select_friend(did);
+            search_friends{ identities: search_results.clone(), onclick: move |entry| {
+                select_entry(entry);
                 search_results.set(Vec::new());
                 reset_searchbar.set(true);
             } },
@@ -330,7 +342,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     icon: Icon::BellSlash,
                                     text: get_local_text("uplink.clear-unreads"),
                                     onpress: move |_| {
-                                        state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
+                                        state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }
                                 },
                                 hr{ },

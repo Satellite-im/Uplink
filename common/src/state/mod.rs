@@ -200,7 +200,7 @@ impl State {
             }
             Action::StartReplying(chat, message) => self.start_replying(chat, message),
             Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
-            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearUnreads(id) => self.clear_unreads(id),
             Action::ClearActiveUnreads => {
                 if let Some(id) = self.chats.active {
                     self.clear_unreads(id);
@@ -589,6 +589,7 @@ impl State {
                 conv.messages = chat.messages;
                 conv.conversation_type = chat.conversation_type;
                 conv.has_more_messages = chat.has_more_messages;
+                conv.conversation_name = chat.conversation_name;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -734,6 +735,9 @@ impl State {
         self.chats
             .active_media
             .and_then(|uuid| self.chats.all.get(&uuid))
+    }
+    pub fn get_chat_by_id(&self, id: Uuid) -> Option<Chat> {
+        self.chats.all.get(&id).cloned()
     }
     pub fn get_chat_with_friend(&self, friend: DID) -> Option<Chat> {
         self.chats
@@ -1112,7 +1116,7 @@ impl State {
         self.id = identity.did_key();
         self.identities.insert(identity.did_key(), identity);
     }
-    pub fn search_identities(&self, name_prefix: &str) -> Vec<(String, DID)> {
+    pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
         self.identities
             .values()
             .filter(|id| {
@@ -1123,7 +1127,58 @@ impl State {
                     &un[..(name_prefix.len())] == name_prefix
                 }
             })
-            .map(|id| (id.username(), id.did_key()))
+            .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
+            .collect()
+    }
+    // lets the user search for a group chat by chat name or, if a chat is not named, by the names of its participants
+    pub fn search_group_chats(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+        let get_display_name = |chat: &Chat| -> String {
+            let names: Vec<_> = chat
+                .participants
+                .iter()
+                .filter_map(|id| self.identities.get(id))
+                .map(|x| x.username())
+                .collect();
+
+            names.join(",")
+        };
+
+        let compare_str = |v: &str| {
+            if v.len() < name_prefix.len() {
+                false
+            } else {
+                &v[..(name_prefix.len())] == name_prefix
+            }
+        };
+
+        self.chats
+            .all
+            .iter()
+            .filter(|(_, v)| v.conversation_type == ConversationType::Group)
+            .filter(|(_k, v)| {
+                let names: Vec<_> = v
+                    .participants
+                    .iter()
+                    .filter_map(|id| self.identities.get(id))
+                    .map(|x| x.username())
+                    .collect();
+
+                let user_name_match = names.iter().any(|n| compare_str(n));
+                let group_name_match = match v.conversation_name.as_ref() {
+                    Some(n) => compare_str(n),
+                    None => false,
+                };
+
+                user_name_match || group_name_match
+            })
+            .map(|(k, v)| {
+                if let Some(name) = v.conversation_name.as_ref() {
+                    identity_search_result::Entry::from_chat(name.clone(), *k)
+                } else {
+                    let name = get_display_name(v);
+                    identity_search_result::Entry::from_chat(name, *k)
+                }
+            })
             .collect()
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
@@ -1179,6 +1234,41 @@ impl State {
             .get(&self.did_key())
             .map(|x| x.username())
             .unwrap_or_default()
+    }
+}
+
+// putting this in a separate module for naming purposes
+pub mod identity_search_result {
+    use uuid::Uuid;
+    use warp::crypto::DID;
+
+    #[derive(Debug, Clone)]
+    pub struct Entry {
+        pub display_name: String,
+        pub id: Identifier,
+    }
+
+    #[allow(clippy::large_enum_variant)]
+    #[derive(Debug, Clone)]
+    pub enum Identifier {
+        Did(DID),
+        Uuid(Uuid),
+    }
+
+    impl Entry {
+        pub fn from_identity(name: String, did: DID) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Did(did),
+            }
+        }
+
+        pub fn from_chat(name: String, id: Uuid) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Uuid(id),
+            }
+        }
     }
 }
 

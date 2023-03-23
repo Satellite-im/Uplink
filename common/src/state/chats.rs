@@ -36,6 +36,9 @@ pub struct Chat {
     // this makes it easier to tell direct conversations from group conversations. There should be no group conversations with only 2 participants.
     #[serde(default = "default_conversation_type")]
     pub conversation_type: ConversationType,
+    // only Some for group chats
+    #[serde(default)]
+    pub conversation_name: Option<String>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.
