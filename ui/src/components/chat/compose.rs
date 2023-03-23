@@ -326,38 +326,17 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let is_loading = data.is_none();
-    let other_participants_names = data
-        .as_ref()
-        .map(|x| x.other_participants_names.clone())
-        .unwrap_or_default();
-    let subtext = data.as_ref().map(|x| x.subtext.clone()).unwrap_or_default();
 
-    cx.render(rsx!(
-        if let Some(data) = data {
-            if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
-                UserImage {
-                    loading: false,
-                    platform: data.platform,
-                    status: data.active_participant.identity_status().into(),
-                    image: data.first_image.clone(),
-                }
-            )} else {rsx! (
+    let data = match data {
+        Some(d) => d,
+        None => {
+            return cx.render(rsx!(
                 UserImageGroup {
-                    loading: false,
-                    participants: build_participants(&data.other_participants),
-                }
-            )}
-        } else {rsx! (
-            UserImageGroup {
-                loading: true,
-                participants: vec![]
-            }
-        )}
-        div {
-            class: "user-info",
-            if is_loading {
-                rsx!(
+                    loading: true,
+                    participants: vec![]
+                },
+                div {
+                    class: "user-info",
                     div {
                         class: "skeletal-bars",
                         div {
@@ -367,18 +346,40 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                             class: "skeletal skeletal-bar",
                         },
                     }
-                )
-            } else {
-                rsx! (
-                    p {
-                        class: "username",
-                        "{other_participants_names}"
-                    },
-                    p {
-                        class: "status",
-                        "{subtext}"
-                    }
-                )
+                }
+            ))
+        }
+    };
+
+    let conversation_title = match data.active_chat.conversation_name.as_ref() {
+        Some(n) => n.clone(),
+        None => data.other_participants_names.clone(),
+    };
+    let subtext = data.subtext.clone();
+
+    cx.render(rsx!(
+        if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
+            UserImage {
+                loading: false,
+                platform: data.platform,
+                status: data.active_participant.identity_status().into(),
+                image: data.first_image.clone(),
+            }
+        )} else {rsx! (
+            UserImageGroup {
+                loading: false,
+                participants: build_participants(&data.other_participants),
+            }
+        )}
+        div {
+            class: "user-info",
+            p {
+                class: "username",
+                "{conversation_title}"
+            },
+            p {
+                class: "status",
+                "{subtext}"
             }
         }
     ))
