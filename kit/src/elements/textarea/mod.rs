@@ -86,6 +86,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! (
         div {
             class: "input-group",
+            aria_label: "input-group",
             div {
                 class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: "{size.get_height()}",
@@ -96,7 +97,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{id}",
                     // todo: troubleshoot this. it isn't working
                     autofocus: *focus,
-                    aria_label: "{aria_label}",
+                    aria_label: "input-text-area",
                     disabled: "{disabled}",
                     value: "{current_val}",
                     maxlength: "{max_length}",
