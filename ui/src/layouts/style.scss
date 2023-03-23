@@ -32,10 +32,14 @@
     .friend-list {
         display: inline-flex;
         flex-direction: column;
-        .friend-container {
+        .friend-group {
             display: inline-flex;
-            flex-direction: row;
-            justify-content: flex-start;
+            flex-direction: column;
+            .friend-container {
+                display: inline-flex;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
         }
     }
    

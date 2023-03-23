@@ -162,6 +162,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                     rsx!(
                         div {
                             key: "friend-group-{group_letter}",
+                            class: "friend-group",
                             sorted_friends.iter().filter(|friend| {
                                 let name = friend.username();
                                 if name.len() < name_prefix.len() {
@@ -171,7 +172,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 }
                             } ).map(|_friend| {
                                 rsx!(
-                                render_friend{
+                                render_friend {
                                     friend: _friend.clone(),
                                     selected_friends: cx.props.selected_friends.clone()
                                 }
@@ -191,7 +192,13 @@ pub struct FriendProps {
 }
 fn render_friend(cx: Scope<FriendProps>) -> Element {
     let is_checked = use_state(cx, || false);
-    if !*is_checked.current() && cx.props.selected_friends.current().contains(&cx.props.friend.did_key()) {
+    if !*is_checked.current()
+        && cx
+            .props
+            .selected_friends
+            .current()
+            .contains(&cx.props.friend.did_key())
+    {
         is_checked.set(true);
     }
 
