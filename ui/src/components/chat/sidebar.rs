@@ -79,7 +79,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
 
-    if let Some(chat) = chat_with.get().clone() {
+    if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
     }
@@ -102,7 +102,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 let rsp = rx.await.expect("command canceled");
 
                 match rsp {
-                    Ok(c) => chat_with.set(Some(c.clone())),
+                    Ok(c) => chat_with.set(Some(c)),
                     Err(e) => {
                         log::error!("failed to create conversation: {}", e);
                         continue;
