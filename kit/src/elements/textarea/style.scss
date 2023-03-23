@@ -4,6 +4,10 @@ textarea {
 	width: 100%;
 	height: "auto";
 	max-height: 250px; //Maybe make max variable?
+	&.disabled {
+		cursor: not-allowed;
+		filter: brightness(85%);
+	}
 }
 
 textarea::-webkit-scrollbar-track {
