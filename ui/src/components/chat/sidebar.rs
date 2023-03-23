@@ -1,6 +1,5 @@
 use common::language::get_local_text;
-use common::state::{self, Action, Chat, State};
-use common::warp_runner::ui_adapter::ChatAdapter;
+use common::state::{self, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -103,7 +102,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 let rsp = rx.await.expect("command canceled");
 
                 match rsp {
-                    Ok(c) => chat_with.set(Some(c)),
+                    Ok(c) => chat_with.set(Some(c.clone())),
                     Err(e) => {
                         log::error!("failed to create conversation: {}", e);
                         continue;
@@ -115,7 +114,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     let select_friend = move |did: DID| {
         if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
-            chat_with.set(Some(c));
+            chat_with.set(Some(c.id));
         } else {
             ch.send(did);
         }
