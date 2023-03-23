@@ -54,6 +54,7 @@ input, textarea {
 /* revert the 'white-space' property for textarea elements on Safari */
 textarea {
     white-space: revert;
+    overflow: hidden;
 }
 
 /* minimum style to allow to style meter element */
