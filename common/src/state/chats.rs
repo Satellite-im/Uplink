@@ -5,7 +5,10 @@ use std::{
 
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
-use warp::{crypto::DID, raygun};
+use warp::{
+    crypto::DID,
+    raygun::{self, ConversationType},
+};
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
@@ -30,6 +33,8 @@ pub struct Chat {
     // Includes the list of participants within a given chat.
     // these don't need to be stored in state either
     pub participants: HashSet<DID>,
+    // this makes it easier to tell direct conversations from group conversations. There should be no group conversations with only 2 participants.
+    pub conversation_type: ConversationType,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.

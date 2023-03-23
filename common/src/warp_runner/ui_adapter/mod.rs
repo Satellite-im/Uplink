@@ -128,7 +128,8 @@ pub async fn conversation_to_chat(
     let unreads = messaging.get_message_count(conv.id()).await?;
     let messages = messaging
         .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
-        .await.and_then(Vec::<_>::try_from)?;
+        .await
+        .and_then(Vec::<_>::try_from)?;
 
     let messages = FuturesOrdered::from_iter(
         messages
@@ -141,6 +142,7 @@ pub async fn conversation_to_chat(
     let adapter = ChatAdapter {
         inner: chats::Chat {
             id: conv.id(),
+            conversation_type: conv.conversation_type(),
             participants: HashSet::from_iter(conv.recipients()),
             messages,
             unreads: unreads as u32,

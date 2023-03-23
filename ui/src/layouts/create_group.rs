@@ -215,9 +215,6 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
         cx.props.selected_friends.set(friends);
     };
 
-    let update_fn1 = update_fn;
-    let update_fn2 = update_fn;
-
     cx.render(rsx!(
         div {
             class: "friend-container",
@@ -232,7 +229,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             },
             p {
                 onclick: move |_| {
-                    update_fn1();
+                    update_fn();
                 },
                 cx.props.friend.username(),
             },
@@ -242,7 +239,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                 height: "1em".into(),
                 is_checked: *is_checked.get(),
                 on_click: move |_| {
-                    update_fn2();
+                    update_fn();
                 }
             }
         }

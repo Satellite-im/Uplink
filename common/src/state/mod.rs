@@ -20,6 +20,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
+use warp::raygun::ConversationType;
 
 use crate::STATIC_ARGS;
 
@@ -650,8 +651,7 @@ impl State {
     pub fn can_use_active_chat(&self) -> bool {
         self.get_active_chat()
             .map(|c| {
-                let participants = &c.participants;
-                if participants.len() == 2 {
+                if c.conversation_type == ConversationType::Direct {
                     return c
                         .participants
                         .iter()
@@ -730,7 +730,8 @@ impl State {
             .all
             .values()
             .find(|chat| {
-                chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
+                chat.conversation_type == ConversationType::Direct
+                    && chat.participants.contains(&friend.did_key())
             })
             .cloned()
     }
@@ -924,7 +925,7 @@ impl State {
 
         // Check if there is a direct chat with the friend being removed
         let direct_chat = all_chats.values().find(|chat| {
-            chat.participants.len() == 2
+            chat.conversation_type == ConversationType::Direct
                 && chat
                     .participants
                     .iter()
