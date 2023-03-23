@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
@@ -42,8 +43,10 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window};
+use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
+#[cfg(target_os = "windows")]
+use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -51,13 +54,22 @@ use warp::{
     multipass::identity::{self, IdentityStatus},
     raygun::{self, ReactionState},
 };
+use wry::webview::FileDropEvent;
 
 use crate::{
     components::media::player::MediaPlayer,
+    layouts::storage::{
+        decoded_pathbufs, get_drag_event, ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
+    },
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
 };
+
+pub const SELECT_CHAT_BAR: &str = r#"
+    var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
+    chatBar.focus()
+"#;
 
 struct ComposeData {
     active_chat: Chat,
@@ -82,6 +94,7 @@ impl PartialEq for ComposeData {
 struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
+    upload_files: Option<UseState<Vec<PathBuf>>>,
 }
 
 #[allow(non_snake_case)]
@@ -90,15 +103,68 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
+    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
+    let window = use_window(cx);
+    let overlay_script = include_str!("./overlay.js");
+
+    let files_to_upload = use_state(cx, Vec::new);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
+    #[cfg(target_os = "windows")]
+    use_future(cx, (), |_| {
+        to_owned![files_to_upload, overlay_script, window, drag_event];
+        async move {
+            // ondragover function from div does not work on windows
+            loop {
+                sleep(Duration::from_millis(100)).await;
+                if let FileDropEvent::Hovered(_) = get_drag_event() {
+                    let new_files =
+                        drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
+                }
+            }
+        }
+    });
+
     cx.render(rsx!(
         div {
             id: "compose",
+            ondragover: move |_| {
+                if drag_event.with(|i| i.clone()).is_none() {
+                    cx.spawn({
+                        to_owned![files_to_upload, drag_event, window, overlay_script];
+                        async move {
+                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
+                            let mut new_files_to_upload: Vec<_> = files_to_upload
+                                .current()
+                                .iter()
+                                .filter(|file_name| !new_files.contains(file_name))
+                                .cloned()
+                                .collect();
+                            new_files_to_upload.extend(new_files);
+                            files_to_upload.set(new_files_to_upload);
+                        }
+                    });
+                }
+            },
+            div {
+                id: "overlay-element",
+                class: "overlay-element",
+                div {id: "dash-element", class: "dash-background active-animation"},
+                p {id: "overlay-text0", class: "overlay-text"},
+                p {id: "overlay-text", class: "overlay-text"}
+            },
             Topbar {
                 with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
                 with_currently_back: state.read().ui.sidebar_hidden,
@@ -129,7 +195,10 @@ pub fn Compose(cx: Scope) -> Element {
                 ),
                 Some(data) =>  rsx!(get_messages{data: data.clone()}),
             },
-            get_chatbar{data: data}
+            get_chatbar {
+                data: data,
+                upload_files: files_to_upload.clone()
+            }
         }
     ))
 }
@@ -324,7 +393,7 @@ enum MessagesCommand {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: PathBuf,
+        file_path_to_download: PathBuf,
     },
     EditMessage {
         conv_id: Uuid,
@@ -433,7 +502,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                         conv_id,
                         msg_id,
                         file_name,
-                        directory,
+                        file_path_to_download,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
@@ -441,7 +510,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                                 conv_id,
                                 msg_id,
                                 file_name,
-                                directory,
+                                file_path_to_download,
                                 rsp: tx,
                             }))
                         {
@@ -725,13 +794,22 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
                 on_download: move |file_name| {
-                    if let Some(directory) = FileDialog::new()
-                    .set_directory(dirs::home_dir().unwrap_or_default())
-                    .pick_folder() {
+                    let file_extension = std::path::Path::new(&file_name)
+                        .extension()
+                        .and_then(OsStr::to_str)
+                        .map(|s| s.to_string())
+                        .unwrap_or_default();
+                    let file_stem = PathBuf::from(&file_name)
+                        .file_stem()
+                        .and_then(OsStr::to_str)
+                        .map(str::to_string)
+                        .unwrap_or_default();
+                    if let Some(file_path_to_download) = FileDialog::new()
+                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id: message.inner.conversation_id(),
                             msg_id: message.inner.id(),
-                            file_name, directory
+                            file_name, file_path_to_download
                         })
                     }
                 },
@@ -792,7 +870,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         })
         .unwrap_or(false);
 
-    let files_to_upload: &UseState<Vec<PathBuf>> = use_state(cx, Vec::new);
+    let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
@@ -1095,9 +1173,17 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     }));
 
     // todo: possibly show more if multiple users are typing
-    let (platform, status) = match users_typing.first() {
-        Some(u) => (u.platform(), u.identity_status()),
-        None => (identity::Platform::Unknown, IdentityStatus::Online),
+    let (platform, status, profile_picture) = match users_typing.first() {
+        Some(u) => (
+            u.platform(),
+            u.identity_status(),
+            u.graphics().profile_picture(),
+        ),
+        None => (
+            identity::Platform::Unknown,
+            IdentityStatus::Online,
+            String::new(),
+        ),
     };
 
     cx.render(rsx!(
@@ -1105,6 +1191,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             rsx!(MessageTyping {
                 user_image: cx.render(rsx!(
                     UserImage {
+                        image: profile_picture,
                         platform: platform.into(),
                         status: status.into()
                     }
@@ -1159,4 +1246,61 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) 
     };
     let user_sender = build_user_from_identity(sender.clone());
     (user_sender.platform, user_sender.status)
+}
+
+// Like ui::src:layout::storage::drag_and_drop_function
+async fn drag_and_drop_function(
+    window: &DesktopContext,
+    drag_event: &UseRef<Option<FileDropEvent>>,
+    overlay_script: String,
+) -> Vec<PathBuf> {
+    *drag_event.write_silent() = Some(get_drag_event());
+    let mut new_files_to_upload = Vec::new();
+    loop {
+        let file_drop_event = get_drag_event();
+        match file_drop_event {
+            FileDropEvent::Hovered(files_local_path) => {
+                let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                if files_local_path.len() > 1 {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.files-to-upload")
+                        ),
+                    ));
+                } else {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.one-file-to-upload")
+                        ),
+                    ));
+                }
+                window.eval(&script);
+            }
+            FileDropEvent::Dropped(files_local_path) => {
+                *drag_event.write_silent() = None;
+                new_files_to_upload = decoded_pathbufs(files_local_path);
+                let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                script.push_str(ANIMATION_DASH_SCRIPT);
+                script.push_str(SELECT_CHAT_BAR);
+                window.set_focus();
+                window.eval(&script);
+                break;
+            }
+            _ => {
+                *drag_event.write_silent() = None;
+                let script = overlay_script.replace("$IS_DRAGGING", "false");
+                window.eval(&script);
+                break;
+            }
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+    *drag_event.write_silent() = None;
+    new_files_to_upload
 }

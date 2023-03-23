@@ -128,7 +128,7 @@ pub async fn conversation_to_chat(
     let unreads = messaging.get_message_count(conv.id()).await?;
     let messages = messaging
         .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
-        .await?;
+        .await.and_then(Vec::<_>::try_from)?;
 
     let messages = FuturesOrdered::from_iter(
         messages
