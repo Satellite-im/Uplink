@@ -8,6 +8,9 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/ui",
+            "args": [
+                "debug"
+            ],
             "cwd": "${workspaceRoot}"
         },
         {
@@ -16,7 +19,8 @@
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/ui",
             "args": [
-                "--with-mock"
+                "--with-mock",
+                "debug"
             ],
             "cwd": "${workspaceRoot}"
         }
