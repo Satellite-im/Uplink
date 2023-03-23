@@ -588,6 +588,7 @@ impl State {
             if let Some(conv) = self.chats.all.get_mut(&id) {
                 conv.messages = chat.messages;
                 conv.conversation_type = chat.conversation_type;
+                conv.has_more_messages = chat.has_more_messages;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -718,6 +719,11 @@ impl State {
             self.chats.favorites.push(*chat);
         }
     }
+    pub fn finished_loading_chat(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.has_more_messages = false;
+        }
+    }
     /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Option<Chat> {
         self.chats
@@ -738,6 +744,18 @@ impl State {
                     && chat.participants.contains(&friend)
             })
             .cloned()
+    }
+    // assumes the messages are sorted by most recent to oldest
+    pub fn prepend_messages_to_chat(
+        &mut self,
+        conversation_id: Uuid,
+        mut messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            for message in messages.drain(..) {
+                chat.messages.push_front(message.clone());
+            }
+        }
     }
 
     /// Check if given chat is favorite on `State` struct.

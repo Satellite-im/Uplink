@@ -14,7 +14,7 @@ use uuid::Uuid;
 use crate::state::{self, chats};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use warp::{
     crypto::DID,
     error::Error,
@@ -115,19 +115,17 @@ pub async fn dids_to_identity(
     Ok(ret)
 }
 
-pub async fn conversation_to_chat(
-    conv: &Conversation,
-    account: &super::Account,
+pub async fn fetch_messages_from_chat(
+    conv_id: Uuid,
     messaging: &mut super::Messaging,
-) -> Result<ChatAdapter, Error> {
-    // todo: should Chat::participants include self?
-    let identities = dids_to_identity(&conv.recipients(), account).await?;
-    let identities = HashSet::from_iter(identities.iter().cloned());
-
-    // todo: warp doesn't support paging yet. it also doesn't check the range bounds
-    let unreads = messaging.get_message_count(conv.id()).await?;
+    to_skip: usize,
+    to_take: usize,
+) -> Result<Vec<Message>, Error> {
+    let total = to_take + to_skip;
+    let max_messages = messaging.get_message_count(conv_id).await?;
+    let total = std::cmp::min(total, max_messages);
     let messages = messaging
-        .get_messages(conv.id(), MessageOptions::default().set_range(0..unreads))
+        .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -139,6 +137,35 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
+    Ok(messages)
+}
+
+pub async fn conversation_to_chat(
+    conv: &Conversation,
+    account: &super::Account,
+    messaging: &mut super::Messaging,
+) -> Result<ChatAdapter, Error> {
+    // todo: should Chat::participants include self?
+    let identities = dids_to_identity(&conv.recipients(), account).await?;
+    let identities = HashSet::from_iter(identities.iter().cloned());
+
+    // todo: warp doesn't support paging yet. it also doesn't check the range bounds
+    let unreads = messaging.get_message_count(conv.id()).await?;
+    let to_take = std::cmp::min(unreads, 20);
+    let messages = messaging
+        .get_messages(conv.id(), MessageOptions::default().set_range(0..to_take))
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: VecDeque<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+
+    let has_more_messages = unreads > to_take;
     let adapter = ChatAdapter {
         inner: chats::Chat {
             id: conv.id(),
@@ -149,6 +176,7 @@ pub async fn conversation_to_chat(
             replying_to: None,
             typing_indicator: HashMap::new(),
             draft: None,
+            has_more_messages,
         },
         identities,
     };
