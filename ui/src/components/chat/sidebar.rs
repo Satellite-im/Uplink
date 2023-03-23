@@ -1,4 +1,5 @@
 use common::language::get_local_text;
+use common::state::{self, Action, Chat, State};
 use common::warp_runner::ui_adapter::ChatAdapter;
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
@@ -24,13 +25,12 @@ use kit::{
     },
     layout::sidebar::Sidebar as ReusableSidebar,
 };
+use uuid::Uuid;
 use warp::{
     crypto::DID,
     logging::tracing::log,
     raygun::{self},
 };
-
-use common::state::{self, Action, Chat, State};
 
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
@@ -76,13 +76,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<(String, DID)>::new);
-    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
 
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(&chat.id, true));
+        state.write().mutate(Action::ChatWith(&chat, true));
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
@@ -91,7 +91,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(recipient) = rx.next().await {
                 // if not, create the chat
-                let (tx, rx) = oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
+                let (tx, rx) = oneshot::channel();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
                     recipient,
                     rsp: tx,
@@ -102,14 +102,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                 let rsp = rx.await.expect("command canceled");
 
-                let c = match rsp {
-                    Ok(c) => c.inner,
+                match rsp {
+                    Ok(c) => chat_with.set(Some(c)),
                     Err(e) => {
                         log::error!("failed to create conversation: {}", e);
                         continue;
                     }
                 };
-                chat_with.set(Some(c));
             }
         }
     });
