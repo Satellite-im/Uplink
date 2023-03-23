@@ -163,7 +163,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
         value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
-            if is_valid {
+            if is_valid && !s.is_empty() {
                 cx.props.on_enter.call(s);
             } else {
                 cx.props.on_enter.call(cx.props.text.clone());

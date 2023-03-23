@@ -17,7 +17,7 @@ use crate::{
     state::{self, chats},
     warp_runner::{
         conv_stream,
-        ui_adapter::{conversation_to_chat, ChatAdapter},
+        ui_adapter::{self, conversation_to_chat, fetch_messages_from_chat, ChatAdapter},
         Account, Messaging,
     },
 };
@@ -39,6 +39,17 @@ pub enum RayGunCmd {
         recipient: DID,
         rsp: oneshot::Sender<Result<ChatAdapter, warp::error::Error>>,
     },
+    #[display(
+        fmt = "FetchMessages {{ conv_id: {conv_id}, req_len: {new_len}, current_len: {current_len} }} "
+    )]
+    FetchMessages {
+        conv_id: Uuid,
+        // the total number of messages that should be in the conversation
+        new_len: usize,
+        // the current size of the conversation
+        current_len: usize,
+        rsp: oneshot::Sender<Result<Vec<ui_adapter::Message>, warp::error::Error>>,
+    },
     #[display(fmt = "SendMessage {{ conv_id: {conv_id} }} ")]
     SendMessage {
         conv_id: Uuid,
@@ -58,7 +69,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: PathBuf,
+        file_path_to_download: PathBuf,
         rsp: oneshot::Sender<Result<ConstellationProgressStream, warp::error::Error>>,
     },
     #[display(fmt = "DeleteMessage {{ conv_id: {conv_id}, msg_id: {msg_id} }} ")]
@@ -130,6 +141,17 @@ pub async fn handle_raygun_cmd(
             };
             let _ = rsp.send(r);
         }
+        RayGunCmd::FetchMessages {
+            conv_id,
+            new_len,
+            current_len,
+            rsp,
+        } => {
+            let to_skip = current_len;
+            let to_add = new_len - current_len;
+            let r = fetch_messages_from_chat(conv_id, messaging, to_skip, to_add).await;
+            let _ = rsp.send(r);
+        }
         RayGunCmd::SendMessage {
             conv_id,
             msg,
@@ -157,11 +179,12 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg_id,
             file_name,
-            directory,
+            file_path_to_download,
             rsp,
         } => {
-            let pb = directory.join(&file_name);
-            let r = messaging.download(conv_id, msg_id, file_name, pb).await;
+            let r = messaging
+                .download(conv_id, msg_id, file_name, file_path_to_download)
+                .await;
             let _ = rsp.send(r);
         }
         RayGunCmd::DeleteMessage {

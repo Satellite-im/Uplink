@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     path::PathBuf,
     rc::Rc,
     time::{Duration, Instant},
@@ -34,6 +35,7 @@ use kit::{
 use common::{
     icons::outline::Shape as Icon,
     state::{group_messages, GroupedMessage, MessageGroup},
+    warp_runner::ui_adapter,
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -42,8 +44,10 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window};
+use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
+#[cfg(target_os = "windows")]
+use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -51,13 +55,22 @@ use warp::{
     multipass::identity::{self, IdentityStatus},
     raygun::{self, ReactionState},
 };
+use wry::webview::FileDropEvent;
 
 use crate::{
     components::media::player::MediaPlayer,
+    layouts::storage::{
+        decoded_pathbufs, get_drag_event, ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
+    },
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
 };
+
+pub const SELECT_CHAT_BAR: &str = r#"
+    var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
+    chatBar.focus()
+"#;
 
 struct ComposeData {
     active_chat: Chat,
@@ -82,6 +95,7 @@ impl PartialEq for ComposeData {
 struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
+    upload_files: Option<UseState<Vec<PathBuf>>>,
 }
 
 #[allow(non_snake_case)]
@@ -90,15 +104,68 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
+    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
+    let window = use_window(cx);
+    let overlay_script = include_str!("./overlay.js");
+
+    let files_to_upload = use_state(cx, Vec::new);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
 
+    #[cfg(target_os = "windows")]
+    use_future(cx, (), |_| {
+        to_owned![files_to_upload, overlay_script, window, drag_event];
+        async move {
+            // ondragover function from div does not work on windows
+            loop {
+                sleep(Duration::from_millis(100)).await;
+                if let FileDropEvent::Hovered(_) = get_drag_event() {
+                    let new_files =
+                        drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
+                }
+            }
+        }
+    });
+
     cx.render(rsx!(
         div {
             id: "compose",
+            ondragover: move |_| {
+                if drag_event.with(|i| i.clone()).is_none() {
+                    cx.spawn({
+                        to_owned![files_to_upload, drag_event, window, overlay_script];
+                        async move {
+                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
+                            let mut new_files_to_upload: Vec<_> = files_to_upload
+                                .current()
+                                .iter()
+                                .filter(|file_name| !new_files.contains(file_name))
+                                .cloned()
+                                .collect();
+                            new_files_to_upload.extend(new_files);
+                            files_to_upload.set(new_files_to_upload);
+                        }
+                    });
+                }
+            },
+            div {
+                id: "overlay-element",
+                class: "overlay-element",
+                div {id: "dash-element", class: "dash-background active-animation"},
+                p {id: "overlay-text0", class: "overlay-text"},
+                p {id: "overlay-text", class: "overlay-text"}
+            },
             Topbar {
                 with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
                 with_currently_back: state.read().ui.sidebar_hidden,
@@ -129,7 +196,10 @@ pub fn Compose(cx: Scope) -> Element {
                 ),
                 Some(data) =>  rsx!(get_messages{data: data.clone()}),
             },
-            get_chatbar{data: data}
+            get_chatbar {
+                data: data,
+                upload_files: files_to_upload.clone()
+            }
         }
     ))
 }
@@ -324,12 +394,17 @@ enum MessagesCommand {
         conv_id: Uuid,
         msg_id: Uuid,
         file_name: String,
-        directory: PathBuf,
+        file_path_to_download: PathBuf,
     },
     EditMessage {
         conv_id: Uuid,
         msg_id: Uuid,
         msg: Vec<String>,
+    },
+    FetchMore {
+        conv_id: Uuid,
+        new_len: usize,
+        current_len: usize,
     },
 }
 
@@ -342,9 +417,22 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
     let user = data.my_id.did_key();
+    let state = use_shared_state::<State>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
+    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
+        use_ref(cx, || None);
+
+    if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
+        if m.is_empty() {
+            log::debug!("finished loading chat: {id}");
+            state.write().finished_loading_chat(id);
+        } else {
+            num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));
+            state.write().prepend_messages_to_chat(id, m);
+        }
+    }
 
     // this needs to be a hook so it can change inside of the use_future.
     // it could be passed in as a dependency but then the wait would reset every time a message comes in.
@@ -379,7 +467,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     });
 
     let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        //to_owned![];
+        to_owned![newely_fetched_messages];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -433,7 +521,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                         conv_id,
                         msg_id,
                         file_name,
-                        directory,
+                        file_path_to_download,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
@@ -441,7 +529,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                                 conv_id,
                                 msg_id,
                                 file_name,
-                                directory,
+                                file_path_to_download,
                                 rsp: tx,
                             }))
                         {
@@ -482,6 +570,33 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                             log::error!("failed to edit message: {}", e);
                         }
                     }
+                    MessagesCommand::FetchMore {
+                        conv_id,
+                        new_len,
+                        current_len,
+                    } => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
+                                conv_id,
+                                new_len,
+                                current_len,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        match rx.await.expect("command canceled") {
+                            Ok(m) => {
+                                newely_fetched_messages.set(Some((conv_id, m)));
+                            }
+                            Err(e) => {
+                                log::error!("failed to fetch more message: {}", e);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -495,7 +610,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                     groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
                     active_chat_id: data.active_chat.id,
                     num_messages_in_conversation: data.active_chat.messages.len(),
-                    num_to_take: num_to_take.clone()
+                    num_to_take: num_to_take.clone(),
+                    has_more: data.active_chat.has_more_messages,
                 })
             }
         }
@@ -508,6 +624,7 @@ struct AllMessageGroupsProps<'a> {
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    has_more: bool,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -520,6 +637,7 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
             active_chat_id: cx.props.active_chat_id,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
+            has_more: cx.props.has_more,
         })
     })))
 }
@@ -530,6 +648,7 @@ struct MessageGroupProps<'a> {
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    has_more: bool,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -540,6 +659,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         active_chat_id: _,
         num_messages_in_conversation: _,
         num_to_take: _,
+        has_more: _,
     } = cx.props;
 
     let messages = &group.messages;
@@ -570,6 +690,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             messages: &group.messages,
             active_chat_id: cx.props.active_chat_id,
             is_remote: group.remote,
+            has_more: cx.props.has_more,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
         }))
@@ -580,9 +701,10 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
     active_chat_id: Uuid,
-    is_remote: bool,
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
+    is_remote: bool,
+    has_more: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -608,13 +730,23 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             key: "{context_key}",
             id: context_key,
             on_mouseenter: move |_| {
-                if should_fetch_more
-                    && *cx.props.num_to_take.get() < cx.props.num_messages_in_conversation
-                {
-                    cx.props
+                if should_fetch_more {
+                    let new_num_to_take = cx
+                        .props
                         .num_to_take
-                        .modify(|x| x.saturating_add(DEFAULT_NUM_TO_TAKE * 2));
-                    //log::info!("lazy loading");
+                        .get()
+                        .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
+                    // lazily render
+                    if new_num_to_take < cx.props.num_messages_in_conversation {
+                        cx.props.num_to_take.set(new_num_to_take);
+                    } else if cx.props.has_more {
+                        // lazily add more messages to conversation, then render
+                        ch.send(MessagesCommand::FetchMore {
+                            conv_id: cx.props.active_chat_id,
+                            new_len: new_num_to_take,
+                            current_len: cx.props.num_messages_in_conversation,
+                        })
+                    }
                 }
             },
             children: cx.render(rsx!(render_message {
@@ -725,13 +857,22 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
                 on_download: move |file_name| {
-                    if let Some(directory) = FileDialog::new()
-                    .set_directory(dirs::home_dir().unwrap_or_default())
-                    .pick_folder() {
+                    let file_extension = std::path::Path::new(&file_name)
+                        .extension()
+                        .and_then(OsStr::to_str)
+                        .map(|s| s.to_string())
+                        .unwrap_or_default();
+                    let file_stem = PathBuf::from(&file_name)
+                        .file_stem()
+                        .and_then(OsStr::to_str)
+                        .map(str::to_string)
+                        .unwrap_or_default();
+                    if let Some(file_path_to_download) = FileDialog::new()
+                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id: message.inner.conversation_id(),
                             msg_id: message.inner.id(),
-                            file_name, directory
+                            file_name, file_path_to_download
                         })
                     }
                 },
@@ -792,7 +933,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         })
         .unwrap_or(false);
 
-    let files_to_upload: &UseState<Vec<PathBuf>> = use_state(cx, Vec::new);
+    let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
@@ -994,11 +1135,15 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
+    let disabled = !state.read().can_use_active_chat();
+
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
+        is_disabled: disabled,
+        tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
             input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
@@ -1011,24 +1156,25 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .and_then(|d| d.active_chat.draft.clone())
             .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
-        controls: cx.render(rsx!(
+        extensions: cx.render(rsx!(
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
-            },
-            Button {
-                icon: Icon::ChevronDoubleRight,
-                disabled: is_loading,
-                appearance: Appearance::Secondary,
-                onpress: move |_| submit_fn(),
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("uplink.send"),
-                })),
             }
         )),
+        controls: cx.render(rsx!(Button {
+            icon: Icon::ChevronDoubleRight,
+            disabled: is_loading || disabled,
+            appearance: Appearance::Secondary,
+            onpress: move |_| submit_fn(),
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::Bottom,
+                text: get_local_text("uplink.send"),
+            })),
+        })),
         with_replying_to: data
             .as_ref()
+            .filter(|_| !disabled)
             .map(|data| {
                 let active_chat = &data.active_chat;
 
@@ -1062,9 +1208,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading || is_reply,
+            disabled: is_loading || is_reply || disabled,
             appearance: Appearance::Primary,
             onpress: move |_| {
+                if disabled {
+                    return;
+                }
                 if let Some(new_files) = FileDialog::new()
                     .set_directory(dirs::home_dir().unwrap_or_default())
                     .pick_files()
@@ -1087,9 +1236,17 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     }));
 
     // todo: possibly show more if multiple users are typing
-    let (platform, status) = match users_typing.first() {
-        Some(u) => (u.platform(), u.identity_status()),
-        None => (identity::Platform::Unknown, IdentityStatus::Online),
+    let (platform, status, profile_picture) = match users_typing.first() {
+        Some(u) => (
+            u.platform(),
+            u.identity_status(),
+            u.graphics().profile_picture(),
+        ),
+        None => (
+            identity::Platform::Unknown,
+            IdentityStatus::Online,
+            String::new(),
+        ),
     };
 
     cx.render(rsx!(
@@ -1097,6 +1254,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             rsx!(MessageTyping {
                 user_image: cx.render(rsx!(
                     UserImage {
+                        image: profile_picture,
                         platform: platform.into(),
                         status: status.into()
                     }
@@ -1151,4 +1309,61 @@ fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) 
     };
     let user_sender = build_user_from_identity(sender.clone());
     (user_sender.platform, user_sender.status)
+}
+
+// Like ui::src:layout::storage::drag_and_drop_function
+async fn drag_and_drop_function(
+    window: &DesktopContext,
+    drag_event: &UseRef<Option<FileDropEvent>>,
+    overlay_script: String,
+) -> Vec<PathBuf> {
+    *drag_event.write_silent() = Some(get_drag_event());
+    let mut new_files_to_upload = Vec::new();
+    loop {
+        let file_drop_event = get_drag_event();
+        match file_drop_event {
+            FileDropEvent::Hovered(files_local_path) => {
+                let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                if files_local_path.len() > 1 {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.files-to-upload")
+                        ),
+                    ));
+                } else {
+                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                        "$TEXT",
+                        &format!(
+                            "{} {}!",
+                            files_local_path.len(),
+                            get_local_text("files.one-file-to-upload")
+                        ),
+                    ));
+                }
+                window.eval(&script);
+            }
+            FileDropEvent::Dropped(files_local_path) => {
+                *drag_event.write_silent() = None;
+                new_files_to_upload = decoded_pathbufs(files_local_path);
+                let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                script.push_str(ANIMATION_DASH_SCRIPT);
+                script.push_str(SELECT_CHAT_BAR);
+                window.set_focus();
+                window.eval(&script);
+                break;
+            }
+            _ => {
+                *drag_event.write_silent() = None;
+                let script = overlay_script.replace("$IS_DRAGGING", "false");
+                window.eval(&script);
+                break;
+            }
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+    *drag_event.write_silent() = None;
+    new_files_to_upload
 }

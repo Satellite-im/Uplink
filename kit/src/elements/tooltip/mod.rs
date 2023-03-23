@@ -5,6 +5,8 @@ use uuid::Uuid;
 #[derive(PartialEq, Eq, Copy, Clone, Display)]
 /// Which direction will the arrow on the popup point?
 pub enum ArrowPosition {
+    #[display(fmt = "arrow-top-none")]
+    None,
     #[display(fmt = "arrow-top-left")]
     TopLeft,
 

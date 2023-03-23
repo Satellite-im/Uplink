@@ -7,7 +7,7 @@
 
 <br/>
 
-Uplink is written in pure Rust with a UI in [Dioxus](https://github.com/DioxusLabs) (which is also written in Rust). It was developed to be a new foundation for the basic implementation of Warp features in a universal application.
+Uplink is written in pure Rust with a UI in [Dioxus](https://github.com/DioxusLabs) (which is also written in Rust). It was developed to be a new foundation for implementing Warp features in a universal application.
 
 The goal should be to build a hyper-customizable application that can run anywhere and support extensions.
 
@@ -17,7 +17,7 @@ The goal should be to build a hyper-customizable application that can run anywhe
 
 ## Quickstart
 
-To get running fast ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
+To get running fast, ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
 
 
 **Standard Run:**
@@ -26,7 +26,7 @@ cargo run --bin ui
 ```
 
 **Rapid Release Testing:**
-This version will run closely to release but without recompiling crates every time.
+This version will run close to release but without recompiling crates every time.
 ```
 cargo run --bin ui --profile=rapid
 ```
@@ -46,8 +46,8 @@ cargo run --bin ui --profile=rapid
 | Protoc | brew install protobuf |
 | ffmpeg | brew install ffmpeg |
 
-a. For it works, we need to install ffmpeg -> brew install ffmpeg for macOS
-And for windows, I followed steps on this site here
+a. For it works, we need to install ffmpeg -> brew install ffmpeg for MacOS
+And for Windows, I followed the steps on this site here
 
 **Windows 10+**
 | Dep  | Install Command                                                  |
@@ -72,6 +72,6 @@ And for windows, I followed steps on this site here
 
 ## Contributing
 
-All contributions are welcome! Please keep in mind we're still a relatively small team and any work done to make sure contributions don't cause bugs or issues in the application is much appreciated.
+All contributions are welcome! Please keep in mind we're still a relatively small team, and any work done to ensure contributions don't cause bugs or issues in the application is much appreciated.
 
 Guidelines for contributing are located in the [`CONTRIBUTING.md`](CONTRIBUTING.md).

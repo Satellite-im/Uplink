@@ -46,7 +46,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::ui::Call;
+use self::ui::{Call, Layout};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -343,9 +343,9 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 self.add_msg_to_chat(conversation_id, message);
 
-                if self.chats.in_sidebar.contains(&conversation_id) {
-                    self.send_chat_to_top_of_sidebar(conversation_id);
-                }
+                //if self.chats.in_sidebar.contains(&conversation_id) {
+                self.send_chat_to_top_of_sidebar(conversation_id);
+                //}
 
                 self.mutate(Action::AddNotification(
                     notifications::NotificationKind::Message,
@@ -355,7 +355,7 @@ impl State {
                 // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
                 let notifications_enabled = self.configuration.notifications.messages_notifications;
-                let should_play_sound = self.chats.active != Some(conversation_id)
+                let should_play_sound = self.ui.current_layout != Layout::Compose
                     && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
                     notifications_enabled && !self.ui.metadata.focused;
@@ -583,6 +583,7 @@ impl State {
         for (id, chat) in chats {
             if let Some(conv) = self.chats.all.get_mut(&id) {
                 conv.messages = chat.messages;
+                conv.has_more_messages = chat.has_more_messages
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -647,6 +648,22 @@ impl State {
             c.replying_to = None;
         }
     }
+    pub fn can_use_active_chat(&self) -> bool {
+        self.get_active_chat()
+            .map(|c| {
+                let participants = &c.participants;
+                if participants.len() == 2 {
+                    return c
+                        .participants
+                        .iter()
+                        .all(|e| e.eq(&self.did_key()) || self.has_friend_with_did(e));
+                }
+                // If more than 2 participants -> group chat
+                // Dont need to be friends with all in a group
+                true
+            })
+            .unwrap_or_default()
+    }
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
@@ -698,6 +715,11 @@ impl State {
             self.chats.favorites.push(*chat);
         }
     }
+    pub fn finished_loading_chat(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.has_more_messages = false;
+        }
+    }
     /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Option<Chat> {
         self.chats
@@ -717,6 +739,18 @@ impl State {
                 chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
             })
             .cloned()
+    }
+    // assumes the messages are sorted by most recent to oldest
+    pub fn prepend_messages_to_chat(
+        &mut self,
+        conversation_id: Uuid,
+        mut messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            for message in messages.drain(..) {
+                chat.messages.push_front(message.clone());
+            }
+        }
     }
 
     /// Check if given chat is favorite on `State` struct.
@@ -888,7 +922,11 @@ impl State {
         }
 
         for (_, list) in friends_by_first_letter.iter_mut() {
-            list.sort_by_key(|a| a.username())
+            list.sort_by(|a, b| {
+                a.username()
+                    .cmp(&b.username())
+                    .then(a.did_key().to_string().cmp(&b.did_key().to_string()))
+            })
         }
 
         friends_by_first_letter
@@ -916,8 +954,6 @@ impl State {
             Some(c) => c,
             None => return,
         };
-
-        self.remove_sidebar_chat(direct_chat.id);
 
         // If the friend's direct chat is currently the active chat, clear the active chat
         if let Some(id) = self.chats.active {
