@@ -124,6 +124,11 @@ html, body {
     background: var(--primary);
 }    
 
+/* Disable the corner of scrollbars */
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
 .drag-handle {
     position: absolute;
     top: 0;

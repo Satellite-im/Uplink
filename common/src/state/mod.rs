@@ -647,6 +647,22 @@ impl State {
             c.replying_to = None;
         }
     }
+    pub fn can_use_active_chat(&self) -> bool {
+        self.get_active_chat()
+            .map(|c| {
+                let participants = &c.participants;
+                if participants.len() == 2 {
+                    return c
+                        .participants
+                        .iter()
+                        .all(|e| e.eq(&self.did_key()) || self.has_friend_with_did(e));
+                }
+                // If more than 2 participants -> group chat
+                // Dont need to be friends with all in a group
+                true
+            })
+            .unwrap_or_default()
+    }
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
@@ -888,7 +904,11 @@ impl State {
         }
 
         for (_, list) in friends_by_first_letter.iter_mut() {
-            list.sort_by_key(|a| a.username())
+            list.sort_by(|a, b| {
+                a.username()
+                    .cmp(&b.username())
+                    .then(a.did_key().to_string().cmp(&b.did_key().to_string()))
+            })
         }
 
         friends_by_first_letter
@@ -916,8 +936,6 @@ impl State {
             Some(c) => c,
             None => return,
         };
-
-        self.remove_sidebar_chat(direct_chat.id);
 
         // If the friend's direct chat is currently the active chat, clear the active chat
         if let Some(id) = self.chats.active {
