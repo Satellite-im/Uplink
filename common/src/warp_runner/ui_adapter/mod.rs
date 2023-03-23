@@ -123,6 +123,7 @@ pub async fn fetch_messages_from_chat(
 ) -> Result<Vec<Message>, Error> {
     let total = to_take + to_skip;
     let max_messages = messaging.get_message_count(conv_id).await?;
+    let to_skip = std::cmp::min(to_skip, max_messages);
     let total = std::cmp::min(total, max_messages);
     let messages = messaging
         .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))

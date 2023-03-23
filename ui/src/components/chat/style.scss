@@ -42,6 +42,8 @@
 .sidebar {
     .searchbar-dropdown {
         position: absolute;
+        display: inline-flex;
+        flex-direction: column;
         a {
             color: var(--text-color);
         }
