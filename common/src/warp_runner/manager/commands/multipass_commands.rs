@@ -128,10 +128,12 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 let _ = rsp.send(r);
                 return;
             }
+            // Invalid did. Try using it as a username (+ short did)
             let r = warp.multipass.get_identity(Identifier::Username(id)).await;
             match r {
                 Ok(id) => {
                     let mut r = Result::Err(Error::IdentityInvalid);
+                    // It should only find 1 matching identity
                     if id.len() == 1 {
                         r = warp.multipass.send_request(&id[0].did_key()).await;
                     }

@@ -32,7 +32,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     // Set up validation options for the input field
     let friend_validation = Validation {
         max_length: Some(56),
-        min_length: Some(9),
+        min_length: Some(9), // Min amount of chars which is the short did (8 chars) + the hash symbol
         alpha_numeric_only: true,
         no_whitespace: true,
         ignore_colons: true,
