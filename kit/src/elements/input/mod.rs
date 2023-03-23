@@ -372,7 +372,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: "{val.read()}",
                     maxlength: "{max_length}",
                     onblur: move |_| {
-                        if onblur_active && *valid.current(){
+                        if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
                             valid.set(false);
                             if options.clear_on_submit {
@@ -396,15 +396,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             true
                         };
                         emit(&cx, current_val, is_valid);
-                    },
-                    onblur: move |_| {
-                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
-                        if *valid.current() {
-                                valid.set(false);
-                        }
-                        if options.clear_on_submit {
-                            reset_fn();
-                        }
                     },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {

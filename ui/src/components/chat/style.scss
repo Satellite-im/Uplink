@@ -44,6 +44,8 @@
         position: absolute;
         display: inline-flex;
         flex-direction: column;
+        z-index: 100;
+        background-color: var(--background);
         a {
             color: var(--text-color);
         }

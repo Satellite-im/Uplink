@@ -156,6 +156,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         options: Options {
                             with_clear_btn: true,
                             react_to_esc_key: true,
+                            clear_on_submit: true,
                             ..Options::default()
                         },
                         onreturn: move |(v, _, _): (String, _, _)| {
