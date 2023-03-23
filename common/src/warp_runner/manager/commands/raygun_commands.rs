@@ -145,6 +145,32 @@ pub async fn handle_raygun_cmd(
             let _ = rsp.send(r);
         }
         RayGunCmd::CreateGroupConversation { recipients, rsp } => {
+            // here's some crazy code to stop creating duplicate group conversations
+            let mut recipients_set: HashSet<DID> = HashSet::from_iter(recipients.iter().cloned());
+            let own_identity = match account.get_own_identity().await {
+                Ok(r) => r,
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+            recipients_set.insert(own_identity.did_key());
+            let existing_conversations = match messaging.list_conversations().await {
+                Ok(c) => c,
+                Err(e) => {
+                    let _ = rsp.send(Err(e));
+                    return;
+                }
+            };
+            if let Some(conv) = existing_conversations.iter().find(|conv| {
+                let conv_recipients: HashSet<DID> =
+                    HashSet::from_iter(conv.recipients().iter().cloned());
+                conv_recipients == recipients_set
+            }) {
+                let _ = rsp.send(Ok(conv.id()));
+                return;
+            }
+
             let r = match messaging.create_group_conversation(recipients).await {
                 Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
                 Err(e) => Err(e),
