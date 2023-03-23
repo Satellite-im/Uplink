@@ -39,6 +39,15 @@
     flex-direction: column;
 }
 
+.sidebar {
+    .searchbar-dropdown {
+        position: absolute;
+        a {
+            color: var(--text-color);
+        }
+    }
+}
+
 #compose-attachments {
     display: inline-flex;
     overflow-y: auto;
