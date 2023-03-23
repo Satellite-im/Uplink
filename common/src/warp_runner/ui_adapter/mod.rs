@@ -126,12 +126,8 @@ pub async fn fetch_messages_from_chat(
     let total = std::cmp::min(total, max_messages);
     let messages = messaging
         .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))
-        .await?;
-
-    let messages = match messages {
-        raygun::Messages::List(m) => m,
-        _ => return Err(Error::OtherWithContext("invalid messages container".into())),
-    };
+        .await
+        .and_then(Vec::<_>::try_from)?;
 
     let messages = FuturesOrdered::from_iter(
         messages
@@ -158,12 +154,8 @@ pub async fn conversation_to_chat(
     let to_take = std::cmp::min(unreads, 20);
     let messages = messaging
         .get_messages(conv.id(), MessageOptions::default().set_range(0..to_take))
-        .await?;
-
-    let messages = match messages {
-        raygun::Messages::List(m) => m,
-        _ => return Err(Error::OtherWithContext("invalid messages container".into())),
-    };
+        .await
+        .and_then(Vec::<_>::try_from)?;
 
     let messages: VecDeque<_> = FuturesOrdered::from_iter(
         messages
