@@ -29,7 +29,7 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn PendingFriends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
+    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
     let friends_list = state.read().incoming_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {

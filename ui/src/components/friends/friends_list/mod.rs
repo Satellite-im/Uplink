@@ -36,7 +36,7 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn Friends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
+    let state: &UseSharedState<State> = use_shared_state::<State>(cx)?;
     let friends_list = HashMap::from_iter(
         state
             .read()

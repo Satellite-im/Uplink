@@ -18,15 +18,15 @@ codegen-units = 1
 version = "0.1.0"
 
 [workspace.dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf" }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf", features = [
     "transparent",
 ] }
 raw-window-handle = "0.5"
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "46cc07e04827f8ea63bd210eaf6b72727441b6bf" }
 fermi = { git = "https://github.com/DioxusLabs/dioxus", rev = "22e71a71bdcdc03c3ae83ae1c3b3fb5417ebaa80" }
 tokio-util = { version = "0.7", features = ["full"] }
 arboard = "3.2"

@@ -491,37 +491,27 @@ fn app(cx: Scope) -> Element {
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
-    let inner = state.inner();
     use_wry_event_handler(cx, {
-        to_owned![needs_update, desktop];
+        to_owned![needs_update, desktop, state];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                }
+
+                state.write().ui.metadata.focused = *focused;
+                //crate::utils::sounds::Play(Sounds::Notification);
+                //needs_update.set(true);
             }
             WryEvent::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
-            } => match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state
-                        .write()
-                        .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
-                }
-                Err(e) => log::error!("{e}"),
-            },
+            } => {
+                state
+                    .write()
+                    .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
+            }
             WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
@@ -532,24 +522,18 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        let metadata = state.read().ui.metadata.clone();
-                        let new_metadata = WindowMeta {
-                            height: size.height,
-                            width: size.width,
-                            minimal_view: size.width < 600,
-                            ..metadata
-                        };
-                        if metadata != new_metadata {
-                            state.write().ui.sidebar_hidden = new_metadata.minimal_view;
-                            state.write().ui.metadata = new_metadata;
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
+
+                let metadata = state.read().ui.metadata.clone();
+                let new_metadata = WindowMeta {
+                    height: size.height,
+                    width: size.width,
+                    minimal_view: size.width < 600,
+                    ..metadata
+                };
+                if metadata != new_metadata {
+                    state.write().ui.sidebar_hidden = new_metadata.minimal_view;
+                    state.write().ui.metadata = new_metadata;
+                    needs_update.set(true);
                 }
             }
             _ => {}
@@ -557,9 +541,8 @@ fn app(cx: Scope) -> Element {
     });
 
     // update state in response to warp events
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init, chats_init];
+        to_owned![needs_update, friends_init, chats_init, state];
         async move {
             // don't process warp events until friends and chats have been loaded
             while !(*friends_init.read() && *chats_init.read()) {
@@ -571,60 +554,39 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().process_warp_event(evt);
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                }
+                state.write().process_warp_event(evt);
+                needs_update.set(true);
             }
         }
     });
 
     // clear toasts
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![needs_update, state];
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        if !state.read().has_toasts() {
-                            continue;
-                        }
-                        if state.write().decrement_toasts() {
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
+
+                if !state.read().has_toasts() {
+                    continue;
+                }
+                if state.write().decrement_toasts() {
+                    needs_update.set(true);
                 }
             }
         }
     });
 
     // clear typing indicator
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![needs_update, state];
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        let now = Instant::now();
-                        if state.write().clear_typing_indicator(now) {
-                            needs_update.set(true);
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
+
+                let now = Instant::now();
+                if state.write().clear_typing_indicator(now) {
+                    needs_update.set(true);
                 }
             }
         }
@@ -643,23 +605,21 @@ fn app(cx: Scope) -> Element {
     });
 
     // control child windows
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![needs_update, desktop];
+        to_owned![needs_update, desktop, state];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
-                window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
+                window_manager::handle_cmd(state.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
         }
     });
 
     // initialize friends
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![friends_init, needs_update];
+        to_owned![friends_init, needs_update, state];
         async move {
             if *friends_init.read() {
                 return;
@@ -687,15 +647,7 @@ fn app(cx: Scope) -> Element {
                 }
             };
 
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state.write().set_friends(friends.0, friends.1);
-                    needs_update.set(true);
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
+            state.write().set_friends(friends.0, friends.1);
 
             *friends_init.write_silent() = true;
             needs_update.set(true);
@@ -703,9 +655,8 @@ fn app(cx: Scope) -> Element {
     });
 
     // initialize files
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![items_init, needs_update];
+        to_owned![items_init, needs_update, state];
         async move {
             if *items_init.read() {
                 return;
@@ -724,16 +675,11 @@ fn app(cx: Scope) -> Element {
 
             log::trace!("init items");
             match res {
-                Ok(storage) => match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().storage = storage;
+                Ok(storage) => {
+                    state.write().storage = storage;
 
-                        needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
-                    }
-                },
+                    needs_update.set(true);
+                }
                 Err(e) => {
                     log::error!("init items failed: {}", e);
                 }
@@ -745,9 +691,8 @@ fn app(cx: Scope) -> Element {
     });
 
     // initialize conversations
-    let inner = state.inner();
     use_future(cx, (), |_| {
-        to_owned![chats_init, needs_update];
+        to_owned![chats_init, needs_update, state];
         async move {
             if *chats_init.read() {
                 return;
@@ -788,69 +733,57 @@ fn app(cx: Scope) -> Element {
                 }
             };
 
-            match inner.try_borrow_mut() {
-                Ok(state) => {
-                    state.write().set_chats(chats.0, chats.1);
-                    needs_update.set(true);
-                }
-                Err(e) => {
-                    log::error!("{e}");
-                }
-            }
-
+            state.write().set_chats(chats.0, chats.1);
             *chats_init.write_silent() = true;
             needs_update.set(true);
         }
     });
 
     // Automatically select the best implementation for your platform.
-    let inner = state.inner();
-    use_future(cx, (), |_| async move {
-        let (tx, mut rx) = futures::channel::mpsc::unbounded();
-        let mut watcher = match RecommendedWatcher::new(
-            move |res| {
-                let _ = tx.unbounded_send(res);
-            },
-            notify::Config::default().with_poll_interval(Duration::from_secs(1)),
-        ) {
-            Ok(watcher) => watcher,
-            Err(e) => {
-                log::error!("{e}");
-                return;
-            }
-        };
-
-        // Add a path to be watched. All files and directories at that path and
-        // below will be monitored for changes.
-        if let Err(e) = watcher.watch(
-            STATIC_ARGS.extensions_path.as_path(),
-            RecursiveMode::Recursive,
-        ) {
-            log::error!("{e}");
-            return;
-        }
-
-        while let Some(event) = rx.next().await {
-            let event = match event {
-                Ok(event) => event,
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            let (tx, mut rx) = futures::channel::mpsc::unbounded();
+            let mut watcher = match RecommendedWatcher::new(
+                move |res| {
+                    let _ = tx.unbounded_send(res);
+                },
+                notify::Config::default().with_poll_interval(Duration::from_secs(1)),
+            ) {
+                Ok(watcher) => watcher,
                 Err(e) => {
                     log::error!("{e}");
-                    continue;
+                    return;
                 }
             };
 
-            log::debug!("{event:?}");
-            match inner.try_borrow_mut() {
-                Ok(state) => match get_extensions() {
+            // Add a path to be watched. All files and directories at that path and
+            // below will be monitored for changes.
+            if let Err(e) = watcher.watch(
+                STATIC_ARGS.extensions_path.as_path(),
+                RecursiveMode::Recursive,
+            ) {
+                log::error!("{e}");
+                return;
+            }
+
+            while let Some(event) = rx.next().await {
+                let event = match event {
+                    Ok(event) => event,
+                    Err(e) => {
+                        log::error!("{e}");
+                        continue;
+                    }
+                };
+
+                log::debug!("{event:?}");
+                match get_extensions() {
                     Ok(ext) => {
                         state.write().mutate(Action::RegisterExtensions(ext));
                     }
                     Err(e) => {
                         log::error!("failed to get extensions: {e}");
                     }
-                },
-                Err(e) => {
-                    log::error!("{e}");
                 }
             }
         }
