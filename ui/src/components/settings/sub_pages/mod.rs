@@ -1,3 +1,4 @@
+pub mod about;
 pub mod audio;
 pub mod developer;
 pub mod extensions;

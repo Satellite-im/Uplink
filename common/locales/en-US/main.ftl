@@ -93,6 +93,7 @@ files = Files
 
 settings = Settings
     .settings = Settings
+    .about = About
     .profile = Profile
     .general = General 
     .files = Files
@@ -101,6 +102,9 @@ settings = Settings
     .extensions = Extensions
     .developer = Developer
     .search-placeholder = Search Settings...
+
+settings-about = About
+    .info = About
 
 settings-profile = Profile Settings
     .failed = Failed to update profile
