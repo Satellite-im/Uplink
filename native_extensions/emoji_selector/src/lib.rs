@@ -120,12 +120,13 @@ impl EmojiSelector {
         let state = use_shared_state::<State>(cx)?;
         #[cfg(not(target_os = "macos"))]
         let mouse_over_emoji_selector = use_ref(cx, || false);
+        #[cfg(not(target_os = "macos"))]
+        let eval = use_eval(cx);
 
         let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
-        let eval = use_eval(cx);
         cx.render(rsx! (
             div {
                 onmouseenter: |_| {

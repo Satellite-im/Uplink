@@ -603,6 +603,18 @@ fn rename_if_duplicate(
     new_file_name
 }
 
+async fn download_file(
+    warp_storage: &warp_storage,
+    file_name: String,
+    local_path_to_save_file: PathBuf,
+) -> Result<(), Error> {
+    warp_storage
+        .get(&file_name, &local_path_to_save_file.to_string_lossy())
+        .await?;
+    log::info!("{file_name} downloaded");
+    Ok(())
+}
+
 fn set_thumbnail_if_file_is_video(
     warp_storage: &warp_storage,
     filename_to_save: String,
@@ -740,16 +752,4 @@ async fn set_thumbnail_if_file_is_image(
         log::warn!("thumbnail file is empty");
         Err(Box::from(Error::InvalidItem))
     }
-}
-
-async fn download_file(
-    warp_storage: &warp_storage,
-    file_name: String,
-    local_path_to_save_file: PathBuf,
-) -> Result<(), Error> {
-    warp_storage
-        .get(&file_name, &local_path_to_save_file.to_string_lossy())
-        .await?;
-    log::info!("{file_name} downloaded");
-    Ok(())
 }

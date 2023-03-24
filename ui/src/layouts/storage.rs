@@ -1,3 +1,4 @@
+#[cfg(target_os = "linux")]
 use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
@@ -848,9 +849,9 @@ async fn drag_and_drop_function(
 }
 
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut paths = paths;
     #[cfg(target_os = "linux")]
     {
+        let mut paths = paths.clone();
         let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
         paths = paths
             .iter()
