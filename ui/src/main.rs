@@ -146,6 +146,8 @@ fn main() {
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
     panic::set_hook(Box::new(|panic_info| {
+        // todo: save this output to a file inside of uplink directory.
+        // todo: give user an option to report a crash and then attach the crash report
         let intro = match panic_info.payload().downcast_ref::<&str>() {
             Some(s) => format!("panic occurred: {s:?}"),
             None => "panic occurred".into(),
