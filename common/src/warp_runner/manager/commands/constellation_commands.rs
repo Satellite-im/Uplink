@@ -1,8 +1,8 @@
 use std::{
     ffi::OsStr,
-    fs::File,
-    io::{BufReader, Cursor},
+    io::{Cursor, Read},
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 use derive_more::Display;
@@ -11,10 +11,9 @@ use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
 use image::{ImageBuffer, Rgba};
 use mime::*;
-use mime_guess::from_path;
 use mupdf::{Colorspace, Document, Matrix};
 use once_cell::sync::Lazy;
-use thumbnailer::{create_thumbnails, ThumbnailSize};
+use tempfile::TempDir;
 use tokio::sync::mpsc;
 use tokio_util::io::ReaderStream;
 
@@ -497,7 +496,7 @@ async fn upload_files(
                     .unwrap_or_default();
 
                 if image_formats.iter().any(|f| f == &file_extension) {
-                    match set_thumbnail_for_image_file(warp_storage, filename.clone()).await {
+                    match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
                         Ok(_) => {
                             log::info!("Image Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
@@ -514,7 +513,7 @@ async fn upload_files(
                 }
 
                 if video_formats.iter().any(|f| f == &file_extension) {
-                    match set_thumbnail_for_video_file(
+                    match set_thumbnail_if_file_is_video(
                         warp_storage,
                         filename.clone(),
                         file_path.clone(),
@@ -531,7 +530,7 @@ async fn upload_files(
                                 FileTransferStep::Thumbnail(None),
                             ));
                         }
-                    }
+                    };
                 }
 
                 if doc_formats.iter().any(|f| f == &file_extension) {
@@ -604,19 +603,102 @@ fn rename_if_duplicate(
     new_file_name
 }
 
-async fn download_file(
+fn set_thumbnail_if_file_is_video(
     warp_storage: &warp_storage,
-    file_name: String,
-    local_path_to_save_file: PathBuf,
-) -> Result<(), Error> {
-    warp_storage
-        .get(&file_name, &local_path_to_save_file.to_string_lossy())
-        .await?;
-    log::info!("{file_name} downloaded");
-    Ok(())
+    filename_to_save: String,
+    file_path: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
+
+    let file_stem = file_path
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+
+    let temp_dir = TempDir::new()?;
+
+    let temp_path = temp_dir.path().join(file_stem);
+
+    let output = Command::new("ffmpeg")
+        .args([
+            "-i",
+            &file_path.to_string_lossy(),
+            "-vf",
+            "select=eq(pict_type\\,I)",
+            "-q:v",
+            "2",
+            "-f",
+            "image2",
+            "-update",
+            "1",
+            &temp_path.to_string_lossy(),
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    if let Some(mut child) = output.stdout {
+        let mut contents = vec![];
+
+        child.read_to_end(&mut contents)?;
+
+        let image = std::fs::read(temp_path)?;
+
+        let prefix = format!("data:{};base64,", IMAGE_JPEG);
+        let base64_image = base64::encode(image);
+        let img = prefix + base64_image.as_str();
+        item.set_thumbnail(&img);
+        Ok(())
+    } else {
+        log::warn!("Failed to save thumbnail from a video file");
+        Err(Box::from(Error::InvalidConversion))
+    }
 }
 
-async fn set_thumbnail_for_image_file(
+fn set_thumbnail_for_pdf_file(
+    warp_storage: &warp_storage,
+    filename_to_save: String,
+    file_path: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let item = warp_storage
+        .current_directory()?
+        .get_item(&filename_to_save)?;
+
+    let document = Document::open(&file_path.to_string_lossy().to_string())?;
+
+    let first_page = document.load_page(0)?;
+    let ctm = Matrix::IDENTITY;
+    let cs = Colorspace::device_rgb();
+    let alpha = 1.0;
+    let show_extras = true;
+
+    let pixmap = first_page.to_pixmap(&ctm, &cs, alpha, show_extras)?;
+
+    let width = pixmap.width();
+    let height = pixmap.height();
+
+    let image_data: Vec<u8> = pixmap.samples().iter().cloned().collect();
+
+    let img = ImageBuffer::<Rgba<u8>, _>::from_raw(width as u32, height as u32, image_data);
+
+    if let Some(image) = img {
+        let mut buf = Cursor::new(Vec::new());
+        image.write_to(&mut buf, image::ImageFormat::Jpeg)?;
+        let base64_data = base64::encode(buf.into_inner());
+        let prefix = format!("data:{};base64,", IMAGE_JPEG);
+        let img = prefix + base64_data.as_str();
+        item.set_thumbnail(&img);
+        Ok(())
+    } else {
+        log::warn!("Thumbnail file is empty");
+        Err(Box::from(Error::InvalidItem))
+    }
+}
+
+async fn set_thumbnail_if_file_is_image(
     warp_storage: &warp_storage,
     filename_to_save: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -660,81 +742,14 @@ async fn set_thumbnail_for_image_file(
     }
 }
 
-fn set_thumbnail_for_video_file(
+async fn download_file(
     warp_storage: &warp_storage,
-    filename_to_save: String,
-    file_path: PathBuf,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
-
-    let file_to_reader = File::open(file_path.clone())?;
-    let reader = BufReader::new(file_to_reader);
-
-    let mime_type = from_path(&file_path.clone()).first_or_octet_stream();
-
-    let mut thumbnails = create_thumbnails(
-        reader,
-        mime_type.clone(),
-        [
-            ThumbnailSize::Small,
-            ThumbnailSize::Medium,
-            ThumbnailSize::Large,
-            ThumbnailSize::Larger,
-        ],
-    )?;
-
-    if let Some(thumbnail) = thumbnails.pop() {
-        let mut buf = Cursor::new(Vec::new());
-        thumbnail.write_png(&mut buf)?;
-        let base64_data = base64::encode(buf.into_inner());
-        let prefix = format!("data:{};base64,", IMAGE_PNG);
-        let img = prefix + base64_data.as_str();
-        item.set_thumbnail(&img);
-        Ok(())
-    } else {
-        log::warn!("Thumbnail file is empty");
-        Err(Box::from(Error::InvalidItem))
-    }
-}
-
-fn set_thumbnail_for_pdf_file(
-    warp_storage: &warp_storage,
-    filename_to_save: String,
-    file_path: PathBuf,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
-
-    let document = Document::open(&file_path.to_string_lossy().to_string())?;
-
-    let first_page = document.load_page(0)?;
-    let ctm = Matrix::IDENTITY;
-    let cs = Colorspace::device_rgb();
-    let alpha = 1.0;
-    let show_extras = true;
-
-    let pixmap = first_page.to_pixmap(&ctm, &cs, alpha, show_extras)?;
-
-    let width = pixmap.width();
-    let height = pixmap.height();
-
-    let image_data: Vec<u8> = pixmap.samples().iter().cloned().collect();
-
-    let img = ImageBuffer::<Rgba<u8>, _>::from_raw(width as u32, height as u32, image_data);
-
-    if let Some(image) = img {
-        let mut buf = Cursor::new(Vec::new());
-        image.write_to(&mut buf, image::ImageFormat::Png)?;
-        let base64_data = base64::encode(buf.into_inner());
-        let prefix = format!("data:{};base64,", IMAGE_PNG);
-        let img = prefix + base64_data.as_str();
-        item.set_thumbnail(&img);
-        Ok(())
-    } else {
-        log::warn!("Thumbnail file is empty");
-        Err(Box::from(Error::InvalidItem))
-    }
+    file_name: String,
+    local_path_to_save_file: PathBuf,
+) -> Result<(), Error> {
+    warp_storage
+        .get(&file_name, &local_path_to_save_file.to_string_lossy())
+        .await?;
+    log::info!("{file_name} downloaded");
+    Ok(())
 }
