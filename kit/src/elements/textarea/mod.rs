@@ -97,7 +97,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{id}",
                     // todo: troubleshoot this. it isn't working
                     autofocus: *focus,
-                    aria_label: "input-text-area",
+                    aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{current_val}",
                     maxlength: "{max_length}",
