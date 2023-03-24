@@ -925,17 +925,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
-    let is_reply = active_chat_id
-        .and_then(|id| {
-            state
-                .read()
-                .chats()
-                .all
-                .get(&id)
-                .map(|chat| chat.replying_to.is_some())
-        })
-        .unwrap_or(false);
-
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
     // used to render the typing indicator
@@ -964,12 +953,16 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                 while let Some((msg, conv_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let cmd = match reply {
-                        Some(reply_to) => RayGunCmd::Reply {
-                            conv_id,
-                            reply_to,
-                            msg,
-                            rsp: tx,
-                        },
+                        Some(reply_to) => {
+                            let attachments = files_to_upload.current().to_vec();
+                            RayGunCmd::Reply {
+                                conv_id,
+                                reply_to,
+                                msg,
+                                attachments,
+                                rsp: tx,
+                            }
+                        }
                         None => {
                             let attachments = files_to_upload.current().to_vec();
                             RayGunCmd::SendMessage {
@@ -1212,7 +1205,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading || is_reply || disabled,
+            disabled: is_loading || disabled,
             aria_label: "upload-button".into(),
             appearance: Appearance::Primary,
             onpress: move |_| {

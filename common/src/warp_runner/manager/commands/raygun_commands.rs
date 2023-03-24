@@ -83,6 +83,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         reply_to: Uuid,
         msg: Vec<String>,
+        attachments: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
@@ -199,9 +200,22 @@ pub async fn handle_raygun_cmd(
             conv_id,
             reply_to,
             msg,
+            attachments,
             rsp,
         } => {
-            let r = messaging.reply(conv_id, reply_to, msg).await;
+            let r = if attachments.is_empty() {
+                messaging.reply(conv_id, reply_to, msg).await
+            } else {
+                let reply_message = if msg.is_empty() {
+                    vec![String::from("Files attached")]
+                } else {
+                    msg
+                };
+
+                let _ = messaging.reply(conv_id, reply_to, reply_message).await;
+                messaging.attach(conv_id, attachments, Vec::new()).await
+            };
+
             let _ = rsp.send(r);
         }
         RayGunCmd::RemoveDirectConvs { recipient, rsp } => {
