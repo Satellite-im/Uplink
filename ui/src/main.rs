@@ -54,6 +54,7 @@ use common::{
     warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
+use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -144,6 +145,19 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    panic::set_hook(Box::new(|panic_info| {
+        let intro = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => format!("panic occurred: {s:?}"),
+            None => "panic occurred".into(),
+        };
+        let location = match panic_info.location() {
+            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
+            None => "".into(),
+        };
+        println!("{intro}{location}");
+        println!("{}", logger::dump_logs());
+        println("");
+    }));
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
