@@ -56,6 +56,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("user-image-wrap {}", if pressable { "pressable" } else { "" })
                 },
+                aria_label: "user-image-wrap",
                 onclick: move |e| emit(&cx, e),
                 div {
                     class: "user-image",

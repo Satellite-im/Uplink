@@ -353,6 +353,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         )}
         div {
             class: "user-info",
+            aria_label: "user-info",
             if is_loading {
                 rsx!(
                     div {
@@ -368,10 +369,12 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             } else {
                 rsx! (
                     p {
+                        aria_label: "user-info-username",
                         class: "username",
                         "{other_participants_names}"
                     },
                     p {
+                        aria_label: "user-info-status",
                         class: "status",
                         "{subtext}"
                     }
@@ -1166,6 +1169,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             icon: Icon::ChevronDoubleRight,
             disabled: is_loading || disabled,
             appearance: Appearance::Secondary,
+            aria_label: "send-message-button".into(),
             onpress: move |_| submit_fn(),
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
@@ -1209,6 +1213,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
             disabled: is_loading || is_reply || disabled,
+            aria_label: "upload-button".into(),
             appearance: Appearance::Primary,
             onpress: move |_| {
                 if disabled {

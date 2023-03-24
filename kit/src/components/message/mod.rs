@@ -116,6 +116,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 rsx! (
                     p {
                         class: "text",
+                        aria_label: "message-text",
                         if cx.props.editing {
                             rsx! (
                                 EditMsg{

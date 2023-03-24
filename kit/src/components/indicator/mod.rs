@@ -98,6 +98,7 @@ pub fn Indicator(cx: Scope<Props>) -> Element {
 
     cx.render(rsx!(div {
         class: "indicator indicator-{status}",
+        aria_label: "indicator-{status}",
         IconElement {
             icon: icon,
             class: "{cx.props.platform.to_string()}"
