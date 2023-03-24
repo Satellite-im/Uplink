@@ -491,7 +491,7 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                state.write().ui.metadata.focused = *focused;
+                state.write_silent().ui.metadata.focused = *focused;
                 //crate::utils::sounds::Play(Sounds::Notification);
             }
             WryEvent::WindowEvent {
@@ -499,7 +499,7 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 state
-                    .write()
+                    .write_silent()
                     .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
             }
             WryEvent::WindowEvent {
@@ -514,6 +514,7 @@ fn app(cx: Scope) -> Element {
                     minimal_view: size.width < 600,
                     ..metadata
                 };
+
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                     state.write().ui.metadata = new_metadata;
@@ -529,7 +530,7 @@ fn app(cx: Scope) -> Element {
         async move {
             // don't process warp events until friends and chats have been loaded
             while !(*friends_init.read() && *chats_init.read()) {
-                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
             log::trace!("starting warp_runner use_future");
@@ -581,6 +582,7 @@ fn app(cx: Scope) -> Element {
             loop {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
+                log::trace!("refresh");
                 state.write();
             }
         }
@@ -638,7 +640,7 @@ fn app(cx: Scope) -> Element {
             };
             log::trace!("init friends successful");
             state.write().set_friends(friends.0, friends.1);
-            *friends_init.write_silent() = true;
+            *friends_init.write() = true;
         }
     });
 
@@ -726,7 +728,7 @@ fn app(cx: Scope) -> Element {
             };
             log::trace!("init chats successful");
             state.write().set_chats(chats.0, chats.1);
-            *chats_init.write_silent() = true;
+            *chats_init.write() = true;
         }
     });
 
