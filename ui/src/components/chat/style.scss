@@ -25,6 +25,7 @@
     .sidebar-chats-header {
         display: inline-flex;
         flex-direction: row;
+        min-height: 32%;
         overflow-y: hidden;
         justify-content: space-between;
     }
