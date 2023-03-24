@@ -55,6 +55,9 @@ input, textarea {
 textarea {
     white-space: revert;
 }
+textarea::-webkit-scrollbar {
+    display: none;
+}
 
 /* minimum style to allow to style meter element */
 meter {
