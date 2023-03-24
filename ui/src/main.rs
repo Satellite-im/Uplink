@@ -430,7 +430,6 @@ fn app(cx: Scope) -> Element {
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let needs_update = use_state(cx, || false);
 
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
@@ -482,27 +481,18 @@ fn app(cx: Scope) -> Element {
     //     not loaded from Warp. however, warp_runner continues to operate normally.
     //
 
-    // yes, double render. sry.
-    if *needs_update.get() {
-        needs_update.set(false);
-        state.write();
-    }
-
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
     use_wry_event_handler(cx, {
-        to_owned![needs_update, desktop, state];
+        to_owned![desktop, state];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                //log::trace!("FOCUS CHANGED {:?}", *focused);
-
                 state.write().ui.metadata.focused = *focused;
                 //crate::utils::sounds::Play(Sounds::Notification);
-                //needs_update.set(true);
             }
             WryEvent::WindowEvent {
                 event: WindowEvent::CloseRequested,
@@ -517,12 +507,6 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 let size = webview.inner_size();
-                //log::trace!(
-                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                //    size,
-                //    size.width < 1200
-                //);
-
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
                     height: size.height,
@@ -533,7 +517,6 @@ fn app(cx: Scope) -> Element {
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                     state.write().ui.metadata = new_metadata;
-                    needs_update.set(true);
                 }
             }
             _ => {}
@@ -542,7 +525,7 @@ fn app(cx: Scope) -> Element {
 
     // update state in response to warp events
     use_future(cx, (), |_| {
-        to_owned![needs_update, friends_init, chats_init, state];
+        to_owned![friends_init, chats_init, state];
         async move {
             // don't process warp events until friends and chats have been loaded
             while !(*friends_init.read() && *chats_init.read()) {
@@ -555,14 +538,13 @@ fn app(cx: Scope) -> Element {
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
                 state.write().process_warp_event(evt);
-                needs_update.set(true);
             }
         }
     });
 
     // clear toasts
     use_future(cx, (), |_| {
-        to_owned![needs_update, state];
+        to_owned![state];
         async move {
             loop {
                 sleep(Duration::from_secs(1)).await;
@@ -570,8 +552,8 @@ fn app(cx: Scope) -> Element {
                 if !state.read().has_toasts() {
                     continue;
                 }
-                if state.write().decrement_toasts() {
-                    needs_update.set(true);
+                if state.write_silent().decrement_toasts() {
+                    state.write();
                 }
             }
         }
@@ -579,14 +561,14 @@ fn app(cx: Scope) -> Element {
 
     // clear typing indicator
     use_future(cx, (), |_| {
-        to_owned![needs_update, state];
+        to_owned![state];
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
 
                 let now = Instant::now();
-                if state.write().clear_typing_indicator(now) {
-                    needs_update.set(true);
+                if state.write_silent().clear_typing_indicator(now) {
+                    state.write();
                 }
             }
         }
@@ -594,111 +576,124 @@ fn app(cx: Scope) -> Element {
 
     // periodically refresh message timestamps and friend's status messages
     use_future(cx, (), |_| {
-        to_owned![needs_update];
+        to_owned![state];
         async move {
             loop {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
-                needs_update.set(true);
+                state.write();
             }
         }
     });
 
     // control child windows
     use_future(cx, (), |_| {
-        to_owned![needs_update, desktop, state];
+        to_owned![desktop, state];
         async move {
             let window_cmd_rx = WINDOW_CMD_CH.rx.clone();
             let mut ch = window_cmd_rx.lock().await;
             while let Some(cmd) = ch.recv().await {
                 window_manager::handle_cmd(state.clone(), cmd, desktop.clone()).await;
-                needs_update.set(true);
             }
         }
     });
 
     // initialize friends
     use_future(cx, (), |_| {
-        to_owned![friends_init, needs_update, state];
+        to_owned![friends_init, state];
         async move {
             if *friends_init.read() {
                 return;
             }
+
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<
-                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
-            >();
-            if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
-                rsp: tx,
-            })) {
-                log::error!("failed to initialize Friends {}", e);
-                tokio::time::sleep(Duration::from_secs(1)).await;
-                return;
-            }
-
-            let res = rx.await.expect("failed to get response from warp_runner");
-
-            log::trace!("init friends");
-            let friends = match res {
-                Ok(friends) => friends,
-                Err(e) => {
-                    log::error!("init friends failed: {}", e);
-                    return;
+            let friends = loop {
+                log::trace!("init friends");
+                let (tx, rx) = oneshot::channel::<
+                    Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
+                >();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
+                        rsp: tx,
+                    }))
+                {
+                    log::error!("failed to initialize Friends {}", e);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
+
+                match rx.await {
+                    Ok(res) => match res {
+                        Ok(friends) => break friends,
+                        Err(e) => {
+                            log::error!("init friends failed: {}", e);
+                            tokio::time::sleep(Duration::from_secs(1)).await;
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("command canceled: {}", e);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
+                    }
+                };
             };
-
+            log::trace!("init friends successful");
             state.write().set_friends(friends.0, friends.1);
-
             *friends_init.write_silent() = true;
-            needs_update.set(true);
         }
     });
 
     // initialize files
     use_future(cx, (), |_| {
-        to_owned![items_init, needs_update, state];
+        to_owned![items_init, state];
         async move {
             if *items_init.read() {
                 return;
             }
+
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<Result<storage::Storage, warp::error::Error>>();
+            let storage = loop {
+                log::trace!("init files");
+                let (tx, rx) = oneshot::channel::<Result<storage::Storage, warp::error::Error>>();
 
-            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
-            )) {
-                log::error!("failed to initialize Files {}", e);
-                return;
-            }
-
-            let res = rx.await.expect("failed to get response from warp_runner");
-
-            log::trace!("init items");
-            match res {
-                Ok(storage) => {
-                    state.write().storage = storage;
-
-                    needs_update.set(true);
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                    ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
+                )) {
+                    log::error!("failed to initialize Files {}", e);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
-                Err(e) => {
-                    log::error!("init items failed: {}", e);
-                }
-            }
 
+                match rx.await {
+                    Ok(r) => match r {
+                        Ok(storage) => break storage,
+                        Err(e) => {
+                            log::error!("init files failed: {}", e);
+                            tokio::time::sleep(Duration::from_secs(1)).await;
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("command canceled: {}", e);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
+                    }
+                }
+            };
+            log::trace!("init files successful");
+            state.write().storage = storage;
             *items_init.write_silent() = true;
-            needs_update.set(true);
         }
     });
 
     // initialize conversations
     use_future(cx, (), |_| {
-        to_owned![chats_init, needs_update, state];
+        to_owned![chats_init, state];
         async move {
             if *chats_init.read() {
                 return;
             }
+
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let res = loop {
+            let chats = loop {
+                log::trace!("init chats");
                 let (tx, rx) = oneshot::channel::<
                     Result<
                         (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
@@ -716,26 +711,22 @@ fn app(cx: Scope) -> Element {
                 }
 
                 match rx.await {
-                    Ok(r) => break r,
+                    Ok(r) => match r {
+                        Ok(chats) => break chats,
+                        Err(e) => {
+                            log::error!("failed to initialize chats: {}", e);
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        }
+                    },
                     Err(e) => {
                         log::error!("command canceled: {}", e);
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                     }
                 }
             };
-
-            log::trace!("init chats");
-            let chats = match res {
-                Ok(r) => r,
-                Err(e) => {
-                    log::error!("failed to initialize chats: {}", e);
-                    return;
-                }
-            };
-
+            log::trace!("init chats successful");
             state.write().set_chats(chats.0, chats.1);
             *chats_init.write_silent() = true;
-            needs_update.set(true);
         }
     });
 

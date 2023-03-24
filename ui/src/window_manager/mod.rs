@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::UseSharedState;
