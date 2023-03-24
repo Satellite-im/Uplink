@@ -123,28 +123,40 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         }
         MultiPassCmd::RequestFriend { id, rsp } => {
             // First attempt using a did
-            if let Ok(some) = DID::from_str(id.as_str()) {
-                let r = warp.multipass.send_request(&some).await;
-                let _ = rsp.send(r);
-                return;
-            }
-            // Invalid did. Try using it as a username (+ short did)
-            let r = warp.multipass.get_identity(Identifier::Username(id)).await;
-            match r {
-                Ok(id) => {
-                    let mut r = Result::Err(Error::IdentityInvalid);
-                    // It should only find 1 matching identity
-                    if id.len() == 1 {
-                        r = warp.multipass.send_request(&id[0].did_key()).await;
+            let did = match DID::from_str(id.as_str()) {
+                Ok(did) => did,
+                Err(_) => {
+                    // Invalid attempt of using a did key
+                    if id.starts_with("did:key") {
+                        log::error!("could not get did from str: {}", id);
+                        let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                        return;
                     }
-                    let _ = rsp.send(r);
-                    ()
+                    // Check that input matches username search syntax of Username#<short id>
+                    let split_data = id.split('#').collect::<Vec<&str>>();
+                    if split_data.len() != 2 || split_data[1].len() != identity::SHORT_ID_SIZE {
+                        log::error!("invalid username input: {}", id);
+                        let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                        return;
+                    }
+                    match warp.multipass.get_identity(Identifier::Username(id)).await {
+                        Ok(id) => {
+                            // It should only find 1 matching identity
+                            if id.len() != 1 {
+                                let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                                return;
+                            }
+                            id[0].did_key()
+                        }
+                        Err(err) => {
+                            let _ = rsp.send(Result::Err(err));
+                            return;
+                        }
+                    }
                 }
-                Err(err) => {
-                    let _ = rsp.send(Result::Err(err));
-                    ()
-                }
-            }
+            };
+            let r = warp.multipass.send_request(&did).await;
+            let _ = rsp.send(r);
         }
         MultiPassCmd::GetOwnDid { rsp } => {
             let r = warp
