@@ -428,7 +428,7 @@ fn app(cx: Scope) -> Element {
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let files_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
 
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
@@ -644,9 +644,9 @@ fn app(cx: Scope) -> Element {
 
     // initialize files
     use_future(cx, (), |_| {
-        to_owned![items_init, state];
+        to_owned![files_init, state];
         async move {
-            if *items_init.read() {
+            if *files_init.read() {
                 return;
             }
 
@@ -679,7 +679,7 @@ fn app(cx: Scope) -> Element {
             };
             log::trace!("init files successful");
             state.write().storage = storage;
-            *items_init.write_silent() = true;
+            *files_init.write_silent() = true;
         }
     });
 
