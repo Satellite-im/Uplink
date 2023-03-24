@@ -296,11 +296,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: if STATIC_ARGS.is_debug {
-                    get_local_text("uplink.call")
-                } else {
-                    get_local_text("uplink.feature-coming-soon")
-                },
+                text: get_local_text("uplink.call")
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -319,11 +315,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::TopRight,
-                text: if STATIC_ARGS.is_debug {
-                    get_local_text("uplink.video-call")
-                } else {
-                    get_local_text("uplink.feature-coming-soon")
-                },
+                text: get_local_text("uplink.video-call"),
             })),
         },
     ))

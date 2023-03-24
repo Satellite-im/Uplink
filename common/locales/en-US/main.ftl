@@ -20,7 +20,6 @@ uplink = Uplink
     .exceeded = exceeded
     .delete = Delete
     .dismiss = Dismiss
-    .feature-coming-soon = Feature coming soon
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
