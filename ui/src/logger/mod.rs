@@ -111,7 +111,7 @@ impl Logger {
             log_file: logger_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
-            max_logs: 1024,
+            max_logs: 128,
         }
     }
 
