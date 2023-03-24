@@ -134,7 +134,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     }
                     // Check that input matches username search syntax of Username#<short id>
                     let split_data = id.split('#').collect::<Vec<&str>>();
-                    if split_data.len() != 2 || split_data[1].len() != identity::SHORT_ID_SIZE {
+                    if split_data.len() != 2
+                        || split_data[1].chars().count() < 4 // Username constraints
+                        || split_data[1].chars().count() > 32
+                        || split_data[1].len() != identity::SHORT_ID_SIZE
+                    {
                         log::error!("invalid username input: {}", id);
                         let _ = rsp.send(Result::Err(Error::IdentityInvalid));
                         return;
