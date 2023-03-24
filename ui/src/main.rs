@@ -156,7 +156,7 @@ fn main() {
         };
         println!("{intro}{location}");
         println!("{}", logger::dump_logs());
-        println!("");
+        println!();
     }));
 
     // Initializes the cache dir if needed
