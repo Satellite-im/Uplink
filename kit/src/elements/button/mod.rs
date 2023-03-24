@@ -90,8 +90,8 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
-                (cx.props.tooltip.is_some()).then(|| rsx!(
-                    cx.props.tooltip.as_ref()
+                cx.props.tooltip.as_ref().map(|tooltip| rsx!( 
+                    tooltip
                 )),
                 (!badge.is_empty()).then(|| rsx!(
                     span {
