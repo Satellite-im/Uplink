@@ -679,7 +679,7 @@ fn set_thumbnail_for_pdf_file(
         .current_directory()?
         .get_item(&filename_to_save)?;
 
-    let document = Document::open(&file_path.to_string_lossy().to_string())?;
+    let document = Document::open(&file_path.to_string_lossy())?;
 
     let first_page = document.load_page(0)?;
     let ctm = Matrix::IDENTITY;
@@ -692,9 +692,9 @@ fn set_thumbnail_for_pdf_file(
     let width = pixmap.width();
     let height = pixmap.height();
 
-    let image_data: Vec<u8> = pixmap.samples().iter().cloned().collect();
+    let image_data: Vec<u8> = pixmap.samples().to_vec();
 
-    let img = ImageBuffer::<Rgba<u8>, _>::from_raw(width as u32, height as u32, image_data);
+    let img = ImageBuffer::<Rgba<u8>, _>::from_raw(width, height, image_data);
 
     if let Some(image) = img {
         let mut buf = Cursor::new(Vec::new());
