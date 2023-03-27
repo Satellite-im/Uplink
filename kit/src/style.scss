@@ -101,27 +101,27 @@ meter {
 }
 
 @font-face {
-  font-family: "open-dyslexic";
+  font-family: OpenDyslexic;
   font-weight: normal;
-  src: url("./fonts/open-dyslexic.ttf");
+  src: url("./kit/src/fonts/OpenDyslexic-Regular.otf");
 }
 
 @font-face {
   font-family: Noto;
   font-weight: normal;
-  src: url("./fonts/NotoSans-Regular.ttf");
+  src: url("./kit/src/fonts/NotoSans-Regular.ttf");
 }
 
 @font-face {
   font-family: Noto;
   font-weight: bold;
-  src: url("./fonts/NotoSans-Bold.ttf");
+  src: url("./kit/src/fonts/NotoSans-Bold.ttf");
 }
 
 @font-face {
   font-family: Noto;
   font-weight: lighter;
-  src: url("./fonts/NotoSans-Light.ttf");
+  src: url("./kit/src/fonts/NotoSans-Light.ttf");
 }
 
 body,
