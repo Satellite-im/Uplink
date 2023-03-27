@@ -43,7 +43,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: {
-                format_args!("sidebar resize-horiz-right {} {}", if hidden { "hidden" } else { "" }, if minimal.get().clone() { "minimal" } else { "" })
+                format_args!("sidebar resize-horiz-right {} {}", if hidden { "hidden" } else { "" }, if *minimal.get() { "minimal" } else { "" })
             },
             aria_label: "sidebar",
             match minimal.get() {
