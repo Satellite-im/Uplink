@@ -15,12 +15,16 @@ pub fn AboutPage(cx: Scope) -> Element {
                 section_label: get_local_text("settings-about.info"),
                 div {
                     p {
-                        format!("{app_name}: {version}")
+
+                        format!("{}: {app_name}", get_local_text("settings-about.application"))
+                    },
+                    p {
+                        format!("{}: {version}", get_local_text("settings-about.version"))
                     },
                     p {
                         a {
                             href: "https://satellite.im/",
-                            "Website: "
+                            format!("{}: ", get_local_text("settings-about.website"))
                         },
                         a {
                             href: "https://satellite.im/",
@@ -30,7 +34,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                     p {
                         a {
                             href: "https://github.com/Satellite-im/Uplink",
-                            "Source Code: "
+                            format!("{}: ", get_local_text("settings-about.source-code"))
                         },
                         a {
                             href: "https://github.com/Satellite-im/Uplink",

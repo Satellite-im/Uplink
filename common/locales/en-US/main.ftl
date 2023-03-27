@@ -104,9 +104,6 @@ settings = Settings
     .developer = Developer
     .search-placeholder = Search Settings...
 
-settings-about = About
-    .info = About
-
 settings-profile = Profile Settings
     .failed = Failed to update profile
     .change-banner = Change banner
@@ -147,6 +144,13 @@ settings-privacy = Settings Privacy
     .backup-recovery-phrase = Backup Recovery Phrase
     .backup-phrase = Backup Phrase
     .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.
+
+settings-about = About Settings
+    .info = About
+    .application = Application
+    .version = Version
+    .website = Website
+    .source-code = Source Code
 
 settings-audio = Audio Settings 
     .call-timer = Call Timer
