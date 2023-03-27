@@ -52,6 +52,13 @@
         flex-direction: column;
         gap: var(--gap-less);
     }
+    .settings-container {
+        flex: 1;
+        min-width: 0;
+        display: inline-flex;
+        flex-direction: row;
+        gap: var(--gap-less);
+    }
     .settings-control {
         display: inline-flex;
         align-items: center;
