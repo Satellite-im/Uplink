@@ -168,7 +168,7 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.send(conv_id, msg).await
             } else {
-                messaging.attach(conv_id, attachments, msg).await
+                messaging.attach(conv_id, None, attachments, msg).await
             };
 
             let _ = rsp.send(r);
@@ -307,7 +307,7 @@ async fn raygun_create_group_conversation(
         return Ok(conv.id());
     }
 
-    match messaging.create_group_conversation(recipients).await {
+    match messaging.create_group_conversation(None, recipients).await {
         Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
         Err(e) => Err(e),
     }
