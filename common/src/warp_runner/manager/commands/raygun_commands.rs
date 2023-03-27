@@ -206,20 +206,9 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.reply(conv_id, reply_to, msg).await
             } else {
-                let mut reply_message: Vec<String> = attachments
-                    .iter()
-                    .map(|path| {
-                        let os_str = path.file_name().unwrap_or_default();
-                        os_str.to_string_lossy().into_owned()
-                    })
-                    .collect();
-                if !msg.is_empty() {
-                    reply_message.splice(..0, vec![String::from("\n")]);
-                    reply_message.splice(..0, msg);
-                }
-
-                let _ = messaging.reply(conv_id, reply_to, reply_message).await;
-                messaging.attach(conv_id, attachments, Vec::new()).await
+                messaging
+                    .attach(conv_id, Some(reply_to), attachments, msg)
+                    .await
             };
 
             let _ = rsp.send(r);
