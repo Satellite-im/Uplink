@@ -100,6 +100,7 @@ settings = Settings
     .audio = Sounds & Audio
     .extensions = Extensions
     .developer = Developer
+    .accessibility = Accessibility
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings

@@ -68,19 +68,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }
                 }
             },
-            div {
-                class: "open-dyslexic",
-                SettingSection {
-                    section_label: get_local_text("settings-general.dyslexia"),
-                    section_description: get_local_text("settings-general.dyslexia-description"),
-                    Switch {
-                        active: state.read().configuration.general.dyslexia_support,
-                        onflipped: move |e| {
-                            state.write().mutate(Action::Config(ConfigAction::SetDyslexicEnabled(e)));
-                        }
-                    }
-                },
-            },
             SettingSection {
                 section_label: get_local_text("settings-general.app-language"),
                 section_description: get_local_text("settings-general.change-language"),
