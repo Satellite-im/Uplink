@@ -2,6 +2,7 @@ uplink = Uplink
     .home = Home
     .add = Add
     .call = Call
+    .crash-report = Uplink crashed. Optionally save crash report to selected folder
     .video-call = Video Call
     .chat = Chat
     .chats = Chats

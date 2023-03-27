@@ -164,7 +164,7 @@ fn main() {
         // todo: hide this behind the debug flag
         let save_path = FileDialog::new()
             .set_directory(dirs::home_dir().unwrap_or(".".into()))
-            .set_title("Program Crashed. Optionally save crash report to selected folder")
+            .set_title(&get_local_text("uplink.crash-report"))
             .pick_folder();
 
         if let Some(p) = save_path {
