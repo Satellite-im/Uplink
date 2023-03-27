@@ -1184,7 +1184,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                             .iter()
                             .find(|x| x.did_key() == msg.sender())
                     };
-                    let (platform, status) = get_platform_and_status(msg_owner);
+                    let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
 
                     rsx!(
                         Reply {
@@ -1195,6 +1195,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                             },
                             message: msg.value().join("\n"),
                             UserImage {
+                                image: profile_picture,
                                 platform: platform,
                                 status: status,
                             },
@@ -1300,13 +1301,13 @@ fn Attachments(cx: Scope<AttachmentProps>) -> Element {
     }))
 }
 
-fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {
+fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {
     let sender = match msg_sender {
         Some(identity) => identity,
-        None => return (Platform::Desktop, Status::Offline),
+        None => return (Platform::Desktop, Status::Offline, String::new()),
     };
     let user_sender = build_user_from_identity(sender.clone());
-    (user_sender.platform, user_sender.status)
+    (user_sender.platform, user_sender.status, user_sender.photo)
 }
 
 // Like ui::src:layout::storage::drag_and_drop_function
