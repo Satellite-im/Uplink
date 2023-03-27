@@ -104,7 +104,7 @@ meter {
   font-family: open-dyslexic;
   font-style: normal;
   font-weight: 400;
-  src: local("Open-Dyslexic"), url("./fonts/open-dyslexic.ttf") format("woff");
+  src: url("./fonts/open-dyslexic.ttf");
 }
 @font-face {
   font-family: Noto;
