@@ -337,6 +337,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                 },
                 div {
                     class: "user-info",
+                    aria_label: "user-info",
                     div {
                         class: "skeletal-bars",
                         div {
@@ -373,6 +374,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         )}
         div {
             class: "user-info",
+            aria_label: "user-info",
             p {
                 class: "username",
                 "{conversation_title}"
@@ -1170,6 +1172,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             icon: Icon::ChevronDoubleRight,
             disabled: is_loading || disabled,
             appearance: Appearance::Secondary,
+            aria_label: "send-message-button".into(),
             onpress: move |_| submit_fn(),
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Bottom,
@@ -1191,7 +1194,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                             .iter()
                             .find(|x| x.did_key() == msg.sender())
                     };
-                    let (platform, status) = get_platform_and_status(msg_owner);
+                    let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
 
                     rsx!(
                         Reply {
@@ -1202,6 +1205,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                             },
                             message: msg.value().join("\n"),
                             UserImage {
+                                image: profile_picture,
                                 platform: platform,
                                 status: status,
                             },
@@ -1213,6 +1217,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
             disabled: is_loading || is_reply || disabled,
+            aria_label: "upload-button".into(),
             appearance: Appearance::Primary,
             onpress: move |_| {
                 if disabled {
@@ -1306,13 +1311,13 @@ fn Attachments(cx: Scope<AttachmentProps>) -> Element {
     }))
 }
 
-fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status) {
+fn get_platform_and_status(msg_sender: Option<&Identity>) -> (Platform, Status, String) {
     let sender = match msg_sender {
         Some(identity) => identity,
-        None => return (Platform::Desktop, Status::Offline),
+        None => return (Platform::Desktop, Status::Offline, String::new()),
     };
     let user_sender = build_user_from_identity(sender.clone());
-    (user_sender.platform, user_sender.status)
+    (user_sender.platform, user_sender.status, user_sender.photo)
 }
 
 // Like ui::src:layout::storage::drag_and_drop_function

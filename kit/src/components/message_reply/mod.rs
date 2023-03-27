@@ -50,6 +50,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" },
                 )
             },
+            aria_label: "message-reply",
             (cx.props.user_image.is_some() && remote_message).then(|| rsx! (
                 cx.props.user_image.as_ref()
             )),
