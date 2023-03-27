@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
@@ -848,6 +849,7 @@ async fn drag_and_drop_function(
 }
 
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    #[allow(unused_mut)]
     let mut paths = paths;
     #[cfg(target_os = "linux")]
     {

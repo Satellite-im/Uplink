@@ -129,6 +129,8 @@ settings-general = General Settings
     .theme-reset = Reset Theme
     .theme-reset-description = Reset the theme to the default.
     .theme-reset-cta = Clear Theme
+    .dyslexia = Open Dyslexic
+    .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
 
 settings-extensions = Extension Settings
     .placeholder = Placeholder

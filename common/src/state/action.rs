@@ -29,6 +29,9 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
+    #[display(fmt = "SetDyslexicEnabled")]
+    SetDyslexicEnabled(bool),
+
     // hang up for the active media stream
     #[display(fmt = "DisableMedia")]
     DisableMedia,
@@ -172,6 +175,8 @@ pub enum Action<'a> {
 
 #[derive(Display)]
 pub enum ConfigAction {
+    #[display(fmt = "SetDyslexicEnabled {_0}")]
+    SetDyslexicEnabled(bool),
     #[display(fmt = "SetNotificationsEnabled {_0}")]
     SetNotificationsEnabled(bool),
     #[display(fmt = "SetTheme {_0}")]

@@ -65,6 +65,8 @@ mod overlay;
 mod utils;
 mod window_manager;
 
+pub static OPEN_DYSLEXIC: &'static str = include_str!("./open-dyslexic.css");
+
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -438,6 +440,12 @@ fn app(cx: Scope) -> Element {
         let user_lang_saved = state.read().settings.language.clone();
         change_language(user_lang_saved);
 
+        let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+            OPEN_DYSLEXIC
+        } else {
+            ""
+        };
+
         let theme = state
             .read()
             .ui
@@ -447,7 +455,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {open_dyslexic}" },
             div {
                 id: "app-wrap",
                 get_titlebar(cx),
