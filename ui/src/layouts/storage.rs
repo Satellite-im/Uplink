@@ -833,7 +833,11 @@ async fn drag_and_drop_function(
                 window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
+                #[cfg(target_os = "linux")]
                 let new_files_to_upload = decoded_pathbufs(files_local_path);
+                #[cfg(not(target_os = "linux"))]
+                let new_files_to_upload = files_local_path;
+
                 ch.send(ChanCmd::UploadFiles(new_files_to_upload));
                 break;
             }
@@ -848,15 +852,13 @@ async fn drag_and_drop_function(
     }
 }
 
+#[cfg(target_os = "linux")]
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    #[cfg(target_os = "linux")]
-    {
-        let mut paths = paths.clone();
-        let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
-        paths = paths
-            .iter()
-            .map(|p| PathBuf::from(decode(p)))
-            .collect::<Vec<PathBuf>>();
-    }
+    let mut paths = paths.clone();
+    let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
+    paths = paths
+        .iter()
+        .map(|p| PathBuf::from(decode(p)))
+        .collect::<Vec<PathBuf>>();
     paths
 }
