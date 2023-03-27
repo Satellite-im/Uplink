@@ -229,9 +229,6 @@ impl State {
 
             // ===== Configuration =====
             Action::Config(action) => self.configuration.mutate(action),
-            Action::SetDyslexicEnabled(flag) => self
-                .configuration
-                .mutate(action::ConfigAction::SetDyslexicEnabled(flag)),
         }
 
         let _ = self.save();

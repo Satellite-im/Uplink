@@ -29,8 +29,6 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
-    #[display(fmt = "SetDyslexicEnabled")]
-    SetDyslexicEnabled(bool),
 
     // hang up for the active media stream
     #[display(fmt = "DisableMedia")]
