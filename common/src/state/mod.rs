@@ -1105,6 +1105,7 @@ impl State {
     }
     pub fn set_own_identity(&mut self, identity: Identity) {
         self.id = identity.did_key();
+        self.ui.cached_username = Some(identity.username().clone());
         self.identities.insert(identity.did_key(), identity);
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {

@@ -11,6 +11,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
 };
+use once_cell::sync::Lazy;
 use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
@@ -21,6 +22,15 @@ use common::{
 };
 
 use crate::AuthPages;
+
+static LAZY_WELCOME_MESSAGE: Lazy<String> = Lazy::new(|| {
+    let state = State::load();
+    let name = match &state.ui.cached_username {
+        Some(name) => name.clone(),
+        None => String::from("UNKNOWN"),
+    };
+    format!("Welcome back, {}", name)
+});
 
 enum UnlockError {
     ValidationError,
@@ -175,7 +185,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                                {Some("Welcome back, UNKNOWN")}
+                            {Some(&LAZY_WELCOME_MESSAGE)}
                             else
                                 {Some("Let's choose your password")}, // TODO: Implement this.
                             ..Default::default()

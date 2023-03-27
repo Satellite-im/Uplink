@@ -65,6 +65,8 @@ pub struct UI {
     pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
+    // Cached username used in login page
+    pub cached_username: Option<String>,
 }
 
 #[derive(Default, Deserialize, Serialize)]
