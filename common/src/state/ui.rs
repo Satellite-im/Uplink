@@ -52,6 +52,7 @@ pub struct UI {
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
     pub enable_overlay: bool,
+    pub active_welcome: bool,
     pub sidebar_hidden: bool,
     pub metadata: WindowMeta,
     #[serde(skip)]
@@ -158,6 +159,9 @@ impl UI {
         if let Some(id) = self.take_debug_logger_id() {
             desktop_context.close_window(id);
         };
+    }
+    pub fn settings_welcome(&mut self) {
+        self.active_welcome = true;
     }
     pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
         self.file_previews.insert(key, window_id);

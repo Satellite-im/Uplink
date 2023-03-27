@@ -1036,6 +1036,10 @@ impl State {
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
     }
+
+    pub fn show_settings_welcome(&mut self, active: bool) {
+        self.ui.active_welcome = active;
+    }
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {
         self.ui.enable_overlay = enabled;
