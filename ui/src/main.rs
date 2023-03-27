@@ -65,7 +65,7 @@ mod overlay;
 mod utils;
 mod window_manager;
 
-pub static OPEN_DYSLEXIC: &'static str = include_str!("./open-dyslexic.css");
+pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
