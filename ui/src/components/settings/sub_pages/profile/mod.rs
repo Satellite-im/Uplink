@@ -155,13 +155,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     let mut did_short = "#".to_string();
     did_short.push_str(&state.read().get_own_identity().short_id());
+    let show_welcome = &state.read().ui.active_welcome;
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (state.read().ui.show_settings_welcome).then(|| rsx!(
+            (!show_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
@@ -176,7 +177,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                state.write().ui.show_settings_welcome = false;
+                                state.write().ui.settings_welcome();
                                 let _ = state.write().save();
                             }
                         },
