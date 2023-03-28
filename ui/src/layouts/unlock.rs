@@ -1,5 +1,5 @@
 use common::{
-    language::get_local_text,
+    language::{get_local_text, get_local_text_args_builder},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
     STATIC_ARGS,
@@ -11,6 +11,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
 };
+
 use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
@@ -175,9 +176,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                                {Some("Welcome back, UNKNOWN")}
+                            {Some(get_welcome_message())}
                             else
-                                {Some("Let's choose your password")}, // TODO: Implement this.
+                                {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {
@@ -246,4 +247,15 @@ fn update_theme_colors() -> String {
         Some(theme) => theme.styles,
         None => String::new(),
     }
+}
+
+fn get_welcome_message() -> String {
+    let state = State::load();
+    let name = match &state.ui.cached_username {
+        Some(name) => name.clone(),
+        None => String::from("UNKNOWN"),
+    };
+    get_local_text_args_builder("unlock.welcome", |m| {
+        m.insert("name", name.into());
+    })
 }

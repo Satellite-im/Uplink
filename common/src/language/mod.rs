@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use fluent_templates::{once_cell::sync::Lazy, LanguageIdentifier, Loader};
+use fluent_templates::{
+    fluent_bundle::FluentValue, once_cell::sync::Lazy, LanguageIdentifier, Loader,
+};
 use unic_langid::langid;
 use warp::sync::RwLock;
 
@@ -49,4 +51,28 @@ pub fn get_available_languages() -> Vec<String> {
 
 pub fn get_local_text(text: &str) -> String {
     LOCALES.lookup(&APP_LANG.read().0, text).unwrap_or_default()
+}
+
+// Looks and formats a local text using the given args
+pub fn get_local_text_with_args<T: AsRef<str>>(
+    text: &str,
+    args: &HashMap<T, FluentValue>,
+) -> String {
+    LOCALES
+        .lookup_with_args(&APP_LANG.read().0, text, args)
+        .unwrap_or_default()
+}
+
+pub fn get_local_text_args_builder<F, T: AsRef<str>>(text: &str, builder: F) -> String
+where
+    F: FnOnce(&mut HashMap<T, FluentValue>),
+{
+    let args = {
+        let mut map = HashMap::new();
+        builder(&mut map);
+        map
+    };
+    LOCALES
+        .lookup_with_args(&APP_LANG.read().0, text, &args)
+        .unwrap_or_default()
 }

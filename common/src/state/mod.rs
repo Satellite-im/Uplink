@@ -1114,6 +1114,7 @@ impl State {
     }
     pub fn set_own_identity(&mut self, identity: Identity) {
         self.id = identity.did_key();
+        self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
     }
     pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
