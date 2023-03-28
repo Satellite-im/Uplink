@@ -244,10 +244,7 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 
 pub fn get_label(cx: &Scope<Props>) -> String {
     let options = cx.props.options.clone().unwrap_or_default();
-    options
-        .with_label
-        .map(|text| text.to_string())
-        .unwrap_or_default()
+    options.with_label.unwrap_or_default()
 }
 
 pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
