@@ -47,7 +47,7 @@ pub struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
+    #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
     /// configures log output
@@ -90,9 +90,20 @@ pub struct StaticArgs {
     pub use_mock: bool,
     /// Uses experimental configuration
     pub experimental: bool,
+    // some features aren't ready for release. This field is used to disable such features.
+    pub is_debug: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
+
+    #[allow(unused_mut)]
+    #[allow(unused_assignments)]
+    let mut use_mock = false;
+    #[cfg(debug_assertions)]
+    {
+        use_mock = args.with_mock;
+    }
+
     let uplink_container = match args.path {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
@@ -113,8 +124,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
-        use_mock: args.with_mock,
+        use_mock,
         experimental: args.experimental_node,
+        is_debug: cfg!(debug_assertions),
     }
 });
 
