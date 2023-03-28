@@ -82,7 +82,7 @@ pub struct Options {
     pub with_clear_btn: bool,
     pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
-    pub with_label: Option<&'static str>,
+    pub with_label: Option<String>,
     pub react_to_esc_key: bool,
 }
 
