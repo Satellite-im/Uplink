@@ -60,7 +60,8 @@ use wry::webview::FileDropEvent;
 use crate::{
     components::media::player::MediaPlayer,
     layouts::storage::{
-        decoded_pathbufs, get_drag_event, ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
+        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
+        FEEDBACK_TEXT_SCRIPT,
     },
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -1325,37 +1326,41 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered(files_local_path) => {
-                let mut script = overlay_script.replace("$IS_DRAGGING", "true");
-                if files_local_path.len() > 1 {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.files-to-upload")
-                        ),
-                    ));
-                } else {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.one-file-to-upload")
-                        ),
-                    ));
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                    if files_local_path.len() > 1 {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.files-to-upload")
+                            ),
+                        ));
+                    } else {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.one-file-to-upload")
+                            ),
+                        ));
+                    }
+                    window.eval(&script);
                 }
-                window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                *drag_event.write_silent() = None;
-                new_files_to_upload = decoded_pathbufs(files_local_path);
-                let mut script = overlay_script.replace("$IS_DRAGGING", "false");
-                script.push_str(ANIMATION_DASH_SCRIPT);
-                script.push_str(SELECT_CHAT_BAR);
-                window.set_focus();
-                window.eval(&script);
-                break;
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    *drag_event.write_silent() = None;
+                    new_files_to_upload = decoded_pathbufs(files_local_path);
+                    let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                    script.push_str(ANIMATION_DASH_SCRIPT);
+                    script.push_str(SELECT_CHAT_BAR);
+                    window.set_focus();
+                    window.eval(&script);
+                    break;
+                }
             }
             _ => {
                 *drag_event.write_silent() = None;
