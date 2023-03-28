@@ -53,7 +53,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::{self, IdentityStatus},
-    raygun::{self, ReactionState},
+    raygun::{self, ConversationType, ReactionState},
 };
 use wry::webview::FileDropEvent;
 
@@ -225,7 +225,10 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         .cloned()
         .expect("chat should have at least 2 participants");
 
-    let subtext = active_participant.status_message().unwrap_or_default();
+    let subtext = match active_chat.conversation_type {
+        ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
+        _ => String::new(),
+    };
     let is_favorite = s.is_favorite(&active_chat);
 
     let first_image = active_participant.graphics().profile_picture();
@@ -291,12 +294,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: data.is_none(),
+            disabled: data.is_none() || !STATIC_ARGS.is_debug,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.call"),
+                text: get_local_text("uplink.call")
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -310,7 +313,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::VideoCamera,
-            disabled: data.is_none(),
+            disabled: data.is_none() || !STATIC_ARGS.is_debug,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
@@ -323,39 +326,18 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let is_loading = data.is_none();
-    let other_participants_names = data
-        .as_ref()
-        .map(|x| x.other_participants_names.clone())
-        .unwrap_or_default();
-    let subtext = data.as_ref().map(|x| x.subtext.clone()).unwrap_or_default();
 
-    cx.render(rsx!(
-        if let Some(data) = data {
-            if data.other_participants.len() < 2 {rsx! (
-                UserImage {
-                    loading: false,
-                    platform: data.platform,
-                    status: data.active_participant.identity_status().into(),
-                    image: data.first_image.clone(),
-                }
-            )} else {rsx! (
+    let data = match data {
+        Some(d) => d,
+        None => {
+            return cx.render(rsx!(
                 UserImageGroup {
-                    loading: false,
-                    participants: build_participants(&data.other_participants),
-                }
-            )}
-        } else {rsx! (
-            UserImageGroup {
-                loading: true,
-                participants: vec![]
-            }
-        )}
-        div {
-            class: "user-info",
-            aria_label: "user-info",
-            if is_loading {
-                rsx!(
+                    loading: true,
+                    participants: vec![]
+                },
+                div {
+                    class: "user-info",
+                    aria_label: "user-info",
                     div {
                         class: "skeletal-bars",
                         div {
@@ -365,20 +347,41 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                             class: "skeletal skeletal-bar",
                         },
                     }
-                )
-            } else {
-                rsx! (
-                    p {
-                        aria_label: "user-info-username",
-                        class: "username",
-                        "{other_participants_names}"
-                    },
-                    p {
-                        aria_label: "user-info-status",
-                        class: "status",
-                        "{subtext}"
-                    }
-                )
+                }
+            ))
+        }
+    };
+
+    let conversation_title = match data.active_chat.conversation_name.as_ref() {
+        Some(n) => n.clone(),
+        None => data.other_participants_names.clone(),
+    };
+    let subtext = data.subtext.clone();
+
+    cx.render(rsx!(
+        if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
+            UserImage {
+                loading: false,
+                platform: data.platform,
+                status: data.active_participant.identity_status().into(),
+                image: data.first_image.clone(),
+            }
+        )} else {rsx! (
+            UserImageGroup {
+                loading: false,
+                participants: build_participants(&data.other_participants),
+            }
+        )}
+        div {
+            class: "user-info",
+            aria_label: "user-info",
+            p {
+                class: "username",
+                "{conversation_title}"
+            },
+            p {
+                class: "status",
+                "{subtext}"
             }
         }
     ))

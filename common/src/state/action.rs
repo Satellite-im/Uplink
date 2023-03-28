@@ -11,7 +11,6 @@ use wry::webview::WebView;
 use crate::warp_runner::ui_adapter;
 
 use super::{
-    chats::Chat,
     identity::Identity,
     notifications::NotificationKind,
     route::To,
@@ -164,7 +163,7 @@ pub enum Action<'a> {
     #[display(fmt = "MockSend")]
     MockSend(Uuid, Vec<String>),
     #[display(fmt = "ClearUnreads")]
-    ClearUnreads(Chat),
+    ClearUnreads(Uuid),
     #[display(fmt = "ClearActiveUnreads")]
     ClearActiveUnreads,
     #[display(fmt = "Config {_0}")]

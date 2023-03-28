@@ -21,6 +21,14 @@
 	}
 	-ms-overflow-style: none;  /* IE and Edge */
 	scrollbar-width: none;  /* Firefox */
+
+    .sidebar-chats-header {
+        display: inline-flex;
+        flex-direction: row;
+        min-height: 32%;
+        overflow-y: hidden;
+        justify-content: space-between;
+    }
 }
 
 
@@ -30,6 +38,19 @@
     min-height: 0;
     display: inline-flex;
     flex-direction: column;
+}
+
+.sidebar {
+    .searchbar-dropdown {
+        position: absolute;
+        display: inline-flex;
+        flex-direction: column;
+        z-index: 100;
+        background-color: var(--background);
+        a {
+            color: var(--text-color);
+        }
+    }
 }
 
 #compose-attachments {
