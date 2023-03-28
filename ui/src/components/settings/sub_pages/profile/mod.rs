@@ -19,8 +19,6 @@ use rfd::FileDialog;
 use warp::multipass;
 use warp::{error::Error, logging::tracing::log};
 
-use crate::layouts::create_account::{MAX_USERNAME_LEN, MIN_USERNAME_LEN};
-
 #[derive(Clone)]
 enum ChanCmd {
     Profile(String),
@@ -121,9 +119,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     // Set up validation options for the input field
     let username_validation_options = Validation {
         // The input should have a maximum length of 32
-        max_length: Some(MIN_USERNAME_LEN),
+        max_length: Some(32),
         // The input should have a minimum length of 4
-        min_length: Some(MAX_USERNAME_LEN),
+        min_length: Some(4),
         // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
         // The input should not contain any whitespace
