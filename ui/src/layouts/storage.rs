@@ -852,13 +852,16 @@ async fn drag_and_drop_function(
     }
 }
 
-#[cfg(target_os = "linux")]
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    #[allow(unused_mut)]
     let mut paths = paths.clone();
-    let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
-    paths = paths
-        .iter()
-        .map(|p| PathBuf::from(decode(p)))
-        .collect::<Vec<PathBuf>>();
+    #[cfg(target_os = "linux")]
+    {
+        let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
+        paths = paths
+            .iter()
+            .map(|p| PathBuf::from(decode(p)))
+            .collect::<Vec<PathBuf>>();
+    }
     paths
 }
