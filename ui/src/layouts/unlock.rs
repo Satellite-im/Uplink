@@ -1,5 +1,5 @@
 use common::{
-    language::{get_local_text, get_local_text_args_builder, get_local_text_with_args},
+    language::{get_local_text, get_local_text_args_builder},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
     STATIC_ARGS,
@@ -257,6 +257,5 @@ fn get_welcome_message() -> String {
     };
     get_local_text_args_builder("unlock.welcome", |m| {
         m.insert("name", name.into());
-        ()
     })
 }
