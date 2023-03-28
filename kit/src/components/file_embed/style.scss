@@ -13,13 +13,12 @@
 .file-embed {
 	display: inline-flex;
 	gap: var(--gap);
-	background: var(--primary);
 	width: fit-content;
 	color: var(--text-color);
-	padding: var(--padding-less) var(--padding);
 	border-radius: var(--border-radius-more);
-	align-content: center;
+	align-content: space-evenly;
 	align-self: flex-end;
+
 	.meta {
 		font-size: var(--text-size-less);
 	}
@@ -46,5 +45,4 @@
 		color: var(--placeholder);
 	}
 	align-self: flex-start;
-	background: var(--secondary);
 }

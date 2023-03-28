@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
@@ -860,6 +861,7 @@ pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool 
 }
 
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    #[allow(unused_mut)]
     let mut paths = paths;
     #[cfg(target_os = "linux")]
     {

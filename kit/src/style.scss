@@ -101,9 +101,15 @@ meter {
 }
 
 @font-face {
+  font-family: OpenDyslexic;
+  font-weight: normal;
+  src: url("./kit/src/fonts/OpenDyslexic-Regular.otf");
+}
+
+@font-face {
   font-family: Noto;
   font-weight: normal;
-  src: url("./fonts/NotoSans-Regular.ttf");
+  src: url("./kit/src/fonts/NotoSans-Regular.ttf");
 }
 
 body,
@@ -324,43 +330,3 @@ p {
 .full-width {
   width: 100%;
 }
-
-// // Do this only on larger screens
-// @media only screen and (min-width: 601px) {
-// 	// hide nav on body of files and friends
-// 	.friends-body > .nav,
-//     #chat-layout > .sidebar > .children > #welcome {
-// 		display: none;
-// 	}
-// }
-// @media only screen and (max-width: 600px) {
-//     // In desktop mode/in the chat-layout welcome inherits 100% width/height from the parent container.
-//     // This is used to fill the sidebar in mobile view if there are no conversations
-//     #welcome {
-//         height: 100%;
-//         width: 100%;
-//     }
-
-//     // Welcome is shown in place of the messages/chat layout, this hides it when it's mobile in favor of
-//     //  the welcome screen in the sidebar
-//     #chat-layout > #welcome {
-//         display: none;
-//     }
-
-//     .full-width-on-mobile > * {
-//         width: 100%;
-//         height: 100%;
-//         position: absolute;
-//         z-index: 1001;
-//         background: var(--background);
-//     }
-
-// 	// #settings-layout > #content {
-//     //     display: none;
-//     // }
-
-//     #files-layout, #friends-layout {
-//         padding-top: 1.5rem;
-//     }
-
-//   }
