@@ -106,18 +106,6 @@ meter {
   src: url("./fonts/NotoSans-Regular.ttf");
 }
 
-@font-face {
-  font-family: Noto;
-  font-weight: bold;
-  src: url("./fonts/NotoSans-Bold.ttf");
-}
-
-@font-face {
-  font-family: Noto;
-  font-weight: lighter;
-  src: url("./fonts/NotoSans-Light.ttf");
-}
-
 body,
 html {
   font-size: var(--text-size);
