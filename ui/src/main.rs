@@ -42,6 +42,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
+use crate::layouts::create_group;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
@@ -79,6 +80,7 @@ pub struct UplinkRoutes<'a> {
     pub friends: &'a str,
     pub files: &'a str,
     pub settings: &'a str,
+    pub create_group: &'a str,
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
@@ -86,6 +88,7 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     friends: "/friends",
     files: "/files",
     settings: "/settings",
+    create_group: "/create-group",
 };
 
 // serve as a sort of router while the user logs in]
@@ -98,17 +101,22 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
+    let dot_uplink = &STATIC_ARGS.dot_uplink;
     let themes_src = Path::new("ui").join("extra").join("themes");
+    let fonts_src = Path::new("kit").join("src").join("fonts");
 
-    match create_all(themes_dest.clone(), false) {
+    match create_all(dot_uplink.clone(), false) {
         Ok(_) => {
             let mut options = CopyOptions::new();
             options.skip_exist = true;
             options.copy_inside = true;
 
-            if let Err(error) = copy(themes_src, themes_dest, &options) {
+            if let Err(error) = copy(themes_src, dot_uplink, &options) {
                 log::error!("Error on copy themes {error}");
+            }
+
+            if let Err(error) = copy(fonts_src, dot_uplink, &options) {
+                log::error!("Error on copy fonts {error}");
             }
         }
         Err(error) => log::error!("Error on create themes folder: {error}"),
@@ -1122,6 +1130,10 @@ fn get_router(cx: Scope) -> Element {
                     }
                 }
             },
+            Route {
+                to: UPLINK_ROUTES.create_group,
+                create_group{},
+            }
         }
     ))
 }

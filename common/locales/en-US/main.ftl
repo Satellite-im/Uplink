@@ -212,6 +212,8 @@ unlock = Unlock
     .enter-pin = Enter Pin
     .create-account = Create Account
     .unlock-account = Unlock Account
+    .welcome = Welcome back, { $name }
+    .create-password = Let's choose your password
 
 auth = Create Account 
     .enter-username = Enter Username

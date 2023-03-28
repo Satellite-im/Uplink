@@ -27,6 +27,29 @@
     }
 }
 
+#create-group {
+    color: var(--text-color);
+    .friend-list {
+        display: inline-flex;
+        flex-direction: column;
+        .friend-group {
+            display: inline-flex;
+            flex-direction: column;
+            .friend-container {
+                display: inline-flex;
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+        }
+    }
+   
+    .button-container {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
 .hover-effect {
     cursor: pointer;
     &::before {
