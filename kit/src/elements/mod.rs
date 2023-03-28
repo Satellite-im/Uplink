@@ -1,6 +1,7 @@
 use derive_more::Display;
 
 pub mod button;
+pub mod checkbox;
 pub mod file;
 pub mod folder;
 pub mod input;
