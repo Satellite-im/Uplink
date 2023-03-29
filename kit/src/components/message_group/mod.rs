@@ -26,6 +26,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx! (
         div {
             class: "message-group-wrap",
+            aria_label: "message-group-wrap",
             remote.then(|| rsx!(
                 &cx.props.user_image
             ))
@@ -33,14 +34,19 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("message-group {}", if remote { "remote" } else { "" })
                 },
+                aria_label: {
+                    format_args!("message-group{}", if remote { "-remote" } else { "" })
+                },
                 &cx.props.children,
                 p {
                     class: "time-ago noselect defaultcursor",
+                    aria_label: "time-ago",
                     "{time_ago}"
                 }
                 (!sender.is_empty()).then(|| rsx! (
                     p {
                         class: "sender",
+                        aria_label: "sender",
                         "{sender}"
                     }
                 )),

@@ -36,6 +36,8 @@ pub struct Configuration {
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct General {
     #[serde(default)]
+    pub dyslexia_support: bool,
+    #[serde(default)]
     pub theme: String,
     #[serde(default)]
     pub show_splash: bool,
@@ -149,6 +151,7 @@ impl Configuration {
             ConfigAction::SetNotificationsEnabled(enabled) => self.notifications.enabled = enabled,
             ConfigAction::SetTheme(theme_name) => self.general.theme = theme_name,
             ConfigAction::SetOverlayEnabled(overlay) => self.general.enable_overlay = overlay,
+            ConfigAction::SetDyslexicEnabled(flag) => self.general.dyslexia_support = flag,
             ConfigAction::SetDevModeEnabled(flag) => self.developer.developer_mode = flag,
             ConfigAction::SetInterfaceSoundsEnabled(flag) => {
                 self.audiovideo.interface_sounds = flag

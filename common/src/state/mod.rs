@@ -20,6 +20,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
+use warp::raygun::ConversationType;
 
 use crate::STATIC_ARGS;
 
@@ -107,7 +108,10 @@ impl State {
     }
 
     pub fn mutate(&mut self, action: Action) {
-        log::debug!("state::mutate: {}", action);
+        // ignore noisy events
+        if !matches!(action, Action::SetChatDraft(_, _)) {
+            log::debug!("state::mutate: {}", action);
+        }
 
         match action {
             Action::SetExtensionEnabled(extension, enabled) => {
@@ -196,7 +200,7 @@ impl State {
             }
             Action::StartReplying(chat, message) => self.start_replying(chat, message),
             Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
-            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearUnreads(id) => self.clear_unreads(id),
             Action::ClearActiveUnreads => {
                 if let Some(id) = self.chats.active {
                     self.clear_unreads(id);
@@ -583,6 +587,9 @@ impl State {
         for (id, chat) in chats {
             if let Some(conv) = self.chats.all.get_mut(&id) {
                 conv.messages = chat.messages;
+                conv.conversation_type = chat.conversation_type;
+                conv.has_more_messages = chat.has_more_messages;
+                conv.conversation_name = chat.conversation_name;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -647,6 +654,21 @@ impl State {
             c.replying_to = None;
         }
     }
+    pub fn can_use_active_chat(&self) -> bool {
+        self.get_active_chat()
+            .map(|c| {
+                if c.conversation_type == ConversationType::Direct {
+                    return c
+                        .participants
+                        .iter()
+                        .all(|e| e.eq(&self.did_key()) || self.has_friend_with_did(e));
+                }
+                // If more than 2 participants -> group chat
+                // Dont need to be friends with all in a group
+                true
+            })
+            .unwrap_or_default()
+    }
     /// Clears the active chat in the `State` struct.
     fn clear_active_chat(&mut self) {
         self.chats.active = None;
@@ -698,6 +720,11 @@ impl State {
             self.chats.favorites.push(*chat);
         }
     }
+    pub fn finished_loading_chat(&mut self, chat_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
+            chat.has_more_messages = false;
+        }
+    }
     /// Get the active chat on `State` struct.
     pub fn get_active_chat(&self) -> Option<Chat> {
         self.chats
@@ -709,14 +736,30 @@ impl State {
             .active_media
             .and_then(|uuid| self.chats.all.get(&uuid))
     }
-    pub fn get_chat_with_friend(&self, friend: &Identity) -> Option<Chat> {
+    pub fn get_chat_by_id(&self, id: Uuid) -> Option<Chat> {
+        self.chats.all.get(&id).cloned()
+    }
+    pub fn get_chat_with_friend(&self, friend: DID) -> Option<Chat> {
         self.chats
             .all
             .values()
             .find(|chat| {
-                chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
+                chat.conversation_type == ConversationType::Direct
+                    && chat.participants.contains(&friend)
             })
             .cloned()
+    }
+    // assumes the messages are sorted by most recent to oldest
+    pub fn prepend_messages_to_chat(
+        &mut self,
+        conversation_id: Uuid,
+        mut messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            for message in messages.drain(..) {
+                chat.messages.push_front(message.clone());
+            }
+        }
     }
 
     /// Check if given chat is favorite on `State` struct.
@@ -888,7 +931,11 @@ impl State {
         }
 
         for (_, list) in friends_by_first_letter.iter_mut() {
-            list.sort_by_key(|a| a.username())
+            list.sort_by(|a, b| {
+                a.username()
+                    .cmp(&b.username())
+                    .then(a.did_key().to_string().cmp(&b.did_key().to_string()))
+            })
         }
 
         friends_by_first_letter
@@ -904,7 +951,7 @@ impl State {
 
         // Check if there is a direct chat with the friend being removed
         let direct_chat = all_chats.values().find(|chat| {
-            chat.participants.len() == 2
+            chat.conversation_type == ConversationType::Direct
                 && chat
                     .participants
                     .iter()
@@ -916,8 +963,6 @@ impl State {
             Some(c) => c,
             None => return,
         };
-
-        self.remove_sidebar_chat(direct_chat.id);
 
         // If the friend's direct chat is currently the active chat, clear the active chat
         if let Some(id) = self.chats.active {
@@ -1069,7 +1114,73 @@ impl State {
     }
     pub fn set_own_identity(&mut self, identity: Identity) {
         self.id = identity.did_key();
+        self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
+    }
+    pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+        self.identities
+            .values()
+            .filter(|id| {
+                let un = id.username();
+                if un.len() < name_prefix.len() {
+                    false
+                } else {
+                    &un[..(name_prefix.len())] == name_prefix
+                }
+            })
+            .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
+            .collect()
+    }
+    // lets the user search for a group chat by chat name or, if a chat is not named, by the names of its participants
+    pub fn search_group_chats(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+        let get_display_name = |chat: &Chat| -> String {
+            let names: Vec<_> = chat
+                .participants
+                .iter()
+                .filter_map(|id| self.identities.get(id))
+                .map(|x| x.username())
+                .collect();
+
+            names.join(",")
+        };
+
+        let compare_str = |v: &str| {
+            if v.len() < name_prefix.len() {
+                false
+            } else {
+                &v[..(name_prefix.len())] == name_prefix
+            }
+        };
+
+        self.chats
+            .all
+            .iter()
+            .filter(|(_, v)| v.conversation_type == ConversationType::Group)
+            .filter(|(_k, v)| {
+                let names: Vec<_> = v
+                    .participants
+                    .iter()
+                    .filter_map(|id| self.identities.get(id))
+                    .map(|x| x.username())
+                    .collect();
+
+                let user_name_match = names.iter().any(|n| compare_str(n));
+                let group_name_match = match v.conversation_name.as_ref() {
+                    Some(n) => compare_str(n),
+                    None => false,
+                };
+
+                user_name_match || group_name_match
+            })
+            .map(|(k, v)| {
+                if let Some(name) = v.conversation_name.as_ref() {
+                    identity_search_result::Entry::from_chat(name.clone(), *k)
+                } else {
+                    let name = get_display_name(v);
+                    identity_search_result::Entry::from_chat(name, *k)
+                }
+            })
+            .collect()
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {
@@ -1124,6 +1235,41 @@ impl State {
             .get(&self.did_key())
             .map(|x| x.username())
             .unwrap_or_default()
+    }
+}
+
+// putting this in a separate module for naming purposes
+pub mod identity_search_result {
+    use uuid::Uuid;
+    use warp::crypto::DID;
+
+    #[derive(Debug, Clone)]
+    pub struct Entry {
+        pub display_name: String,
+        pub id: Identifier,
+    }
+
+    #[allow(clippy::large_enum_variant)]
+    #[derive(Debug, Clone)]
+    pub enum Identifier {
+        Did(DID),
+        Uuid(Uuid),
+    }
+
+    impl Entry {
+        pub fn from_identity(name: String, did: DID) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Did(did),
+            }
+        }
+
+        pub fn from_chat(name: String, id: Uuid) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Uuid(id),
+            }
+        }
     }
 }
 

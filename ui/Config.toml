@@ -2,6 +2,7 @@
 theme = "default"
 enable_overlay = false
 show_splash = false
+dyslexia_support = false
 
 [privacy]
 satellite_sync_nodes = true

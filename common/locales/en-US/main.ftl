@@ -39,7 +39,8 @@ messages = Messages
     .say-something-placeholder = Say Something...
     .user-sent-message = sent you a message.
     .unknown-sent-message = someone sent you a message.
-
+    .not-friends = You are not friends anymore
+    
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
@@ -60,7 +61,8 @@ friends = Friends
     .requested = Requested 
     .sent = Sent
     .requests = Requests
-    .add-failed = You are already friends!
+    .add-existing-friend = You are already friends!
+    .add-failed = No such user was found!
     .pending = Pending
     .key-blocked = Key Blocked
     .blocked = Blocked
@@ -99,6 +101,7 @@ settings = Settings
     .audio = Sounds & Audio
     .extensions = Extensions
     .developer = Developer
+    .accessibility = Accessibility
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings
@@ -119,8 +122,6 @@ settings-profile = Profile Settings
 settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.
-    .splash-screen = Splash Screen
-    .splash-screen-description = Disabling the splash screen could speed up load times.
     .app-language = App Language
     .change-language = Change Language
     .theme = Theme
@@ -128,6 +129,8 @@ settings-general = General Settings
     .theme-reset = Reset Theme
     .theme-reset-description = Reset the theme to the default.
     .theme-reset-cta = Clear Theme
+    .dyslexia = Open Dyslexic
+    .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
 
 settings-extensions = Extension Settings
     .placeholder = Placeholder
@@ -210,6 +213,8 @@ unlock = Unlock
     .enter-pin = Enter Pin
     .create-account = Create Account
     .unlock-account = Unlock Account
+    .welcome = Welcome back, { $name }
+    .create-password = Let's choose your password
 
 auth = Create Account 
     .enter-username = Enter Username
