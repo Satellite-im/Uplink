@@ -32,6 +32,7 @@ use warp::{
     raygun::{self},
 };
 
+use crate::components::chat::create_group::CreateGroup;
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
     utils::build_participants,
@@ -140,6 +141,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     } else {
         (vec![], vec![], None)
     };
+
+    let show_create_group = use_state(&cx, || false);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -272,7 +275,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             text: get_local_text("uplink.chats"),
                         },
                         Button {
-                            appearance: Appearance::Secondary,
+                            appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
                             icon: Icon::ChatPlus,
                             tooltip: cx.render(rsx!(
                                 Tooltip {
@@ -281,11 +284,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 }
                             )),
                             onpress: move |_| {
-                                // using push_route here on purpose
-                                router.push_route(UPLINK_ROUTES.create_group, None, None);
+                                show_create_group.set(!show_create_group.get());
                             }
                         }
                     }
+                    show_create_group.then(|| rsx!(
+                        CreateGroup {
+                            oncreate: move |_| {
+                                show_create_group.set(false);
+                            }
+                        }
+                    )),
                 )),
                 sidebar_chats.iter().cloned().map(|chat| {
                     let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());

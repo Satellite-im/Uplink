@@ -9,6 +9,7 @@
   flex-direction: column;
   gap: var(--gap);
   overflow-y: scroll;
+  overflow-x: hidden;
   label {
     align-self: center;
   }
@@ -23,9 +24,6 @@
 
   .sidebar-chats-header {
     display: inline-flex;
-    flex-direction: row;
-    min-height: fit-content;
-    overflow-y: hidden;
     justify-content: space-between;
 
     .btn {
@@ -45,6 +43,40 @@
   min-height: 0;
   display: inline-flex;
   flex-direction: column;
+}
+
+#create-group {
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--padding);
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--gap);
+
+  .friend-list {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0;
+
+    .friend-group {
+      display: inline-flex;
+      flex-direction: column;
+      .friend-container {
+        display: inline-flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: var(--gap);
+        margin: var(--gap-less) 0;
+        align-content: center;
+        align-items: center;
+      }
+    }
+  }
+
+  .btn,
+  .btn-wrap {
+    width: 100% !important;
+  }
 }
 
 .sidebar {

@@ -16,7 +16,6 @@ use kit::{
         button::Button,
         checkbox::Checkbox,
         input::{Input, Options},
-        label::Label,
         Appearance,
     },
 };
@@ -25,10 +24,13 @@ use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UPLINK_ROUTES;
 
-#[derive(PartialEq, Props)]
-pub struct Props {}
+#[derive(Props)]
+pub struct Props<'a> {
+    oncreate: EventHandler<'a, MouseEvent>,
+}
 
-pub fn create_group(cx: Scope<Props>) -> Element {
+#[allow(non_snake_case)]
+pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering create_group");
     let state = use_shared_state::<State>(cx)?;
     let router = use_router(cx);
@@ -115,30 +117,19 @@ pub fn create_group(cx: Scope<Props>) -> Element {
                     },
                 }
             }
-            Label {
-                text: get_local_text("friends.friends"),
-            },
             render_friends {
                 friends: _friends,
                 name_prefix: friend_prefix.clone(),
                 selected_friends: selected_friends.clone()
             },
-            div {
-                class: "button-container",
-                Button {
-                    text: "Create DM".into(),
-                    appearance: Appearance::Primary,
-                    onpress: move |_| {
-                        log::info!("create dm button");
-                        ch.send(());
-                    },
+            Button {
+                text: "Create DM".into(),
+                appearance: Appearance::Primary,
+                onpress: move |e| {
+                    log::info!("create dm button");
+                    ch.send(());
+                    cx.props.oncreate.call(e);
                 }
-                Button {
-                    text: "Cancel".into(),
-                    appearance: Appearance::Primary,
-                    onpress: move |_| router.pop_route(),
-                }
-
             }
         }
     ))
@@ -227,11 +218,14 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     update_fn();
                 },
             },
-            p {
-                onclick: move |_| {
-                    update_fn();
+            div {
+                class: "flex-1",
+                p {
+                    onclick: move |_| {
+                        update_fn();
+                    },
+                    cx.props.friend.username(),
                 },
-                cx.props.friend.username(),
             },
             Checkbox{
                 disabled: false,
