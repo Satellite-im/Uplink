@@ -25,7 +25,25 @@ document.getElementById("UUID").addEventListener(
   false,
 )
 
-document.addEventListener("click", (_) => {
+//Hide the context menu only if context items are clicked
+document.getElementById("UUID-context-menu").addEventListener("click", (e) => {
   const context_menu = document.getElementById("UUID-context-menu")
-  context_menu.classList.add("hidden")
+  const ctx_items = context_menu.getElementsByClassName("context-item");
+  for (const i of ctx_items) {
+    const rect = i.getBoundingClientRect()
+    if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+      context_menu.classList.add("hidden")
+      break;
+    }
+  }
+})
+
+//Hides the context menu if clicked outside
+document.addEventListener("click", (e) => {
+  const context_menu = document.getElementById("UUID-context-menu")
+  if (context_menu != null) {
+    const rect = context_menu.getBoundingClientRect()
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)
+      context_menu.classList.add("hidden")
+  }
 })

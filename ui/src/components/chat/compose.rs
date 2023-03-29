@@ -11,7 +11,7 @@ use futures::{channel::oneshot, StreamExt};
 
 use kit::{
     components::{
-        context_menu::{ContextItem, ContextMenu},
+        context_menu::{ContextItem, ContextMenu, IdentityHeader},
         file_embed::FileEmbed,
         indicator::{Platform, Status},
         message::{Message, Order},
@@ -23,6 +23,7 @@ use kit::{
     },
     elements::{
         button::Button,
+        input::Input,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
@@ -677,11 +678,15 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     }
 
     cx.render(rsx!(MessageGroup {
-        user_image: cx.render(rsx!(UserImage {
-            image: sender.graphics().profile_picture(),
-            platform: sender.platform().into(),
-            status: sender_status,
-        })),
+        user_image: cx.render(rsx!(
+            QuickProfileContext{
+            identity: sender.clone(),
+            cx.render(rsx!(UserImage {
+                image: sender.graphics().profile_picture(),
+                platform: sender.platform().into(),
+                status: sender_status,
+            }))
+        }))
         timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
         with_sender: if sender_name.is_empty() {
             get_local_text("messages.you")
@@ -1372,4 +1377,77 @@ async fn drag_and_drop_function(
     }
     *drag_event.write_silent() = None;
     new_files_to_upload
+}
+
+#[derive(Props)]
+pub struct QuickProfileProps<'a> {
+    identity: Identity,
+    children: Element<'a>,
+}
+
+#[allow(non_snake_case)]
+pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    let did = &cx.props.identity.did_key();
+
+    let is_self = state.read().get_own_identity().did_key().eq(did);
+    let randomUUID = Uuid::new_v4();
+    let ctx_id = format!("{did}-{randomUUID}");
+
+    cx.render(rsx!(ContextMenu {
+        id: format!("{ctx_id}-friend-listing"),
+        key: "{ctx_id}-friend-listing",
+        items: cx.render(rsx!(
+            IdentityHeader {
+                identity: cx.props.identity.to_owned()
+            },
+            hr{},
+            if is_self {
+                rsx!(ContextItem {
+                    icon: Icon::UserCircle,
+                    text: get_local_text("quickprofile.profile"),
+                    // TODO: Show a profile popup
+                })
+            } else {
+                rsx!(ContextItem {
+                    icon: Icon::UserCircle,
+                    text: get_local_text("quickprofile.profile"),
+                    // TODO: Show a profile popup
+                },
+                ContextItem {
+                    icon: Icon::ChatBubbleBottomCenterText,
+                    text: get_local_text("quickprofile.message"),
+                    onpress: move |_| {
+                        if state.read().ui.is_minimal_view() {
+                            state.write().mutate(Action::SidebarHidden(true));
+                        }
+                        //state.write().mutate(Action::ChatWith(did, false));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::PhoneArrowUpRight,
+                    text: get_local_text("quickprofile.call"),
+                    // TODO: Impl missing
+                },
+                hr{},
+                ContextItem {
+                    icon: Icon::UserMinus,
+                    text: get_local_text("quickprofile.friend-remove"),
+                    // TODO:
+                },
+                ContextItem {
+                    icon: Icon::UserBlock,
+                    text: get_local_text("quickprofile.block"),
+                    // TODO:
+                },
+                hr{},
+                Input {
+                    placeholder: get_local_text("quickprofile.chat-placeholder"),
+                    onreturn: |e|{}
+                })
+            }
+        ))
+        ,
+        &cx.props.children
+    }))
 }

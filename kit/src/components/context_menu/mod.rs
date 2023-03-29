@@ -1,4 +1,4 @@
-use common::icons;
+use common::{icons, state::Identity};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -52,6 +52,30 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             div {"{cx.props.text}"}
         }
     })
+}
+
+#[derive(PartialEq, Props)]
+pub struct IdentityProps {
+    identity: Identity,
+}
+
+#[allow(non_snake_case)]
+pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
+    let image = cx.props.identity.graphics().profile_picture();
+    let banner = cx.props.identity.graphics().profile_banner();
+    cx.render(rsx!(
+        div {
+            class: "identity-header",
+            div {
+                id: "banner-image",
+                style: "background-image: url('{banner}');",
+                div {
+                    id: "profile-image",
+                    style: "background-image: url('{image}');"
+                }
+            }
+        }
+    ))
 }
 
 #[derive(Props)]

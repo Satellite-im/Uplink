@@ -53,3 +53,34 @@
 		}
 	}
 }
+
+.identity-header {
+	display: flex;
+	align-items: end;
+	height: 80px;
+	min-width: 150px;
+	width: fit-content;
+	max-width: 160px;
+	background-size: cover;
+	background-color: var(--secondary);
+	margin: calc(-1*var(--gap-less));
+	padding: 0;
+	#banner-image {
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		background-size: cover;
+		background-color: var(--secondary);
+		border: 0px solid var(--background);
+	}
+	#profile-image {
+		padding: var(--gap-less);
+		width: var(--height-input);
+		height: var(--height-input);
+		border-radius: 50%;
+		background-size: cover;
+		background-color: var(--secondary);
+		border: 1px solid var(--background);
+	}
+}
