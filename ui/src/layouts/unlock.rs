@@ -255,7 +255,13 @@ fn get_welcome_message() -> String {
         Some(name) => name.clone(),
         None => String::from("UNKNOWN"),
     };
+    let name_formatted = if name.len() > 28 {
+        format!("{}...", &name[..28])
+    } else {
+        name.to_string()
+    };
+
     get_local_text_args_builder("unlock.welcome", |m| {
-        m.insert("name", name.into());
+        m.insert("name", name_formatted.into());
     })
 }
