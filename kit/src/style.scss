@@ -173,6 +173,10 @@ html {
   cursor: default;
 }
 
+.flex-1 {
+  flex: 1;
+}
+
 :root {
   --animation-time: 0.2s;
 
@@ -189,7 +193,7 @@ html {
   --padding-less: 0.75rem;
 
   --height-input: 38px;
-  --height-input-less: 40px;
+  --height-input-less: 28px;
   --width-sidebar: 300px;
 
   --icon-size-more: 50px;

@@ -42,7 +42,6 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
-use crate::layouts::create_group;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
@@ -82,7 +81,6 @@ pub struct UplinkRoutes<'a> {
     pub friends: &'a str,
     pub files: &'a str,
     pub settings: &'a str,
-    pub create_group: &'a str,
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
@@ -90,7 +88,6 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     friends: "/friends",
     files: "/files",
     settings: "/settings",
-    create_group: "/create-group",
 };
 
 // serve as a sort of router while the user logs in]
@@ -1137,10 +1134,6 @@ fn get_router(cx: Scope) -> Element {
                         active: files_route,
                     }
                 }
-            },
-            Route {
-                to: UPLINK_ROUTES.create_group,
-                create_group{},
             }
         }
     ))
