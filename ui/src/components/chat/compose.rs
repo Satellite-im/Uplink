@@ -1391,18 +1391,31 @@ pub struct QuickProfileProps<'a> {
 }
 
 enum QuickProfileCmd {
-    ProfileSettings,
-    CreateConversation(Identity),
+    CreateConversation(Option<Chat>, DID),
     RemoveFriend(DID),
     BlockFriend(DID),
-    Chat(Identity, String),
+    RemoveDirectConvs(DID),
+    Chat(Option<Chat>, String),
 }
 
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let identity = cx.props.identity.clone();
+    let remove_identity = identity.clone();
+    let block_identity = identity.clone();
+
     let did = &identity.did_key();
+    let chat_of = state.read().get_chat_with_friend(&identity).clone();
+    let chat_send = chat_of.clone();
+
+    let chat_is_current = match state.read().get_active_chat() {
+        Some(c) => match &chat_of {
+            Some(cO) => c.eq(&cO),
+            None => false,
+        },
+        None => false,
+    };
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
@@ -1412,7 +1425,6 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let router = use_router(cx);
 
     let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
-
     if let Some(chat) = chat_with.get().clone() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat.id, true));
@@ -1422,16 +1434,14 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
 
-    /*let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
         to_owned![chat_with];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    QuickProfileCmd::ProfileSettings => {}
-                    QuickProfileCmd::CreateConversation(identity) => {
+                    QuickProfileCmd::CreateConversation(chat, did) => {
                         // verify chat exists
-                        let chat = state.read().get_chat_with_friend(&identity);
                         let chat = match chat {
                             Some(c) => c,
                             None => {
@@ -1440,7 +1450,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                     oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
                                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
                                     RayGunCmd::CreateConversation {
-                                        recipient: identity.did_key(),
+                                        recipient: did,
                                         rsp: tx,
                                     },
                                 )) {
@@ -1493,11 +1503,54 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             log::error!("failed to block friend: {}", e);
                         }
                     }
-                    QuickProfileCmd::Chat(identity, msg) => {}
+                    QuickProfileCmd::RemoveDirectConvs(recipient) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
+                                recipient: recipient.clone(),
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!(
+                                "failed to remove conversation with friend {}: {}",
+                                recipient,
+                                e
+                            );
+                        }
+                    }
+                    QuickProfileCmd::Chat(chat, msg) => {
+                        let c = match chat {
+                            Some(c) => c,
+                            None => return,
+                        };
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let cmd = RayGunCmd::SendMessage {
+                            conv_id: c.id,
+                            msg: vec![msg],
+                            attachments: Vec::new(),
+                            rsp: tx,
+                        };
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!("failed to send message: {}", e);
+                        }
+                        chat_with.set(Some(c));
+                    }
                 }
             }
         }
-    });*/
+    });
 
     cx.render(rsx!(ContextMenu {
         id: format!("{ctx_id}-friend-listing"),
@@ -1523,13 +1576,16 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 },
                 if is_friend {
                     rsx!(
-                        ContextItem {
-                            icon: Icon::ChatBubbleBottomCenterText,
-                            text: get_local_text("quickprofile.message"),
-                            onpress: move |_| {
-                                //ch.send(QuickProfileCmd::CreateConversation(id2));
-                            }
-                        },
+                        if !chat_is_current {
+                            rsx!(
+                                ContextItem {
+                                icon: Icon::ChatBubbleBottomCenterText,
+                                text: get_local_text("quickprofile.message"),
+                                onpress: move |_| {
+                                    ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
+                                }
+                            })
+                        }
                         ContextItem {
                             icon: Icon::PhoneArrowUpRight,
                             text: get_local_text("quickprofile.call"),
@@ -1543,8 +1599,8 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         icon: Icon::UserMinus,
                         text: get_local_text("quickprofile.friend-remove"),
                         onpress: move |_| {
-                            //ch.send(QuickProfileCmd::RemoveFriend(did1));
-                            //ch.send(QuickProfileCmd::RemoveDirectConvs(did));
+                            ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
+                            ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
                         }
                     })
                 }
@@ -1552,16 +1608,19 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     icon: Icon::UserBlock,
                     text: get_local_text("quickprofile.block"),
                     onpress: move |_| {
-                        //ch.send(QuickProfileCmd::BlockFriend(did2));
-                        //ch.send(QuickProfileCmd::RemoveDirectConvs(did));
+                        ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
+                        ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
                     }
                 },
-                if is_friend {
+                if is_friend && !chat_is_current {
                     rsx!(
                         hr{},
                         Input {
                             placeholder: get_local_text("quickprofile.chat-placeholder"),
-                            onreturn: |e|{}
+                            onreturn: move |(val, _,_)|{
+                                to_owned![chat_send];
+                                ch.send(QuickProfileCmd::Chat(chat_send, val));
+                            }
                         }
                     )
                 })
