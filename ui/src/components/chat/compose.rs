@@ -1398,15 +1398,19 @@ enum QuickProfileCmd {
     Chat(Option<Chat>, String),
 }
 
+// Create a quick profile context menu
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let identity = cx.props.identity.clone();
+    // Message groups dont have any kind of identification
+    let UUID = &*cx.use_hook(|| Uuid::new_v4().to_string());
+
+    let identity = &cx.props.identity;
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
     let did = &identity.did_key();
-    let chat_of = state.read().get_chat_with_friend(&identity).clone();
+    let chat_of = state.read().get_chat_with_friend(identity);
     let chat_send = chat_of.clone();
 
     let chat_is_current = match state.read().get_active_chat() {
@@ -1419,13 +1423,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
-    let randomUUID = Uuid::new_v4();
-    let ctx_id = format!("{did}-{randomUUID}");
 
     let router = use_router(cx);
 
     let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
-    if let Some(chat) = chat_with.get().clone() {
+    if let Some(chat) = chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat.id, true));
         if state.read().ui.is_minimal_view() {
@@ -1553,8 +1555,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     });
 
     cx.render(rsx!(ContextMenu {
-        id: format!("{ctx_id}-friend-listing"),
-        key: "{ctx_id}-friend-listing",
+        id: format!("{UUID}-friend-listing"),
         items: cx.render(rsx!(
             IdentityHeader {
                 identity: cx.props.identity.to_owned()
@@ -1618,8 +1619,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         Input {
                             placeholder: get_local_text("quickprofile.chat-placeholder"),
                             onreturn: move |(val, _,_)|{
-                                to_owned![chat_send];
-                                ch.send(QuickProfileCmd::Chat(chat_send, val));
+                                ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), val));
                             }
                         }
                     )
