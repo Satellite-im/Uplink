@@ -10,8 +10,8 @@ use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
+    label::LabelWithEllipsis,
 };
-
 use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
@@ -179,6 +179,10 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             {Some(get_welcome_message())}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
+                            ellipsis_on_label: Some(LabelWithEllipsis {
+                                apply_ellipsis: true,
+                                padding_rigth_for_ellipsis: 105,
+                            }),
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {
@@ -255,13 +259,8 @@ fn get_welcome_message() -> String {
         Some(name) => name.clone(),
         None => String::from("UNKNOWN"),
     };
-    let name_formatted = if name.len() > 28 {
-        format!("{}...", &name[..28])
-    } else {
-        name.to_string()
-    };
 
     get_local_text_args_builder("unlock.welcome", |m| {
-        m.insert("name", name_formatted.into());
+        m.insert("name", name.into());
     })
 }

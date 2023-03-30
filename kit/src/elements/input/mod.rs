@@ -10,6 +10,8 @@ use crate::elements::label::Label;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
+use super::label::LabelWithEllipsis;
+
 /// This vector of special chars must be used to decide which char can or cannot be allowed in the input field.
 /// Just use this if quantity of chars you want to block and allow are similar.
 /// If not, is best to use SpecialCharsAction to pass small vecs.
@@ -83,6 +85,7 @@ pub struct Options {
     pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
     pub with_label: Option<String>,
+    pub ellipsis_on_label: Option<LabelWithEllipsis>,
     pub react_to_esc_key: bool,
 }
 
@@ -96,6 +99,7 @@ impl Default for Options {
             clear_btn_icon: Icon::Backspace,
             clear_on_submit: true,
             with_label: None,
+            ellipsis_on_label: None,
             react_to_esc_key: false,
         }
     }
@@ -345,7 +349,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             (!label.is_empty()).then(|| rsx! (
                 Label {
-                    text: label
+                    text: label,
+                    label_with_ellipsis: options.ellipsis_on_label.unwrap_or_default(),
                 }
             ))
             div {

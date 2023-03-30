@@ -255,16 +255,6 @@
 .idle {
     max-width: 132px;
     margin-bottom: -3rem;
-    z-index: 2;
+    z-index: 0;
     align-self: flex-end;
-}
-@media screen and (max-width: 475px) {
-    .idle {
-        margin-bottom: -2rem;
-    }
-}
-@media screen and (max-width: 392px) {
-    .idle {
-        margin-bottom: -3rem;
-    }
 }
