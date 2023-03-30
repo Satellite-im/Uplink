@@ -7,6 +7,7 @@ use std::{
 
 use dioxus::prelude::*;
 
+use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
@@ -36,7 +37,10 @@ use kit::{
 use common::{
     icons::outline::Shape as Icon,
     state::{group_messages, GroupedMessage, MessageGroup},
-    warp_runner::ui_adapter,
+    warp_runner::{
+        ui_adapter::{self, ChatAdapter},
+        MultiPassCmd,
+    },
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -66,6 +70,7 @@ use crate::{
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
+    UPLINK_ROUTES,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
@@ -1385,14 +1390,114 @@ pub struct QuickProfileProps<'a> {
     children: Element<'a>,
 }
 
+enum QuickProfileCmd {
+    ProfileSettings,
+    CreateConversation(Identity),
+    RemoveFriend(DID),
+    BlockFriend(DID),
+    Chat(Identity, String),
+}
+
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let did = &cx.props.identity.did_key();
+    let identity = cx.props.identity.clone();
+    let did = &identity.did_key();
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
+    let is_friend = state.read().has_friend_with_did(did);
     let randomUUID = Uuid::new_v4();
     let ctx_id = format!("{did}-{randomUUID}");
+
+    let router = use_router(cx);
+
+    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
+
+    if let Some(chat) = chat_with.get().clone() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(&chat.id, true));
+        if state.read().ui.is_minimal_view() {
+            state.write().mutate(Action::SidebarHidden(true));
+        }
+        router.replace_route(UPLINK_ROUTES.chat, None, None);
+    }
+
+    /*let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
+        to_owned![chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    QuickProfileCmd::ProfileSettings => {}
+                    QuickProfileCmd::CreateConversation(identity) => {
+                        // verify chat exists
+                        let chat = state.read().get_chat_with_friend(&identity);
+                        let chat = match chat {
+                            Some(c) => c,
+                            None => {
+                                // if not, create the chat
+                                let (tx, rx) =
+                                    oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
+                                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
+                                    RayGunCmd::CreateConversation {
+                                        recipient: identity.did_key(),
+                                        rsp: tx,
+                                    },
+                                )) {
+                                    log::error!("failed to send warp command: {}", e);
+                                    continue;
+                                }
+
+                                let rsp = rx.await.expect("command canceled");
+
+                                match rsp {
+                                    Ok(c) => c.inner,
+                                    Err(e) => {
+                                        log::error!("failed to create conversation: {}", e);
+                                        continue;
+                                    }
+                                }
+                            }
+                        };
+                        chat_with.set(Some(chat));
+                    }
+                    QuickProfileCmd::RemoveFriend(did) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
+                                did,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!("failed to remove friend: {}", e);
+                        }
+                    }
+                    QuickProfileCmd::BlockFriend(did) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) = warp_cmd_tx
+                            .send(WarpCmd::MultiPass(MultiPassCmd::Block { did, rsp: tx }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            // todo: display message to user
+                            log::error!("failed to block friend: {}", e);
+                        }
+                    }
+                    QuickProfileCmd::Chat(identity, msg) => {}
+                }
+            }
+        }
+    });*/
 
     cx.render(rsx!(ContextMenu {
         id: format!("{ctx_id}-friend-listing"),
@@ -1405,8 +1510,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             if is_self {
                 rsx!(ContextItem {
                     icon: Icon::UserCircle,
-                    text: get_local_text("quickprofile.profile"),
-                    // TODO: Show a profile popup
+                    text: get_local_text("quickprofile.self-edit"),
+                    onpress: move |_| {
+                        router.replace_route(UPLINK_ROUTES.settings, None, None);
+                    }
                 })
             } else {
                 rsx!(ContextItem {
@@ -1414,36 +1521,49 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     text: get_local_text("quickprofile.profile"),
                     // TODO: Show a profile popup
                 },
-                ContextItem {
-                    icon: Icon::ChatBubbleBottomCenterText,
-                    text: get_local_text("quickprofile.message"),
-                    onpress: move |_| {
-                        if state.read().ui.is_minimal_view() {
-                            state.write().mutate(Action::SidebarHidden(true));
+                if is_friend {
+                    rsx!(
+                        ContextItem {
+                            icon: Icon::ChatBubbleBottomCenterText,
+                            text: get_local_text("quickprofile.message"),
+                            onpress: move |_| {
+                                //ch.send(QuickProfileCmd::CreateConversation(id2));
+                            }
+                        },
+                        ContextItem {
+                            icon: Icon::PhoneArrowUpRight,
+                            text: get_local_text("quickprofile.call"),
+                            // TODO: Impl missing
                         }
-                        //state.write().mutate(Action::ChatWith(did, false));
-                    }
-                },
-                ContextItem {
-                    icon: Icon::PhoneArrowUpRight,
-                    text: get_local_text("quickprofile.call"),
-                    // TODO: Impl missing
-                },
+                    )
+                }
                 hr{},
-                ContextItem {
-                    icon: Icon::UserMinus,
-                    text: get_local_text("quickprofile.friend-remove"),
-                    // TODO:
-                },
+                if is_friend {
+                    rsx!(ContextItem {
+                        icon: Icon::UserMinus,
+                        text: get_local_text("quickprofile.friend-remove"),
+                        onpress: move |_| {
+                            //ch.send(QuickProfileCmd::RemoveFriend(did1));
+                            //ch.send(QuickProfileCmd::RemoveDirectConvs(did));
+                        }
+                    })
+                }
                 ContextItem {
                     icon: Icon::UserBlock,
                     text: get_local_text("quickprofile.block"),
-                    // TODO:
+                    onpress: move |_| {
+                        //ch.send(QuickProfileCmd::BlockFriend(did2));
+                        //ch.send(QuickProfileCmd::RemoveDirectConvs(did));
+                    }
                 },
-                hr{},
-                Input {
-                    placeholder: get_local_text("quickprofile.chat-placeholder"),
-                    onreturn: |e|{}
+                if is_friend {
+                    rsx!(
+                        hr{},
+                        Input {
+                            placeholder: get_local_text("quickprofile.chat-placeholder"),
+                            onreturn: |e|{}
+                        }
+                    )
                 })
             }
         ))
