@@ -1,19 +1,13 @@
 use dioxus::prelude::*;
 
 #[derive(PartialEq, Eq, Clone)]
+#[derive(Default)]
 pub struct LabelWithEllipsis {
     pub apply_ellipsis: bool,
     pub padding_rigth_for_ellipsis: usize,
 }
 
-impl Default for LabelWithEllipsis {
-    fn default() -> Self {
-        Self {
-            apply_ellipsis: false,
-            padding_rigth_for_ellipsis: 0,
-        }
-    }
-}
+
 
 #[derive(PartialEq, Eq, Props)]
 pub struct Props {
