@@ -82,7 +82,7 @@ pub struct Options {
     pub with_clear_btn: bool,
     pub clear_btn_icon: Icon,
     pub clear_on_submit: bool,
-    pub with_label: Option<&'static str>,
+    pub with_label: Option<String>,
     pub react_to_esc_key: bool,
 }
 
@@ -244,10 +244,7 @@ pub fn get_aria_label(cx: &Scope<Props>) -> String {
 
 pub fn get_label(cx: &Scope<Props>) -> String {
     let options = cx.props.options.clone().unwrap_or_default();
-    options
-        .with_label
-        .map(|text| text.to_string())
-        .unwrap_or_default()
+    options.with_label.unwrap_or_default()
 }
 
 pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
@@ -372,7 +369,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     value: "{val.read()}",
                     maxlength: "{max_length}",
                     onblur: move |_| {
-                        if onblur_active && *valid.current(){
+                        if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
                             valid.set(false);
                             if options.clear_on_submit {
@@ -396,15 +393,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             true
                         };
                         emit(&cx, current_val, is_valid);
-                    },
-                    onblur: move |_| {
-                        emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
-                        if *valid.current() {
-                                valid.set(false);
-                        }
-                        if options.clear_on_submit {
-                            reset_fn();
-                        }
                     },
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {

@@ -65,6 +65,8 @@ mod overlay;
 mod utils;
 mod window_manager;
 
+pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
+
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -98,17 +100,22 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
+    let dot_uplink = &STATIC_ARGS.dot_uplink;
     let themes_src = Path::new("ui").join("extra").join("themes");
+    let fonts_src = Path::new("kit").join("src").join("fonts");
 
-    match create_all(themes_dest.clone(), false) {
+    match create_all(dot_uplink.clone(), false) {
         Ok(_) => {
             let mut options = CopyOptions::new();
             options.skip_exist = true;
             options.copy_inside = true;
 
-            if let Err(error) = copy(themes_src, themes_dest, &options) {
+            if let Err(error) = copy(themes_src, dot_uplink, &options) {
                 log::error!("Error on copy themes {error}");
+            }
+
+            if let Err(error) = copy(fonts_src, dot_uplink, &options) {
+                log::error!("Error on copy fonts {error}");
             }
         }
         Err(error) => log::error!("Error on create themes folder: {error}"),
@@ -438,6 +445,12 @@ fn app(cx: Scope) -> Element {
         let user_lang_saved = state.read().settings.language.clone();
         change_language(user_lang_saved);
 
+        let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+            OPEN_DYSLEXIC
+        } else {
+            ""
+        };
+
         let theme = state
             .read()
             .ui
@@ -447,7 +460,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {open_dyslexic}" },
             div {
                 id: "app-wrap",
                 get_titlebar(cx),
@@ -1121,7 +1134,7 @@ fn get_router(cx: Scope) -> Element {
                         active: files_route,
                     }
                 }
-            },
+            }
         }
     ))
 }

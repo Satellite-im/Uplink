@@ -53,14 +53,15 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::{self, IdentityStatus},
-    raygun::{self, ReactionState},
+    raygun::{self, ConversationType, ReactionState},
 };
 use wry::webview::FileDropEvent;
 
 use crate::{
     components::media::player::MediaPlayer,
     layouts::storage::{
-        decoded_pathbufs, get_drag_event, ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
+        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
+        FEEDBACK_TEXT_SCRIPT,
     },
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
@@ -225,7 +226,10 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         .cloned()
         .expect("chat should have at least 2 participants");
 
-    let subtext = active_participant.status_message().unwrap_or_default();
+    let subtext = match active_chat.conversation_type {
+        ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
+        _ => String::new(),
+    };
     let is_favorite = s.is_favorite(&active_chat);
 
     let first_image = active_participant.graphics().profile_picture();
@@ -291,12 +295,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: data.is_none(),
+            disabled: data.is_none() || !STATIC_ARGS.is_debug,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.call"),
+                text: get_local_text("uplink.call")
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -310,7 +314,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::VideoCamera,
-            disabled: data.is_none(),
+            disabled: data.is_none() || !STATIC_ARGS.is_debug,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
@@ -323,39 +327,18 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let is_loading = data.is_none();
-    let other_participants_names = data
-        .as_ref()
-        .map(|x| x.other_participants_names.clone())
-        .unwrap_or_default();
-    let subtext = data.as_ref().map(|x| x.subtext.clone()).unwrap_or_default();
 
-    cx.render(rsx!(
-        if let Some(data) = data {
-            if data.other_participants.len() < 2 {rsx! (
-                UserImage {
-                    loading: false,
-                    platform: data.platform,
-                    status: data.active_participant.identity_status().into(),
-                    image: data.first_image.clone(),
-                }
-            )} else {rsx! (
+    let data = match data {
+        Some(d) => d,
+        None => {
+            return cx.render(rsx!(
                 UserImageGroup {
-                    loading: false,
-                    participants: build_participants(&data.other_participants),
-                }
-            )}
-        } else {rsx! (
-            UserImageGroup {
-                loading: true,
-                participants: vec![]
-            }
-        )}
-        div {
-            class: "user-info",
-            aria_label: "user-info",
-            if is_loading {
-                rsx!(
+                    loading: true,
+                    participants: vec![]
+                },
+                div {
+                    class: "user-info",
+                    aria_label: "user-info",
                     div {
                         class: "skeletal-bars",
                         div {
@@ -365,20 +348,41 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                             class: "skeletal skeletal-bar",
                         },
                     }
-                )
-            } else {
-                rsx! (
-                    p {
-                        aria_label: "user-info-username",
-                        class: "username",
-                        "{other_participants_names}"
-                    },
-                    p {
-                        aria_label: "user-info-status",
-                        class: "status",
-                        "{subtext}"
-                    }
-                )
+                }
+            ))
+        }
+    };
+
+    let conversation_title = match data.active_chat.conversation_name.as_ref() {
+        Some(n) => n.clone(),
+        None => data.other_participants_names.clone(),
+    };
+    let subtext = data.subtext.clone();
+
+    cx.render(rsx!(
+        if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
+            UserImage {
+                loading: false,
+                platform: data.platform,
+                status: data.active_participant.identity_status().into(),
+                image: data.first_image.clone(),
+            }
+        )} else {rsx! (
+            UserImageGroup {
+                loading: false,
+                participants: build_participants(&data.other_participants),
+            }
+        )}
+        div {
+            class: "user-info",
+            aria_label: "user-info",
+            p {
+                class: "username",
+                "{conversation_title}"
+            },
+            p {
+                class: "status",
+                "{subtext}"
             }
         }
     ))
@@ -925,17 +929,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
-    let is_reply = active_chat_id
-        .and_then(|id| {
-            state
-                .read()
-                .chats()
-                .all
-                .get(&id)
-                .map(|chat| chat.replying_to.is_some())
-        })
-        .unwrap_or(false);
-
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
     // used to render the typing indicator
@@ -964,12 +957,16 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                 while let Some((msg, conv_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let cmd = match reply {
-                        Some(reply_to) => RayGunCmd::Reply {
-                            conv_id,
-                            reply_to,
-                            msg,
-                            rsp: tx,
-                        },
+                        Some(reply_to) => {
+                            let attachments = files_to_upload.current().to_vec();
+                            RayGunCmd::Reply {
+                                conv_id,
+                                reply_to,
+                                msg,
+                                attachments,
+                                rsp: tx,
+                            }
+                        }
                         None => {
                             let attachments = files_to_upload.current().to_vec();
                             RayGunCmd::SendMessage {
@@ -1213,7 +1210,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             .unwrap_or(None),
         with_file_upload: cx.render(rsx!(Button {
             icon: Icon::Plus,
-            disabled: is_loading || is_reply || disabled,
+            disabled: is_loading || disabled,
             aria_label: "upload-button".into(),
             appearance: Appearance::Primary,
             onpress: move |_| {
@@ -1329,37 +1326,41 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered(files_local_path) => {
-                let mut script = overlay_script.replace("$IS_DRAGGING", "true");
-                if files_local_path.len() > 1 {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.files-to-upload")
-                        ),
-                    ));
-                } else {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.one-file-to-upload")
-                        ),
-                    ));
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                    if files_local_path.len() > 1 {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.files-to-upload")
+                            ),
+                        ));
+                    } else {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.one-file-to-upload")
+                            ),
+                        ));
+                    }
+                    window.eval(&script);
                 }
-                window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                *drag_event.write_silent() = None;
-                new_files_to_upload = decoded_pathbufs(files_local_path);
-                let mut script = overlay_script.replace("$IS_DRAGGING", "false");
-                script.push_str(ANIMATION_DASH_SCRIPT);
-                script.push_str(SELECT_CHAT_BAR);
-                window.set_focus();
-                window.eval(&script);
-                break;
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    *drag_event.write_silent() = None;
+                    new_files_to_upload = decoded_pathbufs(files_local_path);
+                    let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                    script.push_str(ANIMATION_DASH_SCRIPT);
+                    script.push_str(SELECT_CHAT_BAR);
+                    window.set_focus();
+                    window.eval(&script);
+                    break;
+                }
             }
             _ => {
                 *drag_event.write_silent() = None;

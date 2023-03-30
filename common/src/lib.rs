@@ -47,7 +47,7 @@ pub struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
+    #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
     /// configures log output
@@ -57,12 +57,16 @@ pub struct Args {
 
 #[derive(Debug)]
 pub struct StaticArgs {
+    /// ~/.uplink
+    pub dot_uplink: PathBuf,
     /// Uplink stores its data with the following layout, starting at whatever the root folder is:
     /// ./uplink ./uplink/warp ./themes
     /// uplink_path is used for deleting all uplink data when a new account is created
     pub uplink_path: PathBuf,
     /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
     pub themes_path: PathBuf,
+    /// Location of custom fonts added into the application (as well as a few defaults)
+    pub fonts_path: PathBuf,
     /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
     /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
@@ -86,9 +90,20 @@ pub struct StaticArgs {
     pub use_mock: bool,
     /// Uses experimental configuration
     pub experimental: bool,
+    // some features aren't ready for release. This field is used to disable such features.
+    pub is_debug: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
+
+    #[allow(unused_mut)]
+    #[allow(unused_assignments)]
+    let mut use_mock = false;
+    #[cfg(debug_assertions)]
+    {
+        use_mock = args.with_mock;
+    }
+
     let uplink_container = match args.path {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
@@ -96,8 +111,10 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
     StaticArgs {
+        dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
         themes_path: uplink_container.join("themes"),
+        fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
@@ -107,8 +124,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
-        use_mock: args.with_mock,
+        use_mock,
         experimental: args.experimental_node,
+        is_debug: cfg!(debug_assertions),
     }
 });
 

@@ -31,12 +31,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: get_local_text("settings-general.splash-screen"),
-                section_description: get_local_text("settings-general.splash-screen-description"),
-                Switch {
-                }
-            },
-            SettingSection {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 Select {

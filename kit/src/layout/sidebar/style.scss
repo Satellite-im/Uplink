@@ -1,38 +1,39 @@
 .sidebar {
-	display: inline-flex;
-	flex-direction: column;
-	width: var(--width-sidebar);
-	min-width: var(--width-sidebar);
-	height: 100%;
-	border-right: 1px solid var(--border-color);
-	transition: margin-left var(--animation-speed);
+  display: inline-flex;
+  flex-direction: column;
+  width: var(--width-sidebar);
+  min-width: var(--width-sidebar);
+  height: 100%;
+  border-right: 1px solid var(--border-color);
+  transition: margin-left var(--animation-speed);
 
-	.search {
+  .search {
 		display: inline-flex;
-		padding: var(--gap);
-		border-bottom: 1px solid transparent;
+    padding: var(--gap);
+    border-bottom: 1px solid transparent;
 		flex-direction: row;
-	}
-	.children {
-		flex: 1;
-		min-height: 0;
-		display: inline-flex;
-		flex-direction: column;
-		max-height: 100%;
-		padding: var(--gap);
-		gap: var(--gap);
-		/* overflow scroll adds padding that disrupt the grab handle resizer.
+  }
+  .children {
+    flex: 1;
+    min-height: 0;
+    display: inline-flex;
+    flex-direction: column;
+    max-height: 100%;
+    padding: var(--gap);
+    padding-right: 0;
+    gap: var(--gap);
+    /* overflow scroll adds padding that disrupt the grab handle resizer.
 			this keeps functionality but hides scroller
 		*/
 
-		// TODO: This is not working, it actually removes the scroll functionality entirely. (at least on Mac)
-		// ::-webkit-scrollbar {
-		// 	display: none;
-		// }
-		// -ms-overflow-style: none;  /* IE and Edge */
-		// scrollbar-width: none;  /* Firefox */
-		overflow-y: scroll;
-	}
+    // TODO: This is not working, it actually removes the scroll functionality entirely. (at least on Mac)
+    // ::-webkit-scrollbar {
+    // 	display: none;
+    // }
+    // -ms-overflow-style: none;  /* IE and Edge */
+    // scrollbar-width: none;  /* Firefox */
+    overflow-y: scroll;
+  }
 
 	&.hidden {
 		margin-left: calc(var(--width-sidebar) * -1);
@@ -57,11 +58,11 @@
 }
 
 .sidebar.resizing {
-	border-right: 1px solid var(--primary);
+  border-right: 1px solid var(--primary);
 }
 
 @media only screen and (max-width: 300px) {
-	.sidebar {
-		border-right: none;
-	}
+  .sidebar {
+    border-right: none;
+  }
 }

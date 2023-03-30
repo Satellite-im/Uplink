@@ -11,13 +11,14 @@ use kit::{
     elements::label::Label,
 };
 
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
-use common::{icons::outline::Shape as Icon, warp_runner::ui_adapter::ChatAdapter};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
+use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 use crate::{
@@ -47,11 +48,11 @@ pub fn Friends(cx: Scope) -> Element {
     let friends = State::get_friends_by_first_letter(friends_list);
     let router = use_router(cx);
 
-    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    if let Some(chat) = chat_with.get().clone() {
+    if let Some(id) = *chat_with.get() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(&chat.id, true));
+        state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -67,11 +68,10 @@ pub fn Friends(cx: Scope) -> Element {
                     ChanCmd::CreateConversation { chat, recipient } => {
                         // verify chat exists
                         let chat = match chat {
-                            Some(c) => c,
+                            Some(c) => c.id,
                             None => {
                                 // if not, create the chat
-                                let (tx, rx) =
-                                    oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
+                                let (tx, rx) = oneshot::channel();
                                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
                                     RayGunCmd::CreateConversation { recipient, rsp: tx },
                                 )) {
@@ -82,7 +82,7 @@ pub fn Friends(cx: Scope) -> Element {
                                 let rsp = rx.await.expect("command canceled");
 
                                 match rsp {
-                                    Ok(c) => c.inner,
+                                    Ok(c) => c,
                                     Err(e) => {
                                         log::error!("failed to create conversation: {}", e);
                                         continue;
@@ -167,11 +167,11 @@ pub fn Friends(cx: Scope) -> Element {
                         },
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();
-                            let chat = state.read().get_chat_with_friend(&friend);
+                            let chat = state.read().get_chat_with_friend(friend.did_key());
                             let chat2 = chat.clone();
                             let chat3 = chat.clone();
                             let favorite = chat.clone().map(|c| state.read().is_favorite(&c));
-                            let did_suffix: String = did.to_string().chars().rev().take(6).collect();
+                            let did_suffix: String = friend.short_id();
                             let remove_friend = friend.clone();
                             let remove_friend_2 = friend.clone();
                             let chat_with_friend = friend.clone();

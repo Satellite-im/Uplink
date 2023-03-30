@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
@@ -809,32 +810,36 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered(files_local_path) => {
-                let mut script = main_script.replace("$IS_DRAGGING", "true");
-                if files_local_path.len() > 1 {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.files-to-upload")
-                        ),
-                    ));
-                } else {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.one-file-to-upload")
-                        ),
-                    ));
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let mut script = main_script.replace("$IS_DRAGGING", "true");
+                    if files_local_path.len() > 1 {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.files-to-upload")
+                            ),
+                        ));
+                    } else {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.one-file-to-upload")
+                            ),
+                        ));
+                    }
+                    window.eval(&script);
                 }
-                window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                let new_files_to_upload = decoded_pathbufs(files_local_path);
-                ch.send(ChanCmd::UploadFiles(new_files_to_upload));
-                break;
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let new_files_to_upload = decoded_pathbufs(files_local_path);
+                    ch.send(ChanCmd::UploadFiles(new_files_to_upload));
+                    break;
+                }
             }
             _ => {
                 *drag_event.write_silent() = None;
@@ -847,7 +852,16 @@ async fn drag_and_drop_function(
     }
 }
 
+pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool {
+    if files_local_path.is_empty() {
+        false
+    } else {
+        files_local_path.first().map_or(false, |path| path.exists())
+    }
+}
+
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    #[allow(unused_mut)]
     let mut paths = paths;
     #[cfg(target_os = "linux")]
     {
