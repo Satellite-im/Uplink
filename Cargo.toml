@@ -5,7 +5,6 @@ members = [
     "icons",
     "common",
     "extensions",
-    "extension_example",
     "native_extensions/emoji_selector",
 ]
 
