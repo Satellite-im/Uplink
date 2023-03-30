@@ -5,3 +5,5 @@ kit/src/compiled_styles.css
 ui/src/compiled_styles.css
 Cargo.lock
 .idea
+.uplink
+__MACOSX

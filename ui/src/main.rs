@@ -402,8 +402,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        width: size.width,
-        height: size.height,
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
@@ -549,8 +547,6 @@ fn app(cx: Scope) -> Element {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
                         let new_metadata = WindowMeta {
-                            height: size.height,
-                            width: size.width,
                             minimal_view: size.width < 600,
                             ..metadata
                         };
@@ -970,8 +966,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 300,
-                            height: 534,
                             minimal_view: true,
                             ..meta
                         }));
@@ -987,8 +981,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 600,
-                            height: 534,
                             minimal_view: false,
                             ..meta
                         }));
@@ -1004,8 +996,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 950,
-                            height: 600,
                             minimal_view: false,
                             ..meta
                         }));
