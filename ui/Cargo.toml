@@ -59,6 +59,7 @@ image.workspace = true
 clap = { workspace = true, features = ["derive"] }
 fs_extra.workspace = true
 walkdir.workspace = true
+zip.workspace = true
 
 [features]
 fullscreen = ["wry/fullscreen"]
@@ -69,6 +70,8 @@ tray = ["wry/tray"]
 glob = "0.3.0"
 rustc_version = "0.4.0"
 rsass = "0.26.0"
+zip.workspace = true
+walkdir.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.24.1"

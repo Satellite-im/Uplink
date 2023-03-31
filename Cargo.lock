@@ -8269,6 +8269,7 @@ dependencies = [
  "window-vibrancy",
  "winres",
  "wry",
+ "zip",
 ]
 
 [[package]]
