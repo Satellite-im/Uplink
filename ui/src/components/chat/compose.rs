@@ -8,6 +8,7 @@ use std::{
 
 use dioxus::prelude::*;
 
+use fermi::use_atom_state;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
@@ -67,6 +68,7 @@ use crate::{
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
+    CHAT_DRAFT,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
@@ -929,7 +931,8 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-    let chat_drafts = use_state(cx, || HashMap::<Uuid, String>::new());
+
+    let mut chat_drafts = use_atom_state(cx, CHAT_DRAFT);
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
