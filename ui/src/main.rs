@@ -122,7 +122,7 @@ fn copy_assets() {
             fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
         let exe_changed = FileTime::from_last_modification_time(&exe_meta);
         let assets_changed = FileTime::from_last_modification_time(&version_meta);
-        if assets_changed < exe_changed {
+        if assets_changed > exe_changed {
             log::debug!("assets already exist");
             return;
         } else {
@@ -142,7 +142,11 @@ fn copy_assets() {
                 return;
             }
         }
-    } else if cfg!(any(target_os = "linux", target_os = "macos", target_os = "ios")) {
+    } else if cfg!(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "ios"
+    )) {
         PathBuf::from("/opt/satellite-im/uplink/extra.zip")
     } else {
         log::error!("unknown OS type. failed to copy assets");
