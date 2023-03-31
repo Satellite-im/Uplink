@@ -115,11 +115,17 @@ fn copy_assets() {
     let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
     let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
     if current_version == assets_version {
+        // todo: check if assets_version.txt was created before the uplink executable
         log::debug!("assets already exist");
         return;
     }
 
-    let assets_path = match exe_path.parent().map(|x| x.join("extra.zip")) {
+    // this is windows specific
+    let assets_path = match exe_path
+        .parent()
+        .and_then(|x| x.parent())
+        .map(|x| x.join("extra.zip"))
+    {
         Some(p) => p,
         None => {
             log::error!("failed to get parent directory of uplink executable");
@@ -130,7 +136,7 @@ fn copy_assets() {
         log::error!("failed to delete old assets directory: {e}");
     }
     if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
-        log::error!("failed to unizp assets archive: {e}");
+        log::error!("failed to unizp assets archive {assets_path:?}: {e}");
     }
 
     if let Err(e) = std::fs::write(assets_version_file, current_version) {
