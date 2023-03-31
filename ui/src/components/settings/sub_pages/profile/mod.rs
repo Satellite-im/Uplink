@@ -161,8 +161,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .join("images")
         .join("mascot")
         .join("working.png")
-        .to_string_lossy()
-        .to_string();
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(

@@ -15,8 +15,9 @@ pub fn Welcome(cx: Scope) -> Element {
         .join("images")
         .join("mascot")
         .join("better_with_friends.png")
-        .to_string_lossy()
-        .to_string();
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
     cx.render(rsx! {
         div {
             id: "welcome",
