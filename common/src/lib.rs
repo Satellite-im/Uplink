@@ -103,8 +103,11 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
     // the assets are fetched differently depending on whether the binary is in production mode or not.
     // sometimes we want to test the "release" profile without having to install the program the way a customer would.
-    let override_release_mode = std::env::var("DEBUG").is_ok();
-    let production_mode = !cfg!(debug_assertions) && override_release_mode;
+
+    #[cfg(debug_assertions)]
+    let production_mode = false;
+    #[cfg(not(debug_assertions))]
+    let production_mode = !std::env::var("DEBUG").is_ok();
 
     #[allow(unused_mut)]
     #[allow(unused_assignments)]
