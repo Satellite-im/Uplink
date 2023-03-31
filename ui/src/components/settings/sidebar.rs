@@ -25,6 +25,7 @@ pub enum Page {
     Privacy,
     Profile,
     Notifications,
+    Accessibility,
 }
 
 impl FromStr for Page {
@@ -39,6 +40,7 @@ impl FromStr for Page {
             "privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
+            "accessibility" => Ok(Page::Accessibility),
             _ => Ok(Page::General),
         }
     }
@@ -108,6 +110,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::BellAlert,
         ..UIRoute::default()
     };
+    let accessibility = UIRoute {
+        to: "accessibility",
+        name: get_local_text("settings.accessibility"),
+        icon: Icon::EyeSlash,
+        ..UIRoute::default()
+    };
     let developer = UIRoute {
         to: "developer",
         name: get_local_text("settings.developer"),
@@ -127,6 +135,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         audio,
         files,
         extensions,
+        accessibility,
         notifications,
         developer,
         about,

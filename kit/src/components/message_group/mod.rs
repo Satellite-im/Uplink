@@ -41,15 +41,8 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 p {
                     class: "time-ago noselect defaultcursor",
                     aria_label: "time-ago",
-                    "{time_ago}"
+                    "{sender} - {time_ago}"
                 }
-                (!sender.is_empty()).then(|| rsx! (
-                    p {
-                        class: "sender",
-                        aria_label: "sender",
-                        "{sender}"
-                    }
-                )),
             }
             (!remote).then(|| rsx!(
                 &cx.props.user_image

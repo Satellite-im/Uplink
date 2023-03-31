@@ -19,8 +19,6 @@ use rfd::FileDialog;
 use warp::multipass;
 use warp::{error::Error, logging::tracing::log};
 
-use crate::layouts::create_account::{MAX_USERNAME_LEN, MIN_USERNAME_LEN};
-
 #[derive(Clone)]
 enum ChanCmd {
     Profile(String),
@@ -121,9 +119,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     // Set up validation options for the input field
     let username_validation_options = Validation {
         // The input should have a maximum length of 32
-        max_length: Some(MIN_USERNAME_LEN),
+        max_length: Some(32),
         // The input should have a minimum length of 4
-        min_length: Some(MAX_USERNAME_LEN),
+        min_length: Some(4),
         // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
         // The input should not contain any whitespace
@@ -155,13 +153,14 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     let mut did_short = "#".to_string();
     did_short.push_str(&state.read().get_own_identity().short_id());
+    let show_welcome = &state.read().ui.active_welcome;
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (state.read().ui.show_settings_welcome).then(|| rsx!(
+            (!show_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
@@ -176,7 +175,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                state.write().ui.show_settings_welcome = false;
+                                state.write().ui.settings_welcome();
                                 let _ = state.write().save();
                             }
                         },

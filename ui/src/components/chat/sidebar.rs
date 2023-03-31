@@ -1,7 +1,11 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::state::{self, identity_search_result, Action, State};
+use common::warp_runner::{RayGunCmd, WarpCmd};
+use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_router::*;
+use futures::channel::oneshot;
+use futures::StreamExt;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -12,18 +16,23 @@ use kit::{
         user_image_group::UserImageGroup,
     },
     elements::{
+        button::Button,
         input::{Input, Options},
         label::Label,
+        tooltip::{ArrowPosition, Tooltip},
+        Appearance,
     },
     layout::sidebar::Sidebar as ReusableSidebar,
 };
+use uuid::Uuid;
+use warp::raygun::ConversationType;
 use warp::{
+    crypto::DID,
     logging::tracing::log,
     raygun::{self},
 };
 
-use common::state::{self, Action, State};
-
+use crate::components::chat::create_group::CreateGroup;
 use crate::{
     components::{chat::RouteInfo, media::remote_control::RemoteControls},
     utils::build_participants,
@@ -35,10 +44,92 @@ pub struct Props {
     route_info: RouteInfo,
 }
 
+#[derive(Props)]
+pub struct SearchProps<'a> {
+    // username, did
+    identities: UseState<Vec<identity_search_result::Entry>>,
+    onclick: EventHandler<'a, identity_search_result::Identifier>,
+}
+fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
+    if cx.props.identities.get().is_empty() {
+        return None;
+    }
+    // todo: make this show up
+    cx.render(rsx!(
+        div {
+            class: "searchbar-dropdown",
+            cx.props.identities.get().iter().map(|entry| {
+                rsx!(
+                    a {
+                        onclick: move |_| {
+                            cx.props.onclick.call(entry.id.clone());
+                        },
+                        "{entry.display_name}"
+                    }
+                )
+            })
+        }
+    ))
+}
+
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
+    let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let reset_searchbar = use_state(cx, || false);
+    let router = use_router(cx);
+
+    if let Some(chat) = *chat_with.get() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(&chat, true));
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+        to_owned![chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(recipient) = rx.next().await {
+                // if not, create the chat
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                    recipient,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                match rsp {
+                    Ok(c) => chat_with.set(Some(c)),
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+            }
+        }
+    });
+
+    let select_entry = move |id: identity_search_result::Identifier| match id {
+        identity_search_result::Identifier::Did(did) => {
+            if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
+                chat_with.set(Some(c.id));
+            } else {
+                ch.send(did);
+            }
+        }
+        identity_search_result::Identifier::Uuid(id) => {
+            if let Some(c) = state.read().get_chat_by_id(id) {
+                chat_with.set(Some(c.id));
+            } else {
+                log::warn!("failed to select chat {id}");
+            }
+        }
+    };
 
     // todo: display a loading page if chats is not initialized
     let (sidebar_chats, favorites, active_media_chat) = if state.read().chats().initialized {
@@ -51,6 +142,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         (vec![], vec![], None)
     };
 
+    let show_create_group = use_state(cx, || false);
+
     cx.render(rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,
@@ -60,13 +153,35 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
-                        disabled: true,
+                        disabled: false,
                         aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
+                        reset: reset_searchbar.clone(),
                         options: Options {
                             with_clear_btn: true,
+                            react_to_esc_key: true,
+                            clear_on_submit: true,
                             ..Options::default()
-                        }
+                        },
+                        onreturn: move |(v, _, _): (String, _, _)| {
+                            if !v.is_empty() {
+                                 if let Some(entry) = search_results.get().first() {
+                                    select_entry(entry.id.clone());
+                                }
+                            }
+                            search_results.set(Vec::new());
+                        },
+                        onchange: move |(v, _): (String, _)| {
+                            if v.is_empty() {
+                                search_results.set(Vec::new());
+                            } else {
+                                let mut friends = state.read().search_identities(&v);
+                                let chats = state.read().search_group_chats(&v);
+                                // todo: sort this somehow
+                                friends.extend(chats);
+                                search_results.set(friends);
+                            }
+                        },
                     }
                 }
             ))
@@ -78,10 +193,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
-                        use_router(cx).replace_route(r, None, None);
+                        router.replace_route(r, None, None);
                     }
                 },
             )),
+            search_friends{ identities: search_results.clone(), onclick: move |entry| {
+                select_entry(entry);
+                search_results.set(Vec::new());
+                reset_searchbar.set(true);
+            } },
             // Only display favorites if we have some.
             (!favorites.is_empty()).then(|| rsx!(
                 div {
@@ -113,7 +233,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
                                                 if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                                                    router.replace_route(UPLINK_ROUTES.chat, None, None);
                                                 }
                                             }
                                         },
@@ -135,7 +255,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
                                             if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                                                router.replace_route(UPLINK_ROUTES.chat, None, None);
                                             }
                                         }
                                     }
@@ -149,9 +269,32 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 id: "chats",
                 aria_label: "Chats",
                 (!sidebar_chats.is_empty()).then(|| rsx!(
-                    Label {
-                        text: get_local_text("uplink.chats"),
+                    div {
+                        class: "sidebar-chats-header",
+                        Label {
+                            text: get_local_text("uplink.chats"),
+                        },
+                        Button {
+                            appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
+                            icon: Icon::ChatPlus,
+                            tooltip: cx.render(rsx!(
+                                Tooltip {
+                                    arrow_position: ArrowPosition::Bottom,
+                                    text: String::from("Create Group Chat")
+                                }
+                            )),
+                            onpress: move |_| {
+                                show_create_group.set(!show_create_group.get());
+                            }
+                        }
                     }
+                    show_create_group.then(|| rsx!(
+                        CreateGroup {
+                            oncreate: move |_| {
+                                show_create_group.set(false);
+                            }
+                        }
+                    )),
                 )),
                 sidebar_chats.iter().cloned().map(|chat| {
                     let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
@@ -178,7 +321,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    let participants_name = State::join_usernames(&other_participants);
+                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name? 
+                    let participants_name = match chat.conversation_name {
+                        Some(name) => name,
+                        None => State::join_usernames(&other_participants)
+                    };
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
                         Some(v) => v.into(),
@@ -210,7 +357,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     icon: Icon::BellSlash,
                                     text: get_local_text("uplink.clear-unreads"),
                                     onpress: move |_| {
-                                        state.write().mutate(Action::ClearUnreads(clear_unreads.clone()));
+                                        state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }
                                 },
                                 hr{ },
@@ -235,7 +382,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 timestamp: datetime,
                                 active: is_active,
                                 user_image: cx.render(rsx!(
-                                    if participants.len() <= 2 {rsx! (
+                                    if chat.conversation_type == ConversationType::Direct {rsx! (
                                         UserImage {
                                             platform: platform,
                                             status:  user.identity_status().into(),
@@ -253,7 +400,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        use_router(cx).replace_route(UPLINK_ROUTES.chat, None, None);
+                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
                                     }
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
