@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     ffi::OsStr,
     path::PathBuf,
     rc::Rc,
@@ -8,7 +7,6 @@ use std::{
 
 use dioxus::prelude::*;
 
-use fermi::use_atom_state;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
@@ -68,7 +66,7 @@ use crate::{
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
-    CHAT_DRAFT,
+    ChatDraft,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
@@ -927,12 +925,10 @@ struct TypingInfo {
 fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
+    let chat_drafts = use_shared_state::<ChatDraft>(cx)?;
     let data = &cx.props.data;
     let is_loading = data.is_none();
-    let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-
-    let mut chat_drafts = use_atom_state(cx, CHAT_DRAFT);
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
@@ -1072,16 +1068,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         }
     });
 
-    let value_in_draft = data
-        .as_ref()
-        .and_then(|d| d.active_chat.draft.clone())
-        .unwrap_or_default()
-        .lines()
-        .map(|x| x.to_string())
-        .collect::<Vec<String>>();
-    if *input.read() != value_in_draft {
-        input.with_mut(|v| *v = value_in_draft);
-    }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     use_future(cx, &active_chat_id, |current_chat| async move {
@@ -1101,13 +1087,14 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
 
-        let msg = input.read().clone();
+        let msg: String = active_chat_id
+            .as_ref()
+            .and_then(|id| chat_drafts.read().get(id).cloned())
+            .unwrap_or(String::new());
+        let msg = msg.lines().map(|x| x.to_string()).collect::<Vec<String>>();
         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-        input.write().clear();
         if let Some(id) = active_chat_id {
-            state
-                .write()
-                .mutate(Action::SetChatDraft(id, String::new()));
+            chat_drafts.write().remove(&id);
         }
 
         if !msg_valid(&msg) {
@@ -1150,15 +1137,14 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
-            input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                chat_drafts.make_mut().insert(*id, v);
+                chat_drafts.write().insert(*id, v);
             }
         },
         value: data
             .as_ref()
-            .and_then(|d| (*chat_drafts.current()).get(&d.active_chat.id).cloned())
+            .and_then(|d| (chat_drafts.read()).get(&d.active_chat.id).cloned())
             .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         extensions: cx.render(rsx!(

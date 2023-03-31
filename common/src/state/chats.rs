@@ -53,8 +53,6 @@ pub struct Chat {
     // (user id, last update time)
     #[serde(skip)]
     pub typing_indicator: HashMap<DID, Instant>,
-    #[serde(skip)]
-    pub draft: Option<String>,
     // for loading messages into the UI - indicates if more messages can be fetched from warp and added to Chat.messages
     #[serde(skip)]
     pub has_more_messages: bool,

@@ -108,11 +108,6 @@ impl State {
     }
 
     pub fn mutate(&mut self, action: Action) {
-        // ignore noisy events
-        if !matches!(action, Action::SetChatDraft(_, _)) {
-            log::debug!("state::mutate: {}", action);
-        }
-
         match action {
             Action::SetExtensionEnabled(extension, enabled) => {
                 if enabled {
@@ -206,8 +201,6 @@ impl State {
                     self.clear_unreads(id);
                 }
             }
-            Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
-            Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
@@ -696,13 +689,6 @@ impl State {
         needs_update
     }
 
-    /// Clears the given chats draft message
-    fn clear_chat_draft(&mut self, chat_id: &Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
-            c.draft = None;
-        }
-    }
-
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -834,12 +820,6 @@ impl State {
         self.chats.in_sidebar.push_front(chat_id);
     }
 
-    /// Sets the draft on a given chat to some contents.
-    fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
-            c.draft = Some(value);
-        }
-    }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
         if let Some(mut c) = self.chats.all.get_mut(chat) {

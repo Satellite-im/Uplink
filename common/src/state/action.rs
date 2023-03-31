@@ -147,12 +147,6 @@ pub enum Action<'a> {
     /// chat id, message id
     #[display(fmt = "StartReplying")]
     StartReplying(&'a Uuid, &'a ui_adapter::Message),
-    /// Sets a draft message for the chatbar for a given chat.
-    #[display(fmt = "SetChatDraft")]
-    SetChatDraft(Uuid, String),
-    /// Clears a drafted message from a given chat.
-    #[display(fmt = "ClearChatDraft")]
-    ClearChatDraft(Uuid),
     /// Clears the reply for a given chat
     #[display(fmt = "CancelReply")]
     CancelReply(Uuid),

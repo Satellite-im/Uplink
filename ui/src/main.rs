@@ -12,7 +12,6 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
-use fermi::Atom;
 use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -77,7 +76,7 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
-pub(crate) static CHAT_DRAFT: Atom<HashMap<Uuid, String>> = |_| HashMap::new();
+pub type ChatDraft = HashMap<Uuid, String>;
 
 pub struct UplinkRoutes<'a> {
     pub chat: &'a str,
@@ -425,6 +424,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     );
 
     use_shared_state_provider(cx, || state);
+    use_shared_state_provider(cx, ChatDraft::new);
 
     cx.render(rsx!(crate::app {}))
 }

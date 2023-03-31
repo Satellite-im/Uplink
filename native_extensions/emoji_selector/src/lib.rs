@@ -1,7 +1,6 @@
-use common::{
-    icons::outline::Shape as Icon,
-    state::{Action, State},
-};
+use std::collections::HashMap;
+
+use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
@@ -11,6 +10,7 @@ use kit::{
     elements::{button::Button, label::Label},
 };
 use once_cell::sync::Lazy;
+use uuid::Uuid;
 
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
@@ -118,6 +118,7 @@ impl EmojiSelector {
     ) -> Element<'a> {
         //println!("render emoji selector");
         let state = use_shared_state::<State>(cx)?;
+        let chat_drafts = use_shared_state::<HashMap<Uuid, String>>(cx)?;
         #[cfg(not(target_os = "macos"))]
         let mouse_over_emoji_selector = use_ref(cx, || false);
         #[cfg(not(target_os = "macos"))]
@@ -127,17 +128,17 @@ impl EmojiSelector {
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
-     
+
         cx.render(rsx! (
             div {
                 onmouseenter: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = true;
                     }
                 },
                 onmouseleave: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = false;
                         eval(focus_script.to_string());
@@ -146,13 +147,13 @@ impl EmojiSelector {
                 id: "emoji_selector",
                 tabindex: "0",
                 onblur: |_| {
-                    #[cfg(target_os = "macos")] 
+                    #[cfg(target_os = "macos")]
                     {
                         if !*mouse_over_emoji_button.read() {
                             hide.set(false);
                         }
                     }
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
                             hide.set(false);
@@ -182,9 +183,9 @@ impl EmojiSelector {
                                                     Some(c) => c,
                                                     None => return
                                                 };
-                                                let draft: String = c.draft.unwrap_or_default();
+                                                let draft: String = chat_drafts.read().get(&c.id).cloned().unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
-                                                state.write().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                chat_drafts.write().insert(c.id, new_draft);
                                                 // Hide the selector when clicking an emoji
                                                 hide.set(false)
                                             },
