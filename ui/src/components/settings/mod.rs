@@ -47,16 +47,12 @@ pub struct ContainerProps<'a> {
 pub fn SettingContainer<'a>(cx: Scope<'a, ContainerProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
-            class: "settings-section",
-            aria_label: "settings-section",
+            class: "flex col",
+            aria_label: "settings-info",
             Label {
                 text: cx.props.section_label.clone(),
             },
-            div {
-                class: "settings-container",
-                aria_label: "settings-container",
-                &cx.props.children
-            },
+            &cx.props.children,
         }
     ))
 }

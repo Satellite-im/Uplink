@@ -61,13 +61,6 @@
     width: 20%;
     min-width: fit-content;
   }
-  .settings-container {
-    flex: 1;
-    min-width: 0;
-    display: inline-flex;
-    flex-direction: row;
-    gap: var(--gap-less);
-  }
 }
 
 // TODO: This should just be included in  dynamically rendered css depending on the screen size
