@@ -878,7 +878,13 @@ fn get_pre_release_message(cx: Scope) -> Element {
                 icon: Icon::Beaker,
             },
             p {
-                "{pre_release_text}",
+                div {
+                    onclick: move |_| {
+                        let _ = open::that("https://issues.satellite.im");
+                    },
+                    "{pre_release_text}"
+                }
+
             }
         },
     ))
