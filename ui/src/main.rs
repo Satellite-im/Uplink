@@ -12,7 +12,6 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
-use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::nav::Route as UIRoute;
@@ -22,7 +21,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::PathBuf;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -100,26 +99,68 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
-    let dot_uplink = &STATIC_ARGS.dot_uplink;
-    let themes_src = Path::new("ui").join("extra").join("themes");
-    let fonts_src = Path::new("kit").join("src").join("fonts");
-
-    match create_all(dot_uplink.clone(), false) {
-        Ok(_) => {
-            let mut options = CopyOptions::new();
-            options.skip_exist = true;
-            options.copy_inside = true;
-
-            if let Err(error) = copy(themes_src, dot_uplink, &options) {
-                log::error!("Error on copy themes {error}");
-            }
-
-            if let Err(error) = copy(fonts_src, dot_uplink, &options) {
-                log::error!("Error on copy fonts {error}");
-            }
+    if !STATIC_ARGS.production_mode {
+        return;
+    }
+    let exe_path = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("failed to get path of uplink executable: {e}");
+            return;
         }
-        Err(error) => log::error!("Error on create themes folder: {error}"),
     };
+
+    let current_version = env!("CARGO_PKG_VERSION");
+    let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
+    let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
+    if current_version == assets_version {
+        log::debug!("assets already exist");
+        return;
+    }
+
+    let assets_path = match exe_path.parent().map(|x| x.join("extra")) {
+        Some(p) => p,
+        None => {
+            log::error!("failed to get parent directory of uplink executable");
+            return;
+        }
+    };
+    if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
+        log::error!("failed to delete old assets directory: {e}");
+    }
+    if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
+        log::error!("failed to unizp assets archive: {e}");
+    }
+
+    if let Err(e) = std::fs::write(assets_version_file, current_version) {
+        log::error!("failed to save assets_version_file: {e}");
+    }
+}
+
+// taken from https://github.com/zip-rs/zip/blob/master/examples/extract.rs
+fn unzip_archive(src: &PathBuf, dest: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let assets_zip = fs::File::open(src)?;
+    let mut archive = zip::ZipArchive::new(assets_zip)?;
+    for idx in 0..archive.len() {
+        let mut file = archive.by_index(idx)?;
+        let outpath = match file.enclosed_name() {
+            Some(path) => dest.join(path),
+            None => continue,
+        };
+        if (*file.name()).ends_with('/') || (*file.name()).ends_with('\\') {
+            fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p)?;
+                }
+            }
+            let mut outfile = fs::File::create(&outpath)?;
+            io::copy(&mut file, &mut outfile)?;
+        }
+    }
+
+    Ok(())
 }
 
 fn main() {

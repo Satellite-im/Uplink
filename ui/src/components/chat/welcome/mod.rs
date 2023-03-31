@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
 use crate::UPLINK_ROUTES;
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{icons::outline::Shape as Icon, STATIC_ARGS};
 use dioxus_router::use_router;
 use kit::elements::{button::Button, Appearance};
 
@@ -10,14 +10,18 @@ use kit::elements::{button::Button, Appearance};
 pub fn Welcome(cx: Scope) -> Element {
     let router = use_router(cx).clone();
     let cta_text = get_local_text("friends.cta-text");
-
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images/mascot/better_with_friends.png")
+        .to_string_lossy()
+        .to_string();
     cx.render(rsx! {
         div {
             id: "welcome",
             aria_label: "welcome-screen",
             img {
                 class: "image",
-                src: "./ui/extra/images/mascot/better_with_friends.png"
+                src:"{image_path}"
             },
             p {
                 class: "muted",

@@ -2,6 +2,7 @@ use arboard::Clipboard;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -155,6 +156,12 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     did_short.push_str(&state.read().get_own_identity().short_id());
     let show_welcome = &state.read().ui.active_welcome;
 
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images/mascot/working.png")
+        .to_string_lossy()
+        .to_string();
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
@@ -166,7 +173,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "welcome",
                         img {
-                            src: "./ui/extra/images/mascot/working.png"
+                            src: "{image_path}"
                         },
                     },
                     div {

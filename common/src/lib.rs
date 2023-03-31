@@ -9,7 +9,10 @@ use clap::Parser;
 // export icons crate
 pub use icons;
 use once_cell::sync::Lazy;
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
@@ -63,6 +66,7 @@ pub struct StaticArgs {
     /// ./uplink ./uplink/warp ./themes
     /// uplink_path is used for deleting all uplink data when a new account is created
     pub uplink_path: PathBuf,
+    pub extras_path: PathBuf,
     /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
     pub themes_path: PathBuf,
     /// Location of custom fonts added into the application (as well as a few defaults)
@@ -91,10 +95,13 @@ pub struct StaticArgs {
     /// Uses experimental configuration
     pub experimental: bool,
     // some features aren't ready for release. This field is used to disable such features.
-    pub is_debug: bool,
+    pub production_mode: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
+    // the assets are fetched differently depending on whether the binary is in production mode or not.
+    // sometimes we want to test the "release" profile without having to install the program the way a customer would.
+    let production_mode = std::env::var("PRODUCTION_MODE").is_ok();
 
     #[allow(unused_mut)]
     #[allow(unused_assignments)]
@@ -108,13 +115,20 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
+    let extras_path = if production_mode {
+        uplink_container.join("extra")
+    } else {
+        Path::new("ui").join("extra")
+    };
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
-        themes_path: uplink_container.join("themes"),
-        fonts_path: uplink_container.join("fonts"),
+        extras_path: extras_path.clone(),
+        themes_path: extras_path.join("themes"),
+        fonts_path: extras_path.join("fonts"),
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
@@ -126,7 +140,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         experimental: args.experimental_node,
-        is_debug: cfg!(debug_assertions),
+        production_mode,
     }
 });
 

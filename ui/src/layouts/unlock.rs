@@ -144,6 +144,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists_bool = *account_exists.get();
     let loading = !loaded.get();
 
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images/mascot/idle_alt.png")
+        .to_string_lossy()
+        .to_string();
+
     cx.render(rsx!(
         style {update_theme_colors()},
         div {
@@ -162,7 +168,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 rsx! (
                     img {
                         class: "idle",
-                        src: "./ui/extra/images/mascot/idle_alt.png"
+                        src: "{image_path}"
                     },
                     Input {
                         id: "unlock-input".to_owned(),
