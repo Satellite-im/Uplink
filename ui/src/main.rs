@@ -99,6 +99,7 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
+    log::debug!("copy_assets");
     if !STATIC_ARGS.production_mode {
         return;
     }
@@ -118,7 +119,7 @@ fn copy_assets() {
         return;
     }
 
-    let assets_path = match exe_path.parent().map(|x| x.join("extra")) {
+    let assets_path = match exe_path.parent().map(|x| x.join("extra.zip")) {
         Some(p) => p,
         None => {
             log::error!("failed to get parent directory of uplink executable");
