@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     ffi::OsStr,
     path::PathBuf,
     rc::Rc,
@@ -1137,6 +1138,8 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
+    let chat_drafts = use_state(cx, || HashMap::<Uuid, String>::new());
+
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
@@ -1148,12 +1151,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                state.write().mutate(Action::SetChatDraft(*id, v));
+                chat_drafts.make_mut().insert(*id, v);
             }
         },
         value: data
             .as_ref()
-            .and_then(|d| d.active_chat.draft.clone())
+            .and_then(|d| (*chat_drafts.current()).get(&d.active_chat.id).cloned())
             .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         extensions: cx.render(rsx!(
