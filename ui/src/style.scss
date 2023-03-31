@@ -68,6 +68,7 @@ body {
   p {
     color: var(--warning-light);
     font-size: var(--text-size-less);
+    cursor: pointer;
   }
   svg {
     fill: transparent;
