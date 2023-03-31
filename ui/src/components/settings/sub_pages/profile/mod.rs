@@ -158,7 +158,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     let image_path = STATIC_ARGS
         .extras_path
-        .join("images/mascot/working.png")
+        .join("images")
+        .join("mascot")
+        .join("working.png")
         .to_string_lossy()
         .to_string();
 

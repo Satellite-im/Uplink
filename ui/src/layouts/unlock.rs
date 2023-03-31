@@ -146,7 +146,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
     let image_path = STATIC_ARGS
         .extras_path
-        .join("images/mascot/idle_alt.png")
+        .join("images")
+        .join("mascot")
+        .join("idle_alt.png")
         .to_string_lossy()
         .to_string();
 

@@ -12,7 +12,9 @@ pub fn Welcome(cx: Scope) -> Element {
     let cta_text = get_local_text("friends.cta-text");
     let image_path = STATIC_ARGS
         .extras_path
-        .join("images/mascot/better_with_friends.png")
+        .join("images")
+        .join("mascot")
+        .join("better_with_friends.png")
         .to_string_lossy()
         .to_string();
     cx.render(rsx! {
