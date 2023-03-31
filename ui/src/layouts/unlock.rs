@@ -149,8 +149,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .join("images")
         .join("mascot")
         .join("idle_alt.png")
-        .to_string_lossy()
-        .to_string();
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
 
     cx.render(rsx!(
         style {update_theme_colors()},

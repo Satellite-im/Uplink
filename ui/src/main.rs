@@ -12,6 +12,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
+use filetime::FileTime;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::nav::Route as UIRoute;
@@ -115,23 +116,41 @@ fn copy_assets() {
     let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
     let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
     if current_version == assets_version {
-        // todo: check if assets_version.txt was created before the uplink executable
-        log::debug!("assets already exist");
-        return;
+        let exe_meta =
+            fs::metadata(&exe_path).expect("failed to get metadata for uplink executable");
+        let version_meta =
+            fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
+        let exe_changed = FileTime::from_last_modification_time(&exe_meta);
+        let assets_changed = FileTime::from_last_modification_time(&version_meta);
+        if assets_changed < exe_changed {
+            log::debug!("assets already exist");
+            return;
+        } else {
+            log::debug!("re-install suspected. copying over assets");
+        }
     }
 
-    // this is windows specific
-    let assets_path = match exe_path
-        .parent()
-        .and_then(|x| x.parent())
-        .map(|x| x.join("extra.zip"))
-    {
-        Some(p) => p,
-        None => {
-            log::error!("failed to get parent directory of uplink executable");
-            return;
+    let assets_path = if cfg!(target_os = "windows") {
+        match exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("extra.zip"))
+        {
+            Some(p) => p,
+            None => {
+                log::error!("failed to get parent directory of uplink executable");
+                return;
+            }
         }
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
+    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
+    } else {
+        log::error!("unknown OS type. failed to copy assets");
+        return;
     };
+
     if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
         log::error!("failed to delete old assets directory: {e}");
     }

@@ -103,7 +103,6 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
     // the assets are fetched differently depending on whether the binary is in production mode or not.
     // sometimes we want to test the "release" profile without having to install the program the way a customer would.
-
     #[cfg(debug_assertions)]
     let production_mode = false;
     #[cfg(not(debug_assertions))]
@@ -132,7 +131,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
-        extras_path: extras_path.clone(),
+        extras_path,
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),

@@ -60,6 +60,7 @@ clap = { workspace = true, features = ["derive"] }
 fs_extra.workspace = true
 walkdir.workspace = true
 zip.workspace = true
+filetime = "0.2.20"
 
 [features]
 fullscreen = ["wry/fullscreen"]
