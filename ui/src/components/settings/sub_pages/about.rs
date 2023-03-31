@@ -1,7 +1,7 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
 
-use crate::components::settings::SettingContainer;
+use crate::components::settings::{SettingContainer, SettingSection};
 
 #[allow(non_snake_case)]
 pub fn AboutPage(cx: Scope) -> Element {
@@ -11,36 +11,26 @@ pub fn AboutPage(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-about",
-            SettingContainer {
+            SettingSection {
                 section_label: get_local_text("settings-about.info"),
-                div {
-                    p {
-
-                        format!("{}: {app_name}", get_local_text("settings-about.application"))
-                    },
-                    p {
-                        format!("{}: {version}", get_local_text("settings-about.version"))
-                    },
-                    p {
-                        a {
-                            href: "https://satellite.im/",
-                            format!("{}: ", get_local_text("settings-about.website"))
-                        },
-                        a {
-                            href: "https://satellite.im/",
-                            u {"https://satellite.im/"},
-                        }
-                    },
-                    p {
-                        a {
-                            href: "https://github.com/Satellite-im/Uplink",
-                            format!("{}: ", get_local_text("settings-about.source-code"))
-                        },
-                        a {
-                            href: "https://github.com/Satellite-im/Uplink",
-                            u {"https://github.com/Satellite-im/Uplink"},
-                        }
-                    }
+                section_description: app_name.into(),
+            },
+            SettingSection {
+                section_label:  get_local_text("settings-about.version"),
+                section_description: version.into(),
+            },
+            SettingContainer {
+                section_label:  get_local_text("settings-about.website"),
+                a {
+                    href: "https://satellite.im/",
+                    u {"https://satellite.im/"},
+                }
+            },
+            SettingContainer {
+                section_label: get_local_text("settings-about.source-code"),
+                a {
+                    href: "https://github.com/Satellite-im/Uplink",
+                    u {"https://github.com/Satellite-im/Uplink"},
                 }
             },
         }
