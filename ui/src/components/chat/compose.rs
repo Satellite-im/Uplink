@@ -2,7 +2,6 @@ use std::{
     ffi::OsStr,
     path::PathBuf,
     rc::Rc,
-    thread::sleep,
     time::{Duration, Instant},
 };
 
@@ -49,7 +48,6 @@ use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
-use tokio::{sync::mpsc, task};
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -70,7 +68,7 @@ use crate::{
     },
 };
 
-const DEBOUNCE_INTERVAL: Duration = Duration::from_secs(2);
+const DEBOUNCE_INTERVAL: Duration = Duration::from_secs(3);
 
 pub const SELECT_CHAT_BAR: &str = r#"
     var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
@@ -918,6 +916,11 @@ enum TypingIndicator {
     Refresh(Uuid),
 }
 
+enum ChanCmd {
+    StartTyping(String),
+    Cancel,
+}
+
 #[derive(Clone)]
 struct TypingInfo {
     pub chat_id: Uuid,
@@ -933,6 +936,30 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
     let chatbar_value = use_ref(cx, || (active_chat_id, String::new()));
+    let update_chatbar_value_on_state = use_ref(cx, || false);
+
+    if *update_chatbar_value_on_state.read() {
+        state.write().mutate(Action::SetChatDraft(
+            chatbar_value.read().0.unwrap(),
+            chatbar_value.read().1.clone(),
+        ));
+        *update_chatbar_value_on_state.write_silent() = false;
+    }
+
+    let message_saved = data
+        .as_ref()
+        .and_then(|d| d.active_chat.draft.clone())
+        .unwrap_or_default();
+
+    if active_chat_id != chatbar_value.read().0 {
+        if let Some(id) = chatbar_value.read().0 {
+            state
+                .write_silent()
+                .mutate(Action::SetChatDraft(id, chatbar_value.read().1.clone()));
+        }
+
+        *chatbar_value.write() = (active_chat_id, message_saved);
+    }
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
@@ -1143,10 +1170,28 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
-    let (tx, rx) = mpsc::channel::<String>(100);
-
-    let _ = task::spawn(async move {
-        debounce(rx).await;
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+        to_owned![update_chatbar_value_on_state];
+        async move {
+            let mut last_update_time = Instant::now();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    ChanCmd::StartTyping(value) => {
+                        let elapsed_time = Instant::now().duration_since(last_update_time);
+                        if elapsed_time >= DEBOUNCE_INTERVAL {
+                            println!("2 seconds with value: {}", value);
+                            update_chatbar_value_on_state.with_mut(|i| *i = true);
+                            last_update_time = Instant::now();
+                        }
+                    }
+                    ChanCmd::Cancel => {
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                        last_update_time = last_update_time - Duration::from_millis(90);
+                        println!("Cancel");
+                    }
+                }
+            }
+        }
     });
 
     let chatbar = cx.render(rsx!(Chatbar {
@@ -1161,7 +1206,8 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             if let Some(id) = &active_chat_id {
                 *chatbar_value.write() = (active_chat_id, v.clone());
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                let _ = tx.blocking_send(v);
+                ch.send(ChanCmd::Cancel);
+                ch.send(ChanCmd::StartTyping(v));
             }
         },
         value: if chatbar_value.read().0 == active_chat_id {
@@ -1281,38 +1327,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         chatbar,
         Attachments {files: files_to_upload.clone()}
     ))
-}
-
-async fn debounce(mut rx: mpsc::Receiver<String>) {
-    let mut last_update_time = Instant::now();
-
-    let mut action_task: Option<tokio::task::JoinHandle<()>> = None;
-
-    while let Some(value) = rx.recv().await {
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        if let Ok(next_value) = rx.try_recv() {
-            if let Some(task) = action_task {
-                task.abort();
-            }
-            last_update_time = Instant::now();
-            action_task = None;
-            continue;
-        }
-        let elapsed_time = Instant::now().duration_since(last_update_time);
-        if elapsed_time >= DEBOUNCE_INTERVAL {
-            if let Some(task) = action_task {
-                task.abort();
-            }
-            let task = task::spawn(async move {
-                println!(
-                    "User stopped typing for at least 2 seconds with value: {}",
-                    value
-                );
-            });
-            action_task = Some(task);
-            last_update_time = Instant::now();
-        }
-    }
 }
 
 #[derive(Props, PartialEq)]
