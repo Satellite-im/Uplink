@@ -28,35 +28,13 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
                     "{cx.props.section_description}"
                 }
             },
-            div {
-                class: "settings-control",
-                aria_label: "settings-control",
-                &cx.props.children
-            }
-        }
-    ))
-}
-
-#[derive(Props)]
-pub struct ContainerProps<'a> {
-    section_label: String,
-    children: Element<'a>,
-}
-
-#[allow(non_snake_case)]
-pub fn SettingContainer<'a>(cx: Scope<'a, ContainerProps<'a>>) -> Element<'a> {
-    cx.render(rsx!(
-        div {
-            class: "settings-section",
-            aria_label: "settings-section",
-            div {
-                class: "settings-info",
-                aria_label: "settings-info",
-                Label {
-                    text: cx.props.section_label.clone(),
-                },
-                &cx.props.children
-            }
+            cx.props.children.is_some().then(|| rsx!(
+                div {
+                    class: "settings-control",
+                    aria_label: "settings-control",
+                    &cx.props.children
+                }
+            ))
         }
     ))
 }
