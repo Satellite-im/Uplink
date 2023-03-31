@@ -22,7 +22,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -142,9 +142,7 @@ fn copy_assets() {
                 return;
             }
         }
-    } else if cfg!(target_os = "linux") {
-        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
-    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+    } else if cfg!(any(target_os = "linux", target_os = "macos", target_os = "ios")) {
         PathBuf::from("/opt/satellite-im/uplink/extra.zip")
     } else {
         log::error!("unknown OS type. failed to copy assets");
@@ -164,7 +162,7 @@ fn copy_assets() {
 }
 
 // taken from https://github.com/zip-rs/zip/blob/master/examples/extract.rs
-fn unzip_archive(src: &PathBuf, dest: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn unzip_archive(src: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let assets_zip = fs::File::open(src)?;
     let mut archive = zip::ZipArchive::new(assets_zip)?;
     for idx in 0..archive.len() {
