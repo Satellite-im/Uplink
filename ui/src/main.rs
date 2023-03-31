@@ -195,9 +195,10 @@ fn main() {
     logger::init_with_level(max_log_level).expect("failed to init logger");
 
     // Initializes the cache dir if needed
-    std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
-        .expect("Error creating Uplink directory");
-    std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
     copy_assets();
 

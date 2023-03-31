@@ -66,10 +66,12 @@ pub struct StaticArgs {
     /// ./uplink ./uplink/warp ./themes
     /// uplink_path is used for deleting all uplink data when a new account is created
     pub uplink_path: PathBuf,
+    /// contains assets bundled with uplink, such as themes, fonts, and images
+    /// these are separate from user-imported fonts and themes
     pub extras_path: PathBuf,
-    /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
+    /// custom themes for the user
     pub themes_path: PathBuf,
-    /// Location of custom fonts added into the application (as well as a few defaults)
+    /// custom fonts for the user
     pub fonts_path: PathBuf,
     /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
@@ -128,8 +130,8 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
         extras_path: extras_path.clone(),
-        themes_path: extras_path.join("themes"),
-        fonts_path: extras_path.join("fonts"),
+        themes_path: uplink_container.join("themes"),
+        fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
