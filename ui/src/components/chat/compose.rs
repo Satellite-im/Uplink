@@ -2,6 +2,7 @@ use std::{
     ffi::OsStr,
     path::PathBuf,
     rc::Rc,
+    thread::sleep,
     time::{Duration, Instant},
 };
 
@@ -48,6 +49,7 @@ use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
+use tokio::{sync::mpsc, task};
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -67,6 +69,8 @@ use crate::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
 };
+
+const DEBOUNCE_INTERVAL: Duration = Duration::from_secs(2);
 
 pub const SELECT_CHAT_BAR: &str = r#"
     var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
@@ -115,7 +119,7 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
-
+    println!("Render Compose");
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, overlay_script, window, drag_event];
@@ -928,6 +932,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let is_loading = data.is_none();
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+    let chatbar_value = use_ref(cx, || (active_chat_id, String::new()));
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
 
@@ -1074,7 +1079,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         .lines()
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-    if *input.read() != value_in_draft {
+    if *input.read() != value_in_draft && !value_in_draft.is_empty() {
         input.with_mut(|v| *v = value_in_draft);
     }
     // drives the sending of TypingIndicator
@@ -1098,6 +1103,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
         let msg = input.read().clone();
         // clearing input here should prevent the possibility to double send a message if enter is pressed twice
+        *chatbar_value.write_silent() = (active_chat_id, String::new());
         input.write().clear();
         if let Some(id) = active_chat_id {
             state
@@ -1137,6 +1143,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
+    let (tx, rx) = mpsc::channel::<String>(100);
+
+    let _ = task::spawn(async move {
+        debounce(rx).await;
+    });
+
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
@@ -1147,14 +1159,16 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         onchange: move |v: String| {
             input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
+                *chatbar_value.write() = (active_chat_id, v.clone());
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                state.write().mutate(Action::SetChatDraft(*id, v));
+                let _ = tx.blocking_send(v);
             }
         },
-        value: data
-            .as_ref()
-            .and_then(|d| d.active_chat.draft.clone())
-            .unwrap_or_default(),
+        value: if chatbar_value.read().0 == active_chat_id {
+            chatbar_value.read().1.clone()
+        } else {
+            String::new()
+        },
         onreturn: move |_| submit_fn(),
         extensions: cx.render(rsx!(
             // Load extensions
@@ -1267,6 +1281,38 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         chatbar,
         Attachments {files: files_to_upload.clone()}
     ))
+}
+
+async fn debounce(mut rx: mpsc::Receiver<String>) {
+    let mut last_update_time = Instant::now();
+
+    let mut action_task: Option<tokio::task::JoinHandle<()>> = None;
+
+    while let Some(value) = rx.recv().await {
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        if let Ok(next_value) = rx.try_recv() {
+            if let Some(task) = action_task {
+                task.abort();
+            }
+            last_update_time = Instant::now();
+            action_task = None;
+            continue;
+        }
+        let elapsed_time = Instant::now().duration_since(last_update_time);
+        if elapsed_time >= DEBOUNCE_INTERVAL {
+            if let Some(task) = action_task {
+                task.abort();
+            }
+            let task = task::spawn(async move {
+                println!(
+                    "User stopped typing for at least 2 seconds with value: {}",
+                    value
+                );
+            });
+            action_task = Some(task);
+            last_update_time = Instant::now();
+        }
+    }
 }
 
 #[derive(Props, PartialEq)]
