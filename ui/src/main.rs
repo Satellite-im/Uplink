@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -21,6 +22,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Instant;
@@ -54,6 +56,7 @@ use common::{
     warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
+use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -151,6 +154,40 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    panic::set_hook(Box::new(|panic_info| {
+        let intro = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => format!("panic occurred: {s:?}"),
+            None => "panic occurred".into(),
+        };
+        let location = match panic_info.location() {
+            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
+            None => "".into(),
+        };
+
+        let logs = logger::dump_logs();
+        let crash_report = format!("{intro}{location}\n{logs}\n");
+        println!("{crash_report}");
+
+        // todo: hide this behind the debug flag
+        let save_path = FileDialog::new()
+            .set_directory(dirs::home_dir().unwrap_or(".".into()))
+            .set_title(&get_local_text("uplink.crash-report"))
+            .pick_folder();
+
+        if let Some(p) = save_path {
+            let time = Local::now();
+            let file_name = format!(
+                "uplink-crash-report_{}-{}-{}_{}:{}:{}.txt",
+                time.year(),
+                time.month(),
+                time.day(),
+                time.hour(),
+                time.minute(),
+                time.second()
+            );
+            let _ = fs::write(p.join(file_name), crash_report);
+        }
+    }));
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
