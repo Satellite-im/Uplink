@@ -40,6 +40,8 @@ pub struct General {
     #[serde(default)]
     pub theme: String,
     #[serde(default)]
+    pub font: Option<String>,
+    #[serde(default)]
     pub show_splash: bool,
     #[serde(default)]
     pub enable_overlay: bool,

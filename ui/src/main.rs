@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -21,6 +22,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -54,6 +56,7 @@ use common::{
     warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
+use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -220,6 +223,40 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    panic::set_hook(Box::new(|panic_info| {
+        let intro = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => format!("panic occurred: {s:?}"),
+            None => "panic occurred".into(),
+        };
+        let location = match panic_info.location() {
+            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
+            None => "".into(),
+        };
+
+        let logs = logger::dump_logs();
+        let crash_report = format!("{intro}{location}\n{logs}\n");
+        println!("{crash_report}");
+
+        // todo: hide this behind the debug flag
+        let save_path = FileDialog::new()
+            .set_directory(dirs::home_dir().unwrap_or(".".into()))
+            .set_title(&get_local_text("uplink.crash-report"))
+            .pick_folder();
+
+        if let Some(p) = save_path {
+            let time = Local::now();
+            let file_name = format!(
+                "uplink-crash-report_{}-{}-{}_{}:{}:{}.txt",
+                time.year(),
+                time.month(),
+                time.day(),
+                time.hour(),
+                time.minute(),
+                time.second()
+            );
+            let _ = fs::write(p.join(file_name), crash_report);
+        }
+    }));
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
@@ -507,6 +544,23 @@ fn app(cx: Scope) -> Element {
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
+    let mut font_style = String::new();
+    if let Some(font) = state.read().ui.font.clone() {
+        font_style = format!(
+            "
+        @font-face {{
+            font-family: CustomFont;
+            src: url('{}');
+        }}
+        body,
+        html {{
+            font-family: CustomFont, sans-serif;
+        }}
+        ",
+            font.path
+        );
+    }
+
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
         // render the Uplink app
@@ -528,7 +582,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {open_dyslexic}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
                 get_titlebar(cx),
@@ -948,7 +1002,13 @@ fn get_pre_release_message(cx: Scope) -> Element {
                 icon: Icon::Beaker,
             },
             p {
-                "{pre_release_text}",
+                div {
+                    onclick: move |_| {
+                        let _ = open::that("https://issues.satellite.im");
+                    },
+                    "{pre_release_text}"
+                }
+
             }
         },
     ))

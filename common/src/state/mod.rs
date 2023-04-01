@@ -47,7 +47,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::ui::{Call, Layout};
+use self::ui::{Call, Font, Layout};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -186,8 +186,9 @@ impl State {
             Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
-            Action::SetTheme(theme) => self.set_theme(Some(theme)),
-            Action::ClearTheme => self.set_theme(None),
+            Action::SetTheme(theme) => self.set_theme(theme),
+            // Fonts
+            Action::SetFont(font) => self.set_font(font),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -1044,6 +1045,9 @@ impl State {
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
+    }
+    pub fn set_font(&mut self, font: Option<Font>) {
+        self.ui.font = font;
     }
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {

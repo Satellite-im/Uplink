@@ -75,19 +75,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: get_local_text("settings-developer.open-codebase"),
-                section_description: get_local_text("settings-developer.open-codebase-description"),
-                Button {
-                    text: get_local_text("settings-developer.open-codebase"),
-                    aria_label: "open-codebase-button".into(),
-                    appearance: Appearance::Secondary,
-                    icon: Icon::CodeBracketSquare,
-                    onpress: |_| {
-                        let _ = open::that("https://github.com/Satellite-im/Uplink");
-                    }
-                }
-            },
-            SettingSection {
                 section_label: "Test Notification".into(),
                 section_description: "Sends a test notification.".into(),
                 Button {
