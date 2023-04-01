@@ -1,5 +1,5 @@
 use common::{
-    state::{self, Theme},
+    state::{self, ui::Font, Theme},
     STATIC_ARGS,
 };
 use std::{fs, path::Path};
@@ -39,6 +39,36 @@ pub fn get_available_themes() -> Vec<Theme> {
     themes.sort_by_key(|theme| theme.name.clone());
 
     themes
+}
+
+pub fn get_available_fonts() -> Vec<Font> {
+    let mut fonts = vec![];
+
+    for file in WalkDir::new(&STATIC_ARGS.fonts_path)
+        .into_iter()
+        .filter_map(|file| file.ok())
+    {
+        if file.metadata().unwrap().is_file() {
+            let file_osstr = file.file_name();
+            let mut pretty_name: String = file_osstr.to_str().unwrap_or_default().into();
+            pretty_name = pretty_name
+                .replace("_", " ")
+                .replace("-", " ")
+                .split('.')
+                .next()
+                .unwrap()
+                .into();
+
+            let font = Font {
+                name: pretty_name,
+                path: file.path().to_str().unwrap_or_default().into(),
+            };
+
+            fonts.push(font);
+        }
+    }
+
+    fonts
 }
 
 fn get_pretty_name<S: AsRef<str>>(name: S) -> String {

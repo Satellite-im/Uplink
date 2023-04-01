@@ -117,7 +117,7 @@ settings-profile = Profile Settings
     .save-button = Save
     .welcome = Your new profile!
     .updated = Profile Updated!
-    .welcome-desc = Tell the world all about yourself, well tell them as much as you can while we're still under construction, at least.
+    .welcome-desc = Tell the world all about yourself, well.. tell them as much as you can while we're still under construction, at least.
     .welcome-cta = First step, pick out a profile picture and maybe even a banner too!
     .copy-id = Copy ID
     
@@ -131,6 +131,8 @@ settings-general = General Settings
     .theme-reset = Reset Theme
     .theme-reset-description = Reset the theme to the default.
     .theme-reset-cta = Clear Theme
+    .font = Font
+    .font-description = Change the font of the app.
     .dyslexia = Open Dyslexic
     .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
 
