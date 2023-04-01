@@ -5,6 +5,7 @@ use dioxus::prelude::*;
 use kit::elements::{button::Button, select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
+use crate::utils::get_available_fonts;
 use crate::{components::settings::SettingSection, utils::get_available_themes};
 
 #[allow(non_snake_case)]
@@ -12,6 +13,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
+    let fonts = get_available_fonts();
 
     log::debug!("General settings page rendered.");
 
@@ -43,7 +45,26 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     onselect: move |value| {
                         themes.iter().for_each(|t| {
                             if t.name == value {
-                                state.write().mutate(Action::SetTheme(t.clone()));
+                                state.write().mutate(Action::SetTheme(Some(t.clone())));
+                            }
+                        })
+                    }
+                }
+            },
+            SettingSection {
+                section_label: get_local_text("settings-general.font"),
+                section_description: get_local_text("settings-general.font-description"),
+                Select {
+                    initial_value: if let Some(font) = &state.read().ui.font {
+                        font.name.clone()
+                    } else {
+                        "Default".into()
+                    },
+                    options: fonts.iter().map(|font| font.name.clone()).collect(),
+                    onselect: move |value| {
+                        fonts.iter().for_each(|font| {
+                            if font.name.clone() == value {
+                                state.write().mutate(Action::SetFont(Some(font.to_owned())));
                             }
                         })
                     }
@@ -58,7 +79,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     icon: Icon::Trash,
                     appearance: kit::elements::Appearance::Secondary,
                     onpress: move |_| {
-                        state.write().mutate(Action::ClearTheme);
+                        state.write().mutate(Action::SetTheme(None));
                     }
                 }
             },

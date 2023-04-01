@@ -437,6 +437,23 @@ fn app(cx: Scope) -> Element {
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
+    let mut font_style = String::new();
+    if let Some(font) = state.read().ui.font.clone() {
+        font_style = format!(
+            "
+        @font-face {{
+            font-family: CustomFont;
+            src: url('{}');
+        }}
+        body,
+        html {{
+            font-family: CustomFont, sans-serif;
+        }}
+        ",
+            font.path
+        );
+    }
+
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
         // render the Uplink app
@@ -458,7 +475,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {open_dyslexic}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
                 get_titlebar(cx),

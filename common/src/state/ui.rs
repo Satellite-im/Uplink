@@ -49,6 +49,7 @@ pub struct UI {
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
+    pub font: Option<Font>,
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
@@ -327,4 +328,10 @@ pub struct Theme {
     pub filename: String,
     pub name: String,
     pub styles: String,
+}
+
+#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Font {
+    pub name: String,
+    pub path: String,
 }
