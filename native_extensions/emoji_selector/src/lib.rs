@@ -127,7 +127,7 @@ impl EmojiSelector {
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
-     
+
         cx.render(rsx! (
             div {
                 onmouseenter: |_| {

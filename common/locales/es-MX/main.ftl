@@ -121,6 +121,10 @@ settings-privacy = Settings Privacy
     .backup-phrase = Frase de copia de seguridad
     .backup-phrase-description = ¡Haz una copia de esta frase! Junto con tu contraseña, esto representa tu cuenta. Si la pierdes, no podemos ayudarte a recuperarla.
 
+settings-about = UNKNOWN
+    .open-codebase = Abrir Base de Código
+    .open-codebase-description = Abre la base de código en tu navegador web predeterminado.
+
 settings-audio = Audio Settings 
     .call-timer = Temporizador de llamada
     .call-timer-description = Cuando está habilitado, se mostrará un temporizador cuando estés en una llamada para mostrar su duración.
@@ -134,8 +138,6 @@ settings-files = Files Settings
 settings-developer = Developer Settings 
     .developer-mode = Modo de desarrollador
     .developer-mode-description = Al habilitar el modo de desarrollador, se agrega registro y se muestra información útil de depuración en la interfaz de usuario.
-    .open-codebase = Abrir Base de Código
-    .open-codebase-description = Abre la base de código en tu navegador web predeterminado.
     .open-cache = Abrir Caché
     .open-cache-description = Abrir la caché en tu navegador de archivos predeterminado.
     .open-cache-folder = Abrir Carpeta

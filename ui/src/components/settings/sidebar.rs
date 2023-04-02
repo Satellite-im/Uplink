@@ -16,6 +16,7 @@ use kit::{
 use crate::components::chat::RouteInfo;
 
 pub enum Page {
+    About,
     Audio,
     Developer,
     Extensions,
@@ -30,6 +31,7 @@ pub enum Page {
 impl FromStr for Page {
     fn from_str(input: &str) -> Result<Page, Self::Err> {
         match input {
+            "about" => Ok(Page::About),
             "audio" => Ok(Page::Audio),
             "developer" => Ok(Page::Developer),
             "extensions" => Ok(Page::Extensions),
@@ -120,6 +122,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::CommandLine,
         ..UIRoute::default()
     };
+    let about = UIRoute {
+        to: "about",
+        name: get_local_text("settings.about"),
+        icon: Icon::ExclamationCircle,
+        ..UIRoute::default()
+    };
     let routes = vec![
         profile,
         general,
@@ -130,6 +138,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         accessibility,
         notifications,
         developer,
+        about,
     ];
 
     let active_route = routes[0].clone();
