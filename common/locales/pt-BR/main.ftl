@@ -111,10 +111,7 @@ settings-general = General Settings
     .change-language = Mude o idioma
     .theme = Tema
     .theme-description = Mude o tema do aplicativo.
-    .theme-reset = Restaurar Tema
-    .theme-reset-description = Restaurar tema padrão.
-    .theme-reset-cta = Limpar Tema
-
+   
 settings-extensions = Settings Extensions 
     .placeholder = Espaço reservado
     .open-extensions-folder = Abrir pasta de extensões 

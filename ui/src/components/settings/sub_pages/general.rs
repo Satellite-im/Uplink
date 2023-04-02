@@ -1,8 +1,8 @@
-use common::icons::outline::Shape as Icon;
 use common::language::{change_language, get_available_languages, get_local_text};
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
-use kit::elements::{button::Button, select::Select, switch::Switch};
+use kit::components::slide_selector::SlideSelector;
+use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
 use crate::utils::get_available_fonts;
@@ -71,15 +71,14 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: get_local_text("settings-general.theme-reset"),
-                section_description: get_local_text("settings-general.theme-reset-description"),
-                Button {
-                    text: get_local_text("settings-general.theme-reset-cta"),
-                    aria_label: "clear-theme-button".into(),
-                    icon: Icon::Trash,
-                    appearance: kit::elements::Appearance::Secondary,
-                    onpress: move |_| {
-                        state.write().mutate(Action::SetTheme(None));
+                section_label: get_local_text("settings-general.font-scaling"),
+                section_description: get_local_text("settings-general.font-scaling-description"),
+                SlideSelector {
+                    values: vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"],
+                    current: 3,
+                    onset: move |value: &'static str| {
+                        let as_string = value.to_string();
+                        state.write().mutate(Action::SetFontScale(as_string));
                     }
                 }
             },

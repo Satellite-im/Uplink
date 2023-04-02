@@ -189,6 +189,7 @@ impl State {
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
             Action::SetFont(font) => self.set_font(font),
+            Action::SetFontScale(font_scale) => self.ui.font_scale = font_scale,
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {

@@ -50,6 +50,8 @@ pub struct UI {
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
     pub font: Option<Font>,
+    #[serde(default = "default_font_scale")]
+    pub font_scale: String,
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
@@ -104,6 +106,10 @@ impl Extensions {
 
 fn bool_true() -> bool {
     true
+}
+
+fn default_font_scale() -> String {
+    "1.0".into()
 }
 
 impl Drop for UI {
