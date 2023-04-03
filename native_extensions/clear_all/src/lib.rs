@@ -38,7 +38,7 @@ impl Extension for ClearAll {
                 class: "clear-all_container",
                 Button {
                     icon: Icon::BellSlash,
-                    text: "Clear Notifications".into(),
+                    text: "Clear Notis".into(),
                     onpress: move |_| {
                         // TODO: Clear all notifications in state.
                     }
