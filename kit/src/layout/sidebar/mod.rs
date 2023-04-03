@@ -1,5 +1,7 @@
+use common::state::{Action, State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
+use warp::multipass::identity::Platform;
 
 use crate::elements::button::Button;
 use crate::elements::Appearance;
@@ -22,10 +24,12 @@ const SCRIPT: &str = include_str!("./script.js");
 
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
     let hidden = cx.props.hidden.unwrap_or(false);
     let minimal = use_state(cx, || false);
     // Run the script after the component is mounted
     let eval = use_eval(cx);
+    let mobile = state.read().get_own_identity().platform() == Platform::Mobile;
     use_effect(cx, (), |_| {
         to_owned![eval];
         async move {
@@ -34,10 +38,16 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     });
 
     let hamburger = cx.render(rsx!(Button {
+        aria_label: "hamburger-button".into(),
         icon: Icon::Bars3,
         appearance: Appearance::Transparent,
-        small: true,
-        onpress: move |_| { minimal.set(!minimal.get()) }
+        onpress: move |_| {
+            if !mobile {
+                minimal.set(!minimal.get())
+            } else {
+                state.write().mutate(Action::SidebarHidden(true));
+            }
+        }
     }));
 
     cx.render(rsx!(
