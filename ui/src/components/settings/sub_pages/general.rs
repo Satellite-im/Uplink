@@ -86,7 +86,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
-                    values: vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"],
+                    values: vec!["0.75", "0.85", "0.95", "1.0", "1.15", "1.25", "1.45"],
                     current: 3,
                     onset: move |value: &'static str| {
                         let as_string = value.to_string();
