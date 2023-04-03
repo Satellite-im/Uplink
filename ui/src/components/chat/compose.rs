@@ -1146,7 +1146,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                 match inner_state.try_borrow_mut() {
                     Ok(state) => state
                         .write()
-                        .mutate(Action::SetChatDraft(id.clone(), v.clone())),
+                        .mutate(Action::SetChatDraft(*id, v)),
                     Err(e) => log::error!("{e}"),
                 };
                 local_typing_ch.send(TypingIndicator::Typing(*id));

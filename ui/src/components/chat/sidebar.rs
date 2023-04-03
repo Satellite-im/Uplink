@@ -142,7 +142,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         (vec![], vec![], None)
     };
 
-    let show_create_group = use_state(&cx, || false);
+    let show_create_group = use_state(cx, || false);
 
     cx.render(rsx!(
         ReusableSidebar {
