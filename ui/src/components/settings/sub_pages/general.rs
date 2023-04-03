@@ -33,6 +33,18 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
+                section_label: get_local_text("settings-general.app-language"),
+                section_description: get_local_text("settings-general.change-language"),
+                Select {
+                    initial_value: initial_lang_value,
+                    options: get_available_languages(),
+                    onselect: move |value| {
+                        let new_app_lang = change_language(value);
+                        state.write().mutate(Action::SetLanguage(new_app_lang));
+                    }
+                }
+            },
+            SettingSection {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 Select {
@@ -79,18 +91,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     onset: move |value: &'static str| {
                         let as_string = value.to_string();
                         state.write().mutate(Action::SetFontScale(as_string));
-                    }
-                }
-            },
-            SettingSection {
-                section_label: get_local_text("settings-general.app-language"),
-                section_description: get_local_text("settings-general.change-language"),
-                Select {
-                    initial_value: initial_lang_value,
-                    options: get_available_languages(),
-                    onselect: move |value| {
-                        let new_app_lang = change_language(value);
-                        state.write().mutate(Action::SetLanguage(new_app_lang));
                     }
                 }
             },

@@ -1127,11 +1127,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         Some(i) => i,
         None => uuid::Uuid::new_v4(),
     };
-    // todo: filter out extensions not meant for this area
+
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .values()
         .filter(|ext| ext.enabled())
+        .filter(|ext| ext.details().location == extensions::Location::Chatbar)
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
