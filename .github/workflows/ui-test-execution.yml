@@ -106,6 +106,7 @@ jobs:
         run: |
           ls -la
           unzip Uplink-Mac-Universal.zip
+          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
