@@ -8,7 +8,7 @@ use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn PrivacySettings(cx: Scope) -> Element {
-    log::debug!("Privacy settings page rendered.");
+    log::trace!("Privacy settings page rendered.");
     cx.render(rsx!(
         div {
             id: "settings-privacy",
