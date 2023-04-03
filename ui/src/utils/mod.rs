@@ -57,8 +57,7 @@ pub fn get_available_fonts() -> Vec<Font> {
             let file_osstr = file.file_name();
             let mut pretty_name: String = file_osstr.to_str().unwrap_or_default().into();
             pretty_name = pretty_name
-                .replace("_", " ")
-                .replace("-", " ")
+                .replace(['_', '-'], " ")
                 .split('.')
                 .next()
                 .unwrap()
