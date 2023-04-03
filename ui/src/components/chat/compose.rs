@@ -115,7 +115,6 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
-    println!("Render Compose");
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, overlay_script, window, drag_event];
