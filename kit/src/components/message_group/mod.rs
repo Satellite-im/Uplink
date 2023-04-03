@@ -14,13 +14,12 @@ pub struct Props<'a> {
     #[props(optional)]
     timestamp: Option<String>,
     #[props(optional)]
-    with_sender: Option<String>,
+    with_sender: Option<Element<'a>>,
 }
 
 #[allow(non_snake_case)]
 pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let remote = cx.props.remote.unwrap_or_default();
-    let sender = cx.props.with_sender.clone().unwrap_or_default();
     let time_ago = cx.props.timestamp.clone().unwrap_or_default();
 
     cx.render(rsx! (
@@ -43,13 +42,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "time-ago",
                     "{time_ago}"
                 }
-                (!sender.is_empty()).then(|| rsx! (
-                    p {
-                        class: "sender",
-                        aria_label: "sender",
-                        "{sender}"
-                    }
-                )),
+                cx.props.with_sender.as_ref()
             }
             (!remote).then(|| rsx!(
                 &cx.props.user_image

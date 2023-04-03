@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus::prelude::*;
+use dioxus::prelude::{EventHandler, *};
 
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
@@ -433,6 +433,10 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
         use_ref(cx, || None);
 
+    let window = use_window(cx);
+    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let identity_profile = use_state(cx, || Identity::default());
+
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
             log::debug!("finished loading chat: {id}");
@@ -621,8 +625,26 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                     num_messages_in_conversation: data.active_chat.messages.len(),
                     num_to_take: num_to_take.clone(),
                     has_more: data.active_chat.has_more_messages,
+                    on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                        if !identity_profile.get().did_key().eq(&id.did_key()) {
+                            identity_profile.set(id);
+                        }
+                        let window_size = window.inner_size();
+                        //Dont think there is any way of manually moving elements via dioxus
+                        let script = include_str!("./show_context.js")
+                            .replace("UUID", quick_profile_uuid)
+                            .replace("$PAGE_X", &e.page_coordinates().x.to_string())
+                            .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
+                            .replace("$INNER_WIDTH", &window_size.width.to_string())
+                            .replace("$INNER_HEIGHT", &window_size.height.to_string());
+                        eval(script.to_string());
+                    }
                 })
             }
+        },
+        QuickProfileContext{
+            id: quick_profile_uuid,
+            identity: identity_profile
         }
     ))
 }
@@ -634,6 +656,7 @@ struct AllMessageGroupsProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -647,6 +670,7 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
             has_more: cx.props.has_more,
+            on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
         })
     })))
 }
@@ -658,6 +682,7 @@ struct MessageGroupProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -669,11 +694,14 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         num_messages_in_conversation: _,
         num_to_take: _,
         has_more: _,
+        on_context_menu_action: _,
     } = cx.props;
 
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
     let sender = state.read().get_identity(&group.sender);
+    let sender_clone = sender.clone();
+    let sender_clone_2 = sender.clone();
     let sender_name = sender.username();
     let active_language = &state.read().settings.language;
 
@@ -683,20 +711,40 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     }
 
     cx.render(rsx!(MessageGroup {
-        user_image: cx.render(rsx!(
-            QuickProfileContext{
-            identity: sender.clone(),
-            cx.render(rsx!(UserImage {
-                image: sender.graphics().profile_picture(),
-                platform: sender.platform().into(),
-                status: sender_status,
-            }))
-        }))
+        user_image: cx.render(rsx!(UserImage {
+            image: sender.graphics().profile_picture(),
+            platform: sender.platform().into(),
+            status: sender_status,
+            onpress: move |e| {
+                cx.props.on_context_menu_action.call((e, sender.to_owned()));
+            }
+            oncontextmenu: move |e| {
+                cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+            }
+        })),
         timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
-        with_sender: if sender_name.is_empty() {
-            get_local_text("messages.you")
-        } else {
-            sender_name
+        with_sender: {
+            let sender_clone_3 = sender_clone_2.clone();
+            let sender = if sender_name.is_empty() {
+                get_local_text("messages.you")
+            } else {
+                sender_name
+            };
+            cx.render(rsx!(
+                div {
+                    onclick: move |e| {
+                        cx.props.on_context_menu_action.call((e, sender_clone_2.to_owned()));
+                    },
+                    oncontextmenu: move |e| {
+                        cx.props.on_context_menu_action.call((e, sender_clone_3.to_owned()));
+                    },
+                    p {
+                        class: "sender pressable",
+                        aria_label: "sender",
+                        "{sender}",
+                    }
+                }
+            ))
         },
         remote: group.remote,
         children: cx.render(rsx!(render_messages {
@@ -1386,7 +1434,8 @@ async fn drag_and_drop_function(
 
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
-    identity: Identity,
+    id: &'a String,
+    identity: &'a UseState<Identity>,
     children: Element<'a>,
 }
 
@@ -1402,10 +1451,9 @@ enum QuickProfileCmd {
 #[allow(non_snake_case)]
 pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    // Message groups dont have any kind of identification
-    let UUID = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let id = cx.props.id;
 
-    let identity = &cx.props.identity;
+    let identity = cx.props.identity.get();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
@@ -1555,10 +1603,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     });
 
     cx.render(rsx!(ContextMenu {
-        id: format!("{UUID}-friend-listing"),
+        id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
-                identity: cx.props.identity.to_owned()
+                identity: identity.clone()
             },
             hr{},
             if is_self {

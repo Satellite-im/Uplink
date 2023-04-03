@@ -21,6 +21,8 @@ pub struct Props<'a> {
     with_username: Option<String>,
     #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
+    #[props(optional)]
+    oncontextmenu: Option<EventHandler<'a, MouseEvent>>,
     status: Status,
     platform: Platform,
 }
@@ -31,8 +33,18 @@ pub fn get_image(cx: &Scope<Props>) -> String {
 
 /// Tells the parent the user_image was interacted with.
 pub fn emit(cx: &Scope<Props>, e: Event<MouseData>) {
-    match &cx.props.onpress {
+    match &cx.props.oncontextmenu {
         Some(f) => f.call(e),
+        None => {}
+    }
+}
+
+pub fn emit_context(cx: &Scope<Props>, e: Event<MouseData>) {
+    match &cx.props.onpress {
+        Some(f) => {
+            e.stop_propagation();
+            f.call(e);
+        }
         None => {}
     }
 }
@@ -58,6 +70,7 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 aria_label: "user-image-wrap",
                 onclick: move |e| emit(&cx, e),
+                //oncontextmenu: move |e| emit_context(&cx, e),
                 div {
                     class: "user-image",
                     aria_label: "User Image",
