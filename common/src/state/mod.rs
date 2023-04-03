@@ -487,7 +487,10 @@ impl State {
         }
     }
     /// Saves the current state to disk.
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.ui.font_scale() == 0.0 {
+            self.ui.set_font_scale(1.0);
+        }
         let serialized = serde_json::to_string_pretty(self)?;
         let path = if STATIC_ARGS.use_mock {
             &STATIC_ARGS.mock_cache_path
@@ -524,9 +527,6 @@ impl State {
         state.friends.initialized = false;
         state.chats.initialized = false;
 
-        if state.ui.font_scale() == 0.0 {
-            state.ui.set_font_scale(1.0);
-        }
         state
     }
     fn load_mock() -> Self {

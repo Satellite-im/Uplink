@@ -51,7 +51,7 @@ pub struct UI {
     pub theme: Option<Theme>,
     pub font: Option<Font>,
     #[serde(default = "default_font_scale")]
-    font_scale: f32,
+    pub font_scale: f32,
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
@@ -70,7 +70,6 @@ pub struct UI {
     // Cached username used in login page
     pub cached_username: Option<String>,
 }
-
 #[derive(Default, Deserialize, Serialize)]
 pub struct Extensions {
     #[serde(default)]
