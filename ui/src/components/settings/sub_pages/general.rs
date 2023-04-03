@@ -14,6 +14,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
     let fonts = get_available_fonts();
+    let font_sizes = vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"];
 
     log::trace!("General settings page rendered.");
 
@@ -74,11 +75,15 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
-                    values: vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"],
+                    values: font_sizes.clone(),
                     disp: format!("{}x", state.read().ui.font_scale()),
-                    idx: (state.read().ui.font_scale() * 4_f32) as usize,
-                    onset: move |idx| {
-                        state.write().mutate(Action::SetFontScale( (idx as f32) / 4_f32));
+                    idx: match font_sizes.iter().position(|&x| x == &state.read().ui.font_scale().to_string()) {
+                        Some(index) => index,
+                        None => 3,
+                    },
+                    onset: move |new_value: String| {
+                        let new_value_f32 = new_value.parse::<f32>().unwrap_or(1.0);
+                        state.write().mutate(Action::SetFontScale(new_value_f32));
                     }
                 }
             },

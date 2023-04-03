@@ -8,7 +8,14 @@ pub struct Props<'a> {
     values: Vec<&'static str>,
     disp: String,
     idx: usize,
-    onset: EventHandler<'a, usize>,
+    onset: EventHandler<'a, String>,
+}
+
+fn change_value(cx: &Scoped<Props>, index: usize) -> String {
+    match cx.props.values.get(index) {
+        Some(value) => value.to_string(),
+        None => cx.props.disp.clone(),
+    }
 }
 
 #[allow(non_snake_case)]
@@ -23,8 +30,7 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 if cx.props.idx == 0 {
                     return;
                 }
-
-                cx.props.onset.call(cx.props.idx - 1);
+                cx.props.onset.call(change_value(cx,cx.props.idx - 1));
             },
         },
         span {
@@ -35,11 +41,10 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             icon: Shape::Plus
             appearance: Appearance::Primary,
             onpress: move |_| {
-                if cx.props.idx >= cx.props.values.len() {
+                if cx.props.idx >= (cx.props.values.len() - 1) {
                     return;
                 }
-
-                cx.props.onset.call(cx.props.idx + 1);
+                cx.props.onset.call(change_value(cx,cx.props.idx + 1));
             },
         },
     }))
