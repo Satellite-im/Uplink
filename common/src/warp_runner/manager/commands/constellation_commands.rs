@@ -61,7 +61,7 @@ pub enum ConstellationCmd {
         directory_name: String,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "BackToPreviousDirectory {{ directory: {directory:?} }} ")]
+    #[display(fmt = "BackToPreviousDirectory")]
     BackToPreviousDirectory {
         directory: Directory,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,

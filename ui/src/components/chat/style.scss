@@ -8,8 +8,6 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
-  overflow-y: scroll;
-  overflow-x: hidden;
   label {
     align-self: center;
   }

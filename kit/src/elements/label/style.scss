@@ -4,3 +4,9 @@ label {
     text-transform: uppercase;
     font-weight: lighter;
 }
+
+.wrap-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

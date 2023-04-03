@@ -279,7 +279,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             icon: Icon::ChatPlus,
                             tooltip: cx.render(rsx!(
                                 Tooltip {
-                                    arrow_position: ArrowPosition::Bottom,
+                                    arrow_position: ArrowPosition::Right,
                                     text: String::from("Create Group Chat")
                                 }
                             )),
