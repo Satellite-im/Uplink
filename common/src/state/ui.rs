@@ -70,7 +70,6 @@ pub struct UI {
     // Cached username used in login page
     pub cached_username: Option<String>,
 }
-
 #[derive(Default, Deserialize, Serialize)]
 pub struct Extensions {
     #[serde(default)]
