@@ -1622,6 +1622,16 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 identity: identity.clone()
             },
             hr{},
+            div {
+                id: "profile-name",
+                aria_label: "Context Menu",
+                p {
+                    class: "text",
+                    aria_label: "message-text",
+                    "{cx.props.identity.username()}"
+                }
+            }
+            hr{},
             if is_self {
                 rsx!(ContextItem {
                     icon: Icon::UserCircle,
