@@ -42,6 +42,11 @@ pub enum LogProfile {
     Trace2,
 }
 
+/// If uplink is compiled in release mode, it will look for an `extra.zip` file based on
+/// the platform-specific installer. to circumvent this, set DEBUG=1
+///
+/// If compiled in debug mode or DEBUG=1, uplink will use `ui/extra` for the assets
+/// directory. The folders ~/.uplink/themes and ~/.uplink/fonts are also used as assets.
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 pub struct Args {
@@ -61,10 +66,10 @@ pub struct Args {
 #[derive(Debug)]
 pub struct StaticArgs {
     /// ~/.uplink
+    /// contains the following: extra (folder), extensions (folder), themes (folder), fonts (folder), .user
     pub dot_uplink: PathBuf,
-    /// Uplink stores its data with the following layout, starting at whatever the root folder is:
-    /// ./uplink ./uplink/warp ./themes
-    /// uplink_path is used for deleting all uplink data when a new account is created
+    /// ~/.uplink/.user
+    /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
     /// contains assets bundled with uplink, such as themes, fonts, and images
     /// these are separate from user-imported fonts and themes
