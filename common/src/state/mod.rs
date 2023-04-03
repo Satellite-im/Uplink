@@ -189,7 +189,7 @@ impl State {
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
             Action::SetFont(font) => self.set_font(font),
-            Action::SetFontScale(font_scale) => self.ui.font_scale = font_scale,
+            Action::SetFontScale(font_scale) => self.ui.set_font_scale(font_scale),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -523,6 +523,10 @@ impl State {
         // protection in the future
         state.friends.initialized = false;
         state.chats.initialized = false;
+
+        if state.ui.font_scale() == 0.0 {
+            state.ui.set_font_scale(1.0);
+        }
         state
     }
     fn load_mock() -> Self {
