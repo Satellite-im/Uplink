@@ -71,10 +71,10 @@
   &.appearance-disabled {
     cursor: default;
     opacity: 0.5;
-    background-color: var(--secondary-dark);
-    &:hover {
-      background-color: var(--secondary-dark);
-    }
+    // background-color: var(--secondary-dark);
+    // &:hover {
+    //   background-color: var(--secondary-dark);
+    // }
   }
 }
 .btn-wrap {

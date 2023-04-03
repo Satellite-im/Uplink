@@ -104,7 +104,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{UUID}",
                     aria_label: "{aria_label}",
                     title: "{text}",
-                    disabled: "{disabled}",
+                    // disabled: "{disabled}",
                     class: {
                         format_args!(
                             "btn appearance-{} btn-{} {} {}", 
