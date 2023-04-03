@@ -68,8 +68,6 @@ use crate::{
     },
 };
 
-const DEBOUNCE_INTERVAL: Duration = Duration::from_secs(3);
-
 pub const SELECT_CHAT_BAR: &str = r#"
     var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
     chatBar.focus()
@@ -917,8 +915,7 @@ enum TypingIndicator {
 }
 
 enum ChanCmd {
-    StartTyping(String),
-    Cancel,
+    StartTyping((Uuid, String)),
 }
 
 #[derive(Clone)]
@@ -936,15 +933,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
     let chatbar_value = use_ref(cx, || (active_chat_id, String::new()));
-    let update_chatbar_value_on_state = use_ref(cx, || false);
-
-    if *update_chatbar_value_on_state.read() {
-        state.write().mutate(Action::SetChatDraft(
-            chatbar_value.read().0.unwrap(),
-            chatbar_value.read().1.clone(),
-        ));
-        *update_chatbar_value_on_state.write_silent() = false;
-    }
+    let can_update_value_from_state = use_ref(cx, || false);
 
     let message_saved = data
         .as_ref()
@@ -957,7 +946,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                 .write_silent()
                 .mutate(Action::SetChatDraft(id, chatbar_value.read().1.clone()));
         }
-
         *chatbar_value.write() = (active_chat_id, message_saved);
     }
 
@@ -1099,16 +1087,22 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         }
     });
 
-    let value_in_draft = data
+    let value_in_draft = state
+        .read()
+        .get_active_chat()
         .as_ref()
-        .and_then(|d| d.active_chat.draft.clone())
+        .and_then(|d| d.draft.clone())
         .unwrap_or_default()
         .lines()
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-    if *input.read() != value_in_draft && !value_in_draft.is_empty() {
+
+    if *input.read() != value_in_draft && *can_update_value_from_state.read() == true {
+        *chatbar_value.write_silent() = (active_chat_id, value_in_draft.join(" "));
         input.with_mut(|v| *v = value_in_draft);
     }
+    *can_update_value_from_state.write_silent() = true;
+
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     use_future(cx, &active_chat_id, |current_chat| async move {
@@ -1170,24 +1164,26 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
+    let inner_state = state.inner();
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![update_chatbar_value_on_state];
+        to_owned![inner_state];
         async move {
-            let mut last_update_time = Instant::now();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    ChanCmd::StartTyping(value) => {
-                        let elapsed_time = Instant::now().duration_since(last_update_time);
-                        if elapsed_time >= DEBOUNCE_INTERVAL {
-                            println!("2 seconds with value: {}", value);
-                            update_chatbar_value_on_state.with_mut(|i| *i = true);
-                            last_update_time = Instant::now();
+                    ChanCmd::StartTyping((id, value)) => {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
+                        match inner_state.try_borrow_mut() {
+                            Ok(state) => {
+                                state
+                                    .write()
+                                    .mutate(Action::SetChatDraft(id, value.clone()));
+                            }
+                            Err(e) => {
+                                log::error!("{e}");
+                            }
                         }
-                    }
-                    ChanCmd::Cancel => {
-                        tokio::time::sleep(Duration::from_millis(100)).await;
-                        last_update_time = last_update_time - Duration::from_millis(90);
-                        println!("Cancel");
+                        println!("Updated state: {}", value);
                     }
                 }
             }
@@ -1204,10 +1200,10 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         onchange: move |v: String| {
             input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
+                *can_update_value_from_state.write_silent() = false;
                 *chatbar_value.write() = (active_chat_id, v.clone());
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                ch.send(ChanCmd::Cancel);
-                ch.send(ChanCmd::StartTyping(v));
+                ch.send(ChanCmd::StartTyping((*id, v)));
             }
         },
         value: if chatbar_value.read().0 == active_chat_id {
