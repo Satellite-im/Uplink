@@ -78,6 +78,18 @@ pub const SELECT_CHAT_BAR: &str = r#"
     chatBar.focus()
 "#;
 
+const SETUP_CONTEXT_PARENT: &str = r#"
+    const right_clickable = document.getElementsByClassName("has-context-handler")
+    console.log("E", right_clickable)
+    for (var i = 0; i < right_clickable.length; i++) {
+        //Disable default right click actions (opening the inspect element dropdown)
+        right_clickable.item(i).addEventListener("contextmenu",
+        function (ev) {
+        ev.preventDefault()
+        })
+    }
+"#;
+
 struct ComposeData {
     active_chat: Chat,
     my_id: Identity,
@@ -476,6 +488,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                 let script = include_str!("./script.js");
                 eval(script.to_string());
             }
+            eval(SETUP_CONTEXT_PARENT.to_string());
         }
     });
 
@@ -739,7 +752,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                         cx.props.on_context_menu_action.call((e, sender_clone_3.to_owned()));
                     },
                     p {
-                        class: "sender pressable",
+                        class: "sender pressable has-context-handler",
                         aria_label: "sender",
                         "{sender}",
                     }
