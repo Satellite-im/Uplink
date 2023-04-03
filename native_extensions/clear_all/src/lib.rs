@@ -25,7 +25,7 @@ impl Extension for ClearAll {
     }
 
     fn stylesheet(&self) -> String {
-        "".into()
+        ".clear-all_container, .clear-all_container .btn-wrap, .clear-all_container .btn { width: 100% }".into()
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
@@ -34,10 +34,14 @@ impl Extension for ClearAll {
         cx.render(rsx! (
             style { "{styles}" },
             // Render standard (required) button to fire action.
-            Button {
-                icon: Icon::BellSlash,
-                onpress: move |_| {
-                    // TODO: Clear all notifications in state
+            div {
+                class: "clear-all_container",
+                Button {
+                    icon: Icon::BellSlash,
+                    text: "Clear Notifications".into(),
+                    onpress: move |_| {
+                        // TODO: Clear all notifications in state.
+                    }
                 }
             }
         ))

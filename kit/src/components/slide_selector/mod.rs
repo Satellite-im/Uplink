@@ -5,19 +5,19 @@ use crate::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
-    current: u16,
+    current: usize,
     values: Vec<&'static str>,
     onset: EventHandler<'a, &'static str>,
 }
 
-fn get_by_index(index: u16, values: Vec<&'static str>) -> &'static str {
-    values.get(index as usize).unwrap_or(&"")
+fn get_by_index(index: usize, values: &[&'static str]) -> &'static str {
+    values.get(index).unwrap_or(&"")
 }
 
 #[allow(non_snake_case)]
 pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let current = use_state(cx, || cx.props.current);
-    let current_value = use_state(cx, || get_by_index(*current.get(), cx.props.values.clone()));
+    let current_value = use_state(cx, || get_by_index(*current.get(), &cx.props.values));
 
     let state = use_shared_state::<common::state::State>(cx)?;
 
@@ -32,7 +32,7 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     return;
                 }
                 current.set(current.get() - 1);
-                current_value.set(get_by_index(*current.get(), cx.props.values.clone()));
+                current_value.set(get_by_index(*current.get(), &cx.props.values));
                 cx.props.onset.call(*current_value.get());
             },
         },
@@ -44,11 +44,11 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             icon: Shape::Plus
             appearance: Appearance::Primary,
             onpress: move |_| {
-                if *current.get() == cx.props.values.len() as u16 - 1 {
+                if *current.get() == cx.props.values.len() - 1 {
                     return;
                 }
                 current.set(current.get() + 1);
-                current_value.set(get_by_index(*current.get(), cx.props.values.clone()));
+                current_value.set(get_by_index(*current.get(), &cx.props.values));
                 cx.props.onset.call(*current_value.get());
             },
         },
