@@ -1,6 +1,10 @@
+use std::path::Path;
+
+use futures::StreamExt;
 use reqwest::header;
 use reqwest::Client;
 use serde::Deserialize;
+use tokio::io::AsyncWriteExt;
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]
@@ -51,6 +55,22 @@ async fn get_github_release(url: &str) -> Result<GitHubRelease, reqwest::Error> 
     client.get(url).send().await?.json::<GitHubRelease>().await
 }
 
+async fn download_file<P: AsRef<Path>>(
+    client: &Client,
+    dest: P,
+    url: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut bytes = client.get(url).send().await?.bytes_stream();
+    let mut file = tokio::fs::File::create(dest).await?;
+
+    while let Some(v) = bytes.next().await {
+        let bytes = v?;
+        file.write_all(&bytes).await?;
+    }
+    file.flush().await?;
+    Ok(())
+}
+
 // assumes each release is tagged vX.Y.Z where X.Y.Z equals CARGO_PKG_VERSION
 // assumes `release_version` is the most recently published release
 fn should_upgrade(release_version: &str) -> bool {
@@ -62,14 +82,30 @@ fn should_upgrade(release_version: &str) -> bool {
 mod test {
 
     use super::*;
+    use std::error::Error;
 
     #[tokio::test]
-    async fn test_get_latest_release() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_latest_release() -> Result<(), Box<dyn Error>> {
         let response =
             get_github_release("https://api.github.com/repos/sdwoodbury/Uplink/releases/latest")
                 .await?;
         assert_eq!(response.tag_name, String::from("v0.2.8"));
         println!("assets: {:#?}", response.assets);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_download_asset() -> Result<(), Box<dyn Error>> {
+        let dest = "/tmp/test_download";
+        let response =
+            get_github_release("https://api.github.com/repos/sdwoodbury/Uplink/releases/latest")
+                .await?;
+        let asset = response.assets.first().unwrap();
+
+        let client = get_client()?;
+        println!("downloading {}", asset.name);
+        download_file(&client, dest, &asset.browser_download_url).await?;
+
         Ok(())
     }
 }

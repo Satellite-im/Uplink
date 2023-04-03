@@ -58,9 +58,13 @@ image.workspace = true
 clap = { workspace = true, features = ["derive"] }
 fs_extra.workspace = true
 walkdir.workspace = true
+<<<<<<< HEAD
 zip.workspace = true
 filetime = "0.2.20"
 reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls"] }
+=======
+reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
+>>>>>>> 20a0aa12 (added code to fetch and download assets from GitHub)
 
 [features]
 fullscreen = ["wry/fullscreen"]
