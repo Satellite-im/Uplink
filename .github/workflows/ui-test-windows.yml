@@ -58,7 +58,7 @@ jobs:
         with:
           name: Uplink-Windows
           path: |
-            target/release/ui.exe
+            target/release/uplink.exe
 
   test-on-windows:
     needs: build-windows
