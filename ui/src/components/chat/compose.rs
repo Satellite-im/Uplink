@@ -294,7 +294,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: data.is_none() || !STATIC_ARGS.is_debug,
+            disabled: data.is_none() || STATIC_ARGS.production_mode,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
@@ -313,7 +313,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::VideoCamera,
-            disabled: data.is_none() || !STATIC_ARGS.is_debug,
+            disabled: data.is_none() || STATIC_ARGS.production_mode,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
