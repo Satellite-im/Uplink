@@ -29,9 +29,9 @@ dependencies = [
 
 [[package]]
 name = "aead"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c192eb8f11fc081b0fe4259ba5af04217d4e0faddd02417310a927911abd7c8"
+checksum = "d122413f284cf2d62fb1b7db97e02edb8cda96d769b16e443a4f6195e35662b0"
 dependencies = [
  "crypto-common",
  "generic-array",
@@ -91,7 +91,7 @@ version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82e1366e0c69c9f927b1fa5ce2c7bf9eafc8f9268c0b9800729e8b267612447c"
 dependencies = [
- "aead 0.5.1",
+ "aead 0.5.2",
  "aes 0.8.2",
  "cipher 0.4.4",
  "ctr 0.9.2",
@@ -430,7 +430,7 @@ checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -1094,7 +1094,7 @@ dependencies = [
  "heck 0.4.1",
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -1117,6 +1117,17 @@ name = "claxon"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4bfbf56724aa9eca8afa4fcfadeb479e722935bb2a0900c2d37e0cc477af0688"
+
+[[package]]
+name = "clear_all"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "dioxus",
+ "extensions",
+ "kit",
+ "once_cell",
+]
 
 [[package]]
 name = "clipboard-win"
@@ -1316,9 +1327,9 @@ dependencies = [
 
 [[package]]
 name = "core-foundation-sys"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
+checksum = "e496a50fda8aacccc86d7529e2c1e0892dbd0f898a6b5645b5561b89c3210efa"
 
 [[package]]
 name = "core-graphics"
@@ -1624,7 +1635,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "scratch",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -1641,7 +1652,7 @@ checksum = "2345488264226bf682893e25de0769f3360aac9957980ec49361b083ddaa5bc5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -2402,9 +2413,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.1.19"
+version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93ace6ec7cc19c8ed33a32eaa9ea692d7faea05006b5356b9e2b668ec4bc3955"
+checksum = "e825f6987101665dea6ec934c09ec6d721de7bc1bf92248e1d5810c8cd636b77"
 
 [[package]]
 name = "field-offset"
@@ -2684,7 +2695,7 @@ checksum = "89ca545a94061b6365f2c7355b4b32bd20df3ff95f02da9329b34ccc3bd6ee72"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -3518,16 +3529,16 @@ dependencies = [
 
 [[package]]
 name = "iana-time-zone"
-version = "0.1.55"
+version = "0.1.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "716f12fbcfac6ffab0a5e9ec51d0a0ff70503742bb2dc7b99396394c9dc323f0"
+checksum = "0c17cc76786e99f8d2f055c11159e7f0091c42474dcc3189fbab96072e873e6d"
 dependencies = [
  "android_system_properties",
  "core-foundation-sys",
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows 0.47.0",
+ "windows 0.46.0",
 ]
 
 [[package]]
@@ -6190,9 +6201,9 @@ checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.54"
+version = "1.0.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e472a104799c74b514a57226160104aa483546de37e839ec50e3c2e41dd87534"
+checksum = "1d0dd4be24fcdcfeaa12a432d588dc59bbad6cad3510c67e74a2b6b2fc950564"
 dependencies = [
  "unicode-ident",
 ]
@@ -6454,9 +6465,9 @@ dependencies = [
 
 [[package]]
 name = "raw-window-handle"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f851a03551ceefd30132e447f07f96cb7011d6b658374f3aed847333adb5559"
+checksum = "f2ff9a1f06a88b01621b7ae906ef0211290d1c8a168a15542486a8f61c0833b9"
 
 [[package]]
 name = "rayon"
@@ -6699,9 +6710,9 @@ dependencies = [
 
 [[package]]
 name = "rust-ipfs"
-version = "0.3.12"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9244ec0b7caedb0cb1771473d240923124c59b7976a4e691e25c311639fffb38"
+checksum = "2cb92c3b8e1418390cf9a5c97a8d60be31b465f0130f8266e1afc38026ea80b0"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -6806,9 +6817,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.37.5"
+version = "0.37.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e78cc525325c06b4a7ff02db283472f3c042b7ff0c391f96c6d5ac6f4f91b75"
+checksum = "d097081ed288dfe45699b72f5b5d648e5f15d64d900c7080273baa20c16a6849"
 dependencies = [
  "bitflags",
  "errno",
@@ -6874,7 +6885,7 @@ name = "sata"
 version = "0.1.0"
 source = "git+https://github.com/Satellite-im/Sata?rev=4e4d86751eefdb44cc3f3fc473e231773b676173#4e4d86751eefdb44cc3f3fc473e231773b676173"
 dependencies = [
- "aead 0.5.1",
+ "aead 0.5.2",
  "aes-gcm 0.9.4",
  "anyhow",
  "chrono",
@@ -7066,7 +7077,7 @@ checksum = "4c614d17805b093df4b147b51339e7e44bf05ef59fba1e45d83500bcfb4d8585"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -7088,7 +7099,7 @@ checksum = "bcec881020c684085e55a25f7fd888954d56609ef363479dc5a1305eb0d40cab"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -7631,9 +7642,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.12"
+version = "2.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79d9531f94112cfc3e4c8f5f02cb2b58f72c97b7efd85f70203cc6d8efda5927"
+checksum = "4c9da457c5285ac1f936ebd076af6dac17a61cfe7826f2076b4d015cf47bc8ec"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7826,7 +7837,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -7997,7 +8008,7 @@ checksum = "61a573bdc87985e9d6ddeed1b3d864e8a302c847e40d647746df2f1de209d1ce"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -8210,68 +8221,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
-name = "ui"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "base64 0.20.0",
- "chrono",
- "clap 4.2.1",
- "cocoa",
- "colored",
- "common",
- "core-foundation",
- "derive_more",
- "dioxus",
- "dioxus-core 0.3.1",
- "dioxus-desktop",
- "dioxus-hooks",
- "dioxus-router",
- "dirs",
- "either",
- "extensions",
- "fdlimit",
- "fermi",
- "fs_extra",
- "futures",
- "glob",
- "humansize",
- "image",
- "isolang",
- "kit",
- "libloading",
- "mime",
- "notify",
- "notify-rust",
- "objc",
- "once_cell",
- "open",
- "opener",
- "rand 0.8.5",
- "raw-window-handle",
- "regex",
- "rfd",
- "rsass",
- "rustc_version 0.4.0",
- "serde",
- "serde_json",
- "tempfile",
- "timeago",
- "titlecase",
- "tokio",
- "tokio-util",
- "uuid",
- "walkdir",
- "warp",
- "warp-fs-ipfs",
- "warp-mp-ipfs",
- "warp-rg-ipfs",
- "window-vibrancy",
- "winres",
- "wry",
-]
-
-[[package]]
 name = "uint"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8410,6 +8359,68 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
+name = "uplink"
+version = "0.1.0"
+dependencies = [
+ "arboard",
+ "base64 0.20.0",
+ "chrono",
+ "clap 4.2.1",
+ "cocoa",
+ "colored",
+ "common",
+ "core-foundation",
+ "derive_more",
+ "dioxus",
+ "dioxus-core 0.3.1",
+ "dioxus-desktop",
+ "dioxus-hooks",
+ "dioxus-router",
+ "dirs",
+ "either",
+ "extensions",
+ "fdlimit",
+ "fermi",
+ "fs_extra",
+ "futures",
+ "glob",
+ "humansize",
+ "image",
+ "isolang",
+ "kit",
+ "libloading",
+ "mime",
+ "notify",
+ "notify-rust",
+ "objc",
+ "once_cell",
+ "open",
+ "opener",
+ "rand 0.8.5",
+ "raw-window-handle",
+ "regex",
+ "rfd",
+ "rsass",
+ "rustc_version 0.4.0",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "timeago",
+ "titlecase",
+ "tokio",
+ "tokio-util",
+ "uuid",
+ "walkdir",
+ "warp",
+ "warp-fs-ipfs",
+ "warp-mp-ipfs",
+ "warp-rg-ipfs",
+ "window-vibrancy",
+ "winres",
+ "wry",
+]
+
+[[package]]
 name = "url"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8523,7 +8534,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=543c3d604bbdcd5b4688e490b5523adda572061e#543c3d604bbdcd5b4688e490b5523adda572061e"
+source = "git+https://github.com/Satellite-im/Warp?rev=3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a#3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a"
 dependencies = [
  "aes-gcm 0.10.1",
  "anyhow",
@@ -8582,7 +8593,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=543c3d604bbdcd5b4688e490b5523adda572061e#543c3d604bbdcd5b4688e490b5523adda572061e"
+source = "git+https://github.com/Satellite-im/Warp?rev=3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a#3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a"
 dependencies = [
  "paste",
  "quote",
@@ -8592,7 +8603,7 @@ dependencies = [
 [[package]]
 name = "warp-fs-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=543c3d604bbdcd5b4688e490b5523adda572061e#543c3d604bbdcd5b4688e490b5523adda572061e"
+source = "git+https://github.com/Satellite-im/Warp?rev=3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a#3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -8613,7 +8624,7 @@ dependencies = [
 [[package]]
 name = "warp-mp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=543c3d604bbdcd5b4688e490b5523adda572061e#543c3d604bbdcd5b4688e490b5523adda572061e"
+source = "git+https://github.com/Satellite-im/Warp?rev=3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a#3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -8636,7 +8647,7 @@ dependencies = [
 [[package]]
 name = "warp-rg-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=543c3d604bbdcd5b4688e490b5523adda572061e#543c3d604bbdcd5b4688e490b5523adda572061e"
+source = "git+https://github.com/Satellite-im/Warp?rev=3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a#3280c3842b6d0fd27c4d2b1cd492e555dbcefc6a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9238,11 +9249,11 @@ dependencies = [
 
 [[package]]
 name = "windows"
-version = "0.47.0"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2649ff315bee4c98757f15dac226efe3d81927adbb6e882084bb1ee3e0c330a7"
+checksum = "cdacb41e6a96a052c6cb63a144f24900236121c6f63f4f8219fef5977ecb0c25"
 dependencies = [
- "windows-targets 0.47.0",
+ "windows-targets",
 ]
 
 [[package]]
@@ -9277,12 +9288,12 @@ version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a3e1820f08b8513f676f7ab6c1f99ff312fb97b553d30ff4dd86f9f15728aa7"
 dependencies = [
- "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_gnullvm",
  "windows_aarch64_msvc 0.42.2",
  "windows_i686_gnu 0.42.2",
  "windows_i686_msvc 0.42.2",
  "windows_x86_64_gnu 0.42.2",
- "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_gnullvm",
  "windows_x86_64_msvc 0.42.2",
 ]
 
@@ -9292,7 +9303,7 @@ version = "0.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
 dependencies = [
- "windows-targets 0.42.2",
+ "windows-targets",
 ]
 
 [[package]]
@@ -9301,28 +9312,13 @@ version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e5180c00cd44c9b1c88adb3693291f1cd93605ded80c250a75d472756b4d071"
 dependencies = [
- "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_gnullvm",
  "windows_aarch64_msvc 0.42.2",
  "windows_i686_gnu 0.42.2",
  "windows_i686_msvc 0.42.2",
  "windows_x86_64_gnu 0.42.2",
- "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_gnullvm",
  "windows_x86_64_msvc 0.42.2",
-]
-
-[[package]]
-name = "windows-targets"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f8996d3f43b4b2d44327cd71b7b0efd1284ab60e6e9d0e8b630e18555d87d3e"
-dependencies = [
- "windows_aarch64_gnullvm 0.47.0",
- "windows_aarch64_msvc 0.47.0",
- "windows_i686_gnu 0.47.0",
- "windows_i686_msvc 0.47.0",
- "windows_x86_64_gnu 0.47.0",
- "windows_x86_64_gnullvm 0.47.0",
- "windows_x86_64_msvc 0.47.0",
 ]
 
 [[package]]
@@ -9336,12 +9332,6 @@ name = "windows_aarch64_gnullvm"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "597a5118570b68bc08d8d59125332c54f1ba9d9adeedeef5b99b02ba2b0698f8"
-
-[[package]]
-name = "windows_aarch64_gnullvm"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "831d567d53d4f3cb1db332b68e6e2b6260228eb4d99a777d8b2e8ed794027c90"
 
 [[package]]
 name = "windows_aarch64_msvc"
@@ -9368,12 +9358,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e08e8864a60f06ef0d0ff4ba04124db8b0fb3be5776a5cd47641e942e58c4d43"
 
 [[package]]
-name = "windows_aarch64_msvc"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a42d54a417c60ce4f0e31661eed628f0fa5aca73448c093ec4d45fab4c51cdf"
-
-[[package]]
 name = "windows_i686_gnu"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9396,12 +9380,6 @@ name = "windows_i686_gnu"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c61d927d8da41da96a81f029489353e68739737d3beca43145c8afec9a31a84f"
-
-[[package]]
-name = "windows_i686_gnu"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1925beafdbb22201a53a483db861a5644123157c1c3cee83323a2ed565d71e3"
 
 [[package]]
 name = "windows_i686_msvc"
@@ -9428,12 +9406,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44d840b6ec649f480a41c8d80f9c65108b92d89345dd94027bfe06ac444d1060"
 
 [[package]]
-name = "windows_i686_msvc"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a8ef8f2f1711b223947d9b69b596cf5a4e452c930fb58b6fc3fdae7d0ec6b31"
-
-[[package]]
 name = "windows_x86_64_gnu"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9458,22 +9430,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8de912b8b8feb55c064867cf047dda097f92d51efad5b491dfb98f6bbb70cb36"
 
 [[package]]
-name = "windows_x86_64_gnu"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7acaa0c2cf0d2ef99b61c308a0c3dbae430a51b7345dedec470bd8f53f5a3642"
-
-[[package]]
 name = "windows_x86_64_gnullvm"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26d41b46a36d453748aedef1486d5c7a85db22e56aff34643984ea85514e94a3"
-
-[[package]]
-name = "windows_x86_64_gnullvm"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5a0628f71be1d11e17ca4a0e9e15b3a5180f6fbf1c2d55e3ba3f850378052c1"
 
 [[package]]
 name = "windows_x86_64_msvc"
@@ -9498,12 +9458,6 @@ name = "windows_x86_64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9aec5da331524158c6d1a4ac0ab1541149c0b9505fde06423b02f5ef0106b9f0"
-
-[[package]]
-name = "windows_x86_64_msvc"
-version = "0.47.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d6e62c256dc6d40b8c8707df17df8d774e60e39db723675241e7c15e910bce7"
 
 [[package]]
 name = "winnow"
@@ -9730,13 +9684,13 @@ dependencies = [
 
 [[package]]
 name = "zeroize_derive"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25588073e5216b50bca71d61cb8595cdb9745e87032a58c199730def2862c934"
+checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.12",
+ "syn 2.0.13",
 ]
 
 [[package]]
