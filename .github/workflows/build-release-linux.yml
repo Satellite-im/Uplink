@@ -1,0 +1,35 @@
+
+name: Build Linux
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v*"
+
+jobs:
+  check:
+    name: Build Release Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install libwebkit2gtk
+        run: sudo apt-get install -y build-essential pkg-config libssl-dev libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev librust-alsa-sys-dev
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Build executable
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: cargo build --release --package uplink
+
+      - name: Github Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/release/uplink
