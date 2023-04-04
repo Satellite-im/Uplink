@@ -923,12 +923,12 @@ struct TypingInfo {
 fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
+    state.write_silent().scope_ids.chatbar = cx.scope_id().0;
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
-
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
@@ -1144,9 +1144,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 match inner_state.try_borrow_mut() {
-                    Ok(state) => state
-                        .write()
-                        .mutate(Action::SetChatDraft(*id, v)),
+                    Ok(state) => state.write().mutate(Action::SetChatDraft(*id, v)),
                     Err(e) => log::error!("{e}"),
                 };
                 local_typing_ch.send(TypingIndicator::Typing(*id));
