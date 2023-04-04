@@ -16,6 +16,7 @@ sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/control
 sed -i "s/{{architecture}}/${PACKAGE_ARCHITECTURE}/g" ${BUILD_DIR}/DEBIAN/control
 
 cp target/release/${PACKAGE_NAME} ${BUILD_DIR}/opt/satellite-im/${PACKAGE_NAME}
+cp ./ui/wix/extra.zip ${BUILD_DIR}/opt/satellite-im/extra.zip
 
 dpkg-deb -Z gzip --root-owner-group --build ${BUILD_DIR} target/release/${FULL_NAME}.deb
 sha256sum target/release/${FULL_NAME}.deb > target/release/SHA256SUM
