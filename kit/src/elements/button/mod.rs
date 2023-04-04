@@ -26,6 +26,8 @@ pub struct Props<'a> {
     #[props(optional)]
     disabled: Option<bool>,
     #[props(optional)]
+    disabled_with_tooltip: Option<bool>,
+    #[props(optional)]
     appearance: Option<Appearance>,
     #[props(optional)]
     with_badge: Option<String>,
@@ -70,6 +72,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let badge = cx.props.with_badge.clone().unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
+    let disabled_with_tooltip = cx.props.disabled_with_tooltip.unwrap_or_default();
     let appearance = get_appearance(&cx);
     let small = cx.props.small.unwrap_or_default();
     let text2 = text.clone();
@@ -88,7 +91,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         rsx!(
             div {
                 class: {
-                    format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
+                    format_args!("btn-wrap {} {}", if disabled && !disabled_with_tooltip { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
                 cx.props.tooltip.as_ref().map(|tooltip| rsx!(
                     tooltip
@@ -104,7 +107,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{UUID}",
                     aria_label: "{aria_label}",
                     title: "{text}",
-                    // disabled: "{disabled}",
+                    disabled: if disabled && !disabled_with_tooltip { "true" } else { "false" },
                     class: {
                         format_args!(
                             "btn appearance-{} btn-{} {} {}", 
