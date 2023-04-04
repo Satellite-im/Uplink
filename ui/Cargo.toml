@@ -60,7 +60,6 @@ fs_extra.workspace = true
 walkdir.workspace = true
 zip.workspace = true
 filetime = "0.2.20"
-reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls"] }
 reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
 
 [features]
