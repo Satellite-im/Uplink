@@ -76,8 +76,8 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
                     values: font_sizes.clone(),
-                    disp: format!("{}x", state.read().ui.font_scale()),
-                    idx: font_sizes.iter().position(|&x| x == state.read().ui.font_scale().to_string()).unwrap_or(3),
+                    disp: format!("{}x", state.read().settings.font_scale()),
+                    idx: font_sizes.iter().position(|&x| x == state.read().settings.font_scale().to_string()).unwrap_or(3),
                     onset: move |new_value: String| {
                         let new_value_f32 = new_value.parse::<f32>().unwrap_or(1.0);
                         state.write().mutate(Action::SetFontScale(new_value_f32));

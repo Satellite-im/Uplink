@@ -189,7 +189,7 @@ impl State {
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
             Action::SetFont(font) => self.set_font(font),
-            Action::SetFontScale(font_scale) => self.ui.set_font_scale(font_scale),
+            Action::SetFontScale(font_scale) => self.settings.set_font_scale(font_scale),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -475,9 +475,6 @@ impl State {
         identities.insert(my_id.did_key(), my_id);
         Self {
             id,
-            settings: Settings {
-                language: "English (USA)".into(),
-            },
             route: Route { active: "/".into() },
             storage,
             chats,
@@ -525,8 +522,8 @@ impl State {
         state.friends.initialized = false;
         state.chats.initialized = false;
 
-        if state.ui.font_scale() == 0.0 {
-            state.ui.set_font_scale(1.0);
+        if state.settings.font_scale() == 0.0 {
+            state.settings.set_font_scale(1.0);
         }
 
         state
