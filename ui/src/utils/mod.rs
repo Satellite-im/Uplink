@@ -129,7 +129,7 @@ pub fn copy_assets() {
         target_os = "macos",
         target_os = "ios"
     )) {
-        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
+        PathBuf::from("/opt/satellite-im/extra.zip")
     } else {
         log::error!("unknown OS type. failed to copy assets");
         return;
