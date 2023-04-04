@@ -1,6 +1,6 @@
 TARGET = uplink
 
-SIGNING_KEY = F6ZAL7ANAD
+SIGNING_KEY = LOCAL
 ASSETS_DIR = ui/extra
 RELEASE_DIR = target/release
 
@@ -50,6 +50,7 @@ $(APP_NAME)-%: $(TARGET)-%
 	@echo "Created '$(APP_NAME)' in '$(APP_DIR)'"
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Info.plist
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Resources/uplink.icns
+	cp ./ui/wix/extra.zip $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra.zip
 
 ifeq ($(SIGNING_KEY),LOCAL)
 	@echo "Local Build, no signing"
@@ -67,7 +68,7 @@ $(DMG_NAME)-%: $(APP_NAME)-%
 		-srcfolder $(APP_DIR) \
 		-ov -format UDZO
 	@echo "Packed '$(APP_NAME)' in '$(APP_DIR)'"
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(DMG_DIR)/$(DMG_NAME)
+
 ifeq ($(SIGNING_KEY),LOCAL)
 	@echo "Local Build, no signing"
 else

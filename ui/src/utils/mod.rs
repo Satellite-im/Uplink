@@ -124,12 +124,20 @@ pub fn copy_assets() {
                 return;
             }
         }
-    } else if cfg!(any(
-        target_os = "linux",
-        target_os = "macos",
-        target_os = "ios"
-    )) {
+    } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/satellite-im/extra.zip")
+    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+        match exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources/extra.zip"))
+        {
+            Some(p) => p,
+            None => {
+                log::error!("failed to get parent directory of uplink executable");
+                return;
+            }
+        }
     } else {
         log::error!("unknown OS type. failed to copy assets");
         return;
