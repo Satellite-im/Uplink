@@ -14,7 +14,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let initial_lang_value = state.read().settings.language.clone();
     let themes = get_available_themes();
     let fonts = get_available_fonts();
-    let font_sizes = vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"];
+    let font_sizes = vec!["0.5", "0.75", "0.9", "1.0", "1.25", "1.5", "1.75"];
 
     log::trace!("General settings page rendered.");
 
