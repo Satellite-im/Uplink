@@ -115,7 +115,6 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
-
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, overlay_script, window, drag_event];
@@ -926,7 +925,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
     let is_loading = data.is_none();
-    let input = use_ref(cx, Vec::<String>::new);
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
@@ -1067,16 +1065,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         }
     });
 
-    let value_in_draft = data
-        .as_ref()
-        .and_then(|d| d.active_chat.draft.clone())
-        .unwrap_or_default()
-        .lines()
-        .map(|x| x.to_string())
-        .collect::<Vec<String>>();
-    if *input.read() != value_in_draft {
-        input.with_mut(|v| *v = value_in_draft);
-    }
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     use_future(cx, &active_chat_id, |current_chat| async move {
@@ -1096,9 +1084,16 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
 
-        let msg = input.read().clone();
-        // clearing input here should prevent the possibility to double send a message if enter is pressed twice
-        input.write().clear();
+        let msg = state
+            .read()
+            .get_active_chat()
+            .as_ref()
+            .and_then(|d| d.draft.clone())
+            .unwrap_or_default()
+            .lines()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+
         if let Some(id) = active_chat_id {
             state
                 .write()
@@ -1137,6 +1132,8 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
+    let inner_state = state.inner();
+
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
@@ -1145,15 +1142,21 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
-            input.with_mut(|x| *x = v.lines().map(|x| x.to_string()).collect::<Vec<String>>());
             if let Some(id) = &active_chat_id {
+                match inner_state.try_borrow_mut() {
+                    Ok(state) => state
+                        .write()
+                        .mutate(Action::SetChatDraft(*id, v)),
+                    Err(e) => log::error!("{e}"),
+                };
                 local_typing_ch.send(TypingIndicator::Typing(*id));
-                state.write().mutate(Action::SetChatDraft(*id, v));
             }
         },
-        value: data
+        value: state
+            .read()
+            .get_active_chat()
             .as_ref()
-            .and_then(|d| d.active_chat.draft.clone())
+            .and_then(|d| d.draft.clone())
             .unwrap_or_default(),
         onreturn: move |_| submit_fn(),
         extensions: cx.render(rsx!(
