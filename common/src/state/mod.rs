@@ -484,7 +484,7 @@ impl State {
         }
     }
     /// Saves the current state to disk.
-    pub fn save(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string_pretty(self)?;
         let path = if STATIC_ARGS.use_mock {
             &STATIC_ARGS.mock_cache_path
