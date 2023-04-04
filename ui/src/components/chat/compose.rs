@@ -1144,9 +1144,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 match inner_state.try_borrow_mut() {
-                    Ok(state) => state
-                        .write()
-                        .mutate(Action::SetChatDraft(*id, v)),
+                    Ok(state) => state.write().mutate(Action::SetChatDraft(*id, v)),
                     Err(e) => log::error!("{e}"),
                 };
                 local_typing_ch.send(TypingIndicator::Typing(*id));

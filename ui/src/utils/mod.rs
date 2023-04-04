@@ -22,7 +22,7 @@ pub fn get_available_themes() -> Vec<Theme> {
             .into_iter()
             .filter_map(|file| file.ok())
         {
-            if file.metadata().unwrap().is_file() {
+            if file.metadata().map(|x| x.is_file()).unwrap_or(false) {
                 let theme_path = file.path().display().to_string();
                 let pretty_theme_str = get_pretty_name(&theme_path);
                 let pretty_theme_str = titlecase(&pretty_theme_str);
@@ -54,7 +54,7 @@ pub fn get_available_fonts() -> Vec<Font> {
         .into_iter()
         .filter_map(|file| file.ok())
     {
-        if file.metadata().unwrap().is_file() {
+        if file.metadata().map(|x| x.is_file()).unwrap_or(false) {
             let file_osstr = file.file_name();
             let mut pretty_name: String = file_osstr.to_str().unwrap_or_default().into();
             pretty_name = pretty_name
