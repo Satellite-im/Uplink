@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, Deserialize, Serialize)]
 pub struct ScopeIds {
     #[serde(skip)]
-    pub chatbar: usize,
+    pub chatbar: Option<usize>,
 }
 
 impl ScopeIds {

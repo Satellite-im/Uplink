@@ -923,7 +923,7 @@ struct TypingInfo {
 fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     log::trace!("get_chatbar");
     let state = use_shared_state::<State>(cx)?;
-    state.write_silent().scope_ids.chatbar = cx.scope_id().0;
+    state.write_silent().scope_ids.chatbar = Some(cx.scope_id().0);
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);

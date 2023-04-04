@@ -184,9 +184,12 @@ impl EmojiSelector {
                                                 };
                                                 let draft: String = c.draft.unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
-                                                state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                let chatbar_scope_id = state.read().scope_ids.chatbar;
-                                                cx.needs_update_any(ScopeIds::scope_id_from_usize(chatbar_scope_id));
+                                                if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
+                                                    state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                    cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+                                                } else {
+                                                    state.write().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                }
                                                 // Hide the selector when clicking an emoji
                                                 hide.set(false)
                                             },
