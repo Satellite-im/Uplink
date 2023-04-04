@@ -30,6 +30,8 @@ pub async fn try_upgrade() -> Result<(), Box<dyn std::error::Error>> {
     // copy executable here
     let exe_path = std::env::current_exe()?;
 
+    // for each platform: Linux, Windows, Mac
+
     // todo: find executable in latest_release.assets
 
     // todo: find extra.zip in latest_release.assets
