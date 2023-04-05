@@ -573,7 +573,10 @@ fn app(cx: Scope) -> Element {
             ""
         };
 
-        let font_scale = format!("html {{ font-size: {}rem; }}", state.read().ui.font_scale());
+        let font_scale = format!(
+            "html {{ font-size: {}rem; }}",
+            state.read().settings.font_scale()
+        );
 
         let theme = state
             .read()

@@ -192,7 +192,7 @@ impl State {
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
             Action::SetFont(font) => self.set_font(font),
-            Action::SetFontScale(font_scale) => self.ui.set_font_scale(font_scale),
+            Action::SetFontScale(font_scale) => self.settings.set_font_scale(font_scale),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -478,9 +478,6 @@ impl State {
         identities.insert(my_id.did_key(), my_id);
         Self {
             id,
-            settings: Settings {
-                language: "English (USA)".into(),
-            },
             route: Route { active: "/".into() },
             storage,
             chats,
@@ -490,10 +487,7 @@ impl State {
         }
     }
     /// Saves the current state to disk.
-    pub fn save(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        if self.ui.font_scale() == 0.0 {
-            self.ui.set_font_scale(1.0);
-        }
+    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
         let serialized = serde_json::to_string_pretty(self)?;
         let path = if STATIC_ARGS.use_mock {
             &STATIC_ARGS.mock_cache_path
@@ -509,26 +503,31 @@ impl State {
             return State::load_mock();
         };
 
-        let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
-            Ok(r) => r,
-            Err(_) => {
-                log::info!("state.json not found. Initializing State with default values");
-                return State::default();
-            }
-        };
-        let mut state: Self = match serde_json::from_str(&contents) {
-            Ok(s) => s,
-            Err(e) => {
-                log::error!(
-                    "state.json failed to deserialize: {e}. Initializing State with default values"
-                );
-                return State::default();
+        let mut state = {
+            match fs::read_to_string(&STATIC_ARGS.cache_path) {
+                Ok(contents) => match serde_json::from_str(&contents) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!(
+                            "state.json failed to deserialize: {e}. Initializing State with default values"
+                        );
+                        State::default()
+                    }
+                },
+                Err(_) => {
+                    log::info!("state.json not found. Initializing State with default values");
+                    State::default()
+                }
             }
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
         state.chats.initialized = false;
+
+        if state.settings.font_scale() == 0.0 {
+            state.settings.set_font_scale(1.0);
+        }
 
         state
     }
