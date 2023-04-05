@@ -9,6 +9,7 @@ use crate::components::{
 pub struct Props<'a> {
     children: Element<'a>,
     user_image: Element<'a>,
+    sender: String,
     #[props(optional)]
     remote: Option<bool>,
     #[props(optional)]
@@ -40,7 +41,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 p {
                     class: "time-ago noselect defaultcursor",
                     aria_label: "time-ago",
-                    "{sender} - {time_ago}"
+                    "{cx.props.sender} - {time_ago}"
                 }
                 cx.props.with_sender.as_ref()
             }

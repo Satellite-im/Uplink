@@ -38,7 +38,7 @@ use common::{
     icons::outline::Shape as Icon,
     state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::{
-        ui_adapter::{self, ChatAdapter},
+        ui_adapter::{self},
         MultiPassCmd,
     },
 };
@@ -720,7 +720,11 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let sender = state.read().get_identity(&group.sender);
     let sender_clone = sender.clone();
     let sender_clone_2 = sender.clone();
-    let sender_name = sender.username();
+    let sender_name = if sender.username().is_empty() {
+        get_local_text("messages.you")
+    } else {
+        sender.username()
+    };
     let active_language = &state.read().settings.language;
 
     let mut sender_status = sender.identity_status().into();
@@ -733,7 +737,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             image: sender.graphics().profile_picture(),
             platform: sender.platform().into(),
             status: sender_status,
-            onpress: move |e| {
+            on_press: move |e| {
                 cx.props.on_context_menu_action.call((e, sender.to_owned()));
             }
             oncontextmenu: move |e| {
@@ -741,13 +745,9 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
             }
         })),
         timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
+        sender: sender_name.clone(),
         with_sender: {
             let sender_clone_3 = sender_clone_2.clone();
-            let sender = if sender_name.is_empty() {
-                get_local_text("messages.you")
-            } else {
-                sender_name
-            };
             cx.render(rsx!(
                 div {
                     onclick: move |e| {
@@ -758,8 +758,8 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                     },
                     p {
                         class: "sender pressable has-context-handler",
-                        aria_label: "sender",
-                        "{sender}",
+                        aria_label: "sender_name",
+                        "{sender_name}",
                     }
                 }
             ))
@@ -1476,7 +1476,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let block_identity = identity.clone();
 
     let did = &identity.did_key();
-    let chat_of = state.read().get_chat_with_friend(identity);
+    let chat_of = state.read().get_chat_with_friend(identity.did_key());
     let chat_send = chat_of.clone();
 
     let chat_is_current = match state.read().get_active_chat() {
@@ -1503,10 +1503,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let router = use_router(cx);
 
-    let chat_with: &UseState<Option<Chat>> = use_state(cx, || None);
-    if let Some(chat) = chat_with.get() {
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
+    if let Some(id) = *chat_with.get() {
         chat_with.set(None);
-        state.write().mutate(Action::ChatWith(&chat.id, true));
+        state.write().mutate(Action::ChatWith(&id, true));
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
@@ -1522,11 +1522,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     QuickProfileCmd::CreateConversation(chat, did) => {
                         // verify chat exists
                         let chat = match chat {
-                            Some(c) => c,
+                            Some(c) => c.id,
                             None => {
                                 // if not, create the chat
-                                let (tx, rx) =
-                                    oneshot::channel::<Result<ChatAdapter, warp::error::Error>>();
+                                let (tx, rx) = oneshot::channel();
                                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
                                     RayGunCmd::CreateConversation {
                                         recipient: did,
@@ -1540,7 +1539,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 let rsp = rx.await.expect("command canceled");
 
                                 match rsp {
-                                    Ok(c) => c.inner,
+                                    Ok(c) => c,
                                     Err(e) => {
                                         log::error!("failed to create conversation: {}", e);
                                         continue;
@@ -1605,12 +1604,12 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                     QuickProfileCmd::Chat(chat, msg) => {
                         let c = match chat {
-                            Some(c) => c,
+                            Some(c) => c.id,
                             None => return,
                         };
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         let cmd = RayGunCmd::SendMessage {
-                            conv_id: c.id,
+                            conv_id: c,
                             msg: vec![msg],
                             attachments: Vec::new(),
                             rsp: tx,
