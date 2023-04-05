@@ -295,7 +295,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: true,
-            disabled_with_tooltip: true,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
@@ -315,7 +314,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         Button {
             icon: Icon::VideoCamera,
             disabled: true,
-            disabled_with_tooltip: true,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
