@@ -81,6 +81,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let text_value = Rc::new(RefCell::new(value.to_string()));
     let text_value_onchange = Rc::clone(&text_value);
+    let text_value_onkeyup = Rc::clone(&text_value);
     let text_value_onreturn = Rc::clone(&text_value);
 
     cx.render(rsx! (
@@ -110,6 +111,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         text_value_onchange.borrow_mut().clear();
                         text_value_onchange.borrow_mut().push_str(&current_val);
                         onchange.call((current_val, true));
+                    },
+                    onkeyup: move |evt| {
+                        if(evt.code() == Code::Enter || evt.code() == Code::NumpadEnter) && evt.data.modifiers().contains(Modifiers::SHIFT) {
+                            text_value_onkeyup.borrow_mut().push_str("\n");
+                            onchange.call((text_value_onkeyup.borrow().clone(), true));
+                        }
                     },
                     onkeyup: move |evt| {
                         if(evt.code() == Code::Enter || evt.code() == Code::NumpadEnter) && !evt.data.modifiers().contains(Modifiers::SHIFT) {
