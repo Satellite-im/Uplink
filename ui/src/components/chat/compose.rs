@@ -1645,6 +1645,25 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     "{cx.props.identity.username()}"
                 }
             }
+            identity.status_message().and_then(|s|{
+                cx.render(rsx!(            
+                    hr{},
+                    div {
+                        id: "profile-status",
+                        aria_label: "Context Menu",
+                        p {
+                            class: "text",
+                            aria_label: "message-text",
+                            get_local_text("uplink.status")
+                        },
+                        p {
+                            class: "text",
+                            aria_label: "message-text",
+                            s
+                        }
+                    }
+                ))
+            }),
             hr{},
             if is_self {
                 rsx!(ContextItem {

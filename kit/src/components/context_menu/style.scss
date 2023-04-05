@@ -81,5 +81,10 @@
 		background-size: cover;
 		background-color: var(--secondary);
 		border: 1px solid var(--background);
+		.indicator {
+			position: relative;
+			bottom: 0;
+			left: calc(100% - 1rem);
+		}
 	}
 }

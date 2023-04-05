@@ -6,6 +6,8 @@ use dioxus::{
 };
 use dioxus_desktop::{use_eval, use_window};
 
+use crate::components::indicator::Indicator;
+
 #[derive(Props)]
 pub struct ItemProps<'a> {
     #[props(optional)]
@@ -71,7 +73,11 @@ pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
                 style: "background-image: url('{banner}');",
                 div {
                     id: "profile-image",
-                    style: "background-image: url('{image}');"
+                    style: "background-image: url('{image}');",
+                    Indicator {
+                        status: cx.props.identity.identity_status().into(),
+                        platform: cx.props.identity.platform().into(),
+                    }
                 }
             }
         }
