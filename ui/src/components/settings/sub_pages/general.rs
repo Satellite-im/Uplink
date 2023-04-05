@@ -74,11 +74,10 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
-                    values: vec!["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "1.75"],
-                    disp: format!("{}x", state.read().ui.font_scale()),
-                    idx: (state.read().ui.font_scale() * 4_f32) as usize,
-                    onset: move |idx| {
-                        state.write().mutate(Action::SetFontScale( (idx as f32) / 4_f32));
+                    values: vec![0.5, 0.75, 1.0, 1.25, 1.5],
+                    default_index: 2, // represents 1.0 in the possible values.
+                    onset: move |value| {
+                        state.write().mutate(Action::SetFontScale( value ));
                     }
                 }
             },
