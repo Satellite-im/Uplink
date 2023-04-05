@@ -90,13 +90,26 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
+          cache: "npm"
+
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-macos
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
+      - name: Install NPM dependencies 📦
+        if: steps.cache-macos.outputs.cache-hit != 'true'
+        working-directory: ./appium-tests
+        run: npm ci
 
       - name: Enable opening app not codesigned 🖥️
         run: sudo spctl --master-disable
 
       - name: Download the app 🗳️
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: app-macos
           path: ./appium-tests/apps
@@ -104,15 +117,10 @@ jobs:
       - name: Copy DMG to Appium Apps Directory 💿
         working-directory: ./appium-tests/apps
         run: |
-          ls -la
           unzip Uplink-Mac-Universal.zip
           perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
-
-      - name: Install NPM dependencies 📦
-        run: |
-          cd appium-tests && npm install
 
       - name: Install and Run Appium Server 💻
         run: |
@@ -154,3 +162,92 @@ jobs:
         if: failure()
         with:
           file-name: "desktop.jpg"
+
+  test-chats:
+    if: ${{ always() }}
+    needs: test
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        user: ["ChatUserA", "ChatUserB"]
+        include:
+          - user: "ChatUserA"
+            npm-command: "npm run mac.chatA"
+          - user: "ChatUserB"
+            npm-command: "npm run mac.chatB"
+
+    steps:
+      - name: Checkout working directory 🔖
+        uses: actions/checkout@v3
+
+      - name: Checkout testing directory 🔖
+        uses: actions/checkout@v3
+        with:
+          repository: Satellite-im/testing-uplink
+          path: "./appium-tests"
+
+      - name: Setup Node.js 🔨
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-appium
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
+      - name: Install NPM dependencies 📦
+        if: steps.cache-appium.outputs.cache-hit != 'true'
+        working-directory: appium-tests
+        run: npm ci
+
+      - name: Enable opening app not codesigned 🖥️
+        run: sudo spctl --master-disable
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: app-macos
+          path: ./appium-tests/apps
+
+      - name: Copy DMG to Appium Apps Directory 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          unzip Uplink-Mac-Universal.zip
+          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
+          cp -r ./Uplink.app /Applications/
+          sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
+
+      - name: Install and Run Appium Server 💻
+        run: |
+          npm install -g appium@next
+          appium -v
+          appium driver install mac2
+          appium driver list
+
+      - name: Delete Cache Folder if exists
+        run: |
+          rm -rf ~/.uplink
+          cp -r ./appium-tests/tests/fixtures/users/${{ matrix.user }}/. ~/.uplink
+
+      - name: Run WebdriverIO tests on MacOS 🧪
+        working-directory: ./appium-tests
+        run: ${{ matrix.npm-command }}
+
+      - name: Upload Screenshots for ${{ matrix.user }} 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-screenshots-${{ matrix.user }}
+          path: ./appium-tests/test-results
+
+      - name: Upload Appium Log for ${{ matrix.user }} 📷
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: appium-log-${{ matrix.user }}
+          path: ./appium-tests/appium.log

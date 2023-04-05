@@ -77,17 +77,20 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
+          cache: "npm"
 
-      - name: Download the app 🗳️
-        uses: actions/download-artifact@v3
+      - name: Cache NPM dependencies 🔨
+        uses: actions/cache@v3
+        id: cache-windows
         with:
-          name: Uplink-Windows
-          path: ./appium-tests/apps
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        run: |
-          cd appium-tests && npm install
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        working-directory: ./appium-tests
+        run: npm ci
 
       - name: Install and Run Appium Server 💻
         run: |
@@ -95,6 +98,12 @@ jobs:
           appium -v
           appium driver install --source=npm appium-windows-driver
           appium driver list
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
 
       - name: Delete cache folder before starting
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
