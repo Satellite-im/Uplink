@@ -50,8 +50,6 @@ pub struct UI {
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
     pub font: Option<Font>,
-    #[serde(default = "default_font_scale")]
-    font_scale: f32,
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
@@ -108,10 +106,6 @@ fn bool_true() -> bool {
     true
 }
 
-fn default_font_scale() -> f32 {
-    1.0_f32
-}
-
 impl Drop for UI {
     fn drop(&mut self) {
         self.clear_overlays();
@@ -119,12 +113,6 @@ impl Drop for UI {
 }
 
 impl UI {
-    pub fn font_scale(&self) -> f32 {
-        self.font_scale
-    }
-    pub fn set_font_scale(&mut self, scale: f32) {
-        self.font_scale = scale;
-    }
     fn take_call_popout_id(&mut self) -> Option<WindowId> {
         self.popout_media_player = false;
         match self.current_call.take() {
