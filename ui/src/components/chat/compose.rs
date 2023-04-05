@@ -1142,7 +1142,6 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
-            println!("Chatbar onchange: {:?}", v);
             if let Some(id) = &active_chat_id {
                 match inner_state.try_borrow_mut() {
                     Ok(state) => state.write().mutate(Action::SetChatDraft(*id, v)),

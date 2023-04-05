@@ -83,7 +83,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text_value_onchange = Rc::clone(&text_value);
     let text_value_onkeyup = Rc::clone(&text_value);
     let text_value_onreturn = Rc::clone(&text_value);
-    println!("Re render chatbar");
+
     cx.render(rsx! (
         div {
             class: "input-group",
