@@ -89,6 +89,7 @@ jobs:
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
+        working-directory: ./appium-tests
         with:
           node-version: 18
           cache: "npm"
@@ -189,6 +190,7 @@ jobs:
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
+        working-directory: ./appium-tests
         with:
           node-version: 18
           cache: "npm"
