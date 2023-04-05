@@ -58,6 +58,10 @@ pub struct Args {
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
+    /// if compiled in release mode, this local_mode flag will tell uplink to look for assets in the same place it does for debug builds
+    #[cfg(not(debug_assertions))]
+    #[clap(long, default_value_t = false)]
+    local_mode: bool,
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
@@ -111,7 +115,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     #[cfg(debug_assertions)]
     let production_mode = false;
     #[cfg(not(debug_assertions))]
-    let production_mode = !std::env::var("DEBUG").is_ok();
+    let production_mode = !args.local_mode;
 
     #[allow(unused_mut)]
     #[allow(unused_assignments)]
