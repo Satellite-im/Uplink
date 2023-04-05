@@ -90,6 +90,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 is_password: false,
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),
+                disable_onblur: true,
                 disabled: false,
                 placeholder: get_local_text("auth.enter-username"),
                 options: Options {
@@ -117,6 +118,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 icon: Icon::Check,
                 disabled: *button_disabled.get(),
                 onpress: move |_| {
+
                     ch.send((username.get().to_string(), pin.read().to_string()));
                 }
 

@@ -1,4 +1,4 @@
-TARGET = ui
+TARGET = uplink
 
 SIGNING_KEY = F6ZAL7ANAD
 ASSETS_DIR = ui/extra
@@ -50,6 +50,7 @@ $(APP_NAME)-%: $(TARGET)-%
 	@echo "Created '$(APP_NAME)' in '$(APP_DIR)'"
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Info.plist
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Resources/uplink.icns
+
 ifeq ($(SIGNING_KEY),LOCAL)
 	@echo "Local Build, no signing"
 else

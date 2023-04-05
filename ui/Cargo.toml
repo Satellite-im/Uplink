@@ -1,5 +1,5 @@
 [package]
-name = "ui"
+name = "uplink"
 version.workspace = true
 edition = "2021"
 
@@ -16,7 +16,6 @@ fermi.workspace = true
 kit.workspace = true
 common.workspace = true
 extensions.workspace = true
-
 tokio-util.workspace = true
 arboard.workspace = true
 humansize.workspace = true
@@ -59,6 +58,8 @@ image.workspace = true
 clap = { workspace = true, features = ["derive"] }
 fs_extra.workspace = true
 walkdir.workspace = true
+zip.workspace = true
+filetime = "0.2.20"
 
 [features]
 fullscreen = ["wry/fullscreen"]
@@ -69,6 +70,8 @@ tray = ["wry/tray"]
 glob = "0.3.0"
 rustc_version = "0.4.0"
 rsass = "0.26.0"
+zip.workspace = true
+walkdir.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.24.1"

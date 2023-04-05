@@ -1,5 +1,5 @@
 use common::{
-    language::get_local_text,
+    language::{get_local_text, get_local_text_args_builder},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
     STATIC_ARGS,
@@ -10,6 +10,7 @@ use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
+    label::LabelWithEllipsis,
 };
 use warp::{logging::tracing::log, multipass};
 
@@ -143,6 +144,15 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists_bool = *account_exists.get();
     let loading = !loaded.get();
 
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images")
+        .join("mascot")
+        .join("idle_alt.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
     cx.render(rsx!(
         style {update_theme_colors()},
         div {
@@ -161,13 +171,14 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 rsx! (
                     img {
                         class: "idle",
-                        src: "./ui/extra/images/mascot/idle_alt.png"
+                        src: "{image_path}"
                     },
                     Input {
                         id: "unlock-input".to_owned(),
                         focus: true,
                         is_password: true,
                         icon: Icon::Key,
+                        disable_onblur: !account_exists_bool,
                         aria_label: "pin-input".into(),
                         disabled: !loaded.get(),
                         placeholder: get_local_text("unlock.enter-pin"),
@@ -175,9 +186,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                                {Some("Welcome back, UNKNOWN")}
+                            {Some(get_welcome_message())}
                             else
-                                {Some("Let's choose your password")}, // TODO: Implement this.
+                                {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
+                            ellipsis_on_label: Some(LabelWithEllipsis {
+                                apply_ellipsis: true,
+                                padding_rigth_for_ellipsis: 105,
+                            }),
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {
@@ -246,4 +261,16 @@ fn update_theme_colors() -> String {
         Some(theme) => theme.styles,
         None => String::new(),
     }
+}
+
+fn get_welcome_message() -> String {
+    let state = State::load();
+    let name = match &state.ui.cached_username {
+        Some(name) => name.clone(),
+        None => String::from("UNKNOWN"),
+    };
+
+    get_local_text_args_builder("unlock.welcome", |m| {
+        m.insert("name", name.into());
+    })
 }

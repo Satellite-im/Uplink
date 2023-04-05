@@ -40,7 +40,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 p {
                     class: "time-ago noselect defaultcursor",
                     aria_label: "time-ago",
-                    "{time_ago}"
+                    "{sender} - {time_ago}"
                 }
                 cx.props.with_sender.as_ref()
             }

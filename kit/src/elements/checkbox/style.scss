@@ -1,0 +1,27 @@
+div.input-checkbox {
+  border: 1px solid var(--border-color);
+  border-radius: 0.2em;
+  color: var(--text-color);
+  background: var(--secondary);
+
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    fill: none;
+    stroke: var(--text-color);
+  }
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:checked {
+    background: var(--primary);
+    svg {
+      stroke: var(--text-color-bright);
+    }
+  }
+}

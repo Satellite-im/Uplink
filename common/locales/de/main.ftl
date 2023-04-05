@@ -133,6 +133,10 @@ settings-privacy = Privatsphäre Einstellungen
     .backup-phrase = Backup Phrase
     .backup-phrase-description = Back diese Phrase up! Dies repräsentiert zusammen mit deinem Passwort dein Konto. Wenn du dies verlierst können wir dir nicht helfen.
 
+settings-about = UNKNOWN
+    .open-codebase = Codebase öffnen
+    .open-codebase-description = Öffne den Codebase in deinem Standard-Webbrower.
+
 settings-audio = Audio Einstellungen 
     .call-timer = Anruf Timer
     .call-timer-description = Wenn aktiviert zeigt dir einen Timer für die Länge deines Anrufes.
@@ -162,8 +166,6 @@ settings-notifications = Benachrichtigungen
 settings-developer = Entwicklereinstellungen
     .developer-mode = Entwicklungsmodus
     .developer-mode-description = Aktiviere den Entwicklungsmodus für Debuginformationen etc. in der UI.
-    .open-codebase = Codebase öffnen
-    .open-codebase-description = Öffne den Codebase in deinem Standard-Webbrower.
     .open-cache = Cache öffnen
     .open-cache-description = Öffne den Cache in deinem Dateisystem.
     .open-cache-folder = Ordner öffnen

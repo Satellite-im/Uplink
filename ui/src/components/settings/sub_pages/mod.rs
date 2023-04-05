@@ -1,3 +1,5 @@
+pub mod about;
+pub mod accessibility;
 pub mod audio;
 pub mod developer;
 pub mod extensions;

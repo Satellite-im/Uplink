@@ -1,17 +1,11 @@
-use common::{
-    icons::outline::Shape as Icon,
-    state::{Action, State},
-};
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
-use kit::{
-    components::nav::{Nav, Route},
-    elements::{button::Button, label::Label},
-};
+use kit::elements::button::Button;
 use once_cell::sync::Lazy;
 
 // These two lines are all you need to use your Extension implementation as a shared library
-static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
+static EXTENSION: Lazy<ClearAll> = Lazy::new(|| ClearAll {});
 export_extension!(EXTENSION);
 
 pub struct ClearAll;

@@ -1,6 +1,6 @@
 use common::{
     icons::outline::Shape as Icon,
-    state::{Action, State},
+    state::{scope_ids::ScopeIds, Action, State},
 };
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
@@ -120,12 +120,14 @@ impl EmojiSelector {
         let state = use_shared_state::<State>(cx)?;
         #[cfg(not(target_os = "macos"))]
         let mouse_over_emoji_selector = use_ref(cx, || false);
+        #[cfg(not(target_os = "macos"))]
+        let eval = use_eval(cx);
 
         let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
-        let eval = use_eval(cx);
+
         cx.render(rsx! (
             div {
                 onmouseenter: |_| {
@@ -182,7 +184,10 @@ impl EmojiSelector {
                                                 };
                                                 let draft: String = c.draft.unwrap_or_default();
                                                 let new_draft = format!("{draft}{emoji}");
-                                                state.write().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
+                                                    cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+                                                };
                                                 // Hide the selector when clicking an emoji
                                                 hide.set(false)
                                             },

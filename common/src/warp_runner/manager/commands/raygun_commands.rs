@@ -17,7 +17,7 @@ use crate::{
     state::{self, chats},
     warp_runner::{
         conv_stream,
-        ui_adapter::{self, conversation_to_chat, fetch_messages_from_chat, ChatAdapter},
+        ui_adapter::{self, conversation_to_chat, fetch_messages_from_chat},
         Account, Messaging,
     },
 };
@@ -37,7 +37,12 @@ pub enum RayGunCmd {
     #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
     CreateConversation {
         recipient: DID,
-        rsp: oneshot::Sender<Result<ChatAdapter, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
+    #[display(fmt = "CreateGroupConversation")]
+    CreateGroupConversation {
+        recipients: Vec<DID>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(
         fmt = "FetchMessages {{ conv_id: {conv_id}, req_len: {new_len}, current_len: {current_len} }} "
@@ -83,6 +88,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         reply_to: Uuid,
         msg: Vec<String>,
+        attachments: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
@@ -134,11 +140,13 @@ pub async fn handle_raygun_cmd(
         },
         RayGunCmd::CreateConversation { recipient, rsp } => {
             let r = match messaging.create_conversation(&recipient).await {
-                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => {
-                    conversation_to_chat(&conv, account, messaging).await
-                }
+                Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
                 Err(e) => Err(e),
             };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::CreateGroupConversation { recipients, rsp } => {
+            let r = raygun_create_group_conversation(account, messaging, recipients).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessages {
@@ -199,9 +207,17 @@ pub async fn handle_raygun_cmd(
             conv_id,
             reply_to,
             msg,
+            attachments,
             rsp,
         } => {
-            let r = messaging.reply(conv_id, reply_to, msg).await;
+            let r = if attachments.is_empty() {
+                messaging.reply(conv_id, reply_to, msg).await
+            } else {
+                messaging
+                    .attach(conv_id, Some(reply_to), attachments, msg)
+                    .await
+            };
+
             let _ = rsp.send(r);
         }
         RayGunCmd::RemoveDirectConvs { recipient, rsp } => {
@@ -278,6 +294,30 @@ async fn raygun_remove_direct_convs(
             }
             Ok(())
         }
+        Err(e) => Err(e),
+    }
+}
+
+// here's some crazy code to stop creating duplicate group conversations
+async fn raygun_create_group_conversation(
+    account: &Account,
+    messaging: &mut Messaging,
+    recipients: Vec<DID>,
+) -> Result<Uuid, Error> {
+    let mut recipients_set: HashSet<DID> = HashSet::from_iter(recipients.iter().cloned());
+    let own_identity = account.get_own_identity().await?;
+
+    recipients_set.insert(own_identity.did_key());
+    let existing_conversations = messaging.list_conversations().await?;
+    if let Some(conv) = existing_conversations.iter().find(|conv| {
+        let conv_recipients: HashSet<DID> = HashSet::from_iter(conv.recipients().iter().cloned());
+        conv_recipients == recipients_set
+    }) {
+        return Ok(conv.id());
+    }
+
+    match messaging.create_group_conversation(None, recipients).await {
+        Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
         Err(e) => Err(e),
     }
 }

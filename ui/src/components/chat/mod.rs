@@ -1,6 +1,7 @@
 use kit::components::nav::Route;
 
 pub mod compose;
+pub mod create_group;
 pub mod sidebar;
 pub mod welcome;
 

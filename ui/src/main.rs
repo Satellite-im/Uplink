@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -12,7 +13,7 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
-use fs_extra::dir::*;
+use filetime::FileTime;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::nav::Route as UIRoute;
@@ -21,8 +22,9 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -54,6 +56,7 @@ use common::{
     warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
+use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -64,6 +67,8 @@ mod logger;
 mod overlay;
 mod utils;
 mod window_manager;
+
+pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
@@ -98,21 +103,95 @@ pub enum AuthPages {
 }
 
 fn copy_assets() {
-    let themes_dest = &STATIC_ARGS.themes_path;
-    let themes_src = Path::new("ui").join("extra").join("themes");
+    log::debug!("copy_assets");
+    if !STATIC_ARGS.production_mode {
+        return;
+    }
+    let exe_path = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("failed to get path of uplink executable: {e}");
+            return;
+        }
+    };
 
-    match create_all(themes_dest.clone(), false) {
-        Ok(_) => {
-            let mut options = CopyOptions::new();
-            options.skip_exist = true;
-            options.copy_inside = true;
+    let current_version = env!("CARGO_PKG_VERSION");
+    let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
+    let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
+    if current_version == assets_version {
+        let exe_meta =
+            fs::metadata(&exe_path).expect("failed to get metadata for uplink executable");
+        let version_meta =
+            fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
+        let exe_changed = FileTime::from_last_modification_time(&exe_meta);
+        let assets_changed = FileTime::from_last_modification_time(&version_meta);
+        if assets_changed > exe_changed {
+            log::debug!("assets already exist");
+            return;
+        } else {
+            log::debug!("re-install suspected. copying over assets");
+        }
+    }
 
-            if let Err(error) = copy(themes_src, themes_dest, &options) {
-                log::error!("Error on copy themes {error}");
+    let assets_path = if cfg!(target_os = "windows") {
+        match exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("extra.zip"))
+        {
+            Some(p) => p,
+            None => {
+                log::error!("failed to get parent directory of uplink executable");
+                return;
             }
         }
-        Err(error) => log::error!("Error on create themes folder: {error}"),
+    } else if cfg!(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "ios"
+    )) {
+        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
+    } else {
+        log::error!("unknown OS type. failed to copy assets");
+        return;
     };
+
+    if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
+        log::error!("failed to delete old assets directory: {e}");
+    }
+    if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
+        log::error!("failed to unizp assets archive {assets_path:?}: {e}");
+    }
+
+    if let Err(e) = std::fs::write(assets_version_file, current_version) {
+        log::error!("failed to save assets_version_file: {e}");
+    }
+}
+
+// taken from https://github.com/zip-rs/zip/blob/master/examples/extract.rs
+fn unzip_archive(src: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let assets_zip = fs::File::open(src)?;
+    let mut archive = zip::ZipArchive::new(assets_zip)?;
+    for idx in 0..archive.len() {
+        let mut file = archive.by_index(idx)?;
+        let outpath = match file.enclosed_name() {
+            Some(path) => dest.join(path),
+            None => continue,
+        };
+        if (*file.name()).ends_with('/') || (*file.name()).ends_with('\\') {
+            fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p)?;
+                }
+            }
+            let mut outfile = fs::File::create(&outpath)?;
+            io::copy(&mut file, &mut outfile)?;
+        }
+    }
+
+    Ok(())
 }
 
 fn main() {
@@ -144,11 +223,46 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    panic::set_hook(Box::new(|panic_info| {
+        let intro = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => format!("panic occurred: {s:?}"),
+            None => "panic occurred".into(),
+        };
+        let location = match panic_info.location() {
+            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
+            None => "".into(),
+        };
+
+        let logs = logger::dump_logs();
+        let crash_report = format!("{intro}{location}\n{logs}\n");
+        println!("{crash_report}");
+
+        // todo: hide this behind the debug flag
+        let save_path = FileDialog::new()
+            .set_directory(dirs::home_dir().unwrap_or(".".into()))
+            .set_title(&get_local_text("uplink.crash-report"))
+            .pick_folder();
+
+        if let Some(p) = save_path {
+            let time = Local::now();
+            let file_name = format!(
+                "uplink-crash-report_{}-{}-{}_{}:{}:{}.txt",
+                time.year(),
+                time.month(),
+                time.day(),
+                time.hour(),
+                time.minute(),
+                time.second()
+            );
+            let _ = fs::write(p.join(file_name), crash_report);
+        }
+    }));
 
     // Initializes the cache dir if needed
-    std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
-        .expect("Error creating Uplink directory");
-    std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
     copy_assets();
 
@@ -395,8 +509,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        width: size.width,
-        height: size.height,
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
@@ -432,11 +544,34 @@ fn app(cx: Scope) -> Element {
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
+    let mut font_style = String::new();
+    if let Some(font) = state.read().ui.font.clone() {
+        font_style = format!(
+            "
+        @font-face {{
+            font-family: CustomFont;
+            src: url('{}');
+        }}
+        body,
+        html {{
+            font-family: CustomFont, sans-serif;
+        }}
+        ",
+            font.path
+        );
+    }
+
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
         // render the Uplink app
         let user_lang_saved = state.read().settings.language.clone();
         change_language(user_lang_saved);
+
+        let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+            OPEN_DYSLEXIC
+        } else {
+            ""
+        };
 
         let theme = state
             .read()
@@ -447,7 +582,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
                 get_titlebar(cx),
@@ -536,8 +671,6 @@ fn app(cx: Scope) -> Element {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
                         let new_metadata = WindowMeta {
-                            height: size.height,
-                            width: size.width,
                             minimal_view: size.width < 600,
                             ..metadata
                         };
@@ -869,7 +1002,13 @@ fn get_pre_release_message(cx: Scope) -> Element {
                 icon: Icon::Beaker,
             },
             p {
-                "{pre_release_text}",
+                div {
+                    onclick: move |_| {
+                        let _ = open::that("https://issues.satellite.im");
+                    },
+                    "{pre_release_text}"
+                }
+
             }
         },
     ))
@@ -957,8 +1096,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 300,
-                            height: 534,
                             minimal_view: true,
                             ..meta
                         }));
@@ -974,8 +1111,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 600,
-                            height: 534,
                             minimal_view: false,
                             ..meta
                         }));
@@ -991,8 +1126,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 950,
-                            height: 600,
                             minimal_view: false,
                             ..meta
                         }));
@@ -1121,7 +1254,7 @@ fn get_router(cx: Scope) -> Element {
                         active: files_route,
                     }
                 }
-            },
+            }
         }
     ))
 }

@@ -16,6 +16,7 @@ use kit::{
 use crate::components::chat::RouteInfo;
 
 pub enum Page {
+    About,
     Audio,
     Developer,
     Extensions,
@@ -24,11 +25,13 @@ pub enum Page {
     Privacy,
     Profile,
     Notifications,
+    Accessibility,
 }
 
 impl FromStr for Page {
     fn from_str(input: &str) -> Result<Page, Self::Err> {
         match input {
+            "about" => Ok(Page::About),
             "audio" => Ok(Page::Audio),
             "developer" => Ok(Page::Developer),
             "extensions" => Ok(Page::Extensions),
@@ -37,6 +40,7 @@ impl FromStr for Page {
             "privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
+            "accessibility" => Ok(Page::Accessibility),
             _ => Ok(Page::General),
         }
     }
@@ -106,10 +110,22 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::BellAlert,
         ..UIRoute::default()
     };
+    let accessibility = UIRoute {
+        to: "accessibility",
+        name: get_local_text("settings.accessibility"),
+        icon: Icon::EyeSlash,
+        ..UIRoute::default()
+    };
     let developer = UIRoute {
         to: "developer",
         name: get_local_text("settings.developer"),
         icon: Icon::CommandLine,
+        ..UIRoute::default()
+    };
+    let about = UIRoute {
+        to: "about",
+        name: get_local_text("settings.about"),
+        icon: Icon::ExclamationCircle,
         ..UIRoute::default()
     };
     let routes = vec![
@@ -119,8 +135,10 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         audio,
         files,
         extensions,
+        accessibility,
         notifications,
         developer,
+        about,
     ];
 
     let active_route = routes[0].clone();

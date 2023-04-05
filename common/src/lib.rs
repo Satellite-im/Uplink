@@ -9,7 +9,10 @@ use clap::Parser;
 // export icons crate
 pub use icons;
 use once_cell::sync::Lazy;
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
@@ -39,6 +42,11 @@ pub enum LogProfile {
     Trace2,
 }
 
+/// If uplink is compiled in release mode, it will look for an `extra.zip` file based on
+/// the platform-specific installer. to circumvent this, set DEBUG=1
+///
+/// If compiled in debug mode or DEBUG=1, uplink will use `ui/extra` for the assets
+/// directory. The folders ~/.uplink/themes and ~/.uplink/fonts are also used as assets.
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 pub struct Args {
@@ -47,7 +55,7 @@ pub struct Args {
     path: Option<PathBuf>,
     #[clap(long)]
     experimental_node: bool,
-    // todo: hide mock behind a #[cfg(debug_assertions)]
+    #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
     /// configures log output
@@ -57,12 +65,19 @@ pub struct Args {
 
 #[derive(Debug)]
 pub struct StaticArgs {
-    /// Uplink stores its data with the following layout, starting at whatever the root folder is:
-    /// ./uplink ./uplink/warp ./themes
-    /// uplink_path is used for deleting all uplink data when a new account is created
+    /// ~/.uplink
+    /// contains the following: extra (folder), extensions (folder), themes (folder), fonts (folder), .user
+    pub dot_uplink: PathBuf,
+    /// ~/.uplink/.user
+    /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
-    /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
+    /// contains assets bundled with uplink, such as themes, fonts, and images
+    /// these are separate from user-imported fonts and themes
+    pub extras_path: PathBuf,
+    /// custom themes for the user
     pub themes_path: PathBuf,
+    /// custom fonts for the user
+    pub fonts_path: PathBuf,
     /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
     /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
@@ -86,18 +101,44 @@ pub struct StaticArgs {
     pub use_mock: bool,
     /// Uses experimental configuration
     pub experimental: bool,
+    // some features aren't ready for release. This field is used to disable such features.
+    pub production_mode: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
+    // the assets are fetched differently depending on whether the binary is in production mode or not.
+    // sometimes we want to test the "release" profile without having to install the program the way a customer would.
+    #[cfg(debug_assertions)]
+    let production_mode = false;
+    #[cfg(not(debug_assertions))]
+    let production_mode = !std::env::var("DEBUG").is_ok();
+
+    #[allow(unused_mut)]
+    #[allow(unused_assignments)]
+    let mut use_mock = false;
+    #[cfg(debug_assertions)]
+    {
+        use_mock = args.with_mock;
+    }
+
     let uplink_container = match args.path {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
+    let extras_path = if production_mode {
+        uplink_container.join("extra")
+    } else {
+        Path::new("ui").join("extra")
+    };
     StaticArgs {
+        dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
+        extras_path,
         themes_path: uplink_container.join("themes"),
+        fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
@@ -107,8 +148,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         typing_indicator_timeout: 6,
         tesseract_path: warp_path.join("tesseract.json"),
         login_config_path: uplink_path.join("login_config.json"),
-        use_mock: args.with_mock,
+        use_mock,
         experimental: args.experimental_node,
+        production_mode,
     }
 });
 
