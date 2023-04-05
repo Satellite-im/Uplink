@@ -1,6 +1,5 @@
 //#![deny(elided_lifetimes_in_paths)]
 
-use anyhow::Context;
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
@@ -24,6 +23,7 @@ use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
+use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -101,19 +101,7 @@ pub enum AuthPages {
     Success(multipass::identity::Identity),
 }
 
-fn has_write_permissions() -> anyhow::Result<bool> {
-    let exe_path = std::env::current_exe()?;
-    let parent = exe_path
-        .parent()
-        .ok_or(anyhow::format_err!("failed to get parent dir"))?;
-    let test_file = parent.join(format!("{}.txt", Uuid::new_v4()));
-    std::fs::File::create(&test_file).context("open_failed")?;
-    std::fs::remove_file(test_file).context("remove failed")?;
-    Ok(true)
-}
-
 fn main() {
-    println!("HAS WRITE PERMISSIONS: {:?}", has_write_permissions());
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
@@ -176,6 +164,27 @@ fn main() {
             let _ = fs::write(p.join(file_name), crash_report);
         }
     }));
+
+    log::debug!("starting uplink");
+    if STATIC_ARGS.production_mode && !utils::has_write_permissions().unwrap_or(false) {
+        log::debug!("bootstrapping uplink");
+        match utils::bootstrap_uplink() {
+            Ok(exe) => {
+                let args: Vec<_> = std::env::args().into_iter().skip(1).collect();
+                let mut ch = Command::new(exe)
+                    .args(args)
+                    .spawn()
+                    .expect("error executing bootstrapped uplink");
+                let r = ch.wait().expect("Failed to wait for child process");
+                std::process::exit(r.code().unwrap());
+            }
+            Err(e) => {
+                log::error!("failed to bootstrap uplink: {e}");
+            }
+        }
+    } else {
+        log::debug!("not bootstrapping uplink");
+    }
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
