@@ -4,10 +4,18 @@ use warp::logging::tracing::log;
 
 use crate::elements::{button::Button, Appearance};
 
+#[derive(Clone, PartialEq, Eq)]
+pub enum ButtonsFormat {
+    PlusAndMinus,
+    Arrows,
+}
+
 #[derive(Props)]
 pub struct Props<'a, T> {
     values: Vec<T>,
     inital_index: usize,
+    #[props(default)]
+    buttons_format: Option<ButtonsFormat>,
     onset: EventHandler<'a, T>,
 }
 
@@ -17,6 +25,11 @@ where
     T: std::fmt::Display + Clone,
 {
     let index = use_state(&cx, || cx.props.inital_index);
+    let buttons_format = cx
+        .props
+        .buttons_format
+        .clone()
+        .unwrap_or(ButtonsFormat::Arrows);
 
     let converted_display = match cx.props.values.get(*index.current()) {
         Some(x) => x.to_string(),
@@ -30,8 +43,9 @@ where
         class: "slide-selector",
         aria_label: "slide-selector",
         Button {
-            icon: Shape::Minus,
+            icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
             appearance: Appearance::Primary,
+            disabled: if *index.get() == 0 {true} else {false},
             onpress: move |_| {
                 if *index.get() == 0 {
                     return;
@@ -47,10 +61,11 @@ where
             "{converted_display}",
         },
         Button {
-            icon: Shape::Plus
+            icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
             appearance: Appearance::Primary,
+            disabled: if *index.get() >= (cx.props.values.len() - 1)  {true} else {false},
             onpress: move |_| {
-                if *index.get() >= cx.props.values.len() {
+                if *index.get() >= (cx.props.values.len() - 1) {
                     return;
                 }
                 index.set(index.get() + 1);

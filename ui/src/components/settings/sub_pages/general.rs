@@ -1,7 +1,7 @@
 use common::language::{change_language, get_available_languages, get_local_text};
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
-use kit::components::slide_selector::SlideSelector;
+use kit::components::slide_selector::{ButtonsFormat, SlideSelector};
 use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
@@ -74,6 +74,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.font-scaling"),
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
+                    buttons_format: ButtonsFormat::PlusAndMinus,
                     values: vec![0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
                     inital_index: 2, // represents 1.0 in the possible values.
                     onset: move |value| {
