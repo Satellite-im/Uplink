@@ -697,7 +697,7 @@ fn app(cx: Scope) -> Element {
                 )
                 .await?;
 
-                if !should_upgrade(&latest_release.tag_name) {
+                if versions_match(&latest_release.tag_name) {
                     return Ok(());
                 }
                 */

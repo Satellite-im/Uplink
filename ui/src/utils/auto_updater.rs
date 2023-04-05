@@ -9,8 +9,6 @@ use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use warp::logging::tracing::log;
 
-
-
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]
 struct GitHubRelease {
@@ -29,7 +27,7 @@ pub async fn try_upgrade() -> anyhow::Result<()> {
         get_github_release("https://api.github.com/repos/Satellite-im/Uplink/releases/latest")
             .await?;
 
-    if !should_upgrade(&latest_release.tag_name) {
+    if versions_match(&latest_release.tag_name) {
         return Ok(());
     }
 
@@ -96,11 +94,9 @@ async fn download_file<P: AsRef<Path>>(client: &Client, dest: P, url: &str) -> a
     Ok(())
 }
 
-// assumes each release is tagged vX.Y.Z where X.Y.Z equals CARGO_PKG_VERSION
-// assumes `release_version` is the most recently published release
-fn should_upgrade(release_version: &str) -> bool {
-    let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
-    current_version == release_version
+fn versions_match(release_version: &str) -> bool {
+    format!("v{}", env!("CARGO_PKG_VERSION")) == release_version
+        || env!("CARGO_PKG_VERSION") == release_version
 }
 
 #[cfg(test)]
