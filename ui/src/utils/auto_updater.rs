@@ -9,7 +9,7 @@ use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use warp::logging::tracing::log;
 
-use crate::utils;
+
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]

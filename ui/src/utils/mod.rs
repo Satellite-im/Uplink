@@ -1,4 +1,4 @@
-use anyhow::{bail, Context};
+use anyhow::{bail};
 use common::{
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use titlecase::titlecase;
-use uuid::Uuid;
+
 use walkdir::WalkDir;
 use warp::logging::tracing::log;
 
@@ -90,7 +90,7 @@ pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
         exe_path
             .parent()
             .and_then(|x| x.parent())
-            .map(|x| PathBuf::from(x))
+            .map(PathBuf::from)
             .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/satellite-im")
@@ -104,7 +104,7 @@ pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
         bail!("unknown OS type. failed to copy assets");
     };
 
-    Ok(PathBuf::from(assets_path))
+    Ok(assets_path)
 }
 
 pub fn copy_assets() {
@@ -125,7 +125,7 @@ pub fn copy_assets() {
     let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
     if current_version == assets_version {
         let exe_meta =
-            fs::metadata(&exe_path).expect("failed to get metadata for uplink executable");
+            fs::metadata(exe_path).expect("failed to get metadata for uplink executable");
         let version_meta =
             fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
         let exe_changed = FileTime::from_last_modification_time(&exe_meta);
