@@ -1,21 +1,30 @@
 use common::icons::outline::Shape;
 use dioxus::prelude::*;
+use warp::logging::tracing::log;
 
 use crate::elements::{button::Button, Appearance};
 
 #[derive(Props)]
-pub struct Props<'a> {
-    values: Vec<f64>,
+pub struct Props<'a, T> {
+    values: Vec<T>,
     inital_index: usize,
-    onset: EventHandler<'a, usize>,
+    onset: EventHandler<'a, T>,
 }
 
 #[allow(non_snake_case)]
-pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let to_display = use_state(&cx, || cx.props.values.get(cx.props.inital_index));
+pub fn SlideSelector<'a, T>(cx: Scope<'a, Props<'a, T>>) -> Element<'a>
+where
+    T: std::fmt::Display + Clone,
+{
     let index = use_state(&cx, || cx.props.inital_index);
 
-    let converted_display = to_display.get().unwrap_or(&1.0);
+    let converted_display = match cx.props.values.get(*index.current()) {
+        Some(x) => x.to_string(),
+        None => {
+            log::error!("failed to get value in SlideSelector");
+            "?".into()
+        }
+    };
 
     cx.render(rsx!(div {
         class: "slide-selector",
@@ -28,14 +37,14 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     return;
                 }
                 index.set(index.get() - 1);
-                let selected_value = cx.props.values.get(*index.get());
-                cx.props.onset.call(selected_value);
-                to_display.set(selected_value);
+                if let Some(x) = cx.props.values.get(*index.get()) {
+                     cx.props.onset.call(x.clone());
+                }
             },
         },
         span {
             class: "slide-selector__value",
-            "{converted_display.to_string()}",
+            "{converted_display}",
         },
         Button {
             icon: Shape::Plus
@@ -45,10 +54,9 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     return;
                 }
                 index.set(index.get() + 1);
-                let selected_value = cx.props.values.get(*index.get());
-
-                cx.props.onset.call(selected_value);
-                to_display.set(selected_value);
+                if let Some(x) = cx.props.values.get(*index.get()) {
+                    cx.props.onset.call(x.clone());
+               }
             },
         },
     }))
