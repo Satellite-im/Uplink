@@ -107,29 +107,6 @@ pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
     Ok(PathBuf::from(assets_path))
 }
 
-pub fn has_write_permissions() -> anyhow::Result<bool> {
-    log::debug!("checking for write permissions");
-    let exe_path = std::env::current_exe()?;
-    let parent = exe_path
-        .parent()
-        .ok_or(anyhow::format_err!("failed to get parent dir"))?;
-    let test_file = parent.join(format!("{}.txt", Uuid::new_v4()));
-    std::fs::File::create(&test_file).context("open_failed")?;
-    std::fs::remove_file(test_file).context("remove failed")?;
-    Ok(true)
-}
-
-pub fn bootstrap_uplink() -> anyhow::Result<PathBuf> {
-    let exe_src = std::env::current_exe()?;
-    let exe_name = exe_src
-        .file_name()
-        .ok_or(anyhow::format_err!("failed to get exe name"))?;
-    let exe_dest = STATIC_ARGS.dot_uplink.join(exe_name);
-    std::fs::copy(exe_src, &exe_dest)?;
-
-    Ok(exe_dest)
-}
-
 pub fn copy_assets() {
     log::debug!("copy_assets");
     if !STATIC_ARGS.production_mode {

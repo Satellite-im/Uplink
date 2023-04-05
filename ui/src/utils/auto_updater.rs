@@ -4,8 +4,10 @@ use anyhow::bail;
 use futures::StreamExt;
 use reqwest::header;
 use reqwest::Client;
+use rfd::FileDialog;
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
+use warp::logging::tracing::log;
 
 use crate::utils;
 
@@ -35,31 +37,33 @@ pub async fn try_upgrade() -> anyhow::Result<()> {
         latest_release
             .assets
             .iter()
-            .find(|x| x.name == name)
+            .find(|x| x.name.contains(name))
             .ok_or(anyhow::format_err!("failed to find {name}"))
     };
 
     let binary_asset = if cfg!(target_os = "windows") {
-        find_asset("uplink.exe")?
+        find_asset(".exe")?
     } else if cfg!(target_os = "linux") {
-        find_asset("uplink")?
+        find_asset(".deb")?
     } else if cfg!(any(target_os = "macos", target_os = "ios")) {
-        find_asset("uplink-mac")?
+        find_asset("Uplink-Mac-Universal.zip")?
     } else {
         bail!("unknown OS type. failed to find binary");
     };
 
-    let exe_path = std::env::current_exe()?;
-    let assets_dir = utils::get_assets_dir()?;
-    let extra_asset = find_asset("extra.zip")?;
-    let binary_dest = assets_dir.join(&binary_asset.name);
-    let extras_dest = assets_dir.join("extra.zip");
+    let binary_dest = match FileDialog::new()
+        .set_directory(dirs::home_dir().unwrap_or(".".into()))
+        .pick_folder()
+    {
+        Some(x) => x,
+        None => {
+            log::debug!("update download cancelled by user");
+            return Ok(());
+        }
+    };
 
     let client = get_client()?;
     download_file(&client, binary_dest, &binary_asset.browser_download_url).await?;
-    download_file(&client, extras_dest, &extra_asset.browser_download_url).await?;
-
-    // todo: overwrite executable and copy_assets
 
     todo!()
 }

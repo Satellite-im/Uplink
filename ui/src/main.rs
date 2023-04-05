@@ -130,6 +130,7 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    log::debug!("starting uplink");
     panic::set_hook(Box::new(|panic_info| {
         let intro = match panic_info.payload().downcast_ref::<&str>() {
             Some(s) => format!("panic occurred: {s:?}"),
@@ -144,7 +145,6 @@ fn main() {
         let crash_report = format!("{intro}{location}\n{logs}\n");
         println!("{crash_report}");
 
-        // todo: hide this behind the debug flag
         let save_path = FileDialog::new()
             .set_directory(dirs::home_dir().unwrap_or(".".into()))
             .set_title(&get_local_text("uplink.crash-report"))
@@ -164,27 +164,6 @@ fn main() {
             let _ = fs::write(p.join(file_name), crash_report);
         }
     }));
-
-    log::debug!("starting uplink");
-    if STATIC_ARGS.production_mode && !utils::has_write_permissions().unwrap_or(false) {
-        log::debug!("bootstrapping uplink");
-        match utils::bootstrap_uplink() {
-            Ok(exe) => {
-                let args: Vec<_> = std::env::args().into_iter().skip(1).collect();
-                let mut ch = Command::new(exe)
-                    .args(args)
-                    .spawn()
-                    .expect("error executing bootstrapped uplink");
-                let r = ch.wait().expect("Failed to wait for child process");
-                std::process::exit(r.code().unwrap());
-            }
-            Err(e) => {
-                log::error!("failed to bootstrap uplink: {e}");
-            }
-        }
-    } else {
-        log::debug!("not bootstrapping uplink");
-    }
 
     // Initializes the cache dir if needed
     std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
@@ -699,6 +678,33 @@ fn app(cx: Scope) -> Element {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
                 needs_update.set(true);
+            }
+        }
+    });
+
+    // check for updates
+    use_future(cx, (), |_| {
+        //to_owned![needs_update];
+        async move {
+            if !STATIC_ARGS.production_mode {
+                return;
+            }
+            loop {
+                // todo: use this to inform the user of a possible upgrade:
+                /*
+                let latest_release = get_github_release(
+                    "https://api.github.com/repos/Satellite-im/Uplink/releases/latest",
+                )
+                .await?;
+
+                if !should_upgrade(&latest_release.tag_name) {
+                    return Ok(());
+                }
+                */
+                sleep(Duration::from_secs(60)).await;
+                if let Err(e) = utils::auto_updater::try_upgrade().await {
+                    log::error!("try_upgrade failed: {e}");
+                }
             }
         }
     });
