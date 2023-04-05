@@ -448,6 +448,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let window = use_window(cx);
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, || Identity::default());
+    let update_script = use_state(cx, || String::new());
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
@@ -650,13 +651,14 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                             .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
                             .replace("$INNER_WIDTH", &window_size.width.to_string())
                             .replace("$INNER_HEIGHT", &window_size.height.to_string());
-                        eval(script.to_string());
+                        update_script.set(script);
                     }
                 })
             }
         },
         QuickProfileContext{
             id: quick_profile_uuid,
+            update_script: update_script,
             identity: identity_profile
         }
     ))
@@ -1449,6 +1451,7 @@ async fn drag_and_drop_function(
 pub struct QuickProfileProps<'a> {
     id: &'a String,
     identity: &'a UseState<Identity>,
+    update_script: &'a UseState<String>,
     children: Element<'a>,
 }
 
@@ -1481,6 +1484,17 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         },
         None => false,
     };
+
+    let eval = use_eval(cx);
+    use_future(cx, cx.props.update_script, |update_script| {
+        to_owned![eval];
+        async move {
+            let script = update_script.get();
+            if !script.is_empty() {
+                eval(script.to_string());
+            }
+        }
+    });
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
