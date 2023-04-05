@@ -89,20 +89,10 @@ jobs:
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
-        working-directory: ./appium-tests
         with:
           node-version: 18
-          cache: "npm"
-
-      - name: Cache NPM dependencies 🔨
-        uses: actions/cache@v3
-        id: cache-macos
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        if: steps.cache-macos.outputs.cache-hit != 'true'
         working-directory: ./appium-tests
         run: npm ci
 
@@ -190,21 +180,11 @@ jobs:
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
-        working-directory: ./appium-tests
         with:
           node-version: 18
-          cache: "npm"
-
-      - name: Cache NPM dependencies 🔨
-        uses: actions/cache@v3
-        id: cache-appium
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install NPM dependencies 📦
-        if: steps.cache-appium.outputs.cache-hit != 'true'
-        working-directory: appium-tests
+        working-directory: ./appium-tests
         run: npm ci
 
       - name: Enable opening app not codesigned 🖥️
