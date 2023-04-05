@@ -1,3 +1,4 @@
+use anyhow::bail;
 use common::{
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
@@ -81,6 +82,30 @@ pub fn get_available_fonts() -> Vec<Font> {
     fonts
 }
 
+pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
+    let exe_path = std::env::current_exe()?;
+
+    let assets_path = if cfg!(target_os = "windows") {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| PathBuf::from(x))
+            .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/satellite-im")
+    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources"))
+            .ok_or(anyhow::format_err!("failed to get Macos resources dir"))?
+    } else {
+        bail!("unknown OS type. failed to copy assets");
+    };
+
+    Ok(PathBuf::from(assets_path))
+}
+
 pub fn copy_assets() {
     log::debug!("copy_assets");
     if !STATIC_ARGS.production_mode {
@@ -112,35 +137,12 @@ pub fn copy_assets() {
         }
     }
 
-    let assets_path = if cfg!(target_os = "windows") {
-        match exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(|x| x.join("extra.zip"))
-        {
-            Some(p) => p,
-            None => {
-                log::error!("failed to get parent directory of uplink executable");
-                return;
-            }
+    let assets_path = match get_assets_dir() {
+        Ok(dir) => dir.join("extra.zip"),
+        Err(e) => {
+            log::error!("failed to get assets: {e}");
+            return;
         }
-    } else if cfg!(target_os = "linux") {
-        PathBuf::from("/opt/satellite-im/extra.zip")
-    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
-        match exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(|x| x.join("Resources/extra.zip"))
-        {
-            Some(p) => p,
-            None => {
-                log::error!("failed to get parent directory of uplink executable");
-                return;
-            }
-        }
-    } else {
-        log::error!("unknown OS type. failed to copy assets");
-        return;
     };
 
     if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {

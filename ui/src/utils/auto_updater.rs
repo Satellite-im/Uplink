@@ -1,10 +1,13 @@
 use std::path::Path;
 
+use anyhow::bail;
 use futures::StreamExt;
 use reqwest::header;
 use reqwest::Client;
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
+
+use crate::utils;
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]
@@ -19,22 +22,42 @@ struct GitHubAsset {
     browser_download_url: String,
 }
 
-pub async fn try_upgrade() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn try_upgrade() -> anyhow::Result<()> {
     let latest_release =
         get_github_release("https://api.github.com/repos/Satellite-im/Uplink/releases/latest")
             .await?;
+
     if !should_upgrade(&latest_release.tag_name) {
         return Ok(());
     }
 
-    // copy executable here
+    let find_asset = |name: &str| {
+        latest_release
+            .assets
+            .iter()
+            .find(|x| x.name == name)
+            .ok_or(anyhow::format_err!("failed to find {name}"))
+    };
+
+    let binary_asset = if cfg!(target_os = "windows") {
+        find_asset("uplink.exe")?
+    } else if cfg!(target_os = "linux") {
+        find_asset("uplink")?
+    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+        find_asset("uplink-mac")?
+    } else {
+        bail!("unknown OS type. failed to find binary");
+    };
+
     let exe_path = std::env::current_exe()?;
+    let assets_dir = utils::get_assets_dir()?;
+    let extra_asset = find_asset("extra.zip")?;
+    let binary_dest = assets_dir.join(&binary_asset.name);
+    let extras_dest = assets_dir.join("extra.zip");
 
-    // for each platform: Linux, Windows, Mac
-
-    // todo: find executable in latest_release.assets
-
-    // todo: find extra.zip in latest_release.assets
+    let client = get_client()?;
+    download_file(&client, binary_dest, &binary_asset.browser_download_url).await?;
+    download_file(&client, extras_dest, &extra_asset.browser_download_url).await?;
 
     // todo: overwrite executable and copy_assets
 
@@ -57,11 +80,7 @@ async fn get_github_release(url: &str) -> Result<GitHubRelease, reqwest::Error> 
     client.get(url).send().await?.json::<GitHubRelease>().await
 }
 
-async fn download_file<P: AsRef<Path>>(
-    client: &Client,
-    dest: P,
-    url: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn download_file<P: AsRef<Path>>(client: &Client, dest: P, url: &str) -> anyhow::Result<()> {
     let mut bytes = client.get(url).send().await?.bytes_stream();
     let mut file = tokio::fs::File::create(dest).await?;
 
@@ -91,8 +110,9 @@ mod test {
         let response =
             get_github_release("https://api.github.com/repos/sdwoodbury/Uplink/releases/latest")
                 .await?;
-        assert_eq!(response.tag_name, String::from("v0.2.8"));
+
         println!("assets: {:#?}", response.assets);
+        assert_eq!(response.tag_name, String::from("v0.2.8"));
         Ok(())
     }
 

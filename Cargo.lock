@@ -8445,6 +8445,7 @@ checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 name = "uplink"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "arboard",
  "base64 0.20.0",
  "chrono",

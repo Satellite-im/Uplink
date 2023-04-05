@@ -1,5 +1,6 @@
 //#![deny(elided_lifetimes_in_paths)]
 
+use anyhow::Context;
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
@@ -100,7 +101,19 @@ pub enum AuthPages {
     Success(multipass::identity::Identity),
 }
 
+fn has_write_permissions() -> anyhow::Result<bool> {
+    let exe_path = std::env::current_exe()?;
+    let parent = exe_path
+        .parent()
+        .ok_or(anyhow::format_err!("failed to get parent dir"))?;
+    let test_file = parent.join(format!("{}.txt", Uuid::new_v4()));
+    std::fs::File::create(&test_file).context("open_failed")?;
+    std::fs::remove_file(test_file).context("remove failed")?;
+    Ok(true)
+}
+
 fn main() {
+    println!("HAS WRITE PERMISSIONS: {:?}", has_write_permissions());
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
     if fdlimit::raise_fd_limit().is_none() {}
