@@ -40,7 +40,7 @@ pub async fn try_upgrade() -> anyhow::Result<()> {
     };
 
     let binary_asset = if cfg!(target_os = "windows") {
-        find_asset(".exe")?
+        find_asset(".msi")?
     } else if cfg!(target_os = "linux") {
         find_asset(".deb")?
     } else if cfg!(any(target_os = "macos", target_os = "ios")) {
@@ -61,9 +61,12 @@ pub async fn try_upgrade() -> anyhow::Result<()> {
     };
 
     let client = get_client()?;
-    download_file(&client, binary_dest, &binary_asset.browser_download_url).await?;
-
-    todo!()
+    download_file(
+        &client,
+        binary_dest.join(&binary_asset.name),
+        &binary_asset.browser_download_url,
+    )
+    .await
 }
 
 fn get_client() -> Result<Client, reqwest::Error> {

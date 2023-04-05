@@ -701,7 +701,7 @@ fn app(cx: Scope) -> Element {
                     return Ok(());
                 }
                 */
-                sleep(Duration::from_secs(60)).await;
+                sleep(Duration::from_secs(3600 * 24)).await;
                 if let Err(e) = utils::auto_updater::try_upgrade().await {
                     log::error!("try_upgrade failed: {e}");
                 }
