@@ -13,7 +13,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let to_display = use_state(&cx, || cx.props.values.get(cx.props.inital_index));
-    let index = use_state(&cx, || cx.props.default_index);
+    let index = use_state(&cx, || cx.props.inital_index);
 
     let converted_display = to_display.get().unwrap_or(&1.0);
 
@@ -28,8 +28,9 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     return;
                 }
                 index.set(index.get() - 1);
-                cx.props.onset.call(*index.get());
-                to_display.set(cx.props.values.get(*index.get()).clone());
+                let selected_value = cx.props.values.get(*index.get());
+                cx.props.onset.call(selected_value);
+                to_display.set(selected_value);
             },
         },
         span {
@@ -44,8 +45,10 @@ pub fn SlideSelector<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     return;
                 }
                 index.set(index.get() + 1);
-                cx.props.onset.call(*index.get());
-                to_display.set(cx.props.values.get(*index.get()));
+                let selected_value = cx.props.values.get(*index.get());
+
+                cx.props.onset.call(selected_value);
+                to_display.set(selected_value);
             },
         },
     }))

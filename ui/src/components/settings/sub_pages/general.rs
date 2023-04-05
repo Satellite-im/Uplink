@@ -76,7 +76,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
                     values: vec![0.5, 0.75, 1.0, 1.25, 1.5],
-                    default_index: 2, // represents 1.0 in the possible values.
+                    inital_index: 2, // represents 1.0 in the possible values.
                     onset: move |value| {
                         state.write().mutate(Action::SetFontScale( value ));
                     }
