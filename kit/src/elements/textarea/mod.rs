@@ -119,7 +119,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if enter_pressed && !shift_key_as_modifier {
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         } else if enter_pressed && shift_key_as_modifier {
-                            text_value_onkeyup.borrow_mut().push_str("\n");
+                            text_value_onkeyup.borrow_mut().push('\n');
                             onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
                     }
