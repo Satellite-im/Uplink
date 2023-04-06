@@ -33,15 +33,16 @@ pub fn get_available_themes() -> Vec<Theme> {
                     name: pretty_theme_str.to_owned(),
                     styles,
                 };
-
-                themes.push(theme);
+                if !themes.contains(&theme) {
+                    themes.push(theme);
+                }
             }
         }
     };
     add_to_themes(&STATIC_ARGS.themes_path);
     add_to_themes(&STATIC_ARGS.extras_path.join("themes"));
 
-    themes.sort_by_key(|theme| theme.name.clone());
+    let themes = Theme::remove_duplicates_and_sort_by_name(themes.as_mut());
 
     themes
 }
