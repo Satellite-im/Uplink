@@ -42,7 +42,8 @@ pub fn get_available_themes() -> Vec<Theme> {
     add_to_themes(&STATIC_ARGS.themes_path);
     add_to_themes(&STATIC_ARGS.extras_path.join("themes"));
 
-    let themes = Theme::remove_duplicates_and_sort_by_name(themes.as_mut());
+    themes.sort_by_key(|theme| theme.name.clone());
+    themes.dedup();
 
     themes
 }

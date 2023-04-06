@@ -330,14 +330,6 @@ pub struct Theme {
     pub styles: String,
 }
 
-impl Theme {
-    pub fn remove_duplicates_and_sort_by_name(themes: &mut Vec<Theme>) -> Vec<Theme> {
-        themes.sort_by_key(|theme| theme.name.clone());
-        themes.dedup();
-        themes.clone()
-    }
-}
-
 impl PartialEq for Theme {
     fn eq(&self, other: &Self) -> bool {
         self.name.eq(&other.name)
