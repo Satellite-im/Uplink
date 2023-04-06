@@ -25,6 +25,8 @@ uplink = Uplink
     .update-available = Update available
     .update-downloading = Downloading update
     .update-downloaded = Update downloaded. Click to install
+    .update-menu-dismiss = Dismiss
+    .update-menu-download = Download
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least

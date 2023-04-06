@@ -15,6 +15,7 @@ use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
@@ -1031,29 +1032,52 @@ fn get_update_icon(cx: Scope) -> Element {
         }
     });
 
-    if !*download_finished.current() && !*download_pending.current() {
-        cx.render(rsx!(div {
-            id: "update-available",
-            aria_label: "update-available",
-            onclick: move |_| {
-                download_pending.set(true);
+    let download_update_fn = || {
+        let binary_dest = match FileDialog::new()
+            .set_directory(dirs::home_dir().unwrap_or(".".into()))
+            .set_title(&get_local_text("uplink.pick-download-directory"))
+            .pick_folder()
+        {
+            Some(x) => x,
+            None => {
+                log::debug!("update download cancelled by user");
+                return;
+            }
+        };
+        download_pending.set(true);
+        download_location.set(Some(binary_dest.clone()));
+        download_ch.send(binary_dest);
+    };
 
-                let binary_dest = match FileDialog::new()
-                    .set_directory(dirs::home_dir().unwrap_or(".".into()))
-                    .set_title(&get_local_text("uplink.pick-download-directory"))
-                    .pick_folder()
-                {
-                    Some(x) => x,
-                    None => {
-                        log::debug!("update download cancelled by user");
-                        return;
+    if !*download_finished.current() && !*download_pending.current() {
+        cx.render(rsx!(
+            ContextMenu {
+                key: "update-available-menu",
+                id: "update-available-menu".to_string(),
+                items: cx.render(rsx!(
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-dismiss"),
+                        onpress: move |_| {
+                            state.write().mutate(Action::DismissUpdate);
+                        }
+                    },
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-download"),
+                        onpress: move |_| {
+                            download_update_fn();
+                        }
                     }
-                };
-                download_location.set(Some(binary_dest.clone()));
-                download_ch.send(binary_dest);
-            },
-            "{update_msg}",
-        }))
+                )),
+                div {
+                    id: "update-available",
+                    aria_label: "update-available",
+                    onclick: move |_| {
+                        download_update_fn();
+                    },
+                    "{update_msg}",
+                }
+            }
+        ))
     } else if !*download_finished.current() {
         cx.render(rsx!(div {
             id: "update-available",
@@ -1066,8 +1090,7 @@ fn get_update_icon(cx: Scope) -> Element {
             aria_label: "update-available",
             onclick: move |_| {
                 // be sure to update this before closing the app
-                state.write().dismiss_update();
-                let _ = state.write().save();
+                state.write().mutate(Action::DismissUpdate);
                 if let Some(dest) = download_location.current().as_ref().clone() {
                     std::thread::spawn(move ||  {
 

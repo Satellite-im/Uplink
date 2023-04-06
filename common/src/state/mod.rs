@@ -149,6 +149,14 @@ impl State {
                     .toast_notifications
                     .insert(Uuid::new_v4(), notification);
             }
+            Action::DismissUpdate => {
+                self.settings.update_dismissed = self.settings.update_available.take();
+                self.ui.notifications.decrement(
+                    &self.configuration,
+                    notifications::NotificationKind::Settings,
+                    1,
+                );
+            }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => self.complete_request(&identity),
@@ -1002,9 +1010,6 @@ impl State {
                 1,
             )
         }
-    }
-    pub fn dismiss_update(&mut self) {
-        self.settings.update_dismissed = self.settings.update_available.take();
     }
 }
 

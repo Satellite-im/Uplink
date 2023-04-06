@@ -83,6 +83,8 @@ pub enum Action<'a> {
     ClearNotification(NotificationKind),
     #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
+    #[display(fmt = "DismissUpdate")]
+    DismissUpdate,
     // Settings
     /// Sets the selected language.
     #[display(fmt = "SetLanguage")]
