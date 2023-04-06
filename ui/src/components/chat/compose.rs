@@ -284,7 +284,11 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("favorites.add"),
+                text: if favorite {
+                    get_local_text("favorites.remove")
+                } else {
+                    get_local_text("favorites.add")
+                }
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
