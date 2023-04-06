@@ -5,9 +5,11 @@ use common::{
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::tao::event::WindowEvent;
 use warp::constellation::file::File;
 
-use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
+use dioxus_desktop::wry::application::event::Event as WryEvent;
+use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
 use kit::STYLE as UIKIT_STYLES;
@@ -103,6 +105,23 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         }
     });
 
+    use_wry_event_handler(cx, {
+        to_owned![desktop];
+        move |event, _| match event {
+            WryEvent::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } => {
+                if desktop.outer_size().width < 575 {
+                    desktop.set_title("");
+                } else {
+                    desktop.set_title("Uplink");
+                }
+            }
+            _ => (),
+        }
+    });
+
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         style { css_style },
@@ -113,7 +132,11 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                 id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
             },
-            get_pre_release_message(cx.scope),
+            div {
+                z_index: "10",
+                get_pre_release_message(cx.scope),
+
+            }
             div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {
@@ -182,14 +205,6 @@ fn resize_window(
     }
     Some(())
 }
-
-// fn update_theme_colors() -> String {
-//     let state = State::load();
-//     match state.ui.theme.clone() {
-//         Some(theme) => theme.styles,
-//         None => String::new(),
-//     }
-// }
 
 fn update_theme_colors() -> String {
     let state = State::load();

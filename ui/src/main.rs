@@ -328,13 +328,14 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
     let title = get_local_text("uplink");
 
     #[allow(unused_mut)]
-    let mut window = WindowBuilder::new().with_title(title).with_resizable(true);
+    let mut window = WindowBuilder::new()
+        .with_title(title)
+        .with_resizable(true)
+        // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
+        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
 
     if with_predefined_size {
-        window = window
-            .with_inner_size(LogicalSize::new(950.0, 600.0))
-            // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
-            .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+        window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
     }
 
     #[cfg(target_os = "macos")]
