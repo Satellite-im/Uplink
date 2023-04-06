@@ -156,7 +156,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors(&*state.current())},
+        style {update_theme_colors(&state.current())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -188,7 +188,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                            {Some(get_welcome_message(&*state.current()))}
+                            {Some(get_welcome_message(&state.current()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {

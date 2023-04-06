@@ -2,15 +2,14 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::bail;
-use common::language::get_local_text;
+
 use futures::StreamExt;
 use reqwest::header;
 use reqwest::Client;
-use rfd::FileDialog;
+
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
-use warp::logging::tracing::log;
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]
