@@ -98,21 +98,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 SlideSelector {
                     buttons_format: ButtonsFormat::PlusAndMinus,
                     values: font_options,
-                    inital_index: initial_font_idx,
+                    initial_index: initial_font_idx,
                     onset: move |value| {
                         state.write().mutate(Action::SetFontScale( value ));
-                    }
-                }
-            },
-            SettingSection {
-                section_label: get_local_text("settings-general.app-language"),
-                section_description: get_local_text("settings-general.change-language"),
-                Select {
-                    initial_value: initial_lang_value,
-                    options: get_available_languages(),
-                    onselect: move |value| {
-                        let new_app_lang = change_language(value);
-                        state.write().mutate(Action::SetLanguage(new_app_lang));
                     }
                 }
             },
