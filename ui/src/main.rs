@@ -494,12 +494,12 @@ fn app(cx: Scope) -> Element {
             style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
-                get_titlebar(cx),
-                get_toasts(cx),
-                get_call_dialog(cx),
-                get_pre_release_message(cx),
-                get_router(cx),
-                get_logger(cx)
+                get_titlebar{},
+                get_toasts{},
+                get_call_dialog{},
+                get_pre_release_message{},
+                get_router{},
+                get_logger{},
             }
         )
     };
@@ -962,7 +962,7 @@ fn get_pre_release_message(cx: Scope) -> Element {
                 }
 
             },
-            get_update_icon(cx)
+            get_update_icon{}
         },
     ))
 }
@@ -977,6 +977,13 @@ fn get_update_icon(cx: Scope) -> Element {
         Some(u) => u.clone(),
         None => return cx.render(rsx!("")),
     };
+
+    let update_msg = format!(
+        "{}: {}",
+        get_local_text("uplink.update-available"),
+        new_version,
+    );
+    let downloaded_msg = get_local_text("uplink.update-downloaded");
 
     // updates the UI
     let updater_ch = use_coroutine(
@@ -994,6 +1001,7 @@ fn get_update_icon(cx: Scope) -> Element {
     );
 
     // receives a download command
+    let inner = state.inner();
     let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
         to_owned![download_pending, download_finished, updater_ch];
         async move {
@@ -1003,6 +1011,8 @@ fn get_update_icon(cx: Scope) -> Element {
                 match utils::auto_updater::download_update(dest.clone(), tx).await {
                     Ok(downloaded_version) => {
                         log::debug!("downloaded version {downloaded_version}");
+                        inner.borrow_mut().write().settings.update_available =
+                            Some(downloaded_version);
                         download_finished.set(Some(dest));
                     }
                     Err(e) => {
@@ -1025,7 +1035,7 @@ fn get_update_icon(cx: Scope) -> Element {
                     download_pending.set(true);
                 }
 
-                //state.write_silent().mutate(Action::DismissUpdate);
+                state.write_silent().dismiss_update();
 
                 let binary_dest = match FileDialog::new()
                     .set_directory(dirs::home_dir().unwrap_or(".".into()))
@@ -1045,7 +1055,7 @@ fn get_update_icon(cx: Scope) -> Element {
                 //let update_version = utils::auto_updater::download_update(binary_dest).await
 
             },
-            "update available: {new_version}",
+            "{update_msg}",
         }))
     } else {
         cx.render(rsx!(div {
@@ -1075,7 +1085,7 @@ fn get_update_icon(cx: Scope) -> Element {
                 }
                 download_finished.set(None);
             },
-            "Update downloaded. Click to install"
+            "{downloaded_msg}"
         }))
     }
 }

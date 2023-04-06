@@ -21,6 +21,9 @@ uplink = Uplink
     .exceeded = exceeded
     .delete = Delete
     .dismiss = Dismiss
+    .pick-download-directory = Choose a location to download the update
+    .update-available = Update available
+    .update-downloaded = Update downloaded. Click to install
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least

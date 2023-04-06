@@ -1003,7 +1003,7 @@ impl State {
             )
         }
     }
-    pub fn dismiss_update(mut self) {
+    pub fn dismiss_update(&mut self) {
         self.settings.update_dismissed = self.settings.update_available.take();
     }
 }
