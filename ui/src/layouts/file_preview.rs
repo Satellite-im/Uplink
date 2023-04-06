@@ -10,14 +10,15 @@ use warp::constellation::file::File;
 use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
+use kit::STYLE as UIKIT_STYLES;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
-use crate::utils::WindowDropHandler;
+use crate::{get_pre_release_message, utils::WindowDropHandler, APP_STYLE};
 
 const CSS_STYLE: &str = include_str!("./style.scss");
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum FileFormat {
     Video,
     Image,
@@ -65,14 +66,15 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
     let first_render = use_state(cx, || true);
 
-    resize_window(
-        has_thumbnail,
-        *first_render.get(),
-        desktop,
-        &thumbnail,
-        file.clone(),
-        &file_format,
-    );
+    if *first_render.get() {
+        resize_window(
+            has_thumbnail,
+            desktop,
+            &thumbnail,
+            file.clone(),
+            &file_format,
+        );
+    }
 
     if *first_render.get() {
         first_render.set(false);
@@ -110,11 +112,15 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
     cx.render(rsx! (
         style { css_style },
         style { CSS_STYLE },
+        style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
-            id: "video-poped-out",
-            class: "file-preview",
+            id: "app-wrap",
             div {
-                class: "wrap",
+                id: "titlebar",
+                onmousedown: move |_| { desktop.drag(); },
+            },
+            get_pre_release_message(cx.scope),
+            div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {
                     rsx!{
@@ -153,13 +159,12 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
 fn resize_window(
     has_thumbnail: bool,
-    first_render: bool,
     desktop: &DesktopContext,
     thumbnail: &str,
     file: File,
     file_format: &FileFormat,
 ) -> Option<()> {
-    if has_thumbnail && first_render {
+    if has_thumbnail {
         let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
         let thumbnail_bytes = base64::decode(base64_string).ok()?;
         let cursor = Cursor::new(thumbnail_bytes);
@@ -171,14 +176,14 @@ fn resize_window(
         let image_reader = ImageReader::with_format(cursor, img_format);
         if let Ok(image) = image_reader.decode() {
             let (mut width, mut height) = (image.width() as f64, image.height() as f64);
-            if height > 800.0 || width > 800.0 {
+            while height > 800.0 || width > 800.0 {
                 let scale_factor = desktop.scale_factor() + 0.5;
                 width /= scale_factor;
                 height /= scale_factor;
             }
             desktop.set_inner_size(LogicalSize::new(width, height));
         }
-    } else if first_render && file_format != &FileFormat::Other {
+    } else if file_format != &FileFormat::Other {
         let scale_factor = desktop.scale_factor() + 0.5;
         desktop.set_inner_size(LogicalSize::new(600.0 / scale_factor, 300.0 / scale_factor));
     }

@@ -266,6 +266,32 @@ fn main() {
 
     copy_assets();
 
+    let window = get_window_builder(true);
+
+    let config = Config::default();
+
+    dioxus_desktop::launch_cfg(
+        bootstrap,
+        config
+            .with_window(window)
+            .with_custom_index(
+                r#"
+    <!doctype html>
+    <html>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+    </html>"#
+                    .to_string(),
+            )
+            .with_file_drop_handler(|_w, drag_event| {
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
+                true
+            }),
+    )
+}
+
+pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -302,12 +328,14 @@ fn main() {
     let title = get_local_text("uplink");
 
     #[allow(unused_mut)]
-    let mut window = WindowBuilder::new()
-        .with_title(title)
-        .with_resizable(true)
-        .with_inner_size(LogicalSize::new(950.0, 600.0))
-        // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
-        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+    let mut window = WindowBuilder::new().with_title(title).with_resizable(true);
+
+    if with_predefined_size {
+        window = window
+            .with_inner_size(LogicalSize::new(950.0, 600.0))
+            // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
+            .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+    }
 
     #[cfg(target_os = "macos")]
     {
@@ -326,28 +354,7 @@ fn main() {
     {
         window = window.with_decorations(false).with_transparent(true);
     }
-
-    let config = Config::default();
-
-    dioxus_desktop::launch_cfg(
-        bootstrap,
-        config
-            .with_window(window)
-            .with_custom_index(
-                r#"
-    <!doctype html>
-    <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-    </html>"#
-                    .to_string(),
-            )
-            .with_file_drop_handler(|_w, drag_event| {
-                log::info!("Drag Event: {:?}", drag_event);
-                *DRAG_EVENT.write() = drag_event;
-                true
-            }),
-    )
+    window
 }
 
 // start warp_runner and ensure the user is logged in
@@ -585,10 +592,10 @@ fn app(cx: Scope) -> Element {
             style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
-                get_titlebar(cx),
+                get_titlebar(cx.scope),
                 get_toasts(cx),
                 get_call_dialog(cx),
-                get_pre_release_message(cx),
+                get_pre_release_message(cx.scope),
                 get_router(cx),
                 get_logger(cx)
             }
@@ -992,7 +999,7 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(cx: Scope) -> Element {
+fn get_pre_release_message(cx: &ScopeState) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
     cx.render(rsx!(
         div {
@@ -1041,7 +1048,7 @@ fn get_toasts(cx: Scope) -> Element {
 }
 
 #[allow(unused_assignments)]
-fn get_titlebar(cx: Scope) -> Element {
+fn get_titlebar(cx: &ScopeState) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
