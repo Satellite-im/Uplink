@@ -22,7 +22,7 @@ use crate::{components::settings::SettingSection, logger};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    log::debug!("Developer settings page rendered.");
+    log::trace!("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {

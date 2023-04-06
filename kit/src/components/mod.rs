@@ -8,6 +8,8 @@ pub mod user;
 pub mod user_image;
 pub mod user_image_group;
 
+pub mod slide_selector;
+
 pub mod message;
 pub mod message_divider;
 pub mod message_group;
