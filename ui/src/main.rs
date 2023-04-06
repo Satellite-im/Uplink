@@ -25,6 +25,7 @@ use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
 use std::path::PathBuf;
+use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -695,16 +696,21 @@ fn app(cx: Scope) -> Element {
                 let latest_release = match utils::auto_updater::check_for_release().await {
                     Ok(opt) => match opt {
                         Some(r) => r,
-                        None => continue,
+                        None => {
+                            sleep(Duration::from_secs(3600 * 24)).await;
+                            continue;
+                        }
                     },
                     Err(e) => {
                         log::error!("failed to check for release: {e}");
+                        sleep(Duration::from_secs(3600 * 24)).await;
                         continue;
                     }
                 };
                 if inner.borrow().read().settings.update_dismissed
                     == Some(latest_release.tag_name.clone())
                 {
+                    sleep(Duration::from_secs(3600 * 24)).await;
                     continue;
                 }
                 match inner.try_borrow_mut() {
@@ -967,6 +973,8 @@ fn get_update_icon(cx: Scope) -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
     let download_pending = use_state(cx, || false);
+    let download_finished: &UseState<Option<PathBuf>> = use_state(cx, || None);
+    let desktop = use_window(cx);
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
         None => return cx.render(rsx!("")),
@@ -989,14 +997,15 @@ fn get_update_icon(cx: Scope) -> Element {
 
     // receives a download command
     let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
-        to_owned![download_pending, updater_ch];
+        to_owned![download_pending, download_finished, updater_ch];
         async move {
             while let Some(dest) = rx.next().await {
                 let (tx, rx) = mpsc::unbounded_channel::<f32>();
                 updater_ch.send(rx);
-                match utils::auto_updater::download_update(dest, tx).await {
+                match utils::auto_updater::download_update(dest.clone(), tx).await {
                     Ok(downloaded_version) => {
                         log::debug!("downloaded version {downloaded_version}");
+                        download_finished.set(Some(dest));
                     }
                     Err(e) => {
                         log::error!("failed to download update: {e}");
@@ -1007,42 +1016,60 @@ fn get_update_icon(cx: Scope) -> Element {
         }
     });
 
-    cx.render(rsx!(div {
-        id: "update-available",
-        aria_label: "update-available",
-        onclick: move |_| {
-            if *download_pending.current() || state.read().settings.update_available.is_none()  {
-                return;
-            } else {
-                download_pending.set(true);
-            }
-
-            //state.write_silent().mutate(Action::DismissUpdate);
-
-            let binary_dest = match FileDialog::new()
-                .set_directory(dirs::home_dir().unwrap_or(".".into()))
-                .set_title(&get_local_text("uplink.pick-download-directory"))
-                .pick_folder()
-            {
-                Some(x) => x,
-                None => {
-                    log::debug!("update download cancelled by user");
+    if download_finished.is_none() {
+        cx.render(rsx!(div {
+            id: "update-available",
+            aria_label: "update-available",
+            onclick: move |_| {
+                if *download_pending.current() || state.read().settings.update_available.is_none()  {
                     return;
+                } else {
+                    download_pending.set(true);
                 }
-            };
 
-            download_ch.send(binary_dest);
+                //state.write_silent().mutate(Action::DismissUpdate);
 
-            // todo: display a loading dialog
-            //let update_version = utils::auto_updater::download_update(binary_dest).await
+                let binary_dest = match FileDialog::new()
+                    .set_directory(dirs::home_dir().unwrap_or(".".into()))
+                    .set_title(&get_local_text("uplink.pick-download-directory"))
+                    .pick_folder()
+                {
+                    Some(x) => x,
+                    None => {
+                        log::debug!("update download cancelled by user");
+                        return;
+                    }
+                };
 
-        },
-        "update available: {new_version}",
-    }))
+                download_ch.send(binary_dest);
 
-    //if let Err(e) = utils::auto_updater::try_upgrade().await {
-    //    log::error!("try_upgrade failed: {e}");
-    //}
+                // todo: display a loading dialog
+                //let update_version = utils::auto_updater::download_update(binary_dest).await
+
+            },
+            "update available: {new_version}",
+        }))
+    } else {
+        cx.render(rsx!(div {
+            id: "update-available",
+            aria_label: "update-available",
+            onclick: move |_| {
+                if let Some(dest) = download_finished.current().as_ref().clone() {
+                    std::thread::spawn(move ||  {
+                        let parent = dest.parent().unwrap();
+                        Command::new("xdg-open")
+                        .arg(parent)
+                        .spawn()
+                        .unwrap();
+
+                    });
+                    desktop.close();
+                }
+                download_finished.set(None);
+            },
+            "Update downloaded. Click to install"
+        }))
+    }
 }
 
 fn get_logger(cx: Scope) -> Element {
