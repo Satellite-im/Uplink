@@ -1,4 +1,3 @@
-
 use std::process::Command;
 
 use common::language::get_local_text;
