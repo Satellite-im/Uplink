@@ -971,8 +971,11 @@ fn get_update_icon(cx: Scope) -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
     let download_pending = use_state(cx, || false);
-    let download_finished: &UseState<Option<PathBuf>> = use_state(cx, || None);
+    let download_finished = use_state(cx, || false);
+    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
     let desktop = use_window(cx);
+    let download_progress = use_state(cx, || 0_f32);
+
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
         None => return cx.render(rsx!("")),
@@ -983,27 +986,36 @@ fn get_update_icon(cx: Scope) -> Element {
         get_local_text("uplink.update-available"),
         new_version,
     );
+    let downloading_msg = format!(
+        "{}: {}%",
+        get_local_text("uplink.update-downloading"),
+        *download_progress.current()
+    );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
     // updates the UI
     let updater_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<mpsc::UnboundedReceiver<f32>>| {
-            //to_owned![];
+            to_owned![download_progress, download_finished, download_pending];
             async move {
                 while let Some(mut ch) = rx.next().await {
                     while let Some(percent) = ch.recv().await {
-                        log::debug!("percent of update downloaded: {percent}")
+                        if percent >= *download_progress.current() + 5_f32 {
+                            download_progress.set(percent);
+                        }
                     }
+                    download_finished.set(true);
+                    download_pending.set(false);
                 }
             }
         },
     );
 
     // receives a download command
-    let inner = state.inner();
+    //let inner = state.inner();
     let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
-        to_owned![download_pending, download_finished, updater_ch];
+        to_owned![updater_ch];
         async move {
             while let Some(dest) = rx.next().await {
                 let (tx, rx) = mpsc::unbounded_channel::<f32>();
@@ -1011,31 +1023,25 @@ fn get_update_icon(cx: Scope) -> Element {
                 match utils::auto_updater::download_update(dest.clone(), tx).await {
                     Ok(downloaded_version) => {
                         log::debug!("downloaded version {downloaded_version}");
-                        inner.borrow_mut().write().settings.update_available =
-                            Some(downloaded_version);
-                        download_finished.set(Some(dest));
+
+                        // this may be unnecessary
+                        //inner.borrow_mut().write().settings.update_available =
+                        //    Some(downloaded_version);
                     }
                     Err(e) => {
                         log::error!("failed to download update: {e}");
                     }
                 }
-                download_pending.set(false);
             }
         }
     });
 
-    if download_finished.is_none() {
+    if !*download_finished.current() && !*download_pending.current() {
         cx.render(rsx!(div {
             id: "update-available",
             aria_label: "update-available",
             onclick: move |_| {
-                if *download_pending.current() || state.read().settings.update_available.is_none()  {
-                    return;
-                } else {
-                    download_pending.set(true);
-                }
-
-                state.write_silent().dismiss_update();
+                download_pending.set(true);
 
                 let binary_dest = match FileDialog::new()
                     .set_directory(dirs::home_dir().unwrap_or(".".into()))
@@ -1048,21 +1054,23 @@ fn get_update_icon(cx: Scope) -> Element {
                         return;
                     }
                 };
-
+                download_location.set(Some(binary_dest.clone()));
                 download_ch.send(binary_dest);
-
-                // todo: display a loading dialog
-                //let update_version = utils::auto_updater::download_update(binary_dest).await
-
             },
             "{update_msg}",
+        }))
+    } else if !*download_finished.current() {
+        cx.render(rsx!(div {
+            id: "update-available",
+            aria_label: "update-available",
+            "{downloading_msg}"
         }))
     } else {
         cx.render(rsx!(div {
             id: "update-available",
             aria_label: "update-available",
             onclick: move |_| {
-                if let Some(dest) = download_finished.current().as_ref().clone() {
+                if let Some(dest) = download_location.current().as_ref().clone() {
                     std::thread::spawn(move ||  {
 
                         let cmd = if cfg!(target_os = "windows") {
@@ -1075,15 +1083,17 @@ fn get_update_icon(cx: Scope) -> Element {
                            eprintln!("unknown OS type. failed to open files browser");
                            return;
                         };
-
                         Command::new(cmd)
                         .arg(dest)
                         .spawn()
                         .unwrap();
                     });
+
                     desktop.close();
                 }
-                download_finished.set(None);
+                download_location.set(None);
+                download_finished.set(false);
+                state.write().dismiss_update();
             },
             "{downloaded_msg}"
         }))

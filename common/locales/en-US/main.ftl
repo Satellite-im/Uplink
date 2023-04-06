@@ -23,6 +23,7 @@ uplink = Uplink
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
     .update-available = Update available
+    .update-downloading = Downloading update
     .update-downloaded = Update downloaded. Click to install
 
 warning-messages = Warning Messages
