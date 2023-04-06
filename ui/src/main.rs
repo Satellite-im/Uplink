@@ -989,7 +989,7 @@ fn get_update_icon(cx: Scope) -> Element {
     let downloading_msg = format!(
         "{}: {}%",
         get_local_text("uplink.update-downloading"),
-        *download_progress.current()
+        *download_progress.current() as u32
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
@@ -1013,7 +1013,6 @@ fn get_update_icon(cx: Scope) -> Element {
     );
 
     // receives a download command
-    //let inner = state.inner();
     let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
         to_owned![updater_ch];
         async move {
@@ -1023,10 +1022,6 @@ fn get_update_icon(cx: Scope) -> Element {
                 match utils::auto_updater::download_update(dest.clone(), tx).await {
                     Ok(downloaded_version) => {
                         log::debug!("downloaded version {downloaded_version}");
-
-                        // this may be unnecessary
-                        //inner.borrow_mut().write().settings.update_available =
-                        //    Some(downloaded_version);
                     }
                     Err(e) => {
                         log::error!("failed to download update: {e}");
@@ -1070,6 +1065,9 @@ fn get_update_icon(cx: Scope) -> Element {
             id: "update-available",
             aria_label: "update-available",
             onclick: move |_| {
+                // be sure to update this before closing the app
+                state.write().dismiss_update();
+                let _ = state.write().save();
                 if let Some(dest) = download_location.current().as_ref().clone() {
                     std::thread::spawn(move ||  {
 
@@ -1088,12 +1086,12 @@ fn get_update_icon(cx: Scope) -> Element {
                         .spawn()
                         .unwrap();
                     });
-
                     desktop.close();
+                } else {
+                    log::error!("attempted to download update without download location");
                 }
                 download_location.set(None);
                 download_finished.set(false);
-                state.write().dismiss_update();
             },
             "{downloaded_msg}"
         }))
