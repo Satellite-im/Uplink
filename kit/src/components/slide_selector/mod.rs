@@ -24,7 +24,7 @@ pub fn SlideSelector<'a, T>(cx: Scope<'a, Props<'a, T>>) -> Element<'a>
 where
     T: std::fmt::Display + Clone,
 {
-    let index = use_state(&cx, || cx.props.inital_index);
+    let index = use_state(cx, || cx.props.inital_index);
     let buttons_format = cx
         .props
         .buttons_format
@@ -45,7 +45,7 @@ where
         Button {
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
             appearance: Appearance::Primary,
-            disabled: if *index.get() == 0 {true} else {false},
+            disabled: *index.get() == 0,
             onpress: move |_| {
                 if *index.get() == 0 {
                     return;
@@ -64,7 +64,7 @@ where
         Button {
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
             appearance: Appearance::Primary,
-            disabled: if *index.get() >= (cx.props.values.len() - 1)  {true} else {false},
+            disabled: *index.get() >= (cx.props.values.len() - 1),
             onpress: move |_| {
                 if *index.get() >= (cx.props.values.len() - 1) {
                     return;
