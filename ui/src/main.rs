@@ -592,7 +592,7 @@ fn app(cx: Scope) -> Element {
             style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
             div {
                 id: "app-wrap",
-                get_titlebar(cx.scope),
+                get_titlebar(cx),
                 get_toasts(cx),
                 get_call_dialog(cx),
                 get_pre_release_message(cx.scope),
@@ -1048,7 +1048,7 @@ fn get_toasts(cx: Scope) -> Element {
 }
 
 #[allow(unused_assignments)]
-fn get_titlebar(cx: &ScopeState) -> Element {
+fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
