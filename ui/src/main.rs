@@ -51,6 +51,7 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
+use crate::utils::auto_updater::{DownloadProgress, DownloadState};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -439,6 +440,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     );
 
     use_shared_state_provider(cx, || state);
+    use_shared_state_provider(cx, DownloadState::default);
 
     cx.render(rsx!(crate::app {}))
 }
@@ -971,11 +973,8 @@ fn get_pre_release_message(cx: Scope) -> Element {
 fn get_update_icon(cx: Scope) -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
-    let download_pending = use_state(cx, || false);
-    let download_finished = use_state(cx, || false);
-    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
+    let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
-    let download_progress = use_state(cx, || 0_f32);
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -990,24 +989,24 @@ fn get_update_icon(cx: Scope) -> Element {
     let downloading_msg = format!(
         "{}: {}%",
         get_local_text("uplink.update-downloading"),
-        *download_progress.current() as u32
+        download_state.read().progress as u32
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
 
     // updates the UI
+    let inner = download_state.inner();
     let updater_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<mpsc::UnboundedReceiver<f32>>| {
-            to_owned![download_progress, download_finished, download_pending];
+            //to_owned![];
             async move {
                 while let Some(mut ch) = rx.next().await {
                     while let Some(percent) = ch.recv().await {
-                        if percent >= *download_progress.current() + 5_f32 {
-                            download_progress.set(percent);
+                        if percent >= inner.borrow().read().progress + 5_f32 {
+                            inner.borrow_mut().write().progress = percent;
                         }
                     }
-                    download_finished.set(true);
-                    download_pending.set(false);
+                    inner.borrow_mut().write().stage = DownloadProgress::Finished;
                 }
             }
         },
@@ -1032,25 +1031,21 @@ fn get_update_icon(cx: Scope) -> Element {
         }
     });
 
-    let download_update_fn = || {
-        let binary_dest = match FileDialog::new()
-            .set_directory(dirs::home_dir().unwrap_or(".".into()))
-            .set_title(&get_local_text("uplink.pick-download-directory"))
-            .pick_folder()
-        {
-            Some(x) => x,
-            None => {
-                log::debug!("update download cancelled by user");
-                return;
-            }
-        };
-        download_pending.set(true);
-        download_location.set(Some(binary_dest.clone()));
-        download_ch.send(binary_dest);
+    let get_dest = || match FileDialog::new()
+        .set_directory(dirs::home_dir().unwrap_or(".".into()))
+        .set_title(&get_local_text("uplink.pick-download-directory"))
+        .pick_folder()
+    {
+        Some(x) => Some(x),
+        None => {
+            log::debug!("update download cancelled by user");
+            None
+        }
     };
 
-    if !*download_finished.current() && !*download_pending.current() {
-        cx.render(rsx!(
+    let stage = download_state.read().stage;
+    match stage {
+        DownloadProgress::Idle => cx.render(rsx!(
             ContextMenu {
                 key: "update-available-menu",
                 id: "update-available-menu".to_string(),
@@ -1064,7 +1059,11 @@ fn get_update_icon(cx: Scope) -> Element {
                     ContextItem {
                         text: get_local_text("uplink.update-menu-download"),
                         onpress: move |_| {
-                            download_update_fn();
+                            if let Some(dest) = get_dest() {
+                                download_state.write().stage = DownloadProgress::Pending;
+                                download_state.write().destination = Some(dest.clone());
+                                download_ch.send(dest);
+                            }
                         }
                     }
                 )),
@@ -1072,52 +1071,56 @@ fn get_update_icon(cx: Scope) -> Element {
                     id: "update-available",
                     aria_label: "update-available",
                     onclick: move |_| {
-                        download_update_fn();
+                        if let Some(dest) = get_dest() {
+                            download_state.write().stage = DownloadProgress::Pending;
+                            download_state.write().destination = Some(dest.clone());
+                            download_ch.send(dest);
+                        }
                     },
                     "{update_msg}",
                 }
             }
-        ))
-    } else if !*download_finished.current() {
-        cx.render(rsx!(div {
+        )),
+        DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
             aria_label: "update-available",
             "{downloading_msg}"
-        }))
-    } else {
-        cx.render(rsx!(div {
-            id: "update-available",
-            aria_label: "update-available",
-            onclick: move |_| {
-                // be sure to update this before closing the app
-                state.write().mutate(Action::DismissUpdate);
-                if let Some(dest) = download_location.current().as_ref().clone() {
-                    std::thread::spawn(move ||  {
+        })),
+        DownloadProgress::Finished => {
+            cx.render(rsx!(div {
+                id: "update-available",
+                aria_label: "update-available",
+                onclick: move |_| {
+                    // be sure to update this before closing the app
+                    state.write().mutate(Action::DismissUpdate);
+                    if let Some(dest) = download_state.read().destination.clone() {
+                        std::thread::spawn(move ||  {
 
-                        let cmd = if cfg!(target_os = "windows") {
-                            "explorer"
-                        } else if cfg!(target_os = "linux") {
-                            "xdg-open"
-                        } else if cfg!(target_os = "macos") {
-                            "open"
-                        } else {
-                           eprintln!("unknown OS type. failed to open files browser");
-                           return;
-                        };
-                        Command::new(cmd)
-                        .arg(dest)
-                        .spawn()
-                        .unwrap();
-                    });
-                    desktop.close();
-                } else {
-                    log::error!("attempted to download update without download location");
-                }
-                download_location.set(None);
-                download_finished.set(false);
-            },
-            "{downloaded_msg}"
-        }))
+                            let cmd = if cfg!(target_os = "windows") {
+                                "explorer"
+                            } else if cfg!(target_os = "linux") {
+                                "xdg-open"
+                            } else if cfg!(target_os = "macos") {
+                                "open"
+                            } else {
+                               eprintln!("unknown OS type. failed to open files browser");
+                               return;
+                            };
+                            Command::new(cmd)
+                            .arg(dest)
+                            .spawn()
+                            .unwrap();
+                        });
+                        desktop.close();
+                    } else {
+                        log::error!("attempted to download update without download location");
+                    }
+                    download_state.write().destination = None;
+                    download_state.write().stage = DownloadProgress::Idle;
+                },
+                "{downloaded_msg}"
+            }))
+        }
     }
 }
 

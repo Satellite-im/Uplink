@@ -11,6 +11,25 @@ use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
 
+#[derive(Debug, Copy, Clone)]
+pub enum DownloadProgress {
+    Idle,
+    Pending,
+    Finished,
+}
+
+impl Default for DownloadProgress {
+    fn default() -> Self {
+        Self::Idle
+    }
+}
+#[derive(Debug, Default)]
+pub struct DownloadState {
+    pub stage: DownloadProgress,
+    pub destination: Option<PathBuf>,
+    pub progress: f32,
+}
+
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 #[derive(Debug, Deserialize)]
 pub struct GitHubRelease {
