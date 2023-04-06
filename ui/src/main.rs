@@ -25,7 +25,6 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
-
 use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
@@ -734,9 +733,6 @@ fn app(cx: Scope) -> Element {
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
-            if !STATIC_ARGS.production_mode {
-                // return;
-            }
             loop {
                 let latest_release = match utils::auto_updater::check_for_release().await {
                     Ok(opt) => match opt {

@@ -45,7 +45,7 @@ jobs:
         uses: arduino/setup-protoc@v1
 
       - name: Build Uplink
-        run: cargo build --release --package uplink
+        run: cargo build --release --package uplink --production-mode
       
       - name: Build Installer 
         run: cargo wix --package uplink --no-build --nocapture
