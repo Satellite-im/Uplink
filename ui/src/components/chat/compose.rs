@@ -646,7 +646,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                         if !identity_profile.get().did_key().eq(&id.did_key()) {
                             identity_profile.set(id);
                         }
-                        let window_size = window.inner_size();
+                        let window_size = window.outer_size();
                         //Dont think there is any way of manually moving elements via dioxus
                         let script = include_str!("./show_context.js")
                             .replace("UUID", quick_profile_uuid)
