@@ -297,12 +297,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: data.is_none() || STATIC_ARGS.production_mode,
+            disabled: true,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.call")
+                text: get_local_text("uplink.coming-soon")
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -316,12 +316,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::VideoCamera,
-            disabled: data.is_none() || STATIC_ARGS.production_mode,
+            disabled: true,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::TopRight,
-                text: get_local_text("uplink.video-call"),
+                text: get_local_text("uplink.coming-soon"),
             })),
         },
     ))
