@@ -1675,11 +1675,12 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     }
                 })
             } else {
-                rsx!(ContextItem {
+                rsx!(
+                    /*ContextItem {
                     icon: Icon::UserCircle,
                     text: get_local_text("quickprofile.profile"),
                     // TODO: Show a profile popup
-                },
+                },*/
                 if is_friend {
                     rsx!(
                         if !chat_is_current {
@@ -1692,11 +1693,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                                 }
                             })
                         }
-                        ContextItem {
+                        /*ContextItem {
                             icon: Icon::PhoneArrowUpRight,
                             text: get_local_text("quickprofile.call"),
                             // TODO: Impl missing
-                        }
+                        }*/
                     )
                 }
                 hr{},
