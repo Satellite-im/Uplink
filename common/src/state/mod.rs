@@ -227,7 +227,18 @@ impl State {
                 };
                 self.add_msg_to_chat(id, m);
             }
-
+            Action::UpdateAvailable(version) => {
+                if self.settings.update_available != Some(version.clone()) {
+                    self.settings.update_available = Some(version);
+                    //self.mutate(Action::AddNotification(
+                    //   notifications::NotificationKind::Settings,
+                    //   1,
+                    //))
+                }
+            }
+            Action::DismissUpdate => {
+                self.settings.update_dismissed = self.settings.update_available.take();
+            }
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
@@ -479,6 +490,7 @@ impl State {
             id,
             settings: Settings {
                 language: "English (USA)".into(),
+                ..Default::default()
             },
             route: Route { active: "/".into() },
             storage,

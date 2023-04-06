@@ -24,6 +24,7 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
+use std::path::PathBuf;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -33,7 +34,7 @@ use warp::multipass::identity::Platform;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
 
@@ -683,28 +684,41 @@ fn app(cx: Scope) -> Element {
     });
 
     // check for updates
+    let inner = state.inner();
     use_future(cx, (), |_| {
-        //to_owned![needs_update];
+        to_owned![needs_update];
         async move {
             if !STATIC_ARGS.production_mode {
-                return;
+                // return;
             }
             loop {
-                // todo: use this to inform the user of a possible upgrade:
-                /*
-                let latest_release = get_github_release(
-                    "https://api.github.com/repos/Satellite-im/Uplink/releases/latest",
-                )
-                .await?;
-
-                if versions_match(&latest_release.tag_name) {
-                    return Ok(());
+                let latest_release = match utils::auto_updater::check_for_release().await {
+                    Ok(opt) => match opt {
+                        Some(r) => r,
+                        None => continue,
+                    },
+                    Err(e) => {
+                        log::error!("failed to check for release: {e}");
+                        continue;
+                    }
+                };
+                if inner.borrow().read().settings.update_dismissed
+                    == Some(latest_release.tag_name.clone())
+                {
+                    continue;
                 }
-                */
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state
+                            .write()
+                            .mutate(Action::UpdateAvailable(latest_release.tag_name));
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
                 sleep(Duration::from_secs(3600 * 24)).await;
-                if let Err(e) = utils::auto_updater::try_upgrade().await {
-                    log::error!("try_upgrade failed: {e}");
-                }
             }
         }
     });
@@ -943,9 +957,92 @@ fn get_pre_release_message(cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            }
+            },
+            get_update_icon(cx)
         },
     ))
+}
+
+fn get_update_icon(cx: Scope) -> Element {
+    log::trace!("rendering get_update_icon");
+    let state = use_shared_state::<State>(cx)?;
+    let download_pending = use_state(cx, || false);
+    let new_version = match state.read().settings.update_available.as_ref() {
+        Some(u) => u.clone(),
+        None => return cx.render(rsx!("")),
+    };
+
+    // updates the UI
+    let updater_ch = use_coroutine(
+        cx,
+        |mut rx: UnboundedReceiver<mpsc::UnboundedReceiver<f32>>| {
+            //to_owned![];
+            async move {
+                while let Some(mut ch) = rx.next().await {
+                    while let Some(percent) = ch.recv().await {
+                        log::debug!("percent of update downloaded: {percent}")
+                    }
+                }
+            }
+        },
+    );
+
+    // receives a download command
+    let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
+        to_owned![download_pending, updater_ch];
+        async move {
+            while let Some(dest) = rx.next().await {
+                let (tx, rx) = mpsc::unbounded_channel::<f32>();
+                updater_ch.send(rx);
+                match utils::auto_updater::download_update(dest, tx).await {
+                    Ok(downloaded_version) => {
+                        log::debug!("downloaded version {downloaded_version}");
+                    }
+                    Err(e) => {
+                        log::error!("failed to download update: {e}");
+                    }
+                }
+                download_pending.set(false);
+            }
+        }
+    });
+
+    cx.render(rsx!(div {
+        id: "update-available",
+        aria_label: "update-available",
+        onclick: move |_| {
+            if *download_pending.current() || state.read().settings.update_available.is_none()  {
+                return;
+            } else {
+                download_pending.set(true);
+            }
+
+            //state.write_silent().mutate(Action::DismissUpdate);
+
+            let binary_dest = match FileDialog::new()
+                .set_directory(dirs::home_dir().unwrap_or(".".into()))
+                .set_title(&get_local_text("uplink.pick-download-directory"))
+                .pick_folder()
+            {
+                Some(x) => x,
+                None => {
+                    log::debug!("update download cancelled by user");
+                    return;
+                }
+            };
+
+            download_ch.send(binary_dest);
+
+            // todo: display a loading dialog
+            //let update_version = utils::auto_updater::download_update(binary_dest).await
+
+        },
+        "update available: {new_version}",
+    }))
+
+    //if let Err(e) = utils::auto_updater::try_upgrade().await {
+    //    log::error!("try_upgrade failed: {e}");
+    //}
 }
 
 fn get_logger(cx: Scope) -> Element {

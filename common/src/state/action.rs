@@ -87,6 +87,10 @@ pub enum Action<'a> {
     /// Sets the selected language.
     #[display(fmt = "SetLanguage")]
     SetLanguage(String),
+    #[display(fmt = "UpdateAvailable")]
+    UpdateAvailable(String),
+    #[display(fmt = "DismissUpdate")]
+    DismissUpdate,
 
     // Routes
     /// Set the active route

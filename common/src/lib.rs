@@ -14,7 +14,6 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::Mutex;
-use warp::logging::tracing::log;
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
