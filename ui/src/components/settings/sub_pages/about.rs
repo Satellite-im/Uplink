@@ -50,12 +50,29 @@ pub fn AboutPage(cx: Scope) -> Element {
 
     let opt = download_available.get().clone();
     let stage = download_state.read().stage;
+    let pending_key = format!("btn-pending{}", download_state.read().progress);
 
     let about_button = cx.render(rsx!(match opt {
+        None => {
+            rsx!(Button {
+                key: "btn-start",
+                text: get_local_text("uplink.check-for-updates"),
+                loading: *update_button_loading.current(),
+                aria_label: "check-for-updates-button".into(),
+                appearance: Appearance::Secondary,
+                icon: Icon::ArrowPath,
+                onpress: |_| {
+                    download_available.set(None);
+                    update_button_loading.set(true);
+                    ch.send(());
+                }
+            })
+        }
         Some(_) => match stage {
             DownloadProgress::Idle => {
                 rsx!(Button {
-                    text: get_local_text("uplink.update-menu-download"),
+                    key: "btn-idle",
+                    text: get_local_text("uplink.download-update"),
                     loading: *update_button_loading.current(),
                     aria_label: "check-for-updates-button".into(),
                     appearance: Appearance::Secondary,
@@ -64,14 +81,15 @@ pub fn AboutPage(cx: Scope) -> Element {
                         if let Some(dest) = get_download_dest() {
                             download_state.write().stage = DownloadProgress::Pending;
                             download_state.write().destination = Some(dest.clone());
-                            download_ch.send(SoftwareDownloadCmd(dest));
                             update_button_loading.set(true);
+                            download_ch.send(SoftwareDownloadCmd(dest));
                         }
                     }
                 })
             }
             DownloadProgress::Pending => {
                 rsx!(Button {
+                    key: "{pending_key}",
                     text: format!("{}%", download_state.read().progress as u32),
                     loading: true,
                     aria_label: "check-for-updates-button".into(),
@@ -81,6 +99,7 @@ pub fn AboutPage(cx: Scope) -> Element {
             }
             DownloadProgress::Finished => {
                 rsx!(Button {
+                    key: "btn-finished",
                     text: get_local_text("uplink.update-menu-install"),
                     loading: *update_button_loading.current(),
                     aria_label: "check-for-updates-button".into(),
@@ -113,20 +132,6 @@ pub fn AboutPage(cx: Scope) -> Element {
                 })
             }
         },
-        None => {
-            rsx!(Button {
-                text: get_local_text("uplink.check-for-updates"),
-                loading: *update_button_loading.current(),
-                aria_label: "check-for-updates-button".into(),
-                appearance: Appearance::Secondary,
-                icon: Icon::ArrowPath,
-                onpress: |_| {
-                    download_available.set(None);
-                    ch.send(());
-                    update_button_loading.set(true);
-                }
-            })
-        }
     }));
 
     cx.render(rsx!(
@@ -139,8 +144,9 @@ pub fn AboutPage(cx: Scope) -> Element {
             SettingSection {
                 section_label:  get_local_text("settings-about.version"),
                 section_description: version.into(),
-                about_button
-
+                div {
+                    about_button
+                }
             },
             SettingSection {
                 section_label: get_local_text("settings-about.open-website"),

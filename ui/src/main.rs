@@ -451,6 +451,7 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    let download_state = use_shared_state::<DownloadState>(cx)?;
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -508,6 +509,45 @@ fn app(cx: Scope) -> Element {
             }
         )
     };
+
+    // use_coroutine for software update
+
+    // updates the UI
+    let inner = download_state.inner();
+    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
+        to_owned![needs_update];
+        async move {
+            while let Some(mut ch) = rx.next().await {
+                while let Some(percent) = ch.0.recv().await {
+                    if percent >= inner.borrow().read().progress + 5_f32 {
+                        inner.borrow_mut().write().progress = percent;
+                        needs_update.set(true);
+                    }
+                }
+                inner.borrow_mut().write().stage = DownloadProgress::Finished;
+                needs_update.set(true);
+            }
+        }
+    });
+
+    // receives a download command
+    let _download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
+        to_owned![updater_ch];
+        async move {
+            while let Some(dest) = rx.next().await {
+                let (tx, rx) = mpsc::unbounded_channel::<f32>();
+                updater_ch.send(SoftwareUpdateCmd(rx));
+                match utils::auto_updater::download_update(dest.0.clone(), tx).await {
+                    Ok(downloaded_version) => {
+                        log::debug!("downloaded version {downloaded_version}");
+                    }
+                    Err(e) => {
+                        log::error!("failed to download update: {e}");
+                    }
+                }
+            }
+        }
+    });
 
     // `use_future`s
     // all of Uplinks periodic tasks are located here. it's a lot to read but
@@ -977,6 +1017,7 @@ fn get_update_icon(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
+    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -994,41 +1035,6 @@ fn get_update_icon(cx: Scope) -> Element {
         download_state.read().progress as u32
     );
     let downloaded_msg = get_local_text("uplink.update-downloaded");
-
-    // updates the UI
-    let inner = download_state.inner();
-    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
-        //to_owned![];
-        async move {
-            while let Some(mut ch) = rx.next().await {
-                while let Some(percent) = ch.0.recv().await {
-                    if percent >= inner.borrow().read().progress + 5_f32 {
-                        inner.borrow_mut().write().progress = percent;
-                    }
-                }
-                inner.borrow_mut().write().stage = DownloadProgress::Finished;
-            }
-        }
-    });
-
-    // receives a download command
-    let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
-        to_owned![updater_ch];
-        async move {
-            while let Some(dest) = rx.next().await {
-                let (tx, rx) = mpsc::unbounded_channel::<f32>();
-                updater_ch.send(SoftwareUpdateCmd(rx));
-                match utils::auto_updater::download_update(dest.0.clone(), tx).await {
-                    Ok(downloaded_version) => {
-                        log::debug!("downloaded version {downloaded_version}");
-                    }
-                    Err(e) => {
-                        log::error!("failed to download update: {e}");
-                    }
-                }
-            }
-        }
-    });
 
     let stage = download_state.read().stage;
     match stage {

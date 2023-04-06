@@ -29,6 +29,7 @@ uplink = Uplink
     .update-menu-download = Download
     .update-menu-install = Install
     .check-for-updates = Check for updates
+    .download-update = Download Update
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
