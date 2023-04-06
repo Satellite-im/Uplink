@@ -372,13 +372,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }
                                 },
-                                hr{ },
-                                ContextItem {
-                                    icon: Icon::PhoneArrowUpRight,
-                                    text: get_local_text("uplink.call"),
-                                    //TODO: Wire to state
-
-                                },
                                 hr{ }
                                 ContextItem {
                                     icon: Icon::EyeSlash,

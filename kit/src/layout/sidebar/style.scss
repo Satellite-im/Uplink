@@ -8,8 +8,10 @@
   transition: margin-left var(--animation-speed);
 
   .search {
+		display: inline-flex;
     padding: var(--gap);
     border-bottom: 1px solid transparent;
+		flex-direction: row;
   }
   .children {
     flex: 1;
@@ -34,10 +36,26 @@
     overflow-x: hidden;
   }
 
-  &.hidden {
-    margin-left: calc(var(--width-sidebar) * -1);
-    border-right: none;
-  }
+	&.hidden {
+		margin-left: calc(var(--width-sidebar) * -1);
+		border-right: none;
+	}
+
+	&.minimal {
+		display: inline-flex;
+		width: fit-content;
+		min-width: fit-content;
+	}
+
+	.hamburger {
+		gap: var(--gap);
+		margin-left: var(--gap);
+		//border-bottom: 1px solid transparent;
+		&.minimal {
+			margin-left: 0px;
+			padding: var(--gap);
+		}
+	}
 }
 
 .sidebar.resizing {
