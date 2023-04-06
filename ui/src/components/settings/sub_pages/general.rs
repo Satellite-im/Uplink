@@ -17,6 +17,16 @@ pub fn GeneralSettings(cx: Scope) -> Element {
 
     log::trace!("General settings page rendered.");
 
+    let font_scale = state.read().settings.font_scale();
+    let font_options = vec![0.5, 0.75, 1.0, 1.25, 1.5, 1.75];
+    let initial_font_idx = match font_options.iter().position(|r| r == &font_scale) {
+        Some(idx) => idx,
+        None => {
+            log::error!("invalid font scale detected!");
+            state.write().mutate(Action::SetFontScale(1.0));
+            2
+        }
+    };
     cx.render(rsx!(
         div {
             id: "settings-general",
@@ -75,8 +85,8 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_description: get_local_text("settings-general.font-scaling-description"),
                 SlideSelector {
                     buttons_format: ButtonsFormat::PlusAndMinus,
-                    values: vec![0.5, 0.75, 1.0, 1.25, 1.5, 1.75],
-                    inital_index: 2, // represents 1.0 in the possible values.
+                    values: font_options,
+                    inital_index: initial_font_idx,
                     onset: move |value| {
                         state.write().mutate(Action::SetFontScale( value ));
                     }

@@ -50,8 +50,9 @@ where
                 if *index.get() == 0 {
                     return;
                 }
-                index.set(index.get() - 1);
-                if let Some(x) = cx.props.values.get(*index.get()) {
+                let new_val = index.get() - 1;
+                index.set(new_val);
+                if let Some(x) = cx.props.values.get(new_val) {
                      cx.props.onset.call(x.clone());
                 }
             },
@@ -68,8 +69,9 @@ where
                 if *index.get() >= (cx.props.values.len() - 1) {
                     return;
                 }
-                index.set(index.get() + 1);
-                if let Some(x) = cx.props.values.get(*index.get()) {
+                let new_val = index.get() + 1;
+                index.set(new_val);
+                if let Some(x) = cx.props.values.get(new_val) {
                     cx.props.onset.call(x.clone());
                }
             },
