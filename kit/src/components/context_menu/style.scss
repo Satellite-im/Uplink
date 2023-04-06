@@ -83,7 +83,7 @@
 		border: 1px solid var(--background);
 		.indicator {
 			position: relative;
-			bottom: 0;
+			top: calc(100% - 1rem);
 			left: calc(100% - 1rem);
 		}
 	}
