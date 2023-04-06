@@ -227,18 +227,6 @@ impl State {
                 };
                 self.add_msg_to_chat(id, m);
             }
-            Action::UpdateAvailable(version) => {
-                if self.settings.update_available != Some(version.clone()) {
-                    self.settings.update_available = Some(version);
-                    //self.mutate(Action::AddNotification(
-                    //   notifications::NotificationKind::Settings,
-                    //   1,
-                    //))
-                }
-            }
-            Action::DismissUpdate => {
-                self.settings.update_dismissed = self.settings.update_available.take();
-            }
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
@@ -1003,6 +991,20 @@ impl State {
     /// Sets the user's language.
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
+    }
+
+    pub fn update_available(&mut self, version: String) {
+        if self.settings.update_available != Some(version.clone()) {
+            self.settings.update_available = Some(version);
+            self.ui.notifications.increment(
+                &self.configuration,
+                notifications::NotificationKind::Settings,
+                1,
+            )
+        }
+    }
+    pub fn dismiss_update(mut self) {
+        self.settings.update_dismissed = self.settings.update_available.take();
     }
 }
 

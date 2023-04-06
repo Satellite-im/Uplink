@@ -715,9 +715,7 @@ fn app(cx: Scope) -> Element {
                 }
                 match inner.try_borrow_mut() {
                     Ok(state) => {
-                        state
-                            .write()
-                            .mutate(Action::UpdateAvailable(latest_release.tag_name));
+                        state.write().update_available(latest_release.tag_name);
                         needs_update.set(true);
                     }
                     Err(e) => {
@@ -1056,12 +1054,22 @@ fn get_update_icon(cx: Scope) -> Element {
             onclick: move |_| {
                 if let Some(dest) = download_finished.current().as_ref().clone() {
                     std::thread::spawn(move ||  {
-                        let parent = dest.parent().unwrap();
-                        Command::new("xdg-open")
-                        .arg(parent)
+
+                        let cmd = if cfg!(target_os = "windows") {
+                            "explorer"
+                        } else if cfg!(target_os = "linux") {
+                            "xdg-open"
+                        } else if cfg!(target_os = "macos") {
+                            "open"
+                        } else {
+                           eprintln!("unknown OS type. failed to open files browser");
+                           return;
+                        };
+
+                        Command::new(cmd)
+                        .arg(dest)
                         .spawn()
                         .unwrap();
-
                     });
                     desktop.close();
                 }

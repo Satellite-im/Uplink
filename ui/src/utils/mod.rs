@@ -1,4 +1,4 @@
-use anyhow::{bail};
+use anyhow::bail;
 use common::{
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
@@ -94,7 +94,7 @@ pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
             .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/satellite-im")
-    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+    } else if cfg!(target_os = "macos") {
         exe_path
             .parent()
             .and_then(|x| x.parent())

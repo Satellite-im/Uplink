@@ -58,7 +58,7 @@ pub async fn download_update(
         find_asset(".msi")?
     } else if cfg!(target_os = "linux") {
         find_asset(".deb")?
-    } else if cfg!(any(target_os = "macos", target_os = "ios")) {
+    } else if cfg!(target_os = "macos") {
         find_asset("Uplink-Mac-Universal.zip")?
     } else {
         bail!("unknown OS type. failed to find binary");
