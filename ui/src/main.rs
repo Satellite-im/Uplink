@@ -51,7 +51,9 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
-use crate::utils::auto_updater::{DownloadProgress, DownloadState};
+use crate::utils::auto_updater::{
+    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -995,31 +997,28 @@ fn get_update_icon(cx: Scope) -> Element {
 
     // updates the UI
     let inner = download_state.inner();
-    let updater_ch = use_coroutine(
-        cx,
-        |mut rx: UnboundedReceiver<mpsc::UnboundedReceiver<f32>>| {
-            //to_owned![];
-            async move {
-                while let Some(mut ch) = rx.next().await {
-                    while let Some(percent) = ch.recv().await {
-                        if percent >= inner.borrow().read().progress + 5_f32 {
-                            inner.borrow_mut().write().progress = percent;
-                        }
+    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
+        //to_owned![];
+        async move {
+            while let Some(mut ch) = rx.next().await {
+                while let Some(percent) = ch.0.recv().await {
+                    if percent >= inner.borrow().read().progress + 5_f32 {
+                        inner.borrow_mut().write().progress = percent;
                     }
-                    inner.borrow_mut().write().stage = DownloadProgress::Finished;
                 }
+                inner.borrow_mut().write().stage = DownloadProgress::Finished;
             }
-        },
-    );
+        }
+    });
 
     // receives a download command
-    let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
+    let download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
         to_owned![updater_ch];
         async move {
             while let Some(dest) = rx.next().await {
                 let (tx, rx) = mpsc::unbounded_channel::<f32>();
-                updater_ch.send(rx);
-                match utils::auto_updater::download_update(dest.clone(), tx).await {
+                updater_ch.send(SoftwareUpdateCmd(rx));
+                match utils::auto_updater::download_update(dest.0.clone(), tx).await {
                     Ok(downloaded_version) => {
                         log::debug!("downloaded version {downloaded_version}");
                     }
@@ -1030,18 +1029,6 @@ fn get_update_icon(cx: Scope) -> Element {
             }
         }
     });
-
-    let get_dest = || match FileDialog::new()
-        .set_directory(dirs::home_dir().unwrap_or(".".into()))
-        .set_title(&get_local_text("uplink.pick-download-directory"))
-        .pick_folder()
-    {
-        Some(x) => Some(x),
-        None => {
-            log::debug!("update download cancelled by user");
-            None
-        }
-    };
 
     let stage = download_state.read().stage;
     match stage {
@@ -1059,10 +1046,10 @@ fn get_update_icon(cx: Scope) -> Element {
                     ContextItem {
                         text: get_local_text("uplink.update-menu-download"),
                         onpress: move |_| {
-                            if let Some(dest) = get_dest() {
+                            if let Some(dest) = get_download_dest() {
                                 download_state.write().stage = DownloadProgress::Pending;
                                 download_state.write().destination = Some(dest.clone());
-                                download_ch.send(dest);
+                                download_ch.send(SoftwareDownloadCmd(dest));
                             }
                         }
                     }
@@ -1071,10 +1058,10 @@ fn get_update_icon(cx: Scope) -> Element {
                     id: "update-available",
                     aria_label: "update-available",
                     onclick: move |_| {
-                        if let Some(dest) = get_dest() {
+                        if let Some(dest) = get_download_dest() {
                             download_state.write().stage = DownloadProgress::Pending;
                             download_state.write().destination = Some(dest.clone());
-                            download_ch.send(dest);
+                            download_ch.send(SoftwareDownloadCmd(dest));
                         }
                     },
                     "{update_msg}",

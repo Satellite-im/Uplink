@@ -11,8 +11,9 @@ const SCRIPT: &str = include_str!("./script.js");
 
 #[derive(Props)]
 pub struct Props<'a> {
+    #[allow(dead_code)]
     #[props(optional)]
-    _loading: Option<bool>,
+    loading: Option<bool>,
     #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
     #[props(optional)]

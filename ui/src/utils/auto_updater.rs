@@ -3,13 +3,20 @@ use std::path::PathBuf;
 
 use anyhow::bail;
 
+use common::language::get_local_text;
 use futures::StreamExt;
 use reqwest::header;
 use reqwest::Client;
 
+use rfd::FileDialog;
 use serde::Deserialize;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
+use warp::logging::tracing::log;
+
+// these types exist to allow different parts of the app to share the same logic for managing software updates
+pub struct SoftwareUpdateCmd(pub mpsc::UnboundedReceiver<f32>);
+pub struct SoftwareDownloadCmd(pub PathBuf);
 
 #[derive(Debug, Copy, Clone)]
 pub enum DownloadProgress {
@@ -31,7 +38,7 @@ pub struct DownloadState {
 }
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct GitHubRelease {
     pub tag_name: String,
     assets: Vec<GitHubAsset>,
@@ -42,6 +49,20 @@ struct GitHubAsset {
     name: String,
     browser_download_url: String,
     size: usize,
+}
+
+pub fn get_download_dest() -> Option<PathBuf> {
+    match FileDialog::new()
+        .set_directory(dirs::home_dir().unwrap_or(".".into()))
+        .set_title(&get_local_text("uplink.pick-download-directory"))
+        .pick_folder()
+    {
+        Some(x) => Some(x),
+        None => {
+            log::debug!("update download cancelled by user");
+            None
+        }
+    }
 }
 
 pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {
