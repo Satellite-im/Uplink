@@ -160,7 +160,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
         .extras_path
         .join("images")
         .join("mascot")
-        .join("working.png")
+        .join("working.webp")
         .to_str()
         .map(|x| x.to_string())
         .unwrap_or_default();

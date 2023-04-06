@@ -14,7 +14,7 @@ pub fn Welcome(cx: Scope) -> Element {
         .extras_path
         .join("images")
         .join("mascot")
-        .join("better_with_friends.png")
+        .join("better_with_friends.webp")
         .to_str()
         .map(|x| x.to_string())
         .unwrap_or_default();
