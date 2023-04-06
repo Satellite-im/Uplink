@@ -99,6 +99,9 @@ jobs:
       - name: Enable opening app not codesigned 🖥️
         run: sudo spctl --master-disable
 
+      - name: Remove all notifications before starting tests 🖥️
+        run: killall NotificationCenter
+
       - name: Download the app 🗳️
         uses: actions/download-artifact@v3
         with:
@@ -109,7 +112,6 @@ jobs:
         working-directory: ./appium-tests/apps
         run: |
           unzip Uplink-Mac-Universal.zip
-          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
@@ -133,6 +135,8 @@ jobs:
         with:
           junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on MacOS"
+          job_summary: false
+          compare_to_earlier_commit: false
 
       - name: Upload Screenshots if tests failed 📷
         uses: actions/upload-artifact@v3
@@ -190,6 +194,9 @@ jobs:
       - name: Enable opening app not codesigned 🖥️
         run: sudo spctl --master-disable
 
+      - name: Remove all notifications before starting tests 🖥️
+        run: killall NotificationCenter
+
       - name: Download the app 🗳️
         uses: actions/download-artifact@v3
         with:
@@ -200,7 +207,6 @@ jobs:
         working-directory: ./appium-tests/apps
         run: |
           unzip Uplink-Mac-Universal.zip
-          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
