@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+
 use std::process::Command;
 
 use common::language::get_local_text;
@@ -8,11 +8,11 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use futures::StreamExt;
 use kit::elements::{button::Button, Appearance};
-use tokio::sync::mpsc;
+
 use warp::logging::tracing::log;
 
 use crate::utils::auto_updater::{
-    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd,
 };
 use crate::{
     components::settings::SettingSection,

@@ -25,7 +25,7 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
-use std::path::PathBuf;
+
 use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
