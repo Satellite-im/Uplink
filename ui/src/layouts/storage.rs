@@ -478,7 +478,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 aria_label: "files-body",
                 Topbar {
                     with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
-                    with_currently_back: state.read().ui.sidebar_hidden,
                     onback: move |_| {
                         let current = state.read().ui.sidebar_hidden;
                         state.write().mutate(Action::SidebarHidden(!current));

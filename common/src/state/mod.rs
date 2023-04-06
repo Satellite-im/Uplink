@@ -5,6 +5,7 @@ pub mod friends;
 pub mod identity;
 pub mod notifications;
 pub mod route;
+pub mod scope_ids;
 pub mod settings;
 pub mod storage;
 pub mod ui;
@@ -61,6 +62,7 @@ pub struct State {
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
+    pub scope_ids: scope_ids::ScopeIds,
     pub settings: settings::Settings,
     pub ui: ui::UI,
     pub configuration: configuration::Configuration,
@@ -89,6 +91,7 @@ impl Clone for State {
             friends: self.friends.clone(),
             storage: self.storage.clone(),
             settings: Default::default(),
+            scope_ids: Default::default(),
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),

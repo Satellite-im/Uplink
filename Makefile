@@ -1,4 +1,4 @@
-TARGET = ui
+TARGET = uplink
 
 SIGNING_KEY = F6ZAL7ANAD
 ASSETS_DIR = ui/extra

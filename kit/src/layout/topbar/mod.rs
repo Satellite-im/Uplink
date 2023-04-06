@@ -9,8 +9,6 @@ pub struct Props<'a> {
     #[props(optional)]
     with_back_button: Option<bool>,
     #[props(optional)]
-    with_currently_back: Option<bool>,
-    #[props(optional)]
     onback: Option<EventHandler<'a>>,
     #[props(optional)]
     controls: Option<Element<'a>>,
@@ -34,8 +32,6 @@ pub fn emit(cx: &Scope<Props>) {
 #[allow(non_snake_case)]
 pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering topbar");
-    let currently_back = cx.props.with_currently_back.unwrap_or(false);
-
     cx.render(rsx!(
         div {
             class: "topbar",
@@ -43,7 +39,7 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
                     aria_label: "hamburger-button".into(),
-                    icon: if currently_back { icons::outline::Shape::ChevronLeft } else { icons::outline::Shape::SidebarArrowLeft },
+                    icon: icons::outline::Shape::Bars3,
                     onpress: move |_| emit(&cx),
                     appearance: Appearance::Secondary
                 }

@@ -193,11 +193,6 @@ pub fn Friends(cx: Scope) -> Element {
                                                 ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
                                         },
-                                        ContextItem {
-                                            icon: Icon::PhoneArrowUpRight,
-                                            text: get_local_text("uplink.call"),
-                                            // TODO: Wire this up to state
-                                        },
                                         if let Some(f) = favorite {
                                             rsx!(ContextItem {
                                                 icon: if f {Icon::HeartSlash} else {Icon::Heart},
