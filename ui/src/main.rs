@@ -675,6 +675,12 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
+                if desktop.outer_size().width < 575 {
+                    desktop.set_title("");
+                } else {
+                    desktop.set_title("Uplink");
+                }
+
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
