@@ -448,7 +448,6 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
         use_ref(cx, || None);
 
-    let window = use_window(cx);
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, || Identity::default());
     let update_script = use_state(cx, || String::new());
@@ -643,17 +642,21 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                     num_to_take: num_to_take.clone(),
                     has_more: data.active_chat.has_more_messages,
                     on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
-                        if !identity_profile.get().did_key().eq(&id.did_key()) {
+                        if !identity_profile.get().eq(&id) {
+                            let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                let mut id = id;
+                                id.set_identity_status(IdentityStatus::Online);
+                                id
+                            } else {
+                                id
+                            };
                             identity_profile.set(id);
                         }
-                        let window_size = window.outer_size();
                         //Dont think there is any way of manually moving elements via dioxus
                         let script = include_str!("./show_context.js")
                             .replace("UUID", quick_profile_uuid)
                             .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                            .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
-                            .replace("$INNER_WIDTH", &window_size.width.to_string())
-                            .replace("$INNER_HEIGHT", &window_size.height.to_string());
+                            .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
                         update_script.set(script);
                     }
                 })
@@ -1634,7 +1637,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
-                identity: identity.clone()
+                identity: identity
             },
             hr{},
             div {

@@ -57,8 +57,8 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 }
 
 #[derive(PartialEq, Props)]
-pub struct IdentityProps {
-    identity: Identity,
+pub struct IdentityProps<'a> {
+    identity: &'a Identity,
 }
 
 #[allow(non_snake_case)]
