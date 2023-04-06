@@ -67,13 +67,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
     let first_render = use_state(cx, || true);
 
     if *first_render.get() {
-        resize_window(
-            has_thumbnail,
-            desktop,
-            &thumbnail,
-            file.clone(),
-            &file_format,
-        );
+        resize_window(has_thumbnail, desktop, &thumbnail, file.clone());
     }
 
     if *first_render.get() {
@@ -110,9 +104,9 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
     });
 
     cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE}" },
         style { css_style },
         style { CSS_STYLE },
-        style { "{UIKIT_STYLES} {APP_STYLE}" },
         div {
             id: "app-wrap",
             div {
@@ -162,7 +156,6 @@ fn resize_window(
     desktop: &DesktopContext,
     thumbnail: &str,
     file: File,
-    file_format: &FileFormat,
 ) -> Option<()> {
     if has_thumbnail {
         let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
@@ -176,19 +169,27 @@ fn resize_window(
         let image_reader = ImageReader::with_format(cursor, img_format);
         if let Ok(image) = image_reader.decode() {
             let (mut width, mut height) = (image.width() as f64, image.height() as f64);
+            let scale_factor = desktop.scale_factor() + 0.5;
             while height > 800.0 || width > 800.0 {
-                let scale_factor = desktop.scale_factor() + 0.5;
                 width /= scale_factor;
                 height /= scale_factor;
             }
             desktop.set_inner_size(LogicalSize::new(width, height));
         }
-    } else if file_format != &FileFormat::Other {
+    } else {
         let scale_factor = desktop.scale_factor() + 0.5;
         desktop.set_inner_size(LogicalSize::new(600.0 / scale_factor, 300.0 / scale_factor));
     }
     Some(())
 }
+
+// fn update_theme_colors() -> String {
+//     let state = State::load();
+//     match state.ui.theme.clone() {
+//         Some(theme) => theme.styles,
+//         None => String::new(),
+//     }
+// }
 
 fn update_theme_colors() -> String {
     let state = State::load();
