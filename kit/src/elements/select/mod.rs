@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use dioxus::prelude::*;
 
 #[derive(Props)]
@@ -18,10 +20,17 @@ pub fn emit(cx: &Scope<Props>, s: String) {
     }
 }
 
+fn remove_duplicates(values: Vec<String>) -> Vec<String> {
+    let unique_values: HashSet<_> = values.iter().cloned().collect();
+    let mut unique_values_vec: Vec<String> = Vec::new();
+    unique_values_vec.extend(unique_values);
+    unique_values_vec
+}
+
 #[allow(non_snake_case)]
 pub fn Select<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let initial_value = cx.props.initial_value.clone();
-    let mut options = cx.props.options.clone();
+    let mut options = remove_duplicates(cx.props.options.clone());
     options.retain(|value| value != &initial_value);
     options.insert(0, initial_value.clone());
     let iter = IntoIterator::into_iter(options.clone());
