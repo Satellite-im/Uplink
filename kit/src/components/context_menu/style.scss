@@ -11,10 +11,6 @@
 	gap: var(--gap-less);
 	color: var(--text-color-bright);
 	border: 1px solid var(--secondary);
-	svg {
-		fill: transparent;
-		stroke: var(--text-color-bright);
-	}
 	.context-item {
 		display: flex;
 		border-radius: var(--border-radius-less);
@@ -24,6 +20,10 @@
 		&:hover {
 			background: var(--primary);
 			cursor: pointer;
+		}
+		svg {
+			fill: transparent;
+			stroke: var(--text-color-bright);
 		}
 	}
 	.context-item.danger {
@@ -83,6 +83,7 @@
 		border: 1px solid var(--background);
 		.indicator {
 			position: relative;
+			color: var(--background);
 			top: calc(100% - 1rem);
 			left: calc(100% - 1rem);
 		}
