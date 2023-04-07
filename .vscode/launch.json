@@ -7,7 +7,7 @@
             "name": "UI Debug",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/ui",
+            "program": "${workspaceRoot}/target/debug/uplink",
             "args": [
                 "debug"
             ],
@@ -17,7 +17,7 @@
             "name": "UI Debug With Mock",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/ui",
+            "program": "${workspaceRoot}/target/debug/uplink",
             "args": [
                 "--with-mock",
                 "debug"
