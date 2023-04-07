@@ -33,9 +33,6 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    // todo: remove unused attribute
-    // todo: does this need to be an option like the rest of 'em?
-    #[allow(unused)]
     reactions: Vec<warp::raygun::Reaction>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
@@ -59,11 +56,15 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
-    // todo: render reactions
 
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
+
+    // note: the class "remote" will display the reaction at flex-start, which starts at the bottom left corner of the message.
+    // omitting the class will display the reactions starting from the bottom right corner
+    let remote_class = "";
+    let reactions_class = format!("message-reactions-container {remote_class}");
 
     let has_attachments = cx
         .props
@@ -144,6 +145,17 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             })
 
+        },
+        div {
+            class: "{reactions_class}",
+            cx.props.reactions.iter().map(|reaction| {
+                let emoji = reaction.emoji();
+                rsx!(
+                    div {
+                        "{emoji}"
+                    }
+                )
+            })
         }
     ))
 }

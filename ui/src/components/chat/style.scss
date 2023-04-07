@@ -35,6 +35,21 @@
   }
 }
 
+.message-reactions-container {
+  display: inline-flex;
+  flex-direction: row;
+  color: var(--text-color);
+  justify-content: flex-end;
+
+  &.pointer {
+    cursor: pointer
+  }
+  
+  &.remote {
+    justify-content: flex-start;
+  }
+}
+
 #compose {
   flex: 1;
   min-width: 0;
