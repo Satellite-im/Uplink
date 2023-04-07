@@ -127,13 +127,7 @@
                                 Name='uplink.exe'
                                 DiskId='1'
                                 Source='$(var.CargoTargetBinDir)\uplink.exe'
-                                KeyPath='yes'>
-
-                              <Shortcut Id="ApplicationDesktopShortcut"
-                                Name="Uplink"
-                                Description="P2P Chat Application"
-                                Directory="DesktopFolder"/>
-                            </File>
+                                KeyPath='yes'/>
                         </Component>
                     </Directory>
 					
@@ -159,7 +153,11 @@
             </Directory>  <!-- end of program menu folder-->
 
             <Directory Id="DesktopFolder" Name="Desktop">
-              <Component Id="ApplicationShortcutDesktop" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
+              <Component Id="ApplicationShortcutComponent" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
+                <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="Uplink"
+                  Description="P2P Chat Application"
+                  Target='$(var.CargoTargetBinDir)\uplink.exe'/>
                 <RemoveFolder Id="DesktopFolder" On="uninstall"/>
                 <RegistryValue
                     Root="HKCU"
@@ -192,7 +190,7 @@
             <ComponentRef Id='binary0'/>
             <ComponentRef Id='cmpAssetsZip'/>
             <ComponentRef Id='menu0'/>
-            <ComponentRef Id='ApplicationShortcutDesktop'/>
+            <ComponentRef Id='ApplicationShortcutComponent'/>
 
             <Feature
                 Id='Environment'
