@@ -41,8 +41,9 @@ pub fn get_available_themes() -> Vec<Theme> {
                     name: pretty_theme_str.to_owned(),
                     styles,
                 };
-
-                themes.push(theme);
+                if !themes.contains(&theme) {
+                    themes.push(theme);
+                }
             }
         }
     };
@@ -50,6 +51,7 @@ pub fn get_available_themes() -> Vec<Theme> {
     add_to_themes(&STATIC_ARGS.extras_path.join("themes"));
 
     themes.sort_by_key(|theme| theme.name.clone());
+    themes.dedup();
 
     themes
 }

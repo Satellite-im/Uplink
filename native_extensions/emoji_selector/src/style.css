@@ -1,5 +1,6 @@
 #emoji_selector {
   position: absolute;
+  z-index: 2;
   background-color: var(--background);
   height: 20rem;
   width: 20rem;

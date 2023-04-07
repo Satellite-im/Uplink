@@ -168,7 +168,6 @@ pub fn Compose(cx: Scope) -> Element {
             },
             Topbar {
                 with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
-                with_currently_back: state.read().ui.sidebar_hidden,
                 onback: move |_| {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
@@ -284,7 +283,11 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             },
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("favorites.add"),
+                text: if favorite {
+                    get_local_text("favorites.remove")
+                } else {
+                    get_local_text("favorites.add")
+                }
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -294,12 +297,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: data.is_none() || STATIC_ARGS.production_mode,
+            disabled: true,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.call")
+                text: get_local_text("uplink.coming-soon")
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
@@ -313,12 +316,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::VideoCamera,
-            disabled: data.is_none() || STATIC_ARGS.production_mode,
+            disabled: true,
             aria_label: "Videocall".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::TopRight,
-                text: get_local_text("uplink.video-call"),
+                text: get_local_text("uplink.coming-soon"),
             })),
         },
     ))

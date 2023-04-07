@@ -487,6 +487,11 @@ fn app(cx: Scope) -> Element {
             ""
         };
 
+        let font_scale = format!(
+            "html {{ font-size: {}rem; }}",
+            state.read().settings.font_scale()
+        );
+
         let theme = state
             .read()
             .ui
@@ -496,7 +501,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme}  {font_style} {open_dyslexic}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
                 get_titlebar{},

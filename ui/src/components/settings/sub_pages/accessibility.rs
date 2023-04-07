@@ -10,7 +10,7 @@ use crate::components::settings::SettingSection;
 pub fn AccessibilitySettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
-    log::debug!("Accessibility settings page rendered.");
+    log::trace!("Accessibility settings page rendered.");
 
     cx.render(rsx!(
         div {

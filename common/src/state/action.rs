@@ -46,6 +46,8 @@ pub enum Action<'a> {
     SetTheme(Option<Theme>),
     #[display(fmt = "SetFont")]
     SetFont(Option<Font>),
+    #[display(fmt = "SetFontScale")]
+    SetFontScale(f32),
     // RemoveToastNotification,
     /// sets the active media to the corresponding conversation uuid
     #[display(fmt = "SetActiveMedia")]
