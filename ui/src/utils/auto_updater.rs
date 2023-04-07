@@ -59,7 +59,7 @@ pub fn get_download_dest() -> Option<PathBuf> {
     {
         Some(x) => Some(x),
         None => {
-            log::debug!("update download cancelled by user");
+            log::debug!("update download canceled by user");
             None
         }
     }
