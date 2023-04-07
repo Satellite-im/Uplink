@@ -157,7 +157,8 @@
                 <Shortcut Id="DesktopShortcut"
                   Name="Uplink"
                   Description="P2P Chat Application"
-                  Target='$(var.CargoTargetBinDir)\uplink.exe'/>
+                  Target='[APPLICATIONFOLDER]\bin\uplink.exe'
+                  WorkingDirectory='APPLICATIONFOLDER'/>
                 <RemoveFolder Id="DesktopFolder" On="uninstall"/>
                 <RegistryValue
                     Root="HKCU"
