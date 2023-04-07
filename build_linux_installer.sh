@@ -17,9 +17,9 @@ sed -i "s/{{package}}/${PACKAGE_NAME}/g"              ${BUILD_DIR}/DEBIAN/contro
 sed -i "s/{{version}}/${PACKAGE_VERSION}/g"           ${BUILD_DIR}/DEBIAN/control
 sed -i "s/{{architecture}}/${PACKAGE_ARCHITECTURE}/g" ${BUILD_DIR}/DEBIAN/control
 
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/im.satellite/im.satellite.uplink.desktop
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/im.satellite.uplink.metainfo.xml
-sed -i "s/{{date}}/${DATE}/g"               ${BUILD_DIR}/usr/share/im.satellite.uplink.metainfo.xml
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/applications/im.satellite.uplink.desktop
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/metainfo/im.satellite.uplink.metainfo.xml
+sed -i "s/{{date}}/${DATE}/g"               ${BUILD_DIR}/usr/share/metainfo/im.satellite.uplink.metainfo.xml
 
 cp target/release/${PACKAGE_NAME}       ${BUILD_DIR}/opt/im.satellite/${PACKAGE_NAME}
 cp ./ui/wix/extra.zip                   ${BUILD_DIR}/opt/im.satellite/extra.zip
