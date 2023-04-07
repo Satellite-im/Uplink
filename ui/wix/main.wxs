@@ -153,8 +153,8 @@
             </Directory>  <!-- end of program menu folder-->
 
             <Directory Id="DesktopFolder" Name="Desktop">
-              <Component Id="ApplicationShortcutComponent" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
-                <Shortcut Id="ApplicationDesktopShortcut"
+              <Component Id="DesktopComponent" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
+                <Shortcut Id="DesktopShortcut"
                   Name="Uplink"
                   Description="P2P Chat Application"
                   Target='$(var.CargoTargetBinDir)\uplink.exe'/>
@@ -190,7 +190,7 @@
             <ComponentRef Id='binary0'/>
             <ComponentRef Id='cmpAssetsZip'/>
             <ComponentRef Id='menu0'/>
-            <ComponentRef Id='ApplicationShortcutComponent'/>
+            <ComponentRef Id='DesktopComponent'/>
 
             <Feature
                 Id='Environment'
