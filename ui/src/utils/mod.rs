@@ -95,7 +95,7 @@ pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
             .map(PathBuf::from)
             .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
     } else if cfg!(target_os = "linux") {
-        PathBuf::from("/opt/satellite-im")
+        PathBuf::from("/opt/im.satellite")
     } else if cfg!(target_os = "macos") {
         exe_path
             .parent()

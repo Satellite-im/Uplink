@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Version={{version}}
+Name=Uplink
+Categories=Communications;Chat;
+Exec=/opt/im.satellite/uplink
+Icon=/usr/share/icons/im.satellite/uplink_logo.png
