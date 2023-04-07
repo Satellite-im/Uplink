@@ -13,16 +13,17 @@ DATE=`date +%y-%m-%d`
 mkdir -p ${BUILD_DIR}
 cp -r $FILES_DIR/* ${BUILD_DIR}/
 
-sed -i "s/{{package}}/${PACKAGE_NAME}/g" ${BUILD_DIR}/DEBIAN/control
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/control
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/usr/share/im.satellite/im.satellite.uplink.desktop
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/usr/im.satellite.uplink.metainfo.xml
-sed -i "s/{{date}}/${DATE}/g" ${BUILD_DIR}/DEBIAN/usr/im.satellite.uplink.metainfo.xml
+sed -i "s/{{package}}/${PACKAGE_NAME}/g"              ${BUILD_DIR}/DEBIAN/control
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g"           ${BUILD_DIR}/DEBIAN/control
 sed -i "s/{{architecture}}/${PACKAGE_ARCHITECTURE}/g" ${BUILD_DIR}/DEBIAN/control
 
-cp target/release/${PACKAGE_NAME} ${BUILD_DIR}/opt/im.satellite/${PACKAGE_NAME}
-cp ./ui/wix/extra.zip ${BUILD_DIR}/opt/im.satellite/extra.zip
-cp ./ui/extra/images/logo.png ${BUILD_DIR}/DEBIAN/usr/share/icons/im.satellite/uplink_logo.png
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/im.satellite/im.satellite.uplink.desktop
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/im.satellite.uplink.metainfo.xml
+sed -i "s/{{date}}/${DATE}/g"               ${BUILD_DIR}/usr/share/im.satellite.uplink.metainfo.xml
+
+cp target/release/${PACKAGE_NAME}       ${BUILD_DIR}/opt/im.satellite/${PACKAGE_NAME}
+cp ./ui/wix/extra.zip                   ${BUILD_DIR}/opt/im.satellite/extra.zip
+cp ./ui/extra/images/logo.png           ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
 
 dpkg-deb -Z gzip --root-owner-group --build ${BUILD_DIR} target/release/${FULL_NAME}.deb
 sha256sum target/release/${FULL_NAME}.deb > target/release/SHA256SUM
