@@ -74,6 +74,7 @@ friends = Friends
     .new_request = New friend request.
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
+    .request-exist = Friend request is already pending!
 
 files = Files
     .files = Files
