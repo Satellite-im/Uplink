@@ -38,8 +38,8 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             aria_label: "Topbar",
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
-                    aria_label: "hamburger-button".into(),
-                    icon: icons::outline::Shape::Bars3,
+                    aria_label: "back-button".into(),
+                    icon: icons::outline::Shape::ChevronLeft,
                     onpress: move |_| emit(&cx),
                     appearance: Appearance::Secondary
                 }
