@@ -131,15 +131,27 @@
                         </Component>
                     </Directory>
 					
-					<Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
-							
-						<File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
-						<RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
-					</Component>
+              <Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
+                  
+                <File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
+                <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
+              </Component>
                 </Directory>
-            </Directory>
-        </Directory>
-		
+            </Directory>  <!-- end of local app data folder-->
+
+          
+            <Directory Id='ProgramMenuFolder' Name="PMenu">
+                <Directory Id='ApplicationProgramsFolder' Name='Satellite Im - Uplink'>
+                    <Component Id='menu0' Guid='55179C36-50AD-4A8C-A1DD-C0CBDAF99456'>
+                        <Shortcut Id='cmd1' Description='uplink' Name ='uplink'
+                          Target='[#exe0]' WorkingDirectory='APPLICATIONFOLDER'/>
+                        <RemoveFolder Id='ApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
+                        <RegistryValue Root='HKCU' Key='Software\im.satellite\uplink' Type ='integer'
+                          Name='installed' Value='1' KeyPath='yes'/>
+                    </Component>
+                </Directory>
+            </Directory>  <!-- end of program menu folder-->
+        </Directory>  <!-- end of target dir-->
 
         <Feature
             Id='Binaries'
@@ -158,8 +170,8 @@
             <!--<ComponentRef Id='License'/>-->
 
             <ComponentRef Id='binary0'/>
-			
-			<ComponentRef Id='cmpAssetsZip' />
+            <ComponentRef Id='cmpAssetsZip'/>
+            <ComponentRef Id='menu0'/>
 
             <Feature
                 Id='Environment'
