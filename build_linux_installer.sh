@@ -8,12 +8,16 @@ FULL_NAME="${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}"
 FILES_DIR=./ui/deb-config
 BUILD_DIR=./target/$FULL_NAME
 
+DATE=`date +%y-%m-%d`
+
 mkdir -p ${BUILD_DIR}
 cp -r $FILES_DIR/* ${BUILD_DIR}/
 
 sed -i "s/{{package}}/${PACKAGE_NAME}/g" ${BUILD_DIR}/DEBIAN/control
 sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/control
-sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/usr/share/im.satellite/uplink.desktop
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/usr/share/im.satellite/im.satellite.uplink.desktop
+sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/DEBIAN/usr/im.satellite.uplink.metainfo.xml
+sed -i "s/{{date}}/${DATE}/g" ${BUILD_DIR}/DEBIAN/usr/im.satellite.uplink.metainfo.xml
 sed -i "s/{{architecture}}/${PACKAGE_ARCHITECTURE}/g" ${BUILD_DIR}/DEBIAN/control
 
 cp target/release/${PACKAGE_NAME} ${BUILD_DIR}/opt/im.satellite/${PACKAGE_NAME}
