@@ -88,7 +88,7 @@
 
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="LocalApDataFolder">
-                  <Directory Id="UplinkRootDirectory" Name="uplink">
+                  <Directory Id="UPLINKROOTDIRECTORY" Name="uplink">
 
                       <Directory Id='Bin' Name='bin'></Directory>
 
@@ -104,7 +104,7 @@
                           <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                       </Component>
 
-                  </Directory> <!-- end of UplinkRootDirectory -->
+                  </Directory> <!-- end of UPLINKROOTDIRECTORY -->
             </Directory>
         </Directory> <!-- end of TARGETDIR -->
 
@@ -135,7 +135,7 @@
                           Name="uplink"
                           Description="P2P Chat Application"
                           Target="[#uplink.exe]"
-                          WorkingDirectory="UplinkRootDirectory"/>
+                          WorkingDirectory="UPLINKROOTDIRECTORY"/>
                 <RemoveFolder Id="CleanUpUplinkShortcut" On="uninstall"/>
                 <RegistryValue Root="HKCU" Key="Software\Satellite.im\uplink" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
             </Component>
@@ -147,7 +147,7 @@
                   Name="uplink"
                   Description="P2P Chat Application"
                   Target='[#uplink.exe]'
-                  WorkingDirectory='UplinkRootDirectory'/>
+                  WorkingDirectory='UPLINKROOTDIRECTORY'/>
                 <RemoveFolder Id="DesktopFolder" On="uninstall"/>
                 <RegistryValue
                     Root="HKCU"
@@ -164,7 +164,7 @@
             Title='Application'
             Description='Installs all binaries and the license.'
             Level='1'
-            ConfigurableDirectory='UplinkRootDirectory'
+            ConfigurableDirectory='UPLINKROOTDIRECTORY'
             AllowAdvertise='no'
             Display='expand'
             Absent='disallow'>
@@ -190,7 +190,7 @@
             </Feature>
         </Feature>
 
-        <SetProperty Id='ARPINSTALLLOCATION' Value='[UplinkRootDirectory]' After='CostFinalize'/>
+        <SetProperty Id='ARPINSTALLLOCATION' Value='[UPLINKROOTDIRECTORY]' After='CostFinalize'/>
 
         
         <!--
