@@ -13,9 +13,9 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
-use filetime::FileTime;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
@@ -24,7 +24,8 @@ use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+
+use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -34,7 +35,7 @@ use warp::multipass::identity::Platform;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
 
@@ -49,6 +50,9 @@ use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
+use crate::utils::auto_updater::{
+    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+};
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -102,98 +106,6 @@ pub enum AuthPages {
     Success(multipass::identity::Identity),
 }
 
-fn copy_assets() {
-    log::debug!("copy_assets");
-    if !STATIC_ARGS.production_mode {
-        return;
-    }
-    let exe_path = match std::env::current_exe() {
-        Ok(p) => p,
-        Err(e) => {
-            log::error!("failed to get path of uplink executable: {e}");
-            return;
-        }
-    };
-
-    let current_version = env!("CARGO_PKG_VERSION");
-    let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
-    let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
-    if current_version == assets_version {
-        let exe_meta =
-            fs::metadata(&exe_path).expect("failed to get metadata for uplink executable");
-        let version_meta =
-            fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
-        let exe_changed = FileTime::from_last_modification_time(&exe_meta);
-        let assets_changed = FileTime::from_last_modification_time(&version_meta);
-        if assets_changed > exe_changed {
-            log::debug!("assets already exist");
-            return;
-        } else {
-            log::debug!("re-install suspected. copying over assets");
-        }
-    }
-
-    let assets_path = if cfg!(target_os = "windows") {
-        match exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(|x| x.join("extra.zip"))
-        {
-            Some(p) => p,
-            None => {
-                log::error!("failed to get parent directory of uplink executable");
-                return;
-            }
-        }
-    } else if cfg!(any(
-        target_os = "linux",
-        target_os = "macos",
-        target_os = "ios"
-    )) {
-        PathBuf::from("/opt/satellite-im/uplink/extra.zip")
-    } else {
-        log::error!("unknown OS type. failed to copy assets");
-        return;
-    };
-
-    if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
-        log::error!("failed to delete old assets directory: {e}");
-    }
-    if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
-        log::error!("failed to unizp assets archive {assets_path:?}: {e}");
-    }
-
-    if let Err(e) = std::fs::write(assets_version_file, current_version) {
-        log::error!("failed to save assets_version_file: {e}");
-    }
-}
-
-// taken from https://github.com/zip-rs/zip/blob/master/examples/extract.rs
-fn unzip_archive(src: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let assets_zip = fs::File::open(src)?;
-    let mut archive = zip::ZipArchive::new(assets_zip)?;
-    for idx in 0..archive.len() {
-        let mut file = archive.by_index(idx)?;
-        let outpath = match file.enclosed_name() {
-            Some(path) => dest.join(path),
-            None => continue,
-        };
-        if (*file.name()).ends_with('/') || (*file.name()).ends_with('\\') {
-            fs::create_dir_all(&outpath)?;
-        } else {
-            if let Some(p) = outpath.parent() {
-                if !p.exists() {
-                    fs::create_dir_all(p)?;
-                }
-            }
-            let mut outfile = fs::File::create(&outpath)?;
-            io::copy(&mut file, &mut outfile)?;
-        }
-    }
-
-    Ok(())
-}
-
 fn main() {
     // Attempts to increase the file desc limit on unix-like systems
     // Note: Will be changed out in the future
@@ -223,6 +135,7 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    log::debug!("starting uplink");
     panic::set_hook(Box::new(|panic_info| {
         let intro = match panic_info.payload().downcast_ref::<&str>() {
             Some(s) => format!("panic occurred: {s:?}"),
@@ -237,7 +150,6 @@ fn main() {
         let crash_report = format!("{intro}{location}\n{logs}\n");
         println!("{crash_report}");
 
-        // todo: hide this behind the debug flag
         let save_path = FileDialog::new()
             .set_directory(dirs::home_dir().unwrap_or(".".into()))
             .set_title(&get_local_text("uplink.crash-report"))
@@ -264,7 +176,7 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    copy_assets();
+    utils::copy_assets();
 
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
@@ -529,6 +441,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     );
 
     use_shared_state_provider(cx, || state);
+    use_shared_state_provider(cx, DownloadState::default);
 
     cx.render(rsx!(crate::app {}))
 }
@@ -537,6 +450,7 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    let download_state = use_shared_state::<DownloadState>(cx)?;
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -590,15 +504,54 @@ fn app(cx: Scope) -> Element {
             style { "{UIKIT_STYLES} {APP_STYLE} {theme} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
-                get_titlebar(cx),
-                get_toasts(cx),
-                get_call_dialog(cx),
-                get_pre_release_message(cx),
-                get_router(cx),
-                get_logger(cx)
+                get_titlebar{},
+                get_toasts{},
+                get_call_dialog{},
+                get_pre_release_message{},
+                get_router{},
+                get_logger{},
             }
         )
     };
+
+    // use_coroutine for software update
+
+    // updates the UI
+    let inner = download_state.inner();
+    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
+        to_owned![needs_update];
+        async move {
+            while let Some(mut ch) = rx.next().await {
+                while let Some(percent) = ch.0.recv().await {
+                    if percent >= inner.borrow().read().progress + 5_f32 {
+                        inner.borrow_mut().write().progress = percent;
+                        needs_update.set(true);
+                    }
+                }
+                inner.borrow_mut().write().stage = DownloadProgress::Finished;
+                needs_update.set(true);
+            }
+        }
+    });
+
+    // receives a download command
+    let _download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
+        to_owned![updater_ch];
+        async move {
+            while let Some(dest) = rx.next().await {
+                let (tx, rx) = mpsc::unbounded_channel::<f32>();
+                updater_ch.send(SoftwareUpdateCmd(rx));
+                match utils::auto_updater::download_update(dest.0.clone(), tx).await {
+                    Ok(downloaded_version) => {
+                        log::debug!("downloaded version {downloaded_version}");
+                    }
+                    Err(e) => {
+                        log::error!("failed to download update: {e}");
+                    }
+                }
+            }
+        }
+    });
 
     // `use_future`s
     // all of Uplinks periodic tasks are located here. it's a lot to read but
@@ -776,6 +729,46 @@ fn app(cx: Scope) -> Element {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
                 needs_update.set(true);
+            }
+        }
+    });
+
+    // check for updates
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                let latest_release = match utils::auto_updater::check_for_release().await {
+                    Ok(opt) => match opt {
+                        Some(r) => r,
+                        None => {
+                            sleep(Duration::from_secs(3600 * 24)).await;
+                            continue;
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("failed to check for release: {e}");
+                        sleep(Duration::from_secs(3600 * 24)).await;
+                        continue;
+                    }
+                };
+                if inner.borrow().read().settings.update_dismissed
+                    == Some(latest_release.tag_name.clone())
+                {
+                    sleep(Duration::from_secs(3600 * 24)).await;
+                    continue;
+                }
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().update_available(latest_release.tag_name);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
+                sleep(Duration::from_secs(3600 * 24)).await;
             }
         }
     });
@@ -1014,9 +1007,115 @@ fn get_pre_release_message(cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            }
+            },
+            get_update_icon{}
         },
     ))
+}
+
+fn get_update_icon(cx: Scope) -> Element {
+    log::trace!("rendering get_update_icon");
+    let state = use_shared_state::<State>(cx)?;
+    let download_state = use_shared_state::<DownloadState>(cx)?;
+    let desktop = use_window(cx);
+    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+
+    let new_version = match state.read().settings.update_available.as_ref() {
+        Some(u) => u.clone(),
+        None => return cx.render(rsx!("")),
+    };
+
+    let update_msg = format!(
+        "{}: {}",
+        get_local_text("uplink.update-available"),
+        new_version,
+    );
+    let downloading_msg = format!(
+        "{}: {}%",
+        get_local_text("uplink.update-downloading"),
+        download_state.read().progress as u32
+    );
+    let downloaded_msg = get_local_text("uplink.update-downloaded");
+
+    let stage = download_state.read().stage;
+    match stage {
+        DownloadProgress::Idle => cx.render(rsx!(
+            ContextMenu {
+                key: "update-available-menu",
+                id: "update-available-menu".to_string(),
+                items: cx.render(rsx!(
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-dismiss"),
+                        onpress: move |_| {
+                            state.write().mutate(Action::DismissUpdate);
+                        }
+                    },
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-download"),
+                        onpress: move |_| {
+                            if let Some(dest) = get_download_dest() {
+                                download_state.write().stage = DownloadProgress::Pending;
+                                download_state.write().destination = Some(dest.clone());
+                                download_ch.send(SoftwareDownloadCmd(dest));
+                            }
+                        }
+                    }
+                )),
+                div {
+                    id: "update-available",
+                    aria_label: "update-available",
+                    onclick: move |_| {
+                        if let Some(dest) = get_download_dest() {
+                            download_state.write().stage = DownloadProgress::Pending;
+                            download_state.write().destination = Some(dest.clone());
+                            download_ch.send(SoftwareDownloadCmd(dest));
+                        }
+                    },
+                    "{update_msg}",
+                }
+            }
+        )),
+        DownloadProgress::Pending => cx.render(rsx!(div {
+            id: "update-available",
+            aria_label: "update-available",
+            "{downloading_msg}"
+        })),
+        DownloadProgress::Finished => {
+            cx.render(rsx!(div {
+                id: "update-available",
+                aria_label: "update-available",
+                onclick: move |_| {
+                    // be sure to update this before closing the app
+                    state.write().mutate(Action::DismissUpdate);
+                    if let Some(dest) = download_state.read().destination.clone() {
+                        std::thread::spawn(move ||  {
+
+                            let cmd = if cfg!(target_os = "windows") {
+                                "explorer"
+                            } else if cfg!(target_os = "linux") {
+                                "xdg-open"
+                            } else if cfg!(target_os = "macos") {
+                                "open"
+                            } else {
+                               eprintln!("unknown OS type. failed to open files browser");
+                               return;
+                            };
+                            Command::new(cmd)
+                            .arg(dest)
+                            .spawn()
+                            .unwrap();
+                        });
+                        desktop.close();
+                    } else {
+                        log::error!("attempted to download update without download location");
+                    }
+                    download_state.write().destination = None;
+                    download_state.write().stage = DownloadProgress::Idle;
+                },
+                "{downloaded_msg}"
+            }))
+        }
+    }
 }
 
 fn get_logger(cx: Scope) -> Element {

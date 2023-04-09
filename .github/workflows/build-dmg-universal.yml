@@ -73,6 +73,8 @@ jobs:
       - name: Calculate hashes
         run: |
           shasum -a 256 Uplink-Mac-Universal.zip > Uplink-Mac-Universal.zip.sha256.txt
+      - name: Rename executable
+        run: cp target/release/uplink target/release/uplink-mac
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         env:
@@ -85,4 +87,6 @@ jobs:
       - name: Copy file to release
         uses: softprops/action-gh-release@v1
         with:
-          files: Uplink-Mac-Universal.zip
+          files: |
+            Uplink-Mac-Universal.zip
+            target/release/uplink-mac

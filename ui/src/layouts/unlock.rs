@@ -53,6 +53,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists = use_state(cx, || true);
     let loaded = use_state(cx, || false);
 
+    let state = use_state(cx, State::load);
+
     // this will be needed later
     use_future(cx, (), |_| {
         to_owned![account_exists, loaded];
@@ -154,7 +156,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors()},
+        style {update_theme_colors(&state.current())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -186,7 +188,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                            {Some(get_welcome_message())}
+                            {Some(get_welcome_message(&state.current()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {
@@ -255,17 +257,15 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     ))
 }
 
-fn update_theme_colors() -> String {
-    let state = State::load();
-    match state.ui.theme.clone() {
-        Some(theme) => theme.styles,
+fn update_theme_colors(state: &State) -> String {
+    match state.ui.theme.as_ref() {
+        Some(theme) => theme.styles.clone(),
         None => String::new(),
     }
 }
 
-fn get_welcome_message() -> String {
-    let state = State::load();
-    let name = match &state.ui.cached_username {
+fn get_welcome_message(state: &State) -> String {
+    let name = match state.ui.cached_username.as_ref() {
         Some(name) => name.clone(),
         None => String::from("UNKNOWN"),
     };

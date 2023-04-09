@@ -149,6 +149,14 @@ impl State {
                     .toast_notifications
                     .insert(Uuid::new_v4(), notification);
             }
+            Action::DismissUpdate => {
+                self.settings.update_dismissed = self.settings.update_available.take();
+                self.ui.notifications.decrement(
+                    &self.configuration,
+                    notifications::NotificationKind::Settings,
+                    1,
+                );
+            }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
             Action::RequestAccepted(identity) => self.complete_request(&identity),
@@ -228,7 +236,6 @@ impl State {
                 };
                 self.add_msg_to_chat(id, m);
             }
-
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
@@ -995,6 +1002,17 @@ impl State {
     /// Sets the user's language.
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
+    }
+
+    pub fn update_available(&mut self, version: String) {
+        if self.settings.update_available != Some(version.clone()) {
+            self.settings.update_available = Some(version);
+            self.ui.notifications.increment(
+                &self.configuration,
+                notifications::NotificationKind::Settings,
+                1,
+            )
+        }
     }
 }
 
