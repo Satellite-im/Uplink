@@ -86,79 +86,68 @@
         <Media Id='1' Cabinet='media1.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1'/>
         <Property Id='DiskPrompt' Value='uplink Installation'/>
 
-        <Directory Id='TARGETDIR' Name='SourceDir'>
-            <Directory Id='LocalApDataFolder'>
-                <Directory Id='APPLICATIONFOLDER' Name='uplink'>
-                    
-                    <!--
-                      Enabling the license sidecar file in the installer is a four step process:
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="LocalApDataFolder">
+                  <Directory Id="UplinkRootDirectory" Name="uplink">
+                  
+                      <Directory Id='Bin' Name='bin'></Directory>
 
-                      1. Uncomment the `Component` tag and its contents.
-                      2. Change the value for the `Source` attribute in the `File` tag to a path
-                         to the file that should be included as the license sidecar file. The path
-                         can, and probably should be, relative to this file.
-                      3. Change the value for the `Name` attribute in the `File` tag to the
-                         desired name for the file when it is installed alongside the `bin` folder
-                         in the installation directory. This can be omitted if the desired name is
-                         the same as the file name.
-                      4. Uncomment the `ComponentRef` tag with the Id attribute value of "License"
-                         further down in this file.
-                    -->
-                    <!--
-                    <Component Id='License' Guid='*'>
-                        <File Id='LicenseFile' Name='ChangeMe' DiskId='1' Source='C:\Path\To\File' KeyPath='yes'/>
-                    </Component>
-                    -->
+                      <Directory Id="ProgramMenuFolder" Name="PMenu">
+                          <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink"/>
+                      </Directory>
 
-                    <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='76B85F31-00F1-49BE-AC9E-0F2D0DF34C8C' KeyPath='yes'>
-                            <Environment
-                                Id='PATH'
-                                Name='PATH'
-                                Value='[Bin]'
-                                Permanent='no'
-                                Part='last'
-                                Action='set'
-                                System='yes'/>
-                        </Component>
-                        <Component Id='binary0' Guid='b205eb35-b953-4b2b-9823-c0c0531815d7'>
-                            <File
-                                Id='exe0'
-                                Name='uplink.exe'
-                                DiskId='1'
-                                Source='$(var.CargoTargetBinDir)\uplink.exe'
-                                KeyPath='yes'/>
-                        </Component>
-                    </Directory>
-					
-                    <Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
-                      <File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
-                      <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
-                    </Component>
 
-                </Directory>
-            </Directory>  <!-- end of local app data folder-->
+                      <Directory Id="DesktopFolder" Name="Desktop"></Directory>
 
-          
-            <Directory Id='ProgramMenuFolder' Name="PMenu">
-                <Directory Id='ApplicationProgramsFolder' Name='Satellite Im - Uplink'>
-                    <Component Id='menu0' Guid='55179C36-50AD-4A8C-A1DD-C0CBDAF99456'>
-                        <Shortcut Id='cmd1' Description='uplink' Name ='uplink'
-                          Target='[#exe0]' WorkingDirectory='APPLICATIONFOLDER'/>
-                        <RemoveFolder Id='ApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
-                        <RegistryValue Root='HKCU' Key='Software\Satellite.im\uplink' Type ='integer'
-                          Name='installed' Value='1' KeyPath='yes'/>
-                    </Component>
-                </Directory>
-            </Directory>  <!-- end of program menu folder-->
+                      <Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
+                          <File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
+                          <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
+                      </Component>
 
-            <Directory Id="DesktopFolder" Name="Desktop">
-              <Component Id="DesktopComponent" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
+                  </Directory> <!-- end of UplinkRootDirectory -->
+            </Directory>
+        </Directory> <!-- end of TARGETDIR -->
+
+        <DirectoryRef Id='Bin'>
+            <Component Id='Path' Guid='76B85F31-00F1-49BE-AC9E-0F2D0DF34C8C' KeyPath='yes'>
+                <Environment
+                    Id='PATH'
+                    Name='PATH'
+                    Value='[Bin]'
+                    Permanent='no'
+                    Part='last'
+                    Action='set'
+                    System='yes'/>
+            </Component>
+            <Component Id='UplinkExecutable' Guid='b205eb35-b953-4b2b-9823-c0c0531815d7'>
+                <File
+                    Id='uplink.exe'
+                    Name='uplink.exe'
+                    DiskId='1'
+                    Source='$(var.CargoTargetBinDir)\uplink.exe'
+                    KeyPath='yes'/>
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="UplinkProgramsFolder">
+            <Component Id='UplinkShortcut' Guid='55179C36-50AD-4A8C-A1DD-C0CBDAF99456'>
+                <Shortcut Id="UplinkStartMenuShortcut"
+                          Name="uplink"
+                          Description="P2P Chat Application"
+                          Target="[#uplink.exe]"
+                          WorkingDirectory="UplinkRootDirectory"/>
+                <RemoveFolder Id="CleanUpUplinkShortcut" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\Satellite.im\uplink" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="DesktopFolder" Name="Desktop">
+            <Component Id="DesktopLauncher" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
                 <Shortcut Id="DesktopShortcut"
-                  Name="Uplink"
+                  Name="uplink"
                   Description="P2P Chat Application"
-                  Target='[APPLICATIONFOLDER]\bin\uplink.exe'
-                  WorkingDirectory='APPLICATIONFOLDER'/>
+                  Target='[#uplink.exe]'
+                  WorkingDirectory='UplinkRootDirectory'/>
                 <RemoveFolder Id="DesktopFolder" On="uninstall"/>
                 <RegistryValue
                     Root="HKCU"
@@ -167,17 +156,15 @@
                     Type="integer"
                     Value="1"
                     KeyPath="yes"/>
-              </Component>
-            </Directory> <!-- end of desktop folder-->
-
-        </Directory>  <!-- end of target dir-->
+            </Component>
+        </DirectoryRef>
 
         <Feature
             Id='Binaries'
             Title='Application'
             Description='Installs all binaries and the license.'
             Level='1'
-            ConfigurableDirectory='APPLICATIONFOLDER'
+            ConfigurableDirectory='UplinkRootDirectory'
             AllowAdvertise='no'
             Display='expand'
             Absent='disallow'>
@@ -188,10 +175,10 @@
             -->
             <!--<ComponentRef Id='License'/>-->
 
-            <ComponentRef Id='binary0'/>
+            <ComponentRef Id='UplinkExecutable'/>
             <ComponentRef Id='cmpAssetsZip'/>
-            <ComponentRef Id='menu0'/>
-            <ComponentRef Id='DesktopComponent'/>
+            <ComponentRef Id='UplinkShortcut'/>
+            <ComponentRef Id='DesktopLauncher'/>
 
             <Feature
                 Id='Environment'
@@ -203,7 +190,7 @@
             </Feature>
         </Feature>
 
-        <SetProperty Id='ARPINSTALLLOCATION' Value='[APPLICATIONFOLDER]' After='CostFinalize'/>
+        <SetProperty Id='ARPINSTALLLOCATION' Value='[UplinkRootDirectory]' After='CostFinalize'/>
 
         
         <!--
