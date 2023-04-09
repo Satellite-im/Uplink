@@ -89,7 +89,7 @@
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="LocalApDataFolder">
                   <Directory Id="UplinkRootDirectory" Name="uplink">
-                  
+
                       <Directory Id='Bin' Name='bin'></Directory>
 
                       <Directory Id="ProgramMenuFolder" Name="PMenu">
@@ -141,7 +141,7 @@
             </Component>
         </DirectoryRef>
 
-        <DirectoryRef Id="DesktopFolder" Name="Desktop">
+        <DirectoryRef Id="DesktopFolder">
             <Component Id="DesktopLauncher" Guid="A19F4FC4-4590-447F-8C46-B4E7F5D735BD">
                 <Shortcut Id="DesktopShortcut"
                   Name="uplink"
