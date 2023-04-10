@@ -99,13 +99,6 @@
       <DirectoryRef Id="ExtraFolder">
          <Directory Id="AssetsFolder" Name="assets">
             <Directory Id="ImgFolder" Name="img">
-               <Directory Id="SvgFolder" Name="SVG">
-                  <Component Id="cmpAsset1.svg" Guid="E28CE552-8DB8-4257-8108-B89F2B8E5C7D">
-                     <File Id="Asset1.svg" Name="Asset 1.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\SVG\Asset1.svg" />
-                     <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
-                  </Component>
-               </Directory>
-               <!-- end of SvgFolder-->
                <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
                   <File Id="Logo.png" Name="logo.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\logo.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
@@ -151,23 +144,23 @@
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpIdleWave.png" Guid="C5520AA2-202D-4C30-9C6C-407394F73263">
-                  <File Id="IdleWave.png" Name="idle_wave.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\idle_wave.png" />
+                  <File Id="IdleWave.png" Name="idle_wave.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\idle_wave.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpIdle.png" Guid="D3C7D999-4063-4A88-8AF7-80400F666D7F">
-                  <File Id="Idle.png" Name="idle.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\idle.png" />
+                  <File Id="Idle.png" Name="idle.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\idle.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpLocked.webp" Guid="70248029-5669-4BB3-8F50-E96E4AF5D030">
-                  <File Id="Locked.webp" Name="locked.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\locked.webp" />
+                  <File Id="Locked.webp" Name="locked.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\locked.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpParty.webp" Guid="3CC660FF-7C72-4AAB-8E77-18C0B45BD92A">
-                  <File Id="Party.webp" Name="party.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\party.webp" />
+                  <File Id="Party.webp" Name="party.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\party.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpWorking.webp" Guid="6CBA2C0A-616A-4737-9011-ADBDF70005B7">
-                  <File Id="Working.webp" Name="working.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\working.webp" />
+                  <File Id="Working.webp" Name="working.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\working.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
             </Directory>
