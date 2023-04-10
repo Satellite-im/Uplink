@@ -177,8 +177,6 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    utils::copy_assets();
-
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();

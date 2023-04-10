@@ -5,6 +5,7 @@ pub mod state;
 pub mod testing;
 pub mod warp_runner;
 
+use anyhow::bail;
 use clap::Parser;
 // export icons crate
 pub use icons;
@@ -117,10 +118,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
     let extras_path = if cfg!(feature = "production_mode") {
-        #[cfg(target_os = "windows")]
-        {}
-
-        uplink_container.join("extra")
+        get_assets_dir().expect("couldn't get location of executable")
     } else {
         Path::new("ui").join("extra")
     };
@@ -174,3 +172,28 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
 ];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
+
+fn get_assets_dir() -> anyhow::Result<PathBuf> {
+    let exe_path = std::env::current_exe()?;
+
+    let assets_path = if cfg!(target_os = "windows") {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(PathBuf::from)
+            .map(|x| x.join("extra"))
+            .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/im.satellite/extra")
+    } else if cfg!(target_os = "macos") {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources").join("extra"))
+            .ok_or(anyhow::format_err!("failed to get Macos resources dir"))?
+    } else {
+        bail!("unknown OS type. failed to copy assets");
+    };
+
+    Ok(assets_path)
+}
