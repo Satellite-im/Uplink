@@ -179,7 +179,12 @@ fn get_assets_dir() -> anyhow::Result<PathBuf> {
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/im.satellite/extra")
     } else if cfg!(target_os = "macos") {
-        PathBuf::from("../Resources/extra")
+        let exe_path = std::env::current_exe()?;
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources").join("extra"))
+            .ok_or(anyhow::format_err!("failed to get MacOs resources dir"))?
     } else {
         bail!("unknown OS type. failed to copy assets");
     };
