@@ -53,10 +53,6 @@ pub struct Args {
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
-    /// tells the app that it was installed via an installer, not built locally. Uplink will look for an `extra.zip` file based on
-    /// the platform-specific installer.
-    #[clap(long, default_value_t = false)]
-    production_mode: bool,
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
@@ -120,7 +116,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
 
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
-    let extras_path = if args.production_mode {
+    let extras_path = if cfg!(feature = "production_mode") {
         uplink_container.join("extra")
     } else {
         Path::new("ui").join("extra")
@@ -142,7 +138,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         experimental: args.experimental_node,
-        production_mode: args.production_mode,
+        production_mode: cfg!(feature = "production_mode"),
     }
 });
 
