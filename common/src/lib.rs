@@ -174,23 +174,12 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
 fn get_assets_dir() -> anyhow::Result<PathBuf> {
-    let exe_path = std::env::current_exe()?;
-
     let assets_path = if cfg!(target_os = "windows") {
-        exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(PathBuf::from)
-            .map(|x| x.join("extra"))
-            .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
+        PathBuf::from(r"..\extra")
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/im.satellite/extra")
     } else if cfg!(target_os = "macos") {
-        exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(|x| x.join("Resources").join("extra"))
-            .ok_or(anyhow::format_err!("failed to get Macos resources dir"))?
+        PathBuf::from("../Resources/extra")
     } else {
         bail!("unknown OS type. failed to copy assets");
     };
