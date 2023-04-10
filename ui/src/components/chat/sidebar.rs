@@ -144,6 +144,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
     let show_create_group = use_state(cx, || false);
 
+    let extensions = &state.read().ui.extensions;
+    let ext_renders = extensions
+        .values()
+        .filter(|ext| ext.enabled())
+        .filter(|ext| ext.details().location == extensions::Location::Sidebar)
+        .map(|ext| rsx!(ext.render(cx.scope)))
+        .collect::<Vec<_>>();
+
     cx.render(rsx!(
         ReusableSidebar {
             hidden: state.read().ui.sidebar_hidden,
@@ -202,6 +210,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 search_results.set(Vec::new());
                 reset_searchbar.set(true);
             } },
+            // Load extensions
+            for node in ext_renders {
+                rsx!(node)
+            },
             // Only display favorites if we have some.
             (!favorites.is_empty()).then(|| rsx!(
                 div {
@@ -359,13 +371,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.id));
                                     }
-                                },
-                                hr{ },
-                                ContextItem {
-                                    icon: Icon::PhoneArrowUpRight,
-                                    text: get_local_text("uplink.call"),
-                                    //TODO: Wire to state
-
                                 },
                                 hr{ }
                                 ContextItem {

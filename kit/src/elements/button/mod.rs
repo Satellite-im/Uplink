@@ -11,8 +11,9 @@ const SCRIPT: &str = include_str!("./script.js");
 
 #[derive(Props)]
 pub struct Props<'a> {
+    #[allow(dead_code)]
     #[props(optional)]
-    _loading: Option<bool>,
+    loading: Option<bool>,
     #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
     #[props(optional)]
@@ -88,7 +89,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         rsx!(
             div {
                 class: {
-                    format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
+                    format_args!("btn-wrap {} {}", if disabled && cx.props.tooltip.is_none() { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
                 cx.props.tooltip.as_ref().map(|tooltip| rsx!(
                     tooltip
@@ -104,7 +105,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{UUID}",
                     aria_label: "{aria_label}",
                     title: "{text}",
-                    disabled: "{disabled}",
+                    disabled: if disabled && cx.props.tooltip.is_none() { "true" } else { "false" },
                     class: {
                         format_args!(
                             "btn appearance-{} btn-{} {} {}", 

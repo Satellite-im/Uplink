@@ -99,7 +99,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     continue;
                 }
 
-                let res = rx.await.expect("command cancelled");
+                let res = rx.await.expect("command canceled");
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));

@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.70"
 dioxus.workspace = true
 dioxus-hooks.workspace = true
 dioxus-router.workspace = true
@@ -60,6 +61,7 @@ fs_extra.workspace = true
 walkdir.workspace = true
 zip.workspace = true
 filetime = "0.2.20"
+reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
 
 [features]
 fullscreen = ["wry/fullscreen"]

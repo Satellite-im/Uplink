@@ -46,6 +46,8 @@ pub enum Action<'a> {
     SetTheme(Option<Theme>),
     #[display(fmt = "SetFont")]
     SetFont(Option<Font>),
+    #[display(fmt = "SetFontScale")]
+    SetFontScale(f32),
     // RemoveToastNotification,
     /// sets the active media to the corresponding conversation uuid
     #[display(fmt = "SetActiveMedia")]
@@ -83,11 +85,12 @@ pub enum Action<'a> {
     ClearNotification(NotificationKind),
     #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
+    #[display(fmt = "DismissUpdate")]
+    DismissUpdate,
     // Settings
     /// Sets the selected language.
     #[display(fmt = "SetLanguage")]
     SetLanguage(String),
-
     // Routes
     /// Set the active route
     #[display(fmt = "Navigate")]

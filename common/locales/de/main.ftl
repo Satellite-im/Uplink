@@ -115,9 +115,7 @@ settings-general = Allgemeine Einstellungen
     .change-language = Sprache ändern
     .theme = Aussehen
     .theme-description = Ändere das Aussehen der App.
-    .theme-reset = Aussehen zurücksetzen
-    .theme-reset-description = Setzt das Aussehen auf den Standard zurück.
-    .theme-reset-cta = Aussehen entfernen
+   
 
 settings-extensions = Einstellungen für Erweiterungen
     .placeholder = Placeholder

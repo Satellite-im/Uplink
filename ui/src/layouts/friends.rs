@@ -38,7 +38,10 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return MinimalFriendsLayout(cx);
+        return cx.render(rsx!(MinimalFriendsLayout {
+            route: route,
+            route_info: cx.props.route_info.clone()
+        }));
     }
     log::trace!("rendering FriendsLayout");
 
@@ -65,11 +68,17 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
+#[derive(PartialEq, Props)]
+pub struct MinimalProps<'a> {
+    route: &'a UseState<FriendRoute>,
+    route_info: RouteInfo,
+}
+
 #[allow(non_snake_case)]
-pub fn MinimalFriendsLayout(cx: Scope<Props>) -> Element {
+pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
-    let route = use_state(cx, || FriendRoute::All);
+    let route = cx.props.route;
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {
@@ -106,7 +115,7 @@ pub fn MinimalFriendsLayout(cx: Scope<Props>) -> Element {
     }))
 }
 
-fn render_route(cx: Scope<Props>, route: FriendRoute) -> Element {
+fn render_route<T>(cx: Scope<T>, route: FriendRoute) -> Element {
     cx.render(rsx!(match route {
         FriendRoute::All => rsx!(Friends {}),
         FriendRoute::Pending => rsx!(PendingFriends {}, OutgoingRequests {}),
@@ -114,13 +123,12 @@ fn render_route(cx: Scope<Props>, route: FriendRoute) -> Element {
     }))
 }
 
-fn get_topbar<'a>(cx: Scope<'a, Props>, route: &'a UseState<FriendRoute>) -> Element<'a> {
+fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let pending_friends = state.read().friends().incoming_requests.len();
 
     cx.render(rsx!(Topbar {
         with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
-        with_currently_back: state.read().ui.sidebar_hidden,
         onback: move |_| {
             let current = state.read().ui.sidebar_hidden;
             state.write().mutate(Action::SidebarHidden(!current));
