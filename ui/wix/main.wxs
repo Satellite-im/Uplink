@@ -209,7 +209,6 @@
          <ComponentRef Id="UplinkExecutable" />
          <ComponentRef Id="UplinkShortcut" />
          <ComponentRef Id="DesktopLauncher" />
-         <ComponentRef Id="cmpAsset1.svg" />
          <ComponentRef Id="cmpLogo.png" />
          <ComponentRef Id="cmpUplinkMuted.png" />
          <ComponentRef Id="cmpUplinkMuted.svg" />
