@@ -1,4 +1,8 @@
+// this is for debugging lifetimes
 //#![deny(elided_lifetimes_in_paths)]
+
+// this will make uplink be a "window" application instead of a  "console" application for Windows.
+#![windows_subsystem = "windows"]
 
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
