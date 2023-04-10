@@ -101,7 +101,7 @@
             <Directory Id="ImgFolder" Name="img">
                <Directory Id="SvgFolder" Name="SVG">
                   <Component Id="cmpAsset1.svg" Guid="E28CE552-8DB8-4257-8108-B89F2B8E5C7D">
-                     <File Id="Asset1.svg" Name="Asset1.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\SVG\Asset1.svg" />
+                     <File Id="Asset1.svg" Name="Asset 1.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\SVG\Asset1.svg" />
                      <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                   </Component>
                </Directory>
@@ -135,39 +135,39 @@
          <Directory Id="ImagesFolder" Name="images">
             <Directory Id="MascotFolder" Name="mascot">
                <Component Id="cmpBetterWithFriends.webp" Guid="EC75FF96-C19B-41B3-BF57-84D785FCA3DA">
-                  <File Id="BetterWithFriends.webp" Name="better_with_friends.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\mascot\better_with_friends.webp" />
+                  <File Id="BetterWithFriends.webp" Name="better_with_friends.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\better_with_friends.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpError.webp" Guid="2A5032CF-412A-4993-AB6E-A07CA197FF00">
-                  <File Id="Error.webp" Name="error.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\mascot\error.webp" />
+                  <File Id="Error.webp" Name="error.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\error.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpHappyIdle.webp" Guid="75F38A3A-9B90-4BCF-B8E1-0F882C362748">
-                  <File Id="HappyIdle.webp" Name="happy_idle.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\mascot\happy_idle.webp" />
+                  <File Id="HappyIdle.webp" Name="happy_idle.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\happy_idle.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpIdleAlt.png" Guid="32724A59-79C0-47FA-9B4D-8761EBA70785">
-                  <File Id="IdleAlt.png" Name="idle_alt.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\mascot\idle_alt.png" />
+                  <File Id="IdleAlt.png" Name="idle_alt.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\idle_alt.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpIdleWave.png" Guid="C5520AA2-202D-4C30-9C6C-407394F73263">
-                  <File Id="IdleWave.png" Name="idle_wave.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\idle_wave.png" />
+                  <File Id="IdleWave.png" Name="idle_wave.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\idle_wave.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpIdle.png" Guid="D3C7D999-4063-4A88-8AF7-80400F666D7F">
-                  <File Id="Idle.png" Name="idle.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\idle.png" />
+                  <File Id="Idle.png" Name="idle.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\idle.png" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpLocked.webp" Guid="70248029-5669-4BB3-8F50-E96E4AF5D030">
-                  <File Id="Locked.webp" Name="locked.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\locked.webp" />
+                  <File Id="Locked.webp" Name="locked.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\locked.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpParty.webp" Guid="3CC660FF-7C72-4AAB-8E77-18C0B45BD92A">
-                  <File Id="Party.webp" Name="party.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\party.webp" />
+                  <File Id="Party.webp" Name="party.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\party.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
                <Component Id="cmpWorking.webp" Guid="6CBA2C0A-616A-4737-9011-ADBDF70005B7">
-                  <File Id="Working.webp" Name="working.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\images\working.webp" />
+                  <File Id="Working.webp" Name="working.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\working.webp" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
                </Component>
             </Directory>
@@ -176,31 +176,31 @@
          <!-- end of ImagesFolder-->
          <Directory Id='ThemesFolder' Name='themes'>
               <Component Id="cmpDefault.scss" Guid="7722DA8B-61C5-48D1-B66D-D67C8A9A5DE1">
-                  <File Id="Default.scss" Name="default.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\default.scss" />
+                  <File Id="Default.scss" Name="default.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\default.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpDraculish.scss" Guid="76EF2654-7269-41F8-9AEA-A27609BBF932">
-                  <File Id="Draculish.scss" Name="draculish.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\draculish.scss" />
+                  <File Id="Draculish.scss" Name="draculish.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\draculish.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpGreen.scss" Guid="01480FA2-F2A8-4B25-BA09-024875E7E181">
-                  <File Id="Green.scss" Name="green.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\green.scss" />
+                  <File Id="Green.scss" Name="green.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\green.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpLight.scss" Guid="4891355C-18F2-4ECD-9A99-6BAA43B983E8">
-                  <File Id="Light.scss" Name="light.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\light.scss" />
+                  <File Id="Light.scss" Name="light.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\light.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpNord.scss" Guid="C8A3F86A-1DD8-45C1-B495-419144304CE2">
-                  <File Id="Nord.scss" Name="nord.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\nord.scss" />
+                  <File Id="Nord.scss" Name="nord.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\nord.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpPink.scss" Guid="469F80E7-774E-445A-AF87-7CE4E3E23E50">
-                  <File Id="Pink.scss" Name="pink.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\pink.scss" />
+                  <File Id="Pink.scss" Name="pink.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\pink.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
               <Component Id="cmpPolar.scss" Guid="A6D2B57C-8AA2-45E1-9BE4-F393D3EEE72B">
-                  <File Id="Polar.scss" Name="polar.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\themes\polar.scss" />
+                  <File Id="Polar.scss" Name="polar.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\polar.scss" />
                   <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
               </Component>
          </Directory>
