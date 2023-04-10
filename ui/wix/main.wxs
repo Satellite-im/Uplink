@@ -99,10 +99,7 @@
 
                       <Directory Id="DesktopFolder" Name="Desktop"></Directory>
 
-                      <Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
-                          <File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
-                          <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
-                      </Component>
+                      <Directory Id="AssetsFolder" Name="extra"></Directory>
 
                   </Directory> <!-- end of UPLINKROOTDIRECTORY -->
             </Directory>
@@ -159,6 +156,14 @@
             </Component>
         </DirectoryRef>
 
+
+        <DirectoryRef Id='AssetsFolder'>
+            <Component Id="cmpAssetsZip"  Guid="9a6d3629-42ef-4b70-b195-9be60c5deeae">
+                <File Id="filAssetsZip" Name='extra.zip' DiskId='1' KeyPath='yes' Source="$(var.CargoTargetDir)\..\ui\wix\extra.zip" />
+                <RemoveFile Id="RemoveFilesFromAppilcationDirectory" Name="*.*" On="uninstall" />
+            </Component>
+        </DirectoryRef>
+
         <Feature
             Id='Binaries'
             Title='Application'
@@ -176,7 +181,7 @@
             <!--<ComponentRef Id='License'/>-->
 
             <ComponentRef Id='UplinkExecutable'/>
-            <ComponentRef Id='cmpAssetsZip'/>
+            <ComponentRef Id='AssetsFolder'/>
             <ComponentRef Id='UplinkShortcut'/>
             <ComponentRef Id='DesktopLauncher'/>
 

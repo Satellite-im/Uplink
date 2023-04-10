@@ -117,6 +117,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
     let extras_path = if cfg!(feature = "production_mode") {
+        #[cfg(target_os = "windows")]
+        {}
+
         uplink_container.join("extra")
     } else {
         Path::new("ui").join("extra")
