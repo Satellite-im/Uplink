@@ -50,7 +50,6 @@ $(APP_NAME)-%: $(TARGET)-%
 	@echo "Created '$(APP_NAME)' in '$(APP_DIR)'"
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Info.plist
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Resources/uplink.icns
-	cp ./ui/wix/extra.zip $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra.zip
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
 	cp -r ./ui/extra/assets $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
