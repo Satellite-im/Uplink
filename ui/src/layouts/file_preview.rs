@@ -132,7 +132,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                 id: "titlebar",
                 onmousedown: move |_| { desktop.drag(); },
             },
-            get_pre_release_message(cx.scope),
+            get_pre_release_message{},
             div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {

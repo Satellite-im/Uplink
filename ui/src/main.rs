@@ -1004,9 +1004,9 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(cx: &ScopeState) -> Element {
+fn get_pre_release_message(_cx: Scope) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
-    cx.render(rsx!(
+    _cx.render(rsx!(
         div {
             id: "pre-release",
             aria_label: "pre-release",
