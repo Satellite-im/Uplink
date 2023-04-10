@@ -1,11 +1,17 @@
+use anyhow::bail;
 use common::{
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
 };
-use std::{fs, path::Path};
+use filetime::FileTime;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use titlecase::titlecase;
 
 use walkdir::WalkDir;
+use warp::logging::tracing::log;
 
 use kit::User as UserInfo;
 
@@ -77,6 +83,107 @@ pub fn get_available_fonts() -> Vec<Font> {
     }
 
     fonts
+}
+
+pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
+    let exe_path = std::env::current_exe()?;
+
+    let assets_path = if cfg!(target_os = "windows") {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(PathBuf::from)
+            .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/satellite-im")
+    } else if cfg!(target_os = "macos") {
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources"))
+            .ok_or(anyhow::format_err!("failed to get Macos resources dir"))?
+    } else {
+        bail!("unknown OS type. failed to copy assets");
+    };
+
+    Ok(assets_path)
+}
+
+pub fn copy_assets() {
+    log::debug!("copy_assets");
+    if !STATIC_ARGS.production_mode {
+        return;
+    }
+    let exe_path = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("failed to get path of uplink executable: {e}");
+            return;
+        }
+    };
+
+    let current_version = env!("CARGO_PKG_VERSION");
+    let assets_version_file = STATIC_ARGS.dot_uplink.join("assets_version.txt");
+    let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
+    if current_version == assets_version {
+        let exe_meta =
+            fs::metadata(exe_path).expect("failed to get metadata for uplink executable");
+        let version_meta =
+            fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
+        let exe_changed = FileTime::from_last_modification_time(&exe_meta);
+        let assets_changed = FileTime::from_last_modification_time(&version_meta);
+        if assets_changed > exe_changed {
+            log::debug!("assets already exist");
+            return;
+        } else {
+            log::debug!("re-install suspected. copying over assets");
+        }
+    }
+
+    let assets_path = match get_assets_dir() {
+        Ok(dir) => dir.join("extra.zip"),
+        Err(e) => {
+            log::error!("failed to get assets: {e}");
+            return;
+        }
+    };
+
+    if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
+        log::error!("failed to delete old assets directory: {e}");
+    }
+    if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
+        log::error!("failed to unizp assets archive {assets_path:?}: {e}");
+    }
+
+    if let Err(e) = std::fs::write(assets_version_file, current_version) {
+        log::error!("failed to save assets_version_file: {e}");
+    }
+}
+
+// taken from https://github.com/zip-rs/zip/blob/master/examples/extract.rs
+fn unzip_archive(src: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let assets_zip = fs::File::open(src)?;
+    let mut archive = zip::ZipArchive::new(assets_zip)?;
+    for idx in 0..archive.len() {
+        let mut file = archive.by_index(idx)?;
+        let outpath = match file.enclosed_name() {
+            Some(path) => dest.join(path),
+            None => continue,
+        };
+        if (*file.name()).ends_with('/') || (*file.name()).ends_with('\\') {
+            fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p)?;
+                }
+            }
+            let mut outfile = fs::File::create(&outpath)?;
+            std::io::copy(&mut file, &mut outfile)?;
+        }
+    }
+
+    Ok(())
 }
 
 fn get_pretty_name<S: AsRef<str>>(name: S) -> String {

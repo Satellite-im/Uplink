@@ -54,6 +54,10 @@ pub struct Args {
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
+    /// tells the app that it was installed via an installer, not built locally. Uplink will look for an `extra.zip` file based on
+    /// the platform-specific installer.
+    #[clap(long, default_value_t = false)]
+    production_mode: bool,
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
@@ -117,8 +121,13 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
 
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
+<<<<<<< HEAD
     let extras_path = if cfg!(feature = "production_mode") {
         get_assets_dir().expect("couldn't get location of executable")
+=======
+    let extras_path = if args.production_mode {
+        uplink_container.join("extra")
+>>>>>>> dev
     } else {
         Path::new("ui").join("extra")
     };
