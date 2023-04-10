@@ -121,13 +121,8 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
 
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
-<<<<<<< HEAD
     let extras_path = if cfg!(feature = "production_mode") {
         get_assets_dir().expect("couldn't get location of executable")
-=======
-    let extras_path = if args.production_mode {
-        uplink_container.join("extra")
->>>>>>> dev
     } else {
         Path::new("ui").join("extra")
     };
