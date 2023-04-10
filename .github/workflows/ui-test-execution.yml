@@ -45,7 +45,7 @@ jobs:
         with:
           repo-token: ${{env.GITHUB_TOKEN}}
 
-      - name: Patch makefile to remove --productio-mode flag from make binary universal
+      - name: Patch makefile to remove --production-mode flag from make binary universal
         run: |
           perl -i -pe 's/--production-mode//g' Makefile
 
