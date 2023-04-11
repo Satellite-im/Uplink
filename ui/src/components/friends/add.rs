@@ -164,6 +164,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             .into_iter()
             .any(|id| id.did_key().eq(&did))
         {
+            error_toast.set(Some(get_local_text("friends.request-exist")));
             log::warn!("duplicate friend request");
             return false;
         }
