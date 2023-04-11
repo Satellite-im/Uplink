@@ -42,11 +42,6 @@ pub enum LogProfile {
     Trace2,
 }
 
-/// If uplink is compiled in release mode, it will look for an `extra.zip` file based on
-/// the platform-specific installer. to circumvent this, set DEBUG=1
-///
-/// If compiled in debug mode or DEBUG=1, uplink will use `ui/extra` for the assets
-/// directory. The folders ~/.uplink/themes and ~/.uplink/fonts are also used as assets.
 #[derive(Debug, Parser)]
 #[clap(name = "")]
 pub struct Args {
@@ -58,6 +53,10 @@ pub struct Args {
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
+    /// tells the app that it was installed via an installer, not built locally. Uplink will look for an `extra.zip` file based on
+    /// the platform-specific installer.
+    #[clap(long, default_value_t = false)]
+    production_mode: bool,
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
@@ -106,13 +105,6 @@ pub struct StaticArgs {
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
-    // the assets are fetched differently depending on whether the binary is in production mode or not.
-    // sometimes we want to test the "release" profile without having to install the program the way a customer would.
-    #[cfg(debug_assertions)]
-    let production_mode = false;
-    #[cfg(not(debug_assertions))]
-    let production_mode = !std::env::var("DEBUG").is_ok();
-
     #[allow(unused_mut)]
     #[allow(unused_assignments)]
     let mut use_mock = false;
@@ -128,7 +120,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
 
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
-    let extras_path = if production_mode {
+    let extras_path = if args.production_mode {
         uplink_container.join("extra")
     } else {
         Path::new("ui").join("extra")
@@ -150,7 +142,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         experimental: args.experimental_node,
-        production_mode,
+        production_mode: args.production_mode,
     }
 });
 

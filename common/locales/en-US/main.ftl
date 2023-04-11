@@ -22,6 +22,15 @@ uplink = Uplink
     .exceeded = exceeded
     .delete = Delete
     .dismiss = Dismiss
+    .pick-download-directory = Choose a location to download the update
+    .update-available = Update available
+    .update-downloading = Downloading update
+    .update-downloaded = Update downloaded. Click to install
+    .update-menu-dismiss = Dismiss
+    .update-menu-download = Download
+    .update-menu-install = Install
+    .check-for-updates = Check for updates
+    .download-update = Download Update
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
@@ -74,6 +83,7 @@ friends = Friends
     .new_request = New friend request.
     .copied-did = Copied ID to clipboard!
     .unblock = Unblock
+    .request-exist = Friend request is already pending!
 
 files = Files
     .files = Files

@@ -52,7 +52,7 @@ async fn compress_folder(src: PathBuf, dest: PathBuf) -> Result<(), error::Error
     let res = match handle.await {
         Ok(r) => r,
         Err(_) => {
-            log::warn!("compress operation cancelled");
+            log::warn!("compress operation canceled");
             return Ok(());
         }
     };

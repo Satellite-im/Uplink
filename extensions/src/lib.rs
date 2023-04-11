@@ -145,7 +145,7 @@ pub struct Details {
 // Represents where the extensions main render method should execute.
 // Note that some extension types will NOT render in some locations.
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Location {
     Chatbar,
     Replies,

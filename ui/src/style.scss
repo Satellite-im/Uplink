@@ -50,6 +50,17 @@ body {
   }
 }
 
+#update-available {
+  display: inline-flex;
+  gap: var(--gap-less);
+  align-content: center;
+  justify-content: center;
+  width: fit-content;
+  color: var(--warning-light);
+  font-size: var(--text-size-less);
+  cursor: pointer;
+}
+
 #pre-release {
   position: fixed;
   top: 0.14rem;

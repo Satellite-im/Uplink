@@ -971,6 +971,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+    let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
     // used to render the typing indicator
@@ -1151,7 +1152,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             Some(i) => i,
             None => return,
         };
-
+        can_send.set(false);
         if STATIC_ARGS.use_mock {
             state.write().mutate(Action::MockSend(id, msg));
         } else {
@@ -1166,11 +1167,12 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         Some(i) => i,
         None => uuid::Uuid::new_v4(),
     };
-    // todo: filter out extensions not meant for this area
+
     let extensions = &state.read().ui.extensions;
     let ext_renders = extensions
         .values()
         .filter(|ext| ext.enabled())
+        .filter(|ext| ext.details().location == extensions::Location::Chatbar)
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
 
@@ -1188,7 +1190,10 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 match inner_state.try_borrow_mut() {
-                    Ok(state) => state.write().mutate(Action::SetChatDraft(*id, v)),
+                    Ok(state) => {
+                        can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
+                        state.write().mutate(Action::SetChatDraft(*id, v));
+                    }
                     Err(e) => log::error!("{e}"),
                 };
                 local_typing_ch.send(TypingIndicator::Typing(*id));
@@ -1210,7 +1215,11 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         controls: cx.render(rsx!(Button {
             icon: Icon::ChevronDoubleRight,
             disabled: is_loading || disabled,
-            appearance: Appearance::Secondary,
+            appearance: if *can_send.get() {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
             aria_label: "send-message-button".into(),
             onpress: move |_| submit_fn(),
             tooltip: cx.render(rsx!(Tooltip {
@@ -1274,6 +1283,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
                         .collect();
                     new_files_to_upload.extend(new_files);
                     files_to_upload.set(new_files_to_upload);
+                    can_send.set(true);
                 }
             },
             tooltip: cx.render(rsx!(Tooltip {
@@ -1310,17 +1320,22 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
             })
         })
         chatbar,
-        Attachments {files: files_to_upload.clone()}
+        Attachments {files: files_to_upload.clone(), on_remove: move |b| {
+            can_send.set(b | state
+                .read()
+                .active_chat_has_draft());
+        }}
     ))
 }
 
-#[derive(Props, PartialEq)]
-pub struct AttachmentProps {
+#[derive(Props)]
+pub struct AttachmentProps<'a> {
     files: UseState<Vec<PathBuf>>,
+    on_remove: EventHandler<'a, bool>,
 }
 
 #[allow(non_snake_case)]
-fn Attachments(cx: Scope<AttachmentProps>) -> Element {
+fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(cx
         .props
@@ -1334,12 +1349,15 @@ fn Attachments(cx: Scope<AttachmentProps>) -> Element {
                 remote: false,
                 button_icon: Icon::Trash,
                 on_press: move |_| {
+                    let mut b = false;
                     cx.props.files.with_mut(|files| {
                         files.retain(|x| {
                             let s = x.to_string_lossy().to_string();
                             s != file_name
-                        })
+                        });
+                        b = !files.is_empty();
                     });
+                    cx.props.on_remove.call(b);
                 },
             })
         })));
