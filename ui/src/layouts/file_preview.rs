@@ -1,23 +1,32 @@
 use std::io::Cursor;
 
+#[cfg(not(target_os = "macos"))]
+use common::icons::outline::Shape as Icon;
 use common::{
     language::get_local_text, state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS,
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::tao::event::WindowEvent;
+#[cfg(not(target_os = "macos"))]
+use kit::elements::button::Button;
+#[cfg(not(target_os = "macos"))]
+use kit::elements::Appearance;
 use warp::constellation::file::File;
 
-use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
+use dioxus_desktop::wry::application::event::Event as WryEvent;
+use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::elements::file::get_file_extension;
+use kit::STYLE as UIKIT_STYLES;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
-use crate::utils::WindowDropHandler;
+use crate::{get_pre_release_message, utils::WindowDropHandler, APP_STYLE};
 
 const CSS_STYLE: &str = include_str!("./style.scss");
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum FileFormat {
     Video,
     Image,
@@ -65,14 +74,9 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
     let first_render = use_state(cx, || true);
 
-    resize_window(
-        has_thumbnail,
-        *first_render.get(),
-        desktop,
-        &thumbnail,
-        file.clone(),
-        &file_format,
-    );
+    if *first_render.get() {
+        resize_window(has_thumbnail, desktop, &thumbnail, file.clone());
+    }
 
     if *first_render.get() {
         first_render.set(false);
@@ -107,14 +111,75 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         }
     });
 
+    use_wry_event_handler(cx, {
+        to_owned![desktop];
+        move |event, _| {
+            if let WryEvent::WindowEvent {
+                event: WindowEvent::Resized(_),
+                ..
+            } = event
+            {
+                {
+                    if desktop.outer_size().width < 575 {
+                        desktop.set_title("");
+                    } else {
+                        desktop.set_title("Uplink");
+                    }
+                }
+            }
+        }
+    });
+
+    #[allow(unused_mut, unused_assignments)]
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
+            div {
+                class: "controls",
+                Button {
+                    aria_label: "minimize-button".into(),
+                    icon: Icon::Minus,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_minimized(true);
+                    }
+                },
+                Button {
+                    aria_label: "square-button".into(),
+                    icon: Icon::Square2Stack,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.set_maximized(!desktop.is_maximized());
+                    }
+                },
+                Button {
+                    aria_label: "close-button".into(),
+                    icon: Icon::XMark,
+                    appearance: Appearance::Transparent,
+                    onpress: move |_| {
+                        desktop.close();
+                    }
+                },
+            }
+        ))
+    }
+
     cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE}" },
         style { css_style },
         style { CSS_STYLE },
         div {
-            id: "video-poped-out",
-            class: "file-preview",
+            id: "app-wrap",
             div {
-                class: "wrap",
+                id: "titlebar",
+                onmousedown: move |_| { desktop.drag();
+                },
+                controls,
+            }
+            get_pre_release_message{},
+            div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {
                     rsx!{
@@ -153,13 +218,11 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
 fn resize_window(
     has_thumbnail: bool,
-    first_render: bool,
     desktop: &DesktopContext,
     thumbnail: &str,
     file: File,
-    file_format: &FileFormat,
 ) -> Option<()> {
-    if has_thumbnail && first_render {
+    if has_thumbnail {
         let base64_string = &thumbnail[thumbnail.find(',')? + 1..];
         let thumbnail_bytes = base64::decode(base64_string).ok()?;
         let cursor = Cursor::new(thumbnail_bytes);
@@ -171,14 +234,14 @@ fn resize_window(
         let image_reader = ImageReader::with_format(cursor, img_format);
         if let Ok(image) = image_reader.decode() {
             let (mut width, mut height) = (image.width() as f64, image.height() as f64);
-            if height > 800.0 || width > 800.0 {
-                let scale_factor = desktop.scale_factor() + 0.5;
+            let scale_factor = desktop.scale_factor() + 0.5;
+            while height > 800.0 || width > 800.0 {
                 width /= scale_factor;
                 height /= scale_factor;
             }
             desktop.set_inner_size(LogicalSize::new(width, height));
         }
-    } else if first_render && file_format != &FileFormat::Other {
+    } else {
         let scale_factor = desktop.scale_factor() + 0.5;
         desktop.set_inner_size(LogicalSize::new(600.0 / scale_factor, 300.0 / scale_factor));
     }
