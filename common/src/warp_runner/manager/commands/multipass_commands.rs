@@ -17,7 +17,7 @@ use warp::{
 };
 
 use crate::{
-    state::{self, friends},
+    state::{self, friends, Identity},
     warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
@@ -37,6 +37,7 @@ pub enum MultiPassCmd {
     #[display(fmt = "RequestFriend {{ request: {id} }} ")]
     RequestFriend {
         id: String,
+        outgoing_requests: Vec<Identity>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "InitializeFriends")]
@@ -122,7 +123,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
             // do nothing and drop the rsp channel
         }
-        MultiPassCmd::RequestFriend { id, rsp } => {
+        MultiPassCmd::RequestFriend {
+            id,
+            outgoing_requests,
+            rsp,
+        } => {
             // First attempt using a did
             let did = match DID::from_str(id.as_str()) {
                 Ok(did) => did,
@@ -160,6 +165,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     }
                 }
             };
+            // If request already exist return
+            if outgoing_requests
+                .into_iter()
+                .find(|id| id.did_key().eq(&did))
+                .is_some()
+            {
+                let _ = rsp.send(Result::Err(Error::FriendRequestExist));
+                return;
+            }
             let r = warp.multipass.send_request(&did).await;
             let _ = rsp.send(r);
         }
