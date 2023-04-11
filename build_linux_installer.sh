@@ -22,11 +22,15 @@ sed -i "s/{{version}}/${PACKAGE_VERSION}/g" ${BUILD_DIR}/usr/share/metainfo/im.s
 sed -i "s/{{date}}/${DATE}/g"               ${BUILD_DIR}/usr/share/metainfo/im.satellite.uplink.metainfo.xml
 
 cp target/release/${PACKAGE_NAME}       ${BUILD_DIR}/opt/im.satellite/${PACKAGE_NAME}
+
 mkdir                                   ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/assets                 ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/images                 ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/themes                 ${BUILD_DIR}/opt/im.satellite/extra
 cp ./ui/extra/assets/img/logo.png       ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
+
+mkdir                                   ${BUILD_DIR}/opt/im.satellite/extensions
+cp target/release/*.so                  ${BUILD_DIR}/opt/im.satellite/extensions
 
 dpkg-deb -Z gzip --root-owner-group --build ${BUILD_DIR} target/release/${FULL_NAME}.deb
 sha256sum target/release/${FULL_NAME}.deb > target/release/SHA256SUM

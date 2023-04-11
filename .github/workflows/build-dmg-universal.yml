@@ -90,3 +90,4 @@ jobs:
           files: |
             Uplink-Mac-Universal.zip
             target/release/uplink-mac
+            target/release/*.dylib
