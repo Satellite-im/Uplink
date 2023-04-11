@@ -45,6 +45,10 @@ jobs:
         with:
           repo-token: ${{env.GITHUB_TOKEN}}
 
+      - name: Patch makefile to remove --production-mode flag from make binary universal
+        run: |
+          perl -i -pe 's/--production-mode//g' Makefile
+
       - name: Run cargo update 🌐
         run: cargo update
 
@@ -109,7 +113,6 @@ jobs:
         working-directory: ./appium-tests/apps
         run: |
           unzip Uplink-Mac-Universal.zip
-          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
@@ -133,6 +136,9 @@ jobs:
         with:
           junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on MacOS"
+          ignore_runs: true
+          job_summary: false
+          compare_to_earlier_commit: false
 
       - name: Upload Screenshots if tests failed 📷
         uses: actions/upload-artifact@v3
