@@ -12,7 +12,6 @@ use kit::elements::{button::Button, Appearance};
 pub fn Welcome(cx: Scope) -> Element {
     let router = use_router(cx).clone();
     let state = use_shared_state::<State>(cx)?;
-    let show_back_button = state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden;
 
     let cta_text = get_local_text("friends.cta-text");
     let image_path = STATIC_ARGS
@@ -27,7 +26,7 @@ pub fn Welcome(cx: Scope) -> Element {
             div {
                 id: "welcome",
                 aria_label: "welcome-screen",
-                if show_back_button {
+                if state.read().ui.sidebar_hidden {
                     rsx!(  
                         Topbar {
                         with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
