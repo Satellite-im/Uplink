@@ -113,22 +113,24 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
     use_wry_event_handler(cx, {
         to_owned![desktop];
-        move |event, _| match event {
-            WryEvent::WindowEvent {
+        move |event, _| {
+            if let WryEvent::WindowEvent {
                 event: WindowEvent::Resized(_),
                 ..
-            } => {
-                if desktop.outer_size().width < 575 {
-                    desktop.set_title("");
-                } else {
-                    desktop.set_title("Uplink");
+            } = event
+            {
+                {
+                    if desktop.outer_size().width < 575 {
+                        desktop.set_title("");
+                    } else {
+                        desktop.set_title("Uplink");
+                    }
                 }
             }
-            _ => (),
         }
     });
 
-    #[allow(unused_mut)]
+    #[allow(unused_mut, unused_assignments)]
     let mut controls: Option<VNode> = None;
 
     #[cfg(not(target_os = "macos"))]
