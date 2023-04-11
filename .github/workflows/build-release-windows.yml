@@ -24,7 +24,7 @@ jobs:
       - name: Get rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.68.2
           target: x86_64-pc-windows-msvc
           override: true
 

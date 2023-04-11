@@ -19,7 +19,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.68.2
           override: true
           components: rustfmt, clippy
       - name: Install Protobuf

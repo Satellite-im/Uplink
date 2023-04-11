@@ -23,7 +23,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.68.2
           override: true
       - run: cargo build --release --package uplink -F production_mode
       - run: ./build_linux_installer uplink ${{ github.ref_name }} arm64
