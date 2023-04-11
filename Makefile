@@ -57,7 +57,7 @@ $(APP_NAME)-%: $(TARGET)-%
 	cp -r ./ui/extra/themes $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-	cp $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
+	cp -r $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
 
 ifeq ($(SIGNING_KEY),LOCAL)
 	@echo "Local Build, no signing"

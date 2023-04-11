@@ -30,7 +30,7 @@ cp -r ./ui/extra/themes                 ${BUILD_DIR}/opt/im.satellite/extra
 cp ./ui/extra/assets/img/logo.png       ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
 
 mkdir                                   ${BUILD_DIR}/opt/im.satellite/extensions
-cp target/release/*.so                  ${BUILD_DIR}/opt/im.satellite/extensions
+cp -r target/release/*.so               ${BUILD_DIR}/opt/im.satellite/extensions
 
 dpkg-deb -Z gzip --root-owner-group --build ${BUILD_DIR} target/release/${FULL_NAME}.deb
 sha256sum target/release/${FULL_NAME}.deb > target/release/SHA256SUM
