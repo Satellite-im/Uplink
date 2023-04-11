@@ -195,3 +195,22 @@ fn get_assets_dir() -> anyhow::Result<PathBuf> {
 
     Ok(assets_path)
 }
+
+pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
+    let extensions_path = if cfg!(target_os = "windows") {
+        PathBuf::from(r"..\extensions")
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/im.satellite/extensions")
+    } else if cfg!(target_os = "macos") {
+        let exe_path = std::env::current_exe()?;
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources").join("extensions"))
+            .ok_or(anyhow::format_err!("failed to get MacOs extensions dir"))?
+    } else {
+        bail!("unknown OS type. failed to copy assets");
+    };
+
+    Ok(extensions_path)
+}

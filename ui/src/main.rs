@@ -367,31 +367,42 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> Result<HashMap<String, UplinkExtension>, io::Error> {
+fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {
     fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
     let mut extensions = HashMap::new();
 
-    for entry in paths {
-        let path = entry?.path();
-        log::debug!("Found extension: {:?}", path);
+    let mut add_to_extensions = |dir: fs::ReadDir| -> Result<(), Box<dyn std::error::Error>> {
+        for entry in dir {
+            let path = entry?.path();
+            log::debug!("Found extension: {:?}", path);
 
-        match UplinkExtension::new(path.clone()) {
-            Ok(ext) => {
-                if ext.cargo_version() != extensions::CARGO_VERSION
-                    || ext.rustc_version() != extensions::RUSTC_VERSION
-                {
-                    log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
-                    continue;
+            match UplinkExtension::new(path.clone()) {
+                Ok(ext) => {
+                    if ext.cargo_version() != extensions::CARGO_VERSION
+                        || ext.rustc_version() != extensions::RUSTC_VERSION
+                    {
+                        log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
+                        continue;
+                    }
+                    log::debug!("Loaded extension: {:?}", &path);
+                    extensions.insert(ext.details().meta.name.into(), ext);
                 }
-                log::debug!("Loaded extension: {:?}", &path);
-                extensions.insert(ext.details().meta.name.into(), ext);
-            }
-            Err(e) => {
-                log::error!("Error loading extension: {:?}", e);
+                Err(e) => {
+                    log::error!("Error loading extension: {:?}", e);
+                }
             }
         }
-    }
+
+        Ok(())
+    };
+
+    let user_extension_dir = fs::read_dir(&STATIC_ARGS.extensions_path)?;
+    add_to_extensions(user_extension_dir)?;
+
+    let uplink_extenions_path = common::get_extensions_dir()?;
+    let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
+    add_to_extensions(uplink_extensions_dir)?;
+
     Ok(extensions)
 }
 
