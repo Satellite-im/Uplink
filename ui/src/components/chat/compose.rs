@@ -34,6 +34,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
     state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::ui_adapter,
 };
@@ -611,17 +612,37 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         }
     });
 
+    let msg_container_end = if data.active_chat.has_more_messages {
+        rsx!(MessageGroupSkeletal {}, MessageGroupSkeletal { alt: true })
+    } else {
+        rsx!(
+            div {
+                // key: "encrypted-notification-0001",
+                class: "msg-container-end",
+                IconElement {
+                    icon:  Icon::LockClosed,
+                },
+                p {
+                    "Messages secured by local E2E encryption."
+                }
+            }
+        )
+    };
+
     cx.render(rsx!(
         div {
             id: "messages",
             div {
-                rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
-                    active_chat_id: data.active_chat.id,
-                    num_messages_in_conversation: data.active_chat.messages.len(),
-                    num_to_take: num_to_take.clone(),
-                    has_more: data.active_chat.has_more_messages,
-                })
+                rsx!(
+                    msg_container_end,
+                    render_message_groups{
+                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
+                        active_chat_id: data.active_chat.id,
+                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        num_to_take: num_to_take.clone(),
+                        has_more: data.active_chat.has_more_messages,
+                    }
+                )
             }
         }
     ))
