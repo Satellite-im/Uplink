@@ -157,7 +157,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             Ok(x) => x,
             Err(e) => {
                 log::error!("failed to turn did to string: {e}");
-                return false;
+                return true;
             }
         };
         if outgoing_requests
@@ -166,9 +166,9 @@ pub fn AddFriend(cx: Scope) -> Element {
         {
             error_toast.set(Some(get_local_text("friends.request-exist")));
             log::warn!("duplicate friend request");
-            return false;
+            return true;
         }
-        true
+        false
     };
 
     cx.render(rsx!(
