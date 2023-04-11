@@ -399,9 +399,11 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     let user_extension_dir = fs::read_dir(&STATIC_ARGS.extensions_path)?;
     add_to_extensions(user_extension_dir)?;
 
-    let uplink_extenions_path = common::get_extensions_dir()?;
-    let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
-    add_to_extensions(uplink_extensions_dir)?;
+    if STATIC_ARGS.production_mode {
+        let uplink_extenions_path = common::get_extensions_dir()?;
+        let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
+        add_to_extensions(uplink_extensions_dir)?;
+    }
 
     Ok(extensions)
 }
