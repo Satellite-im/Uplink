@@ -751,6 +751,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             (*reacting_to.current() == Some(msg_uuid)).then(|| {
                 rsx!(
                     div {
+                        key: "add-message-reaction",
                         id: "add-message-reaction",
                         class: "{reactions_class} pointer",
                         tabindex: "0",
