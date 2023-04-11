@@ -930,15 +930,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
-    let can_send = use_state(cx, || {
-        !state
-            .read()
-            .get_active_chat()
-            .as_ref()
-            .and_then(|d| d.draft.clone())
-            .unwrap_or_default()
-            .is_empty()
-    });
+    let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
     // used to render the typing indicator
@@ -1287,12 +1279,9 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         })
         chatbar,
         Attachments {files: files_to_upload.clone(), on_remove: move |b| {
-            can_send.set(b | !state
+            can_send.set(b | state
                 .read()
-                .get_active_chat()
-                .as_ref()
-                .and_then(|d| d.draft.clone())
-                .unwrap_or_default().is_empty());
+                .active_chat_has_draft());
         }}
     ))
 }
