@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.70"
 unic-langid = "0.9.1"
 isolang.workspace = true
 fluent-templates = "0.8.0"
@@ -59,3 +60,6 @@ wry.workspace = true
 cocoa = "0.24.1"
 objc = "0.2.7"
 core-foundation = "0.9.3"
+
+[features]
+production_mode = []

@@ -1,4 +1,5 @@
-//#![deny(elided_lifetimes_in_paths)]
+#![windows_subsystem = "windows"]
+// the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
@@ -175,8 +176,6 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
-
-    utils::copy_assets();
 
     let window = get_window_builder(true);
 

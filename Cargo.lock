@@ -1212,6 +1212,7 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "base64 0.20.0",
  "chrono",
  "clap 4.2.1",

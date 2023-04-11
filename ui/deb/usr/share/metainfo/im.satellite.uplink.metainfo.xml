@@ -17,6 +17,6 @@
     <content_rating type="oars-1.1" />
     <launchable type="desktop-id">im.satellite.uplink.desktop</launchable>
     <releases>
-        <release version="0.1.3" date="2022-05-19"/>
+        <release version="{{version}}" date="{{date}}"/>
     </releases>
 </component>

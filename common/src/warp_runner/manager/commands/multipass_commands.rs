@@ -168,8 +168,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             // If request already exist return
             if outgoing_requests
                 .into_iter()
-                .find(|id| id.did_key().eq(&did))
-                .is_some()
+                .any(|id| id.did_key().eq(&did))
             {
                 let _ = rsp.send(Result::Err(Error::FriendRequestExist));
                 return;
