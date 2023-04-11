@@ -213,9 +213,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     .await
                 {
                     Ok(_) => {
-                        let mut g = my_id.graphics();
-                        g.set_profile_picture(&pfp);
-                        my_id.set_graphics(g);
+                        my_id.set_profile_picture(&pfp);
                         rsp.send(Ok(my_id))
                     }
                     Err(e) => {

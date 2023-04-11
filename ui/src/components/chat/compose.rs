@@ -230,7 +230,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     };
     let is_favorite = s.is_favorite(&active_chat);
 
-    let first_image = active_participant.graphics().profile_picture();
+    let first_image = active_participant.profile_picture();
     let other_participants_names = State::join_usernames(&other_participants);
     let active_media = Some(active_chat.id) == s.chats().active_media;
 
@@ -684,7 +684,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
     cx.render(rsx!(MessageGroup {
         user_image: cx.render(rsx!(UserImage {
-            image: sender.graphics().profile_picture(),
+            image: sender.profile_picture(),
             platform: sender.platform().into(),
             status: sender_status,
         })),
@@ -1248,7 +1248,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
         Some(u) => (
             u.platform(),
             u.identity_status(),
-            u.graphics().profile_picture(),
+            u.profile_picture(),
         ),
         None => (
             identity::Platform::Unknown,
