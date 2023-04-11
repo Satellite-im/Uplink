@@ -1,5 +1,6 @@
 use std::io::Cursor;
 
+#[cfg(not(target_os = "macos"))]
 use common::icons::outline::Shape as Icon;
 use common::{
     language::get_local_text, state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS,
@@ -7,7 +8,9 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_desktop::tao::event::WindowEvent;
+#[cfg(not(target_os = "macos"))]
 use kit::elements::button::Button;
+#[cfg(not(target_os = "macos"))]
 use kit::elements::Appearance;
 use warp::constellation::file::File;
 
@@ -125,16 +128,14 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         }
     });
 
-    cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE}" },
-        style { css_style },
-        style { CSS_STYLE },
-        div {
-            id: "app-wrap",
+    #[allow(unused_mut)]
+    let mut controls: Option<VNode> = None;
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        controls = cx.render(rsx!(
             div {
-                id: "titlebar",
-                onmousedown: move |_| { desktop.drag();
-                },
+                class: "controls",
                 Button {
                     aria_label: "minimize-button".into(),
                     icon: Icon::Minus,
@@ -159,7 +160,22 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                         desktop.close();
                     }
                 },
-            },
+            }
+        ))
+    }
+
+    cx.render(rsx! (
+        style { "{UIKIT_STYLES} {APP_STYLE}" },
+        style { css_style },
+        style { CSS_STYLE },
+        div {
+            id: "app-wrap",
+            div {
+                id: "titlebar",
+                onmousedown: move |_| { desktop.drag();
+                },
+                controls,
+            }
             get_pre_release_message{},
             div {
                 {
