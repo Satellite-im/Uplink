@@ -18,7 +18,7 @@ use warp::logging::tracing::log;
 pub struct SoftwareUpdateCmd(pub mpsc::UnboundedReceiver<f32>);
 pub struct SoftwareDownloadCmd(pub PathBuf);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DownloadProgress {
     Idle,
     Pending,

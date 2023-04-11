@@ -1020,8 +1020,7 @@ fn get_pre_release_message(_cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            },
-            get_update_icon{}
+            }
         },
     ))
 }
@@ -1083,6 +1082,10 @@ fn get_update_icon(cx: Scope) -> Element {
                             download_state.write().destination = Some(dest.clone());
                             download_ch.send(SoftwareDownloadCmd(dest));
                         }
+                    },
+                    IconElement {
+                        icon: common::icons::solid::Shape::ArrowDown,
+                        fill: "green",
                     },
                     "{update_msg}",
                 }
@@ -1203,6 +1206,7 @@ fn get_titlebar(cx: Scope) -> Element {
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
+            get_update_icon{},
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
