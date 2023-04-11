@@ -110,6 +110,7 @@ jobs:
         with:
           junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on Windows"
+          ignore_runs: true
           job_summary: false
           compare_to_earlier_commit: false
 
