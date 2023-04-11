@@ -83,15 +83,14 @@ pub fn AddFriend(cx: Scope) -> Element {
         my_id.set(None);
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<String>| {
         to_owned![request_sent, error_toast];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some((id, outgoing_requests)) = rx.next().await {
+            while let Some(id) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
                     id,
-                    outgoing_requests,
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
@@ -152,6 +151,25 @@ pub fn AddFriend(cx: Scope) -> Element {
         }
     });
 
+    let is_duplicate_request = move |id: &str| {
+        let outgoing_requests = state.read().outgoing_fr_identities();
+        let did = match DID::from_str(id) {
+            Ok(x) => x,
+            Err(e) => {
+                log::error!("failed to turn did to string: {e}");
+                return false;
+            }
+        };
+        if outgoing_requests
+            .into_iter()
+            .any(|id| id.did_key().eq(&did))
+        {
+            log::warn!("duplicate friend request");
+            return false;
+        }
+        true
+    };
+
     cx.render(rsx!(
         div {
             class: "add-friend",
@@ -185,7 +203,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
-                            ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                            let friend = friend_input.current().to_string();
+                            if !is_duplicate_request(&friend) {
+                                ch.send(friend);
+                            }
                         }
                         clear_input.set(true);
                     },
@@ -207,7 +228,11 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
-                            ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
+                            let friend = friend_input.current().to_string();
+                            if !is_duplicate_request(&friend) {
+                                ch.send(friend);
+                            }
+
                         }
                         clear_input.set(true);
                     },
