@@ -1,4 +1,5 @@
-//#![deny(elided_lifetimes_in_paths)]
+#![windows_subsystem = "windows"]
+// the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
@@ -176,8 +177,32 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    utils::copy_assets();
+    let window = get_window_builder(true);
 
+    let config = Config::default();
+
+    dioxus_desktop::launch_cfg(
+        bootstrap,
+        config
+            .with_window(window)
+            .with_custom_index(
+                r#"
+    <!doctype html>
+    <html>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+    </html>"#
+                    .to_string(),
+            )
+            .with_file_drop_handler(|_w, drag_event| {
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
+                true
+            }),
+    )
+}
+
+pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -217,9 +242,12 @@ fn main() {
     let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
-        .with_inner_size(LogicalSize::new(950.0, 600.0))
         // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
         .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+
+    if with_predefined_size {
+        window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
+    }
 
     #[cfg(target_os = "macos")]
     {
@@ -238,28 +266,7 @@ fn main() {
     {
         window = window.with_decorations(false).with_transparent(true);
     }
-
-    let config = Config::default();
-
-    dioxus_desktop::launch_cfg(
-        bootstrap,
-        config
-            .with_window(window)
-            .with_custom_index(
-                r#"
-    <!doctype html>
-    <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-    </html>"#
-                    .to_string(),
-            )
-            .with_file_drop_handler(|_w, drag_event| {
-                log::info!("Drag Event: {:?}", drag_event);
-                *DRAG_EVENT.write() = drag_event;
-                true
-            }),
-    )
+    window
 }
 
 // start warp_runner and ensure the user is logged in
@@ -625,6 +632,12 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
+                if desktop.outer_size().width < 575 {
+                    desktop.set_title("");
+                } else {
+                    desktop.set_title("Uplink");
+                }
+
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
@@ -990,9 +1003,9 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(cx: Scope) -> Element {
+fn get_pre_release_message(_cx: Scope) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
-    cx.render(rsx!(
+    _cx.render(rsx!(
         div {
             id: "pre-release",
             aria_label: "pre-release",
