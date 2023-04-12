@@ -1,0 +1,18 @@
+.slide-selector {
+  display: inline-flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  align-items: center;
+
+  .slide-selector__value {
+    padding: var(--padding-less);
+    height: var(--height-input);
+    background: var(--secondary);
+    border-radius: var(--border-radius-more);
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    justify-content: center;
+    min-width: calc(var(--height-input) * 2);
+  }
+}

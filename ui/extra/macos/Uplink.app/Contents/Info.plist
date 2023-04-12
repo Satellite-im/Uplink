@@ -5,7 +5,7 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleExecutable</key>
-  <string>ui</string>
+  <string>uplink</string>
   <key>CFBundleIdentifier</key>
   <string>im.satellite.uplink</string>
   <key>CFBundleInfoDictionaryVersion</key>

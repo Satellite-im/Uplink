@@ -18,6 +18,9 @@ use warp::multipass;
 
 use crate::AuthPages;
 
+pub const MIN_USERNAME_LEN: i32 = 4;
+pub const MAX_USERNAME_LEN: i32 = 32;
+
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
@@ -28,9 +31,9 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
 
     let username_validation = Validation {
         // The input should have a maximum length of 32
-        max_length: Some(32),
+        max_length: Some(MAX_USERNAME_LEN),
         // The input should have a minimum length of 4
-        min_length: Some(4),
+        min_length: Some(MIN_USERNAME_LEN),
         // The input should only contain alphanumeric characters
         alpha_numeric_only: true,
         // The input should not contain any whitespace
@@ -87,6 +90,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 is_password: false,
                 icon: Icon::Identification,
                 aria_label: "username-input".into(),
+                disable_onblur: true,
                 disabled: false,
                 placeholder: get_local_text("auth.enter-username"),
                 options: Options {
@@ -114,6 +118,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 icon: Icon::Check,
                 disabled: *button_disabled.get(),
                 onpress: move |_| {
+
                     ch.send((username.get().to_string(), pin.read().to_string()));
                 }
 

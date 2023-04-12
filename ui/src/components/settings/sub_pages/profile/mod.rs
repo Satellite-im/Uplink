@@ -2,6 +2,7 @@ use arboard::Clipboard;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -98,7 +99,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     continue;
                 }
 
-                let res = rx.await.expect("command cancelled");
+                let res = rx.await.expect("command canceled");
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));
@@ -153,19 +154,29 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     let mut did_short = "#".to_string();
     did_short.push_str(&state.read().get_own_identity().short_id());
+    let show_welcome = &state.read().ui.active_welcome;
+
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images")
+        .join("mascot")
+        .join("working.webp")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
 
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
             id: "settings-profile",
             aria_label: "settings-profile",
-            (state.read().ui.show_settings_welcome).then(|| rsx!(
+            (!show_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
                     div {
                         class: "welcome",
                         img {
-                            src: "./ui/extra/images/mascot/working.png"
+                            src: "{image_path}"
                         },
                     },
                     div {
@@ -174,7 +185,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("uplink.dismiss"),
                             icon: Icon::XMark,
                             onpress: move |_| {
-                                state.write().ui.show_settings_welcome = false;
+                                state.write().ui.settings_welcome();
                                 let _ = state.write().save();
                             }
                         },

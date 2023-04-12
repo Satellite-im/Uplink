@@ -12,6 +12,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     #[cfg(windows)]
     {
+        //https://github.com/rust-lang/rfcs/blob/master/text/1665-windows-subsystem.md
+        println!("cargo:rustc-link-arg=/ENTRY:mainCRTStartup");
         let mut res = winres::WindowsResource::new();
         res.set("ProductName", "uplink");
         res.set("FileDescription", "uplink");

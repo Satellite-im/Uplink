@@ -65,7 +65,7 @@ pub fn Explore(cx: Scope) -> Element {
                 aria_label: "extensions-search-input".into(),
                 icon: Icon::MagnifyingGlass,
                 options: Options {
-                    with_label: "Search Extensions".into(),
+                    with_label: String::from("Search Extensions").into(),
                     with_clear_btn: true,
                     ..Default::default()
                 }

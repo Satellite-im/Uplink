@@ -1,0 +1,9 @@
+Package: {{package}}
+Version: {{version}}
+Vendor: Satellite Im
+Description: P2P chat application
+Section: net
+Priority: required
+Maintainer: matt.wisniewski@deepspaceshipping.co
+Architecture: {{architecture}}
+Homepage: https://satellite.im/

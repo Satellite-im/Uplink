@@ -111,7 +111,7 @@ impl Logger {
             log_file: logger_path,
             subscribers: vec![],
             log_entries: VecDeque::new(),
-            max_logs: 100,
+            max_logs: 128,
         }
     }
 
@@ -184,6 +184,7 @@ impl Logger {
 
         let mut file = OpenOptions::new()
             .append(true)
+            .create(true)
             .open(&self.log_file)
             .unwrap();
 
@@ -199,6 +200,24 @@ pub fn init_with_level(level: LevelFilter) -> Result<(), SetLoggerError> {
     log::set_max_level(level);
     log::set_boxed_logger(Box::new(LogGlue::new(level)))?;
     Ok(())
+}
+
+// used for panic handlers
+pub fn dump_logs() -> String {
+    let logs = get_logs();
+    LOGGER.write().log_entries.clear();
+    logs
+}
+
+// used for bug report
+pub fn get_logs() -> String {
+    let logs: Vec<String> = LOGGER
+        .read()
+        .log_entries
+        .iter()
+        .map(|x| x.to_string())
+        .collect();
+    logs.join("\n")
 }
 
 pub fn subscribe() -> mpsc::UnboundedReceiver<Log> {

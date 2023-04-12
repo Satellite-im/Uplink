@@ -11,11 +11,10 @@ use wry::webview::WebView;
 use crate::warp_runner::ui_adapter;
 
 use super::{
-    chats::Chat,
     identity::Identity,
     notifications::NotificationKind,
     route::To,
-    ui::{Theme, ToastNotification, WindowMeta},
+    ui::{Font, Theme, ToastNotification, WindowMeta},
 };
 
 /// used exclusively by State::mutate
@@ -29,6 +28,7 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
+
     // hang up for the active media stream
     #[display(fmt = "DisableMedia")]
     DisableMedia,
@@ -43,9 +43,11 @@ pub enum Action<'a> {
     #[display(fmt = "AddToastNotification")]
     AddToastNotification(ToastNotification),
     #[display(fmt = "SetTheme")]
-    SetTheme(Theme),
-    #[display(fmt = "ClearTheme")]
-    ClearTheme,
+    SetTheme(Option<Theme>),
+    #[display(fmt = "SetFont")]
+    SetFont(Option<Font>),
+    #[display(fmt = "SetFontScale")]
+    SetFontScale(f32),
     // RemoveToastNotification,
     /// sets the active media to the corresponding conversation uuid
     #[display(fmt = "SetActiveMedia")]
@@ -83,11 +85,12 @@ pub enum Action<'a> {
     ClearNotification(NotificationKind),
     #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
+    #[display(fmt = "DismissUpdate")]
+    DismissUpdate,
     // Settings
     /// Sets the selected language.
     #[display(fmt = "SetLanguage")]
     SetLanguage(String),
-
     // Routes
     /// Set the active route
     #[display(fmt = "Navigate")]
@@ -163,7 +166,7 @@ pub enum Action<'a> {
     #[display(fmt = "MockSend")]
     MockSend(Uuid, Vec<String>),
     #[display(fmt = "ClearUnreads")]
-    ClearUnreads(Chat),
+    ClearUnreads(Uuid),
     #[display(fmt = "ClearActiveUnreads")]
     ClearActiveUnreads,
     #[display(fmt = "Config {_0}")]
@@ -172,6 +175,8 @@ pub enum Action<'a> {
 
 #[derive(Display)]
 pub enum ConfigAction {
+    #[display(fmt = "SetDyslexicEnabled {_0}")]
+    SetDyslexicEnabled(bool),
     #[display(fmt = "SetNotificationsEnabled {_0}")]
     SetNotificationsEnabled(bool),
     #[display(fmt = "SetTheme {_0}")]

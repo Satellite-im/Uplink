@@ -1,6 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use derive_more::Display;
+
 use futures::channel::oneshot;
 use warp::{
     crypto::DID,
@@ -8,12 +12,12 @@ use warp::{
     logging::tracing::log,
     multipass::{
         self,
-        identity::{self, IdentityUpdate},
+        identity::{self, Identifier, IdentityUpdate},
     },
 };
 
 use crate::{
-    state::{self, friends},
+    state::{self, friends, Identity},
     warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
@@ -30,9 +34,10 @@ pub enum MultiPassCmd {
         passphrase: String,
         rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "RequestFriend {{ did: {did} }} ")]
+    #[display(fmt = "RequestFriend {{ request: {id} }} ")]
     RequestFriend {
-        did: DID,
+        id: String,
+        outgoing_requests: Vec<Identity>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "InitializeFriends")]
@@ -118,7 +123,56 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
             // do nothing and drop the rsp channel
         }
-        MultiPassCmd::RequestFriend { did, rsp } => {
+        MultiPassCmd::RequestFriend {
+            id,
+            outgoing_requests,
+            rsp,
+        } => {
+            // First attempt using a did
+            let did = match DID::from_str(id.as_str()) {
+                Ok(did) => did,
+                Err(_) => {
+                    // Invalid attempt of using a did key
+                    if id.starts_with("did:key") {
+                        log::error!("could not get did from str: {}", id);
+                        let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                        return;
+                    }
+                    // Check that input matches username search syntax of Username#<short id>
+                    let split_data = id.split('#').collect::<Vec<&str>>();
+                    if split_data.len() != 2
+                        || split_data[1].chars().count() < 4 // Username constraints
+                        || split_data[1].chars().count() > 32
+                        || split_data[1].len() != identity::SHORT_ID_SIZE
+                    {
+                        log::error!("invalid username input: {}", id);
+                        let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                        return;
+                    }
+                    match warp.multipass.get_identity(Identifier::Username(id)).await {
+                        Ok(id) => {
+                            // It should only find 1 matching identity
+                            if id.len() != 1 {
+                                let _ = rsp.send(Result::Err(Error::IdentityInvalid));
+                                return;
+                            }
+                            id[0].did_key()
+                        }
+                        Err(err) => {
+                            let _ = rsp.send(Result::Err(err));
+                            return;
+                        }
+                    }
+                }
+            };
+            // If request already exist return
+            if outgoing_requests
+                .into_iter()
+                .any(|id| id.did_key().eq(&did))
+            {
+                let _ = rsp.send(Result::Err(Error::FriendRequestExist));
+                return;
+            }
             let r = warp.multipass.send_request(&did).await;
             let _ = rsp.send(r);
         }

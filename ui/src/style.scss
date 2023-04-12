@@ -1,139 +1,149 @@
-
-  
-html, body {
-    height: 100%;
-    margin: 0;
-    overscroll-behavior-y: none;
-    overscroll-behavior-x: none;
-    overflow: hidden;
-    border-radius: var(--border-radius);
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  overflow: hidden;
+  border-radius: var(--border-radius);
 }
-#main, #app-wrap {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: none;
-    overflow: hidden;
-    display: inline-flex;
-    flex-direction: column;
+#main,
+#app-wrap {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
+  overflow: hidden;
+  display: inline-flex;
+  flex-direction: column;
 }
 
 #app-wrap {
-    border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);
 }
 
 :root {
-    --titlebar-height: 1.75rem;
+  --titlebar-height: 1.75rem;
 }
 
 #titlebar {
-    height: fit-content;
-    width: 100%;
-    background-color: var(--background);
-    border-bottom: 1px solid var(--border-color);
-    display: inline-flex;
-    justify-content: flex-end;
-    user-select: none;
-    cursor: pointer;
-    min-height: 1.6rem;
+  height: fit-content;
+  width: 100%;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border-color);
+  display: inline-flex;
+  justify-content: flex-end;
+  user-select: none;
+  cursor: pointer;
+  min-height: 1.6rem;
 
-    .btn-wrap {
-        height: var(--titlebar-height);
-        width: var(--titlebar-height);
-        padding: unset;
-        .btn {
-            font-size: var(--text-size-less);
-            height: 100%;
-            opacity: 0.5;
-        }
+  .btn-wrap {
+    height: var(--titlebar-height);
+    width: var(--titlebar-height);
+    padding: unset;
+    .btn {
+      font-size: var(--text-size-less);
+      height: 100%;
+      opacity: 0.5;
     }
+  }
+}
+
+#update-available {
+  display: inline-flex;
+  gap: var(--gap-less);
+  align-content: center;
+  justify-content: center;
+  width: fit-content;
+  color: var(--warning-light);
+  font-size: var(--text-size-less);
+  cursor: pointer;
 }
 
 #pre-release {
-    position: fixed;
-    top: 0.14rem;
-    margin-left: 4rem; // TODO: only do this on mac
-    left: var(--gap);
-    background-color: var(--secondary-dark);
-    border-radius: var(--border-radius-less);
-    display: inline-flex;
-    gap: var(--gap-less);
-    align-content: center;
-    justify-content: center;
-    width: fit-content;
-    padding: var(--gap-less);
-    pointer-events: none;
-    user-select: none;
-    cursor: default;
-    p {
-        color: var(--warning-light);
-        font-size: var(--text-size-less);    
-    }
-    svg {
-        fill: transparent;
-        stroke: var(--warning-light);
-        height: var(--text-size-less);
-        align-self: center;
-        width: var(--text-size-less);
-    }
+  position: fixed;
+  top: 0.14rem;
+  margin-left: 4rem; // TODO: only do this on mac
+  left: var(--gap);
+  background-color: var(--secondary-dark);
+  border-radius: var(--border-radius-less);
+  display: inline-flex;
+  gap: var(--gap-less);
+  align-content: center;
+  justify-content: center;
+  width: fit-content;
+  padding: var(--gap-less);
+  user-select: none;
+  cursor: default;
+  p {
+    color: var(--warning-light);
+    font-size: var(--text-size-less);
+    cursor: pointer;
+  }
+  svg {
+    fill: transparent;
+    stroke: var(--warning-light);
+    height: var(--text-size-less);
+    align-self: center;
+    width: var(--text-size-less);
+  }
 }
 
 #main {
-    background-color: var(--background);
-    position: relative;
-    overflow: hidden;
-    // border: 1px solid var(--border-color);
+  background-color: var(--background);
+  position: relative;
+  overflow: hidden;
+  // border: 1px solid var(--border-color);
 }
 
 .search-input,
 .search-input .input-group {
-    width: 100%;
+  width: 100%;
 }
 
 .vertically-scrollable {
-    display: inline-flex;
-    gap: var(--gap);
-    width: 100%;
-    overflow-x: scroll;
-    height: fit-content;
-    transition: background var(--animation-time);
+  display: inline-flex;
+  gap: var(--gap);
+  width: 100%;
+  overflow-x: scroll;
+  height: fit-content;
+  transition: background var(--animation-time);
 }
-
 
 /* width */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-    opacity: 1;
+  width: 8px;
+  height: 8px;
+  opacity: 1;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: var(--background);
+  background: var(--background);
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: var(--secondary);
-    border-radius: var(--border-radius);
+  background: var(--secondary);
+  border-radius: var(--border-radius);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
-}    
+  background: var(--primary);
+}
 
 /* Disable the corner of scrollbars */
 ::-webkit-scrollbar-corner {
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .drag-handle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 2rem;
-    z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  z-index: 1;
 }

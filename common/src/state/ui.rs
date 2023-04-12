@@ -16,8 +16,6 @@ pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,
     pub minimized: bool,
-    pub width: u32,
-    pub height: u32,
     pub minimal_view: bool, // We can use this to detect mobile or portrait mode
 }
 
@@ -51,7 +49,9 @@ pub struct UI {
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
+    pub font: Option<Font>,
     pub enable_overlay: bool,
+    pub active_welcome: bool,
     pub sidebar_hidden: bool,
     pub metadata: WindowMeta,
     #[serde(skip)]
@@ -65,6 +65,8 @@ pub struct UI {
     pub file_previews: HashMap<Uuid, WindowId>,
     #[serde(default = "bool_true")]
     pub show_settings_welcome: bool,
+    // Cached username used in login page
+    pub cached_username: Option<String>,
 }
 
 #[derive(Default, Deserialize, Serialize)]
@@ -158,6 +160,9 @@ impl UI {
         if let Some(id) = self.take_debug_logger_id() {
             desktop_context.close_window(id);
         };
+    }
+    pub fn settings_welcome(&mut self) {
+        self.active_welcome = true;
     }
     pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
         self.file_previews.insert(key, window_id);
@@ -318,9 +323,21 @@ impl ToastNotification {
     }
 }
 
-#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Eq, Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Theme {
     pub filename: String,
     pub name: String,
     pub styles: String,
+}
+
+impl PartialEq for Theme {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
+    }
+}
+
+#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Font {
+    pub name: String,
+    pub path: String,
 }

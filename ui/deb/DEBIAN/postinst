@@ -1,0 +1,3 @@
+#!/bin/sh 
+chmod +x /opt/im.satellite/uplink
+chmod +x /usr/share/applications/im.satellite.uplink.desktop

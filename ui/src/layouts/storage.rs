@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::path::Path;
 use std::rc::Weak;
 use std::time::Duration;
@@ -15,7 +16,7 @@ use common::{
 };
 
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window, DesktopContext};
+use dioxus_desktop::{use_window, Config, DesktopContext};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -46,6 +47,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::get_window_builder;
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
@@ -477,7 +479,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 aria_label: "files-body",
                 Topbar {
                     with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
-                    with_currently_back: state.read().ui.sidebar_hidden,
                     onback: move |_| {
                         let current = state.read().ui.sidebar_hidden;
                         state.write().mutate(Action::SidebarHidden(!current));
@@ -722,7 +723,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     file: file3.clone(),
                                                     _drop_handler: drop_handler
                                                 });
-                                                let window = window.new_window(file_preview, Default::default());
+
+                                                let config = Config::default().with_window(get_window_builder(false));
+                                                let window = window.new_window(file_preview, config);
                                                 if let Some(wv) = Weak::upgrade(&window) {
                                                     let id = wv.window().id();
                                                     state.write().mutate(Action::AddFilePreview(key, id));
@@ -809,32 +812,36 @@ async fn drag_and_drop_function(
         let file_drop_event = get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered(files_local_path) => {
-                let mut script = main_script.replace("$IS_DRAGGING", "true");
-                if files_local_path.len() > 1 {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.files-to-upload")
-                        ),
-                    ));
-                } else {
-                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                        "$TEXT",
-                        &format!(
-                            "{} {}!",
-                            files_local_path.len(),
-                            get_local_text("files.one-file-to-upload")
-                        ),
-                    ));
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let mut script = main_script.replace("$IS_DRAGGING", "true");
+                    if files_local_path.len() > 1 {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.files-to-upload")
+                            ),
+                        ));
+                    } else {
+                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
+                            "$TEXT",
+                            &format!(
+                                "{} {}!",
+                                files_local_path.len(),
+                                get_local_text("files.one-file-to-upload")
+                            ),
+                        ));
+                    }
+                    window.eval(&script);
                 }
-                window.eval(&script);
             }
             FileDropEvent::Dropped(files_local_path) => {
-                let new_files_to_upload = decoded_pathbufs(files_local_path);
-                ch.send(ChanCmd::UploadFiles(new_files_to_upload));
-                break;
+                if verify_if_there_are_valid_paths(&files_local_path) {
+                    let new_files_to_upload = decoded_pathbufs(files_local_path);
+                    ch.send(ChanCmd::UploadFiles(new_files_to_upload));
+                    break;
+                }
             }
             _ => {
                 *drag_event.write_silent() = None;
@@ -847,7 +854,16 @@ async fn drag_and_drop_function(
     }
 }
 
+pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool {
+    if files_local_path.is_empty() {
+        false
+    } else {
+        files_local_path.first().map_or(false, |path| path.exists())
+    }
+}
+
 pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    #[allow(unused_mut)]
     let mut paths = paths;
     #[cfg(target_os = "linux")]
     {

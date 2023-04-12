@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,7 +58,7 @@ jobs:
         with:
           name: Uplink-Windows
           path: |
-            target/release/ui.exe
+            target/release/uplink.exe
 
   test-on-windows:
     needs: build-windows
@@ -73,17 +77,11 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 16
-
-      - name: Download the app 🗳️
-        uses: actions/download-artifact@v3
-        with:
-          name: Uplink-Windows
-          path: ./appium-tests/apps
+          node-version: 18
 
       - name: Install NPM dependencies 📦
-        run: |
-          cd appium-tests && npm install
+        working-directory: ./appium-tests
+        run: npm ci
 
       - name: Install and Run Appium Server 💻
         run: |
@@ -91,6 +89,12 @@ jobs:
           appium -v
           appium driver install --source=npm appium-windows-driver
           appium driver list
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
 
       - name: Delete cache folder before starting
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }

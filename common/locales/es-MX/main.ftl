@@ -108,9 +108,6 @@ settings-general = General Settings
     .change-language = Cambiar Idioma
     .theme = Tema
     .theme-description = Cambia el tema de la aplicación
-    .theme-reset = Restaurar tema
-    .theme-reset-description = Restaurar el tema predeterminado
-    .theme-reset-cta = Limpiar tema
 
 settings-extensions = Extension Settings
     .placeholder = Marcador de posición
@@ -120,6 +117,10 @@ settings-privacy = Settings Privacy
     .backup-recovery-phrase = Frase de recuperación de copia de seguridad
     .backup-phrase = Frase de copia de seguridad
     .backup-phrase-description = ¡Haz una copia de esta frase! Junto con tu contraseña, esto representa tu cuenta. Si la pierdes, no podemos ayudarte a recuperarla.
+
+settings-about = UNKNOWN
+    .open-codebase = Abrir Base de Código
+    .open-codebase-description = Abre la base de código en tu navegador web predeterminado.
 
 settings-audio = Audio Settings 
     .call-timer = Temporizador de llamada
@@ -134,8 +135,6 @@ settings-files = Files Settings
 settings-developer = Developer Settings 
     .developer-mode = Modo de desarrollador
     .developer-mode-description = Al habilitar el modo de desarrollador, se agrega registro y se muestra información útil de depuración en la interfaz de usuario.
-    .open-codebase = Abrir Base de Código
-    .open-codebase-description = Abre la base de código en tu navegador web predeterminado.
     .open-cache = Abrir Caché
     .open-cache-description = Abrir la caché en tu navegador de archivos predeterminado.
     .open-cache-folder = Abrir Carpeta

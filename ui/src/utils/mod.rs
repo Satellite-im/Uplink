@@ -1,44 +1,83 @@
 use common::{
-    state::{self, Theme},
+    state::{self, ui::Font, Theme},
     STATIC_ARGS,
 };
+
 use std::{fs, path::Path};
 use titlecase::titlecase;
+
 use walkdir::WalkDir;
 
 use kit::User as UserInfo;
 
 use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
+pub mod auto_updater;
 pub mod format_timestamp;
 pub mod lifecycle;
 
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
 
-    for file in WalkDir::new(&STATIC_ARGS.themes_path)
+    let mut add_to_themes = |themes_path| {
+        for file in WalkDir::new(themes_path)
+            .into_iter()
+            .filter_map(|file| file.ok())
+        {
+            if file.metadata().map(|x| x.is_file()).unwrap_or(false) {
+                let theme_path = file.path().display().to_string();
+                let pretty_theme_str = get_pretty_name(&theme_path);
+                let pretty_theme_str = titlecase(&pretty_theme_str);
+
+                let styles = fs::read_to_string(&theme_path).unwrap_or_default();
+
+                let theme = Theme {
+                    filename: theme_path.to_owned(),
+                    name: pretty_theme_str.to_owned(),
+                    styles,
+                };
+                if !themes.contains(&theme) {
+                    themes.push(theme);
+                }
+            }
+        }
+    };
+    add_to_themes(&STATIC_ARGS.themes_path);
+    add_to_themes(&STATIC_ARGS.extras_path.join("themes"));
+
+    themes.sort_by_key(|theme| theme.name.clone());
+    themes.dedup();
+
+    themes
+}
+
+pub fn get_available_fonts() -> Vec<Font> {
+    let mut fonts = vec![];
+
+    for file in WalkDir::new(&STATIC_ARGS.fonts_path)
         .into_iter()
         .filter_map(|file| file.ok())
     {
-        if file.metadata().unwrap().is_file() {
-            let theme_path = file.path().display().to_string();
-            let pretty_theme_str = get_pretty_name(&theme_path);
-            let pretty_theme_str = titlecase(&pretty_theme_str);
+        if file.metadata().map(|x| x.is_file()).unwrap_or(false) {
+            let file_osstr = file.file_name();
+            let mut pretty_name: String = file_osstr.to_str().unwrap_or_default().into();
+            pretty_name = pretty_name
+                .replace(['_', '-'], " ")
+                .split('.')
+                .next()
+                .unwrap()
+                .into();
 
-            let styles = fs::read_to_string(&theme_path).unwrap_or_default();
-
-            let theme = Theme {
-                filename: theme_path.to_owned(),
-                name: pretty_theme_str.to_owned(),
-                styles,
+            let font = Font {
+                name: pretty_name,
+                path: file.path().to_str().unwrap_or_default().into(),
             };
 
-            themes.push(theme);
+            fonts.push(font);
         }
     }
-    themes.sort_by_key(|theme| theme.name.clone());
 
-    themes
+    fonts
 }
 
 fn get_pretty_name<S: AsRef<str>>(name: S) -> String {

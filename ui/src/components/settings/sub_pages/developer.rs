@@ -22,7 +22,7 @@ use crate::{components::settings::SettingSection, logger};
 
 #[allow(non_snake_case)]
 pub fn DeveloperSettings(cx: Scope) -> Element {
-    log::debug!("Developer settings page rendered.");
+    log::trace!("Developer settings page rendered.");
     let state = use_shared_state::<State>(cx)?;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<PathBuf>| {
@@ -72,19 +72,6 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
 
                         state.write().mutate(Action::Config(ConfigAction::SetDevModeEnabled(value)));
                     },
-                }
-            },
-            SettingSection {
-                section_label: get_local_text("settings-developer.open-codebase"),
-                section_description: get_local_text("settings-developer.open-codebase-description"),
-                Button {
-                    text: get_local_text("settings-developer.open-codebase"),
-                    aria_label: "open-codebase-button".into(),
-                    appearance: Appearance::Secondary,
-                    icon: Icon::CodeBracketSquare,
-                    onpress: |_| {
-                        let _ = open::that("https://github.com/Satellite-im/Uplink");
-                    }
                 }
             },
             SettingSection {

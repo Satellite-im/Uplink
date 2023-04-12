@@ -5,6 +5,7 @@ pub mod friends;
 pub mod identity;
 pub mod notifications;
 pub mod route;
+pub mod scope_ids;
 pub mod settings;
 pub mod storage;
 pub mod ui;
@@ -20,6 +21,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
+use warp::raygun::ConversationType;
 
 use crate::STATIC_ARGS;
 
@@ -46,7 +48,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::ui::{Call, Layout};
+use self::ui::{Call, Font, Layout};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -60,6 +62,7 @@ pub struct State {
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
+    pub scope_ids: scope_ids::ScopeIds,
     pub settings: settings::Settings,
     pub ui: ui::UI,
     pub configuration: configuration::Configuration,
@@ -88,6 +91,7 @@ impl Clone for State {
             friends: self.friends.clone(),
             storage: self.storage.clone(),
             settings: Default::default(),
+            scope_ids: Default::default(),
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
@@ -107,7 +111,10 @@ impl State {
     }
 
     pub fn mutate(&mut self, action: Action) {
-        log::debug!("state::mutate: {}", action);
+        // ignore noisy events
+        if !matches!(action, Action::SetChatDraft(_, _)) {
+            log::debug!("state::mutate: {}", action);
+        }
 
         match action {
             Action::SetExtensionEnabled(extension, enabled) => {
@@ -141,6 +148,14 @@ impl State {
                 self.ui
                     .toast_notifications
                     .insert(Uuid::new_v4(), notification);
+            }
+            Action::DismissUpdate => {
+                self.settings.update_dismissed = self.settings.update_available.take();
+                self.ui.notifications.decrement(
+                    &self.configuration,
+                    notifications::NotificationKind::Settings,
+                    1,
+                );
             }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
@@ -182,8 +197,10 @@ impl State {
             Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
-            Action::SetTheme(theme) => self.set_theme(Some(theme)),
-            Action::ClearTheme => self.set_theme(None),
+            Action::SetTheme(theme) => self.set_theme(theme),
+            // Fonts
+            Action::SetFont(font) => self.set_font(font),
+            Action::SetFontScale(font_scale) => self.settings.set_font_scale(font_scale),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -196,7 +213,7 @@ impl State {
             }
             Action::StartReplying(chat, message) => self.start_replying(chat, message),
             Action::CancelReply(chat_id) => self.cancel_reply(chat_id),
-            Action::ClearUnreads(chat) => self.clear_unreads(chat.id),
+            Action::ClearUnreads(id) => self.clear_unreads(id),
             Action::ClearActiveUnreads => {
                 if let Some(id) = self.chats.active {
                     self.clear_unreads(id);
@@ -219,7 +236,6 @@ impl State {
                 };
                 self.add_msg_to_chat(id, m);
             }
-
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
@@ -469,9 +485,6 @@ impl State {
         identities.insert(my_id.did_key(), my_id);
         Self {
             id,
-            settings: Settings {
-                language: "English (USA)".into(),
-            },
             route: Route { active: "/".into() },
             storage,
             chats,
@@ -497,26 +510,32 @@ impl State {
             return State::load_mock();
         };
 
-        let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
-            Ok(r) => r,
-            Err(_) => {
-                log::info!("state.json not found. Initializing State with default values");
-                return State::default();
-            }
-        };
-        let mut state: Self = match serde_json::from_str(&contents) {
-            Ok(s) => s,
-            Err(e) => {
-                log::error!(
-                    "state.json failed to deserialize: {e}. Initializing State with default values"
-                );
-                return State::default();
+        let mut state = {
+            match fs::read_to_string(&STATIC_ARGS.cache_path) {
+                Ok(contents) => match serde_json::from_str(&contents) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!(
+                            "state.json failed to deserialize: {e}. Initializing State with default values"
+                        );
+                        State::default()
+                    }
+                },
+                Err(_) => {
+                    log::info!("state.json not found. Initializing State with default values");
+                    State::default()
+                }
             }
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
         state.chats.initialized = false;
+
+        if state.settings.font_scale() == 0.0 {
+            state.settings.set_font_scale(1.0);
+        }
+
         state
     }
     fn load_mock() -> Self {
@@ -583,7 +602,9 @@ impl State {
         for (id, chat) in chats {
             if let Some(conv) = self.chats.all.get_mut(&id) {
                 conv.messages = chat.messages;
-                conv.has_more_messages = chat.has_more_messages
+                conv.conversation_type = chat.conversation_type;
+                conv.has_more_messages = chat.has_more_messages;
+                conv.conversation_name = chat.conversation_name;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -638,6 +659,14 @@ impl State {
             }
         }
     }
+
+    pub fn active_chat_has_draft(&self) -> bool {
+        self.get_active_chat()
+            .as_ref()
+            .and_then(|d| d.draft.as_ref())
+            .map(|d| !d.is_empty())
+            .unwrap_or(false)
+    }
     /// Cancels a reply within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -651,8 +680,7 @@ impl State {
     pub fn can_use_active_chat(&self) -> bool {
         self.get_active_chat()
             .map(|c| {
-                let participants = &c.participants;
-                if participants.len() == 2 {
+                if c.conversation_type == ConversationType::Direct {
                     return c
                         .participants
                         .iter()
@@ -731,12 +759,16 @@ impl State {
             .active_media
             .and_then(|uuid| self.chats.all.get(&uuid))
     }
-    pub fn get_chat_with_friend(&self, friend: &Identity) -> Option<Chat> {
+    pub fn get_chat_by_id(&self, id: Uuid) -> Option<Chat> {
+        self.chats.all.get(&id).cloned()
+    }
+    pub fn get_chat_with_friend(&self, friend: DID) -> Option<Chat> {
         self.chats
             .all
             .values()
             .find(|chat| {
-                chat.participants.len() == 2 && chat.participants.contains(&friend.did_key())
+                chat.conversation_type == ConversationType::Direct
+                    && chat.participants.contains(&friend)
             })
             .cloned()
     }
@@ -942,7 +974,7 @@ impl State {
 
         // Check if there is a direct chat with the friend being removed
         let direct_chat = all_chats.values().find(|chat| {
-            chat.participants.len() == 2
+            chat.conversation_type == ConversationType::Direct
                 && chat
                     .participants
                     .iter()
@@ -978,6 +1010,17 @@ impl State {
     /// Sets the user's language.
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
+    }
+
+    pub fn update_available(&mut self, version: String) {
+        if self.settings.update_available != Some(version.clone()) {
+            self.settings.update_available = Some(version);
+            self.ui.notifications.increment(
+                &self.configuration,
+                notifications::NotificationKind::Settings,
+                1,
+            )
+        }
     }
 }
 
@@ -1035,6 +1078,9 @@ impl State {
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
+    }
+    pub fn set_font(&mut self, font: Option<Font>) {
+        self.ui.font = font;
     }
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {
@@ -1105,7 +1151,73 @@ impl State {
     }
     pub fn set_own_identity(&mut self, identity: Identity) {
         self.id = identity.did_key();
+        self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
+    }
+    pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+        self.identities
+            .values()
+            .filter(|id| {
+                let un = id.username();
+                if un.len() < name_prefix.len() {
+                    false
+                } else {
+                    &un[..(name_prefix.len())] == name_prefix
+                }
+            })
+            .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
+            .collect()
+    }
+    // lets the user search for a group chat by chat name or, if a chat is not named, by the names of its participants
+    pub fn search_group_chats(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+        let get_display_name = |chat: &Chat| -> String {
+            let names: Vec<_> = chat
+                .participants
+                .iter()
+                .filter_map(|id| self.identities.get(id))
+                .map(|x| x.username())
+                .collect();
+
+            names.join(",")
+        };
+
+        let compare_str = |v: &str| {
+            if v.len() < name_prefix.len() {
+                false
+            } else {
+                &v[..(name_prefix.len())] == name_prefix
+            }
+        };
+
+        self.chats
+            .all
+            .iter()
+            .filter(|(_, v)| v.conversation_type == ConversationType::Group)
+            .filter(|(_k, v)| {
+                let names: Vec<_> = v
+                    .participants
+                    .iter()
+                    .filter_map(|id| self.identities.get(id))
+                    .map(|x| x.username())
+                    .collect();
+
+                let user_name_match = names.iter().any(|n| compare_str(n));
+                let group_name_match = match v.conversation_name.as_ref() {
+                    Some(n) => compare_str(n),
+                    None => false,
+                };
+
+                user_name_match || group_name_match
+            })
+            .map(|(k, v)| {
+                if let Some(name) = v.conversation_name.as_ref() {
+                    identity_search_result::Entry::from_chat(name.clone(), *k)
+                } else {
+                    let name = get_display_name(v);
+                    identity_search_result::Entry::from_chat(name, *k)
+                }
+            })
+            .collect()
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {
@@ -1160,6 +1272,41 @@ impl State {
             .get(&self.did_key())
             .map(|x| x.username())
             .unwrap_or_default()
+    }
+}
+
+// putting this in a separate module for naming purposes
+pub mod identity_search_result {
+    use uuid::Uuid;
+    use warp::crypto::DID;
+
+    #[derive(Debug, Clone)]
+    pub struct Entry {
+        pub display_name: String,
+        pub id: Identifier,
+    }
+
+    #[allow(clippy::large_enum_variant)]
+    #[derive(Debug, Clone)]
+    pub enum Identifier {
+        Did(DID),
+        Uuid(Uuid),
+    }
+
+    impl Entry {
+        pub fn from_identity(name: String, did: DID) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Did(did),
+            }
+        }
+
+        pub fn from_chat(name: String, id: Uuid) -> Self {
+            Self {
+                display_name: name,
+                id: Identifier::Uuid(id),
+            }
+        }
     }
 }
 
