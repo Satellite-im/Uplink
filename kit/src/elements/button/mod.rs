@@ -112,7 +112,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             UUID,
                             if disabled { "btn-disabled" } else { "" }, 
                             if text.is_empty() { "no-text" } else {""},
-                            if cx.props.loading.unwrap_or(false) { "pointer" } else { "" }
+                            if cx.props.loading.unwrap_or(false) { "progress" } else { "" }
                         )
                     },
                     // Optionally pass through click events.
