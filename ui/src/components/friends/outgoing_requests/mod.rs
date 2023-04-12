@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::components::friends::friend::Friend;
 use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
@@ -23,22 +25,25 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 pub fn OutgoingRequests(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
     let friends_list = state.read().outgoing_fr_identities();
+    let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
-        //to_owned![];
+        to_owned![remove_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CancelRequest {
-                    did,
+                    did: did.clone(),
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
+                    remove_in_progress.make_mut().remove(&did);
                     continue;
                 }
 
                 let rsp = rx.await.expect("command canceled");
+                remove_in_progress.make_mut().remove(&did);
                 if let Err(e) = rsp {
                     log::error!("failed to cancel request: {}", e);
                 }
@@ -86,6 +91,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 relationship.set_sent_friend_request(true);
                                 relationship
                             },
+                            remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
                             request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
@@ -98,6 +104,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::CancelRequest(&did2));
                                 } else {
+                                    remove_in_progress.make_mut().insert(did2.clone());
                                     ch.send(did2.clone());
                                 }
                             }

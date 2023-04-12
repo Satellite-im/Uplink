@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::rc::Rc;
 
 use crate::components::friends::friend::Friend;
@@ -31,9 +32,11 @@ enum ChanCmd {
 pub fn PendingFriends(cx: Scope) -> Element {
     let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
     let friends_list = state.read().incoming_fr_identities();
+    let deny_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let accept_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        //to_owned![];
+        to_owned![deny_in_progress, accept_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -42,15 +45,17 @@ pub fn PendingFriends(cx: Scope) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::AcceptRequest {
-                                did: identity,
+                                did: identity.clone(),
                                 rsp: tx,
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
+                            accept_in_progress.make_mut().remove(&identity);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
+                        accept_in_progress.make_mut().remove(&identity);
                         if let Err(e) = rsp {
                             log::error!("failed to accept request: {}", e);
                         }
@@ -59,15 +64,17 @@ pub fn PendingFriends(cx: Scope) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::DenyRequest {
-                                did: identity,
+                                did: identity.clone(),
                                 rsp: tx,
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
+                            deny_in_progress.make_mut().remove(&identity);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
+                        deny_in_progress.make_mut().remove(&identity);
                         if let Err(e) = rsp {
                             log::error!("failed to deny request: {}", e);
                         }
@@ -90,6 +97,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 let _status_message = friend.status_message().unwrap_or_default();
                 let mut rng = rand::thread_rng();
                 let did = friend.did_key();
+                let did2 = did.clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let platform = friend.platform().into();
                 let friend2 = friend.clone();
@@ -108,7 +116,8 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::AcceptRequest(&friend));
                                     } else {
-                                       ch.send(ChanCmd::AcceptRequest(friend.did_key()));
+                                        accept_in_progress.make_mut().insert(friend.did_key());
+                                        ch.send(ChanCmd::AcceptRequest(friend.did_key()));
                                     }
                                 }
                             },
@@ -120,7 +129,8 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::DenyRequest(&did));
                                     } else {
-                                       ch.send(ChanCmd::DenyRequest(did.clone()));
+                                        deny_in_progress.make_mut().insert(did.clone());
+                                        ch.send(ChanCmd::DenyRequest(did.clone()));
                                     }
                                 }
                             }
@@ -142,6 +152,8 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                     image: friend2.graphics().profile_picture()
                                 }
                             )),
+                            accept_button_disabled: accept_in_progress.current().contains(&did2),
+                            remove_button_disabled: deny_in_progress.current().contains(&did2),
                             onaccept: move |_| {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::AcceptRequest(&friend4));
