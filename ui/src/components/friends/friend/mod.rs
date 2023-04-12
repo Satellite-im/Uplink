@@ -92,6 +92,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
                         aria_label: "Accept Friend".into(),
+                        loading:  cx.props.accept_button_disabled.unwrap_or(false),
                         disabled: cx.props.accept_button_disabled.unwrap_or(false),
                         onpress: move |_| match &cx.props.onaccept {
                             Some(f) => f.call(()),
@@ -113,6 +114,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Button {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
+                    loading:  cx.props.remove_button_disabled.unwrap_or(false),
                     disabled: cx.props.remove_button_disabled.unwrap_or(false),
                     onpress: move |_| {
                         // note that the blocked list uses the onremove callback to unblock the user.yes, it's kind of a hack
@@ -133,6 +135,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
+                        loading:  cx.props.block_button_disabled.unwrap_or(false),
                         disabled: cx.props.block_button_disabled.unwrap_or(false),
                         onpress: move |_| match &cx.props.onblock {
                             Some(f) => f.call(()),
