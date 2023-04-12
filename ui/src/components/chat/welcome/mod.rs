@@ -27,7 +27,7 @@ pub fn Welcome(cx: Scope) -> Element {
                 id: "welcome",
                 aria_label: "welcome-screen",
                 if state.read().ui.sidebar_hidden {
-                    rsx!(  
+                    rsx!(
                         Topbar {
                         with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
                         onback: move |_| {
