@@ -87,6 +87,18 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
         None => SiteMeta::default(),
     };
 
+    let title = if meta.title.chars().count() > 100 {
+        meta.title[0..97].to_string() + "..."
+    } else {
+        meta.title.clone()
+    };
+
+    let desc = if meta.description.chars().count() > 200 {
+        meta.description[0..197].to_string() + "..."
+    } else {
+        meta.description.clone()
+    };
+
     cx.render(rsx! {
         if meta.title.is_empty() {
             rsx! { span {""} }
@@ -104,14 +116,14 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                             a {
                                 class: "link-title",
                                 href: "{cx.props.link}",
-                                "{meta.title}"
+                                "{title}"
                             }
                         },
                         h2 {},
                         div {
                             class: "embed-details",
                             p {
-                                "{meta.description}"
+                                "{desc}"
                             }
                         }
                     }
