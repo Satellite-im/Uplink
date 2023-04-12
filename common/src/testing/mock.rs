@@ -123,6 +123,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
             _ => ConversationType::Group,
         },
         conversation_name: None,
+        creator: None,
         messages,
         unreads: rng.gen_range(0..2),
         replying_to: None,

@@ -39,6 +39,9 @@ pub struct Chat {
     // only Some for group chats
     #[serde(default)]
     pub conversation_name: Option<String>,
+    // Only for group chats
+    #[serde(default)]
+    pub creator: Option<DID>,
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.

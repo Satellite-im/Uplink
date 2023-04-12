@@ -39,6 +39,11 @@ use crate::{
     UPLINK_ROUTES,
 };
 
+enum MessagesCommand {
+    CreateConversation { recipient: DID },
+    DeleteConversation { conv_id: Uuid },
+}
+
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
@@ -86,28 +91,52 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         state.write().mutate(Action::ChatWith(&chat, true));
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
         to_owned![chat_with];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(recipient) = rx.next().await {
-                // if not, create the chat
-                let (tx, rx) = oneshot::channel();
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                    recipient,
-                    rsp: tx,
-                })) {
-                    log::error!("failed to send warp command: {}", e);
-                    continue;
-                }
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    MessagesCommand::CreateConversation { recipient } => {
+                        // if not, create the chat
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                                recipient,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
 
-                let rsp = rx.await.expect("command canceled");
+                        let rsp = rx.await.expect("command canceled");
 
-                match rsp {
-                    Ok(c) => chat_with.set(Some(c)),
-                    Err(e) => {
-                        log::error!("failed to create conversation: {}", e);
-                        continue;
+                        match rsp {
+                            Ok(c) => chat_with.set(Some(c)),
+                            Err(e) => {
+                                log::error!("failed to create conversation: {}", e);
+                                continue;
+                            }
+                        };
+                    }
+                    MessagesCommand::DeleteConversation { conv_id } => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
+                                conv_id: conv_id,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if res.is_err() {
+                            // failed to delete conversation
+                        }
                     }
                 };
             }
@@ -119,7 +148,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
                 chat_with.set(Some(c.id));
             } else {
-                ch.send(did);
+                ch.send(MessagesCommand::CreateConversation { recipient: did });
             }
         }
         identity_search_result::Identifier::Uuid(id) => {
@@ -314,6 +343,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let other_participants =  state.read().remove_self(&participants);
                     let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                     let platform = user.platform().into();
+                    let is_group_conv = participants.len() > 2;
+                    let is_admin = match chat.creator.clone() {
+                        Some(creator_did) => state.read().did_key() == creator_did, 
+                        None => false,
+                    };
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
@@ -378,6 +412,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     text: get_local_text("uplink.hide-chat"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
+                                    }
+                                },
+                                hr{ }
+                                ContextItem {
+                                    icon: Icon::Trash,
+                                    danger: true,
+                                    text: if is_group_conv && is_admin {get_local_text("uplink.delete-group-chat")} 
+                                    else if is_group_conv && !is_admin  {get_local_text("uplink.leave-group")} 
+                                    else {get_local_text("uplink.delete-conversation")},
+                                    onpress: move |_| {
+                                        ch.send(MessagesCommand::DeleteConversation { conv_id: chat.id });
                                     }
                                 },
                             )),
