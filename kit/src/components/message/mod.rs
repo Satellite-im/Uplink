@@ -1,6 +1,7 @@
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
+use linkify::{LinkFinder, LinkKind};
 use warp::{constellation::file::File, logging::tracing::log};
 
 use crate::{components::file_embed::FileEmbed, elements::textarea};
@@ -128,7 +129,11 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             )
                         } else {
-                            rsx! ("{text}")
+                            rsx!(
+                                ChatText {
+                                    text: text
+                                }
+                            )
                         }
                     }
                 )
@@ -171,4 +176,30 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
             }
         }
     }))
+}
+
+#[derive(Props, PartialEq)]
+struct ChatMessageProps {
+    text: String,
+}
+
+#[allow(non_snake_case)]
+fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    let finder = LinkFinder::new();
+    let mut links = vec![];
+    let texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
+        Some(LinkKind::Url) => {
+            links.push(e.as_str());
+            rsx!(
+                a {
+                    style: "text-decoration: underline",
+                    href: e.as_str(),
+                    e.as_str()
+                }
+            )
+        }
+        _ => rsx!(e.as_str()),
+    });
+
+    cx.render(rsx!(texts))
 }

@@ -17,6 +17,7 @@ humansize.workspace = true
 common.workspace = true
 warp.workspace = true
 derive_more.workspace = true
+linkify = "0.9.0"
 
 [dependencies.uuid]
 workspace = true
