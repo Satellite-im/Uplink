@@ -24,7 +24,7 @@ pub fn SlideSelector<'a, T>(cx: Scope<'a, Props<'a, T>>) -> Element<'a>
 where
     T: std::fmt::Display + Clone,
 {
-    let index = use_state(&cx, || cx.props.initial_index);
+    let index = use_state(cx, || cx.props.initial_index);
     let buttons_format = cx
         .props
         .buttons_format

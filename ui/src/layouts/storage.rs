@@ -16,7 +16,7 @@ use common::{
 };
 
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window, DesktopContext};
+use dioxus_desktop::{use_window, Config, DesktopContext};
 use dioxus_router::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -47,6 +47,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::get_window_builder;
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
@@ -722,7 +723,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     file: file3.clone(),
                                                     _drop_handler: drop_handler
                                                 });
-                                                let window = window.new_window(file_preview, Default::default());
+                                        
+                                                let config = Config::default().with_window(get_window_builder(false));
+                                                let window = window.new_window(file_preview, config);
                                                 if let Some(wv) = Weak::upgrade(&window) {
                                                     let id = wv.window().id();
                                                     state.write().mutate(Action::AddFilePreview(key, id));

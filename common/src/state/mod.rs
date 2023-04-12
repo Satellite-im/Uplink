@@ -659,6 +659,14 @@ impl State {
             }
         }
     }
+
+    pub fn active_chat_has_draft(&self) -> bool {
+        self.get_active_chat()
+            .as_ref()
+            .and_then(|d| d.draft.as_ref())
+            .map(|d| !d.is_empty())
+            .unwrap_or(false)
+    }
     /// Cancels a reply within a given chat on `State` struct.
     ///
     /// # Arguments

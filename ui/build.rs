@@ -3,10 +3,8 @@ use rsass::{compile_scss, output};
 use std::{
     error::Error,
     fs::{self, File},
-    io::{Read, Write},
-    path::Path,
+    io::Write,
 };
-use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let version = rustc_version::version().unwrap();
@@ -14,6 +12,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     #[cfg(windows)]
     {
+        //https://github.com/rust-lang/rfcs/blob/master/text/1665-windows-subsystem.md
+        println!("cargo:rustc-link-arg=/ENTRY:mainCRTStartup");
         let mut res = winres::WindowsResource::new();
         res.set("ProductName", "uplink");
         res.set("FileDescription", "uplink");
@@ -57,61 +57,5 @@ fn main() -> Result<(), Box<dyn Error>> {
     scss.write_all(&css)?;
     scss.flush()?;
 
-    // zip the 'extra' directory for building an installer
-    let zip_dest = Path::new("wix").join("extra.zip");
-    let file = File::create(zip_dest).expect("failed to create zip file");
-
-    let src_dir = String::from("extra");
-    let walkdir = WalkDir::new(&src_dir);
-    let it = walkdir.into_iter();
-    zip_dir(
-        &mut it.filter_map(|e| e.ok()),
-        &src_dir,
-        file,
-        zip::CompressionMethod::BZIP2,
-    )
-    .expect("failed to zip assets");
-
     Ok(())
-}
-
-// taken from here: https://github.com/zip-rs/zip/blob/master/examples/write_dir.rs
-fn zip_dir<T>(
-    it: &mut dyn Iterator<Item = walkdir::DirEntry>,
-    prefix: &str,
-    writer: T,
-    method: zip::CompressionMethod,
-) -> zip::result::ZipResult<()>
-where
-    T: Write + std::io::Seek,
-{
-    let mut zip = zip::ZipWriter::new(writer);
-    let options = zip::write::FileOptions::default()
-        .compression_method(method)
-        .unix_permissions(0o755);
-
-    let mut buffer = Vec::new();
-    for entry in it {
-        let path = entry.path();
-        let name = path.strip_prefix(Path::new(prefix)).unwrap();
-
-        // Write file or directory explicitly
-        // Some unzip tools unzip files with directory paths correctly, some do not!
-        if path.is_file() {
-            #[allow(deprecated)]
-            zip.start_file_from_path(name, options)?;
-            let mut f = File::open(path)?;
-
-            f.read_to_end(&mut buffer)?;
-            zip.write_all(&buffer)?;
-            buffer.clear();
-        } else if !name.as_os_str().is_empty() {
-            // Only if not root! Avoids path spec / warning
-            // and mapname conversion failed error on unzip
-            #[allow(deprecated)]
-            zip.add_directory_from_path(name, options)?;
-        }
-    }
-    zip.finish()?;
-    Result::Ok(())
 }
