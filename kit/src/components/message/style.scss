@@ -51,3 +51,15 @@
 	border-top-left-radius: var(--border-radius);
 	border-bottom-left-radius: var(--border-radius);
 }
+
+.emoji-reaction {
+	border: 1px solid var(--secondary);
+	border-radius: var(--border-radius-more);
+	margin-left: 5px;
+	margin-top: 3px;
+	padding: 2px 5px;
+}
+
+.emoji-reaction-self {
+	border: 1px solid var(--primary);
+}

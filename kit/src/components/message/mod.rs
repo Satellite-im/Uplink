@@ -1,4 +1,5 @@
 //use common::icons::outline::Shape as Icon;
+use common::state::State;
 use derive_more::Display;
 use dioxus::prelude::*;
 use warp::{constellation::file::File, logging::tracing::log};
@@ -56,7 +57,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
-
+    let state = use_shared_state::<State>(cx)?;
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
@@ -149,10 +150,32 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "{reactions_class}",
             cx.props.reactions.iter().map(|reaction| {
+                let reactionCount = reaction.users().len();
+
+                let mydid = state.read().did_key();
+
+                // This gives us a string to show in the UI, TODO: need to convert from DID to Username
+                // let users: String = "".to_owned();
+                // for user in reaction.users().iter() {
+                //     if user.to_string() == mydid.to_string() {
+                //         println!("{} it me", user);
+                //     } else {
+                //         println!("{} it NOT me", user)
+                //     }
+                // // Need did to username
+                //     users.push_str(&user.to_string());
+                // }
+                let self_reaction = reaction.users().contains(&mydid);
                 let emoji = reaction.emoji();
+
                 rsx!(
                     div {
-                        "{emoji}"
+                        // alt: "{users}",
+                        class:
+                            format_args!("emoji-reaction {}", if self_reaction {
+                            "emoji-reaction-self"
+                        } else { "" }),
+                        "{emoji} {reactionCount}"
                     }
                 )
             })
