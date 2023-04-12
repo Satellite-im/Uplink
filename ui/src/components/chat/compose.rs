@@ -623,7 +623,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                     icon:  Icon::LockClosed,
                 },
                 p {
-                    "Messages secured by local E2E encryption."
+                    get_local_text("messages.msg-banner")
                 }
             }
         )
