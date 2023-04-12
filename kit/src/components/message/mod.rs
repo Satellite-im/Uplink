@@ -73,7 +73,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // note: the class "remote" will display the reaction at flex-start, which starts at the bottom left corner of the message.
     // omitting the class will display the reactions starting from the bottom right corner
-    let remote_class = "";
+    let remote_class = ""; //if is_remote { "remote" } else { "" };
     let reactions_class = format!("message-reactions-container {remote_class}");
 
     let has_attachments = cx
