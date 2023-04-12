@@ -3,7 +3,6 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     error::Error,
-    logging::tracing::log,
     raygun::{self, MessageEventKind},
 };
 
@@ -55,7 +54,6 @@ pub async fn convert_message_event(
     _account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<MessageEvent, Error> {
-    log::debug!("got event: {:?}", &event);
     let evt = match event {
         MessageEventKind::MessageReceived {
             conversation_id,
