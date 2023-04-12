@@ -734,6 +734,18 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // periodically refresh message timestamps
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                // simply triggering an update will refresh the message timestamps
+                sleep(Duration::from_secs(60)).await;
+                needs_update.set(true);
+            }
+        }
+    });
+
     // check for updates
     let inner = state.inner();
     use_future(cx, (), |_| {
@@ -774,14 +786,13 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // periodically refresh message timestamps and friend's status messages
+    // friend's status messages and DID
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![needs_update];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             loop {
-                // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(5)).await;
 
                 // fetch the identities for all friends to get changes in their status messages etc
