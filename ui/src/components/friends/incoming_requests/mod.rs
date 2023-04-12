@@ -103,6 +103,10 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 let friend2 = friend.clone();
                 let friend3 = friend.clone();
                 let friend4 = friend.clone();
+
+                let any_button_disabled = accept_in_progress.current().contains(&did)
+                    ||  deny_in_progress.current().contains(&did);
+
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
@@ -112,6 +116,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::Check,
                                 text: get_local_text("friends.accept"),
+                                should_render: !any_button_disabled,
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::AcceptRequest(&friend));
@@ -125,6 +130,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.deny"),
+                                should_render: !any_button_disabled,
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::DenyRequest(&did));

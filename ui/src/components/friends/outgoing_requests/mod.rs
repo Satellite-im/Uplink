@@ -64,6 +64,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
                 let mut rng = rand::thread_rng();
                 let platform = friend.platform().into();
+                let any_button_disabled = remove_in_progress.current().contains(&did);
                 rsx!(
                     ContextMenu {
                         id: format!("{did}-friend-listing"),
@@ -73,6 +74,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::XMark,
                                 text: get_local_text("friends.cancel"),
+                                should_render: !any_button_disabled,
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::CancelRequest(&did));

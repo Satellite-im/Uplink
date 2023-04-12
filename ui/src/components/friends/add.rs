@@ -85,10 +85,11 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
-        to_owned![request_sent, error_toast, add_in_progress];
+        to_owned![request_sent, error_toast, add_in_progress, clear_input];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((id, outgoing_requests)) = rx.next().await {
+                // tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
                     id,
@@ -97,11 +98,14 @@ pub fn AddFriend(cx: Scope) -> Element {
                 })) {
                     log::error!("failed to send warp command: {}", e);
                     add_in_progress.set(false);
+                    // todo: should input be cleared here?
+                    clear_input.set(true);
                     continue;
                 }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
                 add_in_progress.set(false);
+                clear_input.set(true);
                 match res {
                     Ok(_) => {
                         request_sent.set(true);
@@ -193,7 +197,6 @@ pub fn AddFriend(cx: Scope) -> Element {
                             add_in_progress.set(true);
                             ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
                         }
-                        clear_input.set(true);
                     },
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);

@@ -55,6 +55,10 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);
     let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
 
+    let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
+        || cx.props.block_button_disabled.unwrap_or(false)
+        || cx.props.remove_button_disabled.unwrap_or(false);
+
     cx.render(rsx!(
         div {
             class: "friend",
@@ -93,7 +97,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         text: get_local_text("friends.accept"),
                         aria_label: "Accept Friend".into(),
                         loading:  cx.props.accept_button_disabled.unwrap_or(false),
-                        disabled: cx.props.accept_button_disabled.unwrap_or(false),
+                        disabled:any_button_disabled,
                         onpress: move |_| match &cx.props.onaccept {
                             Some(f) => f.call(()),
                             None    => {},
@@ -104,6 +108,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
                         aria_label: "Chat With Friend".into(),
+                        disabled: any_button_disabled,
                         text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
                         onpress: move |_| match &cx.props.onchat {
                             Some(f) => f.call(()),
@@ -115,7 +120,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
                     loading:  cx.props.remove_button_disabled.unwrap_or(false),
-                    disabled: cx.props.remove_button_disabled.unwrap_or(false),
+                    disabled: any_button_disabled,
                     onpress: move |_| {
                         // note that the blocked list uses the onremove callback to unblock the user.yes, it's kind of a hack
                         match &cx.props.onremove {
@@ -136,7 +141,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
                         loading:  cx.props.block_button_disabled.unwrap_or(false),
-                        disabled: cx.props.block_button_disabled.unwrap_or(false),
+                        disabled: any_button_disabled,
                         onpress: move |_| match &cx.props.onblock {
                             Some(f) => f.call(()),
                             None    => {},
