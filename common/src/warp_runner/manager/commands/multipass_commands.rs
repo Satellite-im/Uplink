@@ -293,10 +293,22 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
 async fn multipass_refresh_request(
     account: &mut Account,
 ) -> Result<HashMap<DID, state::Identity>, Error> {
-    let outgoing = account.list_incoming_request().await.map(HashSet::<DID>::from_iter)?;
-    let incoming = account.list_outgoing_request().await.map(HashSet::<DID>::from_iter)?;
-    
-    let ids = Vec::from_iter(outgoing.iter().chain(incoming.iter()).cloned().collect::<HashSet<_>>());
+    let outgoing = account
+        .list_incoming_request()
+        .await
+        .map(HashSet::<DID>::from_iter)?;
+    let incoming = account
+        .list_outgoing_request()
+        .await
+        .map(HashSet::<DID>::from_iter)?;
+
+    let ids = Vec::from_iter(
+        outgoing
+            .iter()
+            .chain(incoming.iter())
+            .cloned()
+            .collect::<HashSet<_>>(),
+    );
 
     let identities = dids_to_identity(&ids, account).await?;
     let list = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
