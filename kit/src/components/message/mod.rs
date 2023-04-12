@@ -52,6 +52,9 @@ pub struct Props<'a> {
 
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
+
+    // called when a reaction is clicked
+    on_click_reaction: EventHandler<'a, String>,
 }
 
 #[allow(non_snake_case)]
@@ -175,6 +178,9 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             format_args!("emoji-reaction {}", if self_reaction {
                             "emoji-reaction-self"
                         } else { "" }),
+                        onclick: move |_| {
+                            cx.props.on_click_reaction.call(emoji.clone());
+                        },
                         "{emoji} {reactionCount}"
                     }
                 )

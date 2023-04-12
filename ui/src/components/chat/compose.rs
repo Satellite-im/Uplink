@@ -394,7 +394,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 enum MessagesCommand {
     // contains the emoji reaction
     // conv id, msg id, emoji
-    React((raygun::Message, String)),
+    React((DID, raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
         msg_id: Uuid,
@@ -425,7 +425,6 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
-    let user = data.my_id.did_key();
     let state = use_shared_state::<State>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
@@ -481,17 +480,16 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    MessagesCommand::React((message, emoji)) => {
+                    MessagesCommand::React((user, message, emoji)) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
 
-                        let mut reactions = message.reactions();
-                        reactions.retain(|x| x.users().contains(&user));
-                        reactions.retain(|x| x.emoji().eq(&emoji));
-                        let reaction_state = if reactions.is_empty() {
-                            ReactionState::Add
-                        } else {
-                            ReactionState::Remove
-                        };
+                        let reaction_state =
+                            match message.reactions().iter().find(|x| x.emoji() == emoji) {
+                                Some(reaction) if reaction.users().contains(&user) => {
+                                    ReactionState::Remove
+                                }
+                                _ => ReactionState::Add,
+                            };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),
@@ -769,7 +767,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                                 div {
                                     onclick: move |_|  {
                                         reacting_to.set(None);
-                                        ch.send(MessagesCommand::React((message.inner.clone(), reaction.to_string())));
+                                        ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
                                     },
                                     "{reaction}"
                                 }
@@ -807,6 +805,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     is_remote: cx.props.is_remote,
                     message_key: _message_key,
                     edit_msg: edit_msg.clone(),
+                    user_did: state.read().did_key(),
                 })),
                 items: cx.render(rsx!(
                     ContextItem {
@@ -869,6 +868,7 @@ struct MessageProps<'a> {
     is_remote: bool,
     message_key: String,
     edit_msg: UseState<Option<Uuid>>,
+    user_did: DID,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
@@ -879,6 +879,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         is_remote: _,
         message_key,
         edit_msg,
+        user_did,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
@@ -907,6 +908,9 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 reactions: message.inner.reactions(),
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
+                on_click_reaction: move |emoji| {
+                    ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
+                },
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
