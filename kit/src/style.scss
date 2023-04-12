@@ -212,6 +212,7 @@ html {
   --text-color-muted: #a3a3c7;
   --text-color-dark: #676795;
   --text-color-bright: #dfdff7;
+  --text-color-link: #0000ee;
 
   --placeholder: #aaaac9;
 
@@ -333,4 +334,12 @@ p {
 
 .full-width {
   width: 100%;
+}
+
+a {
+  color: var(--text-color-link);
+}
+
+a:hover {
+  text-decoration: underline;
 }

@@ -6,6 +6,8 @@ use warp::{constellation::file::File, logging::tracing::log};
 
 use crate::{components::file_embed::FileEmbed, elements::textarea};
 
+use super::link_embed::EmbedLinks;
+
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
     #[display(fmt = "message-first")]
@@ -131,7 +133,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             rsx!(
                                 ChatText {
-                                    text: text
+                                    text: text,
+                                    remote: is_remote
                                 }
                             )
                         }
@@ -181,18 +184,25 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 #[derive(Props, PartialEq)]
 struct ChatMessageProps {
     text: String,
+    remote: bool,
 }
 
 #[allow(non_snake_case)]
 fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let finder = LinkFinder::new();
-    let mut links = vec![];
+    let links: Vec<String> = finder
+        .spans(&cx.props.text)
+        .filter(|e| match e.kind() {
+            Some(LinkKind::Url) => true,
+            _ => false,
+        })
+        .map(|e| e.as_str().to_string())
+        .collect();
+
     let texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
         Some(LinkKind::Url) => {
-            links.push(e.as_str());
             rsx!(
                 a {
-                    style: "text-decoration: underline",
                     href: e.as_str(),
                     e.as_str()
                 }
@@ -201,5 +211,11 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
-    cx.render(rsx!(texts))
+    cx.render(rsx!(
+        texts,
+        links.first().and_then(|l| cx.render(rsx!(EmbedLinks {
+            link: l.to_string()
+            remote: cx.props.remote
+        })))
+    ))
 }
