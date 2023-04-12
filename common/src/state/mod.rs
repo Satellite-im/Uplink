@@ -1118,8 +1118,8 @@ impl State {
             .cloned()
             .collect()
     }
-    pub fn get_identity(&self, did: &DID) -> Identity {
-        self.identities.get(did).cloned().unwrap_or_default()
+    pub fn get_identity(&self, did: &DID) -> Option<Identity> {
+        self.identities.get(did).cloned()
     }
     pub fn get_own_identity(&self) -> Identity {
         self.identities

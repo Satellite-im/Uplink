@@ -1,5 +1,4 @@
 //use common::icons::outline::Shape as Icon;
-use common::state::State;
 use derive_more::Display;
 use dioxus::prelude::*;
 use warp::{constellation::file::File, logging::tracing::log};
@@ -18,6 +17,14 @@ pub enum Order {
     Last,
 }
 
+#[derive(Eq, PartialEq, Clone)]
+pub struct ReactionAdapter {
+    pub emoji: String,
+    pub alt: String,
+    pub self_reacted: bool,
+    pub reaction_count: usize,
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     // Message ID
@@ -34,7 +41,7 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    reactions: Vec<warp::raygun::Reaction>,
+    reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     remote: Option<bool>,
@@ -60,7 +67,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.with_text.clone().unwrap_or_default();
-    let state = use_shared_state::<State>(cx)?;
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
@@ -153,35 +159,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "{reactions_class}",
             cx.props.reactions.iter().map(|reaction| {
-                let reactionCount = reaction.users().len();
-
-                let mydid = state.read().did_key();
-
-                // This gives us a string to show in the UI, TODO: need to convert from DID to Username
-                // let users: String = "".to_owned();
-                // for user in reaction.users().iter() {
-                //     if user.to_string() == mydid.to_string() {
-                //         println!("{} it me", user);
-                //     } else {
-                //         println!("{} it NOT me", user)
-                //     }
-                // // Need did to username
-                //     users.push_str(&user.to_string());
-                // }
-                let self_reaction = reaction.users().contains(&mydid);
-                let emoji = reaction.emoji();
+                let reaction_count = reaction.reaction_count;
+                let emoji = &reaction.emoji;
+                let alt = &reaction.alt;
 
                 rsx!(
                     div {
-                        // alt: "{users}",
+                         alt: "{alt}",
                         class:
-                            format_args!("emoji-reaction {}", if self_reaction {
+                            format_args!("emoji-reaction {}", if reaction.self_reacted {
                             "emoji-reaction-self"
                         } else { "" }),
                         onclick: move |_| {
                             cx.props.on_click_reaction.call(emoji.clone());
                         },
-                        "{emoji} {reactionCount}"
+                        "{emoji} {reaction_count}"
                     }
                 )
             })

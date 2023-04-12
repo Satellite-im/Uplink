@@ -14,7 +14,7 @@ use kit::{
         context_menu::{ContextItem, ContextMenu},
         file_embed::FileEmbed,
         indicator::{Platform, Status},
-        message::{Message, Order},
+        message::{Message, Order, ReactionAdapter},
         message_group::{MessageGroup, MessageGroupSkeletal},
         message_reply::MessageReply,
         message_typing::MessageTyping,
@@ -671,7 +671,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
-    let sender = state.read().get_identity(&group.sender);
+    let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let sender_name = sender.username();
     let active_language = &state.read().settings.language;
 
@@ -873,6 +873,7 @@ struct MessageProps<'a> {
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
 
     let MessageProps {
         message,
@@ -887,6 +888,25 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .get()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
+
+    let reactions_list: Vec<ReactionAdapter> = message
+        .inner
+        .reactions()
+        .iter()
+        .map(|x| {
+            let users = x.users();
+            let user_names: Vec<String> = users
+                .iter()
+                .filter_map(|id| state.read().get_identity(id).map(|x| x.username()))
+                .collect();
+            ReactionAdapter {
+                emoji: x.emoji(),
+                reaction_count: users.len(),
+                self_reacted: users.iter().any(|x| x == user_did),
+                alt: user_names.join(", "),
+            }
+        })
+        .collect();
 
     cx.render(rsx!(
         div {
@@ -905,7 +925,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 editing: is_editing,
                 remote: cx.props.is_remote,
                 with_text: message.inner.value().join("\n"),
-                reactions: message.inner.reactions(),
+                reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
                 on_click_reaction: move |emoji| {
