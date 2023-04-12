@@ -67,6 +67,7 @@ pub fn Friends(cx: Scope) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 match cmd {
                     ChanCmd::CreateConversation { chat, recipient } => {
                         // verify chat exists

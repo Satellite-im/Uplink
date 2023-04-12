@@ -89,7 +89,7 @@ pub fn AddFriend(cx: Scope) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((id, outgoing_requests)) = rx.next().await {
-                // tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
                     id,
@@ -216,9 +216,9 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
+                            add_in_progress.set(true);
                             ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
                         }
-                        clear_input.set(true);
                     },
                     aria_label: "Add Someone Button".into()
                 },

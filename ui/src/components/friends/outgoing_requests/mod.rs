@@ -32,6 +32,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::CancelRequest {
                     did: did.clone(),

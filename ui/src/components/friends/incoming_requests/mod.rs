@@ -40,6 +40,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 match cmd {
                     ChanCmd::AcceptRequest(identity) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
@@ -164,6 +165,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::AcceptRequest(&friend4));
                                 } else {
+                                    accept_in_progress.make_mut().insert(friend4.did_key());
                                      ch.send(ChanCmd::AcceptRequest(friend4.did_key()));
                                 }
 
@@ -172,6 +174,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::AcceptRequest(&friend3));
                                 } else {
+                                    deny_in_progress.make_mut().insert(friend3.did_key());
                                     ch.send(ChanCmd::DenyRequest(friend3.did_key()));
                                 }
                             }
