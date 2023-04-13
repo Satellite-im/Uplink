@@ -6,7 +6,6 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::notifications::set_badge;
 use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -448,10 +447,9 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.ui.extensions.values().count()
     );
 
+    state.ui.notifications.init_badge();
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
-
-    state.ui.notifications.init_badge();
 
     cx.render(rsx!(crate::app {}))
 }
