@@ -230,12 +230,7 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = messaging
-                .react(
-                    conversation_id,
-                    message_id,
-                    reaction_state,
-                    emoji,
-                )
+                .react(conversation_id, message_id, reaction_state, emoji)
                 .await;
             let _ = rsp.send(r);
         }
