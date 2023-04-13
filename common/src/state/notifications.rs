@@ -38,21 +38,21 @@ impl Notifications {
     pub fn increment(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
         match kind {
             NotificationKind::FriendRequest => {
-                self.friends += count;
                 if config.notifications.friends_notifications {
-                    self.badge += count;
+                    self.friends = self.friends.saturating_add(count);
+                    self.badge = self.badge.saturating_add(count);
                 }
             }
             NotificationKind::Message => {
-                self.messages += count;
                 if config.notifications.messages_notifications {
-                    self.badge += count;
+                    self.messages = self.messages.saturating_add(count);
+                    self.badge = self.badge.saturating_add(count);
                 }
             }
             NotificationKind::Settings => {
-                self.settings += count;
                 if config.notifications.settings_notifications {
-                    self.badge += count;
+                    self.settings = self.settings.saturating_add(count);
+                    self.badge = self.badge.saturating_add(count);
                 }
             }
         };
@@ -71,12 +71,10 @@ impl Notifications {
             }
             NotificationKind::Message => {
                 self.messages = self.messages.saturating_sub(count);
-
                 self.badge = self.badge.saturating_sub(count);
             }
             NotificationKind::Settings => {
                 self.settings = self.settings.saturating_sub(count);
-
                 self.badge = self.badge.saturating_sub(count);
             }
         };
