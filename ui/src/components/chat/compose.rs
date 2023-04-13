@@ -956,7 +956,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let grouped_message = message;
     let message = grouped_message.message;
     let is_editing = edit_msg
-        .get()
+        .current()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
 
