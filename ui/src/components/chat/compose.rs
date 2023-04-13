@@ -449,8 +449,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
-    let identity_profile = use_state(cx, || Identity::default());
-    let update_script = use_state(cx, || String::new());
+    let identity_profile = use_state(cx, Identity::default);
+    let update_script = use_state(cx, String::new);
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
@@ -1538,6 +1538,7 @@ pub struct QuickProfileProps<'a> {
     children: Element<'a>,
 }
 
+#[allow(large_enum_variant)]
 enum QuickProfileCmd {
     CreateConversation(Option<Chat>, DID),
     RemoveFriend(DID),
@@ -1562,7 +1563,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let chat_is_current = match state.read().get_active_chat() {
         Some(c) => match &chat_of {
-            Some(cO) => c.eq(&cO),
+            Some(cO) => c.eq(cO),
             None => false,
         },
         None => false,
