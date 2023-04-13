@@ -142,6 +142,7 @@ impl Serialize for Chat {
         state.serialize_field("id", &self.id)?;
         state.serialize_field("participants", &self.participants)?;
         state.serialize_field("conversation_type", &self.conversation_type)?;
+        state.serialize_field("creator", &self.creator)?;
 
         if STATIC_ARGS.use_mock {
             state.serialize_field("messages", &self.messages)?;

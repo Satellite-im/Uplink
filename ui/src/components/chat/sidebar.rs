@@ -85,6 +85,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
+    let show_delete_conversation = use_ref(cx, || true);
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -92,7 +93,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![chat_with];
+        to_owned![chat_with, show_delete_conversation];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -121,6 +122,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         };
                     }
                     MessagesCommand::DeleteConversation { conv_id } => {
+                        *show_delete_conversation.write_silent() = false;
                         let (tx, rx) = futures::channel::oneshot::channel();
 
                         if let Err(e) =
@@ -135,8 +137,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                         let res = rx.await.expect("command canceled");
                         if res.is_err() {
-                            // failed to delete conversation
+                            log::error!("failed to delete conversation");
                         }
+                        *show_delete_conversation.write_silent() = true;
                     }
                 };
             }
@@ -343,11 +346,12 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let other_participants =  state.read().remove_self(&participants);
                     let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                     let platform = user.platform().into();
-                    let is_group_conv = participants.len() > 2;
-                    let is_admin = match chat.creator.clone() {
-                        Some(creator_did) => state.read().did_key() == creator_did, 
-                        None => false,
+                    let is_group_conv =  if chat.conversation_type == ConversationType::Group {
+                        true
+                    } else {
+                        false
                     };
+                    let is_admin = chat.creator.as_ref().map(|x| x == &state.read().did_key()).unwrap_or_default();
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
@@ -414,17 +418,21 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
                                     }
                                 },
-                                hr{ }
-                                ContextItem {
-                                    icon: Icon::Trash,
-                                    danger: true,
-                                    text: if is_group_conv && is_admin {get_local_text("uplink.delete-group-chat")} 
-                                    else if is_group_conv && !is_admin  {get_local_text("uplink.leave-group")} 
-                                    else {get_local_text("uplink.delete-conversation")},
-                                    onpress: move |_| {
-                                        ch.send(MessagesCommand::DeleteConversation { conv_id: chat.id });
-                                    }
-                                },
+                                show_delete_conversation.read().then(|| 
+                                    rsx!(
+                                        hr{ }
+                                        ContextItem {
+                                            icon: Icon::Trash,
+                                            danger: true,
+                                            text: if is_group_conv && is_admin {get_local_text("uplink.delete-group-chat")} 
+                                            else if is_group_conv && !is_admin  {get_local_text("uplink.leave-group")} 
+                                            else {get_local_text("uplink.delete-conversation")},
+                                            onpress: move |_| {
+                                                ch.send(MessagesCommand::DeleteConversation { conv_id: chat.id });
+                                            }
+                                        },
+                                    )
+                                )
                             )),
                             User {
                                 username: participants_name,
