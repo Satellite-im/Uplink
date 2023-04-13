@@ -17,7 +17,6 @@ pub struct ItemProps<'a> {
     icon: Option<icons::outline::Shape>,
     #[props(optional)]
     danger: Option<bool>,
-
     should_render: Option<bool>,
 }
 
