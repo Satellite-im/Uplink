@@ -2,7 +2,7 @@ use common::icons::outline::Shape;
 use dioxus::prelude::*;
 use warp::logging::tracing::log;
 
-use crate::elements::{button::Button, Appearance};
+use crate::elements::button::Button;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonsFormat {

@@ -31,7 +31,6 @@ use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
 use warp::multipass;
-use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -1199,71 +1198,13 @@ fn get_titlebar(cx: Scope) -> Element {
         ))
     }
 
-    cx.render(rsx!(
-        div {
-            id: "titlebar",
-            onmousedown: move |_| { desktop.drag(); },
-            // Only display this if developer mode is enabled.
-            (config.developer.developer_mode).then(|| rsx!(
-                Button {
-                    aria_label: "device-phone-mobile-button".into(),
-                    icon: Icon::DevicePhoneMobile,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: true,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(true));
-                        state.write().mock_own_platform(Platform::Mobile);
-                    }
-                },
-                Button {
-                    aria_label: "device-tablet-button".into(),
-                    icon: Icon::DeviceTablet,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Web);
-                    }
-                },
-                Button {
-                    aria_label: "computer-desktop-button".into(),
-                    icon: Icon::ComputerDesktop,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Desktop);
-                    }
-                },
-                Button {
-                    aria_label: "command-line-button".into(),
-                    icon: Icon::CommandLine,
-                    appearance: Appearance::Transparent,
-                    onpress: |_| {
-                        desktop.devtool();
-                    }
-                }
-            )),
-
-            controls,
-
+    cx.render(rsx!(div {
+        id: "titlebar",
+        onmousedown: move |_| {
+            desktop.drag();
         },
-    ))
+        controls,
+    }))
 }
 
 fn get_call_dialog(_cx: Scope) -> Element {
