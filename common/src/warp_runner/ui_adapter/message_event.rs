@@ -42,6 +42,7 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         message_id: Uuid,
         reaction: String,
+        did_key: DID,
     },
     #[display(fmt = "TypingIndicator")]
     TypingIndicator {
@@ -100,11 +101,12 @@ pub async fn convert_message_event(
             conversation_id,
             message_id,
             reaction,
-            ..
+            did_key,
         } => MessageEvent::MessageReactionRemoved {
             conversation_id,
             message_id,
             reaction,
+            did_key,
         },
         MessageEventKind::EventReceived {
             conversation_id,

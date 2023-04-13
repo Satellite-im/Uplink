@@ -447,8 +447,9 @@ impl State {
                 conversation_id,
                 message_id,
                 reaction,
+                did_key,
             } => {
-                self.remove_message_reaction(conversation_id, message_id, reaction);
+                self.remove_message_reaction(conversation_id, message_id, did_key, reaction);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -800,8 +801,13 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
+    pub fn remove_message_reaction(
+        &mut self,
+        chat_id: Uuid,
+        message_id: Uuid,
+        user: DID,
+        emoji: String,
+    ) {
         let conv = match self.chats.all.get_mut(&chat_id) {
             Some(c) => c,
             None => {

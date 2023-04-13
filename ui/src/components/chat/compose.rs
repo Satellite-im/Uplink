@@ -392,8 +392,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
-    // contains the emoji reaction
-    // conv id, msg id, emoji
     React((DID, raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
@@ -925,7 +923,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
-                on_click_reaction: move |emoji| {
+                on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
                 on_download: move |file_name| {
