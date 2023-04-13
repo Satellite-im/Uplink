@@ -38,8 +38,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let image = state.read().graphics().profile_picture();
-    let banner = state.read().graphics().profile_banner();
+    let image = state.read().profile_picture();
+    let banner = state.read().profile_banner();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");

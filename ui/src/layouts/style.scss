@@ -18,13 +18,6 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    .friends-controls {
-      display: inline-flex;
-      padding: var(--gap);
-      gap: var(--gap);
-      justify-content: flex-end;
-      border-bottom: 1px solid var(--border-color);
-    }
   }
 }
 
