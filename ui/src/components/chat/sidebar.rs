@@ -39,6 +39,7 @@ use crate::{
     UPLINK_ROUTES,
 };
 
+#[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     CreateConversation { recipient: DID },
     DeleteConversation { conv_id: Uuid },
@@ -127,7 +128,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
-                                conv_id: conv_id,
+                                conv_id,
                                 rsp: tx,
                             }))
                         {
@@ -346,11 +347,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let other_participants =  state.read().remove_self(&participants);
                     let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                     let platform = user.platform().into();
-                    let is_group_conv =  if chat.conversation_type == ConversationType::Group {
-                        true
-                    } else {
-                        false
-                    };
+                    let is_group_conv =  chat.conversation_type == ConversationType::Group;
                     let is_admin = chat.creator.as_ref().map(|x| x == &state.read().did_key()).unwrap_or_default();
 
                     let last_message = chat.messages.iter().last();
@@ -418,7 +415,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
                                     }
                                 },
-                                show_delete_conversation.read().then(|| 
+                                show_delete_conversation.read().then(||
                                     rsx!(
                                         hr{ }
                                         ContextItem {
