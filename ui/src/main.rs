@@ -451,6 +451,8 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
 
+    state.ui.notifications.init_badge();
+
     cx.render(rsx!(crate::app {}))
 }
 
@@ -607,9 +609,7 @@ fn app(cx: Scope) -> Element {
                             state.write().ui.metadata.focused = *focused;
 
                             if *focused {
-                                if let Err(e) = set_badge(0) {
-                                    log::error!("failed to clear badge notifications: {e}");
-                                }
+                                state.write().ui.notifications.clear_badge();
                             }
                             //crate::utils::sounds::Play(Sounds::Notification);
                             //needs_update.set(true);

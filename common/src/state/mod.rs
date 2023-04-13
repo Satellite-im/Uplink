@@ -140,10 +140,8 @@ impl State {
                     .notifications
                     .decrement(&self.configuration, kind, count)
             }
-            Action::ClearNotification(kind) => {
-                self.ui.notifications.clear_kind(&self.configuration, kind)
-            }
-            Action::ClearAllNotifications => self.ui.notifications.clear_all(&self.configuration),
+            Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
+            Action::ClearAllNotifications => self.ui.notifications.clear_all(),
             Action::AddToastNotification(notification) => {
                 self.ui
                     .toast_notifications
