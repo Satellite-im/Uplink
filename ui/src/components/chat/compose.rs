@@ -482,7 +482,6 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                 match cmd {
                     MessagesCommand::React((user, message, emoji)) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
-
                         let reaction_state =
                             match message.reactions().iter().find(|x| x.emoji() == emoji) {
                                 Some(reaction) if reaction.users().contains(&user) => {
@@ -805,7 +804,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     is_remote: cx.props.is_remote,
                     message_key: _message_key,
                     edit_msg: edit_msg.clone(),
-                    user_did: state.read().did_key(),
                 })),
                 items: cx.render(rsx!(
                     ContextItem {
@@ -868,19 +866,18 @@ struct MessageProps<'a> {
     is_remote: bool,
     message_key: String,
     edit_msg: UseState<Option<Uuid>>,
-    user_did: DID,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     let state = use_shared_state::<State>(cx)?;
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let user_did = state.read().did_key();
 
     let MessageProps {
         message,
         is_remote: _,
         message_key,
         edit_msg,
-        user_did,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
@@ -902,7 +899,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             ReactionAdapter {
                 emoji: x.emoji(),
                 reaction_count: users.len(),
-                self_reacted: users.iter().any(|x| x == user_did),
+                self_reacted: users.iter().any(|x| x == &user_did),
                 alt: user_names.join(", "),
             }
         })

@@ -439,8 +439,9 @@ impl State {
                 conversation_id,
                 message_id,
                 reaction,
+                did_key,
             } => {
-                self.add_message_reaction(conversation_id, message_id, reaction);
+                self.add_message_reaction(conversation_id, message_id, did_key, reaction);
             }
             MessageEvent::MessageReactionRemoved {
                 conversation_id,
@@ -625,8 +626,13 @@ impl State {
             }
         }
     }
-    pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
+    pub fn add_message_reaction(
+        &mut self,
+        chat_id: Uuid,
+        message_id: Uuid,
+        user: DID,
+        emoji: String,
+    ) {
         let conv = match self.chats.all.get_mut(&chat_id) {
             Some(c) => c,
             None => {
