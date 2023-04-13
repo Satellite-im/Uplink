@@ -156,7 +156,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 UserImage {
                                     platform: platform,
                                     status: friend2.identity_status().into(),
-                                    image: friend2.graphics().profile_picture()
+                                    image: friend2.profile_picture()
                                 }
                             )),
                             accept_button_disabled: accept_in_progress.current().contains(&did2),

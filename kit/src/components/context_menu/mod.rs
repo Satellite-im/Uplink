@@ -1,10 +1,12 @@
-use common::icons;
+use common::{icons, state::Identity};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
 use dioxus_desktop::{use_eval, use_window};
+
+use crate::components::indicator::Indicator;
 
 #[derive(Props)]
 pub struct ItemProps<'a> {
@@ -52,6 +54,34 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
             div {"{cx.props.text}"}
         }
     })
+}
+
+#[derive(PartialEq, Props)]
+pub struct IdentityProps<'a> {
+    identity: &'a Identity,
+}
+
+#[allow(non_snake_case)]
+pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
+    let image = cx.props.identity.profile_picture();
+    let banner = cx.props.identity.profile_banner();
+    cx.render(rsx!(
+        div {
+            class: "identity-header",
+            div {
+                id: "banner-image",
+                style: "background-image: url('{banner}');",
+                div {
+                    id: "profile-image",
+                    style: "background-image: url('{image}');",
+                    Indicator {
+                        status: cx.props.identity.identity_status().into(),
+                        platform: cx.props.identity.platform().into(),
+                    }
+                }
+            }
+        }
+    ))
 }
 
 #[derive(Props)]

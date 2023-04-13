@@ -100,7 +100,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 UserImage {
                                     platform: platform,
                                     status: friend.identity_status().into(),
-                                    image: friend.graphics().profile_picture()
+                                    image: friend.profile_picture()
                                 }
                             )),
                             onremove: move |_| {

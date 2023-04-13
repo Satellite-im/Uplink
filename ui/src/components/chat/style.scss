@@ -240,3 +240,20 @@
     }
   }
 }
+
+#profile-name {
+  max-width: 240px;
+}
+
+#profile-status {
+  word-break: break-word;
+  max-width: 240px;
+  hr {
+    border-bottom: 5px solid;
+    visibility: hidden;
+  }
+}
+
+.bold {
+  font-weight: bold;
+}
