@@ -8625,7 +8625,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=439ffb14dac519968b40f0919a958f58c368bca5#439ffb14dac519968b40f0919a958f58c368bca5"
+source = "git+https://github.com/Satellite-im/Warp?rev=f4e9eaca7903c1c25599e8a803013f8c052e3437#f4e9eaca7903c1c25599e8a803013f8c052e3437"
 dependencies = [
  "aes-gcm 0.10.1",
  "anyhow",
@@ -8684,7 +8684,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=439ffb14dac519968b40f0919a958f58c368bca5#439ffb14dac519968b40f0919a958f58c368bca5"
+source = "git+https://github.com/Satellite-im/Warp?rev=f4e9eaca7903c1c25599e8a803013f8c052e3437#f4e9eaca7903c1c25599e8a803013f8c052e3437"
 dependencies = [
  "paste",
  "quote",
@@ -8694,7 +8694,7 @@ dependencies = [
 [[package]]
 name = "warp-fs-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=439ffb14dac519968b40f0919a958f58c368bca5#439ffb14dac519968b40f0919a958f58c368bca5"
+source = "git+https://github.com/Satellite-im/Warp?rev=f4e9eaca7903c1c25599e8a803013f8c052e3437#f4e9eaca7903c1c25599e8a803013f8c052e3437"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -8715,7 +8715,7 @@ dependencies = [
 [[package]]
 name = "warp-mp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=439ffb14dac519968b40f0919a958f58c368bca5#439ffb14dac519968b40f0919a958f58c368bca5"
+source = "git+https://github.com/Satellite-im/Warp?rev=f4e9eaca7903c1c25599e8a803013f8c052e3437#f4e9eaca7903c1c25599e8a803013f8c052e3437"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -8738,7 +8738,7 @@ dependencies = [
 [[package]]
 name = "warp-rg-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=439ffb14dac519968b40f0919a958f58c368bca5#439ffb14dac519968b40f0919a958f58c368bca5"
+source = "git+https://github.com/Satellite-im/Warp?rev=f4e9eaca7903c1c25599e8a803013f8c052e3437#f4e9eaca7903c1c25599e8a803013f8c052e3437"
 dependencies = [
  "anyhow",
  "async-stream",
