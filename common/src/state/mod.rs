@@ -135,11 +135,7 @@ impl State {
                     .notifications
                     .increment(&self.configuration, kind, count)
             }
-            Action::RemoveNotification(kind, count) => {
-                self.ui
-                    .notifications
-                    .decrement(&self.configuration, kind, count)
-            }
+            Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
             Action::ClearAllNotifications => self.ui.notifications.clear_all(),
             Action::AddToastNotification(notification) => {
@@ -149,11 +145,9 @@ impl State {
             }
             Action::DismissUpdate => {
                 self.settings.update_dismissed = self.settings.update_available.take();
-                self.ui.notifications.decrement(
-                    &self.configuration,
-                    notifications::NotificationKind::Settings,
-                    1,
-                );
+                self.ui
+                    .notifications
+                    .decrement(notifications::NotificationKind::Settings, 1);
             }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),

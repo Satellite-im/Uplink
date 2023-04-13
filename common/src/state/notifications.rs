@@ -61,28 +61,23 @@ impl Notifications {
         let _ = set_badge(self.badge);
     }
 
-    // checking config is really only necessary in the `increment` function
     // Removes notification(s) from the specified kind.
     // Prevent underflow using saturating_sub()
-    pub fn decrement(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
+    pub fn decrement(&mut self, kind: NotificationKind, count: u32) {
         match kind {
             NotificationKind::FriendRequest => {
                 self.friends = self.friends.saturating_sub(count);
-                if config.notifications.friends_notifications {
-                    self.badge = self.badge.saturating_sub(count);
-                }
+                self.badge = self.badge.saturating_sub(count);
             }
             NotificationKind::Message => {
                 self.messages = self.messages.saturating_sub(count);
-                if config.notifications.messages_notifications {
-                    self.badge = self.badge.saturating_sub(count);
-                }
+
+                self.badge = self.badge.saturating_sub(count);
             }
             NotificationKind::Settings => {
                 self.settings = self.settings.saturating_sub(count);
-                if config.notifications.settings_notifications {
-                    self.badge = self.badge.saturating_sub(count);
-                }
+
+                self.badge = self.badge.saturating_sub(count);
             }
         };
 
