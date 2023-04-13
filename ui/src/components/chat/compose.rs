@@ -1254,11 +1254,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     // todo: possibly show more if multiple users are typing
     let (platform, status, profile_picture) = match users_typing.first() {
-        Some(u) => (
-            u.platform(),
-            u.identity_status(),
-            u.profile_picture(),
-        ),
+        Some(u) => (u.platform(), u.identity_status(), u.profile_picture()),
         None => (
             identity::Platform::Unknown,
             IdentityStatus::Online,
