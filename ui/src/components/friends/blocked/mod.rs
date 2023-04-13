@@ -90,7 +90,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 UserImage {
                                     platform: platform,
                                     status: blocked_user.identity_status().into(),
-                                    image: blocked_user.graphics().profile_picture()
+                                    image: blocked_user.profile_picture()
                                 }
                             )),
                             onremove: move |_| {

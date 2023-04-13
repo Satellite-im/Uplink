@@ -47,6 +47,7 @@ use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
+use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
@@ -85,6 +86,7 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
 });
 
 pub struct UplinkRoutes<'a> {
+    pub loading: &'a str,
     pub chat: &'a str,
     pub friends: &'a str,
     pub files: &'a str,
@@ -92,7 +94,8 @@ pub struct UplinkRoutes<'a> {
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
-    chat: "/",
+    loading: "/",
+    chat: "/chat",
     friends: "/friends",
     files: "/files",
     settings: "/settings",
@@ -1336,6 +1339,10 @@ fn get_router(cx: Scope) -> Element {
 
     cx.render(rsx!(
         Router {
+            Route {
+                to: UPLINK_ROUTES.loading,
+                LoadingLayout{}
+            },
             Route {
                 to: UPLINK_ROUTES.chat,
                 ChatLayout {

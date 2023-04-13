@@ -57,10 +57,6 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                 aria_label: "friends-body",
                 get_topbar(cx, route),
                 AddFriend {},
-                div {
-                    class: "friends-controls",
-                    aria_label: "friends-controls",
-                },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 render_route(cx, route.get().clone()),
             }

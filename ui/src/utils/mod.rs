@@ -102,7 +102,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
             platform,
             status: identity.identity_status().into(),
             username: identity.username(),
-            photo: identity.graphics().profile_picture(),
+            photo: identity.profile_picture(),
         })
     }
 
@@ -116,7 +116,7 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         platform,
         status: identity.identity_status().into(),
         username: identity.username(),
-        photo: identity.graphics().profile_picture(),
+        photo: identity.profile_picture(),
     }
 }
 
