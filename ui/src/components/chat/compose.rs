@@ -791,15 +791,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    #[cfg(not(target_os = "macos"))]
-    let eval = use_eval(cx);
-
-    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-    let focus_script = r#"
-            var message_reactions_container = document.getElementById('add-message-reaction');
-            message_reactions_container.focus();
-        "#;
 
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
         let should_fetch_more = grouped_message.should_fetch_more;
@@ -813,43 +805,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
-        let msg_uuid = message.inner.id();
-
-        let remote_class = if sender_is_self { "" } else { "remote" };
-        let reactions_class = format!("message-reactions-container {remote_class}");
+        let _msg_uuid = message.inner.id();
 
         rsx!(
-            (*reacting_to.current() == Some(msg_uuid)).then(|| {
-                rsx!(
-                    div {
-                        key: "add-message-reaction",
-                        id: "add-message-reaction",
-                        class: "{reactions_class} pointer",
-                        tabindex: "0",
-                        onmouseleave: |_| {
-                            #[cfg(not(target_os = "macos"))] 
-                            {
-                                eval(focus_script.to_string());
-                            }
-                        },
-                        onblur: move |_| {
-                            reacting_to.set(None);
-                        },
-                        reactions.iter().cloned().map(|reaction| {
-                            rsx!(
-                                div {
-                                    onclick: move |_|  {
-                                        reacting_to.set(None);
-                                        ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
-                                    },
-                                    "{reaction}"
-                                }
-                            )
-                        })
-                    },
-                    script { focus_script },
-                )
-            }),
             ContextMenu {
                 key: "{context_key}",
                 id: context_key,
@@ -876,7 +834,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 children: cx.render(rsx!(render_message {
                     message: grouped_message,
                     is_remote: cx.props.is_remote,
+                    msg_uuid: _msg_uuid,
                     message_key: _message_key,
+                    reacting_to: reacting_to.clone(),
                     edit_msg: edit_msg.clone(),
                 })),
                 items: cx.render(rsx!(
@@ -894,24 +854,24 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         text: get_local_text("messages.react"),
                         //TODO: let the user pick a reaction
                         onpress: move |_| {
-                            reacting_to.set(Some(msg_uuid));
+                            reacting_to.set(Some(_msg_uuid));
                         }
                     },
                     ContextItem {
                         icon: Icon::Pencil,
                         text: get_local_text("messages.edit"),
                         should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                            && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                         onpress: move |_| {
-                            edit_msg.set(Some(msg_uuid));
-                            log::debug!("editing msg {msg_uuid}");
+                            edit_msg.set(Some(_msg_uuid));
+                            log::debug!("editing msg {_msg_uuid}");
                         }
                     },
                     ContextItem {
                         icon: Icon::Pencil,
                         text: get_local_text("messages.cancel-edit"),
                         should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                            && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
                         onpress: move |_| {
                             edit_msg.set(None);
                         }
@@ -939,18 +899,32 @@ struct MessageProps<'a> {
     message: &'a GroupedMessage<'a>,
     is_remote: bool,
     message_key: String,
+    msg_uuid: Uuid,
+    reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
     let state = use_shared_state::<State>(cx)?;
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     let user_did = state.read().did_key();
+
+    // todo: why? 
+    #[cfg(not(target_os = "macos"))]
+    let eval = use_eval(cx);
+
+    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let focus_script = r#"
+            var message_reactions_container = document.getElementById('add-message-reaction');
+            message_reactions_container.focus();
+        "#;
 
     let MessageProps {
         message,
-        is_remote: _,
+        is_remote,
+        msg_uuid,
         message_key,
+        reacting_to,
         edit_msg,
     } = cx.props;
     let grouped_message = message;
@@ -979,7 +953,40 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         })
         .collect();
 
+        let remote_class = if *is_remote { "" } else { "remote" };
+        let reactions_class = format!("message-reactions-container {remote_class}");
+
     cx.render(rsx!(
+        (*reacting_to.current() == Some(*msg_uuid)).then(|| {
+            rsx!(
+                div {
+                    id: "add-message-reaction",
+                    class: "{reactions_class} pointer",
+                    tabindex: "0",
+                    onmouseleave: |_| {
+                        #[cfg(not(target_os = "macos"))] 
+                        {
+                            eval(focus_script.to_string());
+                        }
+                    },
+                    onblur: move |_| {
+                        reacting_to.set(None);
+                    },
+                    reactions.iter().cloned().map(|reaction| {
+                        rsx!(
+                            div {
+                                onclick: move |_|  {
+                                    reacting_to.set(None);
+                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+                                },
+                                "{reaction}"
+                            }
+                        )
+                    })
+                },
+                script { focus_script },
+            )
+        }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|other_msg| rsx!(
