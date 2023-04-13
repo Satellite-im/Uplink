@@ -156,6 +156,13 @@ jobs:
         with:
           file-name: "desktop.jpg"
 
+      - name: Upload Test User Accounts Created ⬆️
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: appium-test-accounts
+          path: ./appium-tests/tests/fixtures/users/
+
   test-chats:
     if: ${{ always() }}
     needs: test
@@ -179,6 +186,12 @@ jobs:
         with:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
+
+      - name: Download Test User Accounts 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: appium-test-accounts
+          path: ./appium-tests/tests/fixtures/users/
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
@@ -234,3 +247,9 @@ jobs:
         with:
           name: appium-log-${{ matrix.user }}
           path: ./appium-tests/appium.log
+
+      - name: Delete Chat Users Accounts
+        if: always()
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: appium-test-accounts
