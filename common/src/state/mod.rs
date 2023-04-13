@@ -469,6 +469,22 @@ impl State {
                     }
                 }
             }
+            MessageEvent::RecipientAdded {
+                conversation_id,
+                recipient,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.participants.insert(recipient);
+                }
+            }
+            MessageEvent::RecipientRemoved {
+                conversation_id,
+                recipient,
+            } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    chat.participants.remove(&recipient);
+                }
+            }
         }
     }
 }

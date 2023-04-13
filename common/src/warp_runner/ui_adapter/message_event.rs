@@ -40,6 +40,14 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         participant: DID,
     },
+    RecipientAdded {
+        conversation_id: Uuid,
+        recipient: DID,
+    },
+    RecipientRemoved {
+        conversation_id: Uuid,
+        recipient: DID,
+    },
 }
 
 pub async fn convert_message_event(
@@ -118,6 +126,20 @@ pub async fn convert_message_event(
                 message: convert_raygun_message(messaging, &message).await,
             }
         }
+        MessageEventKind::RecipientAdded {
+            conversation_id,
+            recipient,
+        } => MessageEvent::RecipientAdded {
+            conversation_id,
+            recipient,
+        },
+        MessageEventKind::RecipientRemoved {
+            conversation_id,
+            recipient,
+        } => MessageEvent::RecipientRemoved {
+            conversation_id,
+            recipient,
+        },
         _ => {
             todo!();
         }
