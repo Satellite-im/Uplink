@@ -6,6 +6,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
+use common::notifications::set_badge;
 use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -600,14 +601,22 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                if let Err(e) = set_badge(0) {
+                                    log::error!("failed to clear badge notifications: {e}");
+                                }
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
