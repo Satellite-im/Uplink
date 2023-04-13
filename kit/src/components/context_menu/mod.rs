@@ -63,8 +63,8 @@ pub struct IdentityProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
-    let image = cx.props.identity.graphics().profile_picture();
-    let banner = cx.props.identity.graphics().profile_banner();
+    let image = cx.props.identity.profile_picture();
+    let banner = cx.props.identity.profile_banner();
     cx.render(rsx!(
         div {
             class: "identity-header",
