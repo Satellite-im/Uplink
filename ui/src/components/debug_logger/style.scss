@@ -11,7 +11,7 @@
         font-size: var(--text-size-less);
     }
     .body {
-        overflow-y: scroll;
+        overflow-y: auto;
         display: flex;
         flex-direction: column-reverse;
         flex: 1;
