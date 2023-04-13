@@ -243,3 +243,12 @@ auth = Create Account
 sidebar = Sidebar 
     .subtext = sent multiple attachments
     .chat-new = No messages sent yet, send one!
+
+quickprofile = Quick Profile
+    .profile = Profile
+    .message = Message
+    .call = Call
+    .friend-remove = Remove Friend
+    .block = Block User
+    .chat-placeholder = Message
+    .self-edit = Edit Profile
