@@ -282,7 +282,11 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
     let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
-    let conversation_type = active_chat.unwrap().conversation_type.clone();
+    let conversation_type = if let Some(chat) = active_chat.as_ref() {
+        chat.conversation_type
+    } else {
+        ConversationType::Direct
+    };
 
     cx.render(rsx!(
         if conversation_type == ConversationType::Group {

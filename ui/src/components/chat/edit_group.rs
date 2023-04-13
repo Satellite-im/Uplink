@@ -67,10 +67,10 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to_owned![selected_friends, conv_id];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     ChanCmd::AddParticipants => {
+                        let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::AddGroupParticipants {
@@ -88,6 +88,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                     ChanCmd::RemoveParticipants => {
+                        let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveGroupParticipants {
