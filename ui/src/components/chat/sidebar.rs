@@ -348,7 +348,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
                     let platform = user.platform().into();
                     let is_group_conv =  chat.conversation_type == ConversationType::Group;
-                    let is_admin = chat.creator.as_ref().map(|x| x == &state.read().did_key()).unwrap_or_default();
+                    let is_creator = chat.creator.as_ref().map(|x| x == &state.read().did_key()).unwrap_or_default();
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
@@ -421,8 +421,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
-                                            text: if is_group_conv && is_admin {get_local_text("uplink.delete-group-chat")} 
-                                            else if is_group_conv && !is_admin  {get_local_text("uplink.leave-group")} 
+                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")} 
+                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")} 
                                             else {get_local_text("uplink.delete-conversation")},
                                             onpress: move |_| {
                                                 ch.send(MessagesCommand::DeleteConversation { conv_id: chat.id });
