@@ -1656,10 +1656,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         id: "profile-status",
                         aria_label: "Context Menu",
                         p {
-                            class: "text",
+                            class: "text bold",
                             aria_label: "message-text",
                             get_local_text("uplink.status")
                         },
+                        hr {},
                         p {
                             class: "text",
                             aria_label: "message-text",
