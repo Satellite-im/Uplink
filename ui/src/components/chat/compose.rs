@@ -58,7 +58,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::media::player::MediaPlayer,
+    components::{chat::{edit_group::EditGroup}, media::player::MediaPlayer},
     layouts::storage::{
         decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
         FEEDBACK_TEXT_SCRIPT,
@@ -97,6 +97,7 @@ struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
     upload_files: Option<UseState<Vec<PathBuf>>>,
+    show_edit_group: Option<UseState<bool>>,
 }
 
 #[allow(non_snake_case)]
@@ -137,8 +138,10 @@ pub fn Compose(cx: Scope) -> Element {
             }
         }
     });
+    let show_edit_group = use_state(cx, || false);
 
     cx.render(rsx!(
+       
         div {
             id: "compose",
             ondragover: move |_| {
@@ -172,8 +175,14 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                controls: cx.render(rsx!(get_controls{data: data2})),
-                get_topbar_children{data: data.clone()}
+                controls: cx.render(rsx!(get_controls{data: data2, 
+                    show_edit_group: show_edit_group.clone(),
+                })),
+                get_topbar_children {
+                    data: data.clone(),
+                    show_edit_group: show_edit_group.clone(),
+                }, 
+              
             },
             data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
                 MediaPlayer {
@@ -185,20 +194,29 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            match data.as_ref() {
-                None => rsx!(
-                    div {
-                        id: "messages",
-                        MessageGroupSkeletal {},
-                        MessageGroupSkeletal { alt: true }
+            show_edit_group.then(|| rsx!(
+                EditGroup {
+                    oncreate: move |_| {
+                        show_edit_group.set(false);
                     }
-                ),
-                Some(data) =>  rsx!(get_messages{data: data.clone()}),
-            },
-            get_chatbar {
-                data: data,
-                upload_files: files_to_upload.clone()
-            }
+                }
+            )),
+            (!show_edit_group).then(|| rsx!(
+                match data.as_ref() {
+                    None => rsx!(
+                        div {
+                            id: "messages",
+                            MessageGroupSkeletal {},
+                            MessageGroupSkeletal { alt: true }
+                        }
+                    ),
+                    Some(data) =>  rsx!(get_messages{data: data.clone()}),
+                },
+                get_chatbar {
+                    data: data,
+                    upload_files: files_to_upload.clone()
+                }
+            )),
         }
     ))
 }
@@ -259,11 +277,37 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let show_edit_group = cx.props.show_edit_group.as_ref().unwrap();
     let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
     let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
+    let conversation_type = active_chat.unwrap().conversation_type.clone();
+
     cx.render(rsx!(
+        if conversation_type == ConversationType::Group {
+            rsx!(Button {
+                icon: Icon::PencilSquare,
+                disabled: data.is_none(),
+                aria_label: "edit-group".into(),
+                appearance: if *show_edit_group.get() {
+                    Appearance::Primary
+                } else {
+                    Appearance::Secondary
+                },
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Top,
+                    text: if favorite {
+                        get_local_text("friends.edit-group")
+                    } else {
+                        get_local_text("friends.not-admin")
+                    }
+                })),
+                onpress: move |_| {
+                    show_edit_group.set(!show_edit_group);
+                }
+            })
+        }
         Button {
             icon: if favorite {
                 Icon::HeartSlash
@@ -329,6 +373,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
+    let show_edit_group: &UseState<bool> = cx.props.show_edit_group.as_ref().unwrap();
 
     let data = match data {
         Some(d) => d,
@@ -336,7 +381,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             return cx.render(rsx!(
                 UserImageGroup {
                     loading: true,
-                    participants: vec![]
+                    participants: vec![],
                 },
                 div {
                     class: "user-info",
@@ -373,6 +418,9 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             UserImageGroup {
                 loading: false,
                 participants: build_participants(&data.other_participants),
+                onpress: move |_| {
+                    show_edit_group.set(!show_edit_group);
+                },
             }
         )}
         div {
