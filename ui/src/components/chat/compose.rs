@@ -852,7 +852,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     ContextItem {
                         icon: Icon::FaceSmile,
                         text: get_local_text("messages.react"),
-                        //TODO: let the user pick a reaction
                         onpress: move |_| {
                             reacting_to.set(Some(_msg_uuid));
                         }
