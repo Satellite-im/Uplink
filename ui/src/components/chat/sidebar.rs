@@ -391,7 +391,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         UserImage {
                                             platform: platform,
                                             status:  user.identity_status().into(),
-                                            image: user.graphics().profile_picture(),
+                                            image: user.profile_picture(),
                                             typing: users_typing,
                                         }
                                     )} else {rsx! (
