@@ -112,6 +112,13 @@
     }
   }
 
+  .msg-container-end {
+    color: var(--text-color);
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
   .message-group {
     .context-wrap {
       justify-content: flex-end;

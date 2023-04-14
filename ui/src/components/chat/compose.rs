@@ -36,6 +36,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
     state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::{
         ui_adapter::{self},
@@ -452,8 +453,8 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
-    let identity_profile = use_state(cx, || Identity::default());
-    let update_script = use_state(cx, || String::new());
+    let identity_profile = use_state(cx, Identity::default);
+    let update_script = use_state(cx, String::new);
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
@@ -634,35 +635,55 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         }
     });
 
+    let msg_container_end = if data.active_chat.has_more_messages {
+        rsx!(MessageGroupSkeletal {}, MessageGroupSkeletal { alt: true })
+    } else {
+        rsx!(
+            div {
+                // key: "encrypted-notification-0001",
+                class: "msg-container-end",
+                IconElement {
+                    icon:  Icon::LockClosed,
+                },
+                p {
+                    get_local_text("messages.msg-banner")
+                }
+            }
+        )
+    };
+
     cx.render(rsx!(
         div {
             id: "messages",
             div {
-                rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
-                    active_chat_id: data.active_chat.id,
-                    num_messages_in_conversation: data.active_chat.messages.len(),
-                    num_to_take: num_to_take.clone(),
-                    has_more: data.active_chat.has_more_messages,
-                    on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
-                        if !identity_profile.get().eq(&id) {
-                            let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
-                                let mut id = id;
-                                id.set_identity_status(IdentityStatus::Online);
-                                id
-                            } else {
-                                id
-                            };
-                            identity_profile.set(id);
+                rsx!(
+                    msg_container_end,
+                    render_message_groups{
+                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
+                        active_chat_id: data.active_chat.id,
+                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        num_to_take: num_to_take.clone(),
+                        has_more: data.active_chat.has_more_messages,
+                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                            if !identity_profile.get().eq(&id) {
+                                let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                    let mut id = id;
+                                    id.set_identity_status(IdentityStatus::Online);
+                                    id
+                                } else {
+                                    id
+                                };
+                                identity_profile.set(id);
+                            }
+                            //Dont think there is any way of manually moving elements via dioxus
+                            let script = include_str!("./show_context.js")
+                                .replace("UUID", quick_profile_uuid)
+                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
+                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
+                            update_script.set(script);
                         }
-                        //Dont think there is any way of manually moving elements via dioxus
-                        let script = include_str!("./show_context.js")
-                            .replace("UUID", quick_profile_uuid)
-                            .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                            .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
-                        update_script.set(script);
                     }
-                })
+                )
             }
         },
         QuickProfileContext{
@@ -1478,6 +1499,7 @@ pub struct QuickProfileProps<'a> {
     children: Element<'a>,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum QuickProfileCmd {
     CreateConversation(Option<Chat>, DID),
     RemoveFriend(DID),
@@ -1502,7 +1524,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let chat_is_current = match state.read().get_active_chat() {
         Some(c) => match &chat_of {
-            Some(cO) => c.eq(&cO),
+            Some(cO) => c.eq(cO),
             None => false,
         },
         None => false,

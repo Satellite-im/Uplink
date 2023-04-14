@@ -54,6 +54,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
 
+    // the leading underscore is to pass this to a prop named "friends"
     let _friends = State::get_friends_by_first_letter(friends_list);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
@@ -123,7 +124,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 selected_friends: selected_friends.clone()
             },
             Button {
-                text: "Create DM".into(),
+                text: get_local_text("messages.create-group-chat"),
                 aria_label: "create-dm-button".into(),
                 appearance: Appearance::Primary,
                 onpress: move |e| {

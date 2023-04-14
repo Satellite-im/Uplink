@@ -29,23 +29,21 @@ pub struct Props<'a> {
     // Users relationship
     relationship: Relationship,
     // Time when request was sent or received
-    #[props(optional)]
     request_datetime: Option<DateTime<Utc>>,
     // Status message from friend
     status_message: String,
     // The user image element to display
     user_image: Element<'a>,
     // An optional event handler for the "onchat" event
-    #[props(optional)]
     onchat: Option<EventHandler<'a>>,
     // An optional event handler for the "onremove" event
-    #[props(optional)]
     onremove: Option<EventHandler<'a>>,
-    #[props(optional)]
     onaccept: Option<EventHandler<'a>>,
     // An optional event handler for the "onblock" event
-    #[props(optional)]
     onblock: Option<EventHandler<'a>>,
+    accept_button_disabled: Option<bool>,
+    block_button_disabled: Option<bool>,
+    remove_button_disabled: Option<bool>,
 }
 
 #[allow(non_snake_case)]
@@ -56,6 +54,10 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let status_message = cx.props.status_message.clone();
     let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);
     let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
+
+    let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
+        || cx.props.block_button_disabled.unwrap_or(false)
+        || cx.props.remove_button_disabled.unwrap_or(false);
 
     cx.render(rsx!(
         div {
@@ -94,6 +96,8 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: Icon::Check,
                         text: get_local_text("friends.accept"),
                         aria_label: "Accept Friend".into(),
+                        loading:  cx.props.accept_button_disabled.unwrap_or(false),
+                        disabled:any_button_disabled,
                         onpress: move |_| match &cx.props.onaccept {
                             Some(f) => f.call(()),
                             None    => {},
@@ -104,6 +108,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Button {
                         icon: Icon::ChatBubbleBottomCenterText,
                         aria_label: "Chat With Friend".into(),
+                        disabled: any_button_disabled,
                         text: if state.read().ui.is_minimal_view() { "".into() } else { get_local_text("uplink.chat") },
                         onpress: move |_| match &cx.props.onchat {
                             Some(f) => f.call(()),
@@ -114,6 +119,8 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Button {
                     icon: Icon::UserMinus,
                     appearance: Appearance::Secondary,
+                    loading:  cx.props.remove_button_disabled.unwrap_or(false),
+                    disabled: any_button_disabled,
                     onpress: move |_| {
                         // note that the blocked list uses the onremove callback to unblock the user.yes, it's kind of a hack
                         match &cx.props.onremove {
@@ -133,6 +140,8 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Button {
                         icon: Icon::NoSymbol,
                         appearance: Appearance::Secondary,
+                        loading:  cx.props.block_button_disabled.unwrap_or(false),
+                        disabled: any_button_disabled,
                         onpress: move |_| match &cx.props.onblock {
                             Some(f) => f.call(()),
                             None    => {},
