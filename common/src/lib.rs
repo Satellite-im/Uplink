@@ -198,7 +198,7 @@ fn get_assets_dir() -> anyhow::Result<PathBuf> {
 
 pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
     let extensions_path = if cfg!(target_os = "windows") {
-        PathBuf::from(r"..\extensions")
+        PathBuf::from(r"C:\uplink\extensions")
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/im.satellite/extensions")
     } else if cfg!(target_os = "macos") {
