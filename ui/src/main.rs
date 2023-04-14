@@ -608,6 +608,7 @@ fn app(cx: Scope) -> Element {
 
                             if *focused {
                                 state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
                             }
                             //crate::utils::sounds::Play(Sounds::Notification);
                             //needs_update.set(true);

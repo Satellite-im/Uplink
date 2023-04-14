@@ -35,30 +35,44 @@ impl Notifications {
     }
 
     // Adds notification(s) to the specified kind.
-    pub fn increment(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
+    pub fn increment(
+        &mut self,
+        config: &Configuration,
+        kind: NotificationKind,
+        count: u32,
+        increment_badge: bool,
+    ) {
         match kind {
             NotificationKind::FriendRequest => {
                 if config.notifications.friends_notifications {
                     self.friends = self.friends.saturating_add(count);
-                    self.badge = self.badge.saturating_add(count);
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
                 }
             }
             NotificationKind::Message => {
                 if config.notifications.messages_notifications {
                     self.messages = self.messages.saturating_add(count);
-                    self.badge = self.badge.saturating_add(count);
+
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
                 }
             }
             NotificationKind::Settings => {
                 if config.notifications.settings_notifications {
                     self.settings = self.settings.saturating_add(count);
-                    self.badge = self.badge.saturating_add(count);
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
                 }
             }
         };
 
-        // Update the badge any time notifications are added.
-        let _ = set_badge(self.badge);
+        if increment_badge {
+            let _ = set_badge(self.badge);
+        }
     }
 
     // Removes notification(s) from the specified kind.

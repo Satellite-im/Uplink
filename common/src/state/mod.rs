@@ -130,11 +130,12 @@ impl State {
                 }
             }
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => {
-                self.ui
-                    .notifications
-                    .increment(&self.configuration, kind, count)
-            }
+            Action::AddNotification(kind, count) => self.ui.notifications.increment(
+                &self.configuration,
+                kind,
+                count,
+                self.ui.metadata.focused,
+            ),
             Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
             Action::ClearAllNotifications => self.ui.notifications.clear_all(),
@@ -1011,6 +1012,7 @@ impl State {
                 &self.configuration,
                 notifications::NotificationKind::Settings,
                 1,
+                self.ui.metadata.focused,
             )
         }
     }
