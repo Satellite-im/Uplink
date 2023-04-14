@@ -96,6 +96,7 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                 options: Options {
                     with_validation: Some(username_validation),
                     with_clear_btn: true,
+                    clear_on_submit: false,
                     ..Default::default()
                 }
                 onchange: |(val, is_valid): (String, bool)| {
