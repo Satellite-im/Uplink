@@ -21,7 +21,6 @@ use kit::{
 };
 use warp::{crypto::DID, logging::tracing::log};
 
-
 #[derive(PartialEq, Clone)]
 enum EditGroupAction {
     Add,
@@ -70,7 +69,8 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     ChanCmd::AddParticipants => {
-                        let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
+                        let recipients: Vec<DID> =
+                            selected_friends.current().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::AddGroupParticipants {
@@ -88,7 +88,8 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                     ChanCmd::RemoveParticipants => {
-                        let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
+                        let recipients: Vec<DID> =
+                            selected_friends.current().iter().cloned().collect();
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveGroupParticipants {

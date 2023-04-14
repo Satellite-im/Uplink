@@ -64,7 +64,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::{chat::{edit_group::EditGroup}, media::player::MediaPlayer},
+    components::{chat::edit_group::EditGroup, media::player::MediaPlayer},
     layouts::storage::{
         decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
         FEEDBACK_TEXT_SCRIPT,
@@ -1742,7 +1742,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 }
             }
             identity.status_message().and_then(|s|{
-                cx.render(rsx!(            
+                cx.render(rsx!(
                     hr{},
                     div {
                         id: "profile-status",
