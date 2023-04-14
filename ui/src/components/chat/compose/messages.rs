@@ -1,56 +1,32 @@
-use std::{
-    ffi::OsStr,
-    path::PathBuf,
-    rc::Rc,
-    time::{Duration, Instant},
-};
+use std::{ffi::OsStr, path::PathBuf, rc::Rc};
 
 use dioxus::prelude::{EventHandler, *};
 
-use dioxus_router::use_router;
-use futures::{channel::oneshot, StreamExt};
+use futures::StreamExt;
 
-use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu, IdentityHeader},
-        file_embed::FileEmbed,
-        indicator::{Platform, Status},
-        message::{Message, Order, ReactionAdapter},
-        message_group::{MessageGroup, MessageGroupSkeletal},
-        message_reply::MessageReply,
-        message_typing::MessageTyping,
-        user_image::UserImage,
-        user_image_group::UserImageGroup,
-    },
-    elements::{
-        button::Button,
-        input::Input,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    layout::{
-        chatbar::{Chatbar, Reply},
-        topbar::Topbar,
-    },
+use kit::components::{
+    context_menu::{ContextItem, ContextMenu},
+    indicator::Status,
+    message::{Message, Order, ReactionAdapter},
+    message_group::{MessageGroup, MessageGroupSkeletal},
+    message_reply::MessageReply,
+    user_image::UserImage,
 };
 
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     state::{group_messages, GroupedMessage, MessageGroup},
-    warp_runner::{
-        ui_adapter::{self},
-        MultiPassCmd,
-    },
+    warp_runner::ui_adapter::{self},
 };
 use common::{
-    state::{ui, Action, Chat, Identity, State},
+    state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window, DesktopContext};
+use dioxus_desktop::use_eval;
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
@@ -58,22 +34,11 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     logging::tracing::log,
-    multipass::identity::{self, IdentityStatus},
-    raygun::{self, ConversationType, ReactionState},
+    multipass::identity::IdentityStatus,
+    raygun::{self, ReactionState},
 };
-use wry::webview::FileDropEvent;
 
-use crate::{
-    components::media::player::MediaPlayer,
-    layouts::storage::{
-        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
-        FEEDBACK_TEXT_SCRIPT,
-    },
-    utils::{
-        build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
-    },
-    UPLINK_ROUTES,
-};
+use crate::utils::format_timestamp::format_timestamp_timeago;
 
 const SETUP_CONTEXT_PARENT: &str = r#"
     const right_clickable = document.getElementsByClassName("has-context-handler")
