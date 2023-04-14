@@ -124,6 +124,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             Button {
                 text: "Create DM".into(),
+                aria_label: "create-dm-button".into(),
                 appearance: Appearance::Primary,
                 onpress: move |e| {
                     log::info!("create dm button");
@@ -221,6 +222,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             div {
                 class: "flex-1",
                 p {
+                    aria_label: "friend-name",
                     onclick: move |_| {
                         update_fn();
                     },
