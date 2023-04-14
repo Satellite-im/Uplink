@@ -1416,6 +1416,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
 
     cx.render(rsx!(div {
         id: "compose-attachments",
+        aria_label: "compose-attachments",
         attachments
     }))
 }
@@ -1681,10 +1682,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             hr{},
             div {
                 id: "profile-name",
-                aria_label: "Context Menu",
+                aria_label: "profile-name",
                 p {
                     class: "text",
-                    aria_label: "message-text",
+                    aria_label: "profile-name-value",
                     "{cx.props.identity.username()}"
                 }
             }
@@ -1693,16 +1694,16 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     hr{},
                     div {
                         id: "profile-status",
-                        aria_label: "Context Menu",
+                        aria_label: "profile-status",
                         p {
                             class: "text bold",
-                            aria_label: "message-text",
+                            aria_label: "profile-status-header",
                             get_local_text("uplink.status")
                         },
                         hr {},
                         p {
                             class: "text",
-                            aria_label: "message-text",
+                            aria_label: "profile-status-value",
                             s
                         }
                     }
