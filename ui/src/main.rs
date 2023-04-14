@@ -18,6 +18,8 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
+#[cfg(not(target_os = "macos"))]
+use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -45,6 +47,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
+use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::LoadingLayout;
@@ -261,7 +264,8 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
             .with_transparent(true)
             .with_fullsize_content_view(true)
             .with_menu(main_menu)
-            .with_titlebar_transparent(true);
+            .with_titlebar_transparent(true)
+            .with_title("")
         // .with_movable_by_window_background(true)
     }
 
@@ -321,35 +325,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = cx.render(rsx!(
-            div {
-                class: "controls",
-                Button {
-                    aria_label: "minimize-button".into(),
-                    icon: Icon::Minus,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_minimized(true);
-                    }
-                },
-                Button {
-                    aria_label: "square-button".into(),
-                    icon: Icon::Square2Stack,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_maximized(!desktop.is_maximized());
-                    }
-                },
-                Button {
-                    aria_label: "close-button".into(),
-                    icon: Icon::XMark,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.close();
-                    }
-                },
-            }
-        ))
+        controls = cx.render(rsx!(Topbar_Controls {}));
     }
 
     cx.render(rsx! (
@@ -357,7 +333,8 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
         div {
             id: "app-wrap",
             div {
-                id: "titlebar",
+                class: "titlebar",
+                id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
                 onmousedown: move |_| { desktop.drag(); },
                 controls,
             },
@@ -517,7 +494,6 @@ fn app(cx: Scope) -> Element {
                 get_titlebar{},
                 get_toasts{},
                 get_call_dialog{},
-                get_pre_release_message{},
                 get_router{},
                 get_logger{},
             }
@@ -642,11 +618,6 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
-                if desktop.outer_size().width < 575 {
-                    desktop.set_title("");
-                } else {
-                    desktop.set_title("Uplink");
-                }
 
                 match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -1013,28 +984,6 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(_cx: Scope) -> Element {
-    let pre_release_text = get_local_text("uplink.pre-release");
-    _cx.render(rsx!(
-        div {
-            id: "pre-release",
-            aria_label: "pre-release",
-            IconElement {
-                icon: Icon::Beaker,
-            },
-            p {
-                div {
-                    onclick: move |_| {
-                        let _ = open::that("https://issues.satellite.im");
-                    },
-                    "{pre_release_text}"
-                }
-
-            }
-        },
-    ))
-}
-
 fn get_update_icon(cx: Scope) -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
@@ -1094,8 +1043,7 @@ fn get_update_icon(cx: Scope) -> Element {
                         }
                     },
                     IconElement {
-                        icon: common::icons::solid::Shape::ArrowDown,
-                        fill: "green",
+                        icon: common::icons::solid::Shape::ArrowDownCircle,
                     },
                     "{update_msg}",
                 }
@@ -1103,12 +1051,14 @@ fn get_update_icon(cx: Scope) -> Element {
         )),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
+            class: "topbar-item",
             aria_label: "update-available",
             "{downloading_msg}"
         })),
         DownloadProgress::Finished => {
             cx.render(rsx!(div {
                 id: "update-available",
+                class: "topbar-item",
                 aria_label: "update-available",
                 onclick: move |_| {
                     // be sure to update this before closing the app
@@ -1181,42 +1131,19 @@ fn get_titlebar(cx: Scope) -> Element {
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = cx.render(rsx!(
-            div {
-                class: "controls",
-                Button {
-                    aria_label: "minimize-button".into(),
-                    icon: Icon::Minus,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_minimized(true);
-                    }
-                },
-                Button {
-                    aria_label: "square-button".into(),
-                    icon: Icon::Square2Stack,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_maximized(!desktop.is_maximized());
-                    }
-                },
-                Button {
-                    aria_label: "close-button".into(),
-                    icon: Icon::XMark,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.close();
-                    }
-                },
-            }
-        ))
+        controls = cx.render(rsx!(Topbar_Controls {}));
     }
 
     cx.render(rsx!(
         div {
-            id: "titlebar",
+            class: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
-            get_update_icon{},
+            Release_Info{},
+            cx.render(rsx!(span {
+                class: "inline-controls",
+                get_update_icon{},
+                controls
+            })),
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
@@ -1273,9 +1200,6 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
-
-            controls,
-
         },
     ))
 }
