@@ -57,8 +57,8 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let mut friends_group_list = friends_list.clone();
     let mut friends_not_in_group_list = friends_list;
 
-    friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(&did_key));
-    friends_not_in_group_list.retain(|did_key, _| !friends_did_already_in_group.contains(&did_key));
+    friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(did_key));
+    friends_not_in_group_list.retain(|did_key, _| !friends_did_already_in_group.contains(did_key));
 
     let _friends_not_in_group = State::get_friends_by_first_letter(friends_not_in_group_list);
     let _friends_in_group = State::get_friends_by_first_letter(friends_group_list);
@@ -74,7 +74,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::AddGroupParticipants {
-                                conv_id: conv_id,
+                                conv_id,
                                 recipients: recipients.clone(),
                                 rsp: tx,
                             }))
@@ -92,7 +92,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveGroupParticipants {
-                                conv_id: conv_id,
+                                conv_id,
                                 recipients: recipients.clone(),
                                 rsp: tx,
                             }))
