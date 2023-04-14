@@ -7,19 +7,12 @@ use futures::StreamExt;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        indicator::{Platform, Status},
+        indicator::{Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
         message_reply::MessageReply,
         user_image::UserImage,
-        user_image_group::UserImageGroup,
     },
-    elements::{
-        button::Button,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
-    },
-    layout::topbar::Topbar,
 };
 
 use common::{
@@ -29,13 +22,13 @@ use common::{
     warp_runner::ui_adapter::{self},
 };
 use common::{
-    state::{ui, Action, Chat, Identity, State},
+    state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window, DesktopContext};
+use dioxus_desktop::{use_eval};
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
@@ -43,17 +36,12 @@ use uuid::Uuid;
 use warp::{
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, ConversationType, ReactionState},
+    raygun::{self, ReactionState},
 };
-use wry::webview::FileDropEvent;
+
 
 use crate::{
-    components::media::player::MediaPlayer,
-    layouts::storage::{
-        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
-        FEEDBACK_TEXT_SCRIPT,
-    },
-    utils::{build_participants, format_timestamp::format_timestamp_timeago},
+    utils::{format_timestamp::format_timestamp_timeago},
 };
 
 const SETUP_CONTEXT_PARENT: &str = r#"

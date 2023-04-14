@@ -2,20 +2,13 @@ mod chatbar;
 mod messages;
 mod quick_profile;
 
-use std::{ffi::OsStr, path::PathBuf, rc::Rc};
+use std::{path::PathBuf, rc::Rc};
 
-use dioxus::prelude::{EventHandler, *};
-
-use futures::StreamExt;
+use dioxus::prelude::*;
 
 use kit::{
     components::{
-        context_menu::{ContextItem, ContextMenu},
-        indicator::{Platform, Status},
-        message::{Message, Order},
-        message_group::{MessageGroup, MessageGroupSkeletal},
-        message_reply::MessageReply,
-        user_image::UserImage,
+        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
@@ -26,29 +19,16 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use common::{
-    icons::outline::Shape as Icon,
-    icons::Icon as IconElement,
-    state::{group_messages, GroupedMessage, MessageGroup},
-    warp_runner::ui_adapter::{self},
-};
-use common::{
-    state::{ui, Action, Chat, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
-};
+use common::icons::outline::Shape as Icon;
+use common::state::{ui, Action, Chat, Identity, State};
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window, DesktopContext};
-use rfd::FileDialog;
+use dioxus_desktop::{use_window, DesktopContext};
+
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
-use uuid::Uuid;
-use warp::{
-    logging::tracing::log,
-    multipass::identity::IdentityStatus,
-    raygun::{self, ConversationType, ReactionState},
-};
+
+use warp::{logging::tracing::log, raygun::ConversationType};
 use wry::webview::FileDropEvent;
 
 use crate::{
@@ -57,7 +37,7 @@ use crate::{
         decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
         FEEDBACK_TEXT_SCRIPT,
     },
-    utils::{build_participants, format_timestamp::format_timestamp_timeago},
+    utils::build_participants,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
