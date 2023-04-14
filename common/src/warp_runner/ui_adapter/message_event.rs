@@ -81,14 +81,14 @@ pub async fn convert_message_event(
             message_id,
             ..
         } => MessageEvent::MessageReactionAdded {
-            message: messaging.get_message(conversation_id, message_id).await?;,
+            message: messaging.get_message(conversation_id, message_id).await?,
         },
         MessageEventKind::MessageReactionRemoved {
             conversation_id,
             message_id,
             ..
         } => MessageEvent::MessageReactionRemoved {
-            message: messaging.get_message(conversation_id, message_id).await?;,
+            message: messaging.get_message(conversation_id, message_id).await?,
         },
         MessageEventKind::EventReceived {
             conversation_id,

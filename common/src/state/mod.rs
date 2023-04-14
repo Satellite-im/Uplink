@@ -44,7 +44,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, Reaction},
+    raygun::{self},
 };
 
 use self::storage::Storage;
