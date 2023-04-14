@@ -1024,7 +1024,9 @@ fn get_pre_release_message(_cx: Scope) -> Element {
                 }
 
             },
-            get_update_icon{}
+            p {
+                get_update_icon{}
+            }
         },
     ))
 }
