@@ -126,7 +126,7 @@ pub fn Compose(cx: Scope) -> Element {
     let data2 = data.clone();
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let overlay_script = include_str!("./overlay.js");
+    let overlay_script = include_str!("../overlay.js");
 
     let files_to_upload = use_state(cx, Vec::new);
 
@@ -492,7 +492,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             // switch to settings or whatnot, then come back to the chats view and not lose your place.
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
-                let script = include_str!("./script.js");
+                let script = include_str!("../scroll_to_bottom.js");
                 eval(script.to_string());
             }
             eval(SETUP_CONTEXT_PARENT.to_string());
@@ -676,7 +676,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                                 identity_profile.set(id);
                             }
                             //Dont think there is any way of manually moving elements via dioxus
-                            let script = include_str!("./show_context.js")
+                            let script = include_str!("../show_context.js")
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
