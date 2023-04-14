@@ -41,12 +41,10 @@ pub enum MessageEvent {
         participant: DID,
     },
     RecipientAdded {
-        conversation_id: Uuid,
-        recipient: DID,
+        conversation: raygun::Conversation,
     },
     RecipientRemoved {
-        conversation_id: Uuid,
-        recipient: DID,
+        conversation: raygun::Conversation,
     },
 }
 
@@ -127,18 +125,14 @@ pub async fn convert_message_event(
             }
         }
         MessageEventKind::RecipientAdded {
-            conversation_id,
-            recipient,
+            conversation_id, ..
         } => MessageEvent::RecipientAdded {
-            conversation_id,
-            recipient,
+            conversation: messaging.get_conversation(conversation_id).await?,
         },
         MessageEventKind::RecipientRemoved {
-            conversation_id,
-            recipient,
+            conversation_id, ..
         } => MessageEvent::RecipientRemoved {
-            conversation_id,
-            recipient,
+            conversation: messaging.get_conversation(conversation_id).await?,
         },
         _ => {
             todo!();

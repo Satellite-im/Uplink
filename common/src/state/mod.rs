@@ -469,20 +469,16 @@ impl State {
                     }
                 }
             }
-            MessageEvent::RecipientAdded {
-                conversation_id,
-                recipient,
-            } => {
-                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.participants.insert(recipient);
+            MessageEvent::RecipientAdded { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants =
+                        HashSet::from_iter(conversation.recipients().iter().cloned());
                 }
             }
-            MessageEvent::RecipientRemoved {
-                conversation_id,
-                recipient,
-            } => {
-                if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.participants.remove(&recipient);
+            MessageEvent::RecipientRemoved { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants =
+                        HashSet::from_iter(conversation.recipients().iter().cloned());
                 }
             }
         }
