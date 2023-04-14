@@ -6,7 +6,6 @@ use std::{
     ffi::OsStr,
     path::PathBuf,
     rc::Rc,
-    time::{Duration, Instant},
 };
 
 use dioxus::prelude::{EventHandler, *};
@@ -17,12 +16,10 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu, IdentityHeader},
-        file_embed::FileEmbed,
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
         message_reply::MessageReply,
-        message_typing::MessageTyping,
         user_image::UserImage,
         user_image_group::UserImageGroup,
     },
@@ -33,7 +30,6 @@ use kit::{
         Appearance,
     },
     layout::{
-        chatbar::{Chatbar, Reply},
         topbar::Topbar,
     },
 };
@@ -49,8 +45,7 @@ use common::{
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
-    warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    warp_runner::{RayGunCmd, WarpCmd}, WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
@@ -62,7 +57,7 @@ use uuid::Uuid;
 use warp::{
     crypto::DID,
     logging::tracing::log,
-    multipass::identity::{self, IdentityStatus},
+    multipass::identity::{IdentityStatus},
     raygun::{self, ConversationType, ReactionState},
 };
 use wry::webview::FileDropEvent;
@@ -74,7 +69,7 @@ use crate::{
         FEEDBACK_TEXT_SCRIPT,
     },
     utils::{
-        build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
+        build_participants, format_timestamp::format_timestamp_timeago,
     },
     UPLINK_ROUTES,
 };
