@@ -7,7 +7,10 @@ use warp::{
 };
 
 use super::Message;
-use crate::warp_runner::ui_adapter::convert_raygun_message;
+use crate::{
+    state,
+    warp_runner::ui_adapter::{convert_raygun_message, did_to_identity},
+};
 
 pub enum MessageEvent {
     Received {
@@ -42,6 +45,7 @@ pub enum MessageEvent {
     },
     RecipientAdded {
         conversation: raygun::Conversation,
+        identity: state::Identity,
     },
     RecipientRemoved {
         conversation: raygun::Conversation,
@@ -50,7 +54,7 @@ pub enum MessageEvent {
 
 pub async fn convert_message_event(
     event: warp::raygun::MessageEventKind,
-    _account: &mut super::super::Account,
+    account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<MessageEvent, Error> {
     log::debug!("got event: {:?}", &event);
@@ -125,8 +129,10 @@ pub async fn convert_message_event(
             }
         }
         MessageEventKind::RecipientAdded {
-            conversation_id, ..
+            conversation_id,
+            recipient,
         } => MessageEvent::RecipientAdded {
+            identity: did_to_identity(&recipient, account).await?,
             conversation: messaging.get_conversation(conversation_id).await?,
         },
         MessageEventKind::RecipientRemoved {
