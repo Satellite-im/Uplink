@@ -183,10 +183,10 @@
       <!-- end of ExtraFolder -->
       <DirectoryRef Id="ExtensionFolder">
             <Component Id="cmpLibClearAll.dll" Guid="8A156548-9269-4D20-8FC8-213D865E3252">
-               <File Id="LibClearAll.dll" Name="libclear_all.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\libclear_all.dll" />
+               <File Id="ClearAll.dll" Name="clear_all.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\clear_all.dll" />
             </Component>
             <Component Id="cmpLibEmojiSelector.dll" Guid="8C8B04BE-FAAE-418B-8CD9-5AADF2859C67">
-               <File Id="LibEmojiSelector.dll" Name="libemoji_selector.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\libemoji_selector.dll" />
+               <File Id="EmojiSelector.dll" Name="emoji_selector.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\emoji_selector.dll" />
             </Component>
        </DirectoryRef>
       <!-- end of ExtensionFolder -->
