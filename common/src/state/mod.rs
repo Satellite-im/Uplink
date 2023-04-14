@@ -597,6 +597,7 @@ impl State {
                 conv.conversation_type = chat.conversation_type;
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
+                conv.creator = chat.creator;
             } else {
                 self.chats.all.insert(id, chat);
             }

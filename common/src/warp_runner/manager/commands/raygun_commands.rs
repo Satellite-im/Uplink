@@ -44,6 +44,11 @@ pub enum RayGunCmd {
         recipients: Vec<DID>,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
+    #[display(fmt = "DeleteConversation")]
+    DeleteConversation {
+        conv_id: Uuid,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
     #[display(fmt = "FetchMessages {{ req_len: {new_len}, current_len: {current_len} }} ")]
     FetchMessages {
         conv_id: Uuid,
@@ -139,6 +144,13 @@ pub async fn handle_raygun_cmd(
         RayGunCmd::CreateConversation { recipient, rsp } => {
             let r = match messaging.create_conversation(&recipient).await {
                 Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
+                Err(e) => Err(e),
+            };
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::DeleteConversation { conv_id, rsp } => {
+            let r = match messaging.delete(conv_id, None).await {
+                Ok(_) => Ok(conv_id),
                 Err(e) => Err(e),
             };
             let _ = rsp.send(r);
