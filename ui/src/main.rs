@@ -22,7 +22,6 @@ use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
-use kit::layout::topbar::Topbar;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
