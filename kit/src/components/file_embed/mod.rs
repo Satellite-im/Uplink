@@ -100,3 +100,28 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_props_struct() {
+        let props = Props {
+            filename: String::from("test.txt"),
+            filesize: Some(100),
+            kind: Some(String::from("Text")),
+            remote: Some(true),
+            attachment_icon: Some(Icon::Film), 
+            button_icon: Some(Icon::ArrowDown),
+            on_press: EventHandler::default(),
+        };
+
+        assert_eq!(props.filename, String::from("test.txt"));
+        assert_eq!(props.filesize, Some(100));
+        assert_eq!(props.kind, Some(String::from("Text")));
+        assert_eq!(props.remote, Some(true));
+        assert_eq!(props.attachment_icon, Some(Icon::Film));
+        assert_eq!(props.button_icon, Some(Icon::ArrowDown));
+    }
+}
