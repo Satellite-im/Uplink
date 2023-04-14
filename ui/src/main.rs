@@ -450,7 +450,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.ui.extensions.values().count()
     );
 
-    state.ui.notifications.init_badge();
+    state.ui.notifications.clear_badge();
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
 
