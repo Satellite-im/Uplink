@@ -603,14 +603,21 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
