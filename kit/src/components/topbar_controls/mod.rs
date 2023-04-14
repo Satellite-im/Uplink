@@ -6,7 +6,6 @@ use dioxus_desktop::use_window;
 #[allow(non_snake_case)]
 pub fn Topbar_Controls(cx: Scope) -> Element {
     let desktop = use_window(cx);
-    // #[cfg(not(target_os = "macos"))]
     cx.render(rsx!(
         div {
             class: "controls",
