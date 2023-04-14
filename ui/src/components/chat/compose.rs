@@ -116,7 +116,7 @@ struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
     upload_files: Option<UseState<Vec<PathBuf>>>,
-    show_edit_group: Option<UseState<bool>>,
+    show_edit_group: Option<UseState<Option<Uuid>>>,
 }
 
 #[allow(non_snake_case)]
@@ -125,6 +125,10 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
+    let chat_id = data2
+        .as_ref()
+        .map(|data| data.active_chat.id)
+        .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
     let overlay_script = include_str!("./overlay.js");
@@ -157,7 +161,7 @@ pub fn Compose(cx: Scope) -> Element {
             }
         }
     });
-    let show_edit_group = use_state(cx, || false);
+    let show_edit_group = use_state(cx, || None);
 
     cx.render(rsx!(
        
@@ -213,14 +217,16 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
-            show_edit_group.then(|| rsx!(
+            show_edit_group
+                .map_or(false, |group_chat_id| group_chat_id == chat_id).then(|| rsx!(
                 EditGroup {
-                    oncreate: move |_| {
-                        show_edit_group.set(false);
+                    onedit: move |_| {
+                        show_edit_group.set(None);
                     }
                 }
             )),
-            (!show_edit_group).then(|| rsx!(
+            show_edit_group
+                .map_or(true, |group_chat_id| group_chat_id != chat_id).then(|| rsx!(
                 match data.as_ref() {
                     None => rsx!(
                         div {
@@ -307,13 +313,19 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         ConversationType::Direct
     };
 
+    let edit_group_activated = show_edit_group
+    .get()
+    .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+    .unwrap_or(false);
+
+
     cx.render(rsx!(
         if conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
                 disabled: data.is_none(),
                 aria_label: "edit-group".into(),
-                appearance: if *show_edit_group.get() {
+                appearance: if edit_group_activated {
                     Appearance::Primary
                 } else {
                     Appearance::Secondary
@@ -327,7 +339,13 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                     }
                 })),
                 onpress: move |_| {
-                    show_edit_group.set(!show_edit_group);
+                    if edit_group_activated {
+                        show_edit_group.set(None);
+                    } else {
+                        if let Some(chat) = active_chat.as_ref() {
+                            show_edit_group.set(Some(chat.id));
+                        }
+                    }
                 }
             })
         }
@@ -396,7 +414,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let show_edit_group: &UseState<bool> = cx.props.show_edit_group.as_ref().unwrap();
+    let show_edit_group: &UseState<Option<Uuid>> = cx.props.show_edit_group.as_ref().unwrap();
 
     let data = match data {
         Some(d) => d,
@@ -442,7 +460,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                 loading: false,
                 participants: build_participants(&data.other_participants),
                 onpress: move |_| {
-                    show_edit_group.set(!show_edit_group);
+                    if show_edit_group.get().is_some() {
+                        show_edit_group.set(None);
+                    } else {
+                        show_edit_group.set(Some(data.active_chat.id));
+                    }
                 },
             }
         )}

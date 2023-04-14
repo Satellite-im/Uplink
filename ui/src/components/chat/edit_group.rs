@@ -34,7 +34,7 @@ enum ChanCmd {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    oncreate: EventHandler<'a, MouseEvent>,
+    onedit: EventHandler<'a, MouseEvent>,
 }
 
 #[allow(non_snake_case)]
@@ -189,7 +189,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         log::info!("remove participants button");
                         ch.send(ChanCmd::RemoveParticipants);
                      }
-                    cx.props.oncreate.call(e);
+                    cx.props.onedit.call(e);
                 }
             }
         }
