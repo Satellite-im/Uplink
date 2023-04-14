@@ -1668,7 +1668,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 }
             }
             identity.status_message().and_then(|s|{
-                cx.render(rsx!(            
+                cx.render(rsx!(
                     hr{},
                     div {
                         id: "profile-status",
