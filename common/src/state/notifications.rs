@@ -54,7 +54,6 @@ impl Notifications {
             NotificationKind::Message => {
                 if config.notifications.messages_notifications {
                     self.messages = self.messages.saturating_add(count);
-
                     if increment_badge {
                         self.badge = self.badge.saturating_add(count);
                     }
