@@ -5,16 +5,17 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus::prelude::*;
+use dioxus::prelude::{EventHandler, *};
 
+use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
     components::{
-        context_menu::{ContextItem, ContextMenu},
+        context_menu::{ContextItem, ContextMenu, IdentityHeader},
         file_embed::FileEmbed,
         indicator::{Platform, Status},
-        message::{Message, Order},
+        message::{Message, Order, ReactionAdapter},
         message_group::{MessageGroup, MessageGroupSkeletal},
         message_reply::MessageReply,
         message_typing::MessageTyping,
@@ -23,6 +24,7 @@ use kit::{
     },
     elements::{
         button::Button,
+        input::Input,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
@@ -34,8 +36,12 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
     state::{group_messages, GroupedMessage, MessageGroup},
-    warp_runner::ui_adapter,
+    warp_runner::{
+        ui_adapter::{self},
+        MultiPassCmd,
+    },
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -66,11 +72,24 @@ use crate::{
     utils::{
         build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
     },
+    UPLINK_ROUTES,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
     var chatBar = document.getElementsByClassName('chatbar')[0].getElementsByClassName('input_textarea')[0]
     chatBar.focus()
+"#;
+
+const SETUP_CONTEXT_PARENT: &str = r#"
+    const right_clickable = document.getElementsByClassName("has-context-handler")
+    console.log("E", right_clickable)
+    for (var i = 0; i < right_clickable.length; i++) {
+        //Disable default right click actions (opening the inspect element dropdown)
+        right_clickable.item(i).addEventListener("contextmenu",
+        function (ev) {
+        ev.preventDefault()
+        })
+    }
 "#;
 
 struct ComposeData {
@@ -230,7 +249,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     };
     let is_favorite = s.is_favorite(&active_chat);
 
-    let first_image = active_participant.graphics().profile_picture();
+    let first_image = active_participant.profile_picture();
     let other_participants_names = State::join_usernames(&other_participants);
     let active_media = Some(active_chat.id) == s.chats().active_media;
 
@@ -392,9 +411,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
-    // contains the emoji reaction
-    // conv id, msg id, emoji
-    React((raygun::Message, String)),
+    React((DID, raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
         msg_id: Uuid,
@@ -425,13 +442,16 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
     log::trace!("get_messages");
-    let user = data.my_id.did_key();
     let state = use_shared_state::<State>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
     let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
         use_ref(cx, || None);
+
+    let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let identity_profile = use_state(cx, Identity::default);
+    let update_script = use_state(cx, String::new);
 
     if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
         if m.is_empty() {
@@ -472,6 +492,7 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
                 let script = include_str!("./script.js");
                 eval(script.to_string());
             }
+            eval(SETUP_CONTEXT_PARENT.to_string());
         }
     });
 
@@ -481,17 +502,15 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    MessagesCommand::React((message, emoji)) => {
+                    MessagesCommand::React((user, message, emoji)) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
-
-                        let mut reactions = message.reactions();
-                        reactions.retain(|x| x.users().contains(&user));
-                        reactions.retain(|x| x.emoji().eq(&emoji));
-                        let reaction_state = if reactions.is_empty() {
-                            ReactionState::Add
-                        } else {
-                            ReactionState::Remove
-                        };
+                        let reaction_state =
+                            match message.reactions().iter().find(|x| x.emoji() == emoji) {
+                                Some(reaction) if reaction.users().contains(&user) => {
+                                    ReactionState::Remove
+                                }
+                                _ => ReactionState::Add,
+                            };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),
@@ -611,18 +630,61 @@ fn get_messages(cx: Scope, data: Rc<ComposeData>) -> Element {
         }
     });
 
+    let msg_container_end = if data.active_chat.has_more_messages {
+        rsx!(MessageGroupSkeletal {}, MessageGroupSkeletal { alt: true })
+    } else {
+        rsx!(
+            div {
+                // key: "encrypted-notification-0001",
+                class: "msg-container-end",
+                IconElement {
+                    icon:  Icon::LockClosed,
+                },
+                p {
+                    get_local_text("messages.msg-banner")
+                }
+            }
+        )
+    };
+
     cx.render(rsx!(
         div {
             id: "messages",
             div {
-                rsx!(render_message_groups{
-                    groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
-                    active_chat_id: data.active_chat.id,
-                    num_messages_in_conversation: data.active_chat.messages.len(),
-                    num_to_take: num_to_take.clone(),
-                    has_more: data.active_chat.has_more_messages,
-                })
+                rsx!(
+                    msg_container_end,
+                    render_message_groups{
+                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
+                        active_chat_id: data.active_chat.id,
+                        num_messages_in_conversation: data.active_chat.messages.len(),
+                        num_to_take: num_to_take.clone(),
+                        has_more: data.active_chat.has_more_messages,
+                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                            if !identity_profile.get().eq(&id) {
+                                let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                    let mut id = id;
+                                    id.set_identity_status(IdentityStatus::Online);
+                                    id
+                                } else {
+                                    id
+                                };
+                                identity_profile.set(id);
+                            }
+                            //Dont think there is any way of manually moving elements via dioxus
+                            let script = include_str!("./show_context.js")
+                                .replace("UUID", quick_profile_uuid)
+                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
+                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
+                            update_script.set(script);
+                        }
+                    }
+                )
             }
+        },
+        QuickProfileContext{
+            id: quick_profile_uuid,
+            update_script: update_script,
+            identity: identity_profile
         }
     ))
 }
@@ -634,6 +696,7 @@ struct AllMessageGroupsProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -647,6 +710,7 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
             num_to_take: cx.props.num_to_take.clone(),
             has_more: cx.props.has_more,
+            on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
         })
     })))
 }
@@ -658,6 +722,7 @@ struct MessageGroupProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -669,12 +734,19 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         num_messages_in_conversation: _,
         num_to_take: _,
         has_more: _,
+        on_context_menu_action: _,
     } = cx.props;
 
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
-    let sender = state.read().get_identity(&group.sender);
-    let sender_name = sender.username();
+    let sender = state.read().get_identity(&group.sender).unwrap_or_default();
+    let sender_clone = sender.clone();
+    let sender_clone_2 = sender.clone();
+    let sender_name = if sender.username().is_empty() {
+        get_local_text("messages.you")
+    } else {
+        sender.username()
+    };
     let active_language = &state.read().settings.language;
 
     let mut sender_status = sender.identity_status().into();
@@ -684,15 +756,35 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
     cx.render(rsx!(MessageGroup {
         user_image: cx.render(rsx!(UserImage {
-            image: sender.graphics().profile_picture(),
+            image: sender.profile_picture(),
             platform: sender.platform().into(),
             status: sender_status,
+            on_press: move |e| {
+                cx.props.on_context_menu_action.call((e, sender.to_owned()));
+            }
+            oncontextmenu: move |e| {
+                cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+            }
         })),
         timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
-        with_sender: if sender_name.is_empty() {
-            get_local_text("messages.you")
-        } else {
-            sender_name
+        sender: sender_name.clone(),
+        with_sender: {
+            let sender_clone_3 = sender_clone_2.clone();
+            cx.render(rsx!(
+                div {
+                    onclick: move |e| {
+                        cx.props.on_context_menu_action.call((e, sender_clone_2.to_owned()));
+                    },
+                    oncontextmenu: move |e| {
+                        cx.props.on_context_menu_action.call((e, sender_clone_3.to_owned()));
+                    },
+                    p {
+                        class: "sender pressable has-context-handler",
+                        aria_label: "sender_name",
+                        "{sender_name}",
+                    }
+                }
+            ))
         },
         remote: group.remote,
         children: cx.render(rsx!(render_messages {
@@ -718,6 +810,7 @@ struct MessagesProps<'a> {
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
@@ -733,7 +826,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
-        let msg_uuid = message.inner.id();
+        let _msg_uuid = message.inner.id();
 
         rsx!(ContextMenu {
             key: "{context_key}",
@@ -761,7 +854,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
+                msg_uuid: _msg_uuid,
                 message_key: _message_key,
+                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
             })),
             items: cx.render(rsx!(
@@ -777,29 +872,25 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 ContextItem {
                     icon: Icon::FaceSmile,
                     text: get_local_text("messages.react"),
-                    //TODO: let the user pick a reaction
                     onpress: move |_| {
-                        // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
-                        // todo: allow emoji extension instead
-                        // using "like" for now
-                        ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
+                        reacting_to.set(Some(_msg_uuid));
                     }
                 },
                 ContextItem {
                     icon: Icon::Pencil,
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
-                        edit_msg.set(Some(msg_uuid));
-                        log::debug!("editing msg {msg_uuid}");
+                        edit_msg.set(Some(_msg_uuid));
+                        log::debug!("editing msg {_msg_uuid}");
                     }
                 },
                 ContextItem {
                     icon: Icon::Pencil,
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
                     }
@@ -826,26 +917,94 @@ struct MessageProps<'a> {
     message: &'a GroupedMessage<'a>,
     is_remote: bool,
     message_key: String,
+    msg_uuid: Uuid,
+    reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
+    let state = use_shared_state::<State>(cx)?;
+    let user_did = state.read().did_key();
+
+    // todo: why?
+    #[cfg(not(target_os = "macos"))]
+    let eval = use_eval(cx);
+
+    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let focus_script = r#"
+            var message_reactions_container = document.getElementById('add-message-reaction');
+            message_reactions_container.focus();
+        "#;
 
     let MessageProps {
         message,
-        is_remote: _,
+        is_remote,
+        msg_uuid,
         message_key,
+        reacting_to,
         edit_msg,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
     let is_editing = edit_msg
-        .get()
+        .current()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
 
+    let reactions_list: Vec<ReactionAdapter> = message
+        .inner
+        .reactions()
+        .iter()
+        .map(|x| {
+            let users = x.users();
+            let user_names: Vec<String> = users
+                .iter()
+                .filter_map(|id| state.read().get_identity(id).map(|x| x.username()))
+                .collect();
+            ReactionAdapter {
+                emoji: x.emoji(),
+                reaction_count: users.len(),
+                self_reacted: users.iter().any(|x| x == &user_did),
+                alt: user_names.join(", "),
+            }
+        })
+        .collect();
+
+    let remote_class = if *is_remote { "" } else { "remote" };
+    let reactions_class = format!("message-reactions-container {remote_class}");
+
     cx.render(rsx!(
+        (*reacting_to.current() == Some(*msg_uuid)).then(|| {
+            rsx!(
+                div {
+                    id: "add-message-reaction",
+                    class: "{reactions_class} pointer",
+                    tabindex: "0",
+                    onmouseleave: |_| {
+                        #[cfg(not(target_os = "macos"))] 
+                        {
+                            eval(focus_script.to_string());
+                        }
+                    },
+                    onblur: move |_| {
+                        reacting_to.set(None);
+                    },
+                    reactions.iter().cloned().map(|reaction| {
+                        rsx!(
+                            div {
+                                onclick: move |_|  {
+                                    reacting_to.set(None);
+                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+                                },
+                                "{reaction}"
+                            }
+                        )
+                    })
+                },
+                script { focus_script },
+            )
+        }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|other_msg| rsx!(
@@ -862,9 +1021,12 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 editing: is_editing,
                 remote: cx.props.is_remote,
                 with_text: message.inner.value().join("\n"),
-                reactions: message.inner.reactions(),
+                reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
+                on_click_reaction: move |emoji: String| {
+                    ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
+                },
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
@@ -1254,11 +1416,7 @@ fn get_chatbar<'a>(cx: &'a Scoped<'a, ComposeProps>) -> Element<'a> {
 
     // todo: possibly show more if multiple users are typing
     let (platform, status, profile_picture) = match users_typing.first() {
-        Some(u) => (
-            u.platform(),
-            u.identity_status(),
-            u.graphics().profile_picture(),
-        ),
+        Some(u) => (u.platform(), u.identity_status(), u.profile_picture()),
         None => (
             identity::Platform::Unknown,
             IdentityStatus::Online,
@@ -1323,6 +1481,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
 
     cx.render(rsx!(div {
         id: "compose-attachments",
+        aria_label: "compose-attachments",
         attachments
     }))
 }
@@ -1395,4 +1554,294 @@ async fn drag_and_drop_function(
     }
     *drag_event.write_silent() = None;
     new_files_to_upload
+}
+
+#[derive(Props)]
+pub struct QuickProfileProps<'a> {
+    id: &'a String,
+    identity: &'a UseState<Identity>,
+    update_script: &'a UseState<String>,
+    children: Element<'a>,
+}
+
+#[allow(clippy::large_enum_variant)]
+enum QuickProfileCmd {
+    CreateConversation(Option<Chat>, DID),
+    RemoveFriend(DID),
+    BlockFriend(DID),
+    RemoveDirectConvs(DID),
+    Chat(Option<Chat>, String),
+}
+
+// Create a quick profile context menu
+#[allow(non_snake_case)]
+pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    let id = cx.props.id;
+
+    let identity = cx.props.identity.get();
+    let remove_identity = identity.clone();
+    let block_identity = identity.clone();
+
+    let did = &identity.did_key();
+    let chat_of = state.read().get_chat_with_friend(identity.did_key());
+    let chat_send = chat_of.clone();
+
+    let chat_is_current = match state.read().get_active_chat() {
+        Some(c) => match &chat_of {
+            Some(cO) => c.eq(cO),
+            None => false,
+        },
+        None => false,
+    };
+
+    let eval = use_eval(cx);
+    use_future(cx, cx.props.update_script, |update_script| {
+        to_owned![eval];
+        async move {
+            let script = update_script.get();
+            if !script.is_empty() {
+                eval(script.to_string());
+            }
+        }
+    });
+
+    let is_self = state.read().get_own_identity().did_key().eq(did);
+    let is_friend = state.read().has_friend_with_did(did);
+
+    let router = use_router(cx);
+
+    let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
+    if let Some(id) = *chat_with.get() {
+        chat_with.set(None);
+        state.write().mutate(Action::ChatWith(&id, true));
+        if state.read().ui.is_minimal_view() {
+            state.write().mutate(Action::SidebarHidden(true));
+        }
+        router.replace_route(UPLINK_ROUTES.chat, None, None);
+    }
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
+        to_owned![chat_with];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    QuickProfileCmd::CreateConversation(chat, did) => {
+                        // verify chat exists
+                        let chat = match chat {
+                            Some(c) => c.id,
+                            None => {
+                                // if not, create the chat
+                                let (tx, rx) = oneshot::channel();
+                                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(
+                                    RayGunCmd::CreateConversation {
+                                        recipient: did,
+                                        rsp: tx,
+                                    },
+                                )) {
+                                    log::error!("failed to send warp command: {}", e);
+                                    continue;
+                                }
+
+                                let rsp = rx.await.expect("command canceled");
+
+                                match rsp {
+                                    Ok(c) => c,
+                                    Err(e) => {
+                                        log::error!("failed to create conversation: {}", e);
+                                        continue;
+                                    }
+                                }
+                            }
+                        };
+                        chat_with.set(Some(chat));
+                    }
+                    QuickProfileCmd::RemoveFriend(did) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
+                                did,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!("failed to remove friend: {}", e);
+                        }
+                    }
+                    QuickProfileCmd::BlockFriend(did) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) = warp_cmd_tx
+                            .send(WarpCmd::MultiPass(MultiPassCmd::Block { did, rsp: tx }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            // todo: display message to user
+                            log::error!("failed to block friend: {}", e);
+                        }
+                    }
+                    QuickProfileCmd::RemoveDirectConvs(recipient) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveDirectConvs {
+                                recipient: recipient.clone(),
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!(
+                                "failed to remove conversation with friend {}: {}",
+                                recipient,
+                                e
+                            );
+                        }
+                    }
+                    QuickProfileCmd::Chat(chat, msg) => {
+                        let c = match chat {
+                            Some(c) => c.id,
+                            None => return,
+                        };
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let cmd = RayGunCmd::SendMessage {
+                            conv_id: c,
+                            msg: vec![msg],
+                            attachments: Vec::new(),
+                            rsp: tx,
+                        };
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            log::error!("failed to send message: {}", e);
+                        }
+                        chat_with.set(Some(c));
+                    }
+                }
+            }
+        }
+    });
+
+    cx.render(rsx!(ContextMenu {
+        id: format!("{id}"),
+        items: cx.render(rsx!(
+            IdentityHeader {
+                identity: identity
+            },
+            hr{},
+            div {
+                id: "profile-name",
+                aria_label: "profile-name",
+                p {
+                    class: "text",
+                    aria_label: "profile-name-value",
+                    "{cx.props.identity.username()}"
+                }
+            }
+            identity.status_message().and_then(|s|{
+                cx.render(rsx!(
+                    hr{},
+                    div {
+                        id: "profile-status",
+                        aria_label: "profile-status",
+                        p {
+                            class: "text bold",
+                            aria_label: "profile-status-header",
+                            get_local_text("uplink.status")
+                        },
+                        hr {},
+                        p {
+                            class: "text",
+                            aria_label: "profile-status-value",
+                            s
+                        }
+                    }
+                ))
+            }),
+            hr{},
+            if is_self {
+                rsx!(ContextItem {
+                    icon: Icon::UserCircle,
+                    text: get_local_text("quickprofile.self-edit"),
+                    onpress: move |_| {
+                        router.replace_route(UPLINK_ROUTES.settings, None, None);
+                    }
+                })
+            } else {
+                rsx!(
+                    /*ContextItem {
+                    icon: Icon::UserCircle,
+                    text: get_local_text("quickprofile.profile"),
+                    // TODO: Show a profile popup
+                },*/
+                if is_friend {
+                    rsx!(
+                        if !chat_is_current {
+                            rsx!(
+                                ContextItem {
+                                icon: Icon::ChatBubbleBottomCenterText,
+                                text: get_local_text("quickprofile.message"),
+                                onpress: move |_| {
+                                    ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
+                                }
+                            })
+                        }
+                        /*ContextItem {
+                            icon: Icon::PhoneArrowUpRight,
+                            text: get_local_text("quickprofile.call"),
+                            // TODO: Impl missing
+                        }*/
+                    )
+                }
+                hr{},
+                if is_friend {
+                    rsx!(ContextItem {
+                        icon: Icon::UserMinus,
+                        text: get_local_text("quickprofile.friend-remove"),
+                        onpress: move |_| {
+                            ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
+                            ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
+                        }
+                    })
+                }
+                ContextItem {
+                    icon: Icon::UserBlock,
+                    text: get_local_text("quickprofile.block"),
+                    onpress: move |_| {
+                        ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
+                        ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
+                    }
+                },
+                if is_friend && !chat_is_current {
+                    rsx!(
+                        hr{},
+                        Input {
+                            placeholder: get_local_text("quickprofile.chat-placeholder"),
+                            onreturn: move |(val, _,_)|{
+                                ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), val));
+                            }
+                        }
+                    )
+                })
+            }
+        ))
+        ,
+        &cx.props.children
+    }))
 }

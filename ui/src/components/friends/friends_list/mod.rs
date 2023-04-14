@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
 use dioxus_router::use_router;
@@ -45,6 +45,9 @@ pub fn Friends(cx: Scope) -> Element {
             .iter()
             .map(|id| (id.did_key(), id.clone())),
     );
+    let block_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+    let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+
     let friends = State::get_friends_by_first_letter(friends_list);
     let router = use_router(cx);
 
@@ -60,10 +63,11 @@ pub fn Friends(cx: Scope) -> Element {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![chat_with];
+        to_owned![chat_with, block_in_progress, remove_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 match cmd {
                     ChanCmd::CreateConversation { chat, recipient } => {
                         // verify chat exists
@@ -96,29 +100,34 @@ pub fn Friends(cx: Scope) -> Element {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RemoveFriend {
-                                did,
+                                did: did.clone(),
                                 rsp: tx,
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
+                            remove_in_progress.make_mut().remove(&did);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
+                        remove_in_progress.make_mut().remove(&did);
                         if let Err(e) = rsp {
                             log::error!("failed to remove friend: {}", e);
                         }
                     }
                     ChanCmd::BlockFriend(did) => {
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        if let Err(e) = warp_cmd_tx
-                            .send(WarpCmd::MultiPass(MultiPassCmd::Block { did, rsp: tx }))
-                        {
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::Block {
+                            did: did.clone(),
+                            rsp: tx,
+                        })) {
                             log::error!("failed to send warp command: {}", e);
+                            block_in_progress.make_mut().remove(&did);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
+                        block_in_progress.make_mut().remove(&did);
                         if let Err(e) = rsp {
                             // todo: display message to user
                             log::error!("failed to block friend: {}", e);
@@ -211,12 +220,15 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
+                                            should_render: !remove_in_progress.current().contains(&remove_friend.did_key()),
                                             onpress: move |_| {
+                                                let did = remove_friend.did_key();
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::RemoveFriend(&remove_friend.did_key()));
+                                                    state.write().mutate(Action::RemoveFriend(&did));
                                                 } else {
-                                                    ch.send(ChanCmd::RemoveFriend(remove_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveDirectConvs(remove_friend.did_key()));
+                                                    remove_in_progress.make_mut().insert(did.clone());
+                                                    ch.send(ChanCmd::RemoveFriend(did.clone()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(did));
                                                 }
                                             }
                                         },
@@ -224,12 +236,15 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
+                                            should_render: !block_in_progress.current().contains(&block_friend.did_key()),
                                             onpress: move |_| {
+                                                let did = block_friend.did_key();
                                                 if STATIC_ARGS.use_mock {
-                                                    state.write().mutate(Action::Block(&block_friend.did_key()));
+                                                    state.write().mutate(Action::Block(&did));
                                                 } else {
-                                                    ch.send(ChanCmd::BlockFriend(block_friend.did_key()));
-                                                    ch.send(ChanCmd::RemoveDirectConvs(block_friend.did_key()));
+                                                    block_in_progress.make_mut().insert(did.clone());
+                                                    ch.send(ChanCmd::BlockFriend(did.clone()));
+                                                    ch.send(ChanCmd::RemoveDirectConvs(did));
                                                 }
                                             }
                                         },
@@ -243,7 +258,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             UserImage {
                                                 platform: platform,
                                                 status: friend.identity_status().into(),
-                                                image: friend.graphics().profile_picture()
+                                                image: friend.profile_picture()
                                             }
                                         )),
                                         onchat: move |_| {
@@ -254,6 +269,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             if STATIC_ARGS.use_mock {
                                                 state.write().mutate(Action::RemoveFriend(&remove_friend_2.did_key()));
                                             } else {
+                                                remove_in_progress.make_mut().insert(remove_friend_2.did_key());
                                                 ch.send(ChanCmd::RemoveFriend(remove_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(remove_friend_2.did_key()));
                                             }
@@ -262,6 +278,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             if STATIC_ARGS.use_mock {
                                                 state.write().mutate(Action::Block(&block_friend_2.did_key()));
                                             } else {
+                                                block_in_progress.make_mut().insert(block_friend_2.did_key());
                                                 ch.send(ChanCmd::BlockFriend(block_friend_2.did_key()));
                                                 ch.send(ChanCmd::RemoveDirectConvs(block_friend_2.did_key()));
                                             }

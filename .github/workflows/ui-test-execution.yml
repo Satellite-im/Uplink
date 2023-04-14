@@ -109,7 +109,6 @@ jobs:
         working-directory: ./appium-tests/apps
         run: |
           unzip Uplink-Mac-Universal.zip
-          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
@@ -133,6 +132,9 @@ jobs:
         with:
           junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on MacOS"
+          ignore_runs: true
+          job_summary: false
+          compare_to_earlier_commit: false
 
       - name: Upload Screenshots if tests failed 📷
         uses: actions/upload-artifact@v3
@@ -153,6 +155,13 @@ jobs:
         if: failure()
         with:
           file-name: "desktop.jpg"
+
+      - name: Upload Test User Accounts Created ⬆️
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: appium-test-accounts
+          path: ./appium-tests/tests/fixtures/users/
 
   test-chats:
     if: ${{ always() }}
@@ -178,6 +187,12 @@ jobs:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
 
+      - name: Download Test User Accounts 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: appium-test-accounts
+          path: ./appium-tests/tests/fixtures/users/
+
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
@@ -200,7 +215,6 @@ jobs:
         working-directory: ./appium-tests/apps
         run: |
           unzip Uplink-Mac-Universal.zip
-          perl -i -pe 's/>ui</>uplink</g' ./Uplink.app/Contents/Info.plist
           cp -r ./Uplink.app /Applications/
           sudo xattr -r -d com.apple.quarantine /Applications/Uplink.app
 
@@ -233,3 +247,9 @@ jobs:
         with:
           name: appium-log-${{ matrix.user }}
           path: ./appium-tests/appium.log
+
+      - name: Delete Chat Users Accounts
+        if: always()
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: appium-test-accounts

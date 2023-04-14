@@ -47,6 +47,7 @@ use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
+use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
@@ -85,6 +86,7 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
 });
 
 pub struct UplinkRoutes<'a> {
+    pub loading: &'a str,
     pub chat: &'a str,
     pub friends: &'a str,
     pub files: &'a str,
@@ -92,7 +94,8 @@ pub struct UplinkRoutes<'a> {
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
-    chat: "/",
+    loading: "/",
+    chat: "/chat",
     friends: "/friends",
     files: "/files",
     settings: "/settings",
@@ -613,14 +616,21 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
@@ -1033,8 +1043,7 @@ fn get_pre_release_message(_cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            },
-            get_update_icon{}
+            }
         },
     ))
 }
@@ -1096,6 +1105,10 @@ fn get_update_icon(cx: Scope) -> Element {
                             download_state.write().destination = Some(dest.clone());
                             download_ch.send(SoftwareDownloadCmd(dest));
                         }
+                    },
+                    IconElement {
+                        icon: common::icons::solid::Shape::ArrowDown,
+                        fill: "green",
                     },
                     "{update_msg}",
                 }
@@ -1216,6 +1229,7 @@ fn get_titlebar(cx: Scope) -> Element {
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
+            get_update_icon{},
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
@@ -1349,6 +1363,10 @@ fn get_router(cx: Scope) -> Element {
 
     cx.render(rsx!(
         Router {
+            Route {
+                to: UPLINK_ROUTES.loading,
+                LoadingLayout{}
+            },
             Route {
                 to: UPLINK_ROUTES.chat,
                 ChatLayout {

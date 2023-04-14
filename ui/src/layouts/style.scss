@@ -18,13 +18,6 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    .friends-controls {
-      display: inline-flex;
-      padding: var(--gap);
-      gap: var(--gap);
-      justify-content: flex-end;
-      border-bottom: 1px solid var(--border-color);
-    }
   }
 }
 
@@ -50,7 +43,7 @@
   display: none;
   bottom: 2%;
   left: 8px;
-  z-index: 2;
+  z-index: 5;
   width: 285px;
   height: 200px;
   padding-top: 6%;

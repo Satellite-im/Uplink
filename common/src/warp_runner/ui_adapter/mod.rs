@@ -173,6 +173,7 @@ pub async fn conversation_to_chat(
             conversation_type: conv.conversation_type(),
             conversation_name: conv.name(),
             participants: HashSet::from_iter(conv.recipients()),
+            creator: conv.creator(),
             messages,
             unreads: unreads as u32,
             replying_to: None,
