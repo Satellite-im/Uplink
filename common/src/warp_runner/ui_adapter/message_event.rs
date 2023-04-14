@@ -31,19 +31,9 @@ pub enum MessageEvent {
         message_id: Uuid,
     },
     #[display(fmt = "MessageReactionAdded")]
-    MessageReactionAdded {
-        conversation_id: Uuid,
-        message_id: Uuid,
-        reaction: String,
-        did_key: DID,
-    },
+    MessageReactionAdded { message: warp::raygun::Message },
     #[display(fmt = "MessageReactionRemoved")]
-    MessageReactionRemoved {
-        conversation_id: Uuid,
-        message_id: Uuid,
-        reaction: String,
-        did_key: DID,
-    },
+    MessageReactionRemoved { message: warp::raygun::Message },
     #[display(fmt = "TypingIndicator")]
     TypingIndicator {
         conversation_id: Uuid,
@@ -89,24 +79,16 @@ pub async fn convert_message_event(
         MessageEventKind::MessageReactionAdded {
             conversation_id,
             message_id,
-            reaction,
-            did_key,
+            ..
         } => MessageEvent::MessageReactionAdded {
-            conversation_id,
-            message_id,
-            reaction,
-            did_key,
+            message: messaging.get_message(conversation_id, message_id).await?;,
         },
         MessageEventKind::MessageReactionRemoved {
             conversation_id,
             message_id,
-            reaction,
-            did_key,
+            ..
         } => MessageEvent::MessageReactionRemoved {
-            conversation_id,
-            message_id,
-            reaction,
-            did_key,
+            message: messaging.get_message(conversation_id, message_id).await?;,
         },
         MessageEventKind::EventReceived {
             conversation_id,
