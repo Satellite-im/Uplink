@@ -17,6 +17,7 @@ pub struct Notifications {
     pub messages: u32, // For notifications about new messages, mentions.
     pub settings: u32, // For notifications about updates, issues and more.
     // displays above the app icon on the desktop
+    #[serde(skip)]
     pub badge: u32,
 }
 
@@ -137,10 +138,6 @@ impl Notifications {
 
     pub fn clear_badge(&mut self) {
         self.badge = 0;
-        let _ = set_badge(self.badge);
-    }
-
-    pub fn init_badge(&self) {
         let _ = set_badge(self.badge);
     }
 }
