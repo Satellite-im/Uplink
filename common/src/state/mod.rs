@@ -598,6 +598,7 @@ impl State {
                 conv.conversation_type = chat.conversation_type;
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
+                conv.creator = chat.creator;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -1231,10 +1232,17 @@ impl State {
         };
     }
 
-    pub fn graphics(&self) -> warp::multipass::identity::Graphics {
+    pub fn profile_picture(&self) -> String {
         self.identities
             .get(&self.did_key())
-            .map(|x| x.graphics())
+            .map(|x| x.profile_picture())
+            .unwrap_or_default()
+    }
+
+    pub fn profile_banner(&self) -> String {
+        self.identities
+            .get(&self.did_key())
+            .map(|x| x.profile_banner())
             .unwrap_or_default()
     }
     pub fn join_usernames(identities: &[Identity]) -> String {
