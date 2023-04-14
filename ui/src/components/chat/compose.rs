@@ -1477,6 +1477,7 @@ pub struct QuickProfileProps<'a> {
     children: Element<'a>,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum QuickProfileCmd {
     CreateConversation(Option<Chat>, DID),
     RemoveFriend(DID),
