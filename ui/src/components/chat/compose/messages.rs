@@ -4,15 +4,13 @@ use dioxus::prelude::{EventHandler, *};
 
 use futures::StreamExt;
 
-use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu},
-        indicator::{Status},
-        message::{Message, Order},
-        message_group::{MessageGroup, MessageGroupSkeletal},
-        message_reply::MessageReply,
-        user_image::UserImage,
-    },
+use kit::components::{
+    context_menu::{ContextItem, ContextMenu},
+    indicator::Status,
+    message::{Message, Order},
+    message_group::{MessageGroup, MessageGroupSkeletal},
+    message_reply::MessageReply,
+    user_image::UserImage,
 };
 
 use common::{
@@ -28,7 +26,7 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval};
+use dioxus_desktop::use_eval;
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
@@ -39,10 +37,7 @@ use warp::{
     raygun::{self, ReactionState},
 };
 
-
-use crate::{
-    utils::{format_timestamp::format_timestamp_timeago},
-};
+use crate::utils::format_timestamp::format_timestamp_timeago;
 
 const SETUP_CONTEXT_PARENT: &str = r#"
     const right_clickable = document.getElementsByClassName("has-context-handler")

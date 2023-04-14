@@ -1,27 +1,14 @@
-
-
-
-
-use dioxus::prelude::{*};
+use dioxus::prelude::*;
 
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu, IdentityHeader},
-    },
-    elements::{
-        input::Input,
-    },
+    components::context_menu::{ContextItem, ContextMenu, IdentityHeader},
+    elements::input::Input,
 };
 
-use common::{
-    icons::outline::Shape as Icon,
-    warp_runner::{
-        MultiPassCmd,
-    },
-};
+use common::{icons::outline::Shape as Icon, warp_runner::MultiPassCmd};
 use common::{
     state::{Action, Chat, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
@@ -29,20 +16,14 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval};
+use dioxus_desktop::use_eval;
 
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-};
+use warp::{crypto::DID, logging::tracing::log};
 
-
-use crate::{
-    UPLINK_ROUTES,
-};
+use crate::UPLINK_ROUTES;
 
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
@@ -243,7 +224,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 }
             }
             identity.status_message().and_then(|s|{
-                cx.render(rsx!(            
+                cx.render(rsx!(
                     hr{},
                     div {
                         id: "profile-status",
