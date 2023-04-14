@@ -16,6 +16,9 @@ pub struct Notifications {
     pub friends: u32, // For notifications about new friends, friend requests and related CTAs.
     pub messages: u32, // For notifications about new messages, mentions.
     pub settings: u32, // For notifications about updates, issues and more.
+    // displays above the app icon on the desktop
+    #[serde(skip)]
+    pub badge: u32,
 }
 
 impl Notifications {
@@ -28,68 +31,70 @@ impl Notifications {
             messages: 0,
             // Represents total notification count for all settings events. E.g. updates, issues, etc.
             settings: 0,
+            badge: 0,
         }
-    }
-
-    // This method is used for calculating the badge count for the app tray icon.
-    pub fn total(&self, config: &Configuration) -> u32 {
-        let mut total = 0;
-
-        // Only count notifications that are enabled in the config.
-        if config.notifications.friends_notifications {
-            total += self.friends;
-        }
-        if config.notifications.messages_notifications {
-            total += self.messages;
-        }
-        if config.notifications.settings_notifications {
-            total += self.settings;
-        }
-
-        total
     }
 
     // Adds notification(s) to the specified kind.
-    pub fn increment(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
+    pub fn increment(
+        &mut self,
+        config: &Configuration,
+        kind: NotificationKind,
+        count: u32,
+        increment_badge: bool,
+    ) {
         match kind {
-            NotificationKind::FriendRequest => self.friends += count,
-            NotificationKind::Message => self.messages += count,
-            NotificationKind::Settings => self.settings += count,
+            NotificationKind::FriendRequest => {
+                if config.notifications.friends_notifications {
+                    self.friends = self.friends.saturating_add(count);
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
+                }
+            }
+            NotificationKind::Message => {
+                if config.notifications.messages_notifications {
+                    self.messages = self.messages.saturating_add(count);
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
+                }
+            }
+            NotificationKind::Settings => {
+                if config.notifications.settings_notifications {
+                    self.settings = self.settings.saturating_add(count);
+                    if increment_badge {
+                        self.badge = self.badge.saturating_add(count);
+                    }
+                }
+            }
         };
 
-        // Update the badge any time notifications are added.
-        let _ = set_badge(self.total(config));
+        if increment_badge {
+            let _ = set_badge(self.badge);
+        }
     }
 
     // Removes notification(s) from the specified kind.
     // Prevent underflow using saturating_sub()
-    pub fn decrement(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
+    pub fn decrement(&mut self, kind: NotificationKind, count: u32) {
         match kind {
             NotificationKind::FriendRequest => {
                 self.friends = self.friends.saturating_sub(count);
+                self.badge = self.badge.saturating_sub(count);
             }
             NotificationKind::Message => {
                 self.messages = self.messages.saturating_sub(count);
+                self.badge = self.badge.saturating_sub(count);
             }
             NotificationKind::Settings => {
                 self.settings = self.settings.saturating_sub(count);
+                self.badge = self.badge.saturating_sub(count);
             }
         };
 
         // Update the badge any time notifications are removed.
-        let _ = set_badge(self.total(config));
-    }
-
-    // Sets a notification count for the specified kind.
-    pub fn set(&mut self, config: &Configuration, kind: NotificationKind, count: u32) {
-        match kind {
-            NotificationKind::FriendRequest => self.friends = count,
-            NotificationKind::Message => self.messages = count,
-            NotificationKind::Settings => self.settings = count,
-        };
-
-        // Update the badge with new possible totals.
-        let _ = set_badge(self.total(config));
+        let _ = set_badge(self.badge);
     }
 
     // Returns the total count for a given notification kind.
@@ -102,23 +107,37 @@ impl Notifications {
     }
 
     // Clears all notifications for the specified kind.
-    pub fn clear_kind(&mut self, config: &Configuration, kind: NotificationKind) {
+    pub fn clear_kind(&mut self, kind: NotificationKind) {
         match kind {
-            NotificationKind::FriendRequest => self.friends = 0,
-            NotificationKind::Message => self.messages = 0,
-            NotificationKind::Settings => self.settings = 0,
+            NotificationKind::FriendRequest => {
+                self.badge = self.badge.saturating_sub(self.friends);
+                self.friends = 0;
+            }
+            NotificationKind::Message => {
+                self.badge = self.badge.saturating_sub(self.messages);
+                self.messages = 0;
+            }
+            NotificationKind::Settings => {
+                self.badge = self.badge.saturating_sub(self.settings);
+                self.settings = 0;
+            }
         };
         // Update the badge with new possible totals.
-        let _ = set_badge(self.total(config));
+        let _ = set_badge(self.badge);
     }
 
     // Clears all notifications.
-    pub fn clear_all(&mut self, config: &Configuration) {
+    pub fn clear_all(&mut self) {
         self.friends = 0;
         self.messages = 0;
         self.settings = 0;
 
-        // Clear the badge.
-        let _ = set_badge(self.total(config));
+        self.badge = 0;
+        let _ = set_badge(self.badge);
+    }
+
+    pub fn clear_badge(&mut self) {
+        self.badge = 0;
+        let _ = set_badge(self.badge);
     }
 }

@@ -1,43 +1,79 @@
-use std::{ffi::OsStr, path::PathBuf, rc::Rc};
+use std::{
+    ffi::OsStr,
+    path::PathBuf,
+    rc::Rc,
+    time::{Duration, Instant},
+};
 
 use dioxus::prelude::{EventHandler, *};
 
-use futures::StreamExt;
+use dioxus_router::use_router;
+use futures::{channel::oneshot, StreamExt};
 
-use kit::components::{
-    context_menu::{ContextItem, ContextMenu},
-    indicator::Status,
-    message::{Message, Order},
-    message_group::{MessageGroup, MessageGroupSkeletal},
-    message_reply::MessageReply,
-    user_image::UserImage,
+use kit::{
+    components::{
+        context_menu::{ContextItem, ContextMenu, IdentityHeader},
+        file_embed::FileEmbed,
+        indicator::{Platform, Status},
+        message::{Message, Order, ReactionAdapter},
+        message_group::{MessageGroup, MessageGroupSkeletal},
+        message_reply::MessageReply,
+        message_typing::MessageTyping,
+        user_image::UserImage,
+        user_image_group::UserImageGroup,
+    },
+    elements::{
+        button::Button,
+        input::Input,
+        tooltip::{ArrowPosition, Tooltip},
+        Appearance,
+    },
+    layout::{
+        chatbar::{Chatbar, Reply},
+        topbar::Topbar,
+    },
 };
 
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     state::{group_messages, GroupedMessage, MessageGroup},
-    warp_runner::ui_adapter::{self},
+    warp_runner::{
+        ui_adapter::{self},
+        MultiPassCmd,
+    },
 };
 use common::{
-    state::{Action, Identity, State},
+    state::{ui, Action, Chat, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
-    WARP_CMD_CH,
+    STATIC_ARGS, WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::use_eval;
+use dioxus_desktop::{use_eval, use_window, DesktopContext};
 use rfd::FileDialog;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
+    crypto::DID,
     logging::tracing::log,
-    multipass::identity::IdentityStatus,
-    raygun::{self, ReactionState},
+    multipass::identity::{self, IdentityStatus},
+    raygun::{self, ConversationType, ReactionState},
 };
+use wry::webview::FileDropEvent;
 
-use crate::utils::format_timestamp::format_timestamp_timeago;
+use crate::{
+    components::media::player::MediaPlayer,
+    layouts::storage::{
+        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
+        FEEDBACK_TEXT_SCRIPT,
+    },
+    utils::{
+        build_participants, build_user_from_identity, format_timestamp::format_timestamp_timeago,
+    },
+    UPLINK_ROUTES,
+};
 
 const SETUP_CONTEXT_PARENT: &str = r#"
     const right_clickable = document.getElementsByClassName("has-context-handler")
@@ -53,9 +89,7 @@ const SETUP_CONTEXT_PARENT: &str = r#"
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
-    // contains the emoji reaction
-    // conv id, msg id, emoji
-    React((raygun::Message, String)),
+    React((DID, raygun::Message, String)),
     DeleteMessage {
         conv_id: Uuid,
         msg_id: Uuid,
@@ -86,7 +120,6 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
-    let user = data.my_id.did_key();
     let state = use_shared_state::<State>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
@@ -147,17 +180,15 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    MessagesCommand::React((message, emoji)) => {
+                    MessagesCommand::React((user, message, emoji)) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
-
-                        let mut reactions = message.reactions();
-                        reactions.retain(|x| x.users().contains(&user));
-                        reactions.retain(|x| x.emoji().eq(&emoji));
-                        let reaction_state = if reactions.is_empty() {
-                            ReactionState::Add
-                        } else {
-                            ReactionState::Remove
-                        };
+                        let reaction_state =
+                            match message.reactions().iter().find(|x| x.emoji() == emoji) {
+                                Some(reaction) if reaction.users().contains(&user) => {
+                                    ReactionState::Remove
+                                }
+                                _ => ReactionState::Add,
+                            };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),
@@ -386,7 +417,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
 
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
-    let sender = state.read().get_identity(&group.sender);
+    let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let sender_clone = sender.clone();
     let sender_clone_2 = sender.clone();
     let sender_name = if sender.username().is_empty() {
@@ -457,6 +488,7 @@ struct MessagesProps<'a> {
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
@@ -472,7 +504,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
-        let msg_uuid = message.inner.id();
+        let _msg_uuid = message.inner.id();
 
         rsx!(ContextMenu {
             key: "{context_key}",
@@ -500,7 +532,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
+                msg_uuid: _msg_uuid,
                 message_key: _message_key,
+                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
             })),
             items: cx.render(rsx!(
@@ -516,29 +550,25 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 ContextItem {
                     icon: Icon::FaceSmile,
                     text: get_local_text("messages.react"),
-                    //TODO: let the user pick a reaction
                     onpress: move |_| {
-                        // todo: render this by default: ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
-                        // todo: allow emoji extension instead
-                        // using "like" for now
-                        ch.send(MessagesCommand::React((message.inner.clone(), "👍".into())));
+                        reacting_to.set(Some(_msg_uuid));
                     }
                 },
                 ContextItem {
                     icon: Icon::Pencil,
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
+                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
-                        edit_msg.set(Some(msg_uuid));
-                        log::debug!("editing msg {msg_uuid}");
+                        edit_msg.set(Some(_msg_uuid));
+                        log::debug!("editing msg {_msg_uuid}");
                     }
                 },
                 ContextItem {
                     icon: Icon::Pencil,
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
+                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
                     }
@@ -565,26 +595,94 @@ struct MessageProps<'a> {
     message: &'a GroupedMessage<'a>,
     is_remote: bool,
     message_key: String,
+    msg_uuid: Uuid,
+    reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
+    let state = use_shared_state::<State>(cx)?;
+    let user_did = state.read().did_key();
+
+    // todo: why?
+    #[cfg(not(target_os = "macos"))]
+    let eval = use_eval(cx);
+
+    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let focus_script = r#"
+            var message_reactions_container = document.getElementById('add-message-reaction');
+            message_reactions_container.focus();
+        "#;
 
     let MessageProps {
         message,
-        is_remote: _,
+        is_remote,
+        msg_uuid,
         message_key,
+        reacting_to,
         edit_msg,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
     let is_editing = edit_msg
-        .get()
+        .current()
         .map(|id| !cx.props.is_remote && (id == message.inner.id()))
         .unwrap_or(false);
 
+    let reactions_list: Vec<ReactionAdapter> = message
+        .inner
+        .reactions()
+        .iter()
+        .map(|x| {
+            let users = x.users();
+            let user_names: Vec<String> = users
+                .iter()
+                .filter_map(|id| state.read().get_identity(id).map(|x| x.username()))
+                .collect();
+            ReactionAdapter {
+                emoji: x.emoji(),
+                reaction_count: users.len(),
+                self_reacted: users.iter().any(|x| x == &user_did),
+                alt: user_names.join(", "),
+            }
+        })
+        .collect();
+
+    let remote_class = if *is_remote { "" } else { "remote" };
+    let reactions_class = format!("message-reactions-container {remote_class}");
+
     cx.render(rsx!(
+        (*reacting_to.current() == Some(*msg_uuid)).then(|| {
+            rsx!(
+                div {
+                    id: "add-message-reaction",
+                    class: "{reactions_class} pointer",
+                    tabindex: "0",
+                    onmouseleave: |_| {
+                        #[cfg(not(target_os = "macos"))] 
+                        {
+                            eval(focus_script.to_string());
+                        }
+                    },
+                    onblur: move |_| {
+                        reacting_to.set(None);
+                    },
+                    reactions.iter().cloned().map(|reaction| {
+                        rsx!(
+                            div {
+                                onclick: move |_|  {
+                                    reacting_to.set(None);
+                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+                                },
+                                "{reaction}"
+                            }
+                        )
+                    })
+                },
+                script { focus_script },
+            )
+        }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|other_msg| rsx!(
@@ -601,9 +699,12 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 editing: is_editing,
                 remote: cx.props.is_remote,
                 with_text: message.inner.value().join("\n"),
-                reactions: message.inner.reactions(),
+                reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
+                on_click_reaction: move |emoji: String| {
+                    ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
+                },
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()

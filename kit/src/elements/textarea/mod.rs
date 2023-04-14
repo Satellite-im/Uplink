@@ -6,6 +6,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
+use warp::logging::tracing::log;
 
 use crate::elements::tooltip::{ArrowPosition, Tooltip};
 
@@ -51,6 +52,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("render input");
     let Props {
         id,
         focus,

@@ -1,41 +1,40 @@
+use derive_more::Display;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
     error::Error,
-    logging::tracing::log,
     raygun::{self, MessageEventKind},
 };
 
 use super::Message;
 use crate::warp_runner::ui_adapter::convert_raygun_message;
-
+#[derive(Display)]
 pub enum MessageEvent {
+    #[display(fmt = "Received")]
     Received {
         conversation_id: Uuid,
         message: Message,
     },
+    #[display(fmt = "Sent")]
     Sent {
         conversation_id: Uuid,
         message: Message,
     },
+    #[display(fmt = "Edited")]
     Edited {
         conversation_id: Uuid,
         message: Message,
     },
+    #[display(fmt = "Deleted")]
     Deleted {
         conversation_id: Uuid,
         message_id: Uuid,
     },
-    MessageReactionAdded {
-        conversation_id: Uuid,
-        message_id: Uuid,
-        reaction: String,
-    },
-    MessageReactionRemoved {
-        conversation_id: Uuid,
-        message_id: Uuid,
-        reaction: String,
-    },
+    #[display(fmt = "MessageReactionAdded")]
+    MessageReactionAdded { message: warp::raygun::Message },
+    #[display(fmt = "MessageReactionRemoved")]
+    MessageReactionRemoved { message: warp::raygun::Message },
+    #[display(fmt = "TypingIndicator")]
     TypingIndicator {
         conversation_id: Uuid,
         participant: DID,
@@ -47,7 +46,6 @@ pub async fn convert_message_event(
     _account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<MessageEvent, Error> {
-    log::debug!("got event: {:?}", &event);
     let evt = match event {
         MessageEventKind::MessageReceived {
             conversation_id,
@@ -81,22 +79,16 @@ pub async fn convert_message_event(
         MessageEventKind::MessageReactionAdded {
             conversation_id,
             message_id,
-            reaction,
             ..
         } => MessageEvent::MessageReactionAdded {
-            conversation_id,
-            message_id,
-            reaction,
+            message: messaging.get_message(conversation_id, message_id).await?,
         },
         MessageEventKind::MessageReactionRemoved {
             conversation_id,
             message_id,
-            reaction,
             ..
         } => MessageEvent::MessageReactionRemoved {
-            conversation_id,
-            message_id,
-            reaction,
+            message: messaging.get_message(conversation_id, message_id).await?,
         },
         MessageEventKind::EventReceived {
             conversation_id,
