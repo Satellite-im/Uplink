@@ -67,11 +67,14 @@ pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "identity-header",
+            aria_label: "identity-header",
             div {
                 id: "banner-image",
+                aria_label: "banner-image",
                 style: "background-image: url('{banner}');",
                 div {
                     id: "profile-image",
+                    aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     Indicator {
                         status: cx.props.identity.identity_status().into(),

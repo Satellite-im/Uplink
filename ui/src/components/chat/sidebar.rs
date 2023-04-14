@@ -321,6 +321,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         },
                         Button {
                             appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
+                            aria_label: "create-group-chat".into(),
                             icon: Icon::ChatPlus,
                             tooltip: cx.render(rsx!(
                                 Tooltip {

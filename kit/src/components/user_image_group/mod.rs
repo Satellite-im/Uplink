@@ -36,6 +36,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 div {
                     class: "user-image-group",
                     div {
+                        aria_label: "user-image-group-wrap",
                         class: {
                             format_args!("user-image-group-wrap {} {}", if is_pressable { "pressable" } else { "" }, if is_group { "group" } else { "" })
                         },
@@ -53,6 +54,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }),
                             div {
                                 class: "plus-some",
+                                aria_label: "plus-some",
                                 (additional_participants > 0).then(|| rsx!(
                                     if cx.props.typing.unwrap_or_default() {
                                         rsx!(
