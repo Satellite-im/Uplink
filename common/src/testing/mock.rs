@@ -15,7 +15,7 @@ use uuid::Uuid;
 use warp::{
     constellation::{directory::Directory, file::File},
     crypto::DID,
-    multipass::identity::{Graphics, IdentityStatus, Platform},
+    multipass::identity::{IdentityStatus, Platform},
     raygun::{ConversationType, Message},
 };
 
@@ -123,6 +123,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
             _ => ConversationType::Group,
         },
         conversation_name: None,
+        creator: None,
         messages,
         unreads: rng.gen_range(0..2),
         replying_to: None,
@@ -197,10 +198,6 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         let base64_url = encode(&buffer);
         let image_url = format!("data:image/png;base64,{base64_url}");
 
-        let mut graphics = Graphics::default();
-        graphics.set_profile_picture(&image_url);
-        graphics.set_profile_banner(&image_url);
-
         let status = match rng.gen_range(0..3) {
             0 => IdentityStatus::Online,
             1 => IdentityStatus::Away,
@@ -216,7 +213,8 @@ fn generate_random_identities(count: usize) -> Vec<Identity> {
         };
 
         identity.set_platform(platform);
-        identity.set_graphics(graphics);
+        identity.set_profile_picture(&image_url);
+        identity.set_profile_banner(&image_url);
 
         identities.push(identity);
     }

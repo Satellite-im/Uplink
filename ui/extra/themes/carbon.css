@@ -1,0 +1,485 @@
+:root {
+    --border-color: var(--secondary-dark) ;
+
+    --placeholder: #2d2d2d;
+
+    --text-color: #fff;
+    --text-color-muted: #696969;
+    --text-color-dark: #000000;
+    --text-color-bright: var(--text-color);
+
+    --primary: #ebc98f;
+    --primary-dark: var(--primary);
+    --primary-light: var(--primary);
+
+    --secondary: #ffffff;
+    --secondary-light: var(--secondary);
+    --secondary-dark: #eeeeee;
+
+    --background: #2d2d2d;
+    --background-light: #4c4c4c;
+    --background-dark: #000000;
+
+    --success: #88c796;
+    --success-light: #b0ecbd;
+
+    --warning: #d6b782;
+    --warning-light: rgb(250, 203, 154);
+
+    --danger: #ff5555;
+    --danger-light: #fa6464;
+    
+
+    --border-radius-more: 0.75rem;
+}
+
+::selection {
+background: var(--primary);
+}
+
+
+/* width */
+::-webkit-scrollbar {
+    width: 0.25rem;
+    height: 0.25rem;
+    opacity: 1;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: var(--secondary-dark);
+    border-radius: var(--border-radius);
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: var(--background-light);
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--background);
+  }
+  
+  /* Disable the corner of scrollbars */
+  ::-webkit-scrollbar-corner {
+    background-color: transparent;
+  }
+
+body {
+    border-radius: var(--border-radius-more);
+}
+
+#settings-audio, #settings-about, #settings-developer, #settings-extensions, #settings-general, #settings-profile, #settings-files, #settings-notifications, #settings-privacy {
+    color: unset;
+}
+
+.nav {
+    border-top: 1px solid var(--background-light);
+}
+
+#titlebar {
+    padding: 0.5rem;
+}
+
+#titlebar,
+#app-wrap,
+.sidebar {
+    border: none;
+}
+
+
+#pre-release {
+    background-color: var(--warning);
+    margin-left: unset;
+    top: 0.5rem;
+    left: 0.5rem;
+    border-radius: var(--border-radius-more);
+    padding: 0.2rem 0.5rem;
+}
+
+#pre-release p {
+    color: var(--background) !important;
+}
+#pre-release   svg {
+    stroke: var(--background-dark) !important;
+}
+
+.chatbar {
+    border-top: 2px solid var(--secondary-dark);
+}
+
+.topbar {
+    border-bottom: 2px solid var(--secondary-dark);
+}
+
+#compose, #files-layout .friends-body, #files-layout .files-body, #friends-layout .friends-body, #friends-layout .files-body, #settings-layout .flex {
+    background: var(--secondary);
+    color: var(--text-color-dark) !important;
+    border-radius: var(--border-radius-more);
+    margin: 0 0.5rem 0.5rem 0;
+    height: calc(100% - 0.5rem);
+    padding-right: 0.25rem;
+    overflow: hidden;
+}
+
+.sidebar .children {
+    padding: none;
+}
+#files-layout .files-info {
+    color: unset;
+}
+#files-layout .files-breadcrumbs .crumb:nth-child(1) {
+    background: var(--background);
+    color: var(--text-color-bright);
+}
+
+#files-layout .files-breadcrumbs .crumb svg {
+    stroke: var(--text-color-bright);
+}
+
+#settings-layout .flex .btn.appearance-primary {
+    background-color: var(--background);
+}
+
+#settings-layout .flex .nav.bubble .btn.appearance-primary {
+    background-color: var(--primary);
+    color: var(--text-color-dark);
+}
+
+.btn.btn.appearance-primary {
+    color: var(--text-color-dark);
+}
+.btn.btn.appearance-primary svg {
+    stroke: var(--text-color-dark);
+}
+
+#settings-layout .select select {
+    background-color: var(--background);
+}
+
+
+
+
+#compose .input, 
+#settings-layout .input,
+#settings-layout .input:hover,
+.btn.appearance-secondary-less,
+.btn.appearance-secondary-less:hover,
+.btn.appearance-secondary,
+.btn.appearance-secondary:hover {
+    background: var(--secondary-dark);
+    color: var(--text-color-dark);
+}
+#compose .topbar .children .username,
+#compose .topbar .children .status {
+    color: var(--text-color-dark);
+}
+
+.sidebar ::-webkit-scrollbar-thumb,
+#debug_logger .body::-webkit-scrollbar-thumb {
+    background: var(--secondary-dark) !important;
+}
+
+.sidebar ::-webkit-scrollbar-track,
+#debug_logger .body::-webkit-scrollbar-track  {
+    background: var(--background-light) !important;
+}
+
+#settings-layout .flex #content {
+    overflow-y: auto;
+}
+
+#settings-profile .profile-banner {
+    margin: 0.5rem 0 0 0.5rem;
+    width: calc(100% - 1rem);
+    border-radius: var(--border-radius-more) var(--border-radius-more) 0 0;
+}
+
+#settings-profile .profile-picture {
+    left: 1rem;
+}
+
+.sidebar::-webkit-scrollbar-track, 
+.sidebar .children::-webkit-scrollbar-track,
+#debug_logger .body::-webkit-scrollbar-track {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+}
+#settings-layout .flex ::-webkit-scrollbar-track {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-right: 0.25rem;
+}
+
+.sidebar .nav .btn.appearance-primary {
+    background-color: var(--secondary);
+    color: var(--text-color-dark);
+}
+.sidebar .nav .btn.appearance-primary svg {
+    stroke: var(--text-color-dark) !important;
+}
+
+.btn.appearance-secondary,
+.btn.appearance-transparent {
+    background-color: var(--background);
+    color: var(--text-color-bright);
+}
+
+.btn.appearance-transparent:hover,
+.btn.appearance-secondary:hover {
+    background-color: var(--background-light);
+    color: var(--text-color-bright);
+}
+
+.btn.appearance-default {
+    background-color: var(--background);
+}
+
+.btn.appearance-danger {
+    background-color: var(--danger);
+    color: var(--text-color-dark);
+}
+
+.btn.appearance-danger:hover,
+.btn.appearance-danger:hover svg,
+.btn.appearance-danger svg {
+    color: var(--text-color-dark);
+    stroke: var(--text-color-dark);
+}
+
+.btn.appearance-danger:hover {
+    background-color: var(--danger-light);
+}
+
+.btn.appearance-disabled,
+.btn.appearance-disabled:hover {
+    background-color: var(--background-dark);
+}
+
+.btn,
+.chatbar .input-group .input {
+    border-radius: 3rem;
+}
+
+.btn.appearance-transparent:hover {
+    background-color: var(--background-light);
+}
+
+.switch .slider {
+    background-color: var(--background);
+}
+
+.switch .slider:before {
+    height: 16px;
+    width: 16px;
+    top: 2px;
+    left: 2px;
+}
+
+.switch input:checked+.slider {
+    background-color: var(--success);
+}
+
+#extensions-browser .banner {
+    font-size: var(--text-size-less);
+}
+
+
+#settings-profile .new-profile-welcome p {
+    color: unset;
+}
+
+.message {
+    background: var(--background);
+}
+
+.message.remote .text {
+    color: var(--text-color-dark) !important;
+}
+
+.message.remote {
+    background: var(--secondary-dark);
+}
+
+
+#extensions-browser .nav.bubble {
+    padding-right: 0.5rem;
+}
+
+
+.tooltip {
+    background-color: var(--background-dark);
+    color: var(--text-color-bright);
+}
+
+.tooltip-arrow-right::after {
+    border-color: transparent transparent transparent var(--background-dark);
+}
+.tooltip-arrow-left::after {
+    border-color: transparent var(--background-dark) transparent transparent;
+}
+.tooltip-arrow-top-left::after {
+    border-color: transparent transparent var(--background-dark) transparent;
+}
+.tooltip-arrow-top::after {
+    border-color: transparent transparent var(--background-dark) transparent;
+}
+
+.tooltip-arrow-top-right::after {
+    border-color: transparent transparent var(--background-dark) transparent;
+}
+.tooltip-arrow-bottom-left::after {
+    border-color: var(--background-dark) transparent transparent transparent;
+}
+
+.tooltip-arrow-bottom::after {
+    border-color: var(--background-dark) transparent transparent transparent;
+}
+.tooltip-arrow-bottom-right::after {
+    border-color: var(--background-dark) transparent transparent transparent;
+}
+
+.context-menu {
+	position: fixed;
+	border-radius: var(--border-radius-more);
+	background-color: var(--secondary);
+	color: var(--text-color-dark);
+	border: 2px solid var(--background-dark);
+    padding: 0.5rem;
+}
+
+.context-menu svg {
+    fill: transparent;
+    stroke: var(--text-color-dark);
+}
+
+
+.context-menu .context-item {
+    border-radius: var(--border-radius);
+}
+.context-item.danger {
+    color: var(--text-color-bright);
+}
+
+.context-menu hr {
+    border: none;
+    border-bottom: 1px solid var(--secondary-dark);
+}
+
+.context-menu .context-item:hover {
+    background: var(--background);
+    color: var(--text-color-bright);
+}
+
+
+.context-menu .context-item:hover svg {
+    stroke: var(--text-color-bright);
+}
+
+.context-item.danger {
+    color: var(--danger) !important;
+    background-color: transparent;
+}
+.context-menu .context-item.danger:hover {
+    color: var(--danger-light) !important;
+    background-color: var(--background) !important;
+}
+
+.context-item.danger:hover svg,
+.context-item.danger svg {
+    stroke: var(--danger) !important;
+}
+
+
+.sidebar .children {
+    padding-right: 0.5rem;
+    overflow-y: auto;
+    width: calc(100% - 0.5rem);
+}
+
+.sidebar .children
+
+.sidebar .user.active {
+    background: var(--secondary);
+}
+
+.sidebar .user .username {
+    color: var(--text-color-bright);
+}
+
+.sidebar .user.active .username {
+    color: var(--text-color-dark);
+}
+
+.sidebar .user .subtext {
+    color: var(--text-color);
+}
+
+.sidebar .user.active .subtext {
+    color: var(--text-color-dark);
+}
+
+.sidebar .user:hover {
+    background: var(--background-light);
+}
+
+.sidebar .user.active:hover {
+    background: var(--secondary-light);
+}
+
+.sidebar label {
+    color: var(--text-color-bright) !important;
+}
+
+.friend .request-info p {
+    color: var(--text-color-dark);
+}
+
+#unlock-layout {
+    overflow: visible;
+    background-color: var(--secondary-dark);
+    margin: var(--padding-less)var(--padding-more);
+    width: unset;
+    padding: var(--padding-more);
+    border-radius: var(--border-radius-more);
+    height: fit-content;
+} 
+
+#unlock-layout .idle {
+    margin-bottom: -3.1rem;
+    margin-top: -5rem;
+}
+
+.input {
+    color: var(--text-color-dark);
+}
+
+.message-typing {
+    background: var(--secondary-dark);
+}
+
+.file-type {
+    padding: 0.1rem 0.25rem;
+    font-size: var(--text-size-less);
+    text-transform: uppercase;
+    font-size: 0.25rem;
+    border-radius: var(--border-radius-less);
+    bottom: 0;
+    right: 0;
+}
+
+#debug_logger .header label {
+    color: var(--text-color) !important;
+}
+#debug_logger .body .item .log-text {
+    color: var(--text-color);
+}
+#debug_logger {
+    border-top-color: var(--background-light);
+}
+
+.debug-logger .header, .debug-logger .body {
+    width: calc(100% - 0.5rem);
+}
