@@ -48,9 +48,13 @@ type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
 
 #[allow(clippy::large_enum_variant)]
+#[derive(Display)]
 pub enum WarpEvent {
+    #[display(fmt = "RayGunEvent {{ {_0} }} ")]
     RayGun(RayGunEvent),
+    #[display(fmt = "MessageEvent {{ {_0} }} ")]
     Message(ui_adapter::MessageEvent),
+    #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
 }
 

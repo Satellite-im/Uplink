@@ -44,7 +44,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, Reaction},
+    raygun::{self},
 };
 
 use self::storage::Storage;
@@ -250,7 +250,7 @@ impl State {
     }
 
     pub fn process_warp_event(&mut self, event: WarpEvent) {
-        // handle any number of events and then save
+        log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
@@ -428,19 +428,11 @@ impl State {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                 }
             }
-            MessageEvent::MessageReactionAdded {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.add_message_reaction(conversation_id, message_id, reaction);
+            MessageEvent::MessageReactionAdded { message } => {
+                self.update_message(message);
             }
-            MessageEvent::MessageReactionRemoved {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.remove_message_reaction(conversation_id, message_id, reaction);
+            MessageEvent::MessageReactionRemoved { message } => {
+                self.update_message(message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -619,40 +611,6 @@ impl State {
             }
         }
     }
-    pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
-        let conv = match self.chats.all.get_mut(&chat_id) {
-            Some(c) => c,
-            None => {
-                log::warn!("attempted to add reaction to nonexistent conversation");
-                return;
-            }
-        };
-
-        for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
-                continue;
-            }
-
-            let mut has_emoji = false;
-            for reaction in msg.inner.reactions_mut() {
-                if !reaction.emoji().eq(&emoji) {
-                    continue;
-                }
-                if !reaction.users().contains(&user) {
-                    reaction.users_mut().push(user.clone());
-                    has_emoji = true;
-                }
-            }
-
-            if !has_emoji {
-                let mut r = Reaction::default();
-                r.set_emoji(&emoji);
-                r.set_users(vec![user.clone()]);
-                msg.inner.reactions_mut().push(r);
-            }
-        }
-    }
 
     pub fn active_chat_has_draft(&self) -> bool {
         self.get_active_chat()
@@ -788,31 +746,24 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
-        let conv = match self.chats.all.get_mut(&chat_id) {
+    pub fn update_message(&mut self, message: warp::raygun::Message) {
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
-                log::warn!("attempted to remove reaction to nonexistent conversation");
+                log::warn!("attempted to update message in nonexistent conversation");
                 return;
             }
         };
-
+        let message_id = message.id();
         for msg in &mut conv.messages {
             if msg.inner.id() != message_id {
                 continue;
             }
-
-            for reaction in msg.inner.reactions_mut() {
-                if !reaction.emoji().eq(&emoji) {
-                    continue;
-                }
-                let mut users = reaction.users();
-                users.retain(|id| id != &user);
-                reaction.set_users(users);
-            }
-            msg.inner.reactions_mut().retain(|r| !r.users().is_empty());
+            msg.inner = message;
+            return;
         }
+
+        log::warn!("attempted to update a message which wasn't found");
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -1113,8 +1064,8 @@ impl State {
             .cloned()
             .collect()
     }
-    pub fn get_identity(&self, did: &DID) -> Identity {
-        self.identities.get(did).cloned().unwrap_or_default()
+    pub fn get_identity(&self, did: &DID) -> Option<Identity> {
+        self.identities.get(did).cloned()
     }
     pub fn get_own_identity(&self) -> Identity {
         self.identities

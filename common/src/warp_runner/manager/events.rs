@@ -86,7 +86,6 @@ pub async fn handle_message_event(
         Some(e) => e,
         None => return Ok(()),
     };
-    log::debug!("received message event: {:?}", &msg);
     let warp_event_tx = WARP_EVENT_CH.tx.clone();
     match ui_adapter::convert_message_event(msg, &mut warp.multipass, &mut warp.raygun).await {
         Ok(evt) => {
