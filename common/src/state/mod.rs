@@ -134,7 +134,7 @@ impl State {
                 &self.configuration,
                 kind,
                 count,
-                self.ui.metadata.focused,
+                !self.ui.metadata.focused,
             ),
             Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
             Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
@@ -1013,7 +1013,7 @@ impl State {
                 &self.configuration,
                 notifications::NotificationKind::Settings,
                 1,
-                self.ui.metadata.focused,
+                !self.ui.metadata.focused,
             )
         }
     }
