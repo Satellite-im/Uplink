@@ -324,7 +324,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = Topbar_Controls();
+        controls = cx.render(rsx!(Topbar_Controls {}));
     }
 
     cx.render(rsx! (
@@ -1156,7 +1156,7 @@ fn get_titlebar(cx: Scope) -> Element {
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = Topbar_Controls();
+        controls = cx.render(rsx!(Topbar_Controls {}));
     }
 
     cx.render(rsx!(

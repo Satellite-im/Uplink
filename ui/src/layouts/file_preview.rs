@@ -1,17 +1,11 @@
 use std::io::Cursor;
 
-#[cfg(not(target_os = "macos"))]
-use common::icons::outline::Shape as Icon;
 use common::{
     language::get_local_text, state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS,
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
 use dioxus_desktop::tao::event::WindowEvent;
-#[cfg(not(target_os = "macos"))]
-use kit::elements::button::Button;
-#[cfg(not(target_os = "macos"))]
-use kit::elements::Appearance;
 use warp::constellation::file::File;
 
 use dioxus_desktop::wry::application::event::Event as WryEvent;
@@ -137,7 +131,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = Topbar_Controls();
+        controls = cx.render(rsx!(Topbar_Controls {}));
     }
 
     cx.render(rsx! (
