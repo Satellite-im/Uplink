@@ -50,6 +50,17 @@ body {
   }
 }
 
+#update-available {
+  display: inline-flex;
+  gap: var(--gap-less);
+  align-content: center;
+  justify-content: center;
+  width: fit-content;
+  color: var(--warning-light);
+  font-size: var(--text-size-less);
+  cursor: pointer;
+}
+
 #pre-release {
   position: fixed;
   top: 0.14rem;
@@ -63,12 +74,12 @@ body {
   justify-content: center;
   width: fit-content;
   padding: var(--gap-less);
-  pointer-events: none;
   user-select: none;
   cursor: default;
   p {
     color: var(--warning-light);
     font-size: var(--text-size-less);
+    cursor: pointer;
   }
   svg {
     fill: transparent;
@@ -98,6 +109,10 @@ body {
   overflow-x: scroll;
   height: fit-content;
   transition: background var(--animation-time);
+}
+
+.progress {
+  cursor: progress;
 }
 
 /* width */

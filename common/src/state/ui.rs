@@ -16,8 +16,6 @@ pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,
     pub minimized: bool,
-    pub width: u32,
-    pub height: u32,
     pub minimal_view: bool, // We can use this to detect mobile or portrait mode
 }
 
@@ -51,6 +49,7 @@ pub struct UI {
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
     pub theme: Option<Theme>,
+    pub font: Option<Font>,
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
@@ -324,9 +323,21 @@ impl ToastNotification {
     }
 }
 
-#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Eq, Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Theme {
     pub filename: String,
     pub name: String,
     pub styles: String,
+}
+
+impl PartialEq for Theme {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
+    }
+}
+
+#[derive(PartialEq, Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Font {
+    pub name: String,
+    pub path: String,
 }

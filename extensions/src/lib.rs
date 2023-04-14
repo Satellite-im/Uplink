@@ -145,7 +145,7 @@ pub struct Details {
 // Represents where the extensions main render method should execute.
 // Note that some extension types will NOT render in some locations.
 #[repr(C)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Location {
     Chatbar,
     Replies,
@@ -153,11 +153,13 @@ pub enum Location {
     Settings,
 }
 
-// Right now IconLaunched is the only supported render mode. This will evolve over time.
+// Right now IconLaunched is the only supported render mode*. This will evolve over time.
+// SimpleAction types are a work in progress as well
 #[repr(C)]
 #[derive(Clone)]
 pub enum Type {
     IconLaunched,
+    SimpleAction,
     // InlineUI,
     // Headless,
 }

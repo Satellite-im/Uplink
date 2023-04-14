@@ -5,11 +5,15 @@ pub mod state;
 pub mod testing;
 pub mod warp_runner;
 
+use anyhow::bail;
 use clap::Parser;
 // export icons crate
 pub use icons;
 use once_cell::sync::Lazy;
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
@@ -50,6 +54,10 @@ pub struct Args {
     #[cfg(debug_assertions)]
     #[clap(long, default_value_t = false)]
     with_mock: bool,
+    /// tells the app that it was installed via an installer, not built locally. Uplink will look for an `extra.zip` file based on
+    /// the platform-specific installer.
+    #[clap(long, default_value_t = false)]
+    production_mode: bool,
     /// configures log output
     #[command(subcommand)]
     pub profile: Option<LogProfile>,
@@ -58,14 +66,17 @@ pub struct Args {
 #[derive(Debug)]
 pub struct StaticArgs {
     /// ~/.uplink
+    /// contains the following: extra (folder), extensions (folder), themes (folder), fonts (folder), .user
     pub dot_uplink: PathBuf,
-    /// Uplink stores its data with the following layout, starting at whatever the root folder is:
-    /// ./uplink ./uplink/warp ./themes
-    /// uplink_path is used for deleting all uplink data when a new account is created
+    /// ~/.uplink/.user
+    /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
-    /// does nothing until themes are properly bundled with the app. maybe one day we will have an installer that does this
+    /// contains assets bundled with uplink, such as themes, fonts, and images
+    /// these are separate from user-imported fonts and themes
+    pub extras_path: PathBuf,
+    /// custom themes for the user
     pub themes_path: PathBuf,
-    /// Location of custom fonts added into the application (as well as a few defaults)
+    /// custom fonts for the user
     pub fonts_path: PathBuf,
     /// state.json: a serialized version of State which gets saved every time state is modified
     pub cache_path: PathBuf,
@@ -91,11 +102,10 @@ pub struct StaticArgs {
     /// Uses experimental configuration
     pub experimental: bool,
     // some features aren't ready for release. This field is used to disable such features.
-    pub is_debug: bool,
+    pub production_mode: bool,
 }
 pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let args = Args::parse();
-
     #[allow(unused_mut)]
     #[allow(unused_assignments)]
     let mut use_mock = false;
@@ -108,11 +118,18 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         Some(path) => path,
         _ => dirs::home_dir().unwrap_or_default().join(".uplink"),
     };
+
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
+    let extras_path = if cfg!(feature = "production_mode") {
+        get_assets_dir().expect("couldn't get location of executable")
+    } else {
+        Path::new("ui").join("extra")
+    };
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
+        extras_path,
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
@@ -126,7 +143,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         login_config_path: uplink_path.join("login_config.json"),
         use_mock,
         experimental: args.experimental_node,
-        is_debug: cfg!(debug_assertions),
+        production_mode: cfg!(feature = "production_mode"),
     }
 });
 
@@ -159,3 +176,22 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
 ];
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
+
+fn get_assets_dir() -> anyhow::Result<PathBuf> {
+    let assets_path = if cfg!(target_os = "windows") {
+        PathBuf::from(r"..\extra")
+    } else if cfg!(target_os = "linux") {
+        PathBuf::from("/opt/im.satellite/extra")
+    } else if cfg!(target_os = "macos") {
+        let exe_path = std::env::current_exe()?;
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("Resources").join("extra"))
+            .ok_or(anyhow::format_err!("failed to get MacOs resources dir"))?
+    } else {
+        bail!("unknown OS type. failed to copy assets");
+    };
+
+    Ok(assets_path)
+}

@@ -2,6 +2,7 @@ use arboard::Clipboard;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -37,8 +38,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let image = state.read().graphics().profile_picture();
-    let banner = state.read().graphics().profile_banner();
+    let image = state.read().profile_picture();
+    let banner = state.read().profile_banner();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -98,7 +99,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     continue;
                 }
 
-                let res = rx.await.expect("command cancelled");
+                let res = rx.await.expect("command canceled");
                 match res {
                     Ok(ident) => {
                         should_update.set(Some(ident));
@@ -155,6 +156,15 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     did_short.push_str(&state.read().get_own_identity().short_id());
     let show_welcome = &state.read().ui.active_welcome;
 
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images")
+        .join("mascot")
+        .join("working.webp")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
     let change_banner_text = get_local_text("settings-profile.change-banner");
     cx.render(rsx!(
         div {
@@ -166,7 +176,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     div {
                         class: "welcome",
                         img {
-                            src: "./ui/extra/images/mascot/working.png"
+                            src: "{image_path}"
                         },
                     },
                     div {

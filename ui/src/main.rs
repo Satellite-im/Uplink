@@ -1,5 +1,7 @@
-//#![deny(elided_lifetimes_in_paths)]
+#![windows_subsystem = "windows"]
+// the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
+use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -12,17 +14,19 @@ use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
 use extensions::UplinkExtension;
-use fs_extra::dir::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+
+use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
 use uuid::Uuid;
@@ -32,7 +36,7 @@ use warp::multipass::identity::Platform;
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
 use tao::window::WindowBuilder;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
 
@@ -42,12 +46,16 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
-use crate::layouts::create_group;
 use crate::layouts::friends::FriendsLayout;
+use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
+use crate::utils::auto_updater::{
+    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+};
+use crate::utils::get_available_themes;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -55,6 +63,7 @@ use common::{
     warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
+use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
@@ -78,19 +87,19 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
 });
 
 pub struct UplinkRoutes<'a> {
+    pub loading: &'a str,
     pub chat: &'a str,
     pub friends: &'a str,
     pub files: &'a str,
     pub settings: &'a str,
-    pub create_group: &'a str,
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
-    chat: "/",
+    loading: "/",
+    chat: "/chat",
     friends: "/friends",
     files: "/files",
     settings: "/settings",
-    create_group: "/create-group",
 };
 
 // serve as a sort of router while the user logs in]
@@ -100,29 +109,6 @@ pub enum AuthPages {
     Unlock,
     CreateAccount,
     Success(multipass::identity::Identity),
-}
-
-fn copy_assets() {
-    let dot_uplink = &STATIC_ARGS.dot_uplink;
-    let themes_src = Path::new("ui").join("extra").join("themes");
-    let fonts_src = Path::new("kit").join("src").join("fonts");
-
-    match create_all(dot_uplink.clone(), false) {
-        Ok(_) => {
-            let mut options = CopyOptions::new();
-            options.skip_exist = true;
-            options.copy_inside = true;
-
-            if let Err(error) = copy(themes_src, dot_uplink, &options) {
-                log::error!("Error on copy themes {error}");
-            }
-
-            if let Err(error) = copy(fonts_src, dot_uplink, &options) {
-                log::error!("Error on copy fonts {error}");
-            }
-        }
-        Err(error) => log::error!("Error on create themes folder: {error}"),
-    };
 }
 
 fn main() {
@@ -154,14 +140,73 @@ fn main() {
         LevelFilter::Debug
     };
     logger::init_with_level(max_log_level).expect("failed to init logger");
+    log::debug!("starting uplink");
+    panic::set_hook(Box::new(|panic_info| {
+        let intro = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => format!("panic occurred: {s:?}"),
+            None => "panic occurred".into(),
+        };
+        let location = match panic_info.location() {
+            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
+            None => "".into(),
+        };
+
+        let logs = logger::dump_logs();
+        let crash_report = format!("{intro}{location}\n{logs}\n");
+        println!("{crash_report}");
+
+        let save_path = FileDialog::new()
+            .set_directory(dirs::home_dir().unwrap_or(".".into()))
+            .set_title(&get_local_text("uplink.crash-report"))
+            .pick_folder();
+
+        if let Some(p) = save_path {
+            let time = Local::now();
+            let file_name = format!(
+                "uplink-crash-report_{}-{}-{}_{}:{}:{}.txt",
+                time.year(),
+                time.month(),
+                time.day(),
+                time.hour(),
+                time.minute(),
+                time.second()
+            );
+            let _ = fs::write(p.join(file_name), crash_report);
+        }
+    }));
 
     // Initializes the cache dir if needed
-    std::fs::create_dir_all(STATIC_ARGS.uplink_path.clone())
-        .expect("Error creating Uplink directory");
-    std::fs::create_dir_all(STATIC_ARGS.warp_path.clone()).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    copy_assets();
+    let window = get_window_builder(true);
 
+    let config = Config::default();
+
+    dioxus_desktop::launch_cfg(
+        bootstrap,
+        config
+            .with_window(window)
+            .with_custom_index(
+                r#"
+    <!doctype html>
+    <html>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+    </html>"#
+                    .to_string(),
+            )
+            .with_file_drop_handler(|_w, drag_event| {
+                log::info!("Drag Event: {:?}", drag_event);
+                *DRAG_EVENT.write() = drag_event;
+                true
+            }),
+    )
+}
+
+pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -201,9 +246,12 @@ fn main() {
     let mut window = WindowBuilder::new()
         .with_title(title)
         .with_resizable(true)
-        .with_inner_size(LogicalSize::new(950.0, 600.0))
         // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
         .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+
+    if with_predefined_size {
+        window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
+    }
 
     #[cfg(target_os = "macos")]
     {
@@ -222,28 +270,7 @@ fn main() {
     {
         window = window.with_decorations(false).with_transparent(true);
     }
-
-    let config = Config::default();
-
-    dioxus_desktop::launch_cfg(
-        bootstrap,
-        config
-            .with_window(window)
-            .with_custom_index(
-                r#"
-    <!doctype html>
-    <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-    </html>"#
-                    .to_string(),
-            )
-            .with_file_drop_handler(|_w, drag_event| {
-                log::info!("Drag Event: {:?}", drag_event);
-                *DRAG_EVENT.write() = drag_event;
-                true
-            }),
-    )
+    window
 }
 
 // start warp_runner and ensure the user is logged in
@@ -385,6 +412,20 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
+    // Reload theme from file if present
+    let themes = get_available_themes();
+    let theme = themes.iter().find(|t| {
+        state
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.eq(t))
+            .unwrap_or_default()
+    });
+    if let Some(t) = theme {
+        state.set_theme(Some(t.clone()));
+    }
+
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
@@ -405,8 +446,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        width: size.width,
-        height: size.height,
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
@@ -427,6 +466,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     );
 
     use_shared_state_provider(cx, || state);
+    use_shared_state_provider(cx, DownloadState::default);
 
     cx.render(rsx!(crate::app {}))
 }
@@ -435,12 +475,30 @@ fn app(cx: Scope) -> Element {
     log::trace!("rendering app");
     let desktop = use_window(cx);
     let state = use_shared_state::<State>(cx)?;
+    let download_state = use_shared_state::<DownloadState>(cx)?;
 
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
+
+    let mut font_style = String::new();
+    if let Some(font) = state.read().ui.font.clone() {
+        font_style = format!(
+            "
+        @font-face {{
+            font-family: CustomFont;
+            src: url('{}');
+        }}
+        body,
+        html {{
+            font-family: CustomFont, sans-serif;
+        }}
+        ",
+            font.path
+        );
+    }
 
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
@@ -454,6 +512,11 @@ fn app(cx: Scope) -> Element {
             ""
         };
 
+        let font_scale = format!(
+            "html {{ font-size: {}rem; }}",
+            state.read().settings.font_scale()
+        );
+
         let theme = state
             .read()
             .ui
@@ -463,18 +526,57 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {open_dyslexic}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
-                get_titlebar(cx),
-                get_toasts(cx),
-                get_call_dialog(cx),
-                get_pre_release_message(cx),
-                get_router(cx),
-                get_logger(cx)
+                get_titlebar{},
+                get_toasts{},
+                get_call_dialog{},
+                get_pre_release_message{},
+                get_router{},
+                get_logger{},
             }
         )
     };
+
+    // use_coroutine for software update
+
+    // updates the UI
+    let inner = download_state.inner();
+    let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
+        to_owned![needs_update];
+        async move {
+            while let Some(mut ch) = rx.next().await {
+                while let Some(percent) = ch.0.recv().await {
+                    if percent >= inner.borrow().read().progress + 5_f32 {
+                        inner.borrow_mut().write().progress = percent;
+                        needs_update.set(true);
+                    }
+                }
+                inner.borrow_mut().write().stage = DownloadProgress::Finished;
+                needs_update.set(true);
+            }
+        }
+    });
+
+    // receives a download command
+    let _download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
+        to_owned![updater_ch];
+        async move {
+            while let Some(dest) = rx.next().await {
+                let (tx, rx) = mpsc::unbounded_channel::<f32>();
+                updater_ch.send(SoftwareUpdateCmd(rx));
+                match utils::auto_updater::download_update(dest.0.clone(), tx).await {
+                    Ok(downloaded_version) => {
+                        log::debug!("downloaded version {downloaded_version}");
+                    }
+                    Err(e) => {
+                        log::error!("failed to download update: {e}");
+                    }
+                }
+            }
+        }
+    });
 
     // `use_future`s
     // all of Uplinks periodic tasks are located here. it's a lot to read but
@@ -516,14 +618,21 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
@@ -548,12 +657,16 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
+                if desktop.outer_size().width < 575 {
+                    desktop.set_title("");
+                } else {
+                    desktop.set_title("Uplink");
+                }
+
                 match inner.try_borrow_mut() {
                     Ok(state) => {
                         let metadata = state.read().ui.metadata.clone();
                         let new_metadata = WindowMeta {
-                            height: size.height,
-                            width: size.width,
                             minimal_view: size.width < 600,
                             ..metadata
                         };
@@ -654,6 +767,46 @@ fn app(cx: Scope) -> Element {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
                 needs_update.set(true);
+            }
+        }
+    });
+
+    // check for updates
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![needs_update];
+        async move {
+            loop {
+                let latest_release = match utils::auto_updater::check_for_release().await {
+                    Ok(opt) => match opt {
+                        Some(r) => r,
+                        None => {
+                            sleep(Duration::from_secs(3600 * 24)).await;
+                            continue;
+                        }
+                    },
+                    Err(e) => {
+                        log::error!("failed to check for release: {e}");
+                        sleep(Duration::from_secs(3600 * 24)).await;
+                        continue;
+                    }
+                };
+                if inner.borrow().read().settings.update_dismissed
+                    == Some(latest_release.tag_name.clone())
+                {
+                    sleep(Duration::from_secs(3600 * 24)).await;
+                    continue;
+                }
+                match inner.try_borrow_mut() {
+                    Ok(state) => {
+                        state.write().update_available(latest_release.tag_name);
+                        needs_update.set(true);
+                    }
+                    Err(e) => {
+                        log::error!("{e}");
+                    }
+                }
+                sleep(Duration::from_secs(3600 * 24)).await;
             }
         }
     });
@@ -875,9 +1028,9 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(cx: Scope) -> Element {
+fn get_pre_release_message(_cx: Scope) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
-    cx.render(rsx!(
+    _cx.render(rsx!(
         div {
             id: "pre-release",
             aria_label: "pre-release",
@@ -885,10 +1038,125 @@ fn get_pre_release_message(cx: Scope) -> Element {
                 icon: Icon::Beaker,
             },
             p {
-                "{pre_release_text}",
+                div {
+                    onclick: move |_| {
+                        let _ = open::that("https://issues.satellite.im");
+                    },
+                    "{pre_release_text}"
+                }
+
             }
         },
     ))
+}
+
+fn get_update_icon(cx: Scope) -> Element {
+    log::trace!("rendering get_update_icon");
+    let state = use_shared_state::<State>(cx)?;
+    let download_state = use_shared_state::<DownloadState>(cx)?;
+    let desktop = use_window(cx);
+    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+
+    let new_version = match state.read().settings.update_available.as_ref() {
+        Some(u) => u.clone(),
+        None => return cx.render(rsx!("")),
+    };
+
+    let update_msg = format!(
+        "{}: {}",
+        get_local_text("uplink.update-available"),
+        new_version,
+    );
+    let downloading_msg = format!(
+        "{}: {}%",
+        get_local_text("uplink.update-downloading"),
+        download_state.read().progress as u32
+    );
+    let downloaded_msg = get_local_text("uplink.update-downloaded");
+
+    let stage = download_state.read().stage;
+    match stage {
+        DownloadProgress::Idle => cx.render(rsx!(
+            ContextMenu {
+                key: "update-available-menu",
+                id: "update-available-menu".to_string(),
+                items: cx.render(rsx!(
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-dismiss"),
+                        onpress: move |_| {
+                            state.write().mutate(Action::DismissUpdate);
+                        }
+                    },
+                    ContextItem {
+                        text: get_local_text("uplink.update-menu-download"),
+                        onpress: move |_| {
+                            if let Some(dest) = get_download_dest() {
+                                download_state.write().stage = DownloadProgress::Pending;
+                                download_state.write().destination = Some(dest.clone());
+                                download_ch.send(SoftwareDownloadCmd(dest));
+                            }
+                        }
+                    }
+                )),
+                div {
+                    id: "update-available",
+                    aria_label: "update-available",
+                    onclick: move |_| {
+                        if let Some(dest) = get_download_dest() {
+                            download_state.write().stage = DownloadProgress::Pending;
+                            download_state.write().destination = Some(dest.clone());
+                            download_ch.send(SoftwareDownloadCmd(dest));
+                        }
+                    },
+                    IconElement {
+                        icon: common::icons::solid::Shape::ArrowDown,
+                        fill: "green",
+                    },
+                    "{update_msg}",
+                }
+            }
+        )),
+        DownloadProgress::Pending => cx.render(rsx!(div {
+            id: "update-available",
+            aria_label: "update-available",
+            "{downloading_msg}"
+        })),
+        DownloadProgress::Finished => {
+            cx.render(rsx!(div {
+                id: "update-available",
+                aria_label: "update-available",
+                onclick: move |_| {
+                    // be sure to update this before closing the app
+                    state.write().mutate(Action::DismissUpdate);
+                    if let Some(dest) = download_state.read().destination.clone() {
+                        std::thread::spawn(move ||  {
+
+                            let cmd = if cfg!(target_os = "windows") {
+                                "explorer"
+                            } else if cfg!(target_os = "linux") {
+                                "xdg-open"
+                            } else if cfg!(target_os = "macos") {
+                                "open"
+                            } else {
+                               eprintln!("unknown OS type. failed to open files browser");
+                               return;
+                            };
+                            Command::new(cmd)
+                            .arg(dest)
+                            .spawn()
+                            .unwrap();
+                        });
+                        desktop.close();
+                    } else {
+                        log::error!("attempted to download update without download location");
+                    }
+                    download_state.write().destination = None;
+                    download_state.write().stage = DownloadProgress::Idle;
+                },
+                "{downloaded_msg}"
+            }))
+        }
+    }
 }
 
 fn get_logger(cx: Scope) -> Element {
@@ -963,6 +1231,7 @@ fn get_titlebar(cx: Scope) -> Element {
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
+            get_update_icon{},
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
@@ -973,8 +1242,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 300,
-                            height: 534,
                             minimal_view: true,
                             ..meta
                         }));
@@ -990,8 +1257,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 600,
-                            height: 534,
                             minimal_view: false,
                             ..meta
                         }));
@@ -1007,8 +1272,6 @@ fn get_titlebar(cx: Scope) -> Element {
                         desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                         let meta = state.read().ui.metadata.clone();
                         state.write().mutate(Action::SetMeta(WindowMeta {
-                            width: 950,
-                            height: 600,
                             minimal_view: false,
                             ..meta
                         }));
@@ -1103,6 +1366,10 @@ fn get_router(cx: Scope) -> Element {
     cx.render(rsx!(
         Router {
             Route {
+                to: UPLINK_ROUTES.loading,
+                LoadingLayout{}
+            },
+            Route {
                 to: UPLINK_ROUTES.chat,
                 ChatLayout {
                     route_info: RouteInfo {
@@ -1137,10 +1404,6 @@ fn get_router(cx: Scope) -> Element {
                         active: files_route,
                     }
                 }
-            },
-            Route {
-                to: UPLINK_ROUTES.create_group,
-                create_group{},
             }
         }
     ))

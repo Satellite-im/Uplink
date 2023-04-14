@@ -28,11 +28,13 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
                     "{cx.props.section_description}"
                 }
             },
-            div {
-                class: "settings-control",
-                aria_label: "settings-control",
-                &cx.props.children
-            }
+            cx.props.children.is_some().then(|| rsx!(
+                div {
+                    class: "settings-control",
+                    aria_label: "settings-control",
+                    &cx.props.children
+                }
+            ))
         }
     ))
 }

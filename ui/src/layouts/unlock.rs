@@ -10,8 +10,8 @@ use futures::StreamExt;
 use kit::elements::{
     button::Button,
     input::{Input, Options, Validation},
+    label::LabelWithEllipsis,
 };
-
 use warp::{logging::tracing::log, multipass};
 
 use common::icons::outline::Shape as Icon;
@@ -50,14 +50,16 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
     let shown_error = use_state(cx, || "");
 
-    let account_exists = use_state(cx, || true);
-    let loaded = use_state(cx, || false);
+    let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
+    let cmd_in_progress = use_state(cx, || false);
+
+    let state = use_state(cx, State::load);
 
     // this will be needed later
     use_future(cx, (), |_| {
-        to_owned![account_exists, loaded];
+        to_owned![account_exists];
         async move {
-            if *loaded.current() {
+            if account_exists.current().is_some() {
                 return;
             }
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -72,13 +74,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
             let exists = rx.await.unwrap_or(false);
             log::debug!("account_exists: {}", exists);
-            account_exists.set(exists);
-            loaded.set(true);
+            account_exists.set(Some(exists));
         }
     });
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![error, page];
+        to_owned![error, page, cmd_in_progress];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -91,6 +92,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
+                    cmd_in_progress.set(false);
                     continue;
                 }
 
@@ -120,6 +122,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     },
                 }
+                cmd_in_progress.set(false);
             }
         }
     });
@@ -141,11 +144,19 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         special_chars: None,
     };
 
-    let account_exists_bool = *account_exists.get();
-    let loading = !loaded.get();
+    let loading = account_exists.current().is_none();
+
+    let image_path = STATIC_ARGS
+        .extras_path
+        .join("images")
+        .join("mascot")
+        .join("idle_alt.png")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors()},
+        style {update_theme_colors(&state.current())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -162,23 +173,28 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                 rsx! (
                     img {
                         class: "idle",
-                        src: "./ui/extra/images/mascot/idle_alt.png"
+                        src: "{image_path}"
                     },
                     Input {
                         id: "unlock-input".to_owned(),
                         focus: true,
                         is_password: true,
                         icon: Icon::Key,
+                        disable_onblur: !account_exists.current().unwrap_or(true),
                         aria_label: "pin-input".into(),
-                        disabled: !loaded.get(),
+                        disabled: loading,
                         placeholder: get_local_text("unlock.enter-pin"),
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                            {Some(get_welcome_message())}
+                            {Some(get_welcome_message(&state.current()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
+                            ellipsis_on_label: Some(LabelWithEllipsis {
+                                apply_ellipsis: true,
+                                padding_rigth_for_ellipsis: 105,
+                            }),
                             ..Default::default()
                         }
                         onchange: move |(val, validation_passed): (String, bool)| {
@@ -188,6 +204,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set("");
                             }
                             if validation_passed {
+                                cmd_in_progress.set(true);
                                 ch.send(val);
                                 validation_failure.set(None);
                             } else {
@@ -217,14 +234,14 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                     }
                     Button {
-                            text: match account_exists_bool {
+                            text: match account_exists.current().unwrap_or(true) {
                                 true => get_local_text("unlock.unlock-account"),
                                 false => get_local_text("unlock.create-account"),
                             },
                             aria_label: "create-account-button".into(),
                             appearance: kit::elements::Appearance::Primary,
                             icon: Icon::Check,
-                            disabled: validation_failure.get().is_some(),
+                            disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
                             onpress: move |_| {
                                 if let Some(validation_error) = validation_failure.get() {
                                     shown_error.set(validation_error.as_str());
@@ -241,20 +258,19 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     ))
 }
 
-fn update_theme_colors() -> String {
-    let state = State::load();
-    match state.ui.theme.clone() {
-        Some(theme) => theme.styles,
+fn update_theme_colors(state: &State) -> String {
+    match state.ui.theme.as_ref() {
+        Some(theme) => theme.styles.clone(),
         None => String::new(),
     }
 }
 
-fn get_welcome_message() -> String {
-    let state = State::load();
-    let name = match &state.ui.cached_username {
+fn get_welcome_message(state: &State) -> String {
+    let name = match state.ui.cached_username.as_ref() {
         Some(name) => name.clone(),
         None => String::from("UNKNOWN"),
     };
+
     get_local_text_args_builder("unlock.welcome", |m| {
         m.insert("name", name.into());
     })

@@ -14,7 +14,7 @@ use super::{
     identity::Identity,
     notifications::NotificationKind,
     route::To,
-    ui::{Theme, ToastNotification, WindowMeta},
+    ui::{Font, Theme, ToastNotification, WindowMeta},
 };
 
 /// used exclusively by State::mutate
@@ -43,9 +43,11 @@ pub enum Action<'a> {
     #[display(fmt = "AddToastNotification")]
     AddToastNotification(ToastNotification),
     #[display(fmt = "SetTheme")]
-    SetTheme(Theme),
-    #[display(fmt = "ClearTheme")]
-    ClearTheme,
+    SetTheme(Option<Theme>),
+    #[display(fmt = "SetFont")]
+    SetFont(Option<Font>),
+    #[display(fmt = "SetFontScale")]
+    SetFontScale(f32),
     // RemoveToastNotification,
     /// sets the active media to the corresponding conversation uuid
     #[display(fmt = "SetActiveMedia")]
@@ -83,11 +85,12 @@ pub enum Action<'a> {
     ClearNotification(NotificationKind),
     #[display(fmt = "ClearAllNotifications")]
     ClearAllNotifications,
+    #[display(fmt = "DismissUpdate")]
+    DismissUpdate,
     // Settings
     /// Sets the selected language.
     #[display(fmt = "SetLanguage")]
     SetLanguage(String),
-
     // Routes
     /// Set the active route
     #[display(fmt = "Navigate")]

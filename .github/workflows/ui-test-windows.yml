@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -47,14 +51,14 @@ jobs:
         run: cargo clean
 
       - name: Build app 🖥️
-        run: cargo build --release
+        run: cargo build --release --package uplink -F production_mode
 
       - name: Upload Artifact ⬆️
         uses: actions/upload-artifact@v3
         with:
           name: Uplink-Windows
           path: |
-            target/release/ui.exe
+            target/release/uplink.exe
 
   test-on-windows:
     needs: build-windows
@@ -73,17 +77,11 @@ jobs:
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
-          node-version: 16
-
-      - name: Download the app 🗳️
-        uses: actions/download-artifact@v3
-        with:
-          name: Uplink-Windows
-          path: ./appium-tests/apps
+          node-version: 18
 
       - name: Install NPM dependencies 📦
-        run: |
-          cd appium-tests && npm install
+        working-directory: ./appium-tests
+        run: npm ci
 
       - name: Install and Run Appium Server 💻
         run: |
@@ -91,6 +89,12 @@ jobs:
           appium -v
           appium driver install --source=npm appium-windows-driver
           appium driver list
+
+      - name: Download the app 🗳️
+        uses: actions/download-artifact@v3
+        with:
+          name: Uplink-Windows
+          path: ./appium-tests/apps
 
       - name: Delete cache folder before starting
         run: If (Test-Path $home/.uplink) {Remove-Item -Recurse -Force $home/.uplink} Else { Break }
@@ -106,6 +110,9 @@ jobs:
         with:
           junit_files: "./appium-tests/test-report/*.xml"
           check_name: "UI Automated Test Results on Windows"
+          ignore_runs: true
+          job_summary: false
+          compare_to_earlier_commit: false
 
       - name: Upload Screenshots if tests failed 📷
         uses: actions/upload-artifact@v3

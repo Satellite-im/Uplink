@@ -1,17 +1,11 @@
-use common::{
-    icons::outline::Shape as Icon,
-    state::{Action, State},
-};
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
-use kit::{
-    components::nav::{Nav, Route},
-    elements::{button::Button, label::Label},
-};
+use kit::elements::button::Button;
 use once_cell::sync::Lazy;
 
 // These two lines are all you need to use your Extension implementation as a shared library
-static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
+static EXTENSION: Lazy<ClearAll> = Lazy::new(|| ClearAll {});
 export_extension!(EXTENSION);
 
 pub struct ClearAll;
@@ -31,7 +25,7 @@ impl Extension for ClearAll {
     }
 
     fn stylesheet(&self) -> String {
-        "".into()
+        ".clear-all_container, .clear-all_container .btn-wrap, .clear-all_container .btn { width: 100% }".into()
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
@@ -40,10 +34,14 @@ impl Extension for ClearAll {
         cx.render(rsx! (
             style { "{styles}" },
             // Render standard (required) button to fire action.
-            Button {
-                icon: Icon::BellSlash,
-                onpress: move |_| {
-                    // TODO: Clear all notifications in state
+            div {
+                class: "clear-all_container",
+                Button {
+                    icon: Icon::BellSlash,
+                    text: "Clear Notis".into(),
+                    onpress: move |_| {
+                        // TODO: Clear all notifications in state.
+                    }
                 }
             }
         ))

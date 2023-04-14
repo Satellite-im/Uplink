@@ -5,6 +5,7 @@ pub mod friends;
 pub mod identity;
 pub mod notifications;
 pub mod route;
+pub mod scope_ids;
 pub mod settings;
 pub mod storage;
 pub mod ui;
@@ -43,11 +44,11 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, Reaction},
+    raygun::{self},
 };
 
 use self::storage::Storage;
-use self::ui::{Call, Layout};
+use self::ui::{Call, Font, Layout};
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -61,6 +62,7 @@ pub struct State {
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
+    pub scope_ids: scope_ids::ScopeIds,
     pub settings: settings::Settings,
     pub ui: ui::UI,
     pub configuration: configuration::Configuration,
@@ -89,6 +91,7 @@ impl Clone for State {
             friends: self.friends.clone(),
             storage: self.storage.clone(),
             settings: Default::default(),
+            scope_ids: Default::default(),
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
@@ -127,24 +130,25 @@ impl State {
                 }
             }
             // ===== Notifications =====
-            Action::AddNotification(kind, count) => {
-                self.ui
-                    .notifications
-                    .increment(&self.configuration, kind, count)
-            }
-            Action::RemoveNotification(kind, count) => {
-                self.ui
-                    .notifications
-                    .decrement(&self.configuration, kind, count)
-            }
-            Action::ClearNotification(kind) => {
-                self.ui.notifications.clear_kind(&self.configuration, kind)
-            }
-            Action::ClearAllNotifications => self.ui.notifications.clear_all(&self.configuration),
+            Action::AddNotification(kind, count) => self.ui.notifications.increment(
+                &self.configuration,
+                kind,
+                count,
+                !self.ui.metadata.focused,
+            ),
+            Action::RemoveNotification(kind, count) => self.ui.notifications.decrement(kind, count),
+            Action::ClearNotification(kind) => self.ui.notifications.clear_kind(kind),
+            Action::ClearAllNotifications => self.ui.notifications.clear_all(),
             Action::AddToastNotification(notification) => {
                 self.ui
                     .toast_notifications
                     .insert(Uuid::new_v4(), notification);
+            }
+            Action::DismissUpdate => {
+                self.settings.update_dismissed = self.settings.update_available.take();
+                self.ui
+                    .notifications
+                    .decrement(notifications::NotificationKind::Settings, 1);
             }
             // ===== Friends =====
             Action::SendRequest(identity) => self.new_outgoing_request(&identity),
@@ -186,8 +190,10 @@ impl State {
             Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
-            Action::SetTheme(theme) => self.set_theme(Some(theme)),
-            Action::ClearTheme => self.set_theme(None),
+            Action::SetTheme(theme) => self.set_theme(theme),
+            // Fonts
+            Action::SetFont(font) => self.set_font(font),
+            Action::SetFontScale(font_scale) => self.settings.set_font_scale(font_scale),
 
             // ===== Chats =====
             Action::ChatWith(chat, should_move_to_top) => {
@@ -223,7 +229,6 @@ impl State {
                 };
                 self.add_msg_to_chat(id, m);
             }
-
             // ===== Media =====
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
@@ -245,7 +250,7 @@ impl State {
     }
 
     pub fn process_warp_event(&mut self, event: WarpEvent) {
-        // handle any number of events and then save
+        log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
@@ -423,19 +428,11 @@ impl State {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                 }
             }
-            MessageEvent::MessageReactionAdded {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.add_message_reaction(conversation_id, message_id, reaction);
+            MessageEvent::MessageReactionAdded { message } => {
+                self.update_message(message);
             }
-            MessageEvent::MessageReactionRemoved {
-                conversation_id,
-                message_id,
-                reaction,
-            } => {
-                self.remove_message_reaction(conversation_id, message_id, reaction);
+            MessageEvent::MessageReactionRemoved { message } => {
+                self.update_message(message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -473,9 +470,6 @@ impl State {
         identities.insert(my_id.did_key(), my_id);
         Self {
             id,
-            settings: Settings {
-                language: "English (USA)".into(),
-            },
             route: Route { active: "/".into() },
             storage,
             chats,
@@ -501,26 +495,32 @@ impl State {
             return State::load_mock();
         };
 
-        let contents = match fs::read_to_string(&STATIC_ARGS.cache_path) {
-            Ok(r) => r,
-            Err(_) => {
-                log::info!("state.json not found. Initializing State with default values");
-                return State::default();
-            }
-        };
-        let mut state: Self = match serde_json::from_str(&contents) {
-            Ok(s) => s,
-            Err(e) => {
-                log::error!(
-                    "state.json failed to deserialize: {e}. Initializing State with default values"
-                );
-                return State::default();
+        let mut state = {
+            match fs::read_to_string(&STATIC_ARGS.cache_path) {
+                Ok(contents) => match serde_json::from_str(&contents) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!(
+                            "state.json failed to deserialize: {e}. Initializing State with default values"
+                        );
+                        State::default()
+                    }
+                },
+                Err(_) => {
+                    log::info!("state.json not found. Initializing State with default values");
+                    State::default()
+                }
             }
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
         state.chats.initialized = false;
+
+        if state.settings.font_scale() == 0.0 {
+            state.settings.set_font_scale(1.0);
+        }
+
         state
     }
     fn load_mock() -> Self {
@@ -590,6 +590,7 @@ impl State {
                 conv.conversation_type = chat.conversation_type;
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
+                conv.creator = chat.creator;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -610,39 +611,13 @@ impl State {
             }
         }
     }
-    pub fn add_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
-        let conv = match self.chats.all.get_mut(&chat_id) {
-            Some(c) => c,
-            None => {
-                log::warn!("attempted to add reaction to nonexistent conversation");
-                return;
-            }
-        };
 
-        for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
-                continue;
-            }
-
-            let mut has_emoji = false;
-            for reaction in msg.inner.reactions_mut() {
-                if !reaction.emoji().eq(&emoji) {
-                    continue;
-                }
-                if !reaction.users().contains(&user) {
-                    reaction.users_mut().push(user.clone());
-                    has_emoji = true;
-                }
-            }
-
-            if !has_emoji {
-                let mut r = Reaction::default();
-                r.set_emoji(&emoji);
-                r.set_users(vec![user.clone()]);
-                msg.inner.reactions_mut().push(r);
-            }
-        }
+    pub fn active_chat_has_draft(&self) -> bool {
+        self.get_active_chat()
+            .as_ref()
+            .and_then(|d| d.draft.as_ref())
+            .map(|d| !d.is_empty())
+            .unwrap_or(false)
     }
     /// Cancels a reply within a given chat on `State` struct.
     ///
@@ -771,31 +746,24 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn remove_message_reaction(&mut self, chat_id: Uuid, message_id: Uuid, emoji: String) {
-        let user = self.did_key();
-        let conv = match self.chats.all.get_mut(&chat_id) {
+    pub fn update_message(&mut self, message: warp::raygun::Message) {
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
-                log::warn!("attempted to remove reaction to nonexistent conversation");
+                log::warn!("attempted to update message in nonexistent conversation");
                 return;
             }
         };
-
+        let message_id = message.id();
         for msg in &mut conv.messages {
             if msg.inner.id() != message_id {
                 continue;
             }
-
-            for reaction in msg.inner.reactions_mut() {
-                if !reaction.emoji().eq(&emoji) {
-                    continue;
-                }
-                let mut users = reaction.users();
-                users.retain(|id| id != &user);
-                reaction.set_users(users);
-            }
-            msg.inner.reactions_mut().retain(|r| !r.users().is_empty());
+            msg.inner = message;
+            return;
         }
+
+        log::warn!("attempted to update a message which wasn't found");
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -988,6 +956,18 @@ impl State {
     fn set_language(&mut self, string: &str) {
         self.settings.language = string.to_string();
     }
+
+    pub fn update_available(&mut self, version: String) {
+        if self.settings.update_available != Some(version.clone()) {
+            self.settings.update_available = Some(version);
+            self.ui.notifications.increment(
+                &self.configuration,
+                notifications::NotificationKind::Settings,
+                1,
+                !self.ui.metadata.focused,
+            )
+        }
+    }
 }
 
 // for ui
@@ -1045,6 +1025,9 @@ impl State {
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
     }
+    pub fn set_font(&mut self, font: Option<Font>) {
+        self.ui.font = font;
+    }
     /// Updates the display of the overlay
     fn toggle_overlay(&mut self, enabled: bool) {
         self.ui.enable_overlay = enabled;
@@ -1081,8 +1064,8 @@ impl State {
             .cloned()
             .collect()
     }
-    pub fn get_identity(&self, did: &DID) -> Identity {
-        self.identities.get(did).cloned().unwrap_or_default()
+    pub fn get_identity(&self, did: &DID) -> Option<Identity> {
+        self.identities.get(did).cloned()
     }
     pub fn get_own_identity(&self) -> Identity {
         self.identities
@@ -1200,10 +1183,17 @@ impl State {
         };
     }
 
-    pub fn graphics(&self) -> warp::multipass::identity::Graphics {
+    pub fn profile_picture(&self) -> String {
         self.identities
             .get(&self.did_key())
-            .map(|x| x.graphics())
+            .map(|x| x.profile_picture())
+            .unwrap_or_default()
+    }
+
+    pub fn profile_banner(&self) -> String {
+        self.identities
+            .get(&self.did_key())
+            .map(|x| x.profile_banner())
             .unwrap_or_default()
     }
     pub fn join_usernames(identities: &[Identity]) -> String {

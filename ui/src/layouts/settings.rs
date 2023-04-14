@@ -6,7 +6,7 @@ use crate::components::{
     settings::{
         sidebar::{Page, Sidebar},
         sub_pages::{
-            accessibility::AccessibilitySettings, audio::AudioSettings,
+            about::AboutPage, accessibility::AccessibilitySettings, audio::AudioSettings,
             developer::DeveloperSettings, extensions::ExtensionSettings, files::FilesSettings,
             general::GeneralSettings, notifications::NotificationSettings,
             privacy::PrivacySettings, profile::ProfileSettings,
@@ -39,6 +39,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     }
 
     let settings_page = match to.get() {
+        Page::About => rsx!(AboutPage {}),
         Page::General => rsx!(GeneralSettings {}),
         Page::Accessibility => rsx!(AccessibilitySettings {}),
         Page::Profile => rsx!(ProfileSettings {}),
@@ -69,7 +70,6 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 (state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden).then(|| rsx!(
                     Topbar {
                         with_back_button: true,
-                        with_currently_back: state.read().ui.sidebar_hidden,
                         onback: move |_| {
                             let current = state.read().ui.sidebar_hidden;
                             state.write().mutate(Action::SidebarHidden(!current));

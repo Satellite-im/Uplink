@@ -4,6 +4,7 @@ use std::{
 };
 
 use derive_more::Display;
+
 use futures::channel::oneshot;
 use warp::{
     crypto::DID,
@@ -16,13 +17,13 @@ use warp::{
 };
 
 use crate::{
-    state::{self, friends},
+    state::{self, friends, Identity},
     warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
 #[derive(Display)]
 pub enum MultiPassCmd {
-    #[display(fmt = "CreateIdentity {{ username: {username} }} ")]
+    #[display(fmt = "CreateIdentity")]
     CreateIdentity {
         username: String,
         passphrase: String,
@@ -33,9 +34,10 @@ pub enum MultiPassCmd {
         passphrase: String,
         rsp: oneshot::Sender<Result<multipass::identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "RequestFriend {{ request: {id} }} ")]
+    #[display(fmt = "RequestFriend")]
     RequestFriend {
         id: String,
+        outgoing_requests: Vec<Identity>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "InitializeFriends")]
@@ -53,33 +55,33 @@ pub enum MultiPassCmd {
     GetOwnDid {
         rsp: oneshot::Sender<Result<DID, warp::error::Error>>,
     },
-    #[display(fmt = "RemoveFriend {{ did: {did} }} ")]
+    #[display(fmt = "RemoveFriend")]
     RemoveFriend {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "Unblock {{ did: {did} }} ")]
+    #[display(fmt = "Unblock")]
     Unblock {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // can block anyone, friend or not
-    #[display(fmt = "Block {{ did: {did} }} ")]
+    #[display(fmt = "Block")]
     Block {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "AcceptRequest {{ did: {did} }} ")]
+    #[display(fmt = "AcceptRequest")]
     AcceptRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "DenyRequest {{ did: {did} }} ")]
+    #[display(fmt = "DenyRequest")]
     DenyRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "CancelRequest {{ did: {did} }} ")]
+    #[display(fmt = "CancelRequest")]
     CancelRequest {
         did: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
@@ -121,7 +123,11 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
         MultiPassCmd::CreateIdentity { .. } | MultiPassCmd::TryLogIn { .. } => {
             // do nothing and drop the rsp channel
         }
-        MultiPassCmd::RequestFriend { id, rsp } => {
+        MultiPassCmd::RequestFriend {
+            id,
+            outgoing_requests,
+            rsp,
+        } => {
             // First attempt using a did
             let did = match DID::from_str(id.as_str()) {
                 Ok(did) => did,
@@ -159,6 +165,14 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     }
                 }
             };
+            // If request already exist return
+            if outgoing_requests
+                .into_iter()
+                .any(|id| id.did_key().eq(&did))
+            {
+                let _ = rsp.send(Result::Err(Error::FriendRequestExist));
+                return;
+            }
             let r = warp.multipass.send_request(&did).await;
             let _ = rsp.send(r);
         }
@@ -213,9 +227,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     .await
                 {
                     Ok(_) => {
-                        let mut g = my_id.graphics();
-                        g.set_profile_picture(&pfp);
-                        my_id.set_graphics(g);
+                        my_id.set_profile_picture(&pfp);
                         rsp.send(Ok(my_id))
                     }
                     Err(e) => {
