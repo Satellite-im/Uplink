@@ -111,6 +111,10 @@ body {
   transition: background var(--animation-time);
 }
 
+.progress {
+  cursor: progress;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 8px;
