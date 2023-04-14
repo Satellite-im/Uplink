@@ -19,3 +19,5 @@ pub mod message_typing;
 pub mod file_embed;
 
 pub mod context_menu;
+
+pub mod topbar_controls;

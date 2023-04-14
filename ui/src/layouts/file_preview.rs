@@ -17,6 +17,8 @@ use warp::constellation::file::File;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
+#[cfg(not(target_os = "macos"))]
+use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::file::get_file_extension;
 use kit::STYLE as UIKIT_STYLES;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
@@ -135,35 +137,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
 
     #[cfg(not(target_os = "macos"))]
     {
-        controls = cx.render(rsx!(
-            div {
-                class: "controls",
-                Button {
-                    aria_label: "minimize-button".into(),
-                    icon: Icon::Minus,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_minimized(true);
-                    }
-                },
-                Button {
-                    aria_label: "square-button".into(),
-                    icon: Icon::Square2Stack,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_maximized(!desktop.is_maximized());
-                    }
-                },
-                Button {
-                    aria_label: "close-button".into(),
-                    icon: Icon::XMark,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.close();
-                    }
-                },
-            }
-        ))
+        controls = Topbar_Controls();
     }
 
     cx.render(rsx! (
