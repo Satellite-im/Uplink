@@ -807,89 +807,87 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let _msg_uuid = message.inner.id();
 
-        rsx!(
-            ContextMenu {
-                key: "{context_key}",
-                id: context_key,
-                on_mouseenter: move |_| {
-                    if should_fetch_more {
-                        let new_num_to_take = cx
-                            .props
-                            .num_to_take
-                            .get()
-                            .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
-                        // lazily render
-                        if new_num_to_take < cx.props.num_messages_in_conversation {
-                            cx.props.num_to_take.set(new_num_to_take);
-                        } else if cx.props.has_more {
-                            // lazily add more messages to conversation, then render
-                            ch.send(MessagesCommand::FetchMore {
-                                conv_id: cx.props.active_chat_id,
-                                new_len: new_num_to_take,
-                                current_len: cx.props.num_messages_in_conversation,
-                            })
-                        }
+        rsx!(ContextMenu {
+            key: "{context_key}",
+            id: context_key,
+            on_mouseenter: move |_| {
+                if should_fetch_more {
+                    let new_num_to_take = cx
+                        .props
+                        .num_to_take
+                        .get()
+                        .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
+                    // lazily render
+                    if new_num_to_take < cx.props.num_messages_in_conversation {
+                        cx.props.num_to_take.set(new_num_to_take);
+                    } else if cx.props.has_more {
+                        // lazily add more messages to conversation, then render
+                        ch.send(MessagesCommand::FetchMore {
+                            conv_id: cx.props.active_chat_id,
+                            new_len: new_num_to_take,
+                            current_len: cx.props.num_messages_in_conversation,
+                        })
+                    }
+                }
+            },
+            children: cx.render(rsx!(render_message {
+                message: grouped_message,
+                is_remote: cx.props.is_remote,
+                msg_uuid: _msg_uuid,
+                message_key: _message_key,
+                reacting_to: reacting_to.clone(),
+                edit_msg: edit_msg.clone(),
+            })),
+            items: cx.render(rsx!(
+                ContextItem {
+                    icon: Icon::ArrowLongLeft,
+                    text: get_local_text("messages.reply"),
+                    onpress: move |_| {
+                        state
+                            .write()
+                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
                     }
                 },
-                children: cx.render(rsx!(render_message {
-                    message: grouped_message,
-                    is_remote: cx.props.is_remote,
-                    msg_uuid: _msg_uuid,
-                    message_key: _message_key,
-                    reacting_to: reacting_to.clone(),
-                    edit_msg: edit_msg.clone(),
-                })),
-                items: cx.render(rsx!(
-                    ContextItem {
-                        icon: Icon::ArrowLongLeft,
-                        text: get_local_text("messages.reply"),
-                        onpress: move |_| {
-                            state
-                                .write()
-                                .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::FaceSmile,
-                        text: get_local_text("messages.react"),
-                        onpress: move |_| {
-                            reacting_to.set(Some(_msg_uuid));
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Pencil,
-                        text: get_local_text("messages.edit"),
-                        should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
-                        onpress: move |_| {
-                            edit_msg.set(Some(_msg_uuid));
-                            log::debug!("editing msg {_msg_uuid}");
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Pencil,
-                        text: get_local_text("messages.cancel-edit"),
-                        should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
-                        onpress: move |_| {
-                            edit_msg.set(None);
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Trash,
-                        danger: true,
-                        text: get_local_text("uplink.delete"),
-                        should_render: sender_is_self,
-                        onpress: move |_| {
-                            ch.send(MessagesCommand::DeleteMessage {
-                                conv_id: message.inner.conversation_id(),
-                                msg_id: message.inner.id(),
-                            });
-                        }
-                    },
-                )) // end of context menu items
-            }
-        ) // end context menu
+                ContextItem {
+                    icon: Icon::FaceSmile,
+                    text: get_local_text("messages.react"),
+                    onpress: move |_| {
+                        reacting_to.set(Some(_msg_uuid));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                    onpress: move |_| {
+                        edit_msg.set(Some(_msg_uuid));
+                        log::debug!("editing msg {_msg_uuid}");
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    text: get_local_text("messages.cancel-edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                    onpress: move |_| {
+                        edit_msg.set(None);
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Trash,
+                    danger: true,
+                    text: get_local_text("uplink.delete"),
+                    should_render: sender_is_self,
+                    onpress: move |_| {
+                        ch.send(MessagesCommand::DeleteMessage {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                        });
+                    }
+                },
+            )) // end of context menu items
+        }) // end context menu
     }))) // end outer cx.render
 }
 
@@ -907,7 +905,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let user_did = state.read().did_key();
 
-    // todo: why? 
+    // todo: why?
     #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
@@ -952,8 +950,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         })
         .collect();
 
-        let remote_class = if *is_remote { "" } else { "remote" };
-        let reactions_class = format!("message-reactions-container {remote_class}");
+    let remote_class = if *is_remote { "" } else { "remote" };
+    let reactions_class = format!("message-reactions-container {remote_class}");
 
     cx.render(rsx!(
         (*reacting_to.current() == Some(*msg_uuid)).then(|| {
@@ -1735,7 +1733,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 }
             }
             identity.status_message().and_then(|s|{
-                cx.render(rsx!(            
+                cx.render(rsx!(
                     hr{},
                     div {
                         id: "profile-status",
