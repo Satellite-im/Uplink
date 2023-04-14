@@ -1,8 +1,8 @@
 
 
-use std::{ffi::OsStr, path::PathBuf, rc::Rc};
 
-use dioxus::prelude::{EventHandler, *};
+
+use dioxus::prelude::{*};
 
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
@@ -10,58 +10,37 @@ use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu, IdentityHeader},
-        indicator::{Platform, Status},
-        message::{Message, Order},
-        message_group::{MessageGroup, MessageGroupSkeletal},
-        message_reply::MessageReply,
-        user_image::UserImage,
-        user_image_group::UserImageGroup,
     },
     elements::{
-        button::Button,
         input::Input,
-        tooltip::{ArrowPosition, Tooltip},
-        Appearance,
     },
-    layout::topbar::Topbar,
 };
 
 use common::{
     icons::outline::Shape as Icon,
-    icons::Icon as IconElement,
-    state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::{
-        ui_adapter::{self},
         MultiPassCmd,
     },
 };
 use common::{
-    state::{ui, Action, Chat, Identity, State},
+    state::{Action, Chat, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::{use_eval, use_window, DesktopContext};
-use rfd::FileDialog;
+use dioxus_desktop::{use_eval};
+
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
     logging::tracing::log,
-    multipass::identity::IdentityStatus,
-    raygun::{self, ConversationType, ReactionState},
 };
-use wry::webview::FileDropEvent;
+
 
 use crate::{
-    components::media::player::MediaPlayer,
-    layouts::storage::{
-        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
-        FEEDBACK_TEXT_SCRIPT,
-    },
-    utils::{build_participants, format_timestamp::format_timestamp_timeago},
     UPLINK_ROUTES,
 };
 

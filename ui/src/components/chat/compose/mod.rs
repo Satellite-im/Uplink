@@ -5,12 +5,12 @@ use std::{ffi::OsStr, path::PathBuf, rc::Rc};
 
 use dioxus::prelude::{EventHandler, *};
 
-use dioxus_router::use_router;
-use futures::{channel::oneshot, StreamExt};
+
+use futures::{StreamExt};
 
 use kit::{
     components::{
-        context_menu::{ContextItem, ContextMenu, IdentityHeader},
+        context_menu::{ContextItem, ContextMenu},
         indicator::{Platform, Status},
         message::{Message, Order},
         message_group::{MessageGroup, MessageGroupSkeletal},
@@ -20,7 +20,6 @@ use kit::{
     },
     elements::{
         button::Button,
-        input::Input,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
@@ -33,7 +32,6 @@ use common::{
     state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::{
         ui_adapter::{self},
-        MultiPassCmd,
     },
 };
 use common::{
@@ -49,7 +47,6 @@ use rfd::FileDialog;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
-    crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
     raygun::{self, ConversationType, ReactionState},
@@ -63,7 +60,6 @@ use crate::{
         FEEDBACK_TEXT_SCRIPT,
     },
     utils::{build_participants, format_timestamp::format_timestamp_timeago},
-    UPLINK_ROUTES,
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"
