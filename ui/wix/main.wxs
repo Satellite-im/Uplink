@@ -65,7 +65,7 @@
             <Directory Id="UPLINKROOTDIRECTORY" Name="uplink">
                <Directory Id="Bin" Name="bin" />
                <Directory Id="ProgramMenuFolder" Name="PMenu">
-                  <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink" />
+                     <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink" />
                </Directory>
                <Directory Id="DesktopFolder" Name="Desktop" />
                <Directory Id="ExtraFolder" Name="extra" />
@@ -121,6 +121,7 @@
             </Directory>
             <!-- end of StyleFolder-->
          </Directory>
+          <!-- end of AssetsFolder-->
          <Directory Id="ImagesFolder" Name="images">
             <Directory Id="MascotFolder" Name="mascot">
                <Component Id="cmpBetterWithFriends.webp" Guid="EC75FF96-C19B-41B3-BF57-84D785FCA3DA">
@@ -180,7 +181,7 @@
          <!-- endof ThemesFolder -->
       </DirectoryRef>
       <!-- end of ExtraFolder -->
-      <DirectoryRef Id="ExtensionFolder" />
+      <DirectoryRef Id="ExtensionFolder">
             <Component Id="cmpLibClearAll.dll" Guid="8A156548-9269-4D20-8FC8-213D865E3252">
                <File Id="LibClearAll.dll" Name="libclear_all.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\libclear_all.dll" />
             </Component>
