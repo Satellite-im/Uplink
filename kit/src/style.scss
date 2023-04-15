@@ -119,6 +119,20 @@ html {
   background-color: transparent;
 }
 
+strong {
+  font-weight: bold;
+}
+
+pre {
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+}
+
+pre code {
+  border-radius: none;
+}
+
+
 .fs-10 {
   font-size: 0.1rem;
 }
@@ -333,4 +347,10 @@ p {
 
 .full-width {
   width: 100%;
+}
+
+
+pre[class*="language-"] {
+  overflow: hidden;
+  border-radius: var(--border-radius);
 }

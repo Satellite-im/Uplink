@@ -65,6 +65,11 @@ use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
+
+pub const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
+pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
+pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
+
 mod components;
 mod extension_browser;
 mod layouts;
@@ -191,8 +196,9 @@ fn main() {
                 r#"
     <!doctype html>
     <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     </html>"#
                     .to_string(),
             )
@@ -510,7 +516,9 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {font_style} {open_dyslexic} {font_scale}" },
+            style {
+                "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {font_style} {open_dyslexic} {font_scale}"
+            },
             div {
                 id: "app-wrap",
                 get_titlebar{},
@@ -519,6 +527,9 @@ fn app(cx: Scope) -> Element {
                 get_pre_release_message{},
                 get_router{},
                 get_logger{},
+            },
+            script {
+                "{PRISM_SCRIPT}"
             }
         )
     };

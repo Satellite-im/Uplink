@@ -941,6 +941,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 reactions: message.inner.reactions(),
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
+                parse_markdown: true,
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
@@ -977,6 +978,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     }
                 }
             },
+            script {
+                r#"
+                (() => {{
+                    Prism.highlightAll();
+                }})();
+                "#
+            } // Highlights Pre blocks
         }
     ))
 }
@@ -1657,30 +1665,23 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 identity: identity
             },
             hr{},
-            div {
+            p {
                 id: "profile-name",
-                aria_label: "Context Menu",
-                p {
-                    class: "text",
-                    aria_label: "message-text",
-                    "{cx.props.identity.username()}"
-                }
+                aria_label: "quick-profile-name",
+                "{cx.props.identity.username()}"
             }
             identity.status_message().and_then(|s|{
                 cx.render(rsx!(            
-                    hr{},
                     div {
                         id: "profile-status",
                         aria_label: "Context Menu",
-                        p {
-                            class: "text bold",
-                            aria_label: "message-text",
+                        label {
+                            class: "label",
                             get_local_text("uplink.status")
                         },
-                        hr {},
                         p {
                             class: "text",
-                            aria_label: "message-text",
+                            aria_label: "quick-profile-status-text",
                             s
                         }
                     }
