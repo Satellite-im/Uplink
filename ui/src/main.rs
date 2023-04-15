@@ -54,6 +54,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::utils::auto_updater::{
     get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
+use crate::utils::get_available_themes;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -416,6 +417,20 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
+    // Reload theme from file if present
+    let themes = get_available_themes();
+    let theme = themes.iter().find(|t| {
+        state
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.eq(t))
+            .unwrap_or_default()
+    });
+    if let Some(t) = theme {
+        state.set_theme(Some(t.clone()));
+    }
+
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
@@ -613,14 +628,21 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
@@ -1033,8 +1055,7 @@ fn get_pre_release_message(_cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            },
-            get_update_icon{}
+            }
         },
     ))
 }
@@ -1096,6 +1117,10 @@ fn get_update_icon(cx: Scope) -> Element {
                             download_state.write().destination = Some(dest.clone());
                             download_ch.send(SoftwareDownloadCmd(dest));
                         }
+                    },
+                    IconElement {
+                        icon: common::icons::solid::Shape::ArrowDown,
+                        fill: "green",
                     },
                     "{update_msg}",
                 }
@@ -1215,6 +1240,7 @@ fn get_titlebar(cx: Scope) -> Element {
     cx.render(rsx!(div {
         id: "titlebar",
         onmousedown: move |_| {
+            get_update_icon{},
             desktop.drag();
         },
         controls,

@@ -17,6 +17,14 @@ pub enum Order {
     Last,
 }
 
+#[derive(Eq, PartialEq, Clone)]
+pub struct ReactionAdapter {
+    pub emoji: String,
+    pub alt: String,
+    pub self_reacted: bool,
+    pub reaction_count: usize,
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     // Message ID
@@ -33,10 +41,7 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    // todo: remove unused attribute
-    // todo: does this need to be an option like the rest of 'em?
-    #[allow(unused)]
-    reactions: Vec<warp::raygun::Reaction>,
+    reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     remote: Option<bool>,
@@ -57,16 +62,22 @@ pub struct Props<'a> {
 
     /// If true, the markdown parser will be rendered
     parse_markdown: bool,
+    // called when a reaction is clicked
+    on_click_reaction: EventHandler<'a, String>,
 }
 
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("render Message");
     let text = cx.props.with_text.clone().unwrap_or_default();
-    // todo: render reactions
-
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
+
+    // note: the class "remote" will display the reaction at flex-start, which starts at the bottom left corner of the message.
+    // omitting the class will display the reactions starting from the bottom right corner
+    let remote_class = ""; //if is_remote { "remote" } else { "" };
+    let reactions_class = format!("message-reactions-container {remote_class}");
 
     let has_attachments = cx
         .props
@@ -162,6 +173,28 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             })
 
+        },
+        div {
+            class: "{reactions_class}",
+            cx.props.reactions.iter().map(|reaction| {
+                let reaction_count = reaction.reaction_count;
+                let emoji = &reaction.emoji;
+                let alt = &reaction.alt;
+
+                rsx!(
+                    div {
+                         alt: "{alt}",
+                        class:
+                            format_args!("emoji-reaction {}", if reaction.self_reacted {
+                            "emoji-reaction-self"
+                        } else { "" }),
+                        onclick: move |_| {
+                            cx.props.on_click_reaction.call(emoji.clone());
+                        },
+                        "{emoji} {reaction_count}"
+                    }
+                )
+            })
         }
     ))
 }

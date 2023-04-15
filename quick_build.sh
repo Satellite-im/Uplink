@@ -2,4 +2,4 @@
 
 # for most development, this cuts the rebuild time in half
 
-cargo build --package ui
+cargo build --package uplink

@@ -35,6 +35,21 @@
   }
 }
 
+.message-reactions-container {
+  display: inline-flex;
+  flex-direction: row;
+  color: var(--text-color);
+  justify-content: flex-end;
+
+  &.pointer {
+    cursor: pointer
+  }
+  
+  &.remote {
+    justify-content: flex-start;
+  }
+}
+
 #compose {
   flex: 1;
   min-width: 0;
@@ -110,6 +125,13 @@
     .user-image-wrap {
       align-self: flex-end;
     }
+  }
+
+  .msg-container-end {
+    color: var(--text-color);
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
   }
 
   .message-group {

@@ -1,11 +1,15 @@
+use derive_more::Display;
 use uuid::Uuid;
 use warp::{error::Error, logging::tracing::log, raygun::RayGunEventKind};
 
 use super::{super::conv_stream, conversation_to_chat, ChatAdapter};
 
 #[allow(clippy::large_enum_variant)]
+#[derive(Display)]
 pub enum RayGunEvent {
+    #[display(fmt = "ConversationCreated ")]
     ConversationCreated(ChatAdapter),
+    #[display(fmt = "ConversationDeleted ")]
     ConversationDeleted(Uuid),
 }
 

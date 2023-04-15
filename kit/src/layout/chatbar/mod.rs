@@ -53,21 +53,27 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
     cx.render(rsx! (
         div {
             class: "inline-reply",
+            aria_label: "inline-reply",
             Label {
                 text: cx.props.label.clone(),
             },
             Button {
                 small: true,
+                aria_label: "close-reply".into(),
                 appearance: Appearance::Secondary,
                 icon: icons::outline::Shape::XMark,
                 onpress: move |_| cx.props.onclose.call(()),
             },
             div {
                 class: "content",
+                aria_label: "content",
                 remote.then(|| rsx!(&cx.props.children)),
                 p {
                     class: {
                         format_args!("reply-text message {}", if remote { "remote" } else { "" })
+                    },
+                    aria_label: {
+                        format_args!("reply-text-message{}", if remote { "-remote" } else { "" })
                     },
                     "{cx.props.message}"
                 }
