@@ -540,7 +540,7 @@ fn app(cx: Scope) -> Element {
                 get_router{},
                 get_logger{},
             },
-            script { "{PRISM_SCRIPT" }
+            script { "{PRISM_SCRIPT}" }
         )
     };
 
