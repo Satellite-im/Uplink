@@ -10,7 +10,7 @@
   bottom: calc(var(--height-input) + var(--padding-more));
   display: inline-flex;
   flex-direction: column;
-  padding: var(--gap-less);
+  padding: var(--gap);
 }
 
 #emoji_selector .label {
@@ -19,11 +19,11 @@
 }
 
 #emoji_selector .emojis-container {
-  width: 100%;
+  width: calc(100% - var(--gap));
   display: inline-flex;
   flex-wrap: wrap;
   margin-bottom: var(--gap);
-  gap: var(--gap-less);
+  gap: var(--gap);
   justify-content: space-between;
 }
 

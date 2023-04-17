@@ -177,11 +177,13 @@ body {
 }
 
 .sidebar ::-webkit-scrollbar-thumb,
+#emoji_selector ::-webkit-scrollbar-thumb,
 #debug_logger .body::-webkit-scrollbar-thumb {
     background: var(--secondary-dark) !important;
 }
 
 .sidebar ::-webkit-scrollbar-track,
+#emoji_selector ::-webkit-scrollbar-track,
 #debug_logger .body::-webkit-scrollbar-track  {
     background: var(--background-light) !important;
 }
@@ -526,4 +528,23 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > button, div.code-toolbar >
 .identity-header #banner-image {
     border: none;
     border-radius: var(--border-radius-more) var(--border-radius-more) var(--border-radius-less) var(--border-radius-less);
+}
+
+#emoji_selector { 
+    border-radius: var(--border-radius-more) !important;
+    overflow: hidden;
+    color: var(--text-color-bright) !important;
+}
+
+#emoji_selector label {
+    color: var(--text-color-bright) !important;
+}
+
+#emoji_selector .nav {
+    border-top: none !important;
+}
+
+#emoji_selector .btn-wrap {
+    margin-bottom: 0.5rem !important;
+    margin-top: 0.5rem !important;
 }
