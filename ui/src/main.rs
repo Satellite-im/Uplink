@@ -492,7 +492,6 @@ fn app(cx: Scope) -> Element {
                 get_titlebar{},
                 get_toasts{},
                 get_call_dialog{},
-                Release_Info{},
                 get_router{},
                 get_logger{},
             }
@@ -1198,6 +1197,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
+            cx.render(rsx!(Release_Info{})),
             controls,
 
         },
