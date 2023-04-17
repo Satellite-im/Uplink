@@ -26,6 +26,7 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
+use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
@@ -481,6 +482,20 @@ fn app(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
 
+    let prism_path = if STATIC_ARGS.production_mode {
+        if cfg!(target_os = "windows") {
+            STATIC_ARGS.dot_uplink.join("prism_langs")
+        } else {
+            STATIC_ARGS.extras_path.join("prism_langs")
+        }
+    } else {
+        PathBuf::from("ui/extra/prism_langs")
+    };
+    let prism_autoloader_script = format!(
+        r"Prism.plugins.autoloader.languages_path = '{}';",
+        prism_path.to_string_lossy()
+    );
+
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -540,7 +555,8 @@ fn app(cx: Scope) -> Element {
                 get_router{},
                 get_logger{},
             },
-            script { "{PRISM_SCRIPT}" }
+            script { "{PRISM_SCRIPT}" },
+            script { "{prism_autoloader_script}" },
         )
     };
 
