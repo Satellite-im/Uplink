@@ -227,14 +227,15 @@
          </Feature>
       </Feature>
       <SetProperty Id="ARPINSTALLLOCATION" Value="[UPLINKROOTDIRECTORY]" After="CostFinalize" />
+
       <!--
           Uncomment the following `Icon` and `Property` tags to change the product icon.
 
           The product icon is the graphic that appears in the Add/Remove
           Programs control panel for the application.
         -->
-      <!--<Icon Id='ProductICO' SourceFile='wix\Product.ico'/>-->
-      <!--<Property Id='ARPPRODUCTICON' Value='ProductICO' />-->
+      <Icon Id='ProductICO' SourceFile='$(var.CargoTargetDir)\..\ui\extra\windows\uplink.ico'/>
+      <Property Id='ARPPRODUCTICON' Value='ProductICO' />
       <!--
           Adding a URL to Add/Remove Programs control panel listing for the
           application is a two step process:
@@ -244,7 +245,7 @@
           2. Change the value for `Value` attribute of the following
              `Property` tag to a valid URL.
         -->
-      <!--<Property Id='ARPHELPLINK' Value='ChangeMe'/>-->
+      <Property Id='ARPHELPLINK' Value='https://satellite.im/'/>
       <UI>
          <UIRef Id="WixUI_FeatureTree" />
          <!--
