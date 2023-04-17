@@ -5,3 +5,4 @@ pub mod friends;
 pub mod media;
 pub mod settings;
 pub mod toast;
+pub mod topbar;

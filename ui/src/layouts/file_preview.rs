@@ -8,6 +8,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::tao::event::WindowEvent;
 use warp::constellation::file::File;
 
+use crate::components::topbar::release_info::Release_Info;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
@@ -18,7 +19,7 @@ use kit::STYLE as UIKIT_STYLES;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
-use crate::{get_pre_release_message, utils::WindowDropHandler, APP_STYLE};
+use crate::{utils::WindowDropHandler, APP_STYLE};
 
 const CSS_STYLE: &str = include_str!("./style.scss");
 
@@ -146,7 +147,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                 },
                 controls,
             }
-            get_pre_release_message{},
+            Release_Info{},
             div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {

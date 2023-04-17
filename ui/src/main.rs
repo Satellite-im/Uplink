@@ -47,6 +47,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
+use crate::components::topbar::release_info::Release_Info;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::LoadingLayout;
@@ -491,7 +492,7 @@ fn app(cx: Scope) -> Element {
                 get_titlebar{},
                 get_toasts{},
                 get_call_dialog{},
-                get_pre_release_message{},
+                Release_Info{},
                 get_router{},
                 get_logger{},
             }
@@ -987,28 +988,6 @@ fn app(cx: Scope) -> Element {
     cx.render(main_element)
 }
 
-fn get_pre_release_message(_cx: Scope) -> Element {
-    let pre_release_text = get_local_text("uplink.pre-release");
-    _cx.render(rsx!(
-        div {
-            id: "pre-release",
-            aria_label: "pre-release",
-            IconElement {
-                icon: Icon::Beaker,
-            },
-            p {
-                div {
-                    onclick: move |_| {
-                        let _ = open::that("https://issues.satellite.im");
-                    },
-                    "{pre_release_text}"
-                }
-
-            }
-        },
-    ))
-}
-
 fn get_update_icon(cx: Scope) -> Element {
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
@@ -1219,7 +1198,6 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
-
             controls,
 
         },
