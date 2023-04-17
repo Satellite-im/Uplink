@@ -26,6 +26,8 @@ use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
 #[cfg(target_os = "windows")]
+use std::time::Duration;
+#[cfg(target_os = "windows")]
 use tokio::time::sleep;
 
 use warp::{logging::tracing::log, raygun::ConversationType};
