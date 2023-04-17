@@ -28,6 +28,8 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::use_eval;
 use rfd::FileDialog;
+#[cfg(target_os = "windows")]
+use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
