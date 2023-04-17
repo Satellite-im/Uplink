@@ -55,6 +55,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::utils::auto_updater::{
     get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
+use crate::utils::get_available_themes;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -422,6 +423,20 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         assert!(state.chats().initialized);
     } else {
         state.set_own_identity(identity.clone().into());
+    }
+
+    // Reload theme from file if present
+    let themes = get_available_themes();
+    let theme = themes.iter().find(|t| {
+        state
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.eq(t))
+            .unwrap_or_default()
+    });
+    if let Some(t) = theme {
+        state.set_theme(Some(t.clone()));
     }
 
     // set the window to the normal size.
