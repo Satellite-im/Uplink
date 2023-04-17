@@ -111,45 +111,96 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
+    let add_friends_with_sidebar =  rsx!(div {
+        id: "edit-group-add-friends-button-with_sidebar",
+        key: "edit-group-add-friends-button-with_sidebar",
+        Button {
+            icon: Icon::UserPlus,
+            text: get_local_text("uplink.add"),
+            aria_label: "edit-group-add-friends-button-with_sidebar".into(),
+            appearance: if *edit_group_action.get() == EditGroupAction::Add {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
+            onpress: move |_| {
+                edit_group_action.set(EditGroupAction::Add);
+            }
+        }
+    });
+
+    let add_friends_without_sidebar =  rsx!(div {
+        id: "edit-group-add-friends-button-without-sidebar",
+        width: "38px",
+        key: "edit-group-add-friends-button-without-sidebar",
+        Button {
+            icon: Icon::UserPlus,
+            text: "".into(),
+            aria_label: "edit-group-add-friends-button-without-sidebar".into(),
+            appearance: if *edit_group_action.get() == EditGroupAction::Add {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
+            onpress: move |_| {
+                edit_group_action.set(EditGroupAction::Add);
+            }
+        }
+    });
+
+    let remove_friends_with_sidebar =  rsx!(div {
+        id: "edit-group-remove_friends_with_sidebar",
+        key: "edit-group-remove_friends_with_sidebar",
+        Button {
+            icon: Icon::UserPlus,
+            text: get_local_text("uplink.remove"),
+            aria_label: "edit-group-remove_friends_with_sidebar".into(),
+            appearance: if *edit_group_action.get() == EditGroupAction::Remove {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
+            onpress: move |_| {
+                edit_group_action.set(EditGroupAction::Remove);
+            }
+        }
+    });
+
+    let remove_friends_without_sidebar =  rsx!(div {
+        id: "edit-group-remove-friends-without-sidebar",
+        width: "38px",
+        key: "edit-group-remove-friends-without-sidebar",
+        Button {
+            icon: Icon::UserPlus,
+            text: "".into(),
+            aria_label: "edit-group-remove-friends-without-sidebar".into(),
+            appearance: if *edit_group_action.get() == EditGroupAction::Remove {
+                Appearance::Primary
+            } else {
+                Appearance::Secondary
+            },
+            onpress: move |_| {
+                edit_group_action.set(EditGroupAction::Remove);
+            }
+        }
+    });
+
     cx.render(rsx!(
         div {
             id: "edit-group",
-            aria_label: "Edit Group",
+            aria_label: "edit-group",
             Topbar {
                 with_back_button: false,
                 controls: cx.render(rsx!(
-                    Button {
-                        icon: Icon::UserPlus,
-                        text: if state.read().ui.is_minimal_view() {
-                            "".into()
-                        } else {
-                            "Add".into()
-                        },
-                        aria_label: "add-friends-button".into(),
-                        appearance: if *edit_group_action.get() == EditGroupAction::Add {
-                            Appearance::Primary
-                        } else {
-                            Appearance::Secondary
-                        },
-                        onpress: move |_| {
-                            edit_group_action.set(EditGroupAction::Add);
-                        }
-                    },
-                    Button {
-                        icon: Icon::UserMinus,
-                        appearance: if *edit_group_action.get() == EditGroupAction::Remove {
-                            Appearance::Primary
-                        } else {
-                            Appearance::Secondary
-                        },
-                        text: if state.read().ui.is_minimal_view() {
-                            "".into()
-                        } else {
-                            "Remove".into()
-                        },
-                        aria_label: "remove-friends-button".into(),
-                        onpress: move |_| {
-                            edit_group_action.set(EditGroupAction::Remove);
+                    if state.read().ui.sidebar_hidden {
+                       rsx! {
+                        add_friends_without_sidebar,
+                        remove_friends_without_sidebar,
+                       } 
+                    } else {
+                        rsx! {
+                            add_friends_with_sidebar,
+                            remove_friends_with_sidebar,
                         }
                     },
                 )),
@@ -172,25 +223,44 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 }
             }
-            render_friends {
-                friends: if *edit_group_action.get() == EditGroupAction::Add {_friends_not_in_group} else {_friends_in_group},
-                name_prefix: friend_prefix.clone(),
-                selected_friends: selected_friends.clone()
-            },
-            Button {
-                text: if *edit_group_action.get() == EditGroupAction::Add {"Add".into()} else {"Remove".into()},
-                appearance: Appearance::Primary,
-                onpress: move |e| {
-                    if *edit_group_action.get() == EditGroupAction::Add {
-                        log::info!("add participants button");
-                        ch.send(ChanCmd::AddParticipants);
-                    } 
-                    else {
-                        log::info!("remove participants button");
-                        ch.send(ChanCmd::RemoveParticipants);
-                     }
-                    cx.props.onedit.call(e);
-                }
+            div {
+                key: "render_friends",
+                render_friends {
+                    friends: if *edit_group_action.get() == EditGroupAction::Add {_friends_not_in_group} else {_friends_in_group},
+                    name_prefix: friend_prefix.clone(),
+                    selected_friends: selected_friends.clone()
+                },
+            }            
+            if *edit_group_action.current() == EditGroupAction::Add {
+                rsx!(
+                    div {
+                        key: "add-button",
+                        Button {
+                            text: get_local_text("uplink.add"),
+                            appearance: Appearance::Primary,
+                            onpress: move |e| {
+                                log::info!("add participants button");
+                                ch.send(ChanCmd::AddParticipants);
+                                cx.props.onedit.call(e);
+                            }
+                        }
+                    }
+                )
+            } else {
+                rsx!(
+                    div {
+                        key: "remove-button",
+                        Button {
+                            text: get_local_text("uplink.remove"),
+                            appearance: Appearance::Primary,
+                            onpress: move |e| {
+                                log::info!("remove participants button");
+                                ch.send(ChanCmd::RemoveParticipants);
+                                cx.props.onedit.call(e);
+                            }
+                        }
+                    }
+                )
             }
         }
     ))
