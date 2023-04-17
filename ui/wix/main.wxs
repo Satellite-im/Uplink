@@ -284,6 +284,6 @@
 
           The dialog BMP dimensions are 493 x 312 pixels.
         -->
-      <!--<WixVariable Id='WixUIDialogBmp' Value='wix\Dialog.bmp'/>-->
+      <WixVariable Id='WixUIDialogBmp' Value='$(var.CargoTargetDir)\..\ui\extra\windows\uplink.ico'/>
    </Product>
 </Wix>
