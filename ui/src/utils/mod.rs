@@ -92,7 +92,7 @@ fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
 }
 
 pub fn unzip_prism_langs() {
-    if !STATIC_ARGS.production_mode {
+    if !STATIC_ARGS.production_mode || !cfg!(target_os = "windows") {
         return;
     }
     log::debug!("unzip_prism_langs");
