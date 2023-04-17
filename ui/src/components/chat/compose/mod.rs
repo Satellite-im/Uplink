@@ -292,10 +292,8 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 onpress: move |_| {
                     if edit_group_activated {
                         show_edit_group.set(None);
-                    } else {
-                        if let Some(chat) = active_chat.as_ref() {
-                            show_edit_group.set(Some(chat.id));
-                        }
+                    } else if let Some(chat) = active_chat.as_ref() {
+                        show_edit_group.set(Some(chat.id));
                     }
                 }
             })
