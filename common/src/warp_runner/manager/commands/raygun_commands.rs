@@ -34,7 +34,7 @@ pub enum RayGunCmd {
             Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), warp::error::Error>,
         >,
     },
-    #[display(fmt = "CreateConversation {{ did: {recipient} }} ")]
+    #[display(fmt = "CreateConversation")]
     CreateConversation {
         recipient: DID,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
@@ -61,9 +61,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
-    #[display(
-        fmt = "FetchMessages {{ conv_id: {conv_id}, req_len: {new_len}, current_len: {current_len} }} "
-    )]
+    #[display(fmt = "FetchMessages {{ req_len: {new_len}, current_len: {current_len} }} ")]
     FetchMessages {
         conv_id: Uuid,
         // the total number of messages that should be in the conversation
@@ -72,14 +70,14 @@ pub enum RayGunCmd {
         current_len: usize,
         rsp: oneshot::Sender<Result<Vec<ui_adapter::Message>, warp::error::Error>>,
     },
-    #[display(fmt = "SendMessage {{ conv_id: {conv_id} }} ")]
+    #[display(fmt = "SendMessage")]
     SendMessage {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<PathBuf>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "EditMessage {{ conv_id: {conv_id} }} ")]
+    #[display(fmt = "EditMessage")]
     EditMessage {
         conv_id: Uuid,
         msg_id: Uuid,
@@ -94,13 +92,13 @@ pub enum RayGunCmd {
         file_path_to_download: PathBuf,
         rsp: oneshot::Sender<Result<ConstellationProgressStream, warp::error::Error>>,
     },
-    #[display(fmt = "DeleteMessage {{ conv_id: {conv_id}, msg_id: {msg_id} }} ")]
+    #[display(fmt = "DeleteMessage")]
     DeleteMessage {
         conv_id: Uuid,
         msg_id: Uuid,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "Reply {{ conv_id: {conv_id}, reply_to: {reply_to} }} ")]
+    #[display(fmt = "Reply")]
     Reply {
         conv_id: Uuid,
         reply_to: Uuid,
@@ -109,12 +107,12 @@ pub enum RayGunCmd {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     // removes all direct conversations involving the recipient
-    #[display(fmt = "RemoveDirectConvs {{ recipient: {recipient} }} ")]
+    #[display(fmt = "RemoveDirectConvs")]
     RemoveDirectConvs {
         recipient: DID,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "React {{ conversation_id: {conversation_id} }} ")]
+    #[display(fmt = "React")]
     React {
         conversation_id: Uuid,
         message_id: Uuid,
@@ -122,7 +120,7 @@ pub enum RayGunCmd {
         emoji: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "SendEvent {{ conv_id: {conv_id} }} ")]
+    #[display(fmt = "SendEvent")]
     SendEvent {
         conv_id: Uuid,
         event: raygun::MessageEvent,

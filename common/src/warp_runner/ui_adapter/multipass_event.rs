@@ -1,20 +1,32 @@
+use derive_more::Display;
 use warp::{error::Error, multipass::MultiPassEventKind};
 
 use crate::state::{self};
 
 use super::did_to_identity;
-
+#[derive(Display)]
 pub enum MultiPassEvent {
+    #[display(fmt = "None")]
     None,
+    #[display(fmt = "FriendRequestReceived")]
     FriendRequestReceived(state::Identity),
+    #[display(fmt = "FriendRequestSent")]
     FriendRequestSent(state::Identity),
+    #[display(fmt = "FriendAdded")]
     FriendAdded(state::Identity),
+    #[display(fmt = "FriendRemoved")]
     FriendRemoved(state::Identity),
+    #[display(fmt = "FriendRequestCancelled")]
     FriendRequestCancelled(state::Identity),
+    #[display(fmt = "FriendOnline")]
     FriendOnline(state::Identity),
+    #[display(fmt = "FriendOffline")]
     FriendOffline(state::Identity),
+    #[display(fmt = "Blocked")]
     Blocked(state::Identity),
+    #[display(fmt = "Unblocked")]
     Unblocked(state::Identity),
+    #[display(fmt = "IdentityUpdate")]
     IdentityUpdate(state::Identity),
 }
 
