@@ -2,7 +2,7 @@ mod chatbar;
 mod messages;
 mod quick_profile;
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{path::PathBuf, rc::Rc};
 
 use dioxus::prelude::*;
 
@@ -25,6 +25,8 @@ use common::state::{ui, Action, Chat, Identity, State};
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
+#[cfg(target_os = "windows")]
+use std::time::Duration;
 #[cfg(target_os = "windows")]
 use tokio::time::sleep;
 

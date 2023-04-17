@@ -60,6 +60,8 @@ pub struct Props<'a> {
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
 
+    /// If true, the markdown parser will be rendered
+    parse_markdown: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
 }
@@ -100,6 +102,18 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
+    // if markdown support is enabled, we will create it, otherwise we will just pass text.
+    let formatted_text = if cx.props.parse_markdown {
+        let parser = pulldown_cmark::Parser::new(&text);
+        // Write to a new String buffer.
+        let mut html_output = String::new();
+        pulldown_cmark::html::push_html(&mut html_output, parser);
+        html_output.replace("<p>", "").replace("</p>", "")
+    } else {
+        text
+    };
+    let formatted_text_clone = formatted_text.clone();
+
     cx.render(rsx! (
         div {
             class: {
@@ -124,27 +138,30 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     cx.props.with_content.as_ref(),
                 },
             )),
-            (cx.props.with_text.is_some()).then(||
+            (cx.props.with_text.is_some() && cx.props.editing).then(||
                 rsx! (
                     p {
                         class: "text",
                         aria_label: "message-text",
-                        if cx.props.editing {
-                            rsx! (
-                                EditMsg{
-                                    id: cx.props.id.clone(),
-                                    text: text.clone(),
-                                    on_enter: move |update| {
-                                        cx.props.on_edit.call(update);
-                                    }
+                        rsx! (
+                            EditMsg {
+                                id: cx.props.id.clone(),
+                                text: formatted_text,
+                                on_enter: move |update| {
+                                    cx.props.on_edit.call(update);
                                 }
-                            )
-                        } else {
-                            rsx! ("{text}")
-                        }
+                            }
+                        )
                     }
                 )
             ),
+            (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
+                p {
+                    class: "text",
+                    aria_label: "message-text",
+                    dangerous_inner_html: "{formatted_text_clone}"
+                }
+            ))
             has_attachments.then(|| {
                 rsx!(
                     div {

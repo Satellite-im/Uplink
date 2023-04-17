@@ -2,15 +2,24 @@ use common::{state::State, STATIC_ARGS};
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 
-use crate::UPLINK_ROUTES;
+use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
 
 #[allow(non_snake_case)]
 pub fn LoadingLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_router(cx);
-    if state.read().chats().initialized && state.read().friends().initialized {
+
+    let fut = use_future(cx, (), |_| async move {
+        unzip_prism_langs();
+    });
+
+    if fut.value().is_some()
+        && state.read().chats().initialized
+        && state.read().friends().initialized
+    {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
+
     let img_path = STATIC_ARGS
         .extras_path
         .join("assets")
