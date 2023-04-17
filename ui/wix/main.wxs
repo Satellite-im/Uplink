@@ -275,7 +275,7 @@
 
           The banner BMP dimensions are 493 x 58 pixels.
         -->
-      <WixVariable Id='WixUIBannerBmp' Value='$(var.CargoTargetDir)\..\ui\extra\windows\uplink.ico'/>
+      <!--WixVariable Id='WixUIBannerBmp' Value=''/-->
       <!--
           Uncomment the next `WixVariable` tag to customize the installer's
           Graphical User Interface (GUI) and add a custom image to the first
