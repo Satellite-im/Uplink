@@ -264,7 +264,8 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
             .with_transparent(true)
             .with_fullsize_content_view(true)
             .with_menu(main_menu)
-            .with_titlebar_transparent(true);
+            .with_titlebar_transparent(true)
+            .with_title("")
         // .with_movable_by_window_background(true)
     }
 
@@ -616,11 +617,6 @@ fn app(cx: Scope) -> Element {
                 //    size,
                 //    size.width < 1200
                 //);
-                if desktop.outer_size().width < 575 {
-                    desktop.set_title("");
-                } else {
-                    desktop.set_title("Uplink");
-                }
 
                 match inner.try_borrow_mut() {
                     Ok(state) => {
@@ -1046,8 +1042,7 @@ fn get_update_icon(cx: Scope) -> Element {
                         }
                     },
                     IconElement {
-                        icon: common::icons::solid::Shape::ArrowDown,
-                        fill: "green",
+                        icon: common::icons::solid::Shape::ArrowDownCircle,
                     },
                     "{update_msg}",
                 }
@@ -1055,12 +1050,14 @@ fn get_update_icon(cx: Scope) -> Element {
         )),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
+            class: "topbar-item",
             aria_label: "update-available",
             "{downloading_msg}"
         })),
         DownloadProgress::Finished => {
             cx.render(rsx!(div {
                 id: "update-available",
+                class: "topbar-item",
                 aria_label: "update-available",
                 onclick: move |_| {
                     // be sure to update this before closing the app
@@ -1140,6 +1137,7 @@ fn get_titlebar(cx: Scope) -> Element {
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
+            cx.render(rsx!(Release_Info{})),
             get_update_icon{},
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
@@ -1197,9 +1195,7 @@ fn get_titlebar(cx: Scope) -> Element {
                     }
                 }
             )),
-            cx.render(rsx!(Release_Info{})),
             controls,
-
         },
     ))
 }

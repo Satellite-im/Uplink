@@ -6,9 +6,16 @@ use dioxus::prelude::*;
 #[allow(non_snake_case)]
 pub fn Release_Info(cx: Scope) -> Element {
     let pre_release_text = get_local_text("uplink.pre-release");
+
+    #[cfg(target_os = "macos")]
+    let left_padding = true;
+
     cx.render(rsx!(
         div {
             id: "pre-release",
+            class : {
+                if left_padding == true {"topbar-item mac-spacer"}  else {"topbar-item"}
+            },
             aria_label: "pre-release",
             IconElement {
                 icon: Icon::Beaker,
