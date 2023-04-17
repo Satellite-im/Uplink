@@ -548,3 +548,40 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > button, div.code-toolbar >
     margin-bottom: 0.5rem !important;
     margin-top: 0.5rem !important;
 }
+
+
+.emoji-reaction {
+    background-color: var(--secondary-dark);
+}
+
+.emoji-reaction-self {
+    color: var(--text-color-bright);
+    border: none;
+    background-color: var(--background-dark);
+}
+
+#compose #messages .msg-container-end {
+    color: var(--text-color-dark);
+    font-size: var(--text-size-less);
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    background: var(--primary);
+    border-radius: 2rem;
+    padding: 0.25rem var(--gap);
+    margin: 0.5rem auto;
+    font-size: var(--text-size-less) !important;
+}
+
+#compose #messages .msg-container-end svg {
+    fill: transparent;
+    stroke: var(--text-color-dark);
+}
+
+.indicator-offline {
+    stroke: var(--background-dark);
+}
+
+.indicator-offline .circle {
+    fill: var(--secondary-dark);
+}
