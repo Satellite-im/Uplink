@@ -198,7 +198,12 @@ fn get_assets_dir() -> anyhow::Result<PathBuf> {
 
 pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
     let extensions_path = if cfg!(target_os = "windows") {
-        PathBuf::from(r"C:\uplink\extensions")
+        let exe_path = std::env::current_exe()?;
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("extensions"))
+            .ok_or(anyhow::format_err!("failed to get Windows extensions dir"))?
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/im.satellite/extensions")
     } else if cfg!(target_os = "macos") {

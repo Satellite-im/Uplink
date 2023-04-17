@@ -2,7 +2,7 @@ mod chatbar;
 mod messages;
 mod quick_profile;
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{path::PathBuf, rc::Rc};
 
 use dioxus::prelude::*;
 
