@@ -2,7 +2,7 @@ mod chatbar;
 mod messages;
 mod quick_profile;
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{path::PathBuf, rc::Rc};
 
 use dioxus::prelude::*;
 
@@ -93,7 +93,7 @@ pub fn Compose(cx: Scope) -> Element {
         async move {
             // ondragover function from div does not work on windows
             loop {
-                sleep(Duration::from_millis(100)).await;
+                sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered(_) = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
