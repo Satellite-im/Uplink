@@ -489,7 +489,7 @@ fn app(cx: Scope) -> Element {
             STATIC_ARGS.extras_path.join("prism_langs")
         }
     } else {
-        PathBuf::from("ui/extra/prism_langs")
+        PathBuf::from("ui").join("extra").join("prism_langs")
     };
     let prism_autoloader_script = format!(
         r"Prism.plugins.autoloader.languages_path = '{}';",
