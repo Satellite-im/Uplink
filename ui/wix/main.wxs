@@ -101,25 +101,19 @@
          <Component Id="cmpPrismLangs.zip" Guid="297EC9D9-00EE-4274-A2F1-ADF0A3704673">
             <File Id="PrismLangs.zip" Name="prism_langs.zip" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\wix\prism_langs.zip" />
          </Component>
-         <Directory Id="AssetsFolder" Name="assets">
-            <Directory Id="ImgFolder" Name="img">
-               <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
-                  <File Id="Logo.png" Name="logo.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\logo.png" />
-               </Component>
-               <Component Id="cmpUplinkMuted.png" Guid="C2E18688-AB34-4C1A-B764-B29B5A63EAE9">
-                  <File Id="UplinkMuted.png" Name="uplink_muted.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink_muted.png" />
-               </Component>
-               <Component Id="cmpUplinkMuted.svg" Guid="4C5DF7FE-E3A1-471A-8896-5512AE21E8E7">
-                  <File Id="UplinkMuted.svg" Name="uplink_muted.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink_muted.svg" />
-               </Component>
-               <Component Id="cmpUplink.gif" Guid="0FCF0295-7EC7-4299-A2E0-DF94F1DECBEF">
-                  <File Id="Uplink.gif" Name="uplink.gif" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink.gif" />
-               </Component>
-            </Directory>
-            <!-- end of ImgFolder-->
-         </Directory>
-          <!-- end of AssetsFolder-->
          <Directory Id="ImagesFolder" Name="images">
+            <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
+               <File Id="Logo.png" Name="logo.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\logo.png" />
+            </Component>
+            <Component Id="cmpUplinkMuted.png" Guid="C2E18688-AB34-4C1A-B764-B29B5A63EAE9">
+               <File Id="UplinkMuted.png" Name="uplink_muted.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink_muted.png" />
+            </Component>
+            <Component Id="cmpUplinkMuted.svg" Guid="4C5DF7FE-E3A1-471A-8896-5512AE21E8E7">
+               <File Id="UplinkMuted.svg" Name="uplink_muted.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink_muted.svg" />
+            </Component>
+            <Component Id="cmpUplink.gif" Guid="0FCF0295-7EC7-4299-A2E0-DF94F1DECBEF">
+               <File Id="Uplink.gif" Name="uplink.gif" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink.gif" />
+            </Component>
             <Directory Id="MascotFolder" Name="mascot">
                <Component Id="cmpBetterWithFriends.webp" Guid="EC75FF96-C19B-41B3-BF57-84D785FCA3DA">
                   <File Id="BetterWithFriends.webp" Name="better_with_friends.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\better_with_friends.webp" />
