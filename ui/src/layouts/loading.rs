@@ -1,4 +1,4 @@
-use common::{get_extras_dir, get_images_dir, state::State, STATIC_ARGS};
+use common::{get_images_dir, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
