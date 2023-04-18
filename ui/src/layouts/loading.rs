@@ -1,6 +1,7 @@
 use common::{state::State, STATIC_ARGS};
 use dioxus::prelude::*;
 use dioxus_router::use_router;
+use futures::channel::oneshot;
 
 use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
 
@@ -10,7 +11,12 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     let router = use_router(cx);
 
     let fut = use_future(cx, (), |_| async move {
-        unzip_prism_langs();
+        let (tx, rx) = oneshot::channel::<()>();
+        std::thread::spawn(|| {
+            unzip_prism_langs();
+            let _ = tx.send(());
+        });
+        let _ = rx.await;
     });
 
     if fut.value().is_some()
