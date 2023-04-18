@@ -431,6 +431,12 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     }
 
     let desktop = use_window(cx);
+    if state.configuration.general.enable_overlay {
+        let overlay_test = VirtualDom::new(OverlayDom);
+        let window = desktop.new_window(overlay_test, make_config());
+        state.ui.overlays.push(window);
+    }
+
     let size = desktop.webview.inner_size();
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
