@@ -117,9 +117,18 @@
                </Component>
             </Directory>
             <!-- end of ImgFolder-->
-            <Directory Id="StyleFolder" Name="style">
-               <Component Id="cmpAnimate.min.css" Guid="8626F64F-E9DD-4F94-8A95-2BAC0E072B0B">
-                  <File Id="Animate.min.css" Name="animate.min.css" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\style\animate.min.css" />
+            <Directory Id="ScriptsFolder" Name="scripts">
+               <Component Id="cmpPrism.js" Guid="A71A497A-5A29-467C-B49F-4896F22199D1">
+                  <File Id="Prism.js" Name="prism.js" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\scripts\prism.js" />
+               </Component>
+            </Directory>
+            <!-- end of ScriptsFolder-->
+            <Directory Id="StylesFolder" Name="styles">
+               <Component Id="cmpPrismOneDark.css" Guid="8626F64F-E9DD-4F94-8A95-2BAC0E072B0B">
+                  <File Id="PrismOneDark.css" Name="prism-one-dark.css" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\styles\prism-one-dark.css" />
+               </Component>
+               <Component Id="cmpPrism.css" Guid="8C978460-0CE8-4CCF-BD97-BF2BEFC96DD5">
+                  <File Id="Prism.css" Name="prism.css" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\styles\prism.css" />
                </Component>
             </Directory>
             <!-- end of StyleFolder-->
@@ -207,7 +216,7 @@
          <ComponentRef Id="cmpUplinkMuted.png" />
          <ComponentRef Id="cmpUplinkMuted.svg" />
          <ComponentRef Id="cmpUplink.gif" />
-         <ComponentRef Id="cmpAnimate.min.css" />
+         
          <ComponentRef Id="cmpBetterWithFriends.webp" />
          <ComponentRef Id="cmpError.webp" />
          <ComponentRef Id="cmpHappyIdle.webp" />
