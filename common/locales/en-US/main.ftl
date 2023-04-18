@@ -255,5 +255,6 @@ quickprofile = Quick Profile
     .call = Call
     .friend-remove = Remove Friend
     .block = Block User
+    .unblock = Unblock User
     .chat-placeholder = Message
     .self-edit = Edit Profile
