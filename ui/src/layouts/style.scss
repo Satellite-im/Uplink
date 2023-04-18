@@ -113,11 +113,9 @@
 
   .files-list {
     display: flex;
-    flex-direction: row;
     flex-wrap: wrap;
     width: 100%;
-    padding: var(--files-grid-gap);
-    gap: var(--files-grid-gap);
+    gap: var(--gap);
   }
 
   .files-info {
