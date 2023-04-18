@@ -1178,64 +1178,66 @@ fn get_titlebar(cx: Scope) -> Element {
             cx.render(rsx!(span {
                 class: "inline-controls",
                 get_update_icon{},
+                // Only display this if developer mode is enabled.
+                (config.developer.developer_mode).then(|| rsx!(
+                    span {
+                        Button {
+                            aria_label: "device-phone-mobile-button".into(),
+                            icon: Icon::DevicePhoneMobile,
+                            appearance: Appearance::Transparent,
+                            onpress: move |_| {
+                                desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
+                                let meta = state.read().ui.metadata.clone();
+                                state.write().mutate(Action::SetMeta(WindowMeta {
+                                    minimal_view: true,
+                                    ..meta
+                                }));
+                                state.write().mutate(Action::SidebarHidden(true));
+                                state.write().mock_own_platform(Platform::Mobile);
+                            }
+                        },
+                        Button {
+                            aria_label: "device-tablet-button".into(),
+                            icon: Icon::DeviceTablet,
+                            appearance: Appearance::Transparent,
+                            onpress: move |_| {
+                                desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
+                                let meta = state.read().ui.metadata.clone();
+                                state.write().mutate(Action::SetMeta(WindowMeta {
+                                    minimal_view: false,
+                                    ..meta
+                                }));
+                                state.write().mutate(Action::SidebarHidden(false));
+                                state.write().mock_own_platform(Platform::Web);
+                            }
+                        },
+                        Button {
+                            aria_label: "computer-desktop-button".into(),
+                            icon: Icon::ComputerDesktop,
+                            appearance: Appearance::Transparent,
+                            onpress: move |_| {
+                                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                                let meta = state.read().ui.metadata.clone();
+                                state.write().mutate(Action::SetMeta(WindowMeta {
+                                    minimal_view: false,
+                                    ..meta
+                                }));
+                                state.write().mutate(Action::SidebarHidden(false));
+                                state.write().mock_own_platform(Platform::Desktop);
+                            }
+                        },
+                        Button {
+                            aria_label: "command-line-button".into(),
+                            icon: Icon::CommandLine,
+                            appearance: Appearance::Transparent,
+                            onpress: |_| {
+                                desktop.devtool();
+                            }
+                        }
+                    },
+                )),
                 controls
             })),
-            // Only display this if developer mode is enabled.
-            (config.developer.developer_mode).then(|| rsx!(
-                Button {
-                    aria_label: "device-phone-mobile-button".into(),
-                    icon: Icon::DevicePhoneMobile,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: true,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(true));
-                        state.write().mock_own_platform(Platform::Mobile);
-                    }
-                },
-                Button {
-                    aria_label: "device-tablet-button".into(),
-                    icon: Icon::DeviceTablet,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Web);
-                    }
-                },
-                Button {
-                    aria_label: "computer-desktop-button".into(),
-                    icon: Icon::ComputerDesktop,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Desktop);
-                    }
-                },
-                Button {
-                    aria_label: "command-line-button".into(),
-                    icon: Icon::CommandLine,
-                    appearance: Appearance::Transparent,
-                    onpress: |_| {
-                        desktop.devtool();
-                    }
-                }
-            )),
         },
     ))
 }
