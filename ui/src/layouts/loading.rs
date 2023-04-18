@@ -31,7 +31,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     });
 
     if fut.value().is_some()
-        && desktop_resized.is_some()
+        && desktop_resized.value().is_some()
         && state.read().chats().initialized
         && state.read().friends().initialized
     {
