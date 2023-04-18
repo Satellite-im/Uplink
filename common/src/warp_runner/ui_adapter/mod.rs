@@ -53,12 +53,10 @@ pub async fn convert_raygun_message(
 
     Message {
         inner: msg.clone(),
-        in_reply_to: reply.and_then(|msg: raygun::Message| {
-            Some((
+        in_reply_to: reply.map(|msg: raygun::Message| (
                 msg.value().first().cloned().unwrap_or_default(),
                 msg.attachments(),
-            ))
-        }),
+            )),
         key: Uuid::new_v4().to_string(),
     }
 }
