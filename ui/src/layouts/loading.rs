@@ -1,5 +1,6 @@
 use common::{state::State, STATIC_ARGS};
 use dioxus::prelude::*;
+use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
 use futures::channel::oneshot;
 
@@ -9,6 +10,11 @@ use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
 pub fn LoadingLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_router(cx);
+    let desktop = use_window(cx);
+
+    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
+    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
 
     let fut = use_future(cx, (), |_| async move {
         let (tx, rx) = oneshot::channel::<()>();

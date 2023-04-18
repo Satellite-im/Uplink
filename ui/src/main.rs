@@ -430,13 +430,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
-    // set the window to the normal size.
-    // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
-    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
-    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
-
     let size = desktop.webview.inner_size();
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
