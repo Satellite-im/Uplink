@@ -109,7 +109,7 @@ pub fn unzip_prism_langs() {
     let assets_version = std::fs::read_to_string(&assets_version_file).unwrap_or_default();
     if current_version == assets_version {
         let exe_meta =
-            fs::metadata(exe_path).expect("failed to get metadata for uplink executable");
+            fs::metadata(&exe_path).expect("failed to get metadata for uplink executable");
         let version_meta =
             fs::metadata(&assets_version_file).expect("failed to get metadata for assets version");
         let exe_changed = FileTime::from_last_modification_time(&exe_meta);
@@ -122,14 +122,27 @@ pub fn unzip_prism_langs() {
         }
     }
 
-    let assets_path = STATIC_ARGS.extras_path.join("prism_langs.zip");
-    let prism_path = STATIC_ARGS.dot_uplink.join("prism_langs");
+    let prism_src = exe_path
+        .parent()
+        .and_then(|x| x.parent())
+        .map(|x| x.join("extra").join("prism_langs.zip"))
+        .ok_or(anyhow::format_err!("failed to get prism_langs.zip"));
 
-    if let Err(e) = std::fs::remove_dir_all(&prism_path) {
+    let prism_src = match prism_src {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("{e}");
+            return;
+        }
+    };
+
+    let prism_dest = STATIC_ARGS.dot_uplink.join("prism_langs");
+
+    if let Err(e) = std::fs::remove_dir_all(&prism_dest) {
         log::error!("failed to delete old prism_lang directory: {e}");
     }
-    if let Err(e) = unzip_archive(&assets_path, &prism_path) {
-        log::error!("failed to unizp prism_lang archive {assets_path:?}: {e}");
+    if let Err(e) = unzip_archive(&prism_src, &prism_dest) {
+        log::error!("failed to unizp prism_lang archive {prism_src:?}: {e}");
     }
 
     if let Err(e) = std::fs::write(assets_version_file, current_version) {

@@ -177,6 +177,7 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
+// note: Dioxus doesn't like absolute paths in `img` tags on Windows, and the assets_dir is basically all images. so a relative path is used here
 fn get_assets_dir() -> anyhow::Result<PathBuf> {
     let assets_path = if cfg!(target_os = "windows") {
         PathBuf::from(r"..\extra")
