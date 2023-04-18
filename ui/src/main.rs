@@ -430,20 +430,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
-    // Reload theme from file if present
-    let themes = get_available_themes();
-    let theme = themes.iter().find(|t| {
-        state
-            .ui
-            .theme
-            .as_ref()
-            .map(|theme| theme.eq(t))
-            .unwrap_or_default()
-    });
-    if let Some(t) = theme {
-        state.set_theme(Some(t.clone()));
-    }
-
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
@@ -467,21 +453,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
-
-    match get_extensions() {
-        Ok(ext) => {
-            for (name, extension) in ext {
-                state.ui.extensions.insert(name, extension);
-            }
-        }
-        Err(e) => {
-            log::error!("failed to get extensions: {e}");
-        }
-    }
-    log::debug!(
-        "Loaded {} extensions.",
-        state.ui.extensions.values().count()
-    );
 
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
@@ -513,6 +484,7 @@ fn app(cx: Scope) -> Element {
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let state_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
     let mut font_style = String::new();
@@ -856,6 +828,56 @@ fn app(cx: Scope) -> Element {
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
+        }
+    });
+
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![state_init, needs_update];
+        async move {
+            if *state_init.read() {
+                return;
+            }
+
+            let state = match inner.try_borrow_mut() {
+                Ok(state) => state,
+                Err(e) => {
+                    log::error!("{e}");
+                    return;
+                }
+            };
+            // Reload theme from file if present
+            let themes = get_available_themes();
+            let theme = themes.iter().find(|t| {
+                state
+                    .read()
+                    .ui
+                    .theme
+                    .as_ref()
+                    .map(|theme| theme.eq(t))
+                    .unwrap_or_default()
+            });
+            if let Some(t) = theme {
+                state.write().set_theme(Some(t.clone()));
+            }
+
+            match get_extensions() {
+                Ok(ext) => {
+                    for (name, extension) in ext {
+                        state.write().ui.extensions.insert(name, extension);
+                    }
+                }
+                Err(e) => {
+                    log::error!("failed to get extensions: {e}");
+                }
+            }
+            log::debug!(
+                "Loaded {} extensions.",
+                state.write().ui.extensions.values().count()
+            );
+
+            state_init.set(true);
+            needs_update.set(true);
         }
     });
 
