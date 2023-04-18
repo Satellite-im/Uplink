@@ -32,7 +32,7 @@ use std::process::Command;
 use std::time::Instant;
 use uuid::Uuid;
 use warp::multipass;
-use warp::multipass::identity::Platform;
+
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -56,7 +56,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::utils::auto_updater::{
     get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
-use crate::utils::get_available_themes;
+
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
