@@ -14,7 +14,7 @@ use warp::{
     tesseract::Tesseract,
 };
 use warp_fs_ipfs::config::FsIpfsConfig;
-use warp_mp_ipfs::config::MpIpfsConfig;
+use warp_mp_ipfs::config::{MpIpfsConfig, UpdateEvents};
 use warp_rg_ipfs::config::RgIpfsConfig;
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
@@ -48,9 +48,13 @@ type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
 
 #[allow(clippy::large_enum_variant)]
+#[derive(Display)]
 pub enum WarpEvent {
+    #[display(fmt = "RayGunEvent {{ {_0} }} ")]
     RayGun(RayGunEvent),
+    #[display(fmt = "MessageEvent {{ {_0} }} ")]
     Message(ui_adapter::MessageEvent),
+    #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
 }
 
@@ -328,6 +332,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
     config.store_setting.share_platform = true;
+    config.store_setting.update_events = UpdateEvents::Enabled;
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await

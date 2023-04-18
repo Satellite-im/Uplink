@@ -1,4 +1,5 @@
-//#![deny(elided_lifetimes_in_paths)]
+#![windows_subsystem = "windows"]
+// the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
@@ -25,6 +26,7 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
+use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
 use std::{fs, io};
@@ -46,6 +48,7 @@ use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
+use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
@@ -53,6 +56,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::utils::auto_updater::{
     get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
+use crate::utils::get_available_themes;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -74,6 +78,10 @@ mod window_manager;
 
 pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
+pub const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
+pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
+pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
+
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -84,6 +92,7 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
 });
 
 pub struct UplinkRoutes<'a> {
+    pub loading: &'a str,
     pub chat: &'a str,
     pub friends: &'a str,
     pub files: &'a str,
@@ -91,7 +100,8 @@ pub struct UplinkRoutes<'a> {
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
-    chat: "/",
+    loading: "/",
+    chat: "/chat",
     friends: "/friends",
     files: "/files",
     settings: "/settings",
@@ -175,8 +185,6 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
-
-    utils::copy_assets();
 
     let window = get_window_builder(true);
 
@@ -409,6 +417,20 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
+    // Reload theme from file if present
+    let themes = get_available_themes();
+    let theme = themes.iter().find(|t| {
+        state
+            .ui
+            .theme
+            .as_ref()
+            .map(|theme| theme.eq(t))
+            .unwrap_or_default()
+    });
+    if let Some(t) = theme {
+        state.set_theme(Some(t.clone()));
+    }
+
     // set the window to the normal size.
     // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
@@ -460,6 +482,20 @@ fn app(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
 
+    let prism_path = if STATIC_ARGS.production_mode {
+        if cfg!(target_os = "windows") {
+            STATIC_ARGS.dot_uplink.join("prism_langs")
+        } else {
+            STATIC_ARGS.extras_path.join("prism_langs")
+        }
+    } else {
+        PathBuf::from("ui").join("extra").join("prism_langs")
+    };
+    let prism_autoloader_script = format!(
+        r"Prism.plugins.autoloader.languages_path = '{}';",
+        prism_path.to_string_lossy()
+    );
+
     // don't fetch friends and conversations from warp when using mock data
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
@@ -509,7 +545,7 @@ fn app(cx: Scope) -> Element {
             .unwrap_or_default();
 
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {theme} {font_style} {open_dyslexic} {font_scale}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
                 get_titlebar{},
@@ -518,7 +554,9 @@ fn app(cx: Scope) -> Element {
                 get_pre_release_message{},
                 get_router{},
                 get_logger{},
-            }
+            },
+            script { "{PRISM_SCRIPT}" },
+            script { "{prism_autoloader_script}" },
         )
     };
 
@@ -601,14 +639,21 @@ fn app(cx: Scope) -> Element {
                 ..
             } => {
                 //log::trace!("FOCUS CHANGED {:?}", *focused);
-                match inner.try_borrow_mut() {
-                    Ok(state) => {
-                        state.write().ui.metadata.focused = *focused;
-                        //crate::utils::sounds::Play(Sounds::Notification);
-                        //needs_update.set(true);
-                    }
-                    Err(e) => {
-                        log::error!("{e}");
+                if inner.borrow().read().ui.metadata.focused != *focused {
+                    match inner.try_borrow_mut() {
+                        Ok(state) => {
+                            state.write().ui.metadata.focused = *focused;
+
+                            if *focused {
+                                state.write().ui.notifications.clear_badge();
+                                let _ = state.write().save();
+                            }
+                            //crate::utils::sounds::Play(Sounds::Notification);
+                            //needs_update.set(true);
+                        }
+                        Err(e) => {
+                            log::error!("{e}");
+                        }
                     }
                 }
             }
@@ -1021,8 +1066,7 @@ fn get_pre_release_message(_cx: Scope) -> Element {
                     "{pre_release_text}"
                 }
 
-            },
-            get_update_icon{}
+            }
         },
     ))
 }
@@ -1084,6 +1128,10 @@ fn get_update_icon(cx: Scope) -> Element {
                             download_state.write().destination = Some(dest.clone());
                             download_ch.send(SoftwareDownloadCmd(dest));
                         }
+                    },
+                    IconElement {
+                        icon: common::icons::solid::Shape::ArrowDown,
+                        fill: "green",
                     },
                     "{update_msg}",
                 }
@@ -1204,6 +1252,7 @@ fn get_titlebar(cx: Scope) -> Element {
         div {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
+            get_update_icon{},
             // Only display this if developer mode is enabled.
             (config.developer.developer_mode).then(|| rsx!(
                 Button {
@@ -1337,6 +1386,10 @@ fn get_router(cx: Scope) -> Element {
 
     cx.render(rsx!(
         Router {
+            Route {
+                to: UPLINK_ROUTES.loading,
+                LoadingLayout{}
+            },
             Route {
                 to: UPLINK_ROUTES.chat,
                 ChatLayout {

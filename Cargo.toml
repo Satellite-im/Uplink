@@ -24,6 +24,7 @@ codegen-units = 1
 
 [workspace.package]
 version = "0.1.0"
+rust-version = "1.68"
 
 [workspace.dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3" }
@@ -42,10 +43,10 @@ humansize = "2.1.3"
 window-vibrancy = "0.3.2"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "1d2c38dbb870cade93cf05ccdd7f75dfcc948f94" }
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "1d2c38dbb870cade93cf05ccdd7f75dfcc948f94" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "1d2c38dbb870cade93cf05ccdd7f75dfcc948f94" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "1d2c38dbb870cade93cf05ccdd7f75dfcc948f94" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "fbea3abda0ae1dd1dcf8f18fd8efdb9f3b446b00" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "fbea3abda0ae1dd1dcf8f18fd8efdb9f3b446b00" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "fbea3abda0ae1dd1dcf8f18fd8efdb9f3b446b00" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "fbea3abda0ae1dd1dcf8f18fd8efdb9f3b446b00" }
 rfd = "0.10.0"
 mime = "0.3.16"
 serde = "1.0"

@@ -1,17 +1,14 @@
-use anyhow::bail;
 use common::{
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
 };
 use filetime::FileTime;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use warp::logging::tracing::log;
+
+use std::{fs, path::Path};
 use titlecase::titlecase;
 
 use walkdir::WalkDir;
-use warp::logging::tracing::log;
 
 use kit::User as UserInfo;
 
@@ -85,35 +82,20 @@ pub fn get_available_fonts() -> Vec<Font> {
     fonts
 }
 
-pub fn get_assets_dir() -> anyhow::Result<PathBuf> {
-    let exe_path = std::env::current_exe()?;
-
-    let assets_path = if cfg!(target_os = "windows") {
-        exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(PathBuf::from)
-            .ok_or(anyhow::format_err!("failed to get windows resources dir"))?
-    } else if cfg!(target_os = "linux") {
-        PathBuf::from("/opt/satellite-im")
-    } else if cfg!(target_os = "macos") {
-        exe_path
-            .parent()
-            .and_then(|x| x.parent())
-            .map(|x| x.join("Resources"))
-            .ok_or(anyhow::format_err!("failed to get Macos resources dir"))?
-    } else {
-        bail!("unknown OS type. failed to copy assets");
-    };
-
-    Ok(assets_path)
+fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
+    let path = Path::new(name.as_ref());
+    let last = path
+        .file_name()
+        .and_then(|p| Path::new(p).file_stem())
+        .unwrap_or_default();
+    last.to_string_lossy().into()
 }
 
-pub fn copy_assets() {
-    log::debug!("copy_assets");
-    if !STATIC_ARGS.production_mode {
+pub fn unzip_prism_langs() {
+    if !STATIC_ARGS.production_mode || !cfg!(target_os = "windows") {
         return;
     }
+    log::debug!("unzip_prism_langs");
     let exe_path = match std::env::current_exe() {
         Ok(p) => p,
         Err(e) => {
@@ -140,19 +122,14 @@ pub fn copy_assets() {
         }
     }
 
-    let assets_path = match get_assets_dir() {
-        Ok(dir) => dir.join("extra.zip"),
-        Err(e) => {
-            log::error!("failed to get assets: {e}");
-            return;
-        }
-    };
+    let assets_path = STATIC_ARGS.extras_path.join("prism_langs.zip");
+    let prism_path = STATIC_ARGS.dot_uplink.join("prism_langs");
 
-    if let Err(e) = std::fs::remove_dir_all(&STATIC_ARGS.extras_path) {
-        log::error!("failed to delete old assets directory: {e}");
+    if let Err(e) = std::fs::remove_dir_all(&prism_path) {
+        log::error!("failed to delete old prism_lang directory: {e}");
     }
-    if let Err(e) = unzip_archive(&assets_path, &STATIC_ARGS.extras_path) {
-        log::error!("failed to unizp assets archive {assets_path:?}: {e}");
+    if let Err(e) = unzip_archive(&assets_path, &prism_path) {
+        log::error!("failed to unizp prism_lang archive {assets_path:?}: {e}");
     }
 
     if let Err(e) = std::fs::write(assets_version_file, current_version) {
@@ -186,15 +163,6 @@ fn unzip_archive(src: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-fn get_pretty_name<S: AsRef<str>>(name: S) -> String {
-    let path = Path::new(name.as_ref());
-    let last = path
-        .file_name()
-        .and_then(|p| Path::new(p).file_stem())
-        .unwrap_or_default();
-    last.to_string_lossy().into()
-}
-
 pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
     // Create a vector of UserInfo objects to store the results
     let mut user_info: Vec<UserInfo> = vec![];
@@ -208,7 +176,7 @@ pub fn build_participants(identities: &Vec<state::Identity>) -> Vec<UserInfo> {
             platform,
             status: identity.identity_status().into(),
             username: identity.username(),
-            photo: identity.graphics().profile_picture(),
+            photo: identity.profile_picture(),
         })
     }
 
@@ -222,7 +190,7 @@ pub fn build_user_from_identity(identity: state::Identity) -> UserInfo {
         platform,
         status: identity.identity_status().into(),
         username: identity.username(),
-        photo: identity.graphics().profile_picture(),
+        photo: identity.profile_picture(),
     }
 }
 

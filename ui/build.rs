@@ -14,6 +14,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     #[cfg(windows)]
     {
+        //https://github.com/rust-lang/rfcs/blob/master/text/1665-windows-subsystem.md
+        println!("cargo:rustc-link-arg=/ENTRY:mainCRTStartup");
         let mut res = winres::WindowsResource::new();
         res.set("ProductName", "uplink");
         res.set("FileDescription", "uplink");
@@ -57,16 +59,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     scss.write_all(&css)?;
     scss.flush()?;
 
-    // zip the 'extra' directory for building an installer
-    let zip_dest = Path::new("wix").join("extra.zip");
+    // zip the 'prism_langs' directory for building an installer
+    let zip_dest = Path::new("wix").join("prism_langs.zip");
     let file = File::create(zip_dest).expect("failed to create zip file");
 
-    let src_dir = String::from("extra");
+    let src_dir = Path::new("extra").join("prism_langs");
     let walkdir = WalkDir::new(&src_dir);
     let it = walkdir.into_iter();
     zip_dir(
         &mut it.filter_map(|e| e.ok()),
-        &src_dir,
+        &src_dir.to_string_lossy(),
         file,
         zip::CompressionMethod::BZIP2,
     )
@@ -74,7 +76,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 // taken from here: https://github.com/zip-rs/zip/blob/master/examples/write_dir.rs
 fn zip_dir<T>(
     it: &mut dyn Iterator<Item = walkdir::DirEntry>,

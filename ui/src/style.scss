@@ -106,9 +106,13 @@ body {
   display: inline-flex;
   gap: var(--gap);
   width: 100%;
-  overflow-x: scroll;
+  overflow-x: auto;
   height: fit-content;
   transition: background var(--animation-time);
+}
+
+.progress {
+  cursor: progress;
 }
 
 /* width */

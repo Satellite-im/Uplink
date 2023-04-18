@@ -2,7 +2,7 @@ use common::icons::outline::Shape;
 use dioxus::prelude::*;
 use warp::logging::tracing::log;
 
-use crate::elements::{button::Button, Appearance};
+use crate::elements::button::Button;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ButtonsFormat {
@@ -44,7 +44,6 @@ where
         aria_label: "slide-selector",
         Button {
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
-            appearance: Appearance::Primary,
             disabled: *index.get() == 0,
             onpress: move |_| {
                 if *index.get() == 0 {
@@ -63,7 +62,6 @@ where
         },
         Button {
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
-            appearance: Appearance::Primary,
             disabled: *index.get() >= (cx.props.values.len() - 1),
             onpress: move |_| {
                 if *index.get() >= (cx.props.values.len() - 1) {

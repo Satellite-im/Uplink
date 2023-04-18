@@ -126,7 +126,7 @@ pub struct Props<'a> {
     id: String,
     #[props(default = false)]
     focus: bool,
-    _loading: Option<bool>,
+    loading: Option<bool>,
     placeholder: String,
     max_length: Option<i32>,
     #[props(default = Size::Normal)]
@@ -301,6 +301,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let valid = use_state(cx, || false);
     let onblur_active = !cx.props.disable_onblur;
 
+    let loading_class = match cx.props.loading.unwrap_or(false) {
+        true => "progress",
+        false => "",
+    };
+
     if let Some(value) = &cx.props.value {
         val.set(value.clone());
     }
@@ -322,7 +327,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let aria_label = get_aria_label(&cx);
     let label = get_label(&cx);
 
-    let disabled = cx.props.disabled.unwrap_or_default();
+    let disabled = cx.props.disabled.unwrap_or_default() || cx.props.loading.unwrap_or(false);
 
     let typ = cx
         .props
@@ -369,10 +374,13 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
+                    class: "{loading_class}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{max_length}",
+                    "type": "{typ}",
+                    placeholder: "{cx.props.placeholder}",
                     onblur: move |_| {
                         if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
@@ -382,8 +390,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         }
                     },
-                    "type": "{typ}",
-                    placeholder: "{cx.props.placeholder}",
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
                         *val.write_silent() = current_val.clone();
@@ -420,7 +426,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                 },
-                (options.with_clear_btn && !val.read().is_empty()).then(move || rsx!(
+                (options.with_clear_btn && !val.read().is_empty() && !disabled).then(move || rsx!(
                     div {
                         class: "clear-btn",
                         onclick: move |_| {
@@ -437,6 +443,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         IconElement {
                             icon: options.clear_btn_icon
                         }
+                    }
+                )),
+                cx.props.loading.unwrap_or(false).then(move || rsx!(
+                    IconElement {
+                        icon: Icon::Loader
                     }
                 )),
             },

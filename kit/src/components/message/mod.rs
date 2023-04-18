@@ -20,6 +20,14 @@ pub enum Order {
     Last,
 }
 
+#[derive(Eq, PartialEq, Clone)]
+pub struct ReactionAdapter {
+    pub emoji: String,
+    pub alt: String,
+    pub self_reacted: bool,
+    pub reaction_count: usize,
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     // Message ID
@@ -36,10 +44,7 @@ pub struct Props<'a> {
     // An optional field that, if set, will be used as the text content of a nested p element with a class of "text".
     with_text: Option<String>,
 
-    // todo: remove unused attribute
-    // todo: does this need to be an option like the rest of 'em?
-    #[allow(unused)]
-    reactions: Vec<warp::raygun::Reaction>,
+    reactions: Vec<ReactionAdapter>,
 
     // An optional field that, if set to true, will add a CSS class of "remote" to the div element.
     remote: Option<bool>,
@@ -57,16 +62,25 @@ pub struct Props<'a> {
 
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
+
+    /// If true, the markdown parser will be rendered
+    parse_markdown: bool,
+    // called when a reaction is clicked
+    on_click_reaction: EventHandler<'a, String>,
 }
 
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    log::trace!("render Message");
     let text = cx.props.with_text.clone().unwrap_or_default();
-    // todo: render reactions
-
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
     let order = cx.props.order.unwrap_or(Order::Last);
+
+    // note: the class "remote" will display the reaction at flex-start, which starts at the bottom left corner of the message.
+    // omitting the class will display the reactions starting from the bottom right corner
+    let remote_class = ""; //if is_remote { "remote" } else { "" };
+    let reactions_class = format!("message-reactions-container {remote_class}");
 
     let has_attachments = cx
         .props
@@ -90,6 +104,18 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             })
         })
     });
+
+    // if markdown support is enabled, we will create it, otherwise we will just pass text.
+    let formatted_text = if cx.props.parse_markdown {
+        let parser = pulldown_cmark::Parser::new(&text);
+        // Write to a new String buffer.
+        let mut html_output = String::new();
+        pulldown_cmark::html::push_html(&mut html_output, parser);
+        html_output.replace("<p>", "").replace("</p>", "")
+    } else {
+        text
+    };
+    let formatted_text_clone = formatted_text.clone();
 
     cx.render(rsx! (
         div {
@@ -115,32 +141,29 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     cx.props.with_content.as_ref(),
                 },
             )),
-            (cx.props.with_text.is_some()).then(||
+            (cx.props.with_text.is_some() && cx.props.editing).then(||
                 rsx! (
                     p {
                         class: "text",
                         aria_label: "message-text",
-                        if cx.props.editing {
-                            rsx! (
-                                EditMsg{
-                                    id: cx.props.id.clone(),
-                                    text: text.clone(),
-                                    on_enter: move |update| {
-                                        cx.props.on_edit.call(update);
-                                    }
+                        rsx! (
+                            EditMsg {
+                                id: cx.props.id.clone(),
+                                text: formatted_text,
+                                on_enter: move |update| {
+                                    cx.props.on_edit.call(update);
                                 }
-                            )
-                        } else {
-                            rsx!(
-                                ChatText {
-                                    text: text,
-                                    remote: is_remote
-                                }
-                            )
-                        }
+                            }
+                        )
                     }
                 )
             ),
+            (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
+                ChatText {
+                    text: formatted_text_clone,
+                    remote: is_remote
+                }
+            ))
             has_attachments.then(|| {
                 rsx!(
                     div {
@@ -152,6 +175,28 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             })
 
+        },
+        div {
+            class: "{reactions_class}",
+            cx.props.reactions.iter().map(|reaction| {
+                let reaction_count = reaction.reaction_count;
+                let emoji = &reaction.emoji;
+                let alt = &reaction.alt;
+
+                rsx!(
+                    div {
+                         alt: "{alt}",
+                        class:
+                            format_args!("emoji-reaction {}", if reaction.self_reacted {
+                            "emoji-reaction-self"
+                        } else { "" }),
+                        onclick: move |_| {
+                            cx.props.on_click_reaction.call(emoji.clone());
+                        },
+                        "{emoji} {reaction_count}"
+                    }
+                )
+            })
         }
     ))
 }

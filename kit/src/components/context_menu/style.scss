@@ -11,10 +11,6 @@
 	gap: var(--gap-less);
 	color: var(--text-color-bright);
 	border: 1px solid var(--secondary);
-	svg {
-		fill: transparent;
-		stroke: var(--text-color-bright);
-	}
 	.context-item {
 		display: flex;
 		border-radius: var(--border-radius-less);
@@ -24,6 +20,10 @@
 		&:hover {
 			background: var(--primary);
 			cursor: pointer;
+		}
+		svg {
+			fill: transparent;
+			stroke: var(--text-color-bright);
 		}
 	}
 	.context-item.danger {
@@ -50,6 +50,42 @@
 	.context-item.danger {
 		svg {
 			stroke: var(--danger-light);
+		}
+	}
+}
+
+.identity-header {
+	display: flex;
+	height: 80px;
+	min-width: 240px;
+	background-size: cover;
+	background-color: var(--secondary);
+	margin: calc(-1*var(--gap-less));
+	padding: 0;
+	#banner-image {
+		display: flex;
+		align-items: flex-end;
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		background-size: cover;
+		background-color: rgba(0,0,0,0);
+		border: 0px solid var(--background);
+	}
+	#profile-image {
+		margin: var(--gap-less);
+		width: var(--height-input);
+		height: var(--height-input);
+		border-radius: 50%;
+		background-size: cover;
+		background-color: var(--secondary);
+		border: 1px solid var(--background);
+		.indicator {
+			position: relative;
+			color: var(--background);
+			top: calc(100% - 1rem);
+			left: calc(100% - 1rem);
 		}
 	}
 }

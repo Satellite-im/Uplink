@@ -52,7 +52,7 @@ pub fn AboutPage(cx: Scope) -> Element {
     let pending_key = format!("btn-pending{}", download_state.read().progress);
 
     let about_button = cx.render(rsx!(match opt {
-        None => {
+        None if stage == DownloadProgress::Idle => {
             rsx!(Button {
                 key: "btn-start",
                 text: get_local_text("uplink.check-for-updates"),
@@ -67,7 +67,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 }
             })
         }
-        Some(_) => match stage {
+        _ => match stage {
             DownloadProgress::Idle => {
                 rsx!(Button {
                     key: "btn-idle",

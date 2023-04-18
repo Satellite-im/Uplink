@@ -27,6 +27,7 @@ pub fn AddFriend(cx: Scope) -> Element {
     let friend_input_valid = use_state(cx, || false);
     let request_sent = use_state(cx, || false);
     let error_toast: &UseState<Option<String>> = use_state(cx, || None);
+    let add_in_progress = use_state(cx, || false);
     // used when copying the user's id to the clipboard
     let my_id: &UseState<Option<String>> = use_state(cx, || None);
     // Set up validation options for the input field
@@ -84,10 +85,11 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Vec<Identity>)>| {
-        to_owned![request_sent, error_toast];
+        to_owned![request_sent, error_toast, add_in_progress, clear_input];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((id, outgoing_requests)) = rx.next().await {
+                //tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::RequestFriend {
                     id,
@@ -95,10 +97,15 @@ pub fn AddFriend(cx: Scope) -> Element {
                     rsp: tx,
                 })) {
                     log::error!("failed to send warp command: {}", e);
+                    add_in_progress.set(false);
+                    // todo: should input be cleared here?
+                    clear_input.set(true);
                     continue;
                 }
 
                 let res = rx.await.expect("failed to get response from warp_runner");
+                add_in_progress.set(false);
+                clear_input.set(true);
                 match res {
                     Ok(_) => {
                         request_sent.set(true);
@@ -173,6 +180,8 @@ pub fn AddFriend(cx: Scope) -> Element {
                         ..Options::default()
                     },
                     disable_onblur: true,
+                    loading: *add_in_progress.current(),
+                    disabled: *add_in_progress.current(),
                     reset: clear_input.clone(),
                     onreturn: move |_| {
                         if !friend_input_valid.get() {
@@ -185,9 +194,9 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
+                            add_in_progress.set(true);
                             ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
                         }
-                        clear_input.set(true);
                     },
                     onchange: |(s, is_valid)| {
                         friend_input.set(s);
@@ -207,9 +216,9 @@ pub fn AddFriend(cx: Scope) -> Element {
                                 state.write().mutate(Action::SendRequest(ident));
                             }
                         } else {
+                            add_in_progress.set(true);
                             ch.send((friend_input.get().to_string(), state.read().outgoing_fr_identities()));
                         }
-                        clear_input.set(true);
                     },
                     aria_label: "Add Someone Button".into()
                 },
