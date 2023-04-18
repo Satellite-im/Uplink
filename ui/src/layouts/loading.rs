@@ -12,9 +12,14 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     let router = use_router(cx);
     let desktop = use_window(cx);
 
-    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
-    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
+    let desktop_resized = use_future(cx, (), |_| {
+        to_owned![desktop];
+        async move {
+            // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
+            desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+            desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
+        }
+    });
 
     let fut = use_future(cx, (), |_| async move {
         let (tx, rx) = oneshot::channel::<()>();
@@ -26,6 +31,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     });
 
     if fut.value().is_some()
+        && desktop_resized.is_some()
         && state.read().chats().initialized
         && state.read().friends().initialized
     {
