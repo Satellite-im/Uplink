@@ -48,6 +48,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .as_ref()
         .map(|v| !v.is_empty())
         .unwrap_or(false);
+
     let attachment_list = cx.props.with_attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
@@ -56,7 +57,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 filename: file.name(),
                 filesize: file.size(),
                 with_download_button: false,
-                remote: false,
+                remote: remote,
                 on_press: move |_| {},
             })
         })
@@ -95,12 +96,9 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         "{text}"
                         has_attachments.then(|| {
                             rsx!(
-                                div {
-                                    class: "attachment-list",
-                                    attachment_list.map(|list| {
-                                        rsx!( list )
-                                    })
-                                }
+                                attachment_list.map(|list| {
+                                    rsx!( list )
+                                })
                             )
                         })
                     }

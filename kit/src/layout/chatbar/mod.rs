@@ -54,12 +54,14 @@ pub struct ReplyProps<'a> {
 #[allow(non_snake_case)]
 pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
     let remote = cx.props.remote.unwrap_or_default();
+
     let has_attachments = cx
         .props
         .attachments
         .as_ref()
         .map(|v| !v.is_empty())
         .unwrap_or(false);
+
     let attachment_list = cx.props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
@@ -68,7 +70,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                 filename: file.name(),
                 filesize: file.size(),
                 with_download_button: false,
-                remote: false,
+                remote: remote,
                 on_press: move |_| {},
             })
         })
@@ -102,12 +104,9 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                     "{cx.props.message}"
                     has_attachments.then(|| {
                         rsx!(
-                            div {
-                                class: "attachment-list",
-                                attachment_list.map(|list| {
-                                    rsx!( list )
-                                })
-                            }
+                            attachment_list.map(|list| {
+                                rsx!( list )
+                            })
                         )
                     })
                 }
