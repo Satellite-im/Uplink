@@ -2,6 +2,7 @@
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
 	min-height: calc(var(--height-input) / 1.25);
+	padding-bottom: 4px;
 	display: inline-flex;
 	align-items: center;
 	width: fit-content;

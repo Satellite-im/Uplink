@@ -1,6 +1,10 @@
 use dioxus::prelude::*;
+use warp::constellation::file::File;
 
-use crate::elements::{button::Button, label::Label, textarea, Appearance};
+use crate::{
+    components::file_embed::FileEmbed,
+    elements::{button::Button, label::Label, textarea, Appearance},
+};
 
 use common::icons;
 
@@ -42,6 +46,7 @@ pub struct ReplyProps<'a> {
     label: String,
     remote: Option<bool>,
     message: String,
+    attachments: Option<Vec<File>>,
     onclose: EventHandler<'a>,
     children: Element<'a>,
 }
@@ -49,6 +54,25 @@ pub struct ReplyProps<'a> {
 #[allow(non_snake_case)]
 pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
     let remote = cx.props.remote.unwrap_or_default();
+    let has_attachments = cx
+        .props
+        .attachments
+        .as_ref()
+        .map(|v| !v.is_empty())
+        .unwrap_or(false);
+    let attachment_list = cx.props.attachments.as_ref().map(|vec| {
+        vec.iter().map(|file| {
+            let key = file.id();
+            rsx!(FileEmbed {
+                key: "{key}",
+                filename: file.name(),
+                filesize: file.size(),
+                with_download_button: false,
+                remote: false,
+                on_press: move |_| {},
+            })
+        })
+    });
 
     cx.render(rsx! (
         div {
@@ -76,9 +100,20 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                         format_args!("reply-text-message{}", if remote { "-remote" } else { "" })
                     },
                     "{cx.props.message}"
+                    has_attachments.then(|| {
+                        rsx!(
+                            div {
+                                class: "attachment-list",
+                                attachment_list.map(|list| {
+                                    rsx!( list )
+                                })
+                            }
+                        )
+                    })
                 }
                 (!remote).then(|| rsx!(&cx.props.children)),
             }
+
         }
     ))
 }
