@@ -2,7 +2,10 @@ mod chatbar;
 mod messages;
 mod quick_profile;
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{path::PathBuf, rc::Rc};
+
+#[cfg(target_os = "windows")]
+use std::{time::Duration};
 
 use dioxus::prelude::*;
 
@@ -29,7 +32,7 @@ use dioxus_desktop::{use_window, DesktopContext};
 use tokio::time::sleep;
 
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::ConversationType};
+use warp::{logging::tracing::log, raygun::ConversationType, crypto::DID};
 use wry::webview::FileDropEvent;
 
 use crate::{
@@ -259,22 +262,28 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
-    let conversation_type = if let Some(chat) = active_chat.as_ref() {
-        chat.conversation_type
+    let favorite = data.as_ref().map(|d: &Rc<ComposeData>| d.is_favorite).unwrap_or_default();
+    let (conversation_type, creator) = if let Some(chat) = active_chat.as_ref() {
+        (chat.conversation_type, chat.creator.clone())
     } else {
-        ConversationType::Direct
+       ( ConversationType::Direct, None)
     };
     let edit_group_activated = show_edit_group
         .get()
         .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
         .unwrap_or(false);
+    let user_did: DID = state.read().did_key();
+    let is_creator = if let Some(creator_did) = creator {
+        creator_did == user_did
+    } else {
+        false
+    };
 
     cx.render(rsx!(
         if conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
-                disabled: data.is_none(),
+                disabled: !is_creator,
                 aria_label: "edit-group".into(),
                 appearance: if edit_group_activated {
                     Appearance::Primary
@@ -283,18 +292,21 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 },
                 tooltip: cx.render(rsx!(Tooltip {
                     arrow_position: ArrowPosition::Top,
-                    text: if favorite {
+                    text: if is_creator {
                         get_local_text("friends.edit-group")
                     } else {
-                        get_local_text("friends.not-admin")
+                        get_local_text("friends.not-creator")
                     }
                 })),
                 onpress: move |_| {
-                    if edit_group_activated {
-                        show_edit_group.set(None);
-                    } else if let Some(chat) = active_chat.as_ref() {
-                        show_edit_group.set(Some(chat.id));
+                    if is_creator {
+                        if edit_group_activated {
+                            show_edit_group.set(None);
+                        } else if let Some(chat) = active_chat.as_ref() {
+                            show_edit_group.set(Some(chat.id));
+                        }
                     }
+                    
                 }
             })
         }
@@ -363,7 +375,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let show_edit_group: &UseState<Option<Uuid>> = cx.props.show_edit_group.as_ref().unwrap();
 
     let data = match data {
         Some(d) => d,
@@ -408,13 +419,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             UserImageGroup {
                 loading: false,
                 participants: build_participants(&data.other_participants),
-                onpress: move |_| {
-                    if show_edit_group.get().is_some() {
-                        show_edit_group.set(None);
-                    } else {
-                        show_edit_group.set(Some(data.active_chat.id));
-                    }
-                },
             }
         )}
         div {
