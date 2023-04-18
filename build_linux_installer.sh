@@ -26,6 +26,7 @@ cp target/release/${PACKAGE_NAME}       ${BUILD_DIR}/opt/im.satellite/${PACKAGE_
 mkdir                                   ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/assets                 ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/images                 ${BUILD_DIR}/opt/im.satellite/extra
+cp -r ./ui/extra/prism_langs            ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/themes                 ${BUILD_DIR}/opt/im.satellite/extra
 cp ./ui/extra/assets/img/logo.png       ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
 

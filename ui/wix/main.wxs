@@ -98,6 +98,9 @@
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ExtraFolder">
+         <Component Id="cmpPrismLangs.zip" Guid="297EC9D9-00EE-4274-A2F1-ADF0A3704673">
+            <File Id="PrismLangs.zip" Name="prism_langs.zip" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\wix\prism_langs.zip" />
+         </Component>
          <Directory Id="AssetsFolder" Name="assets">
             <Directory Id="ImgFolder" Name="img">
                <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
@@ -199,6 +202,7 @@
          <ComponentRef Id="UplinkExecutable" />
          <ComponentRef Id="UplinkShortcut" />
          <ComponentRef Id="DesktopLauncher" />
+         <ComponentRef Id="cmpPrismLangs.zip" />
          <ComponentRef Id="cmpLogo.png" />
          <ComponentRef Id="cmpUplinkMuted.png" />
          <ComponentRef Id="cmpUplinkMuted.svg" />
