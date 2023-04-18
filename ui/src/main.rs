@@ -824,6 +824,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // init extensions
     let inner = state.inner();
     use_future(cx, (), |_| {
         to_owned![state_init, needs_update];
@@ -839,21 +840,8 @@ fn app(cx: Scope) -> Element {
                     return;
                 }
             };
-            // Reload theme from file if present
-            let themes = get_available_themes();
-            let theme = themes.iter().find(|t| {
-                state
-                    .read()
-                    .ui
-                    .theme
-                    .as_ref()
-                    .map(|theme| theme.eq(t))
-                    .unwrap_or_default()
-            });
-            if let Some(t) = theme {
-                state.write().set_theme(Some(t.clone()));
-            }
 
+            // this is technically bad because it blocks the async runtime
             match get_extensions() {
                 Ok(ext) => {
                     for (name, extension) in ext {
@@ -866,7 +854,7 @@ fn app(cx: Scope) -> Element {
             }
             log::debug!(
                 "Loaded {} extensions.",
-                state.write().ui.extensions.values().count()
+                state.read().ui.extensions.values().count()
             );
 
             state_init.set(true);
@@ -1237,8 +1225,6 @@ fn get_toasts(cx: Scope) -> Element {
 #[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
-    let state = use_shared_state::<State>(cx)?;
-    let config = state.read().configuration.clone();
 
     #[allow(unused_mut)]
     let mut controls: Option<VNode> = None;
