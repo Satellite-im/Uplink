@@ -81,6 +81,8 @@
          </Component>
          <Component Id="UplinkExecutable" Guid="b205eb35-b953-4b2b-9823-c0c0531815d7">
             <File Id="uplink.exe" Name="uplink.exe" DiskId="1" Source="$(var.CargoTargetBinDir)\uplink.exe" KeyPath="yes" />
+            <RemoveFile Id="PurgeUplinkExe" Name="*.*" On="uninstall" />
+            <util:RemoveFolderEx Id="PurgeWebview" On="uninstall" Property="[Bin]" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="UplinkProgramsFolder">
