@@ -6,7 +6,10 @@ use common::{
 use filetime::FileTime;
 use warp::logging::tracing::log;
 
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use titlecase::titlecase;
 
 use walkdir::WalkDir;
@@ -22,7 +25,8 @@ pub mod lifecycle;
 pub fn get_available_themes() -> Vec<Theme> {
     let mut themes = vec![];
 
-    let mut add_to_themes = |themes_path| {
+    let mut add_to_themes = |themes_path: &PathBuf| {
+        log::debug!("add_to_themes: {}", themes_path.to_string_lossy());
         for file in WalkDir::new(themes_path)
             .into_iter()
             .filter_map(|file| file.ok())
