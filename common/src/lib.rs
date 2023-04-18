@@ -71,9 +71,6 @@ pub struct StaticArgs {
     /// ~/.uplink/.user
     /// contains the following: warp (folder), state.json, debug.log
     pub uplink_path: PathBuf,
-    /// contains assets bundled with uplink, such as themes, fonts, and images
-    /// these are separate from user-imported fonts and themes
-    pub extras_path: PathBuf,
     /// custom themes for the user
     pub themes_path: PathBuf,
     /// custom fonts for the user
@@ -121,15 +118,9 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
 
     let uplink_path = uplink_container.join(".user");
     let warp_path = uplink_path.join("warp");
-    let extras_path = if cfg!(feature = "production_mode") {
-        get_assets_dir().expect("couldn't get location of executable")
-    } else {
-        Path::new("ui").join("extra")
-    };
     StaticArgs {
         dot_uplink: uplink_container.clone(),
         uplink_path: uplink_path.clone(),
-        extras_path,
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
@@ -177,10 +168,30 @@ pub const IMAGE_EXTENSIONS: &[&str] = &[
 
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
-// note: Dioxus doesn't like absolute paths in `img` tags on Windows, and the assets_dir is basically all images. so a relative path is used here
-fn get_assets_dir() -> anyhow::Result<PathBuf> {
+pub fn get_images_dir() -> anyhow::Result<PathBuf> {
+    if !cfg!(feature = "production_mode") {
+        return Ok(Path::new("ui").join("extra").join("images"));
+    };
+
+    if cfg!(target_os = "windows") {
+        Ok(PathBuf::from(r"..\extra\images"))
+    } else {
+        Ok(get_extras_dir()?.join("images"))
+    }
+}
+
+pub fn get_extras_dir() -> anyhow::Result<PathBuf> {
+    if !cfg!(feature = "production_mode") {
+        return Ok(Path::new("ui").join("extra"));
+    };
+
     let assets_path = if cfg!(target_os = "windows") {
-        PathBuf::from(r"..\extra")
+        let exe_path = std::env::current_exe()?;
+        exe_path
+            .parent()
+            .and_then(|x| x.parent())
+            .map(|x| x.join("extra"))
+            .ok_or(anyhow::format_err!("failed to get Windows extra dir"))?
     } else if cfg!(target_os = "linux") {
         PathBuf::from("/opt/im.satellite/extra")
     } else if cfg!(target_os = "macos") {

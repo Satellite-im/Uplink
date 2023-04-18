@@ -1,4 +1,4 @@
-use common::{state::State, STATIC_ARGS};
+use common::{get_extras_dir, get_images_dir, state::State, STATIC_ARGS};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
@@ -38,11 +38,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
 
-    let img_path = STATIC_ARGS
-        .extras_path
-        .join("assets")
-        .join("img")
-        .join("uplink.gif");
+    let img_path = get_images_dir().unwrap_or_default().join("uplink.gif");
     let img_path = img_path.to_string_lossy().to_string();
     cx.render(rsx!(img {
         style: "width: 100%",

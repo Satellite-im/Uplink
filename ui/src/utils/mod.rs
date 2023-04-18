@@ -1,4 +1,5 @@
 use common::{
+    get_extras_dir,
     state::{self, ui::Font, Theme},
     STATIC_ARGS,
 };
@@ -45,7 +46,9 @@ pub fn get_available_themes() -> Vec<Theme> {
         }
     };
     add_to_themes(&STATIC_ARGS.themes_path);
-    add_to_themes(&STATIC_ARGS.extras_path.join("themes"));
+    if let Ok(p) = get_extras_dir() {
+        add_to_themes(&p.join("themes"));
+    }
 
     themes.sort_by_key(|theme| theme.name.clone());
     themes.dedup();

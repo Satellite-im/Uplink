@@ -28,7 +28,7 @@ cp -r ./ui/extra/assets                 ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/images                 ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/prism_langs            ${BUILD_DIR}/opt/im.satellite/extra
 cp -r ./ui/extra/themes                 ${BUILD_DIR}/opt/im.satellite/extra
-cp ./ui/extra/assets/img/logo.png       ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
+cp ./ui/extra/images/logo.png           ${BUILD_DIR}/usr/share/icons/im.satellite/uplink_logo.png
 
 mkdir                                   ${BUILD_DIR}/opt/im.satellite/extensions
 cp -r target/release/*.so               ${BUILD_DIR}/opt/im.satellite/extensions

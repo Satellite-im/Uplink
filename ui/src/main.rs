@@ -6,7 +6,9 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{
+    get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
+};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -32,7 +34,6 @@ use std::process::Command;
 use std::time::Instant;
 use uuid::Uuid;
 use warp::multipass;
-
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -463,7 +464,7 @@ fn app(cx: Scope) -> Element {
         if cfg!(target_os = "windows") {
             STATIC_ARGS.dot_uplink.join("prism_langs")
         } else {
-            STATIC_ARGS.extras_path.join("prism_langs")
+            get_extras_dir().unwrap_or_default().join("prism_langs")
         }
     } else {
         PathBuf::from("ui").join("extra").join("prism_langs")
