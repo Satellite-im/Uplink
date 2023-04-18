@@ -63,7 +63,7 @@
       <Directory Id="TARGETDIR" Name="SourceDir">
          <Directory Id="LocalApDataFolder">
             <Directory Id="UPLINKROOTDIRECTORY" Name="uplink">
-               <Directory Id="Bin" Name="bin" />
+               <Directory Id="BIN" Name="bin" />
                <Directory Id="ProgramMenuFolder" Name="PMenu">
                      <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink" />
                </Directory>
@@ -75,14 +75,14 @@
          </Directory>
       </Directory>
       <!-- end of TARGETDIR -->
-      <DirectoryRef Id="Bin">
+      <DirectoryRef Id="BIN">
          <Component Id="Path" Guid="76B85F31-00F1-49BE-AC9E-0F2D0DF34C8C" KeyPath="yes">
-            <Environment Id="PATH" Name="PATH" Value="[Bin]" Permanent="no" Part="last" Action="set" System="yes" />
+            <Environment Id="PATH" Name="PATH" Value="[BIN]" Permanent="no" Part="last" Action="set" System="yes" />
          </Component>
          <Component Id="UplinkExecutable" Guid="b205eb35-b953-4b2b-9823-c0c0531815d7">
             <File Id="uplink.exe" Name="uplink.exe" DiskId="1" Source="$(var.CargoTargetBinDir)\uplink.exe" KeyPath="yes" />
             <RemoveFile Id="PurgeUplinkExe" Name="*.*" On="uninstall" />
-            <util:RemoveFolderEx Id="PurgeWebview" On="uninstall" Property="[Bin]" />
+            <util:RemoveFolderEx On="uninstall" Property="[BIN]" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="UplinkProgramsFolder">
