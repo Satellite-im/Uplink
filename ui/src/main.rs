@@ -5,7 +5,7 @@ use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::{change_language, get_local_text};
+use common::language::get_local_text;
 use common::{
     get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
 };
@@ -468,9 +468,6 @@ fn app(cx: Scope) -> Element {
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
         // render the Uplink app
-        let user_lang_saved = state.read().settings.language.clone();
-        change_language(user_lang_saved);
-
         let open_dyslexic = if state.read().configuration.general.dyslexia_support {
             OPEN_DYSLEXIC
         } else {
