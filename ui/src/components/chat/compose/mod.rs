@@ -25,9 +25,6 @@ use common::state::{ui, Action, Chat, Identity, State};
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
-
 use warp::{logging::tracing::log, raygun::ConversationType};
 use wry::webview::FileDropEvent;
 
@@ -93,7 +90,7 @@ pub fn Compose(cx: Scope) -> Element {
         async move {
             // ondragover function from div does not work on windows
             loop {
-                sleep(std::time::Duration::from_millis(100)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered(_) = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
