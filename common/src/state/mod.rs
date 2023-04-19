@@ -21,7 +21,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
-use warp::raygun::ConversationType;
+use warp::raygun::{ConversationType, Reaction};
 
 use crate::STATIC_ARGS;
 
@@ -454,6 +454,20 @@ impl State {
                     }
                 }
             }
+            MessageEvent::RecipientAdded {
+                conversation,
+                identity,
+            } => {
+                self.identities.insert(identity.did_key(), identity);
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
+            MessageEvent::RecipientRemoved { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
         }
     }
 }
@@ -746,7 +760,7 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, message: warp::raygun::Message) {
+    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -759,6 +773,14 @@ impl State {
             if msg.inner.id() != message_id {
                 continue;
             }
+            let mut reactions: Vec<Reaction> = Vec::new();
+            for mut reaction in message.reactions() {
+                let users_not_duplicated: HashSet<DID> =
+                    HashSet::from_iter(reaction.users().iter().cloned());
+                reaction.set_users(users_not_duplicated.into_iter().collect());
+                reactions.insert(0, reaction);
+            }
+            message.set_reactions(reactions);
             msg.inner = message;
             return;
         }
@@ -944,6 +966,9 @@ impl State {
     }
     fn unblock(&mut self, identity: &DID) {
         self.friends.blocked.remove(identity);
+    }
+    pub fn is_blocked(&self, did: &DID) -> bool {
+        self.friends.blocked.contains(did)
     }
 }
 

@@ -342,6 +342,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             onclose: move |_| {
                                 state.write().mutate(Action::CancelReply(active_chat.id))
                             },
+                            attachments: msg.attachments(),
                             message: msg.value().join("\n"),
                             UserImage {
                                 image: profile_picture,

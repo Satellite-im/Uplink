@@ -54,7 +54,7 @@
 <?else?>
 <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
 <?endif?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
    <Product Id="*" Name="uplink" UpgradeCode="6870113D-8E6C-492B-948B-39A6030AD7D6" Manufacturer="Satellite IM" Language="1033" Codepage="1252" Version="$(var.Version)">
       <Package Id="*" Keywords="Installer" Description="P2P Chat Application" Manufacturer="Satellite IM" InstallerVersion="450" Languages="1033" Compressed="yes" InstallScope="perMachine" SummaryCodepage="1252" />
       <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
@@ -63,23 +63,26 @@
       <Directory Id="TARGETDIR" Name="SourceDir">
          <Directory Id="LocalApDataFolder">
             <Directory Id="UPLINKROOTDIRECTORY" Name="uplink">
-               <Directory Id="Bin" Name="bin" />
+               <Directory Id="BIN" Name="bin" />
                <Directory Id="ProgramMenuFolder" Name="PMenu">
-                  <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink" />
+                     <Directory Id="UplinkProgramsFolder" Name="Satellite Im - Uplink" />
                </Directory>
                <Directory Id="DesktopFolder" Name="Desktop" />
                <Directory Id="ExtraFolder" Name="extra" />
+               <Directory Id="ExtensionFolder" Name="extensions" />
             </Directory>
             <!-- end of UPLINKROOTDIRECTORY -->
          </Directory>
       </Directory>
       <!-- end of TARGETDIR -->
-      <DirectoryRef Id="Bin">
+      <DirectoryRef Id="BIN">
          <Component Id="Path" Guid="76B85F31-00F1-49BE-AC9E-0F2D0DF34C8C" KeyPath="yes">
-            <Environment Id="PATH" Name="PATH" Value="[Bin]" Permanent="no" Part="last" Action="set" System="yes" />
+            <Environment Id="PATH" Name="PATH" Value="[BIN]" Permanent="no" Part="last" Action="set" System="yes" />
          </Component>
          <Component Id="UplinkExecutable" Guid="b205eb35-b953-4b2b-9823-c0c0531815d7">
             <File Id="uplink.exe" Name="uplink.exe" DiskId="1" Source="$(var.CargoTargetBinDir)\uplink.exe" KeyPath="yes" />
+            <RemoveFile Id="PurgeUplinkExe" Name="*.*" On="uninstall" />
+            <util:RemoveFolderEx On="uninstall" Property="BIN" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="UplinkProgramsFolder">
@@ -97,30 +100,22 @@
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="ExtraFolder">
-         <Directory Id="AssetsFolder" Name="assets">
-            <Directory Id="ImgFolder" Name="img">
-               <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
-                  <File Id="Logo.png" Name="logo.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\logo.png" />
-               </Component>
-               <Component Id="cmpUplinkMuted.png" Guid="C2E18688-AB34-4C1A-B764-B29B5A63EAE9">
-                  <File Id="UplinkMuted.png" Name="uplink_muted.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink_muted.png" />
-               </Component>
-               <Component Id="cmpUplinkMuted.svg" Guid="4C5DF7FE-E3A1-471A-8896-5512AE21E8E7">
-                  <File Id="UplinkMuted.svg" Name="uplink_muted.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink_muted.svg" />
-               </Component>
-               <Component Id="cmpUplink.gif" Guid="0FCF0295-7EC7-4299-A2E0-DF94F1DECBEF">
-                  <File Id="Uplink.gif" Name="uplink.gif" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\img\uplink.gif" />
-               </Component>
-            </Directory>
-            <!-- end of ImgFolder-->
-            <Directory Id="StyleFolder" Name="style">
-               <Component Id="cmpAnimate.min.css" Guid="8626F64F-E9DD-4F94-8A95-2BAC0E072B0B">
-                  <File Id="Animate.min.css" Name="animate.min.css" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\assets\style\animate.min.css" />
-               </Component>
-            </Directory>
-            <!-- end of StyleFolder-->
-         </Directory>
+         <Component Id="cmpPrismLangs.zip" Guid="297EC9D9-00EE-4274-A2F1-ADF0A3704673">
+            <File Id="PrismLangs.zip" Name="prism_langs.zip" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\wix\prism_langs.zip" />
+         </Component>
          <Directory Id="ImagesFolder" Name="images">
+            <Component Id="cmpLogo.png" Guid="F6816AAA-6600-424E-97B0-292FFF3A6BA1">
+               <File Id="Logo.png" Name="logo.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\logo.png" />
+            </Component>
+            <Component Id="cmpUplinkMuted.png" Guid="C2E18688-AB34-4C1A-B764-B29B5A63EAE9">
+               <File Id="UplinkMuted.png" Name="uplink_muted.png" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink_muted.png" />
+            </Component>
+            <Component Id="cmpUplinkMuted.svg" Guid="4C5DF7FE-E3A1-471A-8896-5512AE21E8E7">
+               <File Id="UplinkMuted.svg" Name="uplink_muted.svg" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink_muted.svg" />
+            </Component>
+            <Component Id="cmpUplink.gif" Guid="0FCF0295-7EC7-4299-A2E0-DF94F1DECBEF">
+               <File Id="Uplink.gif" Name="uplink.gif" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\uplink.gif" />
+            </Component>
             <Directory Id="MascotFolder" Name="mascot">
                <Component Id="cmpBetterWithFriends.webp" Guid="EC75FF96-C19B-41B3-BF57-84D785FCA3DA">
                   <File Id="BetterWithFriends.webp" Name="better_with_friends.webp" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\images\mascot\better_with_friends.webp" />
@@ -179,6 +174,15 @@
          <!-- endof ThemesFolder -->
       </DirectoryRef>
       <!-- end of ExtraFolder -->
+      <DirectoryRef Id="ExtensionFolder">
+            <Component Id="cmpLibClearAll.dll" Guid="8A156548-9269-4D20-8FC8-213D865E3252">
+               <File Id="ClearAll.dll" Name="clear_all.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\clear_all.dll" />
+            </Component>
+            <Component Id="cmpLibEmojiSelector.dll" Guid="8C8B04BE-FAAE-418B-8CD9-5AADF2859C67">
+               <File Id="EmojiSelector.dll" Name="emoji_selector.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\emoji_selector.dll" />
+            </Component>
+       </DirectoryRef>
+      <!-- end of ExtensionFolder -->
       <Feature Id="Binaries" Title="Application" Description="Installs all binaries and the license." Level="1" ConfigurableDirectory="UPLINKROOTDIRECTORY" AllowAdvertise="no" Display="expand" Absent="disallow">
          <!--
               Uncomment the following `ComponentRef` tag to add the license
@@ -188,11 +192,11 @@
          <ComponentRef Id="UplinkExecutable" />
          <ComponentRef Id="UplinkShortcut" />
          <ComponentRef Id="DesktopLauncher" />
+         <ComponentRef Id="cmpPrismLangs.zip" />
          <ComponentRef Id="cmpLogo.png" />
          <ComponentRef Id="cmpUplinkMuted.png" />
          <ComponentRef Id="cmpUplinkMuted.svg" />
          <ComponentRef Id="cmpUplink.gif" />
-         <ComponentRef Id="cmpAnimate.min.css" />
          <ComponentRef Id="cmpBetterWithFriends.webp" />
          <ComponentRef Id="cmpError.webp" />
          <ComponentRef Id="cmpHappyIdle.webp" />
@@ -209,19 +213,22 @@
          <ComponentRef Id="cmpNord.scss" />
          <ComponentRef Id="cmpPink.scss" />
          <ComponentRef Id="cmpPolar.scss" />
+         <ComponentRef Id="cmpLibClearAll.dll" />
+         <ComponentRef Id="cmpLibEmojiSelector.dll" />
          <Feature Id="Environment" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executable to the PATH system environment variable. This allows the [ProductName] executable to be called from any location." Level="1" Absent="allow">
             <ComponentRef Id="Path" />
          </Feature>
       </Feature>
       <SetProperty Id="ARPINSTALLLOCATION" Value="[UPLINKROOTDIRECTORY]" After="CostFinalize" />
+
       <!--
           Uncomment the following `Icon` and `Property` tags to change the product icon.
 
           The product icon is the graphic that appears in the Add/Remove
           Programs control panel for the application.
         -->
-      <!--<Icon Id='ProductICO' SourceFile='wix\Product.ico'/>-->
-      <!--<Property Id='ARPPRODUCTICON' Value='ProductICO' />-->
+      <Icon Id='ProductICO' SourceFile='$(var.CargoTargetDir)\..\ui\extra\windows\uplink.ico'/>
+      <Property Id='ARPPRODUCTICON' Value='ProductICO' />
       <!--
           Adding a URL to Add/Remove Programs control panel listing for the
           application is a two step process:
@@ -231,7 +238,7 @@
           2. Change the value for `Value` attribute of the following
              `Property` tag to a valid URL.
         -->
-      <!--<Property Id='ARPHELPLINK' Value='ChangeMe'/>-->
+      <Property Id='ARPHELPLINK' Value='https://satellite.im/'/>
       <UI>
          <UIRef Id="WixUI_FeatureTree" />
          <!--
@@ -261,7 +268,7 @@
 
           The banner BMP dimensions are 493 x 58 pixels.
         -->
-      <!--<WixVariable Id='WixUIBannerBmp' Value='wix\Banner.bmp'/>-->
+      <WixVariable Id='WixUIBannerBmp' Value='$(var.CargoTargetDir)\..\ui\wix\uplink-banner.png'/>
       <!--
           Uncomment the next `WixVariable` tag to customize the installer's
           Graphical User Interface (GUI) and add a custom image to the first
@@ -270,6 +277,6 @@
 
           The dialog BMP dimensions are 493 x 312 pixels.
         -->
-      <!--<WixVariable Id='WixUIDialogBmp' Value='wix\Dialog.bmp'/>-->
+      <WixVariable Id='WixUIDialogBmp' Value='$(var.CargoTargetDir)\..\ui\wix\uplink-background.png'/>
    </Product>
 </Wix>
