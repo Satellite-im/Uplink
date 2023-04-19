@@ -12,7 +12,6 @@ use crate::components::topbar::release_info::Release_Info;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
-#[cfg(not(target_os = "macos"))]
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::file::get_file_extension;
 use kit::STYLE as UIKIT_STYLES;
@@ -127,14 +126,6 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         }
     });
 
-    #[allow(unused_mut, unused_assignments)]
-    let mut controls: Option<VNode> = None;
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        controls = cx.render(rsx!(Topbar_Controls {}));
-    }
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         style { css_style },
@@ -146,7 +137,7 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                 onmousedown: move |_| { desktop.drag();
                 },
                 Release_Info{},
-                controls,
+                Topbar_Controls {},
             },
 
             div {

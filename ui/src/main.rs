@@ -18,7 +18,6 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
-#[cfg(not(target_os = "macos"))]
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
@@ -326,14 +325,6 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     let desktop = use_window(cx);
     let theme = "";
 
-    #[allow(unused_mut)]
-    let mut controls: Option<VNode> = None;
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        controls = cx.render(rsx!(Topbar_Controls {}));
-    }
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
         div {
@@ -342,7 +333,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
                 class: "titlebar",
                 id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
                 onmousedown: move |_| { desktop.drag(); },
-                controls,
+                Topbar_Controls {},
             },
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
@@ -1162,14 +1153,6 @@ fn get_titlebar(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let config = state.read().configuration.clone();
 
-    #[allow(unused_mut)]
-    let mut controls: Option<VNode> = None;
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        controls = cx.render(rsx!(Topbar_Controls {}));
-    }
-
     cx.render(rsx!(
         div {
             class: "titlebar",
@@ -1236,7 +1219,7 @@ fn get_titlebar(cx: Scope) -> Element {
                         }
                     },
                 )),
-                controls
+                Topbar_Controls {}
             })),
         },
     ))
