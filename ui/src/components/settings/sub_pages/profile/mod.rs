@@ -1,8 +1,8 @@
 use arboard::Clipboard;
+use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
-use common::{get_images_dir};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
