@@ -28,6 +28,7 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::use_eval;
 use rfd::FileDialog;
+
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -382,7 +383,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let last_message = messages.last().unwrap().message;
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let sender_clone = sender.clone();
-    let sender_clone_2 = sender.clone();
     let sender_name = if sender.username().is_empty() {
         get_local_text("messages.you")
     } else {
@@ -409,24 +409,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         })),
         timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
         sender: sender_name.clone(),
-        with_sender: {
-            let sender_clone_3 = sender_clone_2.clone();
-            cx.render(rsx!(
-                div {
-                    onclick: move |e| {
-                        cx.props.on_context_menu_action.call((e, sender_clone_2.to_owned()));
-                    },
-                    oncontextmenu: move |e| {
-                        cx.props.on_context_menu_action.call((e, sender_clone_3.to_owned()));
-                    },
-                    p {
-                        class: "sender pressable has-context-handler",
-                        aria_label: "sender_name",
-                        "{sender_name}",
-                    }
-                }
-            ))
-        },
         remote: group.remote,
         children: cx.render(rsx!(render_messages {
             messages: &group.messages,

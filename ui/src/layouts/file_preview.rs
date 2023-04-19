@@ -1,28 +1,24 @@
 use std::io::Cursor;
 
-#[cfg(not(target_os = "macos"))]
-use common::icons::outline::Shape as Icon;
 use common::{
     language::get_local_text, state::State, DOC_EXTENSIONS, IMAGE_EXTENSIONS, STATIC_ARGS,
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
 use dioxus_desktop::tao::event::WindowEvent;
-#[cfg(not(target_os = "macos"))]
-use kit::elements::button::Button;
-#[cfg(not(target_os = "macos"))]
-use kit::elements::Appearance;
 use warp::constellation::file::File;
 
+use crate::components::topbar::release_info::Release_Info;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
+use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::file::get_file_extension;
 use kit::STYLE as UIKIT_STYLES;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc::channel;
 
-use crate::{get_pre_release_message, utils::WindowDropHandler, APP_STYLE};
+use crate::{utils::WindowDropHandler, APP_STYLE};
 
 const CSS_STYLE: &str = include_str!("./style.scss");
 
@@ -130,42 +126,6 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         }
     });
 
-    #[allow(unused_mut, unused_assignments)]
-    let mut controls: Option<VNode> = None;
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        controls = cx.render(rsx!(
-            div {
-                class: "controls",
-                Button {
-                    aria_label: "minimize-button".into(),
-                    icon: Icon::Minus,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_minimized(true);
-                    }
-                },
-                Button {
-                    aria_label: "square-button".into(),
-                    icon: Icon::Square2Stack,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_maximized(!desktop.is_maximized());
-                    }
-                },
-                Button {
-                    aria_label: "close-button".into(),
-                    icon: Icon::XMark,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.close();
-                    }
-                },
-            }
-        ))
-    }
-
     cx.render(rsx! (
         style { "{UIKIT_STYLES} {APP_STYLE}" },
         style { css_style },
@@ -173,12 +133,13 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
         div {
             id: "app-wrap",
             div {
-                id: "titlebar",
+                class: "titlebar",
                 onmousedown: move |_| { desktop.drag();
                 },
-                controls,
-            }
-            get_pre_release_message{},
+                Release_Info{},
+                Topbar_Controls {},
+            },
+
             div {
                 {
                 if file_format != FileFormat::Other && has_thumbnail {
