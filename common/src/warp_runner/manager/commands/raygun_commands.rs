@@ -44,6 +44,18 @@ pub enum RayGunCmd {
         recipients: Vec<DID>,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
+    #[display(fmt = "AddGroupParticipants")]
+    AddGroupParticipants {
+        conv_id: Uuid,
+        recipients: Vec<DID>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
+    #[display(fmt = "RemoveGroupParticipants")]
+    RemoveGroupParticipants {
+        conv_id: Uuid,
+        recipients: Vec<DID>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
     #[display(fmt = "DeleteConversation")]
     DeleteConversation {
         conv_id: Uuid,
@@ -159,6 +171,22 @@ pub async fn handle_raygun_cmd(
             let r = raygun_create_group_conversation(account, messaging, recipients).await;
             let _ = rsp.send(r);
         }
+        RayGunCmd::AddGroupParticipants {
+            conv_id,
+            recipients,
+            rsp,
+        } => {
+            let r = raygun_add_recipients_to_a_group(conv_id, recipients, messaging).await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::RemoveGroupParticipants {
+            conv_id,
+            recipients,
+            rsp,
+        } => {
+            let r = raygun_remove_recipients_from_a_group(conv_id, recipients, messaging).await;
+            let _ = rsp.send(r);
+        }
         RayGunCmd::FetchMessages {
             conv_id,
             new_len,
@@ -255,6 +283,42 @@ pub async fn handle_raygun_cmd(
             let _ = rsp.send(r);
         }
     }
+}
+
+async fn raygun_add_recipients_to_a_group(
+    conv_id: Uuid,
+    recipients: Vec<DID>,
+    messaging: &mut Messaging,
+) -> Result<Uuid, Error> {
+    for recipient in recipients {
+        if let Err(e) = messaging.add_recipient(conv_id, &recipient).await {
+            log::error!(
+                "failed to add {} to group conv: {}. Error: {}",
+                recipient,
+                conv_id,
+                e
+            );
+        }
+    }
+    Ok(conv_id)
+}
+
+async fn raygun_remove_recipients_from_a_group(
+    conv_id: Uuid,
+    recipients: Vec<DID>,
+    messaging: &mut Messaging,
+) -> Result<Uuid, Error> {
+    for recipient in recipients {
+        if let Err(e) = messaging.remove_recipient(conv_id, &recipient).await {
+            log::error!(
+                "failed to remove {} from group conv: {}. Error: {}",
+                recipient,
+                conv_id,
+                e
+            );
+        }
+    }
+    Ok(conv_id)
 }
 
 async fn raygun_initialize_conversations(
