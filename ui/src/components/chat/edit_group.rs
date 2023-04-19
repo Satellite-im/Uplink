@@ -75,7 +75,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::AddGroupParticipants {
                                 conv_id,
-                                recipients: recipients.clone(),
+                                recipients,
                                 rsp: tx,
                             }))
                         {
@@ -94,7 +94,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::RemoveGroupParticipants {
                                 conv_id,
-                                recipients: recipients.clone(),
+                                recipients,
                                 rsp: tx,
                             }))
                         {
