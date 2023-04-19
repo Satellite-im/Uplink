@@ -945,6 +945,9 @@ impl State {
     fn unblock(&mut self, identity: &DID) {
         self.friends.blocked.remove(identity);
     }
+    pub fn is_blocked(&self, did: &DID) -> bool {
+        self.friends.blocked.contains(did)
+    }
 }
 
 // for storage
