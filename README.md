@@ -74,4 +74,4 @@ And for Windows, I followed the steps on this site here
 
 All contributions are welcome! Please keep in mind we're still a relatively small team, and any work done to ensure contributions don't cause bugs or issues in the application is much appreciated.
 
-Guidelines for contributing are located in the [`contributing_process.md`](https://github.com/Satellite-im/Uplink/blob/dev/docs/contributing_process.md).
+Guidelines for contributing are located in the [`contributing_process.md`](docs/contributing_process.md).
