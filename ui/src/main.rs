@@ -189,31 +189,32 @@ fn main() {
 
     let window = get_window_builder(true);
 
+    let config = Config::new()
+        .with_window(window)
+        .with_custom_index(
+            r#"
+<!doctype html>
+<html>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
+</html>"#
+                .to_string(),
+        )
+        .with_file_drop_handler(|_w, drag_event| {
+            log::info!("Drag Event: {:?}", drag_event);
+            *DRAG_EVENT.write() = drag_event;
+            true
+        });
+
     let config = if cfg!(target_os = "windows") {
-        Config::default().with_data_directory(STATIC_ARGS.dot_uplink.join("tmp"))
+        let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
+        std::fs::create_dir_all(&webview_data_dir).expect("error creating webview data directory");
+        config.with_data_directory(webview_data_dir)
     } else {
-        Config::default()
+        config
     };
 
-    dioxus_desktop::launch_cfg(
-        bootstrap,
-        config
-            .with_window(window)
-            .with_custom_index(
-                r#"
-    <!doctype html>
-    <html>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-    </html>"#
-                    .to_string(),
-            )
-            .with_file_drop_handler(|_w, drag_event| {
-                log::info!("Drag Event: {:?}", drag_event);
-                *DRAG_EVENT.write() = drag_event;
-                true
-            }),
-    )
+    dioxus_desktop::launch_cfg(bootstrap, config)
 }
 
 pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
