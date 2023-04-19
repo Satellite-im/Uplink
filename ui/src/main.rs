@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+#![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use chrono::{Datelike, Local, Timelike};
