@@ -11,7 +11,7 @@
         font-size: var(--text-size-less);
     }
     .body {
-        overflow-y: scroll;
+        overflow-y: auto;
         display: flex;
         flex-direction: column-reverse;
         flex: 1;
@@ -24,7 +24,7 @@
                 color: var(--text-color-muted);
             }
             .muted {
-                color: var(--text-color-dark);
+                color: var(--text-color-muted);
                 white-space: nowrap;
             }   
 

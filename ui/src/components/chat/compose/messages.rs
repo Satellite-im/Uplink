@@ -649,10 +649,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }),
         div {
             class: "msg-wrapper",
-            message.in_reply_to.as_ref().map(|other_msg| rsx!(
+            message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments)| rsx!(
             MessageReply {
                     key: "reply-{message_key}",
                     with_text: other_msg.to_string(),
+                    with_attachments: other_msg_attachments.clone(),
                     remote: cx.props.is_remote,
                     remote_message: cx.props.is_remote,
                 }
@@ -669,6 +670,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
+                parse_markdown: true,
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
@@ -705,6 +707,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     }
                 }
             },
+            script {
+                r#"
+                (() => {{
+                    Prism.highlightAll();
+                }})();
+                "#
+            } // Highlights Pre blocks
         }
     ))
 }
