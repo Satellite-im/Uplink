@@ -479,7 +479,6 @@ fn app(cx: Scope) -> Element {
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let state_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let needs_update = use_state(cx, || false);
 
     let mut font_style = String::new();
     if let Some(font) = state.read().ui.font.clone() {
@@ -549,11 +548,9 @@ fn app(cx: Scope) -> Element {
                 while let Some(percent) = ch.0.recv().await {
                     if percent >= download_state.read().progress + 5_f32 {
                         download_state.write().progress = percent;
-                        needs_update.set(true);
                     }
                 }
                 download_state.write().stage = DownloadProgress::Finished;
-                needs_update.set(true);
             }
         }
     });
@@ -598,12 +595,6 @@ fn app(cx: Scope) -> Element {
     // when mock data is used, friends and conversations are generated randomly,
     //     not loaded from Warp. however, warp_runner continues to operate normally.
     //
-
-    // yes, double render. sry.
-    if *needs_update.get() {
-        needs_update.set(false);
-        state.write();
-    }
 
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
@@ -655,7 +646,6 @@ fn app(cx: Scope) -> Element {
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
                     state.write().ui.metadata = new_metadata;
-                    needs_update.set(true);
                 }
             }
             _ => {}
