@@ -206,7 +206,7 @@ fn main() {
             true
         });
 
-    let config = if cfg!(target_os = "windows") {
+    let config = if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
         let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
         std::fs::create_dir_all(&webview_data_dir).expect("error creating webview data directory");
         config.with_data_directory(webview_data_dir)
