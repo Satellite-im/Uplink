@@ -4,9 +4,6 @@ mod quick_profile;
 
 use std::{path::PathBuf, rc::Rc};
 
-#[cfg(target_os = "windows")]
-use std::time::Duration;
-
 use dioxus::prelude::*;
 
 use kit::{
@@ -27,11 +24,6 @@ use common::state::{ui, Action, Chat, Identity, State};
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
-
-#[cfg(target_os = "windows")]
-use std::time::Duration;
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
 
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
@@ -104,7 +96,7 @@ pub fn Compose(cx: Scope) -> Element {
         async move {
             // ondragover function from div does not work on windows
             loop {
-                sleep(Duration::from_millis(100)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered(_) = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
