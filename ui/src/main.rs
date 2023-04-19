@@ -305,7 +305,6 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
-    use_shared_state_provider(cx, || State::load());
     cx.render(rsx!(match &*page.current() {
         AuthPages::Success(ident) => rsx!(app_bootstrap {
             identity: ident.clone()
@@ -423,8 +422,7 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
 #[inline_props]
 pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
-    let shared_state = use_shared_state::<State>(cx)?;
-    let mut state = shared_state.write_silent();
+    let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
         assert!(state.friends().initialized);
@@ -450,6 +448,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     };
     state.ui.metadata = window_meta;
 
+    use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
 
     cx.render(rsx!(crate::app {}))
