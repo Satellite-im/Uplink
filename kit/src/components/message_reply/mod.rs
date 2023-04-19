@@ -1,5 +1,8 @@
 use derive_more::Display;
 use dioxus::prelude::*;
+use warp::constellation::file::File;
+
+use crate::components::file_embed::FileEmbed;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -22,6 +25,8 @@ pub struct Props<'a> {
     #[props(optional)]
     with_text: Option<String>,
     #[props(optional)]
+    with_attachments: Option<Vec<File>>,
+    #[props(optional)]
     remote: Option<bool>,
     #[props(optional)]
     remote_message: Option<bool>,
@@ -36,6 +41,27 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let remote_message = cx.props.remote_message.unwrap_or_default();
+
+    let has_attachments = cx
+        .props
+        .with_attachments
+        .as_ref()
+        .map(|v| !v.is_empty())
+        .unwrap_or(false);
+
+    let attachment_list = cx.props.with_attachments.as_ref().map(|vec| {
+        vec.iter().map(|file| {
+            let key = file.id();
+            rsx!(FileEmbed {
+                key: "{key}",
+                filename: file.name(),
+                filesize: file.size(),
+                with_download_button: false,
+                remote: remote,
+                on_press: move |_| {},
+            })
+        })
+    });
 
     cx.render(rsx! (
         div {
@@ -54,7 +80,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (cx.props.user_image.is_some() && remote_message).then(|| rsx! (
                 cx.props.user_image.as_ref()
             )),
-            (cx.props.with_text.is_some()).then(|| rsx! (
+            (cx.props.with_text.is_some() || has_attachments).then(|| rsx! (
                 div {
                     class: "content",
                     (!prefix.is_empty()).then(|| rsx!(
@@ -67,8 +93,14 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
-
                         "{text}"
+                        has_attachments.then(|| {
+                            rsx!(
+                                attachment_list.map(|list| {
+                                    rsx!( list )
+                                })
+                            )
+                        })
                     }
                 }
             )),
