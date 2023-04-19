@@ -111,7 +111,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let add_friends_with_sidebar =  rsx!(div {
+    let add_friends_with_sidebar = rsx!(div {
         id: "edit-group-add-friends-button-with_sidebar",
         key: "edit-group-add-friends-button-with_sidebar",
         Button {
@@ -129,7 +129,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let add_friends_without_sidebar =  rsx!(div {
+    let add_friends_without_sidebar = rsx!(div {
         id: "edit-group-add-friends-button-without-sidebar",
         width: "38px",
         key: "edit-group-add-friends-button-without-sidebar",
@@ -148,7 +148,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let remove_friends_with_sidebar =  rsx!(div {
+    let remove_friends_with_sidebar = rsx!(div {
         id: "edit-group-remove_friends_with_sidebar",
         key: "edit-group-remove_friends_with_sidebar",
         Button {
@@ -166,7 +166,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let remove_friends_without_sidebar =  rsx!(div {
+    let remove_friends_without_sidebar = rsx!(div {
         id: "edit-group-remove-friends-without-sidebar",
         width: "38px",
         key: "edit-group-remove-friends-without-sidebar",
@@ -196,7 +196,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                        rsx! {
                         add_friends_without_sidebar,
                         remove_friends_without_sidebar,
-                       } 
+                       }
                     } else {
                         rsx! {
                             add_friends_with_sidebar,
@@ -230,7 +230,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     name_prefix: friend_prefix.clone(),
                     selected_friends: selected_friends.clone()
                 },
-            }            
+            }
             if *edit_group_action.current() == EditGroupAction::Add {
                 rsx!(
                     div {

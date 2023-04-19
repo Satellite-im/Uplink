@@ -25,10 +25,8 @@ use common::state::{ui, Action, Chat, Identity, State};
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
-
 use uuid::Uuid;
-use warp::{logging::tracing::log, raygun::ConversationType, crypto::DID};
-
+use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
 use wry::webview::FileDropEvent;
 
 use crate::{
@@ -151,11 +149,11 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 controls: cx.render(rsx!(get_controls{
-                    data: data2, 
+                    data: data2,
                     show_edit_group: show_edit_group.clone(),
                 })),
                 get_topbar_children {
-                    data: data.clone(), 
+                    data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                 }
             },
@@ -258,11 +256,14 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let favorite = data.as_ref().map(|d: &Rc<ComposeData>| d.is_favorite).unwrap_or_default();
+    let favorite = data
+        .as_ref()
+        .map(|d: &Rc<ComposeData>| d.is_favorite)
+        .unwrap_or_default();
     let (conversation_type, creator) = if let Some(chat) = active_chat.as_ref() {
         (chat.conversation_type, chat.creator.clone())
     } else {
-       ( ConversationType::Direct, None)
+        (ConversationType::Direct, None)
     };
     let edit_group_activated = show_edit_group
         .get()
@@ -302,7 +303,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                             show_edit_group.set(Some(chat.id));
                         }
                     }
-                    
+
                 }
             })
         }
