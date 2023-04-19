@@ -4,9 +4,6 @@ mod quick_profile;
 
 use std::{path::PathBuf, rc::Rc};
 
-#[cfg(target_os = "windows")]
-use std::{time::Duration};
-
 use dioxus::prelude::*;
 
 use kit::{
