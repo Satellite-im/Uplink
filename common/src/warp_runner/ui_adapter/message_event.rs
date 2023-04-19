@@ -7,7 +7,11 @@ use warp::{
 };
 
 use super::Message;
-use crate::warp_runner::ui_adapter::convert_raygun_message;
+use crate::{
+    state,
+    warp_runner::ui_adapter::{convert_raygun_message, did_to_identity},
+};
+
 #[derive(Display)]
 pub enum MessageEvent {
     #[display(fmt = "Received")]
@@ -39,11 +43,18 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         participant: DID,
     },
+    #[display(fmt = "RecipientAdded")]
+    RecipientAdded {
+        conversation: raygun::Conversation,
+        identity: state::Identity,
+    },
+    #[display(fmt = "RecipientRemoved")]
+    RecipientRemoved { conversation: raygun::Conversation },
 }
 
 pub async fn convert_message_event(
     event: warp::raygun::MessageEventKind,
-    _account: &mut super::super::Account,
+    account: &mut super::super::Account,
     messaging: &mut super::super::Messaging,
 ) -> Result<MessageEvent, Error> {
     let evt = match event {
@@ -110,6 +121,18 @@ pub async fn convert_message_event(
                 message: convert_raygun_message(messaging, &message).await,
             }
         }
+        MessageEventKind::RecipientAdded {
+            conversation_id,
+            recipient,
+        } => MessageEvent::RecipientAdded {
+            identity: did_to_identity(&recipient, account).await?,
+            conversation: messaging.get_conversation(conversation_id).await?,
+        },
+        MessageEventKind::RecipientRemoved {
+            conversation_id, ..
+        } => MessageEvent::RecipientRemoved {
+            conversation: messaging.get_conversation(conversation_id).await?,
+        },
         _ => {
             todo!();
         }
