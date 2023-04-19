@@ -670,7 +670,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
-                parse_markdown: false,
+                parse_markdown: true,
                 on_download: move |file_name| {
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
