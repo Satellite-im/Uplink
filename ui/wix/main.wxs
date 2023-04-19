@@ -54,7 +54,7 @@
 <?else?>
 <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
 <?endif?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" >
    <Product Id="*" Name="uplink" UpgradeCode="6870113D-8E6C-492B-948B-39A6030AD7D6" Manufacturer="Satellite IM" Language="1033" Codepage="1252" Version="$(var.Version)">
       <Package Id="*" Keywords="Installer" Description="P2P Chat Application" Manufacturer="Satellite IM" InstallerVersion="450" Languages="1033" Compressed="yes" InstallScope="perMachine" SummaryCodepage="1252" />
       <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
@@ -81,8 +81,6 @@
          </Component>
          <Component Id="UplinkExecutable" Guid="b205eb35-b953-4b2b-9823-c0c0531815d7">
             <File Id="uplink.exe" Name="uplink.exe" DiskId="1" Source="$(var.CargoTargetBinDir)\uplink.exe" KeyPath="yes" />
-            <RemoveFile Id="PurgeUplinkExe" Name="*.*" On="uninstall" />
-            <util:RemoveFolderEx On="uninstall" Property="BIN" />
          </Component>
       </DirectoryRef>
       <DirectoryRef Id="UplinkProgramsFolder">
