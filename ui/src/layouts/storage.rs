@@ -438,7 +438,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 #[cfg(not(target_os = "macos"))]
                 loop {
                     sleep(Duration::from_millis(100)).await;
-                    if let FileDropEvent::Hovered(_) = get_drag_event() {
+                    if let FileDropEvent::Hovered{..} = get_drag_event() {
                         if drag_event.with(|i| i.clone()).is_none() {
                             drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch)
                                 .await;
@@ -811,15 +811,15 @@ async fn drag_and_drop_function(
     loop {
         let file_drop_event = get_drag_event();
         match file_drop_event {
-            FileDropEvent::Hovered(files_local_path) => {
-                if verify_if_there_are_valid_paths(&files_local_path) {
+            FileDropEvent::Hovered{paths, ..} => {
+                if verify_if_there_are_valid_paths(&paths) {
                     let mut script = main_script.replace("$IS_DRAGGING", "true");
-                    if files_local_path.len() > 1 {
+                    if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
                             &format!(
                                 "{} {}!",
-                                files_local_path.len(),
+                                paths.len(),
                                 get_local_text("files.files-to-upload")
                             ),
                         ));
@@ -828,7 +828,7 @@ async fn drag_and_drop_function(
                             "$TEXT",
                             &format!(
                                 "{} {}!",
-                                files_local_path.len(),
+                                paths.len(),
                                 get_local_text("files.one-file-to-upload")
                             ),
                         ));
@@ -836,9 +836,9 @@ async fn drag_and_drop_function(
                     window.eval(&script);
                 }
             }
-            FileDropEvent::Dropped(files_local_path) => {
-                if verify_if_there_are_valid_paths(&files_local_path) {
-                    let new_files_to_upload = decoded_pathbufs(files_local_path);
+            FileDropEvent::Dropped{paths, ..} => {
+                if verify_if_there_are_valid_paths(&paths) {
+                    let new_files_to_upload = decoded_pathbufs(paths);
                     ch.send(ChanCmd::UploadFiles(new_files_to_upload));
                     break;
                 }
