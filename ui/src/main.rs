@@ -6,7 +6,9 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{change_language, get_local_text};
-use common::{state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{
+    get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
+};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -26,13 +28,12 @@ use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
 use std::collections::{HashMap, HashSet};
 
+use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
-use std::{fs, io};
 use uuid::Uuid;
 use warp::multipass;
-use warp::multipass::identity::Platform;
 
 use std::sync::Arc;
 use tao::menu::{MenuBar as Menu, MenuItem};
@@ -56,7 +57,7 @@ use crate::layouts::unlock::UnlockLayout;
 use crate::utils::auto_updater::{
     get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
-use crate::utils::get_available_themes;
+
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -376,31 +377,44 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
     ))
 }
 
-fn get_extensions() -> Result<HashMap<String, UplinkExtension>, io::Error> {
+fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {
     fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
-    let paths = fs::read_dir(&STATIC_ARGS.extensions_path)?;
     let mut extensions = HashMap::new();
 
-    for entry in paths {
-        let path = entry?.path();
-        log::debug!("Found extension: {:?}", path);
+    let mut add_to_extensions = |dir: fs::ReadDir| -> Result<(), Box<dyn std::error::Error>> {
+        for entry in dir {
+            let path = entry?.path();
+            log::debug!("Found extension: {:?}", path);
 
-        match UplinkExtension::new(path.clone()) {
-            Ok(ext) => {
-                if ext.cargo_version() != extensions::CARGO_VERSION
-                    || ext.rustc_version() != extensions::RUSTC_VERSION
-                {
-                    log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
-                    continue;
+            match UplinkExtension::new(path.clone()) {
+                Ok(ext) => {
+                    if ext.cargo_version() != extensions::CARGO_VERSION
+                        || ext.rustc_version() != extensions::RUSTC_VERSION
+                    {
+                        log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
+                        continue;
+                    }
+                    log::debug!("Loaded extension: {:?}", &path);
+                    extensions.insert(ext.details().meta.name.into(), ext);
                 }
-                log::debug!("Loaded extension: {:?}", &path);
-                extensions.insert(ext.details().meta.name.into(), ext);
-            }
-            Err(e) => {
-                log::error!("Error loading extension: {:?}", e);
+                Err(e) => {
+                    log::error!("Error loading extension: {:?}", e);
+                }
             }
         }
+
+        Ok(())
+    };
+
+    let user_extension_dir = fs::read_dir(&STATIC_ARGS.extensions_path)?;
+    add_to_extensions(user_extension_dir)?;
+
+    if STATIC_ARGS.production_mode {
+        let uplink_extenions_path = common::get_extensions_dir()?;
+        let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
+        add_to_extensions(uplink_extensions_dir)?;
     }
+
     Ok(extensions)
 }
 
@@ -417,28 +431,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         state.set_own_identity(identity.clone().into());
     }
 
-    // Reload theme from file if present
-    let themes = get_available_themes();
-    let theme = themes.iter().find(|t| {
-        state
-            .ui
-            .theme
-            .as_ref()
-            .map(|theme| theme.eq(t))
-            .unwrap_or_default()
-    });
-    if let Some(t) = theme {
-        state.set_theme(Some(t.clone()));
-    }
-
-    // set the window to the normal size.
-    // todo: perhaps when the user resizes the window, store that in State, and load that here
     let desktop = use_window(cx);
-    // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
-    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-    desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
-
-    // todo: delete this. it is just an example
     if state.configuration.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
@@ -454,21 +447,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
-
-    match get_extensions() {
-        Ok(ext) => {
-            for (name, extension) in ext {
-                state.ui.extensions.insert(name, extension);
-            }
-        }
-        Err(e) => {
-            log::error!("failed to get extensions: {e}");
-        }
-    }
-    log::debug!(
-        "Loaded {} extensions.",
-        state.ui.extensions.values().count()
-    );
 
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
@@ -486,7 +464,7 @@ fn app(cx: Scope) -> Element {
         if cfg!(target_os = "windows") {
             STATIC_ARGS.dot_uplink.join("prism_langs")
         } else {
-            STATIC_ARGS.extras_path.join("prism_langs")
+            get_extras_dir().unwrap_or_default().join("prism_langs")
         }
     } else {
         PathBuf::from("ui").join("extra").join("prism_langs")
@@ -500,6 +478,7 @@ fn app(cx: Scope) -> Element {
     let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    let state_init = use_ref(cx, || STATIC_ARGS.use_mock);
     let needs_update = use_state(cx, || false);
 
     let mut font_style = String::new();
@@ -843,6 +822,44 @@ fn app(cx: Scope) -> Element {
                 window_manager::handle_cmd(inner.clone(), cmd, desktop.clone()).await;
                 needs_update.set(true);
             }
+        }
+    });
+
+    // init extensions
+    let inner = state.inner();
+    use_future(cx, (), |_| {
+        to_owned![state_init, needs_update];
+        async move {
+            if *state_init.read() {
+                return;
+            }
+
+            let state = match inner.try_borrow_mut() {
+                Ok(state) => state,
+                Err(e) => {
+                    log::error!("{e}");
+                    return;
+                }
+            };
+
+            // this is technically bad because it blocks the async runtime
+            match get_extensions() {
+                Ok(ext) => {
+                    for (name, extension) in ext {
+                        state.write().ui.extensions.insert(name, extension);
+                    }
+                }
+                Err(e) => {
+                    log::error!("failed to get extensions: {e}");
+                }
+            }
+            log::debug!(
+                "Loaded {} extensions.",
+                state.read().ui.extensions.values().count()
+            );
+
+            state_init.set(true);
+            needs_update.set(true);
         }
     });
 
@@ -1209,8 +1226,6 @@ fn get_toasts(cx: Scope) -> Element {
 #[allow(unused_assignments)]
 fn get_titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
-    let state = use_shared_state::<State>(cx)?;
-    let config = state.read().configuration.clone();
 
     #[allow(unused_mut)]
     let mut controls: Option<VNode> = None;
@@ -1253,63 +1268,6 @@ fn get_titlebar(cx: Scope) -> Element {
             id: "titlebar",
             onmousedown: move |_| { desktop.drag(); },
             get_update_icon{},
-            // Only display this if developer mode is enabled.
-            (config.developer.developer_mode).then(|| rsx!(
-                Button {
-                    aria_label: "device-phone-mobile-button".into(),
-                    icon: Icon::DevicePhoneMobile,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(300.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: true,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(true));
-                        state.write().mock_own_platform(Platform::Mobile);
-                    }
-                },
-                Button {
-                    aria_label: "device-tablet-button".into(),
-                    icon: Icon::DeviceTablet,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(600.0, 534.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Web);
-                    }
-                },
-                Button {
-                    aria_label: "computer-desktop-button".into(),
-                    icon: Icon::ComputerDesktop,
-                    appearance: Appearance::Transparent,
-                    onpress: move |_| {
-                        desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
-                        let meta = state.read().ui.metadata.clone();
-                        state.write().mutate(Action::SetMeta(WindowMeta {
-                            minimal_view: false,
-                            ..meta
-                        }));
-                        state.write().mutate(Action::SidebarHidden(false));
-                        state.write().mock_own_platform(Platform::Desktop);
-                    }
-                },
-                Button {
-                    aria_label: "command-line-button".into(),
-                    icon: Icon::CommandLine,
-                    appearance: Appearance::Transparent,
-                    onpress: |_| {
-                        desktop.devtool();
-                    }
-                }
-            )),
-
             controls,
 
         },

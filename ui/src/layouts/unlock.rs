@@ -1,4 +1,5 @@
 use common::{
+    get_images_dir,
     language::{get_local_text, get_local_text_args_builder},
     state::{configuration::Configuration, State},
     warp_runner::TesseractCmd,
@@ -146,9 +147,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
     let loading = account_exists.current().is_none();
 
-    let image_path = STATIC_ARGS
-        .extras_path
-        .join("images")
+    let image_path = get_images_dir()
+        .unwrap_or_default()
         .join("mascot")
         .join("idle_alt.png")
         .to_str()

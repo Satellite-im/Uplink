@@ -12,8 +12,9 @@ use crate::{components::settings::SettingSection, utils::get_available_themes};
 pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
-    let themes = get_available_themes();
-    let fonts = get_available_fonts();
+
+    let themes_fut = use_future(cx, (), |_| async move { get_available_themes() });
+    let font_fut = use_future(cx, (), |_| async move { get_available_fonts() });
 
     log::trace!("General settings page rendered.");
 
@@ -63,9 +64,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     } else {
                         "Default".into()
                     },
-                    options: themes.iter().map(|t| t.name.clone()).collect(),
+                    options: themes_fut.value().cloned().unwrap_or_default().iter().map(|t| t.name.clone()).collect(),
                     onselect: move |value| {
-                        themes.iter().for_each(|t| {
+                        themes_fut.value().cloned().unwrap_or_default().iter().for_each(|t| {
                             if t.name == value {
                                 state.write().mutate(Action::SetTheme(Some(t.clone())));
                             }
@@ -82,9 +83,9 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     } else {
                         "Default".into()
                     },
-                    options: fonts.iter().map(|font| font.name.clone()).collect(),
+                    options: font_fut.value().cloned().unwrap_or_default().iter().map(|font| font.name.clone()).collect(),
                     onselect: move |value| {
-                        fonts.iter().for_each(|font| {
+                        font_fut.value().cloned().unwrap_or_default().iter().for_each(|font| {
                             if font.name.clone() == value {
                                 state.write().mutate(Action::SetFont(Some(font.to_owned())));
                             }

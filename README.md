@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="ui/extra/assets/img/logo.png" width=200 height=200/><br>
+  <img src="ui/extra/images/logo.png" width=200 height=200/><br>
   Uplink
 </h1>
 

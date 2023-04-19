@@ -1,8 +1,8 @@
 use arboard::Clipboard;
+use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
-use common::STATIC_ARGS;
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -156,9 +156,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     did_short.push_str(&state.read().get_own_identity().short_id());
     let show_welcome = &state.read().ui.active_welcome;
 
-    let image_path = STATIC_ARGS
-        .extras_path
-        .join("images")
+    let image_path = get_images_dir()
+        .unwrap_or_default()
         .join("mascot")
         .join("working.webp")
         .to_str()

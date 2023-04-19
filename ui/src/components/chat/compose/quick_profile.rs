@@ -18,8 +18,6 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::use_eval;
 
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 

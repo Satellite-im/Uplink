@@ -10,6 +10,14 @@ use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let version = rustc_version::version().unwrap();
+
+    if cfg!(feature = "production_mode") {
+        // the command: `rustup install 1.68.2` will ensure that the compiler matches
+        if version.major != 1 || version.minor != 68 || version.patch != 2 {
+            panic!("rustc version != 1.68.2");
+        }
+    }
+
     println!("cargo:rustc-env=RUSTC_VERSION={}", version);
 
     #[cfg(windows)]
@@ -73,6 +81,31 @@ fn main() -> Result<(), Box<dyn Error>> {
         zip::CompressionMethod::BZIP2,
     )
     .expect("failed to zip assets");
+
+    if !cfg!(target_os = "windows") {
+        return Ok(());
+    }
+
+    // make things for the wix installer
+    let zip_stuff = |name: &str| {
+        let zip_name = format!("{name}.zip");
+        let error_message = format!("failed to zip {name}");
+        let zip_dest = Path::new("wix").join(zip_name);
+        let file = File::create(zip_dest).expect("failed to create zip file");
+
+        let src_dir = Path::new("extra").join(name);
+        let walkdir = WalkDir::new(&src_dir);
+        let it = walkdir.into_iter();
+        zip_dir(
+            &mut it.filter_map(|e| e.ok()),
+            &src_dir.to_string_lossy(),
+            file,
+            zip::CompressionMethod::BZIP2,
+        )
+        .expect(&error_message);
+    };
+
+    zip_stuff("prism_langs");
 
     Ok(())
 }
