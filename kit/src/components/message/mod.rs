@@ -104,7 +104,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
     let formatted_text = if cx.props.parse_markdown {
-        let result = text.replace("\n", "@jump_line@");
+        let result = text.replace('\n', "@jump_line@");
         let parser = pulldown_cmark::Parser::new(&result);
         // Write to a new String buffer.
         let mut html_output = String::new();
