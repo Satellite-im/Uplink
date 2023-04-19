@@ -10,10 +10,14 @@ use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let version = rustc_version::version().unwrap();
-    // rustup install 1.68.2 will ensure that the compiler matches
-    if version.major != 1 || version.minor != 68 || version.patch != 2 {
-        panic!("rustc version != 1.68.2");
+
+    if cfg!(feature = "production_mode") {
+        // the command: `rustup install 1.68.2` will ensure that the compiler matches
+        if version.major != 1 || version.minor != 68 || version.patch != 2 {
+            panic!("rustc version != 1.68.2");
+        }
     }
+
     println!("cargo:rustc-env=RUSTC_VERSION={}", version);
 
     #[cfg(windows)]
