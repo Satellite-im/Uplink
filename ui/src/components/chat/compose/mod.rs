@@ -25,13 +25,10 @@ use common::state::{ui, Action, Chat, Identity, State};
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
-#[cfg(target_os = "windows")]
-use std::time::Duration;
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
 
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::ConversationType, crypto::DID};
+
 use wry::webview::FileDropEvent;
 
 use crate::{
