@@ -61,7 +61,7 @@
       <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
       <Property Id="DiskPrompt" Value="uplink Installation" />
       <Directory Id="TARGETDIR" Name="SourceDir">
-         <Directory Id="LocalApDataFolder">
+         <Directory Id="ProgramFiles64Folder">
             <Directory Id="UPLINKROOTDIRECTORY" Name="uplink">
                <Directory Id="BIN" Name="bin" />
                <Directory Id="ProgramMenuFolder" Name="PMenu">
