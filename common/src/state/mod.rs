@@ -531,9 +531,7 @@ impl State {
         // correct that here.
         let themes = get_available_themes();
         if let Some(theme_name) = state.ui.theme.as_ref().map(|x| &x.name) {
-            if let Some(theme) = themes.iter().find(|t| &t.name == theme_name) {
-                state.set_theme(Some(theme.clone()));
-            }
+            state.set_theme(themes.iter().find(|t| &t.name == theme_name).cloned());
         }
 
         // not sure how these defaulted to true, but this should serve as additional
