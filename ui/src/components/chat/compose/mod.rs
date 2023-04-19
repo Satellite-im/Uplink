@@ -98,7 +98,7 @@ pub fn Compose(cx: Scope) -> Element {
         async move {
             // ondragover function from div does not work on windows
             loop {
-                sleep(Duration::from_millis(100)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered{..} = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
