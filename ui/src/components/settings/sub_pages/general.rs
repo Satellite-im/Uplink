@@ -5,16 +5,15 @@ use kit::components::slide_selector::{ButtonsFormat, SlideSelector};
 use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
-use crate::utils::get_available_fonts;
-use crate::{components::settings::SettingSection, utils::get_available_themes};
+use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
 
-    let themes_fut = use_future(cx, (), |_| async move { get_available_themes() });
-    let font_fut = use_future(cx, (), |_| async move { get_available_fonts() });
+    let themes_fut = use_future(cx, (), |_| async move { common::get_available_themes() });
+    let font_fut = use_future(cx, (), |_| async move { common::get_available_fonts() });
 
     log::trace!("General settings page rendered.");
 

@@ -23,7 +23,7 @@ pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
-use crate::STATIC_ARGS;
+use crate::{get_available_themes, STATIC_ARGS};
 
 use crate::{
     testing::mock::generate_mock,
@@ -526,6 +526,16 @@ impl State {
                 }
             }
         };
+
+        // if a theme has changed, there may be a difference between the css saved in State and what's on Disk.
+        // correct that here.
+        let themes = get_available_themes();
+        if let Some(theme_name) = state.ui.theme.as_ref().map(|x| &x.name) {
+            if let Some(theme) = themes.iter().find(|t| &t.name == theme_name) {
+                state.set_theme(Some(theme.clone()));
+            }
+        }
+
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
         state.friends.initialized = false;
