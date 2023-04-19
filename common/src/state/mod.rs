@@ -9,7 +9,9 @@ pub mod scope_ids;
 pub mod settings;
 pub mod storage;
 pub mod ui;
+pub mod utils;
 
+use crate::language::change_language;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -21,7 +23,7 @@ pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
 use warp::multipass::identity::Platform;
-use warp::raygun::ConversationType;
+use warp::raygun::{ConversationType, Reaction};
 
 use crate::STATIC_ARGS;
 
@@ -49,6 +51,7 @@ use warp::{
 
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
+use self::utils::get_available_themes;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -454,6 +457,20 @@ impl State {
                     }
                 }
             }
+            MessageEvent::RecipientAdded {
+                conversation,
+                identity,
+            } => {
+                self.identities.insert(identity.did_key(), identity);
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
+            MessageEvent::RecipientRemoved { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
         }
     }
 }
@@ -520,7 +537,21 @@ impl State {
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
         }
-
+        // Reload themes from disc
+        let themes = get_available_themes();
+        let theme = themes.iter().find(|t| {
+            state
+                .ui
+                .theme
+                .as_ref()
+                .map(|theme| theme.eq(t))
+                .unwrap_or_default()
+        });
+        if let Some(t) = theme {
+            state.set_theme(Some(t.clone()));
+        }
+        let user_lang_saved = state.settings.language.clone();
+        change_language(user_lang_saved);
         state
     }
     fn load_mock() -> Self {
@@ -746,7 +777,7 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, message: warp::raygun::Message) {
+    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -759,6 +790,14 @@ impl State {
             if msg.inner.id() != message_id {
                 continue;
             }
+            let mut reactions: Vec<Reaction> = Vec::new();
+            for mut reaction in message.reactions() {
+                let users_not_duplicated: HashSet<DID> =
+                    HashSet::from_iter(reaction.users().iter().cloned());
+                reaction.set_users(users_not_duplicated.into_iter().collect());
+                reactions.insert(0, reaction);
+            }
+            message.set_reactions(reactions);
             msg.inner = message;
             return;
         }
@@ -944,6 +983,9 @@ impl State {
     }
     fn unblock(&mut self, identity: &DID) {
         self.friends.blocked.remove(identity);
+    }
+    pub fn is_blocked(&self, did: &DID) -> bool {
+        self.friends.blocked.contains(did)
     }
 }
 

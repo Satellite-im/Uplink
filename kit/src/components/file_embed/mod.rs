@@ -28,6 +28,9 @@ pub struct Props<'a> {
     // used for the button. defaults to a download icon
     button_icon: Option<Icon>,
 
+    // used to show download button, if nothing is passed, button will render
+    with_download_button: Option<bool>,
+
     // called shen the icon is clicked
     on_press: EventHandler<'a, ()>,
 }
@@ -35,6 +38,12 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let filename = &cx.props.filename;
+
+    let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
+        with_download_button
+    } else {
+        true
+    };
 
     // show one of the 3:
     // kind
@@ -91,12 +100,17 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     "{file_description}"
                 }
             },
-            Button {
-                icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
-                appearance: Appearance::Primary,
-                aria_label: "attachment-button".into(),
-                onpress: move |_| cx.props.on_press.call(()),
+            if with_download_button {
+                rsx!(
+                    Button {
+                        icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
+                        appearance: Appearance::Primary,
+                        aria_label: "attachment-button".into(),
+                        onpress: move |_| cx.props.on_press.call(()),
+                    }
+                )
             }
+
         }
     ))
 }

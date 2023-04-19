@@ -3,11 +3,21 @@ use rsass::{compile_scss, output};
 use std::{
     error::Error,
     fs::{self, File},
-    io::Write,
+    io::{Read, Write},
+    path::Path,
 };
+use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let version = rustc_version::version().unwrap();
+
+    if cfg!(feature = "production_mode") {
+        // the command: `rustup install 1.68.2` will ensure that the compiler matches
+        if version.major != 1 || version.minor != 68 || version.patch != 2 {
+            panic!("rustc version != 1.68.2");
+        }
+    }
+
     println!("cargo:rustc-env=RUSTC_VERSION={}", version);
 
     #[cfg(windows)]
@@ -57,5 +67,85 @@ fn main() -> Result<(), Box<dyn Error>> {
     scss.write_all(&css)?;
     scss.flush()?;
 
+    // zip the 'prism_langs' directory for building an installer
+    let zip_dest = Path::new("wix").join("prism_langs.zip");
+    let file = File::create(zip_dest).expect("failed to create zip file");
+
+    let src_dir = Path::new("extra").join("prism_langs");
+    let walkdir = WalkDir::new(&src_dir);
+    let it = walkdir.into_iter();
+    zip_dir(
+        &mut it.filter_map(|e| e.ok()),
+        &src_dir.to_string_lossy(),
+        file,
+        zip::CompressionMethod::BZIP2,
+    )
+    .expect("failed to zip assets");
+
+    if !cfg!(target_os = "windows") {
+        return Ok(());
+    }
+
+    // make things for the wix installer
+    let zip_stuff = |name: &str| {
+        let zip_name = format!("{name}.zip");
+        let error_message = format!("failed to zip {name}");
+        let zip_dest = Path::new("wix").join(zip_name);
+        let file = File::create(zip_dest).expect("failed to create zip file");
+
+        let src_dir = Path::new("extra").join(name);
+        let walkdir = WalkDir::new(&src_dir);
+        let it = walkdir.into_iter();
+        zip_dir(
+            &mut it.filter_map(|e| e.ok()),
+            &src_dir.to_string_lossy(),
+            file,
+            zip::CompressionMethod::BZIP2,
+        )
+        .expect(&error_message);
+    };
+
+    zip_stuff("prism_langs");
+
     Ok(())
+}
+// taken from here: https://github.com/zip-rs/zip/blob/master/examples/write_dir.rs
+fn zip_dir<T>(
+    it: &mut dyn Iterator<Item = walkdir::DirEntry>,
+    prefix: &str,
+    writer: T,
+    method: zip::CompressionMethod,
+) -> zip::result::ZipResult<()>
+where
+    T: Write + std::io::Seek,
+{
+    let mut zip = zip::ZipWriter::new(writer);
+    let options = zip::write::FileOptions::default()
+        .compression_method(method)
+        .unix_permissions(0o755);
+
+    let mut buffer = Vec::new();
+    for entry in it {
+        let path = entry.path();
+        let name = path.strip_prefix(Path::new(prefix)).unwrap();
+
+        // Write file or directory explicitly
+        // Some unzip tools unzip files with directory paths correctly, some do not!
+        if path.is_file() {
+            #[allow(deprecated)]
+            zip.start_file_from_path(name, options)?;
+            let mut f = File::open(path)?;
+
+            f.read_to_end(&mut buffer)?;
+            zip.write_all(&buffer)?;
+            buffer.clear();
+        } else if !name.as_os_str().is_empty() {
+            // Only if not root! Avoids path spec / warning
+            // and mapname conversion failed error on unzip
+            #[allow(deprecated)]
+            zip.add_directory_from_path(name, options)?;
+        }
+    }
+    zip.finish()?;
+    Result::Ok(())
 }

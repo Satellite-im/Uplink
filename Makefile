@@ -52,9 +52,13 @@ $(APP_NAME)-%: $(TARGET)-%
 	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Resources/uplink.icns
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/assets $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/images $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/themes $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+	cp -r ./ui/extra/assets      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+	cp -r ./ui/extra/images      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+	cp -r ./ui/extra/prism_langs $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+	cp -r ./ui/extra/themes      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+
+	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
+	cp -r $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
 
 ifeq ($(SIGNING_KEY),LOCAL)
 	@echo "Local Build, no signing"
