@@ -189,7 +189,7 @@ fn main() {
 
     let window = get_window_builder(true);
 
-    let config = Config::default();
+    let config = Config::default().with_data_directory(STATIC_ARGS.dot_uplink.join("tmp"));
 
     dioxus_desktop::launch_cfg(
         bootstrap,
