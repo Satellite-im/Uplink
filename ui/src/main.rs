@@ -5,7 +5,7 @@ use chrono::{Datelike, Local, Timelike};
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::{change_language, get_local_text};
+use common::language::get_local_text;
 use common::{
     get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
 };
@@ -305,6 +305,7 @@ fn bootstrap(cx: Scope) -> Element {
 fn auth_page_manager(cx: Scope) -> Element {
     let page = use_state(cx, || AuthPages::Unlock);
     let pin = use_ref(cx, String::new);
+    use_shared_state_provider(cx, || State::load());
     cx.render(rsx!(match &*page.current() {
         AuthPages::Success(ident) => rsx!(app_bootstrap {
             identity: ident.clone()
@@ -422,7 +423,8 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
 #[inline_props]
 pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
     log::trace!("rendering app_bootstrap");
-    let mut state = State::load();
+    let shared_state = use_shared_state::<State>(cx)?;
+    let mut state = shared_state.write_silent();
 
     if STATIC_ARGS.use_mock {
         assert!(state.friends().initialized);
@@ -448,7 +450,6 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     };
     state.ui.metadata = window_meta;
 
-    use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);
 
     cx.render(rsx!(crate::app {}))
@@ -501,9 +502,6 @@ fn app(cx: Scope) -> Element {
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
     let main_element = {
         // render the Uplink app
-        let user_lang_saved = state.read().settings.language.clone();
-        change_language(user_lang_saved);
-
         let open_dyslexic = if state.read().configuration.general.dyslexia_support {
             OPEN_DYSLEXIC
         } else {

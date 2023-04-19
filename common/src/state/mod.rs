@@ -9,7 +9,9 @@ pub mod scope_ids;
 pub mod settings;
 pub mod storage;
 pub mod ui;
+pub mod utils;
 
+use crate::language::change_language;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -49,6 +51,7 @@ use warp::{
 
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
+use self::utils::get_available_themes;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
@@ -534,7 +537,21 @@ impl State {
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
         }
-
+        // Reload themes from disc
+        let themes = get_available_themes();
+        let theme = themes.iter().find(|t| {
+            state
+                .ui
+                .theme
+                .as_ref()
+                .map(|theme| theme.eq(t))
+                .unwrap_or_default()
+        });
+        if let Some(t) = theme {
+            state.set_theme(Some(t.clone()));
+        }
+        let user_lang_saved = state.settings.language.clone();
+        change_language(user_lang_saved);
         state
     }
     fn load_mock() -> Self {

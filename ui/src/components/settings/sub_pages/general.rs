@@ -1,12 +1,12 @@
 use common::language::{change_language, get_available_languages, get_local_text};
+use common::state::utils::{get_available_fonts, get_available_themes};
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
 use kit::components::slide_selector::{ButtonsFormat, SlideSelector};
 use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
-use crate::utils::get_available_fonts;
-use crate::{components::settings::SettingSection, utils::get_available_themes};
+use crate::components::settings::SettingSection;
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {

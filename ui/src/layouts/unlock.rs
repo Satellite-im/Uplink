@@ -54,7 +54,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
 
-    let state = use_state(cx, State::load);
+    let state = use_shared_state::<State>(cx)?;
 
     // this will be needed later
     use_future(cx, (), |_| {
@@ -156,7 +156,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors(&state.current())},
+        style {update_theme_colors(&state.read())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -188,7 +188,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                            {Some(get_welcome_message(&state.current()))}
+                            {Some(get_welcome_message(&state.read()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {
