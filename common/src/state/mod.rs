@@ -454,6 +454,20 @@ impl State {
                     }
                 }
             }
+            MessageEvent::RecipientAdded {
+                conversation,
+                identity,
+            } => {
+                self.identities.insert(identity.did_key(), identity);
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
+            MessageEvent::RecipientRemoved { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.participants = HashSet::from_iter(conversation.recipients());
+                }
+            }
         }
     }
 }
