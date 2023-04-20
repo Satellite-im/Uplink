@@ -1,4 +1,4 @@
-(() => {
+/*(() => {
     // Handle moving and hiding/showing tooltip
     const input_group = document.getElementById("input-group-$UUID");
     // parent: input, parent of parent: input-group
@@ -23,7 +23,7 @@
             tooltip.classList.add("hidden");
         })
     }
-})()
+})()*/
 
 var MULTI_LINE = $MULTI_LINE;
 

@@ -64,7 +64,6 @@ pub trait IconShape: Clone + std::fmt::Debug {
 /// The properties for the [`IconButton`] component.
 #[derive(Props)]
 pub struct IconButtonProps<'a, S: IconShape> {
-    id: String,
     aria_label: String,
     /// An optional onclick handler for the button.
     #[props(default, strip_option)]
@@ -125,16 +124,15 @@ pub struct IconButtonProps<'a, S: IconShape> {
 pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> Element<'a> {
     cx.render(rsx! {
         button {
-            id: "{cx.props.id}",
             aria_label: "{cx.props.aria_label}",
+            class: format_args!("{}", cx.props.class.clone().unwrap_or_default()),
+            title: format_args!("{}", cx.props.title.unwrap_or("")),
+            disabled: format_args!("{}", if cx.props.disabled { "true" } else { "false" }),
             onclick: move |evt| if !cx.props.disabled {
                 if let Some(oc) = &cx.props.onclick {
                     oc.call(evt);
                 }
             },
-            class: format_args!("{}", cx.props.class.clone().unwrap_or_default()),
-            title: format_args!("{}", cx.props.title.unwrap_or("")),
-            disabled: format_args!("{}", if cx.props.disabled { "true" } else { "false" }),
             Icon {
                 ..IconProps {
                     class: cx.props.icon_class,

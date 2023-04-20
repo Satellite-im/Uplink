@@ -37,8 +37,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
-    #[props(default = "".to_owned())]
-    tooltip: String,
+    tooltip: Option<Element<'a>>,
 }
 
 #[derive(Props)]

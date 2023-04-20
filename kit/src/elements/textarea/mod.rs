@@ -9,8 +9,6 @@ use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
 use uuid::Uuid;
 use warp::logging::tracing::log;
 
-use crate::elements::tooltip::{ArrowPosition, Tooltip};
-
 #[derive(Clone, Copy)]
 pub enum Size {
     Small,
@@ -47,13 +45,14 @@ pub struct Props<'a> {
     value: String,
     #[props(default = false)]
     is_disabled: bool,
-    #[props(default = "".to_owned())]
-    tooltip: String,
+    #[props(!optional)]
+    tooltip: Option<Element<'a>>,
 }
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
+    let tooltip_visible = use_state(cx, || false);
     let eval = dioxus_desktop::use_eval(cx);
     let Props {
         id: _,
@@ -67,7 +66,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         value,
         is_disabled,
-        tooltip,
+        tooltip: _,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -102,7 +101,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: "{size.get_height()}",
-                script { "{script}" },
                 textarea {
                     key: "{element_id}",
                     class: "input_textarea",
@@ -133,18 +131,30 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             text_value_onkeyup.borrow_mut().push('\n');
                             onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
-                    }
+                    },
+                    // todo: change styling on the tooltip
+                    onmouseenter: move |_evt| {
+                        if cx.props.tooltip.is_some() {
+                            tooltip_visible.set(true);
+                        }
+                    },
+                    onmousemove: move |_evt| {
+                        if cx.props.tooltip.is_some() {
+                           
+                        }
+                    },
+                    onmouseout: move |_evt| {
+                        if cx.props.tooltip.is_some() {
+                            tooltip_visible.set(false);
+                        }
+                    },
                 }
             },
-            if *is_disabled && !tooltip.is_empty() {
-                cx.render(rsx!(
-                    Tooltip {
-                        arrow_position: ArrowPosition::None,
-                        text: tooltip.clone(),
-                    }
-                ))
+            if !*is_disabled && *tooltip_visible.current() {
+                cx.props.tooltip.as_ref()
             }
         }
+        script { script },
         script { focus_script }
     ))
 }

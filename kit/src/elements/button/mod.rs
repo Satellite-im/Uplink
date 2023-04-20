@@ -1,35 +1,21 @@
-use uuid::Uuid;
-
 use dioxus::{events::MouseEvent, prelude::*};
 
-use crate::{elements::Appearance, get_script};
+use crate::elements::Appearance;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::IconButton;
 
-const SCRIPT: &str = include_str!("./script.js");
-
 #[derive(Props)]
 pub struct Props<'a> {
-    #[props(optional)]
     loading: Option<bool>,
-    #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
-    #[props(optional)]
     text: Option<String>,
-    #[props(optional)]
     tooltip: Option<Element<'a>>,
-    #[props(optional)]
     aria_label: Option<String>,
-    #[props(optional)]
     icon: Option<Icon>,
-    #[props(optional)]
     disabled: Option<bool>,
-    #[props(optional)]
     appearance: Option<Appearance>,
-    #[props(optional)]
     with_badge: Option<String>,
-    #[props(optional)]
     small: Option<bool>,
 }
 
@@ -64,8 +50,6 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 /// ```
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let UUID = &*cx.use_hook(|| Uuid::new_v4().to_string());
-
     let text = cx.props.text.clone().unwrap_or_default();
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let badge = cx.props.with_badge.clone().unwrap_or_default();
@@ -74,20 +58,11 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let small = cx.props.small.unwrap_or_default();
     let text2 = text.clone();
 
-    let eval = dioxus_desktop::use_eval(cx);
-    // only run this after the component has been mounted
-    use_effect(cx, (UUID,), move |(UUID,)| {
-        to_owned![eval];
-        async move {
-            let script = get_script(SCRIPT, &UUID);
-            eval(script);
-        }
-    });
+    let tooltip_visible = use_state(cx, || false);
 
     let button_class = format!(
-        "btn appearance-{} btn-{} {} {} {}",
+        "btn appearance-{} btn-{} {} {}",
         appearance,
-        UUID,
         if disabled { "btn-disabled" } else { "" },
         if text.is_empty() { "no-text" } else { "" },
         if cx.props.loading.unwrap_or(false) {
@@ -103,9 +78,23 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: {
                     format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
-                cx.props.tooltip.as_ref().map(|tooltip| rsx!(
-                    tooltip
-                )),
+                onmouseover: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(true);
+                    }
+                },
+                onmouseout: move |_| {
+                    if cx.props.tooltip.is_some() {
+                         tooltip_visible.set(false);
+                    }
+                },
+                if *tooltip_visible.current() {
+                    cx.props.tooltip.as_ref().map(|tooltip| {
+                        rsx!(
+                           tooltip
+                        )
+                    })
+                }
                 (!badge.is_empty()).then(|| rsx!(
                     span {
                         aria_label: "Button Badge",
@@ -117,7 +106,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     Some(_icon) => {
                         rsx!(
                             IconButton {
-                                id: UUID.to_string(),
                                 aria_label: cx.props.aria_label.clone().unwrap_or_default(),
                                 title: "{text}",
                                 disabled: cx.props.disabled.unwrap_or_default(),
@@ -135,7 +123,6 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     None => {
                         rsx!(
                             button {
-                                id: "{UUID}",
                                 aria_label: "{aria_label}",
                                 title: "{text}",
                                 disabled: if disabled { "true" } else { "false" },
