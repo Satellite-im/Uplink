@@ -143,7 +143,7 @@ settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.
     .app-language = App Language
-    .change-language = Change Language
+    .change-language = Change Language.
     .theme = Theme
     .theme-description = Change the theme of the app.
     .font-scaling = Font Scaling
@@ -219,7 +219,7 @@ settings-developer = Developer Settings
     .save-logs-to-file = Save logs in a file
     .save-logs-to-file-description = Enabling this option, logs will be saved in a file and will be persistent.
     .print-state = Print State 
-    .print-state-description = Display State in the debug logger 
+    .print-state-description = Display State in the debug logger.
 
 media-player = Media Player 
     .enable-camera = Enable Camera 
