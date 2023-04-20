@@ -49,7 +49,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
     let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
-    let shown_error = use_state(cx, || String::new());
+    let shown_error = use_state(cx, String::new);
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
