@@ -74,6 +74,10 @@ jobs:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
 
+      - name: Change resolution on Windows Runner
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+        shell: powershell
+
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
         with:
