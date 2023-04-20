@@ -1,26 +1,26 @@
 (() => {
     // Handle moving and hiding/showing tooltip
-    const input_group = document.getElementById("$UUID").parentNode.parentNode
+    const input_group = document.getElementById("input-group-$UUID");
     // parent: input, parent of parent: input-group
     // tooltip is child of input-group
-    const tooltip = input_group.getElementsByClassName("tooltip")[0]
+    const tooltip = document.getElementById("tooltip-$UUID");
 
-    if (tooltip != null) {
+    if (input_group != null && tooltip != null) {
         input_group.addEventListener("mouseover", function (e) {
-            tooltip.classList.remove("hidden")
-            tooltip.classList.add("visible")
-            tooltip.style.position = "fixed"
-            tooltip.style.left = e.clientX + "px"
-            tooltip.style.top = (e.clientY - 50) + "px"
+            tooltip.classList.remove("hidden");
+            tooltip.classList.add("visible");
+            tooltip.style.position = "fixed";
+            tooltip.style.left = e.clientX + "px";
+            tooltip.style.top = (e.clientY - 50) + "px";
         })
         input_group.addEventListener("mousemove", function (e) {
-            tooltip.style.position = "fixed"
-            tooltip.style.left = e.clientX + "px"
-            tooltip.style.top = (e.clientY - 50) + "px"
+            tooltip.style.position = "fixed";
+            tooltip.style.left = e.clientX + "px";
+            tooltip.style.top = (e.clientY - 50) + "px";
         })
         input_group.addEventListener("mouseout", function (e) {
-            tooltip.classList.remove("visible")
-            tooltip.classList.add("hidden")
+            tooltip.classList.remove("visible");
+            tooltip.classList.add("hidden");
         })
     }
 })()
@@ -31,7 +31,7 @@ var textareas = document.getElementsByClassName("input_textarea")
 for (let i = 0; i < textareas.length; i++) {
     var txt = textareas[i];
     //Update the height on load
-    updateHeight(txt)
+    updateHeight(txt);
     if (!txt.event_listener) {
         txt.addEventListener("input", inputListener);
         txt.addEventListener("keypress", keyPressListener);
@@ -44,7 +44,7 @@ function inputListener(e) {
 }
 
 function updateHeight(element) {
-    element.style.height = "auto"
+    element.style.height = "auto";
     if (!element.value || MULTI_LINE) {
         element.style.height = "0px";
     }
