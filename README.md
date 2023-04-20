@@ -65,7 +65,7 @@ And for Windows, I followed the steps on this site here
 | pkg-config | `sudo apt-get install pkg-config` |
 | alsa-sys | `sudo apt install librust-alsa-sys-dev` |
 | libgtk-dev | `sudo apt-get install libgtk-3-dev` |
-| libsoup-dev | `sudo apt install libsoup2.4-dev` |
+| libsoup-dev | `sudo apt install libsoup-3.0-dev` |
 | protobuf| `sudo apt-get install protobuf-compiler` |
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 | ffmpeg| `sudo apt-get install ffmpeg` |
