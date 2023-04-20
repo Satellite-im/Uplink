@@ -475,7 +475,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 route_info: cx.props.route_info.clone()
             },
             div {
-                class: "files-body",
+                class: "files-body disable-select",
                 aria_label: "files-body",
                 Topbar {
                     with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,

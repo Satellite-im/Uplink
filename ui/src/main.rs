@@ -330,7 +330,7 @@ fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> El
         div {
             id: "app-wrap",
             div {
-                class: "titlebar",
+                class: "titlebar disable-select",
                 id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
                 onmousedown: move |_| { desktop.drag(); },
                 Topbar_Controls {},
@@ -1166,7 +1166,7 @@ fn get_titlebar(cx: Scope) -> Element {
 
     cx.render(rsx!(
         div {
-            class: "titlebar",
+            class: "titlebar disable-select",
             onmousedown: move |_| { desktop.drag(); },
             Release_Info{},
             cx.render(rsx!(span {
