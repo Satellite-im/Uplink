@@ -54,6 +54,7 @@ messages = Messages
     .user-sent-message = te envió un mensaje.
     .unknown-sent-message = Alguien te envió un mensaje.
     .not-friends = Ya no son amigos
+    .msg-banner = Los mensajes están asegurados con encriptación de extremo a extremo y enviados a través de una red peer to peer
 
 favorites = Favorites
     .favorites = Favoritos
