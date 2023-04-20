@@ -84,11 +84,24 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
+    let button_class = format!(
+        "btn appearance-{} btn-{} {} {} {}",
+        appearance,
+        UUID,
+        if disabled { "btn-disabled" } else { "" },
+        if text.is_empty() { "no-text" } else { "" },
+        if cx.props.loading.unwrap_or(false) {
+            "progress"
+        } else {
+            ""
+        }
+    );
+
     cx.render(
         rsx!(
             div {
                 class: {
-                    format_args!("btn-wrap {} {}", if disabled && cx.props.tooltip.is_none() { "disabled" } else { "" }, if small { "small" } else { "" })
+                    format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
                 },
                 cx.props.tooltip.as_ref().map(|tooltip| rsx!(
                     tooltip
@@ -100,41 +113,44 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         "{badge}" 
                     }
                 )),
-                button {
-                    id: "{UUID}",
-                    aria_label: "{aria_label}",
-                    title: "{text}",
-                    disabled: if disabled && cx.props.tooltip.is_none() { "true" } else { "false" },
-                    class: {
-                        format_args!(
-                            "btn appearance-{} btn-{} {} {} {}", 
-                            appearance,
-                            UUID,
-                            if disabled { "btn-disabled" } else { "" }, 
-                            if text.is_empty() { "no-text" } else {""},
-                            if cx.props.loading.unwrap_or(false) { "progress" } else { "" }
+                match cx.props.icon {
+                    Some(_icon) => {
+                        rsx!(
+                            IconButton {
+                                id: UUID.to_string(),
+                                aria_label: cx.props.aria_label.clone().unwrap_or_default(),
+                                title: "{text}",
+                                disabled: cx.props.disabled.unwrap_or_default(),
+                                class: button_class,
+                                onclick: move |e: MouseEvent| {
+                                    if !cx.props.disabled.unwrap_or_default() {
+                                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
+                                    }
+                                },
+                                icon: _icon,
+                                (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                            }
                         )
                     },
-                    // Optionally pass through click events.
-                    onclick: move |e| {
-                        if !cx.props.disabled.unwrap_or_default() {
-                            let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
-                        }
-                    },
-                    // If an icon was provided, render it before the text.
-                    (cx.props.icon.is_some()).then(|| rsx!(
-                        IconButton {
-                            onclick: move |e: MouseEvent| {
-                                e.stop_propagation();
-                                if !cx.props.disabled.unwrap_or_default() {
-                                    let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
-                                }
-                            },
-                            icon: cx.props.icon.unwrap_or(Icon::QuestionMarkCircle),
-                        }
-                    )),
-                    // We only need to include the text if it contains something.
-                    (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                    None => {
+                        rsx!(
+                            button {
+                                id: "{UUID}",
+                                aria_label: "{aria_label}",
+                                title: "{text}",
+                                disabled: if disabled { "true" } else { "false" },
+                                class: "{button_class}",
+                                // Optionally pass through click events.
+                                onclick: move |e| {
+                                    if !cx.props.disabled.unwrap_or_default() {
+                                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
+                                    }
+                                },
+                                // We only need to include the text if it contains something.
+                                (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                            }
+                        )
+                    }
                 }
             },
         )
