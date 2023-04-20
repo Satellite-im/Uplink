@@ -143,10 +143,14 @@ pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> El
                     disabled_fill: cx.props.disabled_fill
                 },
             },
-            span {
-                class: format_args!("{}", cx.props.span_class.unwrap_or("")),
-                cx.props.children.as_ref(),
-            },
+            (cx.props.children.is_some()).then(|| {
+                rsx!(
+                    span {
+                        class: format_args!("{}", cx.props.span_class.unwrap_or("")),
+                        cx.props.children.as_ref(),
+                    },
+                )
+            })
         },
     })
 }
