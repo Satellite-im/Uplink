@@ -27,6 +27,7 @@ use dioxus_desktop::{use_window, DesktopContext};
 
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
+
 use wry::webview::FileDropEvent;
 
 use crate::{
