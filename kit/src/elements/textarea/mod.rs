@@ -143,7 +143,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                            
                         }
                     },
-                    onmouseout: move |_evt| {
+                    onmouseleave: move |_evt| {
                         if cx.props.tooltip.is_some() {
                             tooltip_visible.set(false);
                         }
