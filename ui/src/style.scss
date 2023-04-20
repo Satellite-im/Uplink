@@ -55,10 +55,15 @@ body {
   justify-content: flex-end;
 }
 
+#update-available-menu {
+  display: flex;
+}
+
 #update-available {
   gap: var(--gap-less);
   align-content: center;
   justify-content: center;
+  margin: auto;
   width: fit-content;
   color: var(--warning-light);
   font-size: var(--text-size-less);
