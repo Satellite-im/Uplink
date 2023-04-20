@@ -48,7 +48,7 @@ pub fn Tooltip(cx: Scope<Props>) -> Element {
         div {
             aria_label: "tooltip",
             class: {
-                format_args!("tooltip hidden tooltip-{}", arrow_position)
+                format_args!("tooltip tooltip-{}", arrow_position)
             },
             span { aria_label: "tooltip-text", class: "tooltip-text", "{text}" }
         }
