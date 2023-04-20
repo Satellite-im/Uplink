@@ -254,7 +254,7 @@ unlock = Unlock
     .create-password = Let's choose your password
     .error-pin = Something is wrong with the pin you supplied.
     .invalid-pin = Hmm, that pin didn't work.
-    .error-unkown-pin = An unknown error occurred.
+    .error-unknown-pin = An unknown error occurred.
 
 auth = Create Account 
     .enter-username = Enter Username
