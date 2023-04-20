@@ -676,8 +676,8 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     edit_msg.set(None);
                     let msg = update.split('\n').collect::<Vec<_>>();
                     let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                    let msg = msg.iter().map(|x| x.to_string()).collect();
-                    if message.inner.value() == msg {
+                    let msg: Vec<String> = msg.iter().map(|x| x.to_string()).collect();
+                    if message.inner.value() == msg || msg.get(0).map(|s| s.to_owned()).unwrap_or("".to_owned()).is_empty() {
                         return;
                     }
                     if !is_valid {
