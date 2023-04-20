@@ -51,12 +51,12 @@ pub fn get_appearance(cx: &Scope<Props>) -> Appearance {
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let text = cx.props.text.clone().unwrap_or_default();
+    let text2 = text.clone();
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let badge = cx.props.with_badge.clone().unwrap_or_default();
     let disabled = cx.props.disabled.unwrap_or_default();
     let appearance = get_appearance(&cx);
     let small = cx.props.small.unwrap_or_default();
-    let text2 = text.clone();
 
     let tooltip_visible = use_state(cx, || false);
 
@@ -116,7 +116,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     }
                                 },
                                 icon: _icon,
-                                (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                                children: cx.props.text.clone().map(|text2| cx.render(rsx!( "{text2}" ))),
                             }
                         )
                     },

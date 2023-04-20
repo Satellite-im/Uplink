@@ -98,7 +98,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
     #[props(default, strip_option)]
     pub icon_class: Option<&'a str>,
     /// These are the child elements of the `IconButton` component.
-    #[props(default, strip_option)]
+    #[props(!optional)]
     pub children: Option<Element<'a>>,
 }
 
