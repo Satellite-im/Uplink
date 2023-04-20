@@ -27,17 +27,17 @@ body {
   --titlebar-height: 1.75rem;
 }
 
-#titlebar {
+.titlebar {
   height: fit-content;
   width: 100%;
   background-color: var(--background);
   border-bottom: 1px solid var(--border-color);
   display: inline-flex;
-  justify-content: flex-end;
+  align-items: flex-end;
+  justify-content: space-between;
   user-select: none;
   cursor: pointer;
   min-height: 1.6rem;
-
   .btn-wrap {
     height: var(--titlebar-height);
     width: var(--titlebar-height);
@@ -50,8 +50,12 @@ body {
   }
 }
 
+#lockscreen-controls {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
 #update-available {
-  display: inline-flex;
   gap: var(--gap-less);
   align-content: center;
   justify-content: center;
@@ -59,35 +63,17 @@ body {
   color: var(--warning-light);
   font-size: var(--text-size-less);
   cursor: pointer;
+  
 }
 
-#pre-release {
-  position: fixed;
-  top: 0.14rem;
-  margin-left: 4rem; // TODO: only do this on mac
-  left: var(--gap);
-  background-color: var(--secondary-dark);
-  border-radius: var(--border-radius-less);
-  display: inline-flex;
-  gap: var(--gap-less);
-  align-content: center;
-  justify-content: center;
-  width: fit-content;
-  padding: var(--gap-less);
-  user-select: none;
-  cursor: default;
-  p {
-    color: var(--warning-light);
-    font-size: var(--text-size-less);
-    cursor: pointer;
-  }
-  svg {
-    fill: transparent;
-    stroke: var(--warning-light);
-    height: var(--text-size-less);
-    align-self: center;
-    width: var(--text-size-less);
-  }
+#update-available > svg {
+  padding-top: 6px;
+  margin-bottom: 0;
+  height: 16px;
+}
+
+#update-available-menu {
+  margin-right: var(--gap-less);
 }
 
 #main {
@@ -150,4 +136,19 @@ body {
   width: 100%;
   height: 2rem;
   z-index: 1;
+}
+
+.topbar-item {
+  background-color: var(--secondary-dark);
+  border-radius: var(--border-radius-less);
+  display: inline-flex;
+  gap: var(--gap-less);
+  width: fit-content;
+  padding: var(--gap-less);
+  user-select: none;
+  margin-right: var(--gap-less);
+}
+
+.inline-controls {
+  display: inline-flex;
 }
