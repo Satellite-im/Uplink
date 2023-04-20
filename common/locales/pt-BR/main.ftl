@@ -34,6 +34,7 @@ messages = Messages
     .reply = Responder
     .you = Você
     .say-something-placeholder = Diga algo...
+    .msg-banner = As mensagens são protegidas por criptografia de ponta-a-ponta e enviadas através de uma rede ponto-a-ponto.
 
 favorites = Favorites
     .favorites = Favoritos

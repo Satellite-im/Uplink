@@ -54,7 +54,7 @@ messages = Messages
     .user-sent-message = sent you a message.
     .unknown-sent-message = someone sent you a message.
     .not-friends = You are not friends anymore
-    .msg-banner = Messages secured by local E2E encryption.
+    .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create DM
     
 favorites = Favorites
