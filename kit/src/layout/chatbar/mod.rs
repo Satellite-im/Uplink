@@ -122,7 +122,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
     cx.render(rsx!(
         div {
-            class: "chatbar",
+            class: "chatbar disable-select",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
             textarea::Input {
