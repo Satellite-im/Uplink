@@ -122,7 +122,7 @@ settings-privacy = Settings Privacy
     .backup-phrase = Frase de backup
     .backup-phrase-description = Guarde esta frase! Junto com sua senha, ela representa a sua conta. Se você perdê-la, não podemos te ajudar a recuperá-la.
 
-settings-about = UNKNONW
+settings-about = UNKNOWN
     .open-codebase = Abrir código fonte
     .open-codebase-description = Abre o código fonte em seu navegador da Web padrão.
 
