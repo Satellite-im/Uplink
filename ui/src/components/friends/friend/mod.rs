@@ -129,12 +129,10 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     }
                     aria_label: "Remove or Deny Friend".into(),
-                    tooltip: cx.render(rsx!(
-                        Tooltip {
-                            arrow_position: ArrowPosition::Right,
-                            text: if cx.props.relationship.blocked() { get_local_text("friends.unblock") } else if cx.props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
-                        }
-                    )),
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Right,
+                        text: if cx.props.relationship.blocked() { get_local_text("friends.unblock") } else if cx.props.onaccept.is_none() { get_local_text("friends.remove") } else { get_local_text("friends.deny") }
+                    })),
                 },
                 (cx.props.onchat.is_some() && !state.read().ui.is_minimal_view()).then(|| rsx!(
                     Button {
@@ -147,12 +145,10 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             None    => {},
                         }
                         aria_label: "Block Friend".into(),
-                        tooltip: cx.render(rsx!(
-                            Tooltip {
-                                arrow_position: ArrowPosition::Right,
-                                text: get_local_text("friends.block"),
-                            }
-                        )),
+                        tooltip: cx.render(rsx!(Tooltip {
+                            arrow_position: ArrowPosition::Right,
+                            text: get_local_text("friends.block"),
+                        }))
                     }
                 ))
             }
