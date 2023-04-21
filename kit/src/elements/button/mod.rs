@@ -3,7 +3,6 @@ use dioxus::{events::MouseEvent, prelude::*};
 use crate::elements::Appearance;
 
 use common::icons::outline::Shape as Icon;
-use common::icons::IconButton;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -102,43 +101,35 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         "{badge}" 
                     }
                 )),
-                match cx.props.icon {
-                    Some(_icon) => {
-                        rsx!(
-                            IconButton {
-                                aria_label: cx.props.aria_label.clone().unwrap_or_default(),
-                                title: "{text}",
-                                disabled: cx.props.disabled.unwrap_or_default(),
-                                class: button_class,
-                                onclick: move |e: MouseEvent| {
-                                    if !cx.props.disabled.unwrap_or_default() {
-                                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
-                                    }
-                                },
-                                icon: _icon,
-                                children: cx.props.text.clone().map(|text2| cx.render(rsx!( "{text2}" ))),
-                            }
-                        )
+                button {
+                    aria_label: "{aria_label}",
+                    title: "{text}",
+                    disabled: if disabled { "true" } else { "false" },
+                    class: "{button_class}",
+                    // Optionally pass through click events.
+                    onclick: move |e| {
+                        if !cx.props.disabled.unwrap_or_default() {
+                            let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
+                        }
                     },
-                    None => {
+                    if let Some(_icon) = cx.props.icon {
                         rsx!(
-                            button {
-                                aria_label: "{aria_label}",
-                                title: "{text}",
-                                disabled: if disabled { "true" } else { "false" },
-                                class: "{button_class}",
-                                // Optionally pass through click events.
-                                onclick: move |e| {
-                                    if !cx.props.disabled.unwrap_or_default() {
-                                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
-                                    }
+                            // for props, copy the defaults passed in by IconButton
+                            common::icons::Icon {
+                                ..common::icons::IconProps {
+                                    class: None,
+                                    size: 20,
+                                    fill:"currentColor",
+                                    icon: _icon,
+                                    disabled:  cx.props.disabled.unwrap_or_default(),
+                                    disabled_fill: "#9CA3AF"
                                 },
-                                // We only need to include the text if it contains something.
-                                (!text.is_empty()).then(|| rsx!( "{text2}" )),
-                            }
+                            },
                         )
                     }
-                }
+                    // We only need to include the text if it contains something.
+                    (!text.is_empty()).then(|| rsx!( "{text2}" )),
+                },
             },
         )
     )
