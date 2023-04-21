@@ -68,7 +68,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    log::trace!("render Message");
+    //  log::trace!("render Message");
     let text = cx.props.with_text.clone().unwrap_or_default();
     let loading = cx.props.loading.unwrap_or_default();
     let is_remote = cx.props.remote.unwrap_or_default();
