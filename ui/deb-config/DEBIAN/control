@@ -1,9 +1,0 @@
-Package: {{package}}
-Version: {{version}}
-Vendor: Satellite Im <https://satellite.im>
-Description: P2P chat application
-Section: net
-Priority: required
-Maintainer: matt.wisniewski@deepspaceshipping.co
-Architecture: {{architecture}}
-Homepage: https://github.com/Satellite-im/Uplink

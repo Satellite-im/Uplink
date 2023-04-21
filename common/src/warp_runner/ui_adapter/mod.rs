@@ -16,6 +16,7 @@ use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use warp::{
+    constellation::file::File,
     crypto::DID,
     error::Error,
     logging::tracing::log,
@@ -28,7 +29,7 @@ use warp::{
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Message {
     pub inner: warp::raygun::Message,
-    pub in_reply_to: Option<String>,
+    pub in_reply_to: Option<(String, Vec<File>)>,
     /// this field exists so that the UI can tell Dioxus when a message has been edited and thus
     /// needs to be re-rendered. Before the addition of this field, the compose view was
     /// using the message Uuid, but this doesn't change when a message is edited.
@@ -52,7 +53,12 @@ pub async fn convert_raygun_message(
 
     Message {
         inner: msg.clone(),
-        in_reply_to: reply.and_then(|msg| msg.value().first().cloned()),
+        in_reply_to: reply.map(|msg: raygun::Message| {
+            (
+                msg.value().first().cloned().unwrap_or_default(),
+                msg.attachments(),
+            )
+        }),
         key: Uuid::new_v4().to_string(),
     }
 }

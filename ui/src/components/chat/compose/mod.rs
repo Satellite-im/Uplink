@@ -25,16 +25,13 @@ use common::state::{ui, Action, Chat, Identity, State};
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
-#[cfg(target_os = "windows")]
-use std::time::Duration;
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
+use uuid::Uuid;
+use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
 
-use warp::{logging::tracing::log, raygun::ConversationType};
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::media::player::MediaPlayer,
+    components::{chat::edit_group::EditGroup, media::player::MediaPlayer},
     layouts::storage::{
         decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
         FEEDBACK_TEXT_SCRIPT,
@@ -71,6 +68,7 @@ pub struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
     upload_files: Option<UseState<Vec<PathBuf>>>,
+    show_edit_group: Option<UseState<Option<Uuid>>>,
 }
 
 #[allow(non_snake_case)]
@@ -79,6 +77,10 @@ pub fn Compose(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = get_compose_data(cx);
     let data2 = data.clone();
+    let chat_id = data2
+        .as_ref()
+        .map(|data| data.active_chat.id)
+        .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
     let overlay_script = include_str!("../overlay.js");
@@ -95,7 +97,7 @@ pub fn Compose(cx: Scope) -> Element {
         async move {
             // ondragover function from div does not work on windows
             loop {
-                sleep(Duration::from_millis(100)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered(_) = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
@@ -111,6 +113,7 @@ pub fn Compose(cx: Scope) -> Element {
             }
         }
     });
+    let show_edit_group = use_state(cx, || None);
 
     cx.render(rsx!(
         div {
@@ -146,8 +149,14 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                controls: cx.render(rsx!(get_controls{data: data2})),
-                get_topbar_children{data: data.clone()}
+                controls: cx.render(rsx!(get_controls{
+                    data: data2,
+                    show_edit_group: show_edit_group.clone(),
+                })),
+                get_topbar_children {
+                    data: data.clone(),
+                    show_edit_group: show_edit_group.clone(),
+                }
             },
             data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
                 MediaPlayer {
@@ -159,6 +168,16 @@ pub fn Compose(cx: Scope) -> Element {
                     end_text: get_local_text("uplink.end"),
                 },
             ))),
+        show_edit_group
+            .map_or(false, |group_chat_id| group_chat_id == chat_id).then(|| rsx!(
+            EditGroup {
+                onedit: move |_| {
+                    show_edit_group.set(None);
+                }
+            }
+        )),
+        show_edit_group
+                .map_or(true, |group_chat_id| group_chat_id != chat_id).then(|| rsx!(
             match data.as_ref() {
                 None => rsx!(
                     div {
@@ -173,7 +192,8 @@ pub fn Compose(cx: Scope) -> Element {
                 data: data,
                 upload_files: files_to_upload.clone()
             }
-        }
+        )),
+    }
     ))
 }
 
@@ -233,11 +253,61 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
+    let show_edit_group = cx.props.show_edit_group.as_ref().unwrap();
     let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
-    let favorite = data.as_ref().map(|d| d.is_favorite).unwrap_or_default();
+    let favorite = data
+        .as_ref()
+        .map(|d: &Rc<ComposeData>| d.is_favorite)
+        .unwrap_or_default();
+    let (conversation_type, creator) = if let Some(chat) = active_chat.as_ref() {
+        (chat.conversation_type, chat.creator.clone())
+    } else {
+        (ConversationType::Direct, None)
+    };
+    let edit_group_activated = show_edit_group
+        .get()
+        .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+        .unwrap_or(false);
+    let user_did: DID = state.read().did_key();
+    let is_creator = if let Some(creator_did) = creator {
+        creator_did == user_did
+    } else {
+        false
+    };
+
     cx.render(rsx!(
+        if conversation_type == ConversationType::Group {
+            rsx!(Button {
+                icon: Icon::PencilSquare,
+                disabled: !is_creator,
+                aria_label: "edit-group".into(),
+                appearance: if edit_group_activated {
+                    Appearance::Primary
+                } else {
+                    Appearance::Secondary
+                },
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Top,
+                    text: if is_creator {
+                        get_local_text("friends.edit-group")
+                    } else {
+                        get_local_text("friends.not-creator")
+                    }
+                })),
+                onpress: move |_| {
+                    if is_creator {
+                        if edit_group_activated {
+                            show_edit_group.set(None);
+                        } else if let Some(chat) = active_chat.as_ref() {
+                            show_edit_group.set(Some(chat.id));
+                        }
+                    }
+
+                }
+            })
+        }
         Button {
             icon: if favorite {
                 Icon::HeartSlash

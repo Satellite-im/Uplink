@@ -18,8 +18,6 @@ use common::{
 use common::language::get_local_text;
 use dioxus_desktop::use_eval;
 
-#[cfg(target_os = "windows")]
-use tokio::time::sleep;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
@@ -38,6 +36,7 @@ enum QuickProfileCmd {
     CreateConversation(Option<Chat>, DID),
     RemoveFriend(DID),
     BlockFriend(DID),
+    UnBlockFriend(DID),
     RemoveDirectConvs(DID),
     Chat(Option<Chat>, String),
 }
@@ -77,6 +76,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let is_self = state.read().get_own_identity().did_key().eq(did);
     let is_friend = state.read().has_friend_with_did(did);
+    let blocked = state.read().is_blocked(did);
 
     let router = use_router(cx);
 
@@ -156,6 +156,21 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         if let Err(e) = rsp {
                             // todo: display message to user
                             log::error!("failed to block friend: {}", e);
+                        }
+                    }
+                    QuickProfileCmd::UnBlockFriend(did) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        if let Err(e) = warp_cmd_tx
+                            .send(WarpCmd::MultiPass(MultiPassCmd::Unblock { did, rsp: tx }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        if let Err(e) = rsp {
+                            // todo: display message to user
+                            log::error!("failed to unblock friend: {}", e);
                         }
                     }
                     QuickProfileCmd::RemoveDirectConvs(recipient) => {
@@ -290,11 +305,15 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     })
                 }
                 ContextItem {
-                    icon: Icon::UserBlock,
-                    text: get_local_text("quickprofile.block"),
+                    icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
+                    text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
                     onpress: move |_| {
-                        ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
-                        ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
+                        if blocked {
+                            ch.send(QuickProfileCmd::UnBlockFriend(block_identity.did_key()));
+                        } else {
+                            ch.send(QuickProfileCmd::BlockFriend(block_identity.did_key()));
+                            ch.send(QuickProfileCmd::RemoveDirectConvs(block_identity.did_key()));
+                        }
                     }
                 },
                 if is_friend && !chat_is_current {
