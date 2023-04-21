@@ -55,17 +55,16 @@ pub fn get_file_format(file_name: String) -> FileFormat {
 #[inline_props]
 #[allow(non_snake_case)]
 pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> Element {
-    let state = use_shared_state::<State>(cx)?;
     let file_format = get_file_format(file.name());
     let file_name = file.name();
     let thumbnail = file.thumbnail();
     let has_thumbnail = !file.thumbnail().is_empty();
     let desktop = use_window(cx);
-    let mut css_style = update_theme_colors(state);
+    let mut css_style = update_theme_colors();
     let update_state: &UseRef<Option<()>> = use_ref(cx, || Some(()));
 
     if update_state.read().is_some() {
-        css_style = update_theme_colors(state);
+        css_style = update_theme_colors();
         *update_state.write_silent() = None;
     }
 
@@ -104,25 +103,6 @@ pub fn FilePreview(cx: Scope, file: File, _drop_handler: WindowDropHandler) -> E
                         }
                     }
                 };
-            }
-        }
-    });
-
-    use_wry_event_handler(cx, {
-        to_owned![desktop];
-        move |event, _| {
-            if let WryEvent::WindowEvent {
-                event: WindowEvent::Resized(_),
-                ..
-            } = event
-            {
-                {
-                    if desktop.outer_size().width < 575 {
-                        desktop.set_title("");
-                    } else {
-                        desktop.set_title("Uplink");
-                    }
-                }
             }
         }
     });
@@ -210,9 +190,9 @@ fn resize_window(
     Some(())
 }
 
-fn update_theme_colors(state: UseSharedState<State>) -> String {
+fn update_theme_colors() -> String {
+    let state = State::load();
     let mut css_style = state
-        .read()
         .ui
         .theme
         .as_ref()
