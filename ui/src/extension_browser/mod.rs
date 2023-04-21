@@ -112,19 +112,19 @@ pub fn Installed(cx: Scope) -> Element {
 pub fn ExtensionsBrowser(cx: Scope) -> Element {
     let routes = vec![
         Route {
-            name: "Installed".into(),
+            name: get_local_text("settings-extensions.installed"),
             icon: Icon::CheckCircle,
             to: "installed",
             ..Default::default()
         },
         Route {
-            name: "Explore".into(),
+            name: get_local_text("settings-extensions.explore"),
             icon: Icon::Sparkles,
             to: "explore",
             ..Default::default()
         },
         Route {
-            name: "Settings".into(),
+            name: get_local_text("settings-extensions.settings"),
             icon: Icon::Cog6Tooth,
             to: "settings",
             ..Default::default()
