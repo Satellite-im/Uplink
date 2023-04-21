@@ -277,9 +277,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         is_disabled: disabled,
-        tooltip: cx.render(rsx!(Tooltip {
-            text: get_local_text("messages.not-friends")
-        })),
+        // todo: the tooltip doesn't appear if the input box is disabled. may as well delete this
+        tooltip: match disabled {
+            false => None,
+            true => Some(cx.render(rsx!(Tooltip {
+                text: get_local_text("messages.not-friends")
+            }))),
+        },
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 match inner_state.try_borrow_mut() {

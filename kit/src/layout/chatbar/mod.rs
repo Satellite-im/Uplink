@@ -37,6 +37,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
+    #[props(!optional)]
     tooltip: Option<Element<'a>>,
 }
 

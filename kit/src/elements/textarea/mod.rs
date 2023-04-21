@@ -155,7 +155,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if cx.props.tooltip.is_some() {
                             let position = evt.client_coordinates();
                             mouse_left.set(format!("{}px", position.x));
-                            mouse_top.set(format!("{}px", position.y - 50_f64));
+                            mouse_top.set(format!("{}px", position.y));
                         }
                     },
                     onmouseleave: move |_evt| {
