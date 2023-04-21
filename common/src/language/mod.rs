@@ -43,7 +43,7 @@ pub fn change_language(new_language: String) -> String {
     }
 }
 
-pub fn get_id_of(language: &String) -> String {
+pub fn get_id_of(language: &str) -> String {
     let language_identifier = LANGUAGES.get(language);
     match language_identifier {
         Some(lang) => lang.0.to_string(),
