@@ -20,22 +20,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up cargo cache 🛠️
-        uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+        uses: Swatinem/rust-cache@v2
 
       - name: Install Rust 💿
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.68.2
           override: true
           components: rustfmt, clippy
 
@@ -46,9 +36,6 @@ jobs:
 
       - name: Run cargo update 🌐
         run: cargo update
-
-      - name: Run cargo clean 🧹
-        run: cargo clean
 
       - name: Build app 🖥️
         run: cargo build --release --package uplink -F production_mode
@@ -73,6 +60,10 @@ jobs:
         with:
           repository: Satellite-im/testing-uplink
           path: "./appium-tests"
+
+      - name: Change resolution on Windows Runner
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+        shell: powershell
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
