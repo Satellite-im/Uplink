@@ -285,13 +285,12 @@ pub fn validate(cx: &Scope<Props>, val: &str) -> Option<ValidationError> {
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     // Input element needs an id. Create a new one if an id wasn't specified
-    let input_id = use_state(cx, || {
-        if cx.props.id.is_empty() {
-            Uuid::new_v4().to_string()
-        } else {
-            cx.props.id.clone()
-        }
-    });
+    let input_id = if cx.props.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        cx.props.id.clone()
+    };
+    let focus_script = include_str!("./script.js").replace("$UUID", &input_id);
     let error = use_state(cx, || String::from(""));
     let val = use_ref(cx, || cx.props.default_text.clone().unwrap_or_default());
     let max_length = cx.props.max_length.unwrap_or(std::i32::MAX);
@@ -337,15 +336,18 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // Run the script after the component is mounted.
     let eval = use_eval(cx);
-    use_effect(cx, (&cx.props.focus, input_id), move |(focus, input_id)| {
-        to_owned![eval];
-        async move {
-            if focus {
-                let script = include_str!("./script.js").replace("UUID", &input_id);
-                eval(script);
+    use_effect(
+        cx,
+        (&cx.props.focus, &focus_script),
+        move |(focus, focus_script)| {
+            to_owned![eval];
+            async move {
+                if focus {
+                    eval(focus_script);
+                }
             }
-        }
-    });
+        },
+    );
 
     cx.render(rsx! (
         div {
@@ -437,8 +439,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 error.set(validation_result);
                             }
                             // re-focus the input after clearing it
-                            let script = include_str!("./script.js").replace("UUID", input_id);
-                            dioxus_desktop::use_eval(cx)(script);
+                            eval(focus_script.clone());
                         },
                         IconElement {
                             icon: options.clear_btn_icon

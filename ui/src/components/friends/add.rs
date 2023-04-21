@@ -8,6 +8,7 @@ use kit::elements::{
     button::Button,
     input::{Input, Options, SpecialCharsAction, Validation},
     label::Label,
+    tooltip::Tooltip,
 };
 use warp::error::Error;
 use warp::{crypto::DID, logging::tracing::log};
@@ -227,7 +228,10 @@ pub fn AddFriend(cx: Scope) -> Element {
                     icon: Icon::ClipboardDocument,
                     onpress: move |_| {
                         id_ch.send(());
-                    }
+                    },
+                    tooltip: cx.render(rsx!(Tooltip{
+                        text: get_local_text("settings-profile.copy-id")
+                    }))
                 }
             }
         }
