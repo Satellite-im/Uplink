@@ -85,41 +85,38 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let msg_ch = use_coroutine(
         cx,
         |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
-            to_owned![files_to_upload];
+            to_owned![files_to_upload, state];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 while let Some((msg, conv_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                    let attachments = files_to_upload.current().to_vec();
                     let cmd = match reply {
-                        Some(reply_to) => {
-                            let attachments = files_to_upload.current().to_vec();
-                            RayGunCmd::Reply {
-                                conv_id,
-                                reply_to,
-                                msg,
-                                attachments,
-                                rsp: tx,
-                            }
-                        }
-                        None => {
-                            let attachments = files_to_upload.current().to_vec();
-                            RayGunCmd::SendMessage {
-                                conv_id,
-                                msg,
-                                attachments,
-                                rsp: tx,
-                            }
-                        }
+                        Some(reply_to) => RayGunCmd::Reply {
+                            conv_id,
+                            reply_to,
+                            msg,
+                            attachments,
+                            rsp: tx,
+                        },
+                        None => RayGunCmd::SendMessage {
+                            conv_id,
+                            msg,
+                            attachments,
+                            rsp: tx,
+                        },
                     };
                     files_to_upload.set(vec![]);
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
+                        state.write().decrement_outgoing_messages(conv_id);
                         continue;
                     }
 
                     let rsp = rx.await.expect("command canceled");
                     if let Err(e) = rsp {
                         log::error!("failed to send message: {}", e);
+                        state.write().decrement_outgoing_messages(conv_id);
                     }
                 }
             }
@@ -251,6 +248,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(id));
             }
+            state.write().increment_outgoing_messages();
             msg_ch.send((msg, id, replying_to));
         }
     };
