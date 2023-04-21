@@ -45,17 +45,13 @@ pub struct Props<'a> {
     value: String,
     #[props(default = false)]
     is_disabled: bool,
-    #[props(!optional)]
-    tooltip: Option<Element<'a>>,
 }
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
-    let tooltip_visible = use_state(cx, || false);
     let eval = dioxus_desktop::use_eval(cx);
-    //let mouse_left = use_state(cx, String::new);
-    //let mouse_top = use_state(cx, String::new);
+
     let Props {
         id: _,
         focus,
@@ -68,7 +64,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         value,
         is_disabled,
-        tooltip: _,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -81,15 +76,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let focus_script = include_str!("./focus.js").replace("$UUID", &id);
     eval(height_script.to_string());
     eval(focus_script.clone());
-
-    // todo: possibly add this back in
-    //let tooltip_script = r##"
-    //    var tooltips = document.getElementsByClassName("tooltip");
-    //    for (let i = 0; i < tooltips.length; i++) {
-    //        tooltips[i].style.left = $left;
-    //        tooltips[i].style.top = $top;
-    //    }
-    //"##;
 
     let script = include_str!("./script.js")
         .replace("$UUID", &id)
@@ -143,37 +129,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
                     },
-                    // todo: change styling on the tooltip
-                    onmouseenter: move |_evt| {
-                        if cx.props.tooltip.is_some() {
-                            //let position = evt.client_coordinates();
-                            //mouse_left.set(format!("{}px", position.x));
-                            //mouse_top.set(format!("{}px", position.y - 50_f64));
-                            tooltip_visible.set(true);
-                        }
-                    },
-                    onmousemove: move |_evt| {
-                        //if cx.props.tooltip.is_some() {
-                        //    let position = evt.client_coordinates();
-                        //    mouse_left.set(format!("{}px", position.x));
-                        //    mouse_top.set(format!("{}px", position.y));
-                        //}
-                    },
-                    onmouseleave: move |_evt| {
-                        if cx.props.tooltip.is_some() {
-                            tooltip_visible.set(false);
-                        }
-                    },
                 }
             },
-            if  *tooltip_visible.current() {
-                cx.props.tooltip.as_ref()
-            }
-            // todo: possibly add this back
-            //if  cx.props.tooltip.is_some() && *tooltip_visible.current() {
-            //    let s = tooltip_script.replace("$left", &*mouse_left.current()).replace("$top", &*mouse_top.current());
-            //    cx.render(rsx!(script { s }))
-            //}
         }
         script { script },
         script { focus_script }

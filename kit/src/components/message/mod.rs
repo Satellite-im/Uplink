@@ -213,7 +213,6 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
         id: cx.props.id.clone(),
         focus: true,
         value: cx.props.text.clone(),
-        tooltip: None,
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
