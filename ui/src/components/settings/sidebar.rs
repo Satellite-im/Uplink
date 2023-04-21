@@ -106,7 +106,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let notifications = UIRoute {
         to: "notifications",
-        name: get_local_text("settings-notifications"),
+        name: get_local_text("settings.notifications"),
         icon: Icon::BellAlert,
         ..UIRoute::default()
     };

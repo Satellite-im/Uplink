@@ -1,9 +1,12 @@
+use crate::language::get_id_of;
 use crate::language::US_ENGLISH;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
     // Selected Language
+    // This is the name of the language
+    // use language_id() to get the id
     #[serde(default = "default_lang")]
     pub language: String,
     pub update_available: Option<String>,
@@ -21,6 +24,12 @@ impl Default for Settings {
             update_available: None,
             font_scale: 1.0,
         }
+    }
+}
+
+impl Settings {
+    pub fn language_id(&self) -> String {
+        get_id_of(&self.language)
     }
 }
 

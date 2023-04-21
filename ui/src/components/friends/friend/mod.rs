@@ -49,7 +49,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let active_language = &state.read().settings.language;
+    let active_language = &state.read().settings.language_id();
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();
     let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);

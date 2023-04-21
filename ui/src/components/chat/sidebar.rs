@@ -326,7 +326,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             tooltip: cx.render(rsx!(
                                 Tooltip {
                                     arrow_position: ArrowPosition::Right,
-                                    text: String::from("Create Group Chat")
+                                    text: get_local_text("messages.create-group-chat")
                                 }
                             )),
                             onpress: move |_| {

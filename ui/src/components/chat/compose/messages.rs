@@ -388,7 +388,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } else {
         sender.username()
     };
-    let active_language = &state.read().settings.language;
+    let active_language = &state.read().settings.language_id();
 
     let mut sender_status = sender.identity_status().into();
     if !group.remote && sender_status == Status::Offline {
