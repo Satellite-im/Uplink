@@ -159,11 +159,15 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
-                ChatText {
-                    text: formatted_text_clone,
-                    remote: is_remote
+                p {
+                    class: "text",
+                    aria_label: "message-text",
+                    ChatText {
+                        text: formatted_text_clone,
+                        remote: is_remote
+                    }
                 }
-            ))
+            )),
             has_attachments.then(|| {
                 rsx!(
                     div {
