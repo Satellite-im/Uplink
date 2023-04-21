@@ -5,12 +5,12 @@ use common::{
     VIDEO_FILE_EXTENSIONS,
 };
 use dioxus::prelude::*;
-use dioxus_desktop::tao::event::WindowEvent;
+
 use warp::constellation::file::File;
 
 use crate::components::topbar::release_info::Release_Info;
-use dioxus_desktop::wry::application::event::Event as WryEvent;
-use dioxus_desktop::{use_window, use_wry_event_handler, DesktopContext, LogicalSize};
+
+use dioxus_desktop::{use_window, DesktopContext, LogicalSize};
 use image::io::Reader as ImageReader;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::file::get_file_extension;
