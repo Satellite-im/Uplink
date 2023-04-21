@@ -135,9 +135,14 @@
     display: inline-flex;
     flex-direction: column;
     z-index: 100;
+    cursor: pointer;
+    border: 10px;
     background-color: var(--background);
     a {
       color: var(--text-color);
+    }
+    a:hover {
+      background-color: var(--background-light);
     }
   }
 }
