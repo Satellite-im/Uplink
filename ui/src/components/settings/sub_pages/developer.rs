@@ -75,17 +75,17 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: "Test Notification".into(),
-                section_description: "Sends a test notification.".into(),
+                section_label: get_local_text("settings-developer.test-notification"),
+                section_description: get_local_text("settings-developer.test-notification-description"),
                 Button {
-                    text: "Test Notifications".into(),
+                    text: get_local_text("settings-developer.test-notification"),
                     aria_label: "test-notification-button".into(),
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
                         push_notification(
-                            "Test".to_string(),
-                            "Test".to_string(),
+                            get_local_text("settings-developer.test-popup"),
+                            get_local_text("settings-developer.test-popup"),
                             Some(Sounds::General),
                             notify_rust::Timeout::Milliseconds(4),
                         );

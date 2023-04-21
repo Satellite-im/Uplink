@@ -31,11 +31,11 @@ enum UnlockError {
 }
 
 impl UnlockError {
-    fn as_str(&self) -> &'static str {
+    fn translation(&self) -> String {
         match self {
-            UnlockError::ValidationError => "Something is wrong with the pin you supplied.",
-            UnlockError::InvalidPin => "Hmm, that pin didn't work.",
-            UnlockError::Unknown => "An unknown error occurred.",
+            UnlockError::ValidationError => get_local_text("unlock.error-pin"),
+            UnlockError::InvalidPin => get_local_text("unlock.invalid-pin"),
+            UnlockError::Unknown => get_local_text("unlock.error-unknown-pin"),
         }
     }
 }
@@ -49,7 +49,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         use_state(cx, || Some(UnlockError::ValidationError)); // By default no pin is an invalid pin.
 
     let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
-    let shown_error = use_state(cx, || "");
+    let shown_error = use_state(cx, String::new);
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
@@ -201,7 +201,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             *pin.write_silent() = val.clone();
                             // Reset the error when the person changes the pin
                             if !shown_error.get().is_empty() {
-                                shown_error.set("");
+                                shown_error.set(String::new());
                             }
                             if validation_passed {
                                 cmd_in_progress.set(true);
@@ -213,9 +213,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         }
                         onreturn: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.as_str());
+                                shown_error.set(validation_error.translation());
                             } else if let Some(e) = error.get() {
-                                shown_error.set(e.as_str());
+                                shown_error.set(e.translation());
                             } else {
                                 page.set(AuthPages::CreateAccount);
                             }
@@ -244,9 +244,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
                             onpress: move |_| {
                                 if let Some(validation_error) = validation_failure.get() {
-                                    shown_error.set(validation_error.as_str());
+                                    shown_error.set(validation_error.translation());
                                 } else if let Some(e) = error.get() {
-                                    shown_error.set(e.as_str());
+                                    shown_error.set(e.translation());
                                 } else {
                                     page.set(AuthPages::CreateAccount);
                                 }

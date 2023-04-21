@@ -14,8 +14,6 @@ pub struct Props<'a> {
     remote: Option<bool>,
     #[props(optional)]
     timestamp: Option<String>,
-    #[props(optional)]
-    with_sender: Option<Element<'a>>,
 }
 
 #[allow(non_snake_case)]
@@ -43,7 +41,6 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "time-ago",
                     "{cx.props.sender} - {time_ago}"
                 }
-                cx.props.with_sender.as_ref()
             }
             (!remote).then(|| rsx!(
                 &cx.props.user_image
