@@ -103,6 +103,7 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 button {
                     aria_label: "{aria_label}",
+                    name: "{aria_label}",
                     title: "{text}",
                     disabled: if disabled { "true" } else { "false" },
                     class: "{button_class}",
