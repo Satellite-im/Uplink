@@ -198,13 +198,10 @@ pub async fn handle_raygun_cmd(
             new_conversation_name,
             rsp,
         } => {
-            let r = match messaging
+            let r = messaging
                 .update_conversation_name(conv_id, &new_conversation_name)
                 .await
-            {
-                Ok(_) => Ok(conv_id),
-                Err(e) => Err(e),
-            };
+                .map(|_| conv_id);
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessages {
