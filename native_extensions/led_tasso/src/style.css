@@ -1,0 +1,71 @@
+#led_tasso {
+  position: absolute;
+  z-index: 2;
+  background-color: var(--background-light);
+  height: 20rem;
+  width: 20rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  right: var(--padding);
+  bottom: calc(var(--height-input) + var(--padding-more));
+  display: inline-flex;
+  flex-direction: column;
+  padding: var(--gap);
+  overflow: hidden;
+}
+
+#led_tasso .btn-wrap {
+  margin: var(--gap) 0;
+}
+
+#led_tasso .btn {
+  border-radius: var(--border-radius);
+  min-height: fit-content;
+  padding: 1rem;
+}
+#led_tasso .label {
+  width: 100%;
+  margin-bottom: var(--gap);
+}
+
+#led_tasso .emojis-container {
+  width: calc(100% - var(--gap));
+  display: inline-flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--gap);
+  gap: var(--gap);
+  justify-content: space-between;
+}
+
+#led_tasso #scrolling {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#led_tasso .emoji {
+  width: calc(var(--height-input) / 1.4);
+  height: calc(var(--height-input) / 1.4);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: calc(var(--height-input) / 1.4);
+}
+
+#led_tasso .nav {
+  overflow-x: auto;
+  height: fit-content;
+  width: 100%;
+  gap: var(--gap);
+  padding: var(--gap-less);
+}
+
+#led_tasso .label {
+  width: 100%;
+  display: inline-block;
+  padding: var(--gap-less);
+}
+
+#led_tasso .emoji:hover {
+  cursor: pointer;
+}
