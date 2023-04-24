@@ -792,7 +792,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // Automatically select the best implementation for your platform.
+    // detect when new extensions are placed in the "extensions" folder, and load them.
     use_future(cx, (), |_| {
         to_owned![state];
         async move {
