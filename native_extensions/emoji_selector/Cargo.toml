@@ -8,10 +8,8 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "d521da1991719760e271457dfe4f9ddf281afbb3", features = [
-    "transparent",
-] }
+dioxus.workspace = true
+dioxus-desktop.workspace = true
 extensions = { path = "../../extensions" }
 common = { path = "../../common" }
 kit = { path = "../../kit" }

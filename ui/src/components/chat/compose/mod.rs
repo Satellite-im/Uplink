@@ -98,7 +98,7 @@ pub fn Compose(cx: Scope) -> Element {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                if let FileDropEvent::Hovered(_) = get_drag_event() {
+                if let FileDropEvent::Hovered { .. } = get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
                     let mut new_files_to_upload: Vec<_> = files_to_upload
@@ -445,15 +445,15 @@ async fn drag_and_drop_function(
     loop {
         let file_drop_event = get_drag_event();
         match file_drop_event {
-            FileDropEvent::Hovered(files_local_path) => {
-                if verify_if_there_are_valid_paths(&files_local_path) {
+            FileDropEvent::Hovered { paths, .. } => {
+                if verify_if_there_are_valid_paths(&paths) {
                     let mut script = overlay_script.replace("$IS_DRAGGING", "true");
-                    if files_local_path.len() > 1 {
+                    if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
                             &format!(
                                 "{} {}!",
-                                files_local_path.len(),
+                                paths.len(),
                                 get_local_text("files.files-to-upload")
                             ),
                         ));
@@ -462,7 +462,7 @@ async fn drag_and_drop_function(
                             "$TEXT",
                             &format!(
                                 "{} {}!",
-                                files_local_path.len(),
+                                paths.len(),
                                 get_local_text("files.one-file-to-upload")
                             ),
                         ));
@@ -470,10 +470,10 @@ async fn drag_and_drop_function(
                     window.eval(&script);
                 }
             }
-            FileDropEvent::Dropped(files_local_path) => {
-                if verify_if_there_are_valid_paths(&files_local_path) {
+            FileDropEvent::Dropped { paths, .. } => {
+                if verify_if_there_are_valid_paths(&paths) {
                     *drag_event.write_silent() = None;
-                    new_files_to_upload = decoded_pathbufs(files_local_path);
+                    new_files_to_upload = decoded_pathbufs(paths);
                     let mut script = overlay_script.replace("$IS_DRAGGING", "false");
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
