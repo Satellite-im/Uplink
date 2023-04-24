@@ -201,7 +201,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     let state = use_shared_state::<State>(cx)?;
     let s = state.read();
     // the Compose page shouldn't be called before chats is initialized. but check here anyway.
-    if !s.chats().initialized {
+    if !s.initialized {
         return None;
     }
 

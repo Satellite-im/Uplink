@@ -6,9 +6,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::{
-    get_extras_dir, state, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH,
-};
+use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -26,13 +24,12 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
 use rfd::FileDialog;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
-use uuid::Uuid;
 use warp::multipass;
 
 use std::sync::Arc;
@@ -62,8 +59,8 @@ use crate::utils::auto_updater::{
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
-    state::{friends, storage, ui::WindowMeta, Action, State},
-    warp_runner::{ConstellationCmd, MultiPassCmd, RayGunCmd, WarpCmd},
+    state::{storage, ui::WindowMeta, Action, State},
+    warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
 };
 use dioxus_router::*;
 use std::panic;
@@ -397,8 +394,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     let mut state = State::load();
 
     if STATIC_ARGS.use_mock {
-        assert!(state.friends().initialized);
-        assert!(state.chats().initialized);
+        assert!(state.initialized);
     } else {
         state.set_own_identity(identity.clone().into());
     }
@@ -446,11 +442,8 @@ fn app(cx: Scope) -> Element {
         prism_path.to_string_lossy()
     );
 
-    // don't fetch friends and conversations from warp when using mock data
-    let friends_init = use_ref(cx, || STATIC_ARGS.use_mock);
+    // don't fetch stuff from warp when using mock data
     let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let chats_init = use_ref(cx, || STATIC_ARGS.use_mock);
-    let state_init = use_ref(cx, || STATIC_ARGS.use_mock);
 
     let mut font_style = String::new();
     if let Some(font) = state.read().ui.font.clone() {
@@ -617,10 +610,10 @@ fn app(cx: Scope) -> Element {
 
     // update state in response to warp events
     use_future(cx, (), |_| {
-        to_owned![state, friends_init, chats_init];
+        to_owned![state];
         async move {
             // don't process warp events until friends and chats have been loaded
-            while !(*friends_init.read() && *chats_init.read()) {
+            while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
             let warp_event_rx = WARP_EVENT_CH.rx.clone();
@@ -712,11 +705,12 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // init extensions
+    // init state from warp
+    // also init extensions
     use_future(cx, (), |_| {
-        to_owned![state_init, state];
+        to_owned![state];
         async move {
-            if *state_init.read() {
+            if state.read().initialized {
                 return;
             }
 
@@ -736,42 +730,41 @@ fn app(cx: Scope) -> Element {
                 state.read().ui.extensions.values().count()
             );
 
-            state_init.set(true);
-        }
-    });
-
-    // initialize friends
-    use_future(cx, (), |_| {
-        to_owned![friends_init, state];
-        async move {
-            if *friends_init.read() {
-                return;
-            }
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let (tx, rx) = oneshot::channel::<
-                Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
-            >();
-            if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::InitializeFriends {
-                rsp: tx,
-            })) {
-                log::error!("failed to initialize Friends {}", e);
-                tokio::time::sleep(Duration::from_secs(1)).await;
-                return;
-            }
-
-            let res = rx.await.expect("failed to get response from warp_runner");
-
-            log::trace!("init friends");
-            let friends = match res {
-                Ok(friends) => friends,
-                Err(e) => {
-                    log::error!("init friends failed: {}", e);
-                    return;
+            let res = loop {
+                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) =
+                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeWarp { rsp: tx }))
+                {
+                    log::error!("failed to send command to initialize warp {}", e);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    continue;
                 }
+
+                let res = match rx.await {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("warp command cancelled {}", e);
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                };
+
+                let res = match res {
+                    Ok(r) => r,
+                    Err(e) => {
+                        log::error!("failed to initialize warp: {}", e);
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                };
+
+                break res;
             };
 
-            state.write().set_friends(friends.0, friends.1);
-            *friends_init.write() = true;
+            state
+                .write()
+                .init_warp(res.friends, res.chats, res.converted_identities);
         }
     });
 
@@ -803,54 +796,6 @@ fn app(cx: Scope) -> Element {
             }
 
             *items_init.write() = true;
-        }
-    });
-
-    // initialize conversations
-    use_future(cx, (), |_| {
-        to_owned![chats_init, state];
-        async move {
-            if *chats_init.read() {
-                return;
-            }
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            let res = loop {
-                let (tx, rx) = oneshot::channel::<
-                    Result<
-                        (HashMap<Uuid, state::Chat>, HashSet<state::Identity>),
-                        warp::error::Error,
-                    >,
-                >();
-                if let Err(e) =
-                    warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeConversations {
-                        rsp: tx,
-                    }))
-                {
-                    log::error!("failed to init RayGun: {}", e);
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                    continue;
-                }
-
-                match rx.await {
-                    Ok(r) => break r,
-                    Err(e) => {
-                        log::error!("command canceled: {}", e);
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await
-                    }
-                }
-            };
-
-            log::trace!("init chats");
-            let chats = match res {
-                Ok(r) => r,
-                Err(e) => {
-                    log::error!("failed to initialize chats: {}", e);
-                    return;
-                }
-            };
-
-            state.write().set_chats(chats.0, chats.1);
-            *chats_init.write() = true;
         }
     });
 

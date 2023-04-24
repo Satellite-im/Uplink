@@ -14,12 +14,12 @@ use warp::{
 };
 
 use crate::{
-    state::{self, chats, identity, Friends},
+    state::{chats, identity, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            get_uninitialized_identity, init_conversation,
+            get_uninitialized_identity,
         },
         Account, Messaging,
     },
@@ -279,14 +279,14 @@ pub async fn handle_raygun_cmd(
 }
 
 pub struct WarpInit {
-    friends: Friends,
+    pub friends: Friends,
     // at some point we may want to initialize identities on demand, such as ony initialize the ones needed for the chats sidebar
     //all_identities: HashSet<DID>,
-    converted_identities: HashMap<DID, identity::Identity>,
+    pub converted_identities: HashMap<DID, identity::Identity>,
     // todo: don't init all conversations at once. instead, store list of all conv ids
     // and initialized conversations separately
     //all_conv_ids: HashSet<Uuid>,
-    chats: HashMap<Uuid, chats::Chat>,
+    pub chats: HashMap<Uuid, chats::Chat>,
 }
 
 // init friends, chats, and identities all at once
@@ -348,9 +348,12 @@ async fn init_warp(
 
     // dids_to_identity won't return an Identity if it couldn't be retrieved from MultiPass.
     for identity in all_identities {
-        if !converted_identities.contains_key(&identity) {
+        // using Entry::Vacant makes clippy happy
+        if let std::collections::hash_map::Entry::Vacant(e) =
+            converted_identities.entry(identity.clone())
+        {
             let uninit_id = get_uninitialized_identity(&identity)?;
-            converted_identities.insert(identity, uninit_id);
+            e.insert(uninit_id);
         }
     }
 
@@ -400,36 +403,6 @@ async fn raygun_remove_recipients_from_a_group(
         }
     }
     Ok(conv_id)
-}
-
-async fn raygun_initialize_conversations(
-    convs: &[raygun::Conversation],
-    stream_manager: &mut conv_stream::Manager,
-    account: &Account,
-    messaging: &mut Messaging,
-) -> Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), Error> {
-    log::trace!("init convs with {} total", convs.len());
-    let mut all_chats = HashMap::new();
-    let mut identities = HashSet::new();
-    for conv in convs {
-        match init_conversation(conv, account, messaging).await {
-            Ok(chat) => {
-                if let Err(e) = stream_manager.add_stream(chat.inner.id, messaging).await {
-                    log::error!(
-                        "failed to open conversation stream for conv {}: {}",
-                        chat.inner.id,
-                        e
-                    );
-                }
-                let _ = all_chats.insert(chat.inner.id, chat.inner);
-                identities.extend(chat.identities);
-            }
-            Err(e) => {
-                log::error!("failed to convert conversation to chat: {}", e);
-            }
-        };
-    }
-    Ok((all_chats, identities))
 }
 
 async fn raygun_remove_direct_convs(
