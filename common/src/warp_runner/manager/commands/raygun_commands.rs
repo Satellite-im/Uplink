@@ -412,10 +412,7 @@ async fn raygun_create_group_conversation(
         return Ok(conv.id());
     }
 
-    match messaging
-        .create_group_conversation(Some(String::from("Test Group")), recipients)
-        .await
-    {
+    match messaging.create_group_conversation(None, recipients).await {
         Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
         Err(e) => Err(e),
     }
