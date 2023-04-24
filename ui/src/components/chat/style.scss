@@ -145,9 +145,13 @@
     display: inline-flex;
     flex-direction: column;
     z-index: 100;
+    cursor: pointer;
     background-color: var(--background);
     a {
       color: var(--text-color);
+    }
+    a:hover {
+      background-color: var(--background-light);
     }
   }
 }
