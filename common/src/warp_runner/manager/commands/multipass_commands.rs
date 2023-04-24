@@ -292,7 +292,7 @@ async fn multipass_refresh_friends(
     account: &mut Account,
 ) -> Result<HashMap<DID, state::Identity>, Error> {
     let ids = account.list_friends().await?;
-    let identities = dids_to_identity(&ids, account).await?;
+    let identities = dids_to_identity(ids.into(), account).await?;
     let friends = HashMap::from_iter(identities.iter().map(|x| (x.did_key(), x.clone())));
 
     if friends.is_empty() {
@@ -323,7 +323,7 @@ async fn multipass_initialize_friends(
     all_ids.extend(incoming_requests.clone());
     all_ids.extend(outgoing_requests.clone());
 
-    let identities = dids_to_identity(&all_ids, account).await?;
+    let identities = dids_to_identity(all_ids.into(), account).await?;
     let ids = HashSet::from_iter(identities.iter().cloned());
 
     let ret = friends::Friends {

@@ -20,7 +20,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    multipass::identity::{Identity, Platform},
+    multipass::identity::{Identifier, Identity, Platform},
     raygun::{self, Conversation, MessageOptions},
 };
 
@@ -109,16 +109,23 @@ pub async fn did_to_identity(
 }
 
 pub async fn dids_to_identity(
-    dids: &[DID],
+    identifier: Identifier,
     account: &super::Account,
 ) -> Result<Vec<state::Identity>, Error> {
-    let mut ret = Vec::new();
-    ret.reserve(dids.len());
-    for id in dids {
-        let ident = did_to_identity(id, account).await?;
-        ret.push(ident);
-    }
-    Ok(ret)
+    let mut identities = account.get_identity(identifier).await?;
+    let ids = identities.drain(..).map(|id| async {
+        let status = account
+            .identity_status(&id.did_key())
+            .await
+            .unwrap_or(warp::multipass::identity::IdentityStatus::Offline);
+        let platform = account
+            .identity_platform(&id.did_key())
+            .await
+            .unwrap_or(Platform::Unknown);
+        state::Identity::new(id, status, platform)
+    });
+    let converted_ids = FuturesOrdered::from_iter(ids).collect().await;
+    Ok(converted_ids)
 }
 
 pub async fn fetch_messages_from_chat(
@@ -153,7 +160,7 @@ pub async fn conversation_to_chat(
     messaging: &mut super::Messaging,
 ) -> Result<ChatAdapter, Error> {
     // todo: should Chat::participants include self?
-    let identities = dids_to_identity(&conv.recipients(), account).await?;
+    let identities = dids_to_identity(conv.recipients().into(), account).await?;
     let identities = HashSet::from_iter(identities.iter().cloned());
 
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds

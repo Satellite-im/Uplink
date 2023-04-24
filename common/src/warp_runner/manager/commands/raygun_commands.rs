@@ -287,6 +287,37 @@ pub async fn handle_raygun_cmd(
     }
 }
 
+// returns a set of all conversation ids and a hashset of all known DIDs - from conversations, friends, incoming and outgoing requests, and blocked identities
+async fn init_warp(
+    stream_manager: &mut conv_stream::Manager,
+    account: &mut Account,
+    messaging: &mut Messaging,
+) -> Result<(HashSet<Uuid>, HashSet<DID>), Error> {
+    let conversations = messaging.list_conversations().await?;
+
+    let mut all_convs = HashSet::new();
+    let mut all_ids = HashSet::new();
+    all_ids.extend(account.list_incoming_request().await?);
+    all_ids.extend(account.list_outgoing_request().await?);
+    all_ids.extend(account.block_list().await?);
+    all_ids.extend(account.list_friends().await?);
+
+    for conv in conversations {
+        all_ids.extend(conv.recipients());
+        all_convs.insert(conv.id());
+
+        if let Err(e) = stream_manager.add_stream(conv.id(), messaging).await {
+            log::error!(
+                "failed to open conversation stream for conv {}: {}",
+                conv.id(),
+                e
+            );
+        }
+    }
+
+    Ok((all_convs, all_ids))
+}
+
 async fn raygun_add_recipients_to_a_group(
     conv_id: Uuid,
     recipients: Vec<DID>,
