@@ -741,14 +741,7 @@ fn app(cx: Scope) -> Element {
                     continue;
                 }
 
-                let res = match rx.await {
-                    Ok(r) => r,
-                    Err(e) => {
-                        log::error!("warp command cancelled {}", e);
-                        tokio::time::sleep(Duration::from_secs(1)).await;
-                        continue;
-                    }
-                };
+                let res = rx.await.expect("failed to get response from warp_runner");
 
                 let res = match res {
                     Ok(r) => r,
