@@ -59,7 +59,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 div {
-                    class: "children",
+                    class: "children disable-select",
                     aria_label: "sidebar-children",
                     cx.props.children.as_ref()
                 },

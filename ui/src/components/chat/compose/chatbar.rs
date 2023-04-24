@@ -269,8 +269,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let disabled = !state.read().can_use_active_chat();
 
-    let inner_state = state.inner();
-
     let chatbar = cx.render(rsx!(Chatbar {
         key: "{id}",
         id: id.to_string(),
@@ -279,13 +277,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
-                match inner_state.try_borrow_mut() {
-                    Ok(state) => {
-                        can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
-                        state.write().mutate(Action::SetChatDraft(*id, v));
-                    }
-                    Err(e) => log::error!("{e}"),
-                };
+                can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
+                state.write_silent().mutate(Action::SetChatDraft(*id, v));
                 local_typing_ch.send(TypingIndicator::Typing(*id));
             }
         },

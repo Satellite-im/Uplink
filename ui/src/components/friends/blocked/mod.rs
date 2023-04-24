@@ -19,7 +19,7 @@ use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity
 
 #[allow(non_snake_case)]
 pub fn BlockedUsers(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let block_list = state.read().blocked_fr_identities();
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {

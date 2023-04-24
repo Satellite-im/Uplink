@@ -13,12 +13,12 @@
 //! debug log back into a Log struct (would be easier for debug_logger but more difficult overall)
 
 use colored::Colorize;
+use log::{self, Level, LevelFilter, SetLoggerError};
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use tokio::sync::mpsc;
-use warp::logging::tracing::log::{self, Level, LevelFilter, SetLoggerError};
 use warp::sync::RwLock;
 
 use chrono::{DateTime, Local};
