@@ -49,6 +49,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
         div {
             id: "friends-layout",
             aria_label: "friends-layout",
+            class: "disable-select",
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
