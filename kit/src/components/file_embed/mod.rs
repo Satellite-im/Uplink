@@ -28,6 +28,9 @@ pub struct Props<'a> {
     // used for the button. defaults to a download icon
     button_icon: Option<Icon>,
 
+    // The thumbnail for the file. If existent
+    thumbnail: Option<String>,
+
     // used to show download button, if nothing is passed, button will render
     with_download_button: Option<bool>,
 
@@ -60,6 +63,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         None => cx.props.kind.clone().unwrap_or_default(),
     };
     let remote = cx.props.remote.unwrap_or_default();
+    let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
+    let has_thumbnail = !thumbnail.is_empty();
 
     cx.render(rsx! (
         div {
@@ -79,34 +84,58 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" }
                 )
             },
-            div {
-                class: "icon",
-                aria_label: "file-icon",
-                IconElement {
-                    icon: cx.props.attachment_icon.unwrap_or(Icon::QuestionMarkCircle)
-                },
-            }
-            div {
-                class: "file-info",
-                aria_label: "file-info",
-                p {
-                    class: "name",
-                    aria_label: "file-name",
-                    "{filename}"
-                },
-                p {
-                    class: "meta",
-                    aria_label: "file-meta",
-                    "{file_description}"
-                }
-            },
-            if with_download_button {
+            if has_thumbnail {
                 rsx!(
-                    Button {
-                        icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
-                        appearance: Appearance::Primary,
-                        aria_label: "attachment-button".into(),
-                        onpress: move |_| cx.props.on_press.call(()),
+                    div {
+                        class: "image-container",
+                        img {
+                            class: "image",
+                            src: "{thumbnail}",
+                        }
+                        if with_download_button {
+                            rsx!(
+                                Button {
+                                    icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
+                                    appearance: Appearance::Primary,
+                                    aria_label: "attachment-button".into(),
+                                    onpress: move |_| cx.props.on_press.call(()),
+                                }
+                            )
+                        }
+                    }
+                )
+            } else {
+                rsx!(
+                    div {
+                        class: "icon",
+                        aria_label: "file-icon",
+                        IconElement {
+                            icon: cx.props.attachment_icon.unwrap_or(Icon::QuestionMarkCircle)
+                        },
+                    }
+                    div {
+                        class: "file-info",
+                        aria_label: "file-info",
+                        p {
+                            class: "name",
+                            aria_label: "file-name",
+                            "{filename}"
+                        },
+                        p {
+                            class: "meta",
+                            aria_label: "file-meta",
+                            "{file_description}"
+                        }
+                    },
+                    if with_download_button {
+                        rsx!(
+                            Button {
+                                icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
+                                appearance: Appearance::Primary,
+                                aria_label: "attachment-button".into(),
+                                onpress: move |_| cx.props.on_press.call(()),
+                            }
+                        )
                     }
                 )
             }

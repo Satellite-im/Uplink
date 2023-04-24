@@ -18,6 +18,26 @@
   align-content: center;
   align-self: flex-end;
 
+  .image-container {
+    display: flex;
+    position: relative;
+    padding-top: var(--padding-less);
+    width: fit-content;
+    height: fit-content;
+    .btn-wrap{
+      position: absolute;
+      left: var(--padding-less);
+      top: calc(2*var(--padding-less));
+    }
+  }
+
+  .image {
+    width: 100%;
+    max-width: 700px;
+    height: 100%;
+    max-height: 1500px;
+  }
+
   .meta {
     font-size: var(--text-size-less);
   }
