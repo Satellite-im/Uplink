@@ -292,7 +292,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
-            div {
+            span {
                 rsx!(
                     msg_container_end,
                     render_message_groups{
