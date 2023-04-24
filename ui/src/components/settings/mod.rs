@@ -16,7 +16,7 @@ pub struct SectionProps<'a> {
 pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
-            class: "settings-section",
+            class: "settings-section disable-select",
             aria_label: "settings-section",
             div {
                 class: "settings-info",
