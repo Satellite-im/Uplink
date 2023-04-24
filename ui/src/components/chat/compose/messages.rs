@@ -673,18 +673,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 },
                 on_edit: move |update: String| {
                     edit_msg.set(None);
-                    let msg = update.split('\n').collect::<Vec<_>>();
-                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                    let msg = msg.iter().map(|x| x.to_string()).collect();
-                    if message.inner.value() == msg {
+                    let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
+                    if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
                     }
-                    if !is_valid {
-                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
-                    }
-                    else {
-                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
-                    }
+                    ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
                 }
             },
             script {
