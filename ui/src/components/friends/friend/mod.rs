@@ -15,9 +15,9 @@ use kit::{
 };
 
 use crate::utils::format_timestamp::format_timestamp_timeago;
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::State;
+use common::{icons::outline::Shape as Icon, language::get_local_text_with_args};
 use warp::multipass::identity::Relationship;
 
 #[derive(Props)]
@@ -83,9 +83,11 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 } else  {
                     rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
-                        text: format!("{} {formatted_timeago}", 
-                        if relationship.sent_friend_request() { get_local_text("friends.sent") } 
-                        else { get_local_text("friends.requested") })
+                        text: get_local_text_args_builder(
+                            if relationship.blocked() {"friends.blocked"}
+                            else if relationship.sent_friend_request() { "friends.sent" } 
+                            else { "friends.requested" }, 
+                            |m| m.put("time", formatted_timeago))
                     })
                 }
             },
