@@ -63,6 +63,22 @@ pub async fn convert_raygun_message(
     }
 }
 
+pub fn get_uninitialized_identity(did: &DID) -> Result<state::Identity, Error> {
+    let mut default: Identity = Default::default();
+    default.set_did_key(did.clone());
+    let did_str = &did.to_string();
+    // warning: assumes DIDs are very long. this can cause a panic if that ever changes
+    let start = did_str
+        .get(8..=10)
+        .ok_or(Error::OtherWithContext("DID too short".into()))?;
+    let len = did_str.len();
+    let end = did_str
+        .get(len - 3..)
+        .ok_or(Error::OtherWithContext("DID too short".into()))?;
+    default.set_username(&format!("{start}...{end}"));
+    Ok(state::Identity::from(default))
+}
+
 // this function is used in response to warp events. assuming that the DID from these events is valid.
 // Warp sends the Identity over. if the Identity has not been received yet, get_identity will fail for
 // a valid DID.
@@ -89,21 +105,7 @@ pub async fn did_to_identity(
                 .unwrap_or(Platform::Unknown);
             state::Identity::new(id, status, platform)
         }
-        None => {
-            let mut default: Identity = Default::default();
-            default.set_did_key(did.clone());
-            let did_str = &did.to_string();
-            // warning: assumes DIDs are very long. this can cause a panic if that ever changes
-            let start = did_str
-                .get(8..=10)
-                .ok_or(Error::OtherWithContext("DID too short".into()))?;
-            let len = did_str.len();
-            let end = did_str
-                .get(len - 3..)
-                .ok_or(Error::OtherWithContext("DID too short".into()))?;
-            default.set_username(&format!("{start}...{end}"));
-            state::Identity::from(default)
-        }
+        None => get_uninitialized_identity(did)?,
     };
     Ok(identity)
 }
@@ -156,13 +158,8 @@ pub async fn fetch_messages_from_chat(
 
 pub async fn conversation_to_chat(
     conv: &Conversation,
-    account: &super::Account,
-    messaging: &mut super::Messaging,
-) -> Result<ChatAdapter, Error> {
-    // todo: should Chat::participants include self?
-    let identities = dids_to_identity(conv.recipients().into(), account).await?;
-    let identities = HashSet::from_iter(identities.iter().cloned());
-
+    messaging: &super::Messaging,
+) -> Result<chats::Chat, Error> {
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let unreads = messaging.get_message_count(conv.id()).await?;
     let to_take = std::cmp::min(unreads, 20);
@@ -180,22 +177,30 @@ pub async fn conversation_to_chat(
     .await;
 
     let has_more_messages = unreads > to_take;
-    let adapter = ChatAdapter {
-        inner: chats::Chat {
-            id: conv.id(),
-            conversation_type: conv.conversation_type(),
-            conversation_name: conv.name(),
-            participants: HashSet::from_iter(conv.recipients()),
-            creator: conv.creator(),
-            messages,
-            unreads: unreads as u32,
-            replying_to: None,
-            typing_indicator: HashMap::new(),
-            draft: None,
-            has_more_messages,
-        },
-        identities,
-    };
+    Ok(chats::Chat {
+        id: conv.id(),
+        conversation_type: conv.conversation_type(),
+        conversation_name: conv.name(),
+        participants: HashSet::from_iter(conv.recipients()),
+        creator: conv.creator(),
+        messages,
+        unreads: unreads as u32,
+        replying_to: None,
+        typing_indicator: HashMap::new(),
+        draft: None,
+        has_more_messages,
+    })
+}
 
-    Ok(adapter)
+pub async fn init_conversation(
+    conv: &Conversation,
+    account: &super::Account,
+    messaging: &mut super::Messaging,
+) -> Result<ChatAdapter, Error> {
+    // todo: should Chat::participants include self?
+    let identities = dids_to_identity(conv.recipients().into(), account).await?;
+    let identities = HashSet::from_iter(identities.iter().cloned());
+
+    let inner = conversation_to_chat(conv, messaging).await?;
+    Ok(ChatAdapter { inner, identities })
 }

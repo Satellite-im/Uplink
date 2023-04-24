@@ -14,10 +14,13 @@ use warp::{
 };
 
 use crate::{
-    state::{self, chats},
+    state::{self, chats, identity, Friends},
     warp_runner::{
         conv_stream,
-        ui_adapter::{self, conversation_to_chat, fetch_messages_from_chat},
+        ui_adapter::{
+            self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
+            get_uninitialized_identity, init_conversation,
+        },
         Account, Messaging,
     },
 };
@@ -25,14 +28,10 @@ use crate::{
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
 pub enum RayGunCmd {
-    #[display(fmt = "InitializeConversations")]
-    InitializeConversations {
-        // response is (own identity, chats)
+    #[display(fmt = "InitializeWarp")]
+    InitializeWarp {
         // need to send over own identity because 'State' sets it to default
-        #[allow(clippy::type_complexity)]
-        rsp: oneshot::Sender<
-            Result<(HashMap<Uuid, chats::Chat>, HashSet<state::Identity>), warp::error::Error>,
-        >,
+        rsp: oneshot::Sender<Result<WarpInit, warp::error::Error>>,
     },
     #[display(fmt = "CreateConversation")]
     CreateConversation {
@@ -141,18 +140,10 @@ pub async fn handle_raygun_cmd(
     messaging: &mut Messaging,
 ) {
     match cmd {
-        RayGunCmd::InitializeConversations { rsp } => match messaging.list_conversations().await {
-            Ok(convs) => {
-                let r = raygun_initialize_conversations(&convs, stream_manager, account, messaging)
-                    .await;
-                let _ = rsp.send(r);
-            }
-            Err(e) => {
-                log::error!("failed to initialize conversations: {}", e);
-                // do nothing. will cancel the channel
-                // could happen if warp isn't available yet
-            }
-        },
+        RayGunCmd::InitializeWarp { rsp } => {
+            let r = init_warp(stream_manager, account, messaging).await;
+            let _ = rsp.send(r);
+        }
         RayGunCmd::CreateConversation { recipient, rsp } => {
             let r = match messaging.create_conversation(&recipient).await {
                 Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
@@ -287,24 +278,43 @@ pub async fn handle_raygun_cmd(
     }
 }
 
-// returns a set of all conversation ids and a hashset of all known DIDs - from conversations, friends, incoming and outgoing requests, and blocked identities
+pub struct WarpInit {
+    friends: Friends,
+    // at some point we may want to initialize identities on demand, such as ony initialize the ones needed for the chats sidebar
+    //all_identities: HashSet<DID>,
+    converted_identities: HashMap<DID, identity::Identity>,
+    // todo: don't init all conversations at once. instead, store list of all conv ids
+    // and initialized conversations separately
+    //all_conv_ids: HashSet<Uuid>,
+    chats: HashMap<Uuid, chats::Chat>,
+}
+
+// init friends, chats, and identities all at once
 async fn init_warp(
     stream_manager: &mut conv_stream::Manager,
     account: &mut Account,
     messaging: &mut Messaging,
-) -> Result<(HashSet<Uuid>, HashSet<DID>), Error> {
+) -> Result<WarpInit, Error> {
+    log::trace!("init_warp starting");
     let conversations = messaging.list_conversations().await?;
 
-    let mut all_convs = HashSet::new();
-    let mut all_ids = HashSet::new();
-    all_ids.extend(account.list_incoming_request().await?);
-    all_ids.extend(account.list_outgoing_request().await?);
-    all_ids.extend(account.block_list().await?);
-    all_ids.extend(account.list_friends().await?);
+    //let mut all_conv_ids = HashSet::new();
+    let mut all_identities = HashSet::new();
+    let friends = Friends {
+        all: HashSet::from_iter(account.list_friends().await?),
+        blocked: HashSet::from_iter(account.block_list().await?),
+        incoming_requests: HashSet::from_iter(account.list_incoming_request().await?),
+        outgoing_requests: HashSet::from_iter(account.list_outgoing_request().await?),
+    };
+    all_identities.extend(friends.all.iter().cloned());
+    all_identities.extend(friends.blocked.iter().cloned());
+    all_identities.extend(friends.incoming_requests.iter().cloned());
+    all_identities.extend(friends.outgoing_requests.iter().cloned());
 
+    let mut chats = HashMap::new();
     for conv in conversations {
-        all_ids.extend(conv.recipients());
-        all_convs.insert(conv.id());
+        all_identities.extend(conv.recipients());
+        //all_conv_ids.insert(conv.id());
 
         if let Err(e) = stream_manager.add_stream(conv.id(), messaging).await {
             log::error!(
@@ -313,9 +323,47 @@ async fn init_warp(
                 e
             );
         }
+        match conversation_to_chat(&conv, messaging).await {
+            Ok(chat) => {
+                chats.insert(conv.id(), chat);
+            }
+            Err(e) => {
+                log::error!("failed to convert conversation to chat: {e}");
+            }
+        };
     }
 
-    Ok((all_convs, all_ids))
+    // ensure that own identity gets fetched
+    let own_id = account.get_own_identity().await?;
+    all_identities.insert(own_id.did_key());
+
+    let identifier_vec = Vec::from_iter(all_identities.iter().cloned());
+    let mut converted_identities = HashMap::new();
+    for identity in dids_to_identity(identifier_vec.into(), account)
+        .await?
+        .drain(..)
+    {
+        converted_identities.insert(identity.did_key(), identity);
+    }
+
+    // dids_to_identity won't return an Identity if it couldn't be retrieved from MultiPass.
+    for identity in all_identities {
+        if !converted_identities.contains_key(&identity) {
+            let uninit_id = get_uninitialized_identity(&identity)?;
+            converted_identities.insert(identity, uninit_id);
+        }
+    }
+
+    log::trace!(
+        "init warp with {} friends and {} conversations",
+        friends.all.len(),
+        chats.len()
+    );
+    Ok(WarpInit {
+        friends,
+        converted_identities,
+        chats,
+    })
 }
 
 async fn raygun_add_recipients_to_a_group(
@@ -364,7 +412,7 @@ async fn raygun_initialize_conversations(
     let mut all_chats = HashMap::new();
     let mut identities = HashSet::new();
     for conv in convs {
-        match conversation_to_chat(conv, account, messaging).await {
+        match init_conversation(conv, account, messaging).await {
             Ok(chat) => {
                 if let Err(e) = stream_manager.add_stream(chat.inner.id, messaging).await {
                     log::error!(

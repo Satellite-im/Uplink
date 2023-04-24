@@ -71,6 +71,8 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip)]
     identities: HashMap<DID, identity::Identity>,
+    #[serde(skip)]
+    pub initialized: bool,
 }
 
 impl fmt::Debug for State {
@@ -98,6 +100,7 @@ impl Clone for State {
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
+            initialized: self.initialized,
         }
     }
 }
@@ -492,6 +495,7 @@ impl State {
             chats,
             friends,
             identities,
+            initialized: true,
             ..Default::default()
         }
     }
@@ -531,8 +535,7 @@ impl State {
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
-        state.friends.initialized = false;
-        state.chats.initialized = false;
+        state.initialized = false;
 
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
@@ -626,7 +629,6 @@ impl State {
                 self.chats.all.insert(id, chat);
             }
         }
-        self.chats.initialized = true;
         self.identities
             .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
@@ -877,7 +879,6 @@ impl State {
     }
     pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
         self.friends = friends;
-        self.friends.initialized = true;
         self.identities
             .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }

@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-};
+use std::{collections::HashMap, str::FromStr};
 
 use derive_more::Display;
 
@@ -17,7 +14,7 @@ use warp::{
 };
 
 use crate::{
-    state::{self, friends, Identity},
+    state::{self, Identity},
     warp_runner::{ui_adapter::dids_to_identity, Account},
 };
 
@@ -39,12 +36,6 @@ pub enum MultiPassCmd {
         id: String,
         outgoing_requests: Vec<Identity>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
-    },
-    #[display(fmt = "InitializeFriends")]
-    InitializeFriends {
-        rsp: oneshot::Sender<
-            Result<(friends::Friends, HashSet<state::Identity>), warp::error::Error>,
-        >,
     },
     #[display(fmt = "RefreshFriends")]
     RefreshFriends {
@@ -184,10 +175,6 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .map(|id| id.did_key());
             let _ = rsp.send(r);
         }
-        MultiPassCmd::InitializeFriends { rsp } => {
-            let r = multipass_initialize_friends(&mut warp.multipass).await;
-            let _ = rsp.send(r);
-        }
         MultiPassCmd::RefreshFriends { rsp } => {
             let r = multipass_refresh_friends(&mut warp.multipass).await;
             let _ = rsp.send(r);
@@ -299,39 +286,4 @@ async fn multipass_refresh_friends(
         log::warn!("No identities found");
     }
     Ok(friends)
-}
-
-async fn multipass_initialize_friends(
-    account: &mut Account,
-) -> Result<(state::friends::Friends, HashSet<state::Identity>), Error> {
-    let reqs = account.list_incoming_request().await?;
-    log::trace!("init friends with {} total", reqs.len());
-    let incoming_requests = HashSet::from_iter(reqs.iter().cloned());
-
-    let outgoing = account.list_outgoing_request().await?;
-    let outgoing_requests = HashSet::from_iter(outgoing.iter().cloned());
-
-    let ids = account.block_list().await?;
-    let blocked = HashSet::from_iter(ids.iter().cloned());
-
-    let ids = account.list_friends().await?;
-    let friends = HashSet::from_iter(ids.iter().cloned());
-
-    let mut all_ids = Vec::new();
-    all_ids.extend(friends.clone());
-    all_ids.extend(blocked.clone());
-    all_ids.extend(incoming_requests.clone());
-    all_ids.extend(outgoing_requests.clone());
-
-    let identities = dids_to_identity(all_ids.into(), account).await?;
-    let ids = HashSet::from_iter(identities.iter().cloned());
-
-    let ret = friends::Friends {
-        initialized: true,
-        all: friends,
-        blocked,
-        incoming_requests,
-        outgoing_requests,
-    };
-    Ok((ret, ids))
 }
