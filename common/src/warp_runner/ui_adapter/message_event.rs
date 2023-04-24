@@ -50,6 +50,8 @@ pub enum MessageEvent {
     },
     #[display(fmt = "RecipientRemoved")]
     RecipientRemoved { conversation: raygun::Conversation },
+    #[display(fmt = "ConversationNameUpdated")]
+    ConversationNameUpdated { conversation: raygun::Conversation },
 }
 
 pub async fn convert_message_event(
@@ -131,6 +133,11 @@ pub async fn convert_message_event(
         MessageEventKind::RecipientRemoved {
             conversation_id, ..
         } => MessageEvent::RecipientRemoved {
+            conversation: messaging.get_conversation(conversation_id).await?,
+        },
+        MessageEventKind::ConversationNameUpdated {
+            conversation_id, ..
+        } => MessageEvent::ConversationNameUpdated {
             conversation: messaging.get_conversation(conversation_id).await?,
         },
         _ => {
