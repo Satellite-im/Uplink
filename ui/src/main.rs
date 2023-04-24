@@ -730,8 +730,8 @@ fn app(cx: Scope) -> Element {
                 state.read().ui.extensions.values().count()
             );
 
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             let res = loop {
-                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
                 let (tx, rx) = oneshot::channel();
                 if let Err(e) =
                     warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::InitializeWarp { rsp: tx }))
