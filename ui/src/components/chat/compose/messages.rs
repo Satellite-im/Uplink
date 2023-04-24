@@ -388,7 +388,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } else {
         sender.username()
     };
-    let active_language = &state.read().settings.language;
+    let active_language = &state.read().settings.language_id();
 
     let mut sender_status = sender.identity_status().into();
     if !group.remote && sender_status == Status::Offline {
@@ -506,7 +506,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(_msg_uuid));
-                        log::debug!("editing msg {_msg_uuid}");
                     }
                 },
                 ContextItem {

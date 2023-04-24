@@ -10,7 +10,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, ConversationType, ReactionState},
+    raygun::{self, ConversationType, ReactionState, Location},
 };
 
 use crate::{
@@ -207,7 +207,7 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.send(conv_id, msg).await
             } else {
-                messaging.attach(conv_id, None, attachments, msg).await
+                messaging.attach(conv_id, None, Location::Disk, attachments, msg).await
             };
 
             let _ = rsp.send(r);
@@ -252,7 +252,7 @@ pub async fn handle_raygun_cmd(
                 messaging.reply(conv_id, reply_to, msg).await
             } else {
                 messaging
-                    .attach(conv_id, Some(reply_to), attachments, msg)
+                    .attach(conv_id, Some(reply_to), Location::Disk, attachments, msg)
                     .await
             };
 

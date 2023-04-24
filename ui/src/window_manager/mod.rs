@@ -1,7 +1,7 @@
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use dioxus_desktop::DesktopContext;
-use dioxus_hooks::ProvidedStateInner;
+use dioxus_hooks::UseSharedState;
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex,
@@ -28,38 +28,22 @@ pub enum WindowManagerCmd {
 }
 
 pub async fn handle_cmd(
-    state: Rc<RefCell<ProvidedStateInner<State>>>,
+    state: UseSharedState<State>,
     cmd: WindowManagerCmd,
     desktop: DesktopContext,
 ) {
     match cmd {
         WindowManagerCmd::ClosePopout => {
-            if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearCallPopout(desktop));
-            } else {
-                //todo: add logging
-            }
+            state.write().mutate(Action::ClearCallPopout(desktop));
         }
         WindowManagerCmd::CloseDebugLogger => {
-            if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearDebugLogger(desktop));
-            } else {
-                //todo: add logging
-            }
+            state.write().mutate(Action::ClearDebugLogger(desktop));
         }
         WindowManagerCmd::CloseFilePreview => {
-            if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ClearFilePreviews(desktop));
-            } else {
-                //todo: add logging
-            }
+            state.write().mutate(Action::ClearFilePreviews(desktop));
         }
         WindowManagerCmd::ForgetFilePreview(id) => {
-            if let Ok(s) = state.try_borrow_mut() {
-                s.write().mutate(Action::ForgetFilePreview(id));
-            } else {
-                //todo: add logging
-            }
+            state.write().mutate(Action::ForgetFilePreview(id));
         }
     }
 }
