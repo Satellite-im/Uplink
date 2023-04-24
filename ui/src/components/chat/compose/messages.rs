@@ -292,7 +292,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
-            div {
+            span {
                 rsx!(
                     msg_container_end,
                     render_message_groups{
@@ -513,7 +513,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(_msg_uuid));
-                        log::debug!("editing msg {_msg_uuid}");
                     }
                 },
                 ContextItem {

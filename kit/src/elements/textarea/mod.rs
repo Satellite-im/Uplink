@@ -6,9 +6,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::{Code, Modifiers};
+use uuid::Uuid;
 use warp::logging::tracing::log;
-
-use crate::elements::tooltip::{ArrowPosition, Tooltip};
 
 #[derive(Clone, Copy)]
 pub enum Size {
@@ -46,15 +45,15 @@ pub struct Props<'a> {
     value: String,
     #[props(default = false)]
     is_disabled: bool,
-    #[props(default = "".to_owned())]
-    tooltip: String,
 }
 
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("render input");
+    let eval = dioxus_desktop::use_eval(cx);
+
     let Props {
-        id,
+        id: _,
         focus,
         loading,
         placeholder,
@@ -65,16 +64,21 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         value,
         is_disabled,
-        tooltip,
     } = &cx.props;
 
+    let id = if cx.props.id.is_empty() {
+        Uuid::new_v4().to_string()
+    } else {
+        cx.props.id.clone()
+    };
+
     let height_script = include_str!("./update_input_height.js");
-    let focus_script = include_str!("./focus.js").replace("UUID", id);
-    dioxus_desktop::use_eval(cx)(height_script.to_string());
-    dioxus_desktop::use_eval(cx)(focus_script.to_string());
+    let focus_script = include_str!("./focus.js").replace("$UUID", &id);
+    eval(height_script.to_string());
+    eval(focus_script.clone());
 
     let script = include_str!("./script.js")
-        .replace("$UUID", id)
+        .replace("$UUID", &id)
         .replace("$MULTI_LINE", &format!("{}", true));
     let current_val = value.to_string();
     let disabled = *loading || *is_disabled;
@@ -88,12 +92,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     cx.render(rsx! (
         div {
+            id: "input-group-{id}",
             class: "input-group",
             aria_label: "input-group",
             div {
                 class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: "{size.get_height()}",
-                script { "{script}" },
                 textarea {
                     key: "{element_id}",
                     class: "input_textarea",
@@ -124,18 +128,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             text_value_onkeyup.borrow_mut().push('\n');
                             onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
-                    }
+                    },
                 }
             },
-            if *is_disabled && !tooltip.is_empty() {
-                cx.render(rsx!(
-                    Tooltip {
-                        arrow_position: ArrowPosition::None,
-                        text: tooltip.clone(),
-                    }
-                ))
-            }
         }
+        script { script },
         script { focus_script }
     ))
 }

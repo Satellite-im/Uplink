@@ -273,7 +273,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         is_disabled: disabled,
-        tooltip: get_local_text("messages.not-friends"),
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());

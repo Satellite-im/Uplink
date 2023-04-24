@@ -6,7 +6,7 @@ use crate::{
     elements::{button::Button, label::Label, textarea, Appearance},
 };
 
-use common::icons;
+use common::{icons, language::get_local_text};
 
 pub type To = &'static str;
 
@@ -37,8 +37,6 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
-    #[props(default = "".to_owned())]
-    tooltip: String,
 }
 
 #[derive(Props)]
@@ -122,7 +120,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
     cx.render(rsx!(
         div {
-            class: "chatbar",
+            class: "chatbar disable-select",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
             textarea::Input {
@@ -131,7 +129,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
                 focus: cx.props.with_replying_to.is_some(),
-                value: cx.props.value.clone().unwrap_or_default(),
+                value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
                 onchange: move |(v, _)| cx.props.onchange.call(v),
                 onreturn: move |(v, is_valid, _)| {
                     if is_valid {
@@ -139,7 +137,6 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 },
                 is_disabled: cx.props.is_disabled,
-                tooltip: cx.props.tooltip.clone(),
             },
             cx.props.extensions.as_ref(),
             div {
