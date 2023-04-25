@@ -265,8 +265,8 @@ Tests marked with `[NYI] Not Yet Implemented` need not pass.
 
 - [ ] Sidebar should persist through Chat, Files, and Friends pages.
 - [ ] The user's active chats should appear in the sidebar.
-- [ ] sidebar should be hidden when the User enters Settings.
-- [ ] sidebar should display User's favorite chats (If the User has any).
+- [ ] Sidebar should be hidden when the User enters Settings.
+- [ ] Sidebar should display User's favorite chats (If the User has any).
 - [ ] Users should be navigated to chat when they click a friend in their favorites.
 - [ ] Sidebar should display all User's chats with the most relevant at the top.
 - [ ] Notification bubble should appear on the Chat icon if the User has any.
