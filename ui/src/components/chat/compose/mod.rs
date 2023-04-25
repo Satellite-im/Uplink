@@ -117,10 +117,6 @@ pub fn Compose(cx: Scope) -> Element {
     let show_edit_group = use_state(cx, || None);
     let should_ignore_focus = state.read().ui.ignore_focus;
 
-    if should_ignore_focus {
-        state.write_silent().ui.ignore_focus = false;
-    }
-
     cx.render(rsx!(
         div {
             id: "compose",

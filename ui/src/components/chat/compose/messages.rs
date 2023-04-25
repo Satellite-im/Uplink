@@ -676,6 +676,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 },
                 on_edit: move |update: String| {
                     edit_msg.set(None);
+                    state.write().ui.ignore_focus = false;
                     let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
                     if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
