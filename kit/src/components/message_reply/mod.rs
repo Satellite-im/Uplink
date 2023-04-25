@@ -1,6 +1,6 @@
 use derive_more::Display;
 use dioxus::prelude::*;
-use uuid::Uuid;
+
 use warp::{constellation::file::File, crypto::DID};
 
 use crate::components::file_embed::FileEmbed;
@@ -46,8 +46,8 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let remote_message = cx.props.remote_message.unwrap_or_default();
-    let sender_did = cx.props.sender_did.as_ref().map(|f| f.clone());
-    let replier_did = cx.props.replier_did.as_ref().map(|f| f.clone());
+    let sender_did = cx.props.sender_did.as_ref().cloned();
+    let replier_did = cx.props.replier_did.as_ref().cloned();
 
     let has_attachments = cx
         .props
