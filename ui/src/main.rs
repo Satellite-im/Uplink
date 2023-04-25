@@ -188,7 +188,7 @@ fn main() {
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 
-    let window = get_window_builder(true);
+    let window = get_window_builder(true, true);
 
     let config = Config::new()
         .with_window(window)
@@ -218,7 +218,7 @@ fn main() {
     dioxus_desktop::launch_cfg(bootstrap, config)
 }
 
-pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
+pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -269,14 +269,17 @@ pub fn get_window_builder(with_predefined_size: bool) -> WindowBuilder {
     {
         use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
 
+        if with_menu {
+            window = window.with_menu(main_menu)
+        }
+
         window = window
             .with_has_shadow(true)
             .with_transparent(true)
             .with_fullsize_content_view(true)
-            .with_menu(main_menu)
             .with_titlebar_transparent(true)
             .with_title("")
-        // .with_movable_by_window_background(true)
+            .with_movable_by_window_background(true)
     }
 
     #[cfg(not(target_os = "macos"))]

@@ -723,7 +723,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     file: file3.clone(),
                                                     _drop_handler: drop_handler
                                                 });
-                                                let config = Config::default().with_window(get_window_builder(false));
+                                                let config = Config::default().with_window(get_window_builder(false, false));
 
                                                 let window = window.new_window(file_preview, config);
                                                 if let Some(wv) = Weak::upgrade(&window) {
