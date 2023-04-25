@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 
 use kit::{
@@ -14,10 +13,9 @@ use kit::{
     },
 };
 
-use crate::utils::format_timestamp::format_timestamp_timeago;
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::state::State;
-use common::{icons::outline::Shape as Icon, language::get_local_text_args_builder};
 use warp::multipass::identity::Relationship;
 
 #[derive(Props)]
@@ -28,8 +26,6 @@ pub struct Props<'a> {
     suffix: String,
     // Users relationship
     relationship: Relationship,
-    // Time when request was sent or received
-    request_datetime: Option<DateTime<Utc>>,
     // Status message from friend
     status_message: String,
     // The user image element to display
@@ -49,11 +45,8 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let active_language = &state.read().settings.language_id();
     let relationship = cx.props.relationship;
     let status_message = cx.props.status_message.clone();
-    let request_datetime = cx.props.request_datetime.unwrap_or_else(Utc::now);
-    let formatted_timeago = format_timestamp_timeago(request_datetime, active_language);
 
     let any_button_disabled = cx.props.accept_button_disabled.unwrap_or(false)
         || cx.props.block_button_disabled.unwrap_or(false)
@@ -83,18 +76,14 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 } else  {
                     rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
-                        text: get_local_text_args_builder(
+                        text: get_local_text(
                             if relationship.blocked() {
                                 "friends.blocked-desc"
                             } else if relationship.sent_friend_request() {
                                 "friends.sent"
                             } else {
                                 "friends.requested"
-                            },
-                            |m| {
-                                m.insert("time", formatted_timeago.into());
-                            },
-                        )
+                            })
                     })
                 }
             },
