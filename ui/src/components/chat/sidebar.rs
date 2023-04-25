@@ -60,7 +60,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
         return None;
     }
-    // todo: make this show up
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
