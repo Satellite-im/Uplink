@@ -23,6 +23,7 @@
   .sidebar-chats-header {
     display: inline-flex;
     justify-content: space-between;
+    margin-right: 8px;
 
     .btn {
       height: var(--height-input-less);
@@ -129,15 +130,28 @@
   }
 }
 
+.edit-group-name {
+  margin-top: 8px;
+  display: flex;
+  gap: var(--gap);
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
 .sidebar {
   .searchbar-dropdown {
     position: absolute;
     display: inline-flex;
     flex-direction: column;
     z-index: 100;
+    cursor: pointer;
     background-color: var(--background);
     a {
       color: var(--text-color);
+    }
+    a:hover {
+      background-color: var(--background-light);
     }
   }
 }

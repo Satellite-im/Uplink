@@ -14,7 +14,8 @@ use kit::{
     elements::{
         button::Button,
         checkbox::Checkbox,
-        input::{Input, Options},
+        input::{Input, Options, Validation},
+        label::Label,
         Appearance,
     },
     layout::topbar::Topbar,
@@ -30,6 +31,7 @@ enum EditGroupAction {
 enum ChanCmd {
     AddParticipants,
     RemoveParticipants,
+    UpdateGroupName(String),
 }
 
 #[derive(Props)]
@@ -45,6 +47,12 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let edit_group_action = use_state(cx, || EditGroupAction::Add);
     let conv_id = state.read().get_active_chat().unwrap().id;
+    let conv_name = state
+        .read()
+        .get_active_chat()
+        .unwrap()
+        .conversation_name
+        .unwrap_or_default();
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
     let friends_list = HashMap::from_iter(
         state
@@ -104,6 +112,23 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let res = rx.await.expect("command canceled");
                         if let Err(e) = res {
                             log::error!("failed to remove recipients from a group: {}", e);
+                        }
+                    }
+                    ChanCmd::UpdateGroupName(new_conversation_name) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
+                                conv_id,
+                                new_conversation_name,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to update group conversation name: {}", e);
                         }
                     }
                 }
@@ -185,24 +210,65 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
+    // Set up validation options for the input field
+    let group_name_validation_options = Validation {
+        // The input should have a maximum length of 64
+        max_length: Some(64),
+        // The input should have a minimum length of 1
+        min_length: Some(1),
+        // The input should only contain alphanumeric characters
+        alpha_numeric_only: true,
+        // The input should not contain any whitespace
+        no_whitespace: true,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
+        // The input should allow any special characters
+        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
+        special_chars: None,
+    };
+
     cx.render(rsx!(
         div {
             id: "edit-group",
             aria_label: "edit-group",
-            Topbar {
+            div {
+                id: "edit-group-name", 
+                class: "edit-group-name", 
+                Label {
+                    text: get_local_text("messages.group-name"),
+                },
+                Input {
+                        placeholder:  get_local_text("messages.group-name"),
+                        default_text: conv_name.clone(),
+                        aria_label: "groupname-input".into(),
+                        options: Options {
+                            with_clear_btn: true,
+                            ..get_input_options(group_name_validation_options)
+                        },
+                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                            if !is_valid {
+                                return;
+                            }
+                            if v != conv_name {
+                                ch.send(ChanCmd::UpdateGroupName(v));
+                            }
+                        },
+                    },
+            }
+        Topbar {
                 with_back_button: false,
                 controls: cx.render(rsx!(
                     if state.read().ui.sidebar_hidden {
-                       rsx! {
-                        add_friends_without_sidebar,
-                        remove_friends_without_sidebar,
-                       }
-                    } else {
                         rsx! {
-                            add_friends_with_sidebar,
-                            remove_friends_with_sidebar,
+                         add_friends_without_sidebar,
+                         remove_friends_without_sidebar,
                         }
-                    },
+                     } else {
+                         rsx! {
+                             add_friends_with_sidebar,
+                             remove_friends_with_sidebar,
+                         }
+                     },
                 )),
             },
             div {
@@ -369,4 +435,15 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             }
         }
     ))
+}
+
+fn get_input_options(validation_options: Validation) -> Options {
+    // Set up options for the input field
+    Options {
+        // Enable validation for the input field with the specified options
+        with_validation: Some(validation_options),
+        clear_on_submit: false,
+        // Use the default options for the remaining fields
+        ..Options::default()
+    }
 }
