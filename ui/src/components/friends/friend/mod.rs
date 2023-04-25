@@ -68,7 +68,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     ))
                 },
-                if relationship.friends() || !relationship.blocked() {
+                if relationship.friends() {
                    rsx!(p {
                         class: "status-message",
                         (!state.read().ui.is_minimal_view()).then(|| rsx!( "{status_message}" ))
