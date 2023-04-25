@@ -212,13 +212,16 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         }
                         onreturn: move |_| {
-                            if let Some(validation_error) = validation_failure.get() {
-                                shown_error.set(validation_error.translation());
-                            } else if let Some(e) = error.get() {
-                                shown_error.set(e.translation());
-                            } else {
-                                page.set(AuthPages::CreateAccount);
+                            if !STATIC_ARGS.cache_path.exists() {
+                                if let Some(validation_error) = validation_failure.get() {
+                                    shown_error.set(validation_error.translation());
+                                } else if let Some(e) = error.get() {
+                                    shown_error.set(e.translation());
+                                } else {
+                                    page.set(AuthPages::CreateAccount);
+                                }
                             }
+                           
                         }
                     },
                     (!shown_error.get().is_empty()).then(|| rsx!(
