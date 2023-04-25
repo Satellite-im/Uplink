@@ -64,12 +64,13 @@ pub trait IconShape: Clone + std::fmt::Debug {
 /// The properties for the [`IconButton`] component.
 #[derive(Props)]
 pub struct IconButtonProps<'a, S: IconShape> {
+    aria_label: String,
     /// An optional onclick handler for the button.
     #[props(default, strip_option)]
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
     #[props(default, strip_option)]
     /// An optional class for the *button itself*.
-    pub class: Option<&'a str>,
+    pub class: Option<String>,
     /// An optional title for the button element.
     #[props(default, strip_option)]
     pub title: Option<&'a str>,
@@ -97,7 +98,7 @@ pub struct IconButtonProps<'a, S: IconShape> {
     #[props(default, strip_option)]
     pub icon_class: Option<&'a str>,
     /// These are the child elements of the `IconButton` component.
-    #[props(default, strip_option)]
+    #[props(!optional)]
     pub children: Option<Element<'a>>,
 }
 
@@ -123,14 +124,15 @@ pub struct IconButtonProps<'a, S: IconShape> {
 pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> Element<'a> {
     cx.render(rsx! {
         button {
+            aria_label: "{cx.props.aria_label}",
+            class: format_args!("{}", cx.props.class.clone().unwrap_or_default()),
+            title: format_args!("{}", cx.props.title.unwrap_or("")),
+            disabled: format_args!("{}", if cx.props.disabled { "true" } else { "false" }),
             onclick: move |evt| if !cx.props.disabled {
                 if let Some(oc) = &cx.props.onclick {
                     oc.call(evt);
                 }
             },
-            class: format_args!("{}", cx.props.class.unwrap_or("")),
-            title: format_args!("{}", cx.props.title.unwrap_or("")),
-            disabled: format_args!("{}", if cx.props.disabled { "true" } else { "false" }),
             Icon {
                 ..IconProps {
                     class: cx.props.icon_class,
@@ -141,10 +143,14 @@ pub fn IconButton<'a, S: IconShape>(cx: Scope<'a, IconButtonProps<'a, S>>) -> El
                     disabled_fill: cx.props.disabled_fill
                 },
             },
-            span {
-                class: format_args!("{}", cx.props.span_class.unwrap_or("")),
-                cx.props.children.as_ref(),
-            },
+            (cx.props.children.is_some()).then(|| {
+                rsx!(
+                    span {
+                        class: format_args!("{}", cx.props.span_class.unwrap_or("")),
+                        cx.props.children.as_ref(),
+                    },
+                )
+            })
         },
     })
 }

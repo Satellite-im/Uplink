@@ -30,7 +30,7 @@ enum ChanCmd {
 
 #[allow(non_snake_case)]
 pub fn PendingFriends(cx: Scope) -> Element {
-    let state: UseSharedState<State> = use_shared_state::<State>(cx).unwrap();
+    let state = use_shared_state::<State>(cx)?;
     let friends_list = state.read().incoming_fr_identities();
     let deny_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let accept_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);

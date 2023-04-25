@@ -292,7 +292,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
-            div {
+            span {
                 rsx!(
                     msg_container_end,
                     render_message_groups{
@@ -388,7 +388,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } else {
         sender.username()
     };
-    let active_language = &state.read().settings.language;
+    let active_language = &state.read().settings.language_id();
 
     let mut sender_status = sender.identity_status().into();
     if !group.remote && sender_status == Status::Offline {
@@ -506,7 +506,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(_msg_uuid));
-                        log::debug!("editing msg {_msg_uuid}");
                     }
                 },
                 ContextItem {
@@ -674,18 +673,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 },
                 on_edit: move |update: String| {
                     edit_msg.set(None);
-                    let msg = update.split('\n').collect::<Vec<_>>();
-                    let is_valid = msg.iter().any(|x| !x.trim().is_empty());
-                    let msg = msg.iter().map(|x| x.to_string()).collect();
-                    if message.inner.value() == msg {
+                    let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
+                    if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
                     }
-                    if !is_valid {
-                        ch.send(MessagesCommand::DeleteMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id() });
-                    }
-                    else {
-                        ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
-                    }
+                    ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
                 }
             },
             script {

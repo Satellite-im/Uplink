@@ -168,6 +168,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "settings-profile",
+            class: "disable-select",
             aria_label: "settings-profile",
             (!show_welcome).then(|| rsx!(
                 div {

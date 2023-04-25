@@ -55,7 +55,8 @@ messages = Messages
     .unknown-sent-message = someone sent you a message.
     .not-friends = You are not friends anymore
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
-    .create-group-chat = Create DM
+    .create-group-chat = Create Group Chat
+    .group-name = Group Name
     
 favorites = Favorites
     .favorites = Favorites
@@ -113,15 +114,16 @@ files = Files
 
 settings = Settings
     .settings = Settings
-    .about = About
     .profile = Profile
     .general = General 
-    .files = Files
     .privacy = Privacy
     .audio = Sounds & Audio
+    .files = Files
     .extensions = Extensions
-    .developer = Developer
     .accessibility = Accessibility
+    .notifications = Notifications
+    .developer = Developer
+    .about = About
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings
@@ -143,39 +145,20 @@ settings-general = General Settings
     .overlay = Uplink Overlay
     .overlay-description = Enable the on screen Uplink overlay. This will show active call information, as well as allow you to add custom widgets to your screen.
     .app-language = App Language
-    .change-language = Change Language
+    .change-language = Change Language.
     .theme = Theme
     .theme-description = Change the theme of the app.
     .font-scaling = Font Scaling
     .font-scaling-description = Scale the font size up or down to your liking.
     .font = Font
     .font-description = Change the font of the app.
-    .dyslexia = Open Dyslexic
-    .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
-
-settings-extensions = Extension Settings
-    .placeholder = Placeholder
-    .open-extensions-folder = Open Extensions Folder
-    .auto-enable = Enable Automatically
-    .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
-    .banner = Extensions are pre-compiled on external hardware. For added security you can compile extensions from source and place in the `extensions` folder.
-    .open-folder-description = Open the local directory containing your installed extensions.
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
     .backup-phrase = Backup Phrase
     .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.
 
-settings-about = About Settings
-    .info = About
-    .application = Application
-    .version = Version
-    .open-website = Open Website
-    .open-website-description = Opens our website in your default web browser.
-    .open-codebase = Open Source Code
-    .open-codebase-description = Opens the codebase in your default web browser.
-
-settings-audio = Audio Settings 
+settings-audio = Audio & Sound Settings 
     .call-timer = Call Timer
     .call-timer-description = When enabled a timer will display when you're in a call showing it's duration.
     .interface-sounds = Interface Sounds
@@ -191,11 +174,26 @@ settings-files = Files Settings
     .open-sync-folder = Open Sync Folder
     .open-sync-folder-description = Open the folder where your files are synced to.
 
+settings-extensions = Extension Settings
+    .placeholder = Placeholder
+    .open-extensions-folder = Open Extensions Folder
+    .auto-enable = Enable Automatically
+    .auto-enable-description = When turned on, new extensions will automatically be enabled by default.
+    .banner = Extensions are pre-compiled on external hardware. For added security you can compile extensions from source and place in the `extensions` folder.
+    .open-folder-description = Open the local directory containing your installed extensions.
+    .installed = Installed
+    .explore = Explore
+    .settings = Settings
+
+settings-accessibility = Accessibility Settings
+    .dyslexia = Open Dyslexic
+    .dyslexia-description = Open Dyslexic may help some users who suffer from dyslexia, it's a custom font you can enable.
+
 settings-notifications = Notifications
     .notifications-description = Enable notifications for incoming calls, messages, and more.
     .enabled = Enabled
     .enabled-description = Enable notifications for incoming calls, messages, and more.
-    .grant-permissions= Grant Permissions
+    .grant-permissions = Grant Permissions
     .grant-permissions-description = Grant permissions to receive notifications.
     .friends-description = Enable notifications for friend requests.
     .messages-description = Enable notifications for new messages.
@@ -204,6 +202,9 @@ settings-notifications = Notifications
 settings-developer = Developer Settings 
     .developer-mode = Developer Mode
     .developer-mode-description = Enabling developer mode adds logging and displays helpful debug information on the UI.
+    .test-notification = Test Notification
+    .test-notification-description = Sends a test notification.
+    .test-popup = Test
     .open-cache = Open Cache
     .open-cache-description = Open the cache in your default file browser.
     .open-cache-folder = Open Folder
@@ -219,7 +220,16 @@ settings-developer = Developer Settings
     .save-logs-to-file = Save logs in a file
     .save-logs-to-file-description = Enabling this option, logs will be saved in a file and will be persistent.
     .print-state = Print State 
-    .print-state-description = Display State in the debug logger 
+    .print-state-description = Display State in the debug logger.
+
+settings-about = About Settings
+    .info = About
+    .application = Application
+    .version = Version
+    .open-website = Open Website
+    .open-website-description = Opens our website in your default web browser.
+    .open-codebase = Open Source Code
+    .open-codebase-description = Opens the codebase in your default web browser.
 
 media-player = Media Player 
     .enable-camera = Enable Camera 
@@ -243,6 +253,9 @@ unlock = Unlock
     .unlock-account = Unlock Account
     .welcome = Welcome back, { $name }
     .create-password = Let's choose your password
+    .error-pin = Something is wrong with the pin you supplied.
+    .invalid-pin = Hmm, that pin didn't work.
+    .error-unknown-pin = An unknown error occurred.
 
 auth = Create Account 
     .enter-username = Enter Username

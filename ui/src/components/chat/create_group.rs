@@ -99,6 +99,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             id: "create-group",
+            margin_right: "8px",
             aria_label: "Create Group",
             div {
                 class: "search-input",
@@ -230,7 +231,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     cx.props.friend.username(),
                 },
             },
-            Checkbox{
+            Checkbox {
                 disabled: false,
                 width: "1em".into(),
                 height: "1em".into(),
