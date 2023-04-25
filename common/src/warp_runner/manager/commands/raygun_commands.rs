@@ -55,6 +55,12 @@ pub enum RayGunCmd {
         recipients: Vec<DID>,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
+    #[display(fmt = "UpdateConversationName")]
+    UpdateConversationName {
+        conv_id: Uuid,
+        new_conversation_name: String,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
     #[display(fmt = "DeleteConversation")]
     DeleteConversation {
         conv_id: Uuid,
@@ -176,6 +182,17 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = raygun_remove_recipients_from_a_group(conv_id, recipients, messaging).await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::UpdateConversationName {
+            conv_id,
+            new_conversation_name,
+            rsp,
+        } => {
+            let r = messaging
+                .update_conversation_name(conv_id, &new_conversation_name)
+                .await
+                .map(|_| conv_id);
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchMessages {

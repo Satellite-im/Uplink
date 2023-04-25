@@ -224,7 +224,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     let active_participant = other_participants
         .first()
         .cloned()
-        .expect("chat should have at least 2 participants");
+        .unwrap_or(s.get_own_identity());
 
     let subtext = match active_chat.conversation_type {
         ConversationType::Direct => active_participant.status_message().unwrap_or_default(),

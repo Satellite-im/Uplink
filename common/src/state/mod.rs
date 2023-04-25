@@ -474,6 +474,11 @@ impl State {
                     chat.participants = HashSet::from_iter(conversation.recipients());
                 }
             }
+            MessageEvent::ConversationNameUpdated { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.conversation_name = conversation.name();
+                }
+            }
         }
     }
 }
