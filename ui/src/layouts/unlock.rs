@@ -221,7 +221,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                     page.set(AuthPages::CreateAccount);
                                 }
                             }
-                           
                         }
                     },
                     (!shown_error.get().is_empty()).then(|| rsx!(
