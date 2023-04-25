@@ -60,7 +60,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
         return None;
     }
-    // todo: make this show up
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
@@ -190,7 +189,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             hidden: state.read().ui.sidebar_hidden,
             with_search: cx.render(rsx!(
                 div {
-                    class: "search-input",
+                    class: "search-input disable-select",
                     Input {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation

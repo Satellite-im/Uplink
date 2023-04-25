@@ -10,7 +10,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, ConversationType, ReactionState, Location},
+    raygun::{self, ConversationType, Location, ReactionState},
 };
 
 use crate::{
@@ -54,6 +54,12 @@ pub enum RayGunCmd {
     RemoveGroupParticipants {
         conv_id: Uuid,
         recipients: Vec<DID>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateConversationName")]
+    UpdateConversationName {
+        conv_id: Uuid,
+        new_conversation_name: String,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "DeleteConversation")]
@@ -187,6 +193,17 @@ pub async fn handle_raygun_cmd(
             let r = raygun_remove_recipients_from_a_group(conv_id, recipients, messaging).await;
             let _ = rsp.send(r);
         }
+        RayGunCmd::UpdateConversationName {
+            conv_id,
+            new_conversation_name,
+            rsp,
+        } => {
+            let r = messaging
+                .update_conversation_name(conv_id, &new_conversation_name)
+                .await
+                .map(|_| conv_id);
+            let _ = rsp.send(r);
+        }
         RayGunCmd::FetchMessages {
             conv_id,
             new_len,
@@ -207,7 +224,9 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.send(conv_id, msg).await
             } else {
-                messaging.attach(conv_id, None, Location::Disk, attachments, msg).await
+                messaging
+                    .attach(conv_id, None, Location::Disk, attachments, msg)
+                    .await
             };
 
             let _ = rsp.send(r);
