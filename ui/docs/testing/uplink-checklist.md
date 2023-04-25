@@ -109,7 +109,7 @@ Tests marked with `[NYI] Not Yet Implemented` do not need to pass yet.
 - [ ] User Profile Pic should appear next to their Message and be up to date.
 - [ ] Username should appear above each message or bulk of messages sent or received.
 - [ ] Clicking the *Heart* should add the friend to your *Favorites*.
-- [ ] Currect chat should be displayed at top of the list in Sidebar.
+- [ ] Current chat should be displayed at top of the list in Sidebar.
 - [ ] Timestamps should update in chat, and sidebar. (now, then goes by minutes-hours-days)
 - [ ] Clicking *Phone* icon should open call modal.
 - [ ] Chat should close if User blocks friend they are in current chat with.

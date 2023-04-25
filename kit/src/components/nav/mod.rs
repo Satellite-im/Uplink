@@ -116,6 +116,15 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 let name: String = route.name.clone();
                 let aria_label: String = route.name.clone();
                 // todo: don't show the tooltip if bubble is true
+                let tooltip = if cx.props.bubble.is_some() {
+                    cx.render(rsx!(""))
+                } else {
+                    cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Bottom,
+                        text: route.name.clone(),
+                    }))
+                };
+
                 rsx!(
                     Button {
                         key: "{key}",
@@ -129,10 +138,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if bubble { name } else { "".into() }
                         },
                         with_badge: badge,
-                        tooltip: cx.render(rsx!(Tooltip {
-                            arrow_position: ArrowPosition::Bottom,
-                            text: route.name.clone(),
-                        })),
+                        tooltip: tooltip,
                         appearance: get_appearance(active, route)
                     }
                 )
