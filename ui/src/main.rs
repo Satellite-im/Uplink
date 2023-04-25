@@ -265,13 +265,16 @@ pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> Window
         window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
     }
 
+    if with_menu {
+        #[cfg(target_os = "macos")]
+        {
+            window = window.with_menu(main_menu)
+        }
+    }
+
     #[cfg(target_os = "macos")]
     {
         use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
-
-        if with_menu {
-            window = window.with_menu(main_menu)
-        }
 
         window = window
             .with_has_shadow(true)
