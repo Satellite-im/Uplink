@@ -497,6 +497,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     icon: Icon::FaceSmile,
                     text: get_local_text("messages.react"),
                     onpress: move |_| {
+                        state.write().ui.ignore_focus = true;
                         reacting_to.set(Some(_msg_uuid));
                     }
                 },
@@ -613,6 +614,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         }
                     },
                     onblur: move |_| {
+                        state.write().ui.ignore_focus = false;
                         reacting_to.set(None);
                     },
                     reactions.iter().cloned().map(|reaction| {
@@ -620,6 +622,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             div {
                                 onclick: move |_|  {
                                     reacting_to.set(None);
+                                    state.write().ui.ignore_focus = false;
                                     ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
                                 },
                                 "{reaction}"
