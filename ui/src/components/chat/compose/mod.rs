@@ -67,8 +67,9 @@ impl PartialEq for ComposeData {
 pub struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
-    upload_files: Option<UseState<Vec<PathBuf>>>,
-    show_edit_group: Option<UseState<Option<Uuid>>>,
+    upload_files: UseState<Vec<PathBuf>>,
+    show_edit_group: UseState<Option<Uuid>>,
+    ignore_focus: bool,
 }
 
 #[allow(non_snake_case)]
@@ -114,6 +115,11 @@ pub fn Compose(cx: Scope) -> Element {
         }
     });
     let show_edit_group = use_state(cx, || None);
+    let should_ignore_focus = state.read().ui.ignore_focus;
+
+    if should_ignore_focus {
+        state.write_silent().ui.ignore_focus = false;
+    }
 
     cx.render(rsx!(
         div {
@@ -150,12 +156,16 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 controls: cx.render(rsx!(get_controls{
-                    data: data2,
+                    data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
+                    upload_files: files_to_upload.clone(),
+                    ignore_focus: should_ignore_focus,
                 })),
                 get_topbar_children {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
+                    upload_files: files_to_upload.clone(),
+                    ignore_focus: should_ignore_focus,
                 }
             },
             data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
@@ -186,11 +196,13 @@ pub fn Compose(cx: Scope) -> Element {
                         MessageGroupSkeletal { alt: true }
                     }
                 ),
-                Some(data) =>  rsx!(messages::get_messages{data: data.clone()}),
+                Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
             },
             chatbar::get_chatbar {
-                data: data,
-                upload_files: files_to_upload.clone()
+                data: data.clone(),
+                show_edit_group: show_edit_group.clone(),
+                upload_files: files_to_upload.clone(),
+                ignore_focus: should_ignore_focus,
             }
         )),
     }
@@ -253,7 +265,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let show_edit_group = cx.props.show_edit_group.as_ref().unwrap();
     let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
@@ -266,7 +277,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     } else {
         (ConversationType::Direct, None)
     };
-    let edit_group_activated = show_edit_group
+    let edit_group_activated = cx
+        .props
+        .show_edit_group
         .get()
         .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
         .unwrap_or(false);
@@ -299,9 +312,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 onpress: move |_| {
                     if is_creator {
                         if edit_group_activated {
-                            show_edit_group.set(None);
+                            cx.props.show_edit_group.set(None);
                         } else if let Some(chat) = active_chat.as_ref() {
-                            show_edit_group.set(Some(chat.id));
+                            cx.props.show_edit_group.set(Some(chat.id));
                         }
                     }
 

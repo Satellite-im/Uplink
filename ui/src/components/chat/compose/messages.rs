@@ -451,6 +451,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let _msg_uuid = message.inner.id();
 
+        // todo: add onblur event
         rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
@@ -506,6 +507,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
                         edit_msg.set(Some(_msg_uuid));
+                        state.write().ui.ignore_focus = true;
                     }
                 },
                 ContextItem {
@@ -515,6 +517,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
+                        state.write().ui.ignore_focus = false;
                     }
                 },
                 ContextItem {
