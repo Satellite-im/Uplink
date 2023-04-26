@@ -61,13 +61,13 @@ pub struct Chat {
     // for loading messages into the UI - indicates if more messages can be fetched from warp and added to Chat.messages
     #[serde(skip)]
     pub has_more_messages: bool,
+    #[serde(skip)]
+    pub pending_outgoing_messages: usize,
 }
 
 // warning: Chats implements Serialize
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Chats {
-    #[serde(skip)]
-    pub initialized: bool,
     // All active chats from warp.
     pub all: HashMap<Uuid, Chat>,
     // Chat to display / interact with currently.
@@ -114,13 +114,7 @@ impl Serialize for Chats {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Chats", 6)?;
-
-        if STATIC_ARGS.use_mock {
-            state.serialize_field("initialized", &self.initialized)?;
-        } else {
-            state.skip_field("initialized")?;
-        }
+        let mut state = serializer.serialize_struct("Chats", 5)?;
 
         state.serialize_field("all", &self.all)?;
         state.serialize_field("active", &self.active)?;

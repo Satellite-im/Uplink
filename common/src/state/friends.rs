@@ -7,9 +7,6 @@ use crate::STATIC_ARGS;
 // warning: Friends implements Serialize
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Friends {
-    // becomes true when the friends fields have been retrieved from Warp
-    #[serde(skip)]
-    pub initialized: bool,
     // All active friends.
     #[serde(default)]
     pub all: HashSet<DID>,
@@ -29,15 +26,13 @@ impl Serialize for Friends {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Friends", 5)?;
+        let mut state = serializer.serialize_struct("Friends", 4)?;
         if STATIC_ARGS.use_mock {
-            state.serialize_field("initialized", &self.initialized)?;
             state.serialize_field("all", &self.all)?;
             state.serialize_field("blocked", &self.blocked)?;
             state.serialize_field("incoming_requests", &self.incoming_requests)?;
             state.serialize_field("outgoing_requests", &self.outgoing_requests)?;
         } else {
-            state.skip_field("initialized")?;
             state.skip_field("all")?;
             state.skip_field("blocked")?;
             state.skip_field("incoming_requests")?;
