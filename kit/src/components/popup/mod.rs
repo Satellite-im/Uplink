@@ -12,9 +12,9 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Popup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let full = use_state(&cx, || false);
-    let modal = use_state(&cx, || false);
-    let show_children = use_state(&cx, || true);
+    let full = use_state(cx, || false);
+    let modal = use_state(cx, || false);
+    let show_children = use_state(cx, || true);
 
     let full_class = match full.get() {
         true => "popup full",
