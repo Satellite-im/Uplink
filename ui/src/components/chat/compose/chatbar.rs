@@ -64,14 +64,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
-    let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
-    let update_send = || {
+    let files_to_upload = &cx.props.upload_files;
+    let update_send = move || {
         let valid = state.read().active_chat_has_draft() || !files_to_upload.is_empty();
         if !can_send.get().eq(&valid) {
             can_send.set(valid);
         }
     };
     update_send();
+
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
@@ -218,7 +219,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let msg_valid = |msg: &[String]| {
         (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
-            || !files_to_upload.current().is_empty()
+            || !cx.props.upload_files.current().is_empty()
     };
 
     let submit_fn = move || {
@@ -280,6 +281,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         loading: is_loading,
         placeholder: get_local_text("messages.say-something-placeholder"),
         is_disabled: disabled,
+        ignore_focus: cx.props.ignore_focus,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
                 state.write_silent().mutate(Action::SetChatDraft(*id, v));
@@ -364,14 +366,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     .set_directory(dirs::home_dir().unwrap_or_default())
                     .pick_files()
                 {
-                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                    let mut new_files_to_upload: Vec<_> = cx
+                        .props
+                        .upload_files
                         .current()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
-                    files_to_upload.set(new_files_to_upload);
+                    cx.props.upload_files.set(new_files_to_upload);
                     update_send();
                 }
             },
@@ -405,7 +409,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             })
         })
         chatbar,
-        Attachments {files: files_to_upload.clone(), on_remove: move |_| {
+        Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
             update_send();
         }}
     ))
