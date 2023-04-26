@@ -2,7 +2,7 @@ use derive_more::Display;
 use uuid::Uuid;
 use warp::{error::Error, logging::tracing::log, raygun::RayGunEventKind};
 
-use super::{super::conv_stream, conversation_to_chat, ChatAdapter};
+use super::{super::conv_stream, init_conversation, ChatAdapter};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
@@ -23,7 +23,7 @@ pub async fn convert_raygun_event(
     let evt = match event {
         RayGunEventKind::ConversationCreated { conversation_id } => {
             let conv = messaging.get_conversation(conversation_id).await?;
-            let chat = conversation_to_chat(&conv, account, messaging).await?;
+            let chat = init_conversation(&conv, account, messaging).await?;
             stream_manager.add_stream(chat.inner.id, messaging).await?;
             RayGunEvent::ConversationCreated(chat)
         }
