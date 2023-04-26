@@ -37,6 +37,7 @@ pub struct Props<'a> {
     onreturn: EventHandler<'a, String>,
     #[props(default = false)]
     is_disabled: bool,
+    ignore_focus: bool,
 }
 
 #[derive(Props)]
@@ -128,7 +129,7 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 id: controlled_input_id.clone(),
                 loading: cx.props.loading.unwrap_or_default(),
                 placeholder: cx.props.placeholder.clone(),
-                focus: cx.props.with_replying_to.is_some(),
+                ignore_focus: cx.props.ignore_focus,
                 value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
                 onchange: move |(v, _)| cx.props.onchange.call(v),
                 onreturn: move |(v, is_valid, _)| {

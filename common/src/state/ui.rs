@@ -67,6 +67,8 @@ pub struct UI {
     pub show_settings_welcome: bool,
     // Cached username used in login page
     pub cached_username: Option<String>,
+    #[serde(skip)]
+    pub ignore_focus: bool,
 }
 
 #[derive(Default, Deserialize, Serialize)]
