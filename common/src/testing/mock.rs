@@ -128,6 +128,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages: false,
+        pending_outgoing_messages: 0,
     }
 }
 

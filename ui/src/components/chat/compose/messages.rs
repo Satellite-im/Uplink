@@ -296,11 +296,12 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 rsx!(
                     msg_container_end,
                     render_message_groups{
-                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE,  &data.active_chat.messages),
+                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE, &data.active_chat.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         num_to_take: num_to_take.clone(),
                         has_more: data.active_chat.has_more_messages,
+                        pending_outgoing_message: state.read().active_chat_send_in_progress(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             if !identity_profile.get().eq(&id) {
                                 let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
@@ -338,6 +339,7 @@ struct AllMessageGroupsProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
+    pending_outgoing_message: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -345,16 +347,21 @@ struct AllMessageGroupsProps<'a> {
 // temporary location
 fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
     log::trace!("render message groups");
-    cx.render(rsx!(cx.props.groups.iter().map(|_group| {
-        rsx!(render_message_group {
-            group: _group,
-            active_chat_id: cx.props.active_chat_id,
-            num_messages_in_conversation: cx.props.num_messages_in_conversation,
-            num_to_take: cx.props.num_to_take.clone(),
-            has_more: cx.props.has_more,
-            on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
-        })
-    })))
+    cx.render(rsx!(
+        cx.props.groups.iter().map(|_group| {
+            rsx!(render_message_group {
+                group: _group,
+                active_chat_id: cx.props.active_chat_id,
+                num_messages_in_conversation: cx.props.num_messages_in_conversation,
+                num_to_take: cx.props.num_to_take.clone(),
+                has_more: cx.props.has_more,
+                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+            },)
+        }),
+        cx.props
+            .pending_outgoing_message
+            .then(|| rsx!(MessageGroupSkeletal { alt: true }))
+    ))
 }
 
 #[derive(Props)]

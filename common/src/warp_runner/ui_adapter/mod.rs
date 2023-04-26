@@ -189,6 +189,7 @@ pub async fn conversation_to_chat(
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages,
+        pending_outgoing_messages: 0,
     })
 }
 
