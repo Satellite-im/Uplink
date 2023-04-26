@@ -3,7 +3,6 @@ use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
-use common::state::State;
 use dioxus::prelude::*;
 
 use humansize::format_size;
