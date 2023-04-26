@@ -282,7 +282,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
-                //can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
                 state.write_silent().mutate(Action::SetChatDraft(*id, v));
                 update_send();
                 local_typing_ch.send(TypingIndicator::Typing(*id));
