@@ -410,6 +410,7 @@ impl State {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
+                self.decrement_outgoing_messages(conversation_id);
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -665,6 +666,14 @@ impl State {
             .map(|d| !d.is_empty())
             .unwrap_or(false)
     }
+
+    pub fn active_chat_send_in_progress(&self) -> bool {
+        self.get_active_chat()
+            .as_ref()
+            .map(|d| d.pending_outgoing_messages > 0)
+            .unwrap_or(false)
+    }
+
     /// Cancels a reply within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -854,6 +863,22 @@ impl State {
     fn send_chat_to_top_of_sidebar(&mut self, chat_id: Uuid) {
         self.chats.in_sidebar.retain(|id| id != &chat_id);
         self.chats.in_sidebar.push_front(chat_id);
+    }
+
+    // indicates that a conversation has a pending outgoing message
+    // can only send messages to the active chat
+    pub fn increment_outgoing_messages(&mut self) {
+        if let Some(id) = self.chats.active {
+            if let Some(chat) = self.chats.all.get_mut(&id) {
+                chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_add(1);
+            }
+        }
+    }
+
+    pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
+            chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_sub(1);
+        }
     }
 
     /// Sets the draft on a given chat to some contents.
