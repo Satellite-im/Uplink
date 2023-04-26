@@ -71,6 +71,8 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip)]
     identities: HashMap<DID, identity::Identity>,
+    #[serde(skip)]
+    pub initialized: bool,
 }
 
 impl fmt::Debug for State {
@@ -98,6 +100,7 @@ impl Clone for State {
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
+            initialized: self.initialized,
         }
     }
 }
@@ -498,6 +501,7 @@ impl State {
             chats,
             friends,
             identities,
+            initialized: true,
             ..Default::default()
         }
     }
@@ -537,8 +541,7 @@ impl State {
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
-        state.friends.initialized = false;
-        state.chats.initialized = false;
+        state.initialized = false;
 
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
@@ -570,6 +573,29 @@ impl State {
         //     }
         // };
         // serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
+    }
+
+    pub fn init_warp(
+        &mut self,
+        friends: Friends,
+        chats: HashMap<Uuid, Chat>,
+        mut identities: HashMap<DID, Identity>,
+    ) {
+        self.friends = friends;
+        for (id, chat) in chats {
+            if let Some(conv) = self.chats.all.get_mut(&id) {
+                conv.messages = chat.messages;
+                conv.conversation_type = chat.conversation_type;
+                conv.has_more_messages = chat.has_more_messages;
+                conv.conversation_name = chat.conversation_name;
+                conv.creator = chat.creator;
+            } else {
+                self.chats.all.insert(id, chat);
+            }
+        }
+        self.identities.extend(identities.drain());
+
+        self.initialized = true;
     }
 }
 
@@ -619,22 +645,6 @@ impl State {
             .filter_map(|did| self.identities.get(did))
             .cloned()
             .collect()
-    }
-    pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
-        for (id, chat) in chats {
-            if let Some(conv) = self.chats.all.get_mut(&id) {
-                conv.messages = chat.messages;
-                conv.conversation_type = chat.conversation_type;
-                conv.has_more_messages = chat.has_more_messages;
-                conv.conversation_name = chat.conversation_name;
-                conv.creator = chat.creator;
-            } else {
-                self.chats.all.insert(id, chat);
-            }
-        }
-        self.chats.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
@@ -904,12 +914,6 @@ impl State {
 impl State {
     pub fn friends(&self) -> &friends::Friends {
         &self.friends
-    }
-    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
-        self.friends = friends;
-        self.friends.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
 
     fn block(&mut self, identity: &DID) {
