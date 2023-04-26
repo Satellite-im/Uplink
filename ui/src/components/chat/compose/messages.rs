@@ -1,4 +1,9 @@
-use std::{ffi::OsStr, path::PathBuf, rc::Rc};
+use std::{
+    collections::{HashMap, HashSet},
+    ffi::OsStr,
+    path::PathBuf,
+    rc::Rc,
+};
 
 use dioxus::prelude::{EventHandler, *};
 
@@ -61,7 +66,7 @@ enum MessagesCommand {
     DownloadAttachment {
         conv_id: Uuid,
         msg_id: Uuid,
-        file_name: String,
+        file: warp::constellation::file::File,
         file_path_to_download: PathBuf,
     },
     EditMessage {
@@ -76,6 +81,8 @@ enum MessagesCommand {
     },
 }
 
+type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
+
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
 /// tell group_messages to flag the first X messages.
@@ -84,7 +91,9 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
+    use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new()});
     let state = use_shared_state::<State>(cx)?;
+    let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
@@ -139,7 +148,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     });
 
     let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![newely_fetched_messages];
+        to_owned![newely_fetched_messages, pending_downloads];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -190,7 +199,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                     MessagesCommand::DownloadAttachment {
                         conv_id,
                         msg_id,
-                        file_name,
+                        file,
                         file_path_to_download,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
@@ -198,12 +207,15 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DownloadAttachment {
                                 conv_id,
                                 msg_id,
-                                file_name,
+                                file_name: file.name(),
                                 file_path_to_download,
                                 rsp: tx,
                             }))
                         {
                             log::error!("failed to send warp command: {}", e);
+                            if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
+                                conv.remove(&file);
+                            }
                             continue;
                         }
 
@@ -217,6 +229,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             Err(e) => {
                                 log::error!("failed to download attachment: {}", e);
                             }
+                        }
+                        if let Some(conv) = pending_downloads.write().get_mut(&conv_id) {
+                            conv.remove(&file);
                         }
                     }
                     MessagesCommand::EditMessage {
@@ -553,6 +568,7 @@ struct MessageProps<'a> {
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
     let state = use_shared_state::<State>(cx)?;
+    let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
     let user_did = state.read().did_key();
 
     // todo: why?
@@ -657,11 +673,13 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
                 attachments: message.inner.attachments(),
+                attachments_pending_download: pending_downloads.read().get(&message.inner.conversation_id()).cloned(),
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
                 parse_markdown: true,
-                on_download: move |file_name| {
+                on_download: move |file: warp::constellation::file::File| {
+                    let file_name = file.name();
                     let file_extension = std::path::Path::new(&file_name)
                         .extension()
                         .and_then(OsStr::to_str)
@@ -674,10 +692,17 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         .unwrap_or_default();
                     if let Some(file_path_to_download) = FileDialog::new()
                     .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
+                        let conv_id = message.inner.conversation_id();
+                        if !pending_downloads.read().contains_key(&conv_id) {
+                            pending_downloads.write().insert(conv_id, HashSet::new());
+                        }
+                        pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
+                        
                         ch.send(MessagesCommand::DownloadAttachment {
-                            conv_id: message.inner.conversation_id(),
+                            conv_id,
                             msg_id: message.inner.id(),
-                            file_name, file_path_to_download
+                            file, 
+                            file_path_to_download
                         })
                     }
                 },

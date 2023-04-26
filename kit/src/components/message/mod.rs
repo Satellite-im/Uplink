@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
@@ -54,8 +56,12 @@ pub struct Props<'a> {
     // available for download
     attachments: Option<Vec<File>>,
 
+    // attachments which are being downloaded
+    #[props(!optional)]
+    attachments_pending_download: Option<HashSet<File>>,
+
     /// called when an attachment is downloaded
-    on_download: EventHandler<'a, String>,
+    on_download: EventHandler<'a, File>,
 
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
@@ -91,13 +97,18 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let attachment_list = cx.props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
-            let name = file.name();
             rsx!(FileEmbed {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
                 remote: is_remote,
-                on_press: move |_| cx.props.on_download.call(name.clone()),
+                download_pending: cx
+                    .props
+                    .attachments_pending_download
+                    .as_ref()
+                    .map(|x| x.contains(file))
+                    .unwrap_or(false),
+                on_press: move |_| cx.props.on_download.call(file.clone()),
             })
         })
     });
