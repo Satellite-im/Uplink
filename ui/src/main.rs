@@ -18,7 +18,9 @@ use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::nav::Route as UIRoute;
+use kit::components::popup::Popup;
 use kit::components::topbar_controls::Topbar_Controls;
+use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -857,6 +859,8 @@ fn get_update_icon(cx: Scope) -> Element {
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
     let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
+    let disp_download_location: &UseState<String> = use_state(cx, String::new);
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -891,11 +895,8 @@ fn get_update_icon(cx: Scope) -> Element {
                     ContextItem {
                         text: get_local_text("uplink.update-menu-download"),
                         onpress: move |_| {
-                            if let Some(dest) = get_download_dest() {
-                                download_state.write().stage = DownloadProgress::Pending;
-                                download_state.write().destination = Some(dest.clone());
-                                download_ch.send(SoftwareDownloadCmd(dest));
-                            }
+                            download_state.write().stage = DownloadProgress::PickFolder;
+
                         }
                     }
                 )),
@@ -903,11 +904,8 @@ fn get_update_icon(cx: Scope) -> Element {
                     id: "update-available",
                     aria_label: "update-available",
                     onclick: move |_| {
-                        if let Some(dest) = get_download_dest() {
-                            download_state.write().stage = DownloadProgress::Pending;
-                            download_state.write().destination = Some(dest.clone());
-                            download_ch.send(SoftwareDownloadCmd(dest));
-                        }
+                        download_state.write().stage = DownloadProgress::PickFolder;
+
                     },
                     IconElement {
                         icon: common::icons::solid::Shape::ArrowDownCircle,
@@ -916,6 +914,42 @@ fn get_update_icon(cx: Scope) -> Element {
                 }
             }
         )),
+        DownloadProgress::PickFolder => cx.render(rsx!(Popup {
+            hidden: false,
+            on_dismiss: move |_| {
+                download_state.write().stage = DownloadProgress::Idle;
+                disp_download_location.set(String::new());
+                download_location.set(None);
+            },
+            children: cx.render(rsx!(
+                div {
+                    class: "download-modal",
+                    div {
+                        Button {
+                            text: "pick location to download installer ".into(),
+                            onpress: move |_| {
+                                let dest = get_download_dest();
+                                disp_download_location.set(dest.as_ref().map(|x| x.to_string_lossy().to_string()).unwrap_or_default());
+                                download_location.set(dest);
+                            },
+                        } ,
+                       p {
+                        *disp_download_location.current()
+                       }
+                    },
+                    download_location.current().clone().map(|dest| rsx!(
+                        Button {
+                            text: "download installer".into(),
+                            onpress: move |_| {
+                                download_state.write().stage = DownloadProgress::Pending;
+                                download_state.write().destination = Some(dest.clone());
+                                download_ch.send(SoftwareDownloadCmd(dest));
+                            }
+                        }
+                    ))
+                }
+            ))
+        })),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
             class: "topbar-item",

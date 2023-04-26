@@ -21,6 +21,7 @@ pub struct SoftwareDownloadCmd(pub PathBuf);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DownloadProgress {
     Idle,
+    PickFolder,
     Pending,
     Finished,
 }
