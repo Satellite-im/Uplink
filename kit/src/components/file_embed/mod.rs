@@ -3,6 +3,7 @@ use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
+use common::state::State;
 use dioxus::prelude::*;
 
 use humansize::format_size;
@@ -30,6 +31,8 @@ pub struct Props<'a> {
 
     // The thumbnail for the file. If existent
     thumbnail: Option<String>,
+
+    big: Option<bool>,
 
     // used to show download button, if nothing is passed, button will render
     with_download_button: Option<bool>,
@@ -70,9 +73,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "file-embed {}",
+                    "file-embed {} {}",
                     if remote {
                         "remote"
+                    } else { "" },
+                    if cx.props.big.unwrap_or_default() {
+                        "big"
                     } else { "" }
                 )
             },
@@ -89,7 +95,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: "image-container",
                         img {
-                            class: "image",
+                            class: format_args!(
+                                "image {}",
+                                if cx.props.big.unwrap_or_default() {
+                                    "big"
+                                } else { "" }
+                            ),
                             src: "{thumbnail}",
                         }
                         if with_download_button {
