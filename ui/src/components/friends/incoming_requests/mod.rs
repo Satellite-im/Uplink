@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use crate::components::friends::friend::Friend;
-use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
@@ -19,7 +18,6 @@ use kit::{
     },
     elements::label::Label,
 };
-use rand::Rng;
 use warp::crypto::DID;
 use warp::{logging::tracing::log, multipass::identity::Relationship};
 
@@ -96,7 +94,6 @@ pub fn PendingFriends(cx: Scope) -> Element {
                 let friend = Rc::new(friend);
                 let _username = friend.username();
                 let _status_message = friend.status_message().unwrap_or_default();
-                let mut rng = rand::thread_rng();
                 let did = friend.did_key();
                 let did2 = did.clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
@@ -151,7 +148,6 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 relationship.set_received_friend_request(true);
                                 relationship
                             },
-                            request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,

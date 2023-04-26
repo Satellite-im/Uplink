@@ -79,6 +79,7 @@ friends = Friends
     .cancel = Cancel Request
     .requested = Requested 
     .sent = Sent
+    .blocked-desc = Blocked
     .requests = Requests
     .add-existing-friend = You are already friends!
     .add-failed = No such user was found!
