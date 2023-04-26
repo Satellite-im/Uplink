@@ -91,7 +91,7 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
-    use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new()});
+    use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
@@ -697,11 +697,11 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             pending_downloads.write().insert(conv_id, HashSet::new());
                         }
                         pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
-                        
+
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id,
                             msg_id: message.inner.id(),
-                            file, 
+                            file,
                             file_path_to_download
                         })
                     }
