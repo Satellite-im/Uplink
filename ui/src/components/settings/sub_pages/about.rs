@@ -12,9 +12,7 @@ use kit::elements::{button::Button, Appearance};
 
 use warp::logging::tracing::log;
 
-use crate::utils::auto_updater::{
-    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd,
-};
+use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
 use crate::{
     components::settings::SettingSection,
     utils::{self, auto_updater::GitHubRelease},
