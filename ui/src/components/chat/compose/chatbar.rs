@@ -65,6 +65,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
     let files_to_upload: &UseState<Vec<PathBuf>> = cx.props.upload_files.as_ref().unwrap();
+    let update_send = || {
+        let valid = state.read().active_chat_has_draft() || !files_to_upload.is_empty();
+        if !can_send.get().eq(&valid) {
+            can_send.set(valid);
+        }
+    };
+    update_send();
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
     let my_id = state.read().did_key();
@@ -275,8 +282,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         is_disabled: disabled,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
-                can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
+                //can_send.set(!v.is_empty() || !files_to_upload.get().is_empty());
                 state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                update_send();
                 local_typing_ch.send(TypingIndicator::Typing(*id));
             }
         },
@@ -365,7 +373,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         .collect();
                     new_files_to_upload.extend(new_files);
                     files_to_upload.set(new_files_to_upload);
-                    can_send.set(true);
+                    update_send();
                 }
             },
             tooltip: cx.render(rsx!(Tooltip {
@@ -398,10 +406,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             })
         })
         chatbar,
-        Attachments {files: files_to_upload.clone(), on_remove: move |b| {
-            can_send.set(b | state
-                .read()
-                .active_chat_has_draft());
+        Attachments {files: files_to_upload.clone(), on_remove: move |_| {
+            update_send();
         }}
     ))
 }
@@ -409,7 +415,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 #[derive(Props)]
 pub struct AttachmentProps<'a> {
     files: UseState<Vec<PathBuf>>,
-    on_remove: EventHandler<'a, bool>,
+    on_remove: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
@@ -435,7 +441,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         });
                         b = !files.is_empty();
                     });
-                    cx.props.on_remove.call(b);
+                    cx.props.on_remove.call(());
                 },
             })
         })));
