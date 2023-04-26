@@ -602,6 +602,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let remote_class = if *is_remote { "" } else { "remote" };
     let reactions_class = format!("message-reactions-container {remote_class}");
+    let user_did_2 = user_did.clone();
 
     cx.render(rsx!(
         (*reacting_to.current() == Some(*msg_uuid)).then(|| {
@@ -636,13 +637,15 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }),
         div {
             class: "msg-wrapper",
-            message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments)| rsx!(
+            message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
             MessageReply {
                     key: "reply-{message_key}",
                     with_text: other_msg.to_string(),
                     with_attachments: other_msg_attachments.clone(),
                     remote: cx.props.is_remote,
                     remote_message: cx.props.is_remote,
+                    sender_did: sender_did.clone(),
+                    replier_did: user_did_2.clone(),
                 }
             )),
             Message {
