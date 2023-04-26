@@ -7,7 +7,7 @@ use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use futures::StreamExt;
-use kit::components::popup::Popup;
+use kit::components::modal::Modal;
 use kit::elements::{button::Button, Appearance};
 
 use warp::logging::tracing::log;
@@ -81,8 +81,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                     }
                 })
             }
-            DownloadProgress::PickFolder => rsx!(Popup {
-                hidden: false,
+            DownloadProgress::PickFolder => rsx!(Modal {
                 on_dismiss: move |_| {
                     download_state.write().stage = DownloadProgress::Idle;
                 },

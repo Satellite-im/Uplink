@@ -17,8 +17,8 @@ use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
+use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
-use kit::components::popup::Popup;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
@@ -912,8 +912,7 @@ fn get_update_icon(cx: Scope) -> Element {
                 }
             }
         )),
-        DownloadProgress::PickFolder => cx.render(rsx!(Popup {
-            hidden: false,
+        DownloadProgress::PickFolder => cx.render(rsx!(Modal {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
             },
@@ -982,8 +981,9 @@ pub fn get_download_modal<'a>(cx: Scope<'a>, on_submit: EventHandler<'a, PathBuf
         .unwrap_or_default();
 
     cx.render(rsx!(div {
-        class: "download-modal",
+        class: "download-modal flex col",
         div {
+            class: "flex row",
             Button {
                 text: "pick location to download installer ".into(),
                 onpress: move |_| {

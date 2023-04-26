@@ -164,3 +164,15 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
+
+.flex {
+  display: inline-flex;
+
+  &.row {
+    flex-direction: row;
+  }
+
+  &.col {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,23 @@
+
+.modal-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+
+  // this was copied over from Popup from an old version of uplink. not sure how much is necessary
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: blur 0.2s;
+  background: var(--theme-semi-transparent);
+
+  .modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    background: var(--theme-background-light);
+  }
+}
