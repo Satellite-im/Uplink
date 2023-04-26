@@ -1,0 +1,119 @@
+// Popups
+.popup-mask {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    transition: blur 0.2s;
+    background: var(--theme-semi-transparent);
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+  
+    &.as-modal {
+      position: fixed;
+  
+      .popup {
+        max-height: 100%;
+        margin: 2rem;
+        border-radius: 8px;
+  
+        .handle {
+          display: none;
+        }
+      }
+    }
+  
+    &.hidden {
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: none;
+      background: transparent;
+      pointer-events: none;
+      position: absolute;
+      display: none;
+    }
+  
+    .popup {
+      align-self: center;
+      border-radius: 8px 8px 0 0;
+      position: absolute;
+      overflow: show;
+      left: 5px;
+      right: 5px;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      height: 50%;
+      background: var(--theme-background-light);
+      margin-top: 50px;
+      transform: translate3d(0, 110%, 0);
+  
+      .wrapper {
+        display: flex;
+        min-height: 0;
+      }
+  
+      &.show {
+        transform: unset;
+      }
+  
+      &.full {
+        height: 100%;
+        max-height: 90vh;
+  
+        &.hidden {
+          height: 0px;
+          padding: 0;
+          overflow: hidden;
+          min-height: unset;
+        }
+      }
+  
+      .controls {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1;
+        display: inline-flex;
+  
+        .button {
+          background: transparent;
+          color: var(--theme-muted);
+          min-width: fit-content;
+          height: fit-content;
+          padding: 0.5rem 0.5rem 0 0;
+        }
+      }
+  
+      .handle {
+        content: "";
+        cursor: pointer;
+        pointer-events: all;
+        position: absolute;
+        width: 70%;
+        left: 15%;
+        height: 6px;
+        background: var(--theme-placeholder);
+        border-radius: 3px;
+        top: -15px;
+        border: none;
+        z-index: 100;
+      }
+  
+      .title {
+        text-align: left;
+        align-content: center;
+        display: inline-flex;
+        border-bottom: 1px solid var(--theme--borders);
+        color: var(--theme-text);
+  
+        svg {
+          margin-right: 1rem;
+        }
+      }
+    }
+  }
+  .popup .input {
+    background: var(--theme-background);
+  }
