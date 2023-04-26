@@ -71,6 +71,8 @@ pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {
         get_github_release("https://api.github.com/repos/Satellite-im/Uplink/releases/latest")
             .await?;
 
+    // todo: ensure installer is released - .deb, .msi, or .dpkg
+
     if versions_match(&latest_release.tag_name) {
         Ok(None)
     } else {

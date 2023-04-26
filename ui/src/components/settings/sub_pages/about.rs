@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::process::Command;
 
 use common::language::get_local_text;
@@ -6,6 +7,7 @@ use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use futures::StreamExt;
+use kit::components::popup::Popup;
 use kit::elements::{button::Button, Appearance};
 
 use warp::logging::tracing::log;
@@ -77,15 +79,23 @@ pub fn AboutPage(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
                     onpress: move |_| {
-                        if let Some(dest) = get_download_dest() {
-                            download_state.write().stage = DownloadProgress::Pending;
-                            download_state.write().destination = Some(dest.clone());
-                            update_button_loading.set(true);
-                            download_ch.send(SoftwareDownloadCmd(dest));
-                        }
+                        download_state.write().stage = DownloadProgress::PickFolder;
                     }
                 })
             }
+            DownloadProgress::PickFolder => rsx!(Popup {
+                hidden: false,
+                on_dismiss: move |_| {
+                    download_state.write().stage = DownloadProgress::Idle;
+                },
+                children: cx.render(rsx!(crate::get_download_modal {
+                    on_submit: move |dest: PathBuf| {
+                        download_state.write().stage = DownloadProgress::Pending;
+                        download_state.write().destination = Some(dest.clone());
+                        download_ch.send(SoftwareDownloadCmd(dest));
+                    }
+                }))
+            }),
             DownloadProgress::Pending => {
                 rsx!(Button {
                     key: "{pending_key}",

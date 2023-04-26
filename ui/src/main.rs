@@ -859,8 +859,6 @@ fn get_update_icon(cx: Scope) -> Element {
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
     let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
-    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
-    let disp_download_location: &UseState<String> = use_state(cx, String::new);
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -918,37 +916,14 @@ fn get_update_icon(cx: Scope) -> Element {
             hidden: false,
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
-                disp_download_location.set(String::new());
-                download_location.set(None);
             },
-            children: cx.render(rsx!(
-                div {
-                    class: "download-modal",
-                    div {
-                        Button {
-                            text: "pick location to download installer ".into(),
-                            onpress: move |_| {
-                                let dest = get_download_dest();
-                                disp_download_location.set(dest.as_ref().map(|x| x.to_string_lossy().to_string()).unwrap_or_default());
-                                download_location.set(dest);
-                            },
-                        } ,
-                       p {
-                        *disp_download_location.current()
-                       }
-                    },
-                    download_location.current().clone().map(|dest| rsx!(
-                        Button {
-                            text: "download installer".into(),
-                            onpress: move |_| {
-                                download_state.write().stage = DownloadProgress::Pending;
-                                download_state.write().destination = Some(dest.clone());
-                                download_ch.send(SoftwareDownloadCmd(dest));
-                            }
-                        }
-                    ))
+            children: cx.render(rsx!(get_download_modal {
+                on_submit: move |dest: PathBuf| {
+                    download_state.write().stage = DownloadProgress::Pending;
+                    download_state.write().destination = Some(dest.clone());
+                    download_ch.send(SoftwareDownloadCmd(dest));
                 }
-            ))
+            }))
         })),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
@@ -993,6 +968,42 @@ fn get_update_icon(cx: Scope) -> Element {
             }))
         }
     }
+}
+
+#[inline_props]
+pub fn get_download_modal<'a>(cx: Scope<'a>, on_submit: EventHandler<'a, PathBuf>) -> Element<'a> {
+    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
+
+    let dl = download_location.current().clone();
+    let disp_download_location = dl
+        .as_ref()
+        .clone()
+        .map(|x| x.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    cx.render(rsx!(div {
+        class: "download-modal",
+        div {
+            Button {
+                text: "pick location to download installer ".into(),
+                onpress: move |_| {
+                    let dest = get_download_dest();
+                    download_location.set(dest);
+                },
+            } ,
+            p {
+                disp_download_location
+            }
+        },
+        dl.as_ref().clone().map(|dest| rsx!(
+            Button {
+                text: "download installer".into(),
+                onpress: move |_| {
+                   on_submit.call(dest.clone());
+                }
+            }
+        ))
+    }))
 }
 
 fn get_logger(cx: Scope) -> Element {
