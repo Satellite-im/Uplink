@@ -23,4 +23,4 @@
 # 
 # CMD ["bash"]
 
-docker run -ti --rm --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`/target:/root/bin -v $2:/root/.uplink $1 /bin/bash
+docker run -ti --rm --net=host --ipc=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`/target:/root/bin -v $2:/root/.uplink $1 /bin/bash
