@@ -30,11 +30,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
         let _ = rx.await;
     });
 
-    if fut.value().is_some()
-        && desktop_resized.value().is_some()
-        && state.read().chats().initialized
-        && state.read().friends().initialized
-    {
+    if fut.value().is_some() && desktop_resized.value().is_some() && state.read().initialized {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
 

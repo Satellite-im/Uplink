@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use crate::components::friends::friend::Friend;
-use chrono::{Duration, Utc};
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
@@ -18,7 +17,6 @@ use kit::{
     },
     elements::label::Label,
 };
-use rand::Rng;
 use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship};
 
 #[allow(non_snake_case)]
@@ -63,7 +61,6 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                 let did = friend.did_key();
                 let did2 = did.clone();
                 let did_suffix: String = did.to_string().chars().rev().take(6).collect();
-                let mut rng = rand::thread_rng();
                 let platform = friend.platform().into();
                 let any_button_disabled = remove_in_progress.current().contains(&did);
                 rsx!(
@@ -95,7 +92,6 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                                 relationship
                             },
                             remove_button_disabled: remove_in_progress.current().contains(&friend.did_key()),
-                            request_datetime: Utc::now() - Duration::days(rng.gen_range(0..30)),
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,

@@ -74,7 +74,6 @@ pub fn generate_mock() -> State {
     }
 
     let chats = Chats {
-        initialized: true,
         all: all_chats.clone(),
         active: None,
         active_media: None,
@@ -82,7 +81,6 @@ pub fn generate_mock() -> State {
         favorites: vec![],
     };
     let friends = Friends {
-        initialized: true,
         all: HashSet::from_iter(identities.iter().map(|x| x.did_key())),
         blocked: HashSet::from_iter(blocked_identities.iter().map(|x| x.did_key())),
         incoming_requests: HashSet::from_iter(incoming_requests.iter().map(|x| x.did_key())),
@@ -130,6 +128,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages: false,
+        pending_outgoing_messages: 0,
     }
 }
 

@@ -1,6 +1,7 @@
 use derive_more::Display;
 use dioxus::prelude::*;
-use warp::constellation::file::File;
+
+use warp::{constellation::file::File, crypto::DID};
 
 use crate::components::file_embed::FileEmbed;
 
@@ -32,6 +33,10 @@ pub struct Props<'a> {
     remote_message: Option<bool>,
     #[props(optional)]
     with_prefix: Option<String>,
+    #[props(optional)]
+    sender_did: Option<DID>,
+    #[props(optional)]
+    replier_did: Option<DID>,
 }
 
 #[allow(non_snake_case)]
@@ -41,6 +46,8 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let loading = cx.props.loading.unwrap_or_default();
     let remote = cx.props.remote.unwrap_or_default();
     let remote_message = cx.props.remote_message.unwrap_or_default();
+    let sender_did = cx.props.sender_did.as_ref().cloned();
+    let replier_did = cx.props.replier_did.as_ref().cloned();
 
     let has_attachments = cx
         .props
@@ -94,6 +101,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
+                        background: if replier_did == sender_did {"var(--primary)"} else {"var(--secondary)"},
                         "{text}"
                         has_attachments.then(|| {
                             rsx!(

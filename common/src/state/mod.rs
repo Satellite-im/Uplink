@@ -71,6 +71,8 @@ pub struct State {
     pub configuration: configuration::Configuration,
     #[serde(skip)]
     identities: HashMap<DID, identity::Identity>,
+    #[serde(skip)]
+    pub initialized: bool,
 }
 
 impl fmt::Debug for State {
@@ -98,6 +100,7 @@ impl Clone for State {
             ui: Default::default(),
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
+            initialized: self.initialized,
         }
     }
 }
@@ -407,6 +410,7 @@ impl State {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
+                self.decrement_outgoing_messages(conversation_id);
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -471,6 +475,11 @@ impl State {
                     chat.participants = HashSet::from_iter(conversation.recipients());
                 }
             }
+            MessageEvent::ConversationNameUpdated { conversation } => {
+                if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    chat.conversation_name = conversation.name();
+                }
+            }
         }
     }
 }
@@ -492,6 +501,7 @@ impl State {
             chats,
             friends,
             identities,
+            initialized: true,
             ..Default::default()
         }
     }
@@ -531,8 +541,7 @@ impl State {
         };
         // not sure how these defaulted to true, but this should serve as additional
         // protection in the future
-        state.friends.initialized = false;
-        state.chats.initialized = false;
+        state.initialized = false;
 
         if state.settings.font_scale() == 0.0 {
             state.settings.set_font_scale(1.0);
@@ -564,6 +573,29 @@ impl State {
         //     }
         // };
         // serde_json::from_str(&contents).unwrap_or_else(|_| generate_mock())
+    }
+
+    pub fn init_warp(
+        &mut self,
+        friends: Friends,
+        chats: HashMap<Uuid, Chat>,
+        mut identities: HashMap<DID, Identity>,
+    ) {
+        self.friends = friends;
+        for (id, chat) in chats {
+            if let Some(conv) = self.chats.all.get_mut(&id) {
+                conv.messages = chat.messages;
+                conv.conversation_type = chat.conversation_type;
+                conv.has_more_messages = chat.has_more_messages;
+                conv.conversation_name = chat.conversation_name;
+                conv.creator = chat.creator;
+            } else {
+                self.chats.all.insert(id, chat);
+            }
+        }
+        self.identities.extend(identities.drain());
+
+        self.initialized = true;
     }
 }
 
@@ -614,22 +646,6 @@ impl State {
             .cloned()
             .collect()
     }
-    pub fn set_chats(&mut self, chats: HashMap<Uuid, Chat>, identities: HashSet<Identity>) {
-        for (id, chat) in chats {
-            if let Some(conv) = self.chats.all.get_mut(&id) {
-                conv.messages = chat.messages;
-                conv.conversation_type = chat.conversation_type;
-                conv.has_more_messages = chat.has_more_messages;
-                conv.conversation_name = chat.conversation_name;
-                conv.creator = chat.creator;
-            } else {
-                self.chats.all.insert(id, chat);
-            }
-        }
-        self.chats.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
-    }
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
@@ -650,6 +666,14 @@ impl State {
             .map(|d| !d.is_empty())
             .unwrap_or(false)
     }
+
+    pub fn active_chat_send_in_progress(&self) -> bool {
+        self.get_active_chat()
+            .as_ref()
+            .map(|d| d.pending_outgoing_messages > 0)
+            .unwrap_or(false)
+    }
+
     /// Cancels a reply within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -841,6 +865,22 @@ impl State {
         self.chats.in_sidebar.push_front(chat_id);
     }
 
+    // indicates that a conversation has a pending outgoing message
+    // can only send messages to the active chat
+    pub fn increment_outgoing_messages(&mut self) {
+        if let Some(id) = self.chats.active {
+            if let Some(chat) = self.chats.all.get_mut(&id) {
+                chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_add(1);
+            }
+        }
+    }
+
+    pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
+            chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_sub(1);
+        }
+    }
+
     /// Sets the draft on a given chat to some contents.
     fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
         if let Some(mut c) = self.chats.all.get_mut(chat_id) {
@@ -874,12 +914,6 @@ impl State {
 impl State {
     pub fn friends(&self) -> &friends::Friends {
         &self.friends
-    }
-    pub fn set_friends(&mut self, friends: friends::Friends, identities: HashSet<Identity>) {
-        self.friends = friends;
-        self.friends.initialized = true;
-        self.identities
-            .extend(identities.iter().map(|x| (x.did_key(), x.clone())));
     }
 
     fn block(&mut self, identity: &DID) {

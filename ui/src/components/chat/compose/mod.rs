@@ -201,7 +201,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     let state = use_shared_state::<State>(cx)?;
     let s = state.read();
     // the Compose page shouldn't be called before chats is initialized. but check here anyway.
-    if !s.chats().initialized {
+    if !s.initialized {
         return None;
     }
 
@@ -216,7 +216,7 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     let active_participant = other_participants
         .first()
         .cloned()
-        .expect("chat should have at least 2 participants");
+        .unwrap_or(s.get_own_identity());
 
     let subtext = match active_chat.conversation_type {
         ConversationType::Direct => active_participant.status_message().unwrap_or_default(),
