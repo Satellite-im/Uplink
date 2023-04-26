@@ -241,10 +241,7 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
-        .filter(|e| match e.kind() {
-            Some(LinkKind::Url) => true,
-            _ => false,
-        })
+        .filter(|e| matches!(e.kind(), Some(LinkKind::Url)))
         .map(|e| e.as_str().to_string())
         .collect();
 

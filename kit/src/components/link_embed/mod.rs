@@ -77,7 +77,7 @@ pub struct LinkEmbedProps {
 
 #[allow(non_snake_case)]
 pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
-    let fetch_meta = use_future(&cx, &cx.props.link, |link| async move {
+    let fetch_meta = use_future(cx, &cx.props.link, |link| async move {
         get_meta(link.as_str()).await
     });
 
