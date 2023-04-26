@@ -211,7 +211,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
-        focus: true,
+        ignore_focus: false,
         value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
