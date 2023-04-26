@@ -61,6 +61,8 @@ pub struct Chat {
     // for loading messages into the UI - indicates if more messages can be fetched from warp and added to Chat.messages
     #[serde(skip)]
     pub has_more_messages: bool,
+    #[serde(skip)]
+    pub pending_outgoing_messages: usize,
 }
 
 // warning: Chats implements Serialize
