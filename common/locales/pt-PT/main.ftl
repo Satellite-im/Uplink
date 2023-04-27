@@ -110,7 +110,7 @@ files = Ficheiros
     .files-to-upload = Ficheiros a carregar
     .video-thumb = Miniatura de vídeo
     .image-thumb = Miniatura de pré-visualização
-    .doc-thumb = Previsualização de documento
+    .doc-thumb = Miniatura de pré-visualização de documento
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
 
 settings = Definições
