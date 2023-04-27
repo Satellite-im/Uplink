@@ -66,10 +66,14 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             while rx.next().await.is_some() {
                 let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
                 let group_name: Option<String> = group_name.current().as_ref().clone();
+                let group_name_string = group_name.clone().unwrap_or_default();
+
                 let (tx, rx) = oneshot::channel();
                 let cmd = RayGunCmd::CreateGroupConversation {
                     recipients,
-                    group_name: if group_name.clone().unwrap_or_default().is_empty() {
+                    group_name: if group_name_string.is_empty()
+                        || group_name_string.chars().all(char::is_whitespace)
+                    {
                         None
                     } else {
                         group_name
