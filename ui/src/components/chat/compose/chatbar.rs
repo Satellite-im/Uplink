@@ -6,7 +6,7 @@ use std::{
 use common::{
     icons,
     language::get_local_text,
-    state::{Action, Identity, State},
+    state::{Action, Identity, State, ToastNotification},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -284,6 +284,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         ignore_focus: cx.props.ignore_focus,
         onchange: move |v: String| {
             if let Some(id) = &active_chat_id {
+                if v.len() == 1024 {
+                    state
+                        .write()
+                        .mutate(common::state::Action::AddToastNotification(
+                            ToastNotification::init(
+                                "".into(),
+                                get_local_text("messages.max-1024-chars"),
+                                None,
+                                2,
+                            ),
+                        ));
+                }
                 state.write_silent().mutate(Action::SetChatDraft(*id, v));
                 update_send();
                 local_typing_ch.send(TypingIndicator::Typing(*id));
