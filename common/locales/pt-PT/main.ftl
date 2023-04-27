@@ -109,7 +109,7 @@ files = Ficheiros
     .one-file-to-upload = Ficheiro a carregar
     .files-to-upload = Ficheiros a carregar
     .video-thumb = Miniatura de vídeo
-    .image-thumb = Miniatura da imagem 
+    .image-thumb = Miniatura de pré-visualização
     .doc-thumb = Previsualização de documento
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
 
