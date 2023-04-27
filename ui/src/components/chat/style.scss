@@ -200,6 +200,21 @@
       flex-direction: column;
     }
   }
+
+  .blocked-container {
+    color: var(--text-color);
+    display: flex;
+    padding: var(--padding-less);
+    cursor: default;
+
+    .pressable {
+      cursor: pointer;
+      &:hover {
+        color: var(--text-color-bright);
+        text-decoration: underline;
+      }
+    }
+  }
 }
 
 #compose .topbar .children .username {

@@ -16,6 +16,7 @@ use kit::components::{
 use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
+    language::get_local_text_args_builder,
     state::{group_messages, GroupedMessage, MessageGroup},
     warp_runner::ui_adapter::{self},
 };
@@ -389,6 +390,57 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     let messages = &group.messages;
     let last_message = messages.last().unwrap().message;
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
+    let blocked = group.remote && state.read().is_blocked(&sender.did_key());
+    let show_blocked = use_state(cx, || false);
+
+    let blocked_element = if blocked {
+        if !show_blocked.get() {
+            return cx.render(rsx!(
+                div {
+                    class: "blocked-container",
+                    p {
+                        get_local_text_args_builder("messages.blocked", |m| {
+                        m.insert("amount", messages.len().into());
+                        })
+                    },
+                    p {
+                        style: "white-space: pre",
+                        " - "
+                    },
+                    div {
+                        class: "pressable",
+                        onclick: move |_| {
+                            show_blocked.set(true);
+                        },
+                        get_local_text("messages.view")
+                    }
+                }
+            ));
+        }
+        cx.render(rsx!(
+            div {
+                class: "blocked-container",
+                p {
+                    get_local_text_args_builder("messages.blocked", |m| {
+                    m.insert("amount", messages.len().into());
+                    })
+                },
+                p {
+                    style: "white-space: pre",
+                    " - "
+                },
+                div {
+                    class: "pressable",
+                    onclick: move |_| {
+                        show_blocked.set(false);
+                    },
+                    get_local_text("messages.hide")
+                }
+            }
+        ))
+    } else {
+        Option::None
+    };
     let sender_clone = sender.clone();
     let sender_name = if sender.username().is_empty() {
         get_local_text("messages.you")
@@ -402,30 +454,33 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         sender_status = Status::Online;
     }
 
-    cx.render(rsx!(MessageGroup {
-        user_image: cx.render(rsx!(UserImage {
-            image: sender.profile_picture(),
-            platform: sender.platform().into(),
-            status: sender_status,
-            on_press: move |e| {
-                cx.props.on_context_menu_action.call((e, sender.to_owned()));
-            }
-            oncontextmenu: move |e| {
-                cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
-            }
-        })),
-        timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
-        sender: sender_name.clone(),
-        remote: group.remote,
-        children: cx.render(rsx!(render_messages {
-            messages: &group.messages,
-            active_chat_id: cx.props.active_chat_id,
-            is_remote: group.remote,
-            has_more: cx.props.has_more,
-            num_messages_in_conversation: cx.props.num_messages_in_conversation,
-            num_to_take: cx.props.num_to_take.clone(),
-        }))
-    },))
+    cx.render(rsx!(
+        blocked_element,
+        MessageGroup {
+            user_image: cx.render(rsx!(UserImage {
+                image: sender.profile_picture(),
+                platform: sender.platform().into(),
+                status: sender_status,
+                on_press: move |e| {
+                    cx.props.on_context_menu_action.call((e, sender.to_owned()));
+                }
+                oncontextmenu: move |e| {
+                    cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+                }
+            })),
+            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
+            sender: sender_name.clone(),
+            remote: group.remote,
+            children: cx.render(rsx!(render_messages {
+                messages: &group.messages,
+                active_chat_id: cx.props.active_chat_id,
+                is_remote: group.remote,
+                has_more: cx.props.has_more,
+                num_messages_in_conversation: cx.props.num_messages_in_conversation,
+                num_to_take: cx.props.num_to_take.clone(),
+            }))
+        },
+    ))
 }
 
 #[derive(Props)]
