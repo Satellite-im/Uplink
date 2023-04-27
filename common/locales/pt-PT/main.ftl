@@ -238,7 +238,7 @@ media-player = Leitor de multimédia
     .popout-player = Leitor de popout 
     .screenshare = Partilha de ecrã
     
-remote-controls = Controlos remotos 
+remote-controls = Controlos remotos
     .in-call = Em chamada
     .mute = Sem som
     .unmute = Sem som 
