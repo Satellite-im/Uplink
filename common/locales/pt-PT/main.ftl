@@ -243,7 +243,7 @@ remote-controls = Controlos remotos
     .mute = Sem som
     .unmute = Sem som 
     .listen = Ouvir
-    .silence = Silêncio 
+    .silence = Silêncio
     .end = Terminar
 
 unlock = Desbloquear
