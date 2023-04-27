@@ -1,4 +1,4 @@
-uplink = Ligação ascendente
+uplink = Uplink
     .home = Casa
     .add = Adicionar
     .call = Chamada
