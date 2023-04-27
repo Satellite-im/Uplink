@@ -1,5 +1,5 @@
 uplink = Uplink
-    .home = Casa
+    .home = Início
     .add = Adicionar
     .call = Chamada
     .coming-soon = Em breve
