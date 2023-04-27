@@ -60,7 +60,7 @@ messages = Mensagens
     
 favoritos = Favoritos
     .favorites = Favoritos
-    .add = Adicionar aos Favoritos
+    .add = Adicionar aos favoritos
     .remove = Remover dos Favoritos
 
 amigos = Amigos
