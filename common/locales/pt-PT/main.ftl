@@ -242,7 +242,7 @@ remote-controls = Controlos remotos
     .in-call = Em chamada
     .mute = Sem som
     .unmute = Remover do Silêncio
-    .listen = Ouvir
+    .listen = Ativar Áudio
     .silence = Desativar Áudio
     .end = Terminar
 
