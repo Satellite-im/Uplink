@@ -94,7 +94,7 @@ amigos = Amigos
     .unblock = Desbloquear
     .request-exist = O pedido de amizade já está pendente!
 
-files = Arquivos
+files = Ficheiros
     .files = Ficheiros
     .new-folder = Nova pasta
     .upload = Carregar
