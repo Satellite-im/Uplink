@@ -52,6 +52,7 @@ jobs:
           security find-identity -p codesigning -v
           security list-keychains
           make dmg-universal
+          /usr/bin/codesign -vvv --deep --entitlements ui/extra/entitlements.plist --strict --options=runtime --force target/release/macos/Uplink.dmg
       - name: "Notarize executable"
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
