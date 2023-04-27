@@ -63,7 +63,7 @@ favoritos = Favoritos
     .add = Adicionar aos favoritos
     .remove = Remover dos favoritos
 
-amigos = Amigos
+friends = Amigos
     .friends = Amigos
     .cta-text = As coisas são melhores com os amigos.
     .add = Adicionar alguém
