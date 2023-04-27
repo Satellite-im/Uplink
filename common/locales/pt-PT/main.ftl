@@ -240,7 +240,7 @@ media-player = Leitor de multimédia
     
 remote-controls = Controlos remotos
     .in-call = Em chamada
-    .mute = Sem som
+    .mute = Silenciar
     .unmute = Remover do Silêncio
     .listen = Ativar Áudio
     .silence = Desativar Áudio
