@@ -8,6 +8,7 @@
 	padding: var(--padding-less) var(--padding);
 	width: fit-content;
 	align-self: flex-end;
+	overflow: hidden;
 	overflow-wrap: anywhere;
 	.context-wrap {
 		align-self: flex-end;
@@ -15,6 +16,7 @@
 	.text {
 		color: var(--text-color);
 		display: inline-flex;
+		flex-direction: column;
 	}
 }
 .message.message-loading {

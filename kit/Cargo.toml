@@ -19,6 +19,9 @@ common.workspace = true
 warp.workspace = true
 derive_more.workspace = true
 pulldown-cmark = "0.9.2"
+linkify.workspace = true
+reqwest.workspace = true
+select.workspace = true
 
 [dependencies.uuid]
 workspace = true
