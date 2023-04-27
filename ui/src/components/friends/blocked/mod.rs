@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::components::friends::friend::Friend;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
@@ -21,21 +23,25 @@ use warp::{crypto::DID, error::Error, logging::tracing::log, multipass::identity
 pub fn BlockedUsers(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let block_list = state.read().blocked_fr_identities();
+    let unblock_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<DID>| {
-        //to_owned![];
+        to_owned![unblock_in_progress];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(did) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                if let Err(e) =
-                    warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::Unblock { did, rsp: tx }))
-                {
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::Unblock {
+                    did: did.clone(),
+                    rsp: tx,
+                })) {
                     log::error!("failed to send warp command: {}", e);
+                    unblock_in_progress.make_mut().remove(&did);
                     continue;
                 }
 
                 let rsp = rx.await.expect("command canceled");
+                unblock_in_progress.make_mut().remove(&did);
                 if let Err(e) = rsp {
                     match e {
                         Error::PublicKeyIsntBlocked => {}
@@ -76,6 +82,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                     if STATIC_ARGS.use_mock {
                                         state.write().mutate(Action::Unblock(&unblock_user.did_key()));
                                     } else {
+                                        unblock_in_progress.make_mut().insert(unblock_user.did_key());
                                         ch.send(unblock_user.clone().did_key());
                                     }
                                 }
@@ -86,6 +93,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             suffix: did_suffix,
                             status_message: blocked_user.status_message().unwrap_or_default(),
                             relationship: relationship,
+                            remove_button_disabled: unblock_in_progress.current().contains(&blocked_user.did_key()),
                             user_image: cx.render(rsx! (
                                 UserImage {
                                     platform: platform,
@@ -97,6 +105,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                                 if STATIC_ARGS.use_mock {
                                     state.write().mutate(Action::Unblock(&unblock_user_clone.did_key()));
                                 } else {
+                                    unblock_in_progress.make_mut().insert(unblock_user_clone.did_key());
                                     ch.send(unblock_user_clone.clone().did_key());
                                 }
                             }
