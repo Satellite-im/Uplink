@@ -244,7 +244,7 @@ remote-controls = Controlos remotos
     .unmute = Sem som 
     .listen = Ouvir
     .silence = Silêncio 
-    .end = Fim
+    .end = Terminar
 
 unlock = Desbloquear
     .description = Introduza o seu pin ou palavra-passe para desbloquear a sua conta.
