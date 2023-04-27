@@ -668,7 +668,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
-                            let file_id = file.id().clone();
+                            let file_id = file.id();
                             rsx!(ContextMenu {
                                         key: "{key}-menu",
                                         id: file.id().to_string(),
@@ -719,7 +719,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
                                             onpress: move |_| {
-                                                let key = file_id.clone();
+                                                let key = file_id;
                                                 if state.read().ui.file_previews.contains_key(&key) {
                                                     state
                                                     .write()
