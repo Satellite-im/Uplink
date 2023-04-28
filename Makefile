@@ -32,6 +32,8 @@ $(TARGET)-universal:
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(APP_BINARY)
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(RELEASE_DIR)/libclear_all.dylib
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(RELEASE_DIR)/libemoji_selector.dylib
 # /usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_BINARY)
 
 app: $(APP_NAME)-native ## Create a Uplink.app
