@@ -190,7 +190,7 @@ settings-accessibility = Configurações de acessibilidade
     .dyslexia = Abrir o Dyslexic
     .dyslexia-description = O Open Dyslexic pode ajudar alguns utilizadores que sofrem de dislexia, é um tipo de letra personalizado que pode activar.
 
-definições-notificações = Notificações
+settings-notifications = Notificações
     .notifications-description = Activar as notificações de chamadas recebidas, mensagens e muito mais.
     .enabled = Activado
     .enabled-description = Activar as notificações de chamadas recebidas, mensagens e muito mais.
