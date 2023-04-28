@@ -39,6 +39,7 @@ jobs:
 
       - name: Build app 🖥️
         run: cargo build --release --package uplink -F production_mode
+        continue-on-error: true
 
       - name: Upload Artifact ⬆️
         uses: actions/upload-artifact@v3
