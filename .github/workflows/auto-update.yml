@@ -1,13 +1,28 @@
-name: autoupdate
+name: Update PRs on Dev Branch Changes
+
 on:
-  pull_request:
-    types:
-      - opened
+  push:
+    branches:
+      - dev
+
 jobs:
-  autoupdate:
-    name: autoupdate
-    runs-on: ubuntu-22.04
+  update_prs:
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: docker://chinthakagodawita/autoupdate-action:v1
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Update PRs
+        run: |
+          git fetch origin dev
+          git checkout dev
+          git pull origin dev
+
+          # Find open pull requests targeting the dev branch
+          PR_LIST=$(hub pr list -s open -h dev --format "%I")
+
+          # Update each open pull request
+          for PR_NUMBER in $PR_LIST; do
+            hub pr update $PR_NUMBER
+          done
