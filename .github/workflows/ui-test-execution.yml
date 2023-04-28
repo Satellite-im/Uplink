@@ -238,7 +238,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete Chat Users Accounts
-        if: success()
         uses: geekyeggo/delete-artifact@v2
         with:
           name: appium-test-accounts
