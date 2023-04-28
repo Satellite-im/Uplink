@@ -1,31 +1,48 @@
+
 .modal-wrapper {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-
+  z-index: 10;
+  min-height: 300px;
+  display: flex;
+  border: 1px solid black;
+  justify-content: center; /* align item horizontally */
+  align-items: center; /* align item vertically */
+  // this was copied over from Popup from an old version of uplink. not sure how much is necessary
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   transition: blur 0.2s;
   background: var(--theme-semi-transparent);
 
   .modal {
-    background: var(--theme-background-light);
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: center;
-
-    .controlls {
-      align-self: flex-end;
-    }
-
-    .content {
-      align-self: center;
-    }
+    width: 70%;
+    height: 70%;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    opacity:1;
   }
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.model-body {
+  flex: auto;
+  padding: 25px;
+}
+
+.modal-head {
+  margin: 3px;
+  margin-left: auto;
+}
+
+.modal-content .modal-head .btn-wrap {
+  height: var(--titlebar-height);
+  width: var(--titlebar-height);
 }

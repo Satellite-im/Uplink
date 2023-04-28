@@ -986,17 +986,42 @@ pub fn get_download_modal<'a>(
         on_dismiss: move |_| on_dismiss.call(()),
         children: cx.render(rsx!(
             div {
-                class: "",
-                Button {
-                    text: "pick location to download installer ".into(),
-                    onpress: move |_| {
-                        let dest = get_download_dest();
-                        download_location.set(dest);
+            class: "download-modal flex col",
+            h1 {
+                get_local_text("updates.title")
+            },
+            ul {
+                class: "instruction-list",
+                li {
+                    get_local_text("updates.instruction1")
+                },
+                li {
+                    div {
+                        class: "",
+                        Button {
+                            text: get_local_text("updates.button-label").into(),
+                            onpress: move |_| {
+                                let dest = get_download_dest();
+                                download_location.set(dest);
+                            },
+                        } ,
+                        p {
+                            disp_download_location
+                        }
                     },
-                } ,
-                p {
-                    disp_download_location
+                },
+                li {
+                    get_local_text("updates.instruction2")
+                },
+                li {
+                    get_local_text("updates.instruction3")
+                },
+                li {
+                    get_local_text("updates.instruction4")
                 }
+            },
+            p {
+                "*We are going to streamline this process in a future update."
             },
             dl.as_ref().clone().map(|dest| rsx!(
                 Button {
@@ -1006,6 +1031,7 @@ pub fn get_download_modal<'a>(
                     }
                 }
             ))
+        }
         ))
     }))
 }
