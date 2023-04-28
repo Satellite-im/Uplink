@@ -1,7 +1,7 @@
 TARGET = uplink
 
-ASSETS_DIR = ui/extra
-RELEASE_DIR = target/release
+ASSETS_DIR = ./ui/extra
+RELEASE_DIR = ./target/release
 
 APP_NAME = Uplink.app
 APP_TEMPLATE = $(ASSETS_DIR)/macos/$(APP_NAME)
@@ -53,7 +53,7 @@ $(APP_NAME)-%: $(TARGET)-%
 	cp -r ./ui/extra/themes      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-	cp -r $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
+	cp $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
 # /usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)/$(APP_NAME)
 
 dmg: $(DMG_NAME)-native ## Create a Uplink.dmg
