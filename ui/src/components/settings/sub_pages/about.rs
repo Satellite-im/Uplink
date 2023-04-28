@@ -12,6 +12,7 @@ use kit::elements::{button::Button, Appearance};
 
 use warp::logging::tracing::log;
 
+use crate::get_download_modal;
 use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
 use crate::{
     components::settings::SettingSection,
@@ -81,17 +82,15 @@ pub fn AboutPage(cx: Scope) -> Element {
                     }
                 })
             }
-            DownloadProgress::PickFolder => rsx!(Modal {
+            DownloadProgress::PickFolder => rsx!(get_download_modal {
                 on_dismiss: move |_| {
                     download_state.write().stage = DownloadProgress::Idle;
                 },
-                children: cx.render(rsx!(crate::get_download_modal {
-                    on_submit: move |dest: PathBuf| {
-                        download_state.write().stage = DownloadProgress::Pending;
-                        download_state.write().destination = Some(dest.clone());
-                        download_ch.send(SoftwareDownloadCmd(dest));
-                    }
-                }))
+                on_submit: move |dest: PathBuf| {
+                    download_state.write().stage = DownloadProgress::Pending;
+                    download_state.write().destination = Some(dest.clone());
+                    download_ch.send(SoftwareDownloadCmd(dest));
+                }
             }),
             DownloadProgress::Pending => {
                 rsx!(Button {

@@ -16,12 +16,12 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "modal-wrapper",
             onclick: move |_| cx.props.on_dismiss.call(()),
             div {
-                class: "modal flex col",
+                class: "modal",
                 onclick: move |evt| {
                     evt.stop_propagation();
                 },
                 div {
-                    class: "controls flex row",
+                    class: "controls",
                     Button {
                         onpress: move |_| {
                             cx.props.on_dismiss.call(());
@@ -29,7 +29,10 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: Shape::XMark
                     },
                 },
-                rsx!(cx.props.children.as_ref())
+                div {
+                    class: "content",
+                    rsx!(cx.props.children.as_ref())
+                }
 
             }
         }

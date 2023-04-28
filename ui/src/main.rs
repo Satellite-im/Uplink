@@ -912,17 +912,15 @@ fn get_update_icon(cx: Scope) -> Element {
                 }
             }
         )),
-        DownloadProgress::PickFolder => cx.render(rsx!(Modal {
+        DownloadProgress::PickFolder => cx.render(rsx!(get_download_modal {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
             },
-            children: cx.render(rsx!(get_download_modal {
-                on_submit: move |dest: PathBuf| {
-                    download_state.write().stage = DownloadProgress::Pending;
-                    download_state.write().destination = Some(dest.clone());
-                    download_ch.send(SoftwareDownloadCmd(dest));
-                }
-            }))
+            on_submit: move |dest: PathBuf| {
+                download_state.write().stage = DownloadProgress::Pending;
+                download_state.write().destination = Some(dest.clone());
+                download_ch.send(SoftwareDownloadCmd(dest));
+            }
         })),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
@@ -970,7 +968,11 @@ fn get_update_icon(cx: Scope) -> Element {
 }
 
 #[inline_props]
-pub fn get_download_modal<'a>(cx: Scope<'a>, on_submit: EventHandler<'a, PathBuf>) -> Element<'a> {
+pub fn get_download_modal<'a>(
+    cx: Scope<'a>,
+    on_submit: EventHandler<'a, PathBuf>,
+    on_dismiss: EventHandler<'a, ()>,
+) -> Element<'a> {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
 
     let dl = download_location.current().clone();
@@ -980,28 +982,30 @@ pub fn get_download_modal<'a>(cx: Scope<'a>, on_submit: EventHandler<'a, PathBuf
         .map(|x| x.to_string_lossy().to_string())
         .unwrap_or_default();
 
-    cx.render(rsx!(div {
-        class: "download-modal flex col",
-        div {
-            class: "flex row",
-            Button {
-                text: "pick location to download installer ".into(),
-                onpress: move |_| {
-                    let dest = get_download_dest();
-                    download_location.set(dest);
-                },
-            } ,
-            p {
-                disp_download_location
-            }
-        },
-        dl.as_ref().clone().map(|dest| rsx!(
-            Button {
-                text: "download installer".into(),
-                onpress: move |_| {
-                   on_submit.call(dest.clone());
+    cx.render(rsx!(Modal {
+        on_dismiss: move |_| on_dismiss.call(()),
+        children: cx.render(rsx!(
+            div {
+                class: "",
+                Button {
+                    text: "pick location to download installer ".into(),
+                    onpress: move |_| {
+                        let dest = get_download_dest();
+                        download_location.set(dest);
+                    },
+                } ,
+                p {
+                    disp_download_location
                 }
-            }
+            },
+            dl.as_ref().clone().map(|dest| rsx!(
+                Button {
+                    text: "download installer".into(),
+                    onpress: move |_| {
+                       on_submit.call(dest.clone());
+                    }
+                }
+            ))
         ))
     }))
 }
