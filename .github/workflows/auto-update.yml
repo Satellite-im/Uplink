@@ -1,7 +1,7 @@
 name: Update PRs on Dev Branch Changes
 
 on:
-  push:
+  pull_request:
     branches:
       - dev
 
