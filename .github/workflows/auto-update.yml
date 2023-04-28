@@ -1,13 +1,13 @@
-name: autoupdater
-on: push
+name: Update PR's with latest dev
+on:
+   push:
+     branches:
+        - dev
 jobs:
-  autoupdate:
-    name: autoupdate
+  shipit:
+    name: shipit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: PR Auto Updater
-        uses: grmoon/autoupdater@0.0.2
+      - uses: kevinrobayna/shipit@v2.0.0
         env:
-          # Required
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
