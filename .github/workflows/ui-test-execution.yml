@@ -233,6 +233,10 @@ jobs:
           name: appium-log-${{ matrix.user }}
           path: ./appium-tests/appium.log
 
+  remove-accounts:
+    needs: test-chats
+    runs-on: ubuntu-latest
+    steps:
       - name: Delete Chat Users Accounts
         if: success()
         uses: geekyeggo/delete-artifact@v2
