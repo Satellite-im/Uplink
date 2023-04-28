@@ -7,6 +7,7 @@ use std::{ffi::OsStr, path::PathBuf};
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::state::ToastNotification;
 use common::warp_runner::{FileTransferProgress, FileTransferStep};
 use common::STATIC_ARGS;
 use common::{
@@ -667,6 +668,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
+                            let file_id = file.id();
                             rsx!(ContextMenu {
                                         key: "{key}-menu",
                                         id: file.id().to_string(),
@@ -717,7 +719,34 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
                                             onpress: move |_| {
-                                                let key = Uuid::new_v4();
+                                                let key = file_id;
+                                                if state.read().ui.file_previews.contains_key(&key) {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.file-already-opened"),
+                                                            None,
+                                                            2,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
+                                                if file3.thumbnail().is_empty() {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.no-thumbnail-preview"),
+                                                            None,
+                                                            3,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
+
                                                 let drop_handler = WindowDropHandler::new(WindowManagerCmd::ForgetFilePreview(key));
                                                 let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
                                                     file: file3.clone(),
