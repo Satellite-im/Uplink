@@ -41,6 +41,7 @@ pub enum RayGunCmd {
     #[display(fmt = "CreateGroupConversation")]
     CreateGroupConversation {
         recipients: Vec<DID>,
+        group_name: Option<String>,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "AddGroupParticipants")]
@@ -164,8 +165,13 @@ pub async fn handle_raygun_cmd(
             };
             let _ = rsp.send(r);
         }
-        RayGunCmd::CreateGroupConversation { recipients, rsp } => {
-            let r = raygun_create_group_conversation(account, messaging, recipients).await;
+        RayGunCmd::CreateGroupConversation {
+            recipients,
+            group_name,
+            rsp,
+        } => {
+            let r =
+                raygun_create_group_conversation(account, messaging, recipients, group_name).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::AddGroupParticipants {
@@ -448,20 +454,17 @@ async fn raygun_create_group_conversation(
     account: &Account,
     messaging: &mut Messaging,
     recipients: Vec<DID>,
+    group_name: Option<String>,
 ) -> Result<Uuid, Error> {
     let mut recipients_set: HashSet<DID> = HashSet::from_iter(recipients.iter().cloned());
     let own_identity = account.get_own_identity().await?;
 
     recipients_set.insert(own_identity.did_key());
-    let existing_conversations = messaging.list_conversations().await?;
-    if let Some(conv) = existing_conversations.iter().find(|conv| {
-        let conv_recipients: HashSet<DID> = HashSet::from_iter(conv.recipients().iter().cloned());
-        conv_recipients == recipients_set
-    }) {
-        return Ok(conv.id());
-    }
 
-    match messaging.create_group_conversation(None, recipients).await {
+    match messaging
+        .create_group_conversation(group_name, recipients)
+        .await
+    {
         Ok(conv) | Err(Error::ConversationExist { conversation: conv }) => Ok(conv.id()),
         Err(e) => Err(e),
     }
