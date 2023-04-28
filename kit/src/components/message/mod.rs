@@ -1,9 +1,14 @@
+use std::collections::HashSet;
+
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
+use linkify::{LinkFinder, LinkKind};
 use warp::{constellation::file::File, logging::tracing::log};
 
 use crate::{components::file_embed::FileEmbed, elements::textarea};
+
+use super::link_embed::EmbedLinks;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
@@ -54,8 +59,12 @@ pub struct Props<'a> {
     // available for download
     attachments: Option<Vec<File>>,
 
+    // attachments which are being downloaded
+    #[props(!optional)]
+    attachments_pending_download: Option<HashSet<File>>,
+
     /// called when an attachment is downloaded
-    on_download: EventHandler<'a, String>,
+    on_download: EventHandler<'a, File>,
 
     /// called when editing is completed
     on_edit: EventHandler<'a, String>,
@@ -91,13 +100,18 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let attachment_list = cx.props.attachments.as_ref().map(|vec| {
         vec.iter().map(|file| {
             let key = file.id();
-            let name = file.name();
             rsx!(FileEmbed {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
                 remote: is_remote,
-                on_press: move |_| cx.props.on_download.call(name.clone()),
+                download_pending: cx
+                    .props
+                    .attachments_pending_download
+                    .as_ref()
+                    .map(|x| x.contains(file))
+                    .unwrap_or(false),
+                on_press: move |_| cx.props.on_download.call(file.clone()),
             })
         })
     });
@@ -159,9 +173,12 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 p {
                     class: "text",
                     aria_label: "message-text",
-                    dangerous_inner_html: "{formatted_text_clone}"
+                    ChatText {
+                        text: formatted_text_clone,
+                        remote: is_remote
+                    }
                 }
-            ))
+            )),
             has_attachments.then(|| {
                 rsx!(
                     div {
@@ -211,7 +228,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
-        focus: true,
+        ignore_focus: false,
         value: cx.props.text.clone(),
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
@@ -222,4 +239,40 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
             }
         }
     }))
+}
+
+#[derive(Props, PartialEq)]
+struct ChatMessageProps {
+    text: String,
+    remote: bool,
+}
+
+#[allow(non_snake_case)]
+fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+    let finder = LinkFinder::new();
+    let links: Vec<String> = finder
+        .spans(&cx.props.text)
+        .filter(|e| matches!(e.kind(), Some(LinkKind::Url)))
+        .map(|e| e.as_str().to_string())
+        .collect();
+
+    let texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
+        Some(LinkKind::Url) => {
+            rsx!(
+                a {
+                    href: e.as_str(),
+                    e.as_str()
+                }
+            )
+        }
+        _ => rsx!(e.as_str()),
+    });
+
+    cx.render(rsx!(
+        texts,
+        links.first().and_then(|l| cx.render(rsx!(EmbedLinks {
+            link: l.to_string()
+            remote: cx.props.remote
+        })))
+    ))
 }

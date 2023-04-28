@@ -40,6 +40,7 @@ jobs:
 
       - name: Build executable 🖥️
         run: make dmg
+        continue-on-error: true
 
       - name: Create ZIP archive 🗳️
         run: |
@@ -150,11 +151,9 @@ jobs:
           path: ./appium-tests/tests/fixtures/users/
 
   test-chats:
-    if: ${{ always() }}
     needs: test
     runs-on: macos-latest
     strategy:
-      fail-fast: false
       matrix:
         user: ["ChatUserA", "ChatUserB"]
         include:
@@ -235,7 +234,7 @@ jobs:
           path: ./appium-tests/appium.log
 
       - name: Delete Chat Users Accounts
-        if: always()
+        if: success()
         uses: geekyeggo/delete-artifact@v2
         with:
           name: appium-test-accounts
