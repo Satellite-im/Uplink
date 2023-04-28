@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
-    state::{Action, Identity, State},
+    state::{Action, Identity, State, ToastNotification},
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -15,7 +15,8 @@ use kit::{
     elements::{
         button::Button,
         checkbox::Checkbox,
-        input::{Input, Options},
+        input::{Input, Options, SpecialCharsAction, Validation},
+        label::Label,
         Appearance,
     },
 };
@@ -37,6 +38,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let group_name = use_state(cx, || Some(String::new()));
     let friends_list = HashMap::from_iter(
         state
             .read()
@@ -58,23 +60,25 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let _friends = State::get_friends_by_first_letter(friends_list);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![selected_friends, chat_with];
+        to_owned![selected_friends, chat_with, group_name];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while rx.next().await.is_some() {
                 let recipients: Vec<DID> = selected_friends.current().iter().cloned().collect();
+                let group_name: Option<String> = group_name.current().as_ref().clone();
+                let group_name_string = group_name.clone().unwrap_or_default();
 
                 let (tx, rx) = oneshot::channel();
-                let cmd = match &recipients[..] {
-                    [] => continue,
-                    [recipient] => RayGunCmd::CreateConversation {
-                        recipient: recipient.clone(),
-                        rsp: tx,
+                let cmd = RayGunCmd::CreateGroupConversation {
+                    recipients,
+                    group_name: if group_name_string.is_empty()
+                        || group_name_string.chars().all(char::is_whitespace)
+                    {
+                        None
+                    } else {
+                        group_name
                     },
-                    _ => RayGunCmd::CreateGroupConversation {
-                        recipients,
-                        rsp: tx,
-                    },
+                    rsp: tx,
                 };
 
                 if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
@@ -102,7 +106,36 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             margin_right: "8px",
             aria_label: "Create Group",
             div {
+                id: "create-group-name",
+                class: "create-group-name",
+                div {
+                    align_items: "start",
+                    Label {
+                        text: get_local_text("messages.group-name"),
+                    },
+                }
+                Input {
+                        placeholder:  get_local_text("messages.group-name"),
+                        default_text: group_name.get().clone().unwrap_or_default(),
+                        aria_label: "groupname-input".into(),
+                        options: Options {
+                            with_clear_btn: true,
+                            ..get_input_options()
+                        },
+                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                            if !is_valid {
+                                group_name.set(None);
+                                return;
+                            }
+                            group_name.set(Some(v));
+                        },
+                    },
+            },
+            div {
                 class: "search-input",
+                Label {
+                    text: "Users".into(),
+                },
                 Input {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
@@ -130,8 +163,21 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 appearance: Appearance::Primary,
                 onpress: move |e| {
                     log::info!("create dm button");
-                    ch.send(());
-                    cx.props.oncreate.call(e);
+                    if group_name.get().is_some() {
+                        ch.send(());
+                        cx.props.oncreate.call(e);
+                    } else {
+                        state
+                        .write()
+                        .mutate(common::state::Action::AddToastNotification(
+                            ToastNotification::init(
+                                "".into(),
+                                get_local_text("messages.group-name-invalid"),
+                                None,
+                                3,
+                            ),
+                        ));
+                    }
                 }
             }
         }
@@ -242,4 +288,32 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             }
         }
     ))
+}
+
+pub fn get_input_options() -> Options {
+    // Set up validation options for the input field
+    let group_name_validation_options = Validation {
+        // The input should have a maximum length of 64
+        max_length: Some(64),
+        // The input should have a minimum length of 0
+        min_length: Some(0),
+        // The input should only contain alphanumeric characters
+        alpha_numeric_only: true,
+        // The input can contain any whitespace
+        no_whitespace: false,
+        // The input component validation is shared - if you need to allow just colons in, set this to true
+        ignore_colons: false,
+        // The input should allow any special characters
+        // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
+        special_chars: Some((SpecialCharsAction::Allow, vec![' '])),
+    };
+
+    // Set up options for the input field
+    Options {
+        // Enable validation for the input field with the specified options
+        with_validation: Some(group_name_validation_options),
+        clear_on_submit: false,
+        // Use the default options for the remaining fields
+        ..Options::default()
+    }
 }
