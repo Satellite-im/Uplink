@@ -57,6 +57,8 @@ messages = Messages
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create Group Chat
     .group-name = Group Name
+    .group-name-invalid = Group Name Invalid
+
     
 favorites = Favorites
     .favorites = Favorites
