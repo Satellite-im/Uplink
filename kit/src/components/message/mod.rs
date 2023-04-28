@@ -170,13 +170,9 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )
             ),
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
-                p {
-                    class: "text",
-                    aria_label: "message-text",
-                    ChatText {
-                        text: formatted_text_clone,
-                        remote: is_remote
-                    }
+                ChatText {
+                    text: formatted_text_clone,
+                    remote: is_remote
                 }
             )),
             has_attachments.then(|| {
@@ -256,7 +252,8 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         .map(|e| e.as_str().to_string())
         .collect();
 
-    let texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
+    // this is broken. may be fixed later.
+    let _texts = finder.spans(&cx.props.text).map(|e| match e.kind() {
         Some(LinkKind::Url) => {
             rsx!(
                 a {
@@ -268,11 +265,22 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
         _ => rsx!(e.as_str()),
     });
 
+    // not really
+    let dangerous_text = cx.props.text.clone();
+
     cx.render(rsx!(
-        texts,
-        links.first().and_then(|l| cx.render(rsx!(EmbedLinks {
-            link: l.to_string()
-            remote: cx.props.remote
-        })))
+        div {
+            class: "text",
+            p {
+                class: "text",
+                aria_label: "message-text",
+                dangerous_inner_html: "{dangerous_text}",
+            },
+            links.first().and_then(|l| cx.render(rsx!(
+                EmbedLinks {
+                link: l.to_string()
+                remote: cx.props.remote
+            })))
+        }
     ))
 }
