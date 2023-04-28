@@ -274,9 +274,21 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();
-    let error = use_state(cx, || String::from(""));
+    let error = use_state(cx, || (false, id));
+    let value_chatbar = state
+        .read()
+        .get_active_chat()
+        .as_ref()
+        .and_then(|d| d.draft.clone())
+        .unwrap_or_default();
 
-    let validate_min_max = move || {
+    if value_chatbar.len() >= 1024 && error.0 == false {
+        error.set((true, id));
+    } else if value_chatbar.len() < 1024 && error.0 == true {
+        error.set((false, id));
+    }
+
+    let validate_max = move || {
         let value_chatbar = state
             .read()
             .get_active_chat()
@@ -284,16 +296,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default();
         if value_chatbar.len() >= 1024 {
-            let error_message = format!(
-                "{} {} {} {}.",
-                get_local_text("warning-messages.maximum-of"),
-                1024,
-                get_local_text("uplink.characters"),
-                get_local_text("uplink.reached")
-            );
-            error.set(error_message);
-        } else if value_chatbar.len() < 1024 && !error.get().is_empty() {
-            error.set(String::new());
+            error.set((true, id));
+        } else if value_chatbar.len() < 1024 && error.0 == true {
+            error.set((false, id));
         }
     };
 
@@ -308,7 +313,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             onchange: move |v: String| {
                 if let Some(id) = &active_chat_id {
                     state.write_silent().mutate(Action::SetChatDraft(*id, v));
-                    validate_min_max();
+                    validate_max();
                     update_send();
                     local_typing_ch.send(TypingIndicator::Typing(*id));
                 }
@@ -410,11 +415,17 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 }))
             }))
         },
-        (!error.is_empty()).then(|| rsx!(
+        (error.0 == true).then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
-                "{error}"
+                format!(
+                    "{} {} {} {}.",
+                    get_local_text("warning-messages.maximum-of"),
+                    1024,
+                    get_local_text("uplink.characters"),
+                    get_local_text("uplink.reached")
+                )
             }
         ))
     ));
