@@ -1,28 +1,13 @@
-name: Update PRs on Dev Branch Changes
-
-on:
-  pull_request:
-    branches:
-      - dev
-
+name: autoupdater
+on: push
 jobs:
-  update_prs:
+  autoupdate:
+    name: autoupdate
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Update PRs
-        run: |
-          git fetch origin dev
-          git checkout dev
-          git pull origin dev
-
-          # Find open pull requests targeting the dev branch
-          PR_LIST=$(hub pr list -s open -h dev --format "%I")
-
-          # Update each open pull request
-          for PR_NUMBER in $PR_LIST; do
-            hub pr update $PR_NUMBER
-          done
+      - uses: actions/checkout@v2
+      - name: PR Auto Updater
+        uses: grmoon/autoupdater@0.0.2
+        env:
+          # Required
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
