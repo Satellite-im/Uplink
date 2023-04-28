@@ -1,8 +1,7 @@
 TARGET = uplink
 
-SIGNING_KEY = LOCAL
-ASSETS_DIR = ui/extra
-RELEASE_DIR = target/release
+ASSETS_DIR = ./ui/extra
+RELEASE_DIR = ./target/release
 
 APP_NAME = Uplink.app
 APP_TEMPLATE = $(ASSETS_DIR)/macos/$(APP_NAME)
@@ -33,12 +32,10 @@ $(TARGET)-universal:
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(APP_BINARY)
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_BINARY)
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_BINARY)
-endif
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(RELEASE_DIR)/libclear_all.dylib
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(RELEASE_DIR)/libemoji_selector.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_BINARY)
+
 app: $(APP_NAME)-native ## Create a Uplink.app
 app-universal: $(APP_NAME)-universal ## Create a universal Uplink.app
 $(APP_NAME)-%: $(TARGET)-%
@@ -58,13 +55,9 @@ $(APP_NAME)-%: $(TARGET)-%
 	cp -r ./ui/extra/themes      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-	cp -r $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
+	cp $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
+# /usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)/$(APP_NAME)
 
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)/$(APP_NAME)
-endif
 dmg: $(DMG_NAME)-native ## Create a Uplink.dmg
 dmg-universal: $(DMG_NAME)-universal ## Create a universal Uplink.dmg
 $(DMG_NAME)-%: $(APP_NAME)-%
@@ -76,12 +69,8 @@ $(DMG_NAME)-%: $(APP_NAME)-%
 		-srcfolder $(APP_DIR) \
 		-ov -format UDZO
 	@echo "Packed '$(APP_NAME)' in '$(APP_DIR)'"
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_DIR)/$(DMG_NAME)
 
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(DMG_DIR)/$(DMG_NAME)
-endif
 install: $(INSTALL)-native ## Mount disk image
 install-universal: $(INSTALL)-native ## Mount universal disk image
 $(INSTALL)-%: $(DMG_NAME)-%
