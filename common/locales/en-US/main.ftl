@@ -58,7 +58,8 @@ messages = Messages
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create Group Chat
     .group-name = Group Name
-
+    .group-name-invalid = Group Name Invalid
+    
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
@@ -112,7 +113,8 @@ files = Files
     .video-thumb = Video Thumb
     .image-thumb = Image Thumb 
     .doc-thumb = First Page Thumb
-    .no-thumbnail-preview = There is no preview thumb for this file
+    .no-thumbnail-preview = No thumbnail file preview
+    .file-already-opened = File already opened
 
 settings = Settings
     .settings = Settings
