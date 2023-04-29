@@ -37,11 +37,12 @@ uplink = Uplink
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.
-    .instruction1 = 1. Download the update.
+    .instruction1 = 1. Download the update from our release page.
     .instruction2 = 2. Close Uplink.
     .instruction3 = 3. Run the installer. The older version of uplink will be overwritten, leaving your account intact.
     .instruction4 = 4. Open Uplink and start chatting again!
     .button-label = Pick Download Folder
+    .download-label = Download Update
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least

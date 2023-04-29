@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
@@ -55,7 +57,7 @@ use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::utils::auto_updater::{
-    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+    DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -980,7 +982,7 @@ pub fn get_download_modal<'a>(
 ) -> Element<'a> {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
 
-    let dl = download_location.current().clone();
+    let dl = download_location.current();
     let disp_download_location = dl
         .as_ref()
         .clone()
@@ -1001,19 +1003,14 @@ pub fn get_download_modal<'a>(
                     get_local_text("updates.instruction1")
                 },
                 li {
-                    div {
-                        class: "",
-                        Button {
-                            text: get_local_text("updates.button-label").into(),
-                            onpress: move |_| {
-                                let dest = get_download_dest();
-                                download_location.set(dest);
-                            },
-                        } ,
-                        p {
-                            disp_download_location
+                    Button {
+                        text: get_local_text("updates.download-label"),
+                        aria_label: get_local_text("updates.download-label"),
+                        appearance: Appearance::Secondary,
+                        onpress: |_| {
+                            let _ = open::that("https://github.com/Satellite-im/Uplink/releases/latest");
                         }
-                    },
+                    }
                 },
                 li {
                     get_local_text("updates.instruction2")
@@ -1028,14 +1025,14 @@ pub fn get_download_modal<'a>(
             p {
                 "*We are going to streamline this process in a future update."
             },
-            dl.as_ref().clone().map(|dest| rsx!(
-                Button {
-                    text: "download installer".into(),
-                    onpress: move |_| {
-                       on_submit.call(dest.clone());
-                    }
-                }
-            ))
+            // dl.as_ref().clone().map(|dest| rsx!(
+            //     Button {
+            //         text: "download installer".into(),
+            //         onpress: move |_| {
+            //            on_submit.call(dest.clone());
+            //         }
+            //     }
+            // ))
         }
         ))
     }))
