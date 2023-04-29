@@ -18,7 +18,7 @@ pub struct WindowManagerCmdChannels {
     pub rx: WindowManagerCmdRx,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[allow(clippy::enum_variant_names)]
 pub enum WindowManagerCmd {
     ClosePopout,
@@ -32,6 +32,7 @@ pub async fn handle_cmd(
     cmd: WindowManagerCmd,
     desktop: DesktopContext,
 ) {
+    log::trace!("window manager command: {cmd:?}");
     match cmd {
         WindowManagerCmd::ClosePopout => {
             state.write().mutate(Action::ClearCallPopout(desktop));
