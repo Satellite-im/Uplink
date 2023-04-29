@@ -40,7 +40,7 @@ updates = Updates
     .instruction1 = 1. Download the update.
     .instruction2 = 2. Close uplink.
     .instruction3 = 3. Run the installer. The older version of uplink will be overwritten, leaving your account intact.
-    .instruction4 = 4. Open uplink and start chatting again!
+    .instruction4 = 4. Open Uplink and start chatting again!
     .button-label = Pick Download Folder
 
 warning-messages = Warning Messages
