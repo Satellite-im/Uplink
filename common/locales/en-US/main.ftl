@@ -41,6 +41,7 @@ updates = Updates
     .instruction2 = 2. Close Uplink.
     .instruction3 = 3. Run the installer. The older version of uplink will be overwritten, leaving your account intact.
     .instruction4 = 4. Open Uplink and start chatting again!
+    .instruction5 = "*We are going to streamline this process in a future update."
     .button-label = Pick Download Folder
     .download-label = Download Update
 

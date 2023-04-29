@@ -1023,7 +1023,7 @@ pub fn get_download_modal<'a>(
                 }
             },
             p {
-                "*We are going to streamline this process in a future update."
+                get_local_text("updates.instruction5")
             },
             // dl.as_ref().clone().map(|dest| rsx!(
             //     Button {
