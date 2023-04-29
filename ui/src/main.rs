@@ -644,6 +644,7 @@ fn app(cx: Scope) -> Element {
                 if !state.read().has_toasts() {
                     continue;
                 }
+                log::trace!("decrement toasts");
                 state.write().decrement_toasts();
             }
         }
@@ -655,7 +656,10 @@ fn app(cx: Scope) -> Element {
         async move {
             loop {
                 sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_timeout)).await;
-                state.write().clear_typing_indicator(Instant::now());
+                if state.write_silent().clear_typing_indicator(Instant::now()) {
+                    log::trace!("clear typing indicator");
+                    state.write();
+                }
             }
         }
     });
@@ -667,6 +671,7 @@ fn app(cx: Scope) -> Element {
             loop {
                 // simply triggering an update will refresh the message timestamps
                 sleep(Duration::from_secs(60)).await;
+                log::trace!("refresh timestamps");
                 state.write();
             }
         }
