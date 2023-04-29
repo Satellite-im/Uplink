@@ -993,7 +993,7 @@ pub fn get_download_modal<'a>(
         on_dismiss: move |_| on_dismiss.call(()),
         children: cx.render(rsx!(
             div {
-            class: "download-modal flex col",
+            class: "download-modal disp-flex col",
             h1 {
                 get_local_text("updates.title")
             },
