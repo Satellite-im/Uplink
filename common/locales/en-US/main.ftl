@@ -67,8 +67,10 @@ messages = Messages
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create Group Chat
     .group-name = Group Name
+    .view = View Messages
+    .hide = Hide Messages
+    .blocked = { $amount } messages blocked
     .group-name-invalid = Group Name Invalid
-
     
 favorites = Favorites
     .favorites = Favorites
