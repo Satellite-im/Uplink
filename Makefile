@@ -64,10 +64,10 @@ app: folders ## Build the release binary and Uplink.app
 
 signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
 	@echo "make signed-app ..."
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(MACOS_DIR)/$(TARGET)
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libclear_all.dylib
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libemoji_selector.dylib
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_DIR)
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force $(MACOS_DIR)/$(TARGET)
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libclear_all.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libemoji_selector.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force $(APP_DIR)
 
 unsigned-dmg: app # build the universal Uplink.dmg file without signing
 	@echo "Packing disk image..."
@@ -81,7 +81,7 @@ unsigned-dmg: app # build the universal Uplink.dmg file without signing
 
 dmg: signed-app unsigned-dmg ## sign Uplink.dmg
 	@echo "make dmg..."
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_NAME)
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_NAME)
 
 # tell Make that these targets don't correspond to physical files
 .PHONY: dmg unsigned-dmg signed-app app folders help all clean
