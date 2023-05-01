@@ -199,7 +199,7 @@ pub fn get_extras_dir() -> anyhow::Result<PathBuf> {
         exe_path
             .parent()
             .and_then(|x| x.parent())
-            .map(|x| x.join("Resources").join("extra"))
+            .map(|x| x.join("Resources"))
             .ok_or(anyhow::format_err!("failed to get MacOs resources dir"))?
     } else {
         bail!("unknown OS type. failed to copy assets");
@@ -223,7 +223,7 @@ pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
         exe_path
             .parent()
             .and_then(|x| x.parent())
-            .map(|x| x.join("Resources").join("extensions"))
+            .map(|x| x.join("Frameworks"))
             .ok_or(anyhow::format_err!("failed to get MacOs extensions dir"))?
     } else {
         bail!("unknown OS type. failed to copy assets");
