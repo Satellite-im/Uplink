@@ -14,7 +14,7 @@ ASSETS_SOURCE_DIR = ui/extra
 
 BUNDLE_DIR = target/macos_bundle
 # folder used for the universal installer
-DMG_DIR = $(BUNDLE_DIR)/Uplink.dmg
+DMG_NAME = $(BUNDLE_DIR)/Uplink.dmg
 # folder used to build the .app
 APP_DIR = $(BUNDLE_DIR)/Uplink.app
 
@@ -37,7 +37,7 @@ help: ## Print this help message
 folders: ## creates build directory and copies assets
 # 	clean up from previous build
 	@rm -rf $(APP_DIR)
-	@rm -rf $(DMG_DIR)
+	@rm  $(DMG_NAME) = $(BUNDLE_DIR)/Uplink.dmg)
 	@mkdir -p $(APP_DIR)
 
 # 	this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
@@ -69,16 +69,16 @@ signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
 
 unsigned-dmg: app # build the universal Uplink.dmg file without signing
 	@echo "Packing disk image..."
-	@ln -sf /Applications $(APP_DIR)/Applications
-	@hdiutil create $(DMG_DIR) \
+	@ln -sf /Applications $(BUNDLE_DIR)/Applications
+	@hdiutil create $(DMG_NAME) \
 		-volname "Uplink" \
 		-fs HFS+ \
-		-srcfolder $(APP_DIR) \
+		-srcfolder $(BUNDLE_DIR) \
 		-ov -format UDZO
-	@echo "Packed '$(APP_DIR)' into dmg"
+	@echo "Packed '$(BUNDLE_DIR)' into dmg"
 
 dmg: signed-app unsigned-dmg ## sign Uplink.dmg
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_DIR)
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_NAME)
 
 # tell Make that these targets don't correspond to physical files
 .PHONY: dmg unsigned-dmg signed-app app folders help all clean
