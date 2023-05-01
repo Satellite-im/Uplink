@@ -34,7 +34,7 @@ pub fn GroupUsers(cx: Scope) -> Element {
             .iter()
             .map(|id| (id.did_key(), id.clone())),
     );
-    let mut friends_group_list = friends_list.clone();
+    let mut friends_group_list = friends_list;
     friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(did_key));
     let _friends_in_group = State::get_friends_by_first_letter(friends_group_list);
 
