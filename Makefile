@@ -51,6 +51,7 @@ folders: ## creates build directory and copies assets
 	@cp -R $(ASSETS_SOURCE_DIR)/themes      $(RESOURCES_DIR) 
 
 app: folders ## Build the release binary and Uplink.app
+	@echo "make app ..."
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(MACOS_DIR)/$(TARGET)
@@ -62,6 +63,7 @@ app: folders ## Build the release binary and Uplink.app
 	xattr -c $(RESOURCES_DIR)/uplink.icns
 
 signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
+	@echo "make signed-app ..."
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(MACOS_DIR)/$(TARGET)
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libclear_all.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libemoji_selector.dylib
@@ -78,6 +80,7 @@ unsigned-dmg: app # build the universal Uplink.dmg file without signing
 	@echo "Packed '$(BUNDLE_DIR)' into dmg"
 
 dmg: signed-app unsigned-dmg ## sign Uplink.dmg
+	@echo "make dmg..."
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_NAME)
 
 # tell Make that these targets don't correspond to physical files
