@@ -13,21 +13,22 @@ DMG_DIR = $(RELEASE_DIR)/Uplink.dmg
 # stuff to copy over to RESOURCES_DIR
 ASSETS_SOURCE_DIR = ui/extra
 
-# folder used to build the .app
-APP_DIR = $(RELEASE_DIR)/Uplink.app
-APP_CONTENTS_DIR = $(APP_DIR)/Contents
-
 # directory structure for .dmg :
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW8
+
+# folder used to build the .app
+APP_DIR = $(RELEASE_DIR)/Uplink.app
+
+# contains all subfolders: MacOs, Resources, Frameworks
+# https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/20001119-110730
+APP_CONTENTS_DIR = $(APP_DIR)/Contents
 
 # contains standalone executables
 MACOS_DIR = $(APP_CONTENTS_DIR)/MacOs
 # contains resources 
-# https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/20001119-110730
 RESOURCES_DIR = $(APP_CONTENTS_DIR)/Resources
 # contains shared libraries (.dylib)
 FRAMEWORKS_DIR = $(APP_CONTENTS_DIR)/Frameworks
-
 
 all: help
 
@@ -35,15 +36,18 @@ help: ## Print this help message
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 create-folders: ## creates build directory and copies assets
+# clean up from previous build
+	@rm -rf $(APP_DIR)
+	@rm -rf $(DMG_DIR)
 # this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
-	@cp -fRp ui/extra/macos/Uplink.App/Contents $(APP_DIR)
+	@cp -fRp $(ASSETS_SOURCE_DIR)/macos/Uplink.App/Contents $(APP_DIR)
 	@mkdir    $(MACOS_DIR)
 	@mkdir    $(FRAMEWORKS_DIR)
 
-	@cp -R ui/extra/assets      $(RESOURCES_DIR)
-	@cp -R ui/extra/images      $(RESOURCES_DIR)
-	@cp -R ui/extra/prism_langs $(RESOURCES_DIR)
-	@cp -R ui/extra/themes      $(RESOURCES_DIR) 
+	@cp -R $(ASSETS_SOURCE_DIR)/assets      $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/images      $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/prism_langs $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/themes      $(RESOURCES_DIR) 
 
 build-app: create-folders ## Build the release binary and Uplink.app
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
