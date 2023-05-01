@@ -71,6 +71,8 @@ messages = Messages
     .hide = Hide Messages
     .blocked = { $amount } messages blocked
     .group-name-invalid = Group Name Invalid
+    .participant = Participant
+    .participants = Participants
     
 favorites = Favorites
     .favorites = Favorites

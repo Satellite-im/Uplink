@@ -31,7 +31,10 @@ use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::{chat::edit_group::EditGroup, media::player::MediaPlayer},
+    components::{
+        chat::{edit_group::EditGroup, group_users::GroupUsers},
+        media::player::MediaPlayer,
+    },
     layouts::storage::{
         decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
         FEEDBACK_TEXT_SCRIPT,
@@ -69,6 +72,7 @@ pub struct ComposeProps {
     data: Option<Rc<ComposeData>>,
     upload_files: UseState<Vec<PathBuf>>,
     show_edit_group: UseState<Option<Uuid>>,
+    show_group_users: UseState<Option<Uuid>>,
     ignore_focus: bool,
 }
 
@@ -114,7 +118,20 @@ pub fn Compose(cx: Scope) -> Element {
             }
         }
     });
-    let show_edit_group = use_state(cx, || None);
+    let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
+
+    if show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id))
+        && !show_group_users.is_none()
+    {
+        show_group_users.set(None);
+    }
+    if show_group_users.map_or(false, |group_chat_id| (group_chat_id == chat_id))
+        && !show_edit_group.is_none()
+    {
+        show_edit_group.set(None);
+    }
+
     let should_ignore_focus = state.read().ui.ignore_focus;
 
     cx.render(rsx!(
@@ -154,12 +171,14 @@ pub fn Compose(cx: Scope) -> Element {
                 controls: cx.render(rsx!(get_controls{
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
+                    show_group_users: show_group_users.clone(),
                     upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
                 })),
                 get_topbar_children {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
+                    show_group_users: show_group_users.clone(),
                     upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
                 }
@@ -175,15 +194,27 @@ pub fn Compose(cx: Scope) -> Element {
                 },
             ))),
         show_edit_group
-            .map_or(false, |group_chat_id| group_chat_id == chat_id).then(|| rsx!(
+            .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
             EditGroup {
                 onedit: move |_| {
                     show_edit_group.set(None);
                 }
             }
         )),
-        show_edit_group
-                .map_or(true, |group_chat_id| group_chat_id != chat_id).then(|| rsx!(
+        show_group_users
+            .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
+                GroupUsers {
+                    onedit: move |_| {
+                        show_group_users.set(None);
+                    }
+            }
+        )),
+        (show_edit_group
+                .map_or(true, |group_chat_id| group_chat_id != chat_id)
+            &&
+        show_group_users
+                .map_or(true, |group_chat_id| group_chat_id != chat_id)
+            ).then(|| rsx!(
             match data.as_ref() {
                 None => rsx!(
                     div {
@@ -197,6 +228,7 @@ pub fn Compose(cx: Scope) -> Element {
             chatbar::get_chatbar {
                 data: data.clone(),
                 show_edit_group: show_edit_group.clone(),
+                show_group_users: show_group_users.clone(),
                 upload_files: files_to_upload.clone(),
                 ignore_focus: should_ignore_focus,
             }
@@ -382,6 +414,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
+    let show_group_users = cx.props.show_group_users.clone();
+    let show_group_users2 = cx.props.show_group_users.clone();
+    let chat_did = data.clone().unwrap().active_chat.id;
 
     let data = match data {
         Some(d) => d,
@@ -426,10 +461,24 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             UserImageGroup {
                 loading: false,
                 participants: build_participants(&data.other_participants),
+                onpress: move |_| {
+                    if show_group_users.is_none() {
+                        show_group_users.set(Some(chat_did));
+                    } else {
+                        show_group_users.set(None);
+                    }
+                },
             }
         )}
         div {
             class: "user-info",
+            onclick: move |_| {
+                if show_group_users2.is_none() {
+                    show_group_users2.set(Some(chat_did));
+                } else {
+                    show_group_users2.set(None);
+                }
+            },
             aria_label: "user-info",
             p {
                 class: "username",

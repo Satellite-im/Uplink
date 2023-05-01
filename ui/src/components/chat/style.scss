@@ -148,6 +148,44 @@
   align-items: stretch;
 }
 
+#group-users {
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--padding);
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 16px;
+  height: 100%;
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--gap);
+
+  .friend-list {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0;
+
+    .friend-group {
+      display: inline-flex;
+      flex-direction: column;
+      .friend-container {
+        display: inline-flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: var(--gap);
+        margin: var(--gap-less) 0;
+        align-content: center;
+        align-items: center;
+      }
+    }
+  }
+
+  .btn,
+  .btn-wrap {
+    width: 100% !important;
+  }
+}
+
 .sidebar {
   .searchbar-dropdown {
     position: absolute;
