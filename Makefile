@@ -37,7 +37,7 @@ help: ## Print this help message
 folders: ## creates build directory and copies assets
 # 	clean up from previous build
 	@rm -rf $(APP_DIR)
-	@rm  $(DMG_NAME) = $(BUNDLE_DIR)/Uplink.dmg)
+	@rm  $(DMG_NAME)
 	@mkdir -p $(APP_DIR)
 
 # 	this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
