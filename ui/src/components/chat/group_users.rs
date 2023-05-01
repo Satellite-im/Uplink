@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -13,7 +13,7 @@ use kit::{
         label::Label,
     },
 };
-use warp::{crypto::DID, logging::tracing::log};
+use warp::logging::tracing::log;
 
 #[derive(PartialEq, Clone)]
 enum EditGroupAction {
@@ -21,25 +21,11 @@ enum EditGroupAction {
     Remove,
 }
 
-enum ChanCmd {
-    AddParticipants,
-    RemoveParticipants,
-    UpdateGroupName(String),
-}
-
-#[derive(Props)]
-pub struct Props<'a> {
-    onedit: EventHandler<'a, MouseEvent>,
-}
-
 #[allow(non_snake_case)]
-pub fn GroupUsers<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    log::trace!("rendering edit_group");
+pub fn GroupUsers(cx: Scope) -> Element {
+    log::trace!("rendering group_users");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
-    let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let edit_group_action = use_state(cx, || EditGroupAction::Add);
-    let conv_id = state.read().get_active_chat().unwrap().id;
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
     let friends_list = HashMap::from_iter(
         state
@@ -88,7 +74,6 @@ pub fn GroupUsers<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 render_friends {
                     friends: _friends_in_group,
                     name_prefix: friend_prefix.clone(),
-                    selected_friends: selected_friends.clone()
                 },
             }
         }
@@ -99,7 +84,6 @@ pub fn GroupUsers<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 pub struct FriendsProps {
     friends: BTreeMap<char, Vec<Identity>>,
     name_prefix: UseState<String>,
-    selected_friends: UseState<HashSet<DID>>,
 }
 
 fn render_friends(cx: Scope<FriendsProps>) -> Element {
@@ -125,7 +109,6 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 rsx!(
                                 render_friend {
                                     friend: _friend.clone(),
-                                    selected_friends: cx.props.selected_friends.clone()
                                 }
                             )})
                         }
@@ -139,7 +122,6 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
 #[derive(PartialEq, Props)]
 pub struct FriendProps {
     friend: Identity,
-    selected_friends: UseState<HashSet<DID>>,
 }
 fn render_friend(cx: Scope<FriendProps>) -> Element {
     cx.render(rsx!(
