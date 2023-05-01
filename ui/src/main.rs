@@ -283,7 +283,6 @@ pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> Window
             .with_fullsize_content_view(true)
             .with_titlebar_transparent(true)
             .with_title("")
-            .with_movable_by_window_background(true)
     }
 
     #[cfg(not(target_os = "macos"))]
