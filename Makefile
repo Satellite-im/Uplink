@@ -35,12 +35,12 @@ help: ## Print this help message
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 create-folders: ## creates build directory and copies assets
-# clean up from previous build
+# 	clean up from previous build
 	@rm -rf $(APP_DIR)
 	@rm -rf $(DMG_DIR)
 	@mkdir -p $(APP_DIR)
 
-# this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
+# 	this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
 	@cp -fRp $(ASSETS_SOURCE_DIR)/macos/Uplink.App/Contents $(APP_DIR)
 	@mkdir    $(MACOS_DIR)
 	@mkdir    $(FRAMEWORKS_DIR)
@@ -60,22 +60,22 @@ build-app: create-folders ## Build the release binary and Uplink.app
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libclear_all.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libemoji_selector.dylib
 
-# not sure why this is needed but keeping it for now. 
+# 	not sure why this is needed but keeping it for now. 
 	xattr -c $(APP_CONTENTS_DIR)/Info.plist
 	xattr -c $(RESOURCES_DIR)/uplink.icns
-# sign target/macos/Uplink.app
+# 	sign target/macos/Uplink.app
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_DIR)
 
 dmg: build-app ## Create a universal Uplink.dmg
 	@echo "Packing disk image..."
-	@ln -sf /Applications $(DMG_DIR)/Applications
+	@ln -sf /Applications $(APP_DIR)/Applications
 	@hdiutil create $(DMG_DIR) \
 		-volname "Uplink" \
 		-fs HFS+ \
 		-srcfolder $(APP_DIR) \
 		-ov -format UDZO
 	@echo "Packed '$(APP_DIR)' into dmg"
-# sign target/macos/Uplink.dmg
+# 	sign target/macos/Uplink.dmg
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_DIR)
 
 .PHONY: build-app dmg
