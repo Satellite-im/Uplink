@@ -34,7 +34,7 @@ all: help
 help: ## Print this help message
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-create-folders: ## creates build directory and copies assets
+folders: ## creates build directory and copies assets
 # 	clean up from previous build
 	@rm -rf $(APP_DIR)
 	@rm -rf $(DMG_DIR)
@@ -50,23 +50,24 @@ create-folders: ## creates build directory and copies assets
 	@cp -R $(ASSETS_SOURCE_DIR)/prism_langs $(RESOURCES_DIR)
 	@cp -R $(ASSETS_SOURCE_DIR)/themes      $(RESOURCES_DIR) 
 
-build-app: create-folders ## Build the release binary and Uplink.app
+app: folders ## Build the release binary and Uplink.app
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(MACOS_DIR)/$(TARGET)
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(FRAMEWORKS_DIR)/libclear_all.dylib
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(FRAMEWORKS_DIR)/libemoji_selector.dylib
+	
+# 	delete all special attributes. not sure why/if this is needed 
+	xattr -c $(APP_CONTENTS_DIR)/Info.plist
+	xattr -c $(RESOURCES_DIR)/uplink.icns
+
+signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(MACOS_DIR)/$(TARGET)
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libclear_all.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(FRAMEWORKS_DIR)/libemoji_selector.dylib
-
-# 	not sure why this is needed but keeping it for now. 
-	xattr -c $(APP_CONTENTS_DIR)/Info.plist
-	xattr -c $(RESOURCES_DIR)/uplink.icns
-# 	sign target/macos/Uplink.app
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_DIR)
 
-dmg: build-app ## Create a universal Uplink.dmg
+unsigned-dmg: app # build the universal Uplink.dmg file without signing
 	@echo "Packing disk image..."
 	@ln -sf /Applications $(APP_DIR)/Applications
 	@hdiutil create $(DMG_DIR) \
@@ -75,10 +76,12 @@ dmg: build-app ## Create a universal Uplink.dmg
 		-srcfolder $(APP_DIR) \
 		-ov -format UDZO
 	@echo "Packed '$(APP_DIR)' into dmg"
-# 	sign target/macos/Uplink.dmg
+
+dmg: signed-app unsigned-dmg ## sign Uplink.dmg
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_DIR)
 
-.PHONY: build-app dmg
+# tell Make that these targets don't correspond to physical files
+.PHONY: dmg unsigned-dmg signed-app app folders help all clean
 clean: ## Remove all build artifacts
 	@cargo clean
 
