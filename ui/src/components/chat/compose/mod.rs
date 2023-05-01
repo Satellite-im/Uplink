@@ -121,17 +121,6 @@ pub fn Compose(cx: Scope) -> Element {
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
-    if show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id))
-        && !show_group_users.is_none()
-    {
-        show_group_users.set(None);
-    }
-    if show_group_users.map_or(false, |group_chat_id| (group_chat_id == chat_id))
-        && !show_edit_group.is_none()
-    {
-        show_edit_group.set(None);
-    }
-
     let should_ignore_focus = state.read().ui.ignore_focus;
 
     cx.render(rsx!(
@@ -343,6 +332,8 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                             cx.props.show_edit_group.set(None);
                         } else if let Some(chat) = active_chat.as_ref() {
                             cx.props.show_edit_group.set(Some(chat.id));
+                            cx.props.show_group_users.set(None);
+
                         }
                     }
 
@@ -414,8 +405,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let show_group_users = cx.props.show_group_users.clone();
-    let show_group_users2 = cx.props.show_group_users.clone();
     let chat_did = data.clone().unwrap().active_chat.id;
 
     let data = match data {
@@ -449,6 +438,15 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     };
     let subtext = data.subtext.clone();
 
+    let active_show_group_users = move || {
+        if cx.props.show_group_users.is_none() {
+            cx.props.show_group_users.set(Some(chat_did));
+            cx.props.show_edit_group.set(None);
+        } else {
+            cx.props.show_group_users.set(None);
+        }
+    };
+
     cx.render(rsx!(
         if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
             UserImage {
@@ -462,22 +460,14 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                 loading: false,
                 participants: build_participants(&data.other_participants),
                 onpress: move |_| {
-                    if show_group_users.is_none() {
-                        show_group_users.set(Some(chat_did));
-                    } else {
-                        show_group_users.set(None);
-                    }
+                    active_show_group_users();
                 },
             }
         )}
         div {
             class: "user-info",
             onclick: move |_| {
-                if show_group_users2.is_none() {
-                    show_group_users2.set(Some(chat_did));
-                } else {
-                    show_group_users2.set(None);
-                }
+                active_show_group_users();
             },
             aria_label: "user-info",
             p {
