@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
@@ -17,8 +19,10 @@ use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
+use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
+use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -53,7 +57,7 @@ use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::utils::auto_updater::{
-    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
+    DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
 use crate::window_manager::WindowManagerCmdChannels;
@@ -896,11 +900,8 @@ fn get_update_icon(cx: Scope) -> Element {
                     ContextItem {
                         text: get_local_text("uplink.update-menu-download"),
                         onpress: move |_| {
-                            if let Some(dest) = get_download_dest() {
-                                download_state.write().stage = DownloadProgress::Pending;
-                                download_state.write().destination = Some(dest.clone());
-                                download_ch.send(SoftwareDownloadCmd(dest));
-                            }
+                            download_state.write().stage = DownloadProgress::PickFolder;
+
                         }
                     }
                 )),
@@ -908,11 +909,8 @@ fn get_update_icon(cx: Scope) -> Element {
                     id: "update-available",
                     aria_label: "update-available",
                     onclick: move |_| {
-                        if let Some(dest) = get_download_dest() {
-                            download_state.write().stage = DownloadProgress::Pending;
-                            download_state.write().destination = Some(dest.clone());
-                            download_ch.send(SoftwareDownloadCmd(dest));
-                        }
+                        download_state.write().stage = DownloadProgress::PickFolder;
+
                     },
                     IconElement {
                         icon: common::icons::solid::Shape::ArrowDownCircle,
@@ -921,6 +919,16 @@ fn get_update_icon(cx: Scope) -> Element {
                 }
             }
         )),
+        DownloadProgress::PickFolder => cx.render(rsx!(get_download_modal {
+            on_dismiss: move |_| {
+                download_state.write().stage = DownloadProgress::Idle;
+            },
+            on_submit: move |dest: PathBuf| {
+                download_state.write().stage = DownloadProgress::Pending;
+                download_state.write().destination = Some(dest.clone());
+                download_ch.send(SoftwareDownloadCmd(dest));
+            }
+        })),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
             class: "topbar-item",
@@ -964,6 +972,70 @@ fn get_update_icon(cx: Scope) -> Element {
             }))
         }
     }
+}
+
+#[inline_props]
+pub fn get_download_modal<'a>(
+    cx: Scope<'a>,
+    on_submit: EventHandler<'a, PathBuf>,
+    on_dismiss: EventHandler<'a, ()>,
+) -> Element<'a> {
+    let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
+
+    let dl = download_location.current();
+    let disp_download_location = dl
+        .as_ref()
+        .clone()
+        .map(|x| x.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    cx.render(rsx!(Modal {
+        on_dismiss: move |_| on_dismiss.call(()),
+        children: cx.render(rsx!(
+            div {
+            class: "download-modal disp-flex col",
+            h1 {
+                get_local_text("updates.title")
+            },
+            ul {
+                class: "instruction-list",
+                li {
+                    get_local_text("updates.instruction1")
+                },
+                li {
+                    Button {
+                        text: get_local_text("updates.download-label"),
+                        aria_label: get_local_text("updates.download-label"),
+                        appearance: Appearance::Secondary,
+                        onpress: |_| {
+                            let _ = open::that("https://github.com/Satellite-im/Uplink/releases/latest");
+                        }
+                    }
+                },
+                li {
+                    get_local_text("updates.instruction2")
+                },
+                li {
+                    get_local_text("updates.instruction3")
+                },
+                li {
+                    get_local_text("updates.instruction4")
+                }
+            },
+            p {
+                get_local_text("updates.instruction5")
+            },
+            // dl.as_ref().clone().map(|dest| rsx!(
+            //     Button {
+            //         text: "download installer".into(),
+            //         onpress: move |_| {
+            //            on_submit.call(dest.clone());
+            //         }
+            //     }
+            // ))
+        }
+        ))
+    }))
 }
 
 fn get_logger(cx: Scope) -> Element {

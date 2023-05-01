@@ -21,6 +21,7 @@ pub struct SoftwareDownloadCmd(pub PathBuf);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DownloadProgress {
     Idle,
+    PickFolder,
     Pending,
     Finished,
 }
@@ -69,6 +70,25 @@ pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {
     let latest_release =
         get_github_release("https://api.github.com/repos/Satellite-im/Uplink/releases/latest")
             .await?;
+
+    // ensure installer is released - .deb, .msi, or .dpkg
+    let extension = if cfg!(target_os = "windows") {
+        ".msi"
+    } else if cfg!(target_os = "linux") {
+        ".deb"
+    } else if cfg!(target_os = "macos") {
+        ".dpkg"
+    } else {
+        bail!("unknown OS");
+    };
+
+    if !latest_release
+        .assets
+        .iter()
+        .any(|x| x.name.contains(extension))
+    {
+        bail!("{extension} file not found in software release");
+    }
 
     if versions_match(&latest_release.tag_name) {
         Ok(None)
