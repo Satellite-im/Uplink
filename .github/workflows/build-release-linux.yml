@@ -33,7 +33,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/*.so
-            target/release/uplink
             target/release/*.deb
             target/release/SHA256SUM
