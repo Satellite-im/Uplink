@@ -35,6 +35,8 @@ $(TARGET)-universal:
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(RELEASE_DIR)/libclear_all.dylib
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(RELEASE_DIR)/libemoji_selector.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_BINARY)
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(RELEASE_DIR)/libclear_all.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(RELEASE_DIR)/libemoji_selector.dylib
 
 app: $(APP_NAME)-native ## Create a Uplink.app
 app-universal: $(APP_NAME)-universal ## Create a universal Uplink.app
@@ -56,7 +58,8 @@ $(APP_NAME)-%: $(TARGET)-%
 
 	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
 	cp $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-# /usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)/$(APP_NAME)
+# sign target/macos/Uplink.app
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(APP_DIR)/$(APP_NAME)
 
 dmg: $(DMG_NAME)-native ## Create a Uplink.dmg
 dmg-universal: $(DMG_NAME)-universal ## Create a universal Uplink.dmg
@@ -69,6 +72,7 @@ $(DMG_NAME)-%: $(APP_NAME)-%
 		-srcfolder $(APP_DIR) \
 		-ov -format UDZO
 	@echo "Packed '$(APP_NAME)' in '$(APP_DIR)'"
+# sign target/macos/Uplink.dmg
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force $(DMG_DIR)/$(DMG_NAME)
 
 install: $(INSTALL)-native ## Mount disk image
