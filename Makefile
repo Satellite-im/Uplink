@@ -68,7 +68,7 @@ signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(FRAMEWORKS_DIR)/libemoji_selector.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)
 
-unsigned-dmg: app # build the universal Uplink.dmg file without signing
+unsigned-dmg: app ## build the universal Uplink.dmg file without signing
 	@echo "Packing disk image..."
 	@ln -sf /Applications $(BUNDLE_DIR)/Applications
 	@hdiutil create $(DMG_NAME) \
