@@ -6,18 +6,17 @@
 # name of the executable
 TARGET = uplink
 
-# build output
-RELEASE_DIR = target/release
-DMG_DIR = $(RELEASE_DIR)/Uplink.dmg
-
 # stuff to copy over to RESOURCES_DIR
 ASSETS_SOURCE_DIR = ui/extra
 
 # directory structure for .dmg :
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW8
 
+BUNDLE_DIR = macos_bundle
+# folder used for the universal installer
+DMG_DIR = $(BUNDLE_DIR)/Uplink.dmg
 # folder used to build the .app
-APP_DIR = $(RELEASE_DIR)/Uplink.app
+APP_DIR = $(BUNDLE_DIR)/Uplink.app
 
 # contains all subfolders: MacOs, Resources, Frameworks
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/20001119-110730
@@ -39,6 +38,8 @@ create-folders: ## creates build directory and copies assets
 # clean up from previous build
 	@rm -rf $(APP_DIR)
 	@rm -rf $(DMG_DIR)
+	@mkdir -p $(APP_DIR)
+
 # this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
 	@cp -fRp $(ASSETS_SOURCE_DIR)/macos/Uplink.App/Contents $(APP_DIR)
 	@mkdir    $(MACOS_DIR)
