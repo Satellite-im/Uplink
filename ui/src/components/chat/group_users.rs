@@ -25,7 +25,7 @@ pub fn GroupUsers(cx: Scope) -> Element {
     let friend_prefix = use_state(cx, String::new);
     let conv_id = state.read().get_active_chat().unwrap().id;
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
-    let group_participants: &UseRef<HashMap<DID, Identity>> = use_ref(cx, || HashMap::new());
+    let group_participants: &UseRef<HashMap<DID, Identity>> = use_ref(cx, HashMap::new);
 
     let _friends_in_group = State::get_friends_by_first_letter(group_participants.read().clone());
 
