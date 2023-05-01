@@ -282,9 +282,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .and_then(|d| d.draft.clone())
         .unwrap_or_default();
 
-    if value_chatbar.len() >= 1024 && error.0 == false {
+    if value_chatbar.len() >= 1024 && !error.0 {
         error.set((true, id));
-    } else if value_chatbar.len() < 1024 && error.0 == true {
+    } else if value_chatbar.len() < 1024 && error.0 {
         error.set((false, id));
     }
 
@@ -297,7 +297,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             .unwrap_or_default();
         if value_chatbar.len() >= 1024 {
             error.set((true, id));
-        } else if value_chatbar.len() < 1024 && error.0 == true {
+        } else if value_chatbar.len() < 1024 && error.0 {
             error.set((false, id));
         }
     };
@@ -415,7 +415,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 }))
             }))
         },
-        (error.0 == true).then(|| rsx!(
+        error.0.then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
                 aria_label: "chatbar-input-error",
