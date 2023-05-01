@@ -35,6 +35,8 @@ use warp::{
     raygun,
 };
 
+const MAX_CHARS_LIMIT: usize = 1024;
+
 use crate::utils::build_user_from_identity;
 
 #[derive(Eq, PartialEq)]
@@ -282,9 +284,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .and_then(|d| d.draft.clone())
         .unwrap_or_default();
 
-    if value_chatbar.len() >= 1024 && !error.0 {
+    if value_chatbar.len() >= MAX_CHARS_LIMIT && !error.0 {
         error.set((true, id));
-    } else if value_chatbar.len() < 1024 && error.0 {
+    } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
         error.set((false, id));
     }
 
@@ -295,9 +297,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             .as_ref()
             .and_then(|d| d.draft.clone())
             .unwrap_or_default();
-        if value_chatbar.len() >= 1024 {
+        if value_chatbar.len() >= MAX_CHARS_LIMIT {
             error.set((true, id));
-        } else if value_chatbar.len() < 1024 && error.0 {
+        } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
             error.set((false, id));
         }
     };
@@ -422,7 +424,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 format!(
                     "{} {} {} {}.",
                     get_local_text("warning-messages.maximum-of"),
-                    1024,
+                    MAX_CHARS_LIMIT,
                     get_local_text("uplink.characters"),
                     get_local_text("uplink.reached")
                 )
