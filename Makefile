@@ -12,7 +12,7 @@ ASSETS_SOURCE_DIR = ui/extra
 # directory structure for .dmg :
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW8
 
-BUNDLE_DIR = macos_bundle
+BUNDLE_DIR = target/macos_bundle
 # folder used for the universal installer
 DMG_DIR = $(BUNDLE_DIR)/Uplink.dmg
 # folder used to build the .app
