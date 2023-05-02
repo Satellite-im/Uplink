@@ -30,18 +30,10 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Install Protobuf
-        continue-on-error: true
-        run: |
-          brew update
-          brew install protobuf 
-          brew install cmake rustup-init gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav gst-rtsp-server gst-editing-services
-
-      - name: Add Targets
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "10.13"
-        run: |
-          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+      - name: Install Protobuf 💿
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{env.GITHUB_TOKEN}}
 
       - name: Run cargo update 🌐
         run: cargo update
