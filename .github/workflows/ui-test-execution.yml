@@ -35,6 +35,12 @@ jobs:
         with:
           repo-token: ${{env.GITHUB_TOKEN}}
 
+      - name: Add Targets
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
       - name: Run cargo update 🌐
         run: cargo update
 
