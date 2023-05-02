@@ -30,21 +30,29 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Install Protobuf 💿
-        uses: arduino/setup-protoc@v1
-        with:
-          repo-token: ${{env.GITHUB_TOKEN}}
+      - name: Install Protobuf
+        continue-on-error: true
+        run: |
+          brew update
+          brew install protobuf 
+          brew install cmake rustup-init gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav gst-rtsp-server gst-editing-services
+
+      - name: Add Targets
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.13"
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
 
       - name: Run cargo update 🌐
         run: cargo update
 
       - name: Build executable 🖥️
-        run: make dmg
+        run: make unsigned-dmg
         continue-on-error: true
 
       - name: Create ZIP archive 🗳️
         run: |
-          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
+          ditto -c -k --sequesterRsrc --keepParent target/macos_bundle/Uplink.app Uplink-Mac-Universal.zip
 
       - name: Calculate hashes 🧮
         run: |
