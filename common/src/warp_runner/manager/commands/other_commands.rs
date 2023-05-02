@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{Read, Seek, Write},
+    io::{Seek, Write},
     path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
@@ -75,7 +75,6 @@ where
         .unix_permissions(0o755)
         .large_file(true);
 
-    let mut buffer = Vec::new();
     for entry in it {
         let path = entry.path();
         let name = path.strip_prefix(Path::new(prefix)).unwrap();
@@ -87,10 +86,7 @@ where
             #[allow(deprecated)]
             zip.start_file_from_path(name, options)?;
             let mut f = File::open(path)?;
-
-            f.read_to_end(&mut buffer)?;
-            zip.write_all(&buffer)?;
-            buffer.clear();
+            std::io::copy(&mut f, &mut zip)?;
         } else if !name.as_os_str().is_empty() {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
