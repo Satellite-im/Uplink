@@ -1,6 +1,5 @@
 .item-alignment {
 	width: var(--icon-label-size-horizontal);
-	height: var(--icon-label-size-vertical);
 	display: inline-flex;
 	align-content: center;
 	align-self: center;
@@ -59,6 +58,7 @@
 	text-align: center;
 	white-space: nowrap;
 	overflow: hidden;
+	max-height: 36px;
 	text-overflow: ellipsis;
 }
 
