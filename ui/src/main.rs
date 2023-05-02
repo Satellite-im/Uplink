@@ -8,6 +8,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -24,6 +25,7 @@ use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
+use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
@@ -1150,6 +1152,8 @@ fn get_router(cx: Scope) -> Element {
         settings_route.clone(),
     ];
 
+    let initial_friend_page = use_ref(cx, || FriendRoute::All);
+
     cx.render(rsx!(
         Router {
             Route {
@@ -1180,7 +1184,8 @@ fn get_router(cx: Scope) -> Element {
                     route_info: RouteInfo {
                         routes: routes.clone(),
                         active: friends_route.clone(),
-                    }
+                    },
+                    initial_page: initial_friend_page
                 }
             },
             Route {
@@ -1191,7 +1196,48 @@ fn get_router(cx: Scope) -> Element {
                         active: files_route,
                     }
                 }
+            },
+            notification_action_handler {
+                friend_state: initial_friend_page
             }
         }
     ))
+}
+
+// handle notification actions
+// we need this here as an element to e.g. change routings
+
+#[derive(Props)]
+struct NotificationProps<'a> {
+    friend_state: &'a UseRef<FriendRoute>,
+}
+
+fn notification_action_handler<'a>(cx: Scope<'a, NotificationProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    let route = use_router(cx);
+    let friend_state = cx.props.friend_state;
+
+    use_future(cx, (), |_| {
+        to_owned![state, route, friend_state];
+        async move {
+            let warp_cmd_tx = NOTIFICATION_LISTENER.rx.clone();
+            log::trace!("starting notification action listener");
+            let mut ch = warp_cmd_tx.lock().await;
+            while let Some(cmd) = ch.recv().await {
+                log::debug!("handling notification action {:#?}", cmd);
+                match cmd {
+                    NotificationAction::DisplayChat(uuid) => {
+                        state.write_silent().mutate(Action::ChatWith(&uuid, true));
+                        route.replace_route(UPLINK_ROUTES.chat, None, None);
+                    }
+                    NotificationAction::FriendListPending => {
+                        *friend_state.write_silent() = FriendRoute::Pending;
+                        route.replace_route(UPLINK_ROUTES.friends, None, None);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    });
+    cx.render(rsx!(()))
 }
