@@ -56,6 +56,3 @@ jobs:
         with:
           files: |
             target/wix/*.msi
-            target/release/*.dll
-            target/release/uplink.exe 
-            ui/wix/extra.zip
