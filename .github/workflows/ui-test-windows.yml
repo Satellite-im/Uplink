@@ -34,9 +34,6 @@ jobs:
         with:
           repo-token: ${{env.GITHUB_TOKEN}}
 
-      - name: Remove aarch64 target from Makefile make app on this workflow
-        run: perl -i -pe 's/MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode//g' Makefile
-
       - name: Run cargo update 🌐
         run: cargo update
 
