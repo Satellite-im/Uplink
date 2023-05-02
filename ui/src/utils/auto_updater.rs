@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::bail;
 
 use common::language::get_local_text;
-use futures::StreamExt;
+use futures::TryStreamExt;
 use reqwest::header;
 use reqwest::Client;
 
@@ -178,12 +178,11 @@ async fn download_file<P: AsRef<Path>>(
     let mut bytes = client.get(url).send().await?.bytes_stream();
     let mut file = tokio::fs::File::create(dest).await?;
 
-    while let Some(v) = bytes.next().await {
-        let bytes = v?;
-        let _ = ch.send(Ok(bytes.len()));
+    while let Some(bytes) = bytes.try_next().await? {
         file.write_all(&bytes).await?;
+        let _ = ch.send(Ok(bytes.len()));
     }
-    file.flush().await?;
+    file.sync_all().await?;
     Ok(())
 }
 
