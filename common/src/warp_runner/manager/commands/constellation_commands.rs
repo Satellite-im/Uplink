@@ -515,7 +515,9 @@ async fn upload_files(
                         warp_storage,
                         filename.clone(),
                         file_path.clone(),
-                    ).await {
+                    )
+                    .await
+                    {
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
