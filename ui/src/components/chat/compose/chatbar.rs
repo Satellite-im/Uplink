@@ -35,6 +35,8 @@ use warp::{
     raygun,
 };
 
+const MAX_CHARS_LIMIT: usize = 1024;
+
 use crate::utils::build_user_from_identity;
 
 #[derive(Eq, PartialEq)]
@@ -274,117 +276,161 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();
+    let error = use_state(cx, || (false, id));
+    let value_chatbar = state
+        .read()
+        .get_active_chat()
+        .as_ref()
+        .and_then(|d| d.draft.clone())
+        .unwrap_or_default();
 
-    let chatbar = cx.render(rsx!(Chatbar {
-        key: "{id}",
-        id: id.to_string(),
-        loading: is_loading,
-        placeholder: get_local_text("messages.say-something-placeholder"),
-        is_disabled: disabled,
-        ignore_focus: cx.props.ignore_focus,
-        onchange: move |v: String| {
-            if let Some(id) = &active_chat_id {
-                state.write_silent().mutate(Action::SetChatDraft(*id, v));
-                update_send();
-                local_typing_ch.send(TypingIndicator::Typing(*id));
-            }
-        },
-        value: state
+    if value_chatbar.len() >= MAX_CHARS_LIMIT && !error.0 {
+        error.set((true, id));
+    } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
+        error.set((false, id));
+    }
+
+    let validate_max = move || {
+        let value_chatbar = state
             .read()
             .get_active_chat()
             .as_ref()
             .and_then(|d| d.draft.clone())
-            .unwrap_or_default(),
-        onreturn: move |_| submit_fn(),
-        extensions: cx.render(rsx!(
-            // Load extensions
-            for node in ext_renders {
-                rsx!(node)
-            }
-        )),
-        controls: cx.render(rsx!(Button {
-            icon: icons::outline::Shape::ChevronDoubleRight,
-            disabled: is_loading || disabled,
-            appearance: if *can_send.get() {
-                Appearance::Primary
-            } else {
-                Appearance::Secondary
-            },
-            aria_label: "send-message-button".into(),
-            onpress: move |_| submit_fn(),
-            tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Bottom,
-                text: get_local_text("uplink.send"),
-            })),
-        })),
-        with_replying_to: data
-            .as_ref()
-            .filter(|_| !disabled)
-            .map(|data| {
-                let active_chat = &data.active_chat;
+            .unwrap_or_default();
+        if value_chatbar.len() >= MAX_CHARS_LIMIT {
+            error.set((true, id));
+        } else if value_chatbar.len() < MAX_CHARS_LIMIT && error.0 {
+            error.set((false, id));
+        }
+    };
 
-                cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
-                    let our_did = state.read().did_key();
-                    let msg_owner = if data.my_id.did_key() == msg.sender() {
-                        Some(&data.my_id)
-                    } else {
-                        data.other_participants
-                            .iter()
-                            .find(|x| x.did_key() == msg.sender())
-                    };
-                    let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
-
-                    rsx!(
-                        Reply {
-                            label: get_local_text("messages.replying"),
-                            remote: our_did != msg.sender(),
-                            onclose: move |_| {
-                                state.write().mutate(Action::CancelReply(active_chat.id))
-                            },
-                            attachments: msg.attachments(),
-                            message: msg.value().join("\n"),
-                            UserImage {
-                                image: profile_picture,
-                                platform: platform,
-                                status: status,
-                            },
-                        }
-                    )
-                })))
-            })
-            .unwrap_or(None),
-        with_file_upload: cx.render(rsx!(Button {
-            icon: icons::outline::Shape::Plus,
-            disabled: is_loading || disabled,
-            aria_label: "upload-button".into(),
-            appearance: Appearance::Primary,
-            onpress: move |_| {
-                if disabled {
-                    return;
-                }
-                if let Some(new_files) = FileDialog::new()
-                    .set_directory(dirs::home_dir().unwrap_or_default())
-                    .pick_files()
-                {
-                    let mut new_files_to_upload: Vec<_> = cx
-                        .props
-                        .upload_files
-                        .current()
-                        .iter()
-                        .filter(|file_name| !new_files.contains(file_name))
-                        .cloned()
-                        .collect();
-                    new_files_to_upload.extend(new_files);
-                    cx.props.upload_files.set(new_files_to_upload);
+    let chatbar = cx.render(rsx!(
+        Chatbar {
+            key: "{id}",
+            id: id.to_string(),
+            loading: is_loading,
+            placeholder: get_local_text("messages.say-something-placeholder"),
+            is_disabled: disabled,
+            ignore_focus: cx.props.ignore_focus,
+            onchange: move |v: String| {
+                if let Some(id) = &active_chat_id {
+                    state.write_silent().mutate(Action::SetChatDraft(*id, v));
+                    validate_max();
                     update_send();
+                    local_typing_ch.send(TypingIndicator::Typing(*id));
                 }
             },
-            tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Bottom,
-                text: get_local_text("files.upload"),
+            value: state
+                .read()
+                .get_active_chat()
+                .as_ref()
+                .and_then(|d| d.draft.clone())
+                .unwrap_or_default(),
+            onreturn: move |_| submit_fn(),
+            extensions: cx.render(rsx!(
+                // Load extensions
+                for node in ext_renders {
+                    rsx!(node)
+                }
+            )),
+            controls: cx.render(rsx!(Button {
+                icon: icons::outline::Shape::ChevronDoubleRight,
+                disabled: is_loading || disabled,
+                appearance: if *can_send.get() {
+                    Appearance::Primary
+                } else {
+                    Appearance::Secondary
+                },
+                aria_label: "send-message-button".into(),
+                onpress: move |_| submit_fn(),
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: get_local_text("uplink.send"),
+                })),
+            })),
+            with_replying_to: data
+                .as_ref()
+                .filter(|_| !disabled)
+                .map(|data| {
+                    let active_chat = &data.active_chat;
+
+                    cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
+                        let our_did = state.read().did_key();
+                        let msg_owner = if data.my_id.did_key() == msg.sender() {
+                            Some(&data.my_id)
+                        } else {
+                            data.other_participants
+                                .iter()
+                                .find(|x| x.did_key() == msg.sender())
+                        };
+                        let (platform, status, profile_picture) =
+                            get_platform_and_status(msg_owner);
+
+                        rsx!(
+                            Reply {
+                                label: get_local_text("messages.replying"),
+                                remote: our_did != msg.sender(),
+                                onclose: move |_| {
+                                    state.write().mutate(Action::CancelReply(active_chat.id))
+                                },
+                                attachments: msg.attachments(),
+                                message: msg.value().join("\n"),
+                                UserImage {
+                                    image: profile_picture,
+                                    platform: platform,
+                                    status: status,
+                                },
+                            }
+                        )
+                    })))
+                })
+                .unwrap_or(None),
+            with_file_upload: cx.render(rsx!(Button {
+                icon: icons::outline::Shape::Plus,
+                disabled: is_loading || disabled,
+                aria_label: "upload-button".into(),
+                appearance: Appearance::Primary,
+                onpress: move |_| {
+                    if disabled {
+                        return;
+                    }
+                    if let Some(new_files) = FileDialog::new()
+                        .set_directory(dirs::home_dir().unwrap_or_default())
+                        .pick_files()
+                    {
+                        let mut new_files_to_upload: Vec<_> = cx
+                            .props
+                            .upload_files
+                            .current()
+                            .iter()
+                            .filter(|file_name| !new_files.contains(file_name))
+                            .cloned()
+                            .collect();
+                        new_files_to_upload.extend(new_files);
+                        cx.props.upload_files.set(new_files_to_upload);
+                        update_send();
+                    }
+                },
+                tooltip: cx.render(rsx!(Tooltip {
+                    arrow_position: ArrowPosition::Bottom,
+                    text: get_local_text("files.upload"),
+                }))
             }))
-        }))
-    }));
+        },
+        error.0.then(|| rsx!(
+            p {
+                class: "chatbar-error-input-message",
+                aria_label: "chatbar-input-error",
+                format!(
+                    "{} {} {} {}.",
+                    get_local_text("warning-messages.maximum-of"),
+                    MAX_CHARS_LIMIT,
+                    get_local_text("uplink.characters"),
+                    get_local_text("uplink.reached")
+                )
+            }
+        ))
+    ));
 
     // todo: possibly show more if multiple users are typing
     let (platform, status, profile_picture) = match users_typing.first() {
