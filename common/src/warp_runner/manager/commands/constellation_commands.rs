@@ -515,7 +515,9 @@ async fn upload_files(
                         warp_storage,
                         filename.clone(),
                         file_path.clone(),
-                    ) {
+                    )
+                    .await
+                    {
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
@@ -536,7 +538,9 @@ async fn upload_files(
                         warp_storage,
                         filename.clone(),
                         file_path.clone(),
-                    ) {
+                    )
+                    .await
+                    {
                         Ok(_) => {
                             log::info!("Document Thumbnail uploaded");
                             let _ = tx.send(FileTransferProgress::Step(
@@ -601,118 +605,128 @@ fn rename_if_duplicate(
     new_file_name
 }
 
-fn set_thumbnail_if_file_is_video(
+async fn set_thumbnail_if_file_is_video(
     warp_storage: &warp_storage,
     filename_to_save: String,
     file_path: PathBuf,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
+) -> Result<(), Error> {
+    let warp_storage = warp_storage.clone();
+    tokio::task::spawn_blocking(move || {
+        let item = warp_storage
+            .current_directory()?
+            .get_item(&filename_to_save)?;
 
-    let file_stem = file_path
-        .file_stem()
-        .and_then(OsStr::to_str)
-        .map(str::to_string)
-        .unwrap_or_default();
+        let file_stem = file_path
+            .file_stem()
+            .and_then(OsStr::to_str)
+            .map(str::to_string)
+            .unwrap_or_default();
 
-    let temp_dir = TempDir::new()?;
+        let temp_dir = TempDir::new()?;
 
-    let temp_path = temp_dir.path().join(file_stem);
+        let temp_path = temp_dir.path().join(file_stem);
 
-    let output = Command::new("ffmpeg")
-        .args([
-            "-i",
-            &file_path.to_string_lossy(),
-            "-vf",
-            "select=eq(pict_type\\,I)",
-            "-q:v",
-            "2",
-            "-f",
-            "image2",
-            "-update",
-            "1",
-            &temp_path.to_string_lossy(),
-        ])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()?;
+        let output = Command::new("ffmpeg")
+            .args([
+                "-i",
+                &file_path.to_string_lossy(),
+                "-vf",
+                "select=eq(pict_type\\,I)",
+                "-q:v",
+                "2",
+                "-f",
+                "image2",
+                "-update",
+                "1",
+                &temp_path.to_string_lossy(),
+            ])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()?;
 
-    if let Some(mut child) = output.stdout {
-        let mut contents = vec![];
+        if let Some(mut child) = output.stdout {
+            let mut contents = vec![];
 
-        child.read_to_end(&mut contents)?;
+            child.read_to_end(&mut contents)?;
 
-        let image = std::fs::read(temp_path)?;
+            let image = std::fs::read(temp_path)?;
 
-        let prefix = format!("data:{};base64,", IMAGE_JPEG);
-        let base64_image = base64::encode(image);
-        let img = prefix + base64_image.as_str();
-        item.set_thumbnail(&img);
-        Ok(())
-    } else {
-        log::warn!("Failed to save thumbnail from a video file");
-        Err(Box::from(Error::InvalidConversion))
-    }
+            let prefix = format!("data:{};base64,", IMAGE_JPEG);
+            let base64_image = base64::encode(image);
+            let img = prefix + base64_image.as_str();
+            item.set_thumbnail(&img);
+            Ok(())
+        } else {
+            log::warn!("Failed to save thumbnail from a video file");
+            Err(Error::InvalidConversion)
+        }
+    })
+    .await
+    .map_err(anyhow::Error::from)?
 }
 
-fn set_thumbnail_if_file_is_document(
+async fn set_thumbnail_if_file_is_document(
     warp_storage: &warp_storage,
     filename_to_save: String,
     file_path: PathBuf,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
+) -> Result<(), Error> {
+    let warp_storage = warp_storage.clone();
+    tokio::task::spawn_blocking(move || {
+        let item = warp_storage
+            .current_directory()?
+            .get_item(&filename_to_save)?;
 
-    let file_stem = file_path
-        .file_stem()
-        .and_then(OsStr::to_str)
-        .map(str::to_string)
-        .unwrap_or_default();
+        let file_stem = file_path
+            .file_stem()
+            .and_then(OsStr::to_str)
+            .map(str::to_string)
+            .unwrap_or_default();
 
-    let temp_dir = TempDir::new()?;
-    let temp_path = temp_dir.path().join(file_stem);
+        let temp_dir = TempDir::new()?;
+        let temp_path = temp_dir.path().join(file_stem);
 
-    let output = Command::new("pdftoppm")
-        .args([
-            "-jpeg",
-            "-singlefile",
-            "-scale-to",
-            "500",
-            "-r",
-            "600",
-            "-f",
-            "1",
-            "-l",
-            "1",
-            &file_path.to_string_lossy(),
-            &temp_path.to_string_lossy(),
-        ])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()?;
+        let output = Command::new("pdftoppm")
+            .args([
+                "-jpeg",
+                "-singlefile",
+                "-scale-to",
+                "500",
+                "-r",
+                "600",
+                "-f",
+                "1",
+                "-l",
+                "1",
+                &file_path.to_string_lossy(),
+                &temp_path.to_string_lossy(),
+            ])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()?;
 
-    if output.stdout.is_some() {
-        let path_2 = format!("{}.jpg", temp_path.to_string_lossy());
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        let image = std::fs::read(path_2)?;
+        if output.stdout.is_some() {
+            let path_2 = format!("{}.jpg", temp_path.to_string_lossy());
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            let image = std::fs::read(path_2)?;
 
-        let prefix = format!("data:{};base64,", IMAGE_JPEG);
-        let base64_image = base64::encode(image);
-        let img = prefix + base64_image.as_str();
-        item.set_thumbnail(&img);
-        Ok(())
-    } else {
-        log::warn!("Failed to save thumbnail from a document file");
-        Err(Box::from(Error::InvalidConversion))
-    }
+            let prefix = format!("data:{};base64,", IMAGE_JPEG);
+            let base64_image = base64::encode(image);
+            let img = prefix + base64_image.as_str();
+            item.set_thumbnail(&img);
+            Ok(())
+        } else {
+            log::warn!("Failed to save thumbnail from a document file");
+            Err(Error::InvalidConversion)
+        }
+    })
+    .await
+    .map_err(anyhow::Error::from)?
 }
 
 async fn set_thumbnail_if_file_is_image(
     warp_storage: &warp_storage,
     filename_to_save: String,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Error> {
     let item = warp_storage
         .current_directory()?
         .get_item(&filename_to_save)?;
@@ -732,12 +746,12 @@ async fn set_thumbnail_if_file_is_image(
             "svg" => IMAGE_SVG.to_string(),
             _ => {
                 log::warn!("invalid mime type: {m:?}");
-                return Err(Box::from(Error::InvalidItem));
+                return Err(Error::InvalidItem);
             }
         },
         None => {
             log::warn!("thumbnail has no mime type");
-            return Err(Box::from(Error::InvalidItem));
+            return Err(Error::InvalidItem);
         }
     };
 
@@ -749,7 +763,7 @@ async fn set_thumbnail_if_file_is_image(
         Ok(())
     } else {
         log::warn!("thumbnail file is empty");
-        Err(Box::from(Error::InvalidItem))
+        Err(Error::InvalidItem)
     }
 }
 
