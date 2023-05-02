@@ -23,6 +23,7 @@ uplink = Uplink
     .status = Status
     .characters = characters
     .exceeded = exceeded
+    .reached = reached
     .delete = Delete
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
