@@ -34,7 +34,7 @@ pub struct Props<'a> {
     loading: bool,
     #[props(default = "".to_owned())]
     placeholder: String,
-    #[props(default = 1024)]
+    #[props(default = 1025)]
     max_length: i32,
     #[props(default = Size::Normal)]
     size: Size,
