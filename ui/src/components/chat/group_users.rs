@@ -55,47 +55,49 @@ pub fn GroupUsers(cx: Scope) -> Element {
 
     if group_participants.read().is_empty() {
         ch.send(());
-    }
-    cx.render(rsx!(
-        div {
-            id: "group-users",
-            aria_label: "group-users",
+        cx.render(rsx!(div {}))
+    } else {
+        cx.render(rsx!(
             div {
-                class: "search-input",
-                Label {
-                    text: format!("{} {}", _friends_in_group.len(),  get_local_text(
-                        if _friends_in_group.len() > 1 {
-                            "messages.participants"
-                        } else {
-                            "messages.participant"
-                        }
-                        )),
-                },
-                Input {
-                    // todo: filter friends on input
-                    placeholder: get_local_text("uplink.search-placeholder"),
-                    disabled: false,
-                    aria_label: "chat-search-input".into(),
-                    icon: Icon::MagnifyingGlass,
-                    options: Options {
-                        with_clear_btn: true,
-                        react_to_esc_key: true,
-                        ..Options::default()
+                id: "group-users",
+                aria_label: "group-users",
+                div {
+                    class: "search-input",
+                    Label {
+                        text: format!("{} {}", _friends_in_group.len(),  get_local_text(
+                            if _friends_in_group.len() > 1 {
+                                "messages.participants"
+                            } else {
+                                "messages.participant"
+                            }
+                            )),
                     },
-                    onchange: move |(v, _): (String, _)| {
-                        friend_prefix.set(v);
+                    Input {
+                        // todo: filter friends on input
+                        placeholder: get_local_text("uplink.search-placeholder"),
+                        disabled: false,
+                        aria_label: "chat-search-input".into(),
+                        icon: Icon::MagnifyingGlass,
+                        options: Options {
+                            with_clear_btn: true,
+                            react_to_esc_key: true,
+                            ..Options::default()
+                        },
+                        onchange: move |(v, _): (String, _)| {
+                            friend_prefix.set(v);
+                        },
+                    }
+                }
+                div {
+                    key: "render_friends",
+                    render_friends {
+                        friends: _friends_in_group,
+                        name_prefix: friend_prefix.clone(),
                     },
                 }
             }
-            div {
-                key: "render_friends",
-                render_friends {
-                    friends: _friends_in_group,
-                    name_prefix: friend_prefix.clone(),
-                },
-            }
-        }
-    ))
+        ))
+    }
 }
 
 #[derive(PartialEq, Props)]
