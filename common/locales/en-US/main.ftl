@@ -128,6 +128,7 @@ files = Files
     .doc-thumb = First Page Thumb
     .no-thumbnail-preview = No thumbnail file preview
     .file-already-opened = File already opened
+    .directory-alrady-with-name = There is already a directory with this name
 
 settings = Settings
     .settings = Settings

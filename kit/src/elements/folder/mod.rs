@@ -83,12 +83,13 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     with_validation: Some(Validation {
                                         alpha_numeric_only: true,
                                         special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
+                                        min_length: Some(1),
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
                                 }
                                 onreturn: move |(s, is_valid, key_code)| {
-                                    if is_valid {
+                                    if is_valid || key_code == Code::Escape {
                                         emit(&cx, s, key_code);
                                     }
                                 }

@@ -596,7 +596,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             Folder {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
+                                    if key_code == Code::Escape {
+                                        add_new_folder.set(false);
+                                    }
                                     let new_name: String = val;
+                                    if let Some(_) = directories_list.read().iter().find(|dir| dir.name() == new_name) {
+                                        state
+                                        .write()
+                                        .mutate(common::state::Action::AddToastNotification(
+                                            ToastNotification::init(
+                                                "".into(),
+                                                get_local_text("files.directory-alrady-with-name"),
+                                                None,
+                                                3,
+                                            ),
+                                        ));
+                                        return;
+                                    }
                                     if key_code == Code::Enter {
                                         if STATIC_ARGS.use_mock {
                                             directories_list
@@ -609,8 +625,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     files_list,
                                                 );
                                         } else {
-                                            ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                            if !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+                                            }
                                         }
                                     }
                                     add_new_folder.set(false);
