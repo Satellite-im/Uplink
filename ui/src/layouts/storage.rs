@@ -471,7 +471,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     });
                 }
                 },
-            onclick: |_| is_renaming_map.with_mut(|i| *i = None),
+            onclick: |_| {
+                add_new_folder.set(false);
+                is_renaming_map.with_mut(|i| *i = None);
+            },
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
