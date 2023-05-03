@@ -53,7 +53,6 @@
 
 .alignment {
 	width: var(--icon-size-more);
-	height: var(--icon-size-more);
 	display: inline-flex;
 	align-content: center;
 	align-self: center;
@@ -80,12 +79,6 @@
 	padding:2px;
 	background-color: var(--warning-light);
 	border-radius: 4px;
-}
-
-.file-name:hover {
-	overflow:visible;
-	white-space: pre-wrap;
-	word-break: break-all;
 }
 
 .file-name:hover {
