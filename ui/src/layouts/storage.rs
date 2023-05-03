@@ -596,9 +596,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             Folder {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
-                                    if key_code == Code::Escape {
-                                        add_new_folder.set(false);
-                                    }
                                     let new_name: String = val;
                                     if let Some(_) = directories_list.read().iter().find(|dir| dir.name() == new_name) {
                                         state
@@ -606,7 +603,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         .mutate(common::state::Action::AddToastNotification(
                                             ToastNotification::init(
                                                 "".into(),
-                                                get_local_text("files.directory-alrady-with-name"),
+                                                get_local_text("files.directory-already-with-name"),
                                                 None,
                                                 3,
                                             ),
@@ -673,7 +670,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             .mutate(common::state::Action::AddToastNotification(
                                                 ToastNotification::init(
                                                     "".into(),
-                                                    get_local_text("files.directory-alrady-with-name"),
+                                                    get_local_text("files.directory-already-with-name"),
                                                     None,
                                                     3,
                                                 ),
@@ -790,9 +787,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 }
                                             },
                                             onrename: move |(val, key_code)| {
+                                                let new_name: String = val;
+                                                if let Some(_) = files_list.read().iter().find(|file| file.name() == new_name) {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.file-alrady-with-name"),
+                                                            None,
+                                                            3,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
                                                 is_renaming_map.with_mut(|i| *i = None);
-                                                if key_code == Code::Enter {
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: new_name});
                                                 }
                                             }
                                         }
