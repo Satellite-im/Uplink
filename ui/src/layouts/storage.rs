@@ -624,11 +624,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     directories_list,
                                                     files_list,
                                                 );
-                                        } else {
-                                            if !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                                ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-                                            }
+                                        } else if !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                            ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                         }
                                     }
                                     add_new_folder.set(false);
