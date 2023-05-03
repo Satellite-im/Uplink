@@ -803,7 +803,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 }
                                                 is_renaming_map.with_mut(|i| *i = None);
                                                 if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: new_name});
+                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                                 }
                                             }
                                         }
