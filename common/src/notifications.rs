@@ -1,7 +1,6 @@
-use std::{thread, time::Duration};
+use std::thread;
 
 use super::sounds::{Play, Sounds};
-use mac_notification_sys::*;
 use notify_rust::Notification;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -75,7 +74,7 @@ pub fn push_notification_actionable(
                 .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
                 .send()
                 .unwrap();
-            if let NotificationResponse::ActionButton(id) = _n {
+            if let mac_notification_sys::NotificationResponse::ActionButton(id) = _n {
                 if action_name.eq(&id) {
                     let tx = NOTIFICATION_LISTENER.tx.clone();
                     if let Err(e) = tx.send(action) {
