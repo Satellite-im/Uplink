@@ -1360,6 +1360,7 @@ dependencies = [
  "image",
  "isolang",
  "lipsum",
+ "mac-notification-sys",
  "mime",
  "names",
  "notify",

@@ -61,6 +61,7 @@ wry.workspace = true
 cocoa = "0.24.1"
 objc = "0.2.7"
 core-foundation = "0.9.3"
+mac-notification-sys = "0.5"
 
 [features]
 production_mode = []

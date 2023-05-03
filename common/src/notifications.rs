@@ -1,6 +1,7 @@
-use std::thread;
+use std::{thread, time::Duration};
 
 use super::sounds::{Play, Sounds};
+use mac_notification_sys::*;
 use notify_rust::Notification;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -40,6 +41,7 @@ pub fn push_notification(
     notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
 ) {
+    print!("SERGESRGE");
     let summary = format!("Uplink - {title}");
     let _n = Notification::new()
         .summary(summary.as_ref())
@@ -63,22 +65,44 @@ pub fn push_notification_actionable(
     action: NotificationAction,
 ) {
     let summary = format!("Uplink - {title}");
+    // We need to handle them all differently as there isnt a single lib that covers it for all
     thread::spawn(move || {
-        let handle = Notification::new()
-            .summary(summary.as_ref())
-            .body(&content)
-            .timeout(timeout)
-            .action(&action_id, &action_name)
-            .show()
-            .unwrap();
-        handle.wait_for_action(|id| {
-            if action_id.eq(id) {
-                let tx = NOTIFICATION_LISTENER.tx.clone();
-                if let Err(e) = tx.send(action) {
-                    log::error!("failed to send command to initialize warp {}", e);
-                }
-            };
-        });
+        #[cfg(target_os = "macos")]
+        {
+            let _n = mac_notification_sys::Notification::new()
+                .title(summary.as_ref())
+                .message(&content)
+                .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
+                .send()
+                .unwrap();
+            if let NotificationResponse::ActionButton(id) = _n {
+                if action_name.eq(&id) {
+                    let tx = NOTIFICATION_LISTENER.tx.clone();
+                    if let Err(e) = tx.send(action) {
+                        log::error!("failed to send command to initialize warp {}", e);
+                    }
+                };
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            let handle = Notification::new()
+                .summary(summary.as_ref())
+                .body(&content)
+                .timeout(timeout)
+                .action(&action_id, &action_name)
+                .show()
+                .unwrap();
+            handle.wait_for_action(|id| {
+                if action_id.eq(id) {
+                    let tx = NOTIFICATION_LISTENER.tx.clone();
+                    if let Err(e) = tx.send(action) {
+                        log::error!("failed to send command to initialize warp {}", e);
+                    }
+                };
+            });
+        };
     });
 
     if let Some(sound) = notification_sound {
