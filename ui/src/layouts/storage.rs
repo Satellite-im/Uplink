@@ -597,7 +597,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
-                                    if let Some(_) = directories_list.read().iter().find(|dir| dir.name() == new_name) {
+                                    if directories_list.read().iter().any(|dir| dir.name() == new_name) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(
@@ -664,7 +664,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: dir.name(),
                                     with_rename: *is_renaming_map.read() == Some(key),
                                     onrename: move |(val, key_code)| {
-                                        if let Some(_) = directories_list.read().iter().find(|dir| dir.name() == val) {
+                                        if directories_list.read().iter().any(|dir| dir.name() == val) {
                                             state
                                             .write()
                                             .mutate(common::state::Action::AddToastNotification(
@@ -788,7 +788,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
-                                                if let Some(_) = files_list.read().iter().find(|file| file.name() == new_name) {
+                                                if  files_list.read().iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
                                                     .mutate(common::state::Action::AddToastNotification(
