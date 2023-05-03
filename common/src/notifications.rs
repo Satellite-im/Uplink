@@ -40,7 +40,6 @@ pub fn push_notification(
     notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
 ) {
-    print!("SERGESRGE");
     let summary = format!("Uplink - {title}");
     let _n = Notification::new()
         .summary(summary.as_ref())
