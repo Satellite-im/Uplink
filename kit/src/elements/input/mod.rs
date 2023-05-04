@@ -231,7 +231,11 @@ pub fn validate_min_max(val: &str, min: Option<i32>, max: Option<i32>) -> Option
             "{} {} {}.",
             get_local_text("warning-messages.please-enter-at-least"),
             min,
-            get_local_text("uplink.characters")
+            get_local_text(if min > 1 {
+                "uplink.characters"
+            } else {
+                "uplink.character"
+            })
         ));
     }
 
