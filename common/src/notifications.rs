@@ -63,44 +63,18 @@ pub fn push_notification_actionable(
     action: NotificationAction,
 ) {
     let summary = format!("Uplink - {title}");
-    // We need to handle them all differently as there isnt a single lib that covers it for all
     thread::spawn(move || {
-        #[cfg(target_os = "macos")]
-        {
-            let _n = mac_notification_sys::Notification::new()
-                .title(summary.as_ref())
-                .message(&content)
-                .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
-                .send()
-                .unwrap();
-            if let mac_notification_sys::NotificationResponse::ActionButton(id) = _n {
-                if action_name.eq(&id) {
-                    let tx = NOTIFICATION_LISTENER.tx.clone();
-                    if let Err(e) = tx.send(action) {
-                        log::error!("failed to send command to initialize warp {}", e);
-                    }
-                };
-            }
-        }
-
-        #[cfg(target_os = "linux")]
-        {
-            let handle = Notification::new()
+        show_with_action(
+            Notification::new()
                 .summary(summary.as_ref())
                 .body(&content)
                 .timeout(timeout)
                 .action(&action_id, &action_name)
-                .show()
-                .unwrap();
-            handle.wait_for_action(|id| {
-                if action_id.eq(id) {
-                    let tx = NOTIFICATION_LISTENER.tx.clone();
-                    if let Err(e) = tx.send(action) {
-                        log::error!("failed to send command to initialize warp {}", e);
-                    }
-                };
-            });
-        };
+                .finalize(),
+            action_id,
+            action_name,
+            action,
+        );
     });
 
     if let Some(sound) = notification_sound {
@@ -125,4 +99,50 @@ pub fn set_badge(count: u32) -> Result<(), String> {
         let _: cocoa::base::id = msg_send![dock_tile, setBadgeLabel: label];
     }
     Ok(())
+}
+
+// We need to handle them all differently as there isnt a single lib that covers it for all
+fn show_with_action(
+    notification: Notification,
+    action_id: String,
+    action_name: String,
+    action: NotificationAction,
+) {
+    #[cfg(target_os = "windows")]
+    {
+        //TODO
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let handle = mac_notification_sys::Notification::default()
+            .title(notification.summary.as_str())
+            .message(&notification.body)
+            .maybe_subtitle(notification.subtitle.as_deref())
+            .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
+            .send();
+        if let Ok(response) = handle {
+            if let mac_notification_sys::NotificationResponse::ActionButton(id) = response {
+                if action_name.eq(&id) {
+                    let tx = NOTIFICATION_LISTENER.tx.clone();
+                    if let Err(e) = tx.send(action) {
+                        log::error!("failed to send command to initialize warp {}", e);
+                    }
+                };
+            }
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let handle = notification.show()?;
+        handle.wait_for_action(|id| {
+            if action_id.eq(id) {
+                let tx = NOTIFICATION_LISTENER.tx.clone();
+                if let Err(e) = tx.send(action) {
+                    log::error!("failed to send command to initialize warp {}", e);
+                }
+            };
+        });
+    }
 }
