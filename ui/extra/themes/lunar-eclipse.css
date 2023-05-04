@@ -83,6 +83,7 @@ body {
 }
 
 #titlebar,
+.titlebar,
 #app-wrap,
 .sidebar {
     border: none;
@@ -91,9 +92,6 @@ body {
 
 #pre-release {
     background-color: var(--warning);
-    margin-left: unset;
-    top: 0.5rem;
-    left: 0.5rem;
     border-radius: var(--border-radius-more);
     padding: 0.2rem 0.5rem;
 }
@@ -192,10 +190,16 @@ body {
     overflow-y: auto;
 }
 
-#settings-profile .profile-banner {
+#settings-profile .profile-header {
     margin: 0.5rem 0 0 0.5rem;
     width: calc(100% - 1rem);
     border-radius: var(--border-radius-more) var(--border-radius-more) 0 0;
+    margin-bottom: 2rem;
+}
+
+#settings-profile .profile-banner, #settings-profile .profile-banner::before {
+    border-radius: var(--border-radius-more) var(--border-radius-more) 0 0;
+    color: var(--text-color-bright) !important;
 }
 
 #settings-profile .profile-picture {
@@ -551,13 +555,13 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > button, div.code-toolbar >
 
 
 .emoji-reaction {
-    background-color: var(--secondary-dark);
+    background-color: var(--background);
 }
 
 .emoji-reaction-self {
     color: var(--text-color-bright);
     border: none;
-    background-color: var(--background-dark);
+    background-color: var(--primary);
 }
 
 #compose #messages .msg-container-end {
@@ -567,7 +571,7 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > button, div.code-toolbar >
     flex-direction: row;
     justify-content: center;
     background: var(--primary);
-    border-radius: 2rem;
+    border-radius: var(--border-radius);
     padding: 0.25rem var(--gap);
     margin: 0.5rem auto;
     font-size: var(--text-size-less) !important;
