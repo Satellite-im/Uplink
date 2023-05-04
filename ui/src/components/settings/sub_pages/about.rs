@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use common::language::get_local_text;
-use common::state::Action;
+use common::state::{Action, ToastNotification};
 use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
@@ -29,11 +29,21 @@ pub fn AboutPage(cx: Scope) -> Element {
     let desktop = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![download_available, update_button_loading];
+        to_owned![download_available, update_button_loading, state];
         async move {
             while rx.next().await.is_some() {
                 match utils::auto_updater::check_for_release().await {
                     Ok(opt) => {
+                        if opt.is_none() {
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("settings-about.no-update-available"),
+                                    None,
+                                    2,
+                                ),
+                            ))
+                        }
                         download_available.set(opt);
                     }
                     Err(e) => {
