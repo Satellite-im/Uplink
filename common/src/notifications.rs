@@ -115,21 +115,20 @@ fn show_with_action(
 
     #[cfg(target_os = "macos")]
     {
-        let handle = mac_notification_sys::Notification::default()
+        let response = mac_notification_sys::Notification::default()
             .title(notification.summary.as_str())
             .message(&notification.body)
             .maybe_subtitle(notification.subtitle.as_deref())
             .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
-            .send();
-        if let Ok(response) = handle {
-            if let mac_notification_sys::NotificationResponse::ActionButton(id) = response {
-                if action_name.eq(&id) {
-                    let tx = NOTIFICATION_LISTENER.tx.clone();
-                    if let Err(e) = tx.send(action) {
-                        log::error!("failed to send command to initialize warp {}", e);
-                    }
-                };
-            }
+            .send()
+            .unwrap();
+        if let mac_notification_sys::NotificationResponse::ActionButton(id) = response {
+            if action_name.eq(&id) {
+                let tx = NOTIFICATION_LISTENER.tx.clone();
+                if let Err(e) = tx.send(action) {
+                    log::error!("failed to send command to initialize warp {}", e);
+                }
+            };
         }
     }
 
