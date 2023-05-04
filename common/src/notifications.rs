@@ -134,7 +134,7 @@ fn show_with_action(
 
     #[cfg(target_os = "linux")]
     {
-        let handle = notification.show()?;
+        let handle = notification.show().unwrap();
         handle.wait_for_action(|id| {
             if action_id.eq(id) {
                 let tx = NOTIFICATION_LISTENER.tx.clone();
