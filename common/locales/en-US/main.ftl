@@ -251,7 +251,7 @@ settings-about = About Settings
     .open-codebase = Open Source Code
     .open-codebase-description = Opens the codebase in your default web browser.
     .no-update-available = Your software is up to date!
-    .update-check-error = There was an error checking for the update. Please report this!
+    .update-check-error = Failed to fetch update. Please check your internet connection.
     
 media-player = Media Player 
     .enable-camera = Enable Camera 
