@@ -47,6 +47,14 @@ pub fn AboutPage(cx: Scope) -> Element {
                         download_available.set(opt);
                     }
                     Err(e) => {
+                        state.write().mutate(Action::AddToastNotification(
+                            ToastNotification::init(
+                                "".into(),
+                                get_local_text("settings-about.update-check-error"),
+                                None,
+                                4,
+                            ),
+                        ));
                         log::error!("failed to check for updates: {e}");
                     }
                 }
