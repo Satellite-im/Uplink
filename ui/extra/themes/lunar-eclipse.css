@@ -202,6 +202,11 @@ body {
     color: var(--text-color-bright) !important;
 }
 
+#settings-profile .profile-banner {
+    background-color: var(--secondary-dark);
+}
+
+
 #settings-profile .profile-picture {
     left: 1rem;
 }
