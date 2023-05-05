@@ -71,6 +71,7 @@ messages = Messages
     .hide = Hide Messages
     .blocked = { $amount } messages blocked
     .group-name-invalid = Group Name Invalid
+    .action-message = Open Chat
     
 favorites = Favorites
     .favorites = Favorites
@@ -237,6 +238,7 @@ settings-developer = Developer Settings
     .save-logs-to-file-description = Enabling this option, logs will be saved in a file and will be persistent.
     .print-state = Print State 
     .print-state-description = Display State in the debug logger.
+    .action-test = Dummy Action
 
 settings-about = About Settings
     .info = About

@@ -88,8 +88,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             get_local_text("settings-developer.test-popup"),
                             Some(Sounds::General),
                             notify_rust::Timeout::Milliseconds(4),
-                            String::from("action.test"),
-                            String::from("Dummy Action"),
+                            String::from("settings-developer.action-test"),
                             NotificationAction::Dummy
                         );
                         state

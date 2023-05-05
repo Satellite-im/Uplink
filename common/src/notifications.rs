@@ -1,5 +1,7 @@
 use std::thread;
 
+use crate::language::get_local_text;
+
 use super::sounds::{Play, Sounds};
 use notify_rust::Notification;
 use std::sync::Arc;
@@ -59,7 +61,6 @@ pub fn push_notification_actionable(
     notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
     action_id: String,
-    action_name: String,
     action: NotificationAction,
 ) {
     let summary = format!("Uplink - {title}");
@@ -69,10 +70,9 @@ pub fn push_notification_actionable(
                 .summary(summary.as_ref())
                 .body(&content)
                 .timeout(timeout)
-                .action(&action_id, &action_name)
+                .action(&action_id, &get_local_text(&action_id))
                 .finalize(),
             action_id,
-            action_name,
             action,
         );
     });
@@ -102,12 +102,7 @@ pub fn set_badge(count: u32) -> Result<(), String> {
 }
 
 // We need to handle them all differently as there isnt a single lib that covers it for all
-fn show_with_action(
-    notification: Notification,
-    action_id: String,
-    action_name: String,
-    action: NotificationAction,
-) {
+fn show_with_action(notification: Notification, action_id: String, action: NotificationAction) {
     #[cfg(target_os = "windows")]
     {
         //TODO
@@ -115,6 +110,7 @@ fn show_with_action(
 
     #[cfg(target_os = "macos")]
     {
+        let action_name = &get_local_text(action_id);
         let response = mac_notification_sys::Notification::default()
             .title(notification.summary.as_str())
             .message(&notification.body)
