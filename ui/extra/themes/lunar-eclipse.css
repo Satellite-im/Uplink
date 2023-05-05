@@ -273,6 +273,12 @@ body {
     background-color: var(--background-light);
 }
 
+
+#files-layout .files-breadcrumbs .crumb:nth-child(1):hover {
+    background-color: var(--background-light);
+    cursor: pointer;
+}
+
 .switch .slider {
     background-color: var(--background);
 }
@@ -588,4 +594,14 @@ div.code-toolbar > .toolbar.toolbar > .toolbar-item > button, div.code-toolbar >
 
 .indicator-offline .circle {
     fill: var(--secondary-dark);
+}
+
+
+.sidebar .input-checkbox {
+    background: var(--background-light);
+    border: none;
+}
+
+#compose .friend-container p {
+    color: var(--text-color-dark);
 }

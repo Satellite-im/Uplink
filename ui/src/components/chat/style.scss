@@ -79,6 +79,7 @@
     display: inline-flex;
     flex-direction: column;
     gap: 0;
+    max-height: 20vh;
 
     .friend-group {
       display: inline-flex;
@@ -116,6 +117,7 @@
     display: inline-flex;
     flex-direction: column;
     gap: 0;
+    max-height: 20vh;
 
     .friend-group {
       display: inline-flex;
