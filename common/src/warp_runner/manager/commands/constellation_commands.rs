@@ -90,6 +90,10 @@ pub enum ConstellationCmd {
         item: Item,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(fmt = "GetStorageSize")]
+    GetStorageSize {
+        rsp: oneshot::Sender<Result<usize, warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -137,6 +141,10 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::DeleteItems { item, rsp } => {
             let r = delete_items(warp_storage, item).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::GetStorageSize { rsp } => {
+            let r = get_storage_size(warp_storage);
             let _ = rsp.send(r);
         }
     }
@@ -261,6 +269,10 @@ async fn rename_item(
     }
 
     get_items_from_current_directory(warp_storage)
+}
+
+fn get_storage_size(warp_storage: &mut warp_storage) -> Result<usize, Error> {
+    Ok(warp_storage.root_directory().size())
 }
 
 async fn create_new_directory(

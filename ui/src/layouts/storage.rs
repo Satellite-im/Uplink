@@ -90,6 +90,7 @@ enum ChanCmd {
         new_name: String,
     },
     DeleteItems(Item),
+    GetStorageSize,
 }
 
 #[derive(PartialEq, Props)]
@@ -105,6 +106,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let free_space_text = get_local_text("files.free-space");
     let total_space_text = get_local_text("files.total-space");
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
+    let storage_size: &UseRef<Option<usize>> = use_ref(cx, || None);
     let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
     let files_list = use_ref(cx, || state.read().storage.files.clone());
@@ -118,301 +120,21 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let window = use_window(cx);
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, main_script, window, drag_event];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    ChanCmd::CreateNewDirectory(directory_name) => {
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                        let directory_name2 = directory_name.clone();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::CreateNewDirectory {
-                                directory_name,
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to add new directory {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-
-                        match rsp {
-                            Ok(_) => {
-                                log::info!("New directory added: {}", directory_name2);
-                            }
-                            Err(e) => {
-                                log::error!("failed to add new directory: {}", e);
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::GetItemsFromCurrentDirectory => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
-                        )) {
-                            log::error!("failed to get items from current directory {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                storage_state.set(Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to add new directory: {}", e);
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::OpenDirectory(directory_name) => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-                        let directory_name2 = directory_name.clone();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::OpenDirectory {
-                                directory_name,
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to open {directory_name2} directory {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                storage_state.set(Some(storage));
-                                log::info!("Folder {} opened", directory_name2);
-                            }
-                            Err(e) => {
-                                log::error!("failed to open folder {directory_name2}: {}", e);
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::BackToPreviousDirectory(directory) => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-                        let directory_name = directory.name();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::BackToPreviousDirectory { directory, rsp: tx },
-                        )) {
-                            log::error!("failed to open directory {}: {}", directory_name, e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                storage_state.set(Some(storage));
-                                log::info!("Folder {} opened", directory_name);
-                            }
-                            Err(e) => {
-                                log::error!("failed to open directory {}: {}", directory_name, e);
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::UploadFiles(files_path) => {
-                        let mut script = main_script.replace("$IS_DRAGGING", "true");
-                        script.push_str(ANIMATION_DASH_SCRIPT);
-                        window.eval(&script);
-
-                        let (tx, mut rx) =
-                            mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::UploadFiles {
-                                files_path,
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to upload files {}", e);
-                            continue;
-                        }
-                        while let Some(msg) = rx.recv().await {
-                            match msg {
-                                FileTransferProgress::Step(steps) => {
-                                    match steps {
-                                        FileTransferStep::Start(name) => {
-                                            let file_name_formatted = format_item_name(name);
-                                            let script = FILE_NAME_SCRIPT
-                                                .replace("$FILE_NAME", &file_name_formatted);
-                                            window.eval(&script);
-                                            sleep(Duration::from_millis(100)).await;
-                                        }
-                                        FileTransferStep::DuplicateName(duplicate_name_step) => {
-                                            match duplicate_name_step {
-                                                None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text(
-                                                            "files.renaming-duplicated",
-                                                        ),
-                                                    );
-                                                    window.eval(&script);
-                                                }
-                                                Some(name) => {
-                                                    let file_name_formatted =
-                                                        format_item_name(name);
-                                                    let script = FILE_NAME_SCRIPT.replace(
-                                                        "$FILE_NAME",
-                                                        &file_name_formatted,
-                                                    );
-                                                    window.eval(&script);
-                                                }
-                                            }
-                                            sleep(Duration::from_millis(200)).await;
-                                        }
-                                        FileTransferStep::Upload(progress) => {
-                                            let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                "$TEXT",
-                                                &format!(
-                                                    "{} {}",
-                                                    progress,
-                                                    get_local_text("files.uploaded")
-                                                ),
-                                            );
-                                            window.eval(&script);
-                                            sleep(Duration::from_millis(3)).await;
-                                        }
-                                        FileTransferStep::Thumbnail(thumb_type) => {
-                                            match thumb_type {
-                                                Some(_) => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text("files.thumbnail-uploaded"),
-                                                    );
-                                                    window.eval(&script);
-                                                }
-                                                None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text("files.no-thumbnail"),
-                                                    );
-                                                    window.eval(&script);
-                                                }
-                                            }
-                                            sleep(Duration::from_millis(200)).await;
-                                        }
-                                    };
-                                }
-                                FileTransferProgress::Finished(storage) => {
-                                    *drag_event.write_silent() = None;
-                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
-                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
-                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
-                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
-                                    window.eval(&script);
-                                    storage_state.set(Some(storage));
-                                    break;
-                                }
-                                FileTransferProgress::Error(_) => {
-                                    *drag_event.write_silent() = None;
-                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
-                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
-                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
-                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
-                                    window.eval(&script);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    ChanCmd::DownloadFile {
-                        file_name,
-                        local_path_to_save_file,
-                    } => {
-                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::DownloadFile {
-                                file_name,
-                                local_path_to_save_file,
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to download file {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-
-                        if let Err(error) = rsp {
-                            log::error!("failed to download file: {}", error);
-                            continue;
-                        }
-                    }
-                    ChanCmd::RenameItem { old_name, new_name } => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
-                                old_name,
-                                new_name,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to rename item {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                storage_state.set(Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!(
-                                    "failed to update uplink storage with renamed item: {}",
-                                    e
-                                );
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::DeleteItems(item) => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::DeleteItems {
-                                item: item.clone(),
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to delete items {}, item {:?}", e, item.name());
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                storage_state.set(Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to delete items {}, item {:?}", e, item.name());
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
-
+    let ch = storage_coroutine(
+        cx,
+        storage_state,
+        storage_size,
+        main_script.to_string(),
+        window,
+        drag_event,
+    );
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
 
     let first_render = use_state(cx, || true);
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
+        ch.send(ChanCmd::GetStorageSize);
     }
 
     if let Some(storage) = storage_state.get().clone() {
@@ -946,4 +668,325 @@ pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
             .collect::<Vec<PathBuf>>();
     }
     paths
+}
+
+fn storage_coroutine<'a>(
+    cx: &'a Scoped<'a, Props>,
+    storage_state: &'a UseState<Option<Storage>>,
+    storage_size: &'a UseRef<Option<usize>>,
+    main_script: String,
+    window: &'a DesktopContext,
+    drag_event: &'a UseRef<Option<FileDropEvent>>,
+) -> &'a Coroutine<ChanCmd> {
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
+        to_owned![storage_state, main_script, window, drag_event, storage_size];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    ChanCmd::CreateNewDirectory(directory_name) => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                        let directory_name2 = directory_name.clone();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::CreateNewDirectory {
+                                directory_name,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to add new directory {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+
+                        match rsp {
+                            Ok(_) => {
+                                log::info!("New directory added: {}", directory_name2);
+                            }
+                            Err(e) => {
+                                log::error!("failed to add new directory: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::GetItemsFromCurrentDirectory => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
+                        )) {
+                            log::error!("failed to get items from current directory {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!("failed to add new directory: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::OpenDirectory(directory_name) => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+                        let directory_name2 = directory_name.clone();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::OpenDirectory {
+                                directory_name,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to open {directory_name2} directory {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                                log::info!("Folder {} opened", directory_name2);
+                            }
+                            Err(e) => {
+                                log::error!("failed to open folder {directory_name2}: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::BackToPreviousDirectory(directory) => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+                        let directory_name = directory.name();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::BackToPreviousDirectory { directory, rsp: tx },
+                        )) {
+                            log::error!("failed to open directory {}: {}", directory_name, e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                                log::info!("Folder {} opened", directory_name);
+                            }
+                            Err(e) => {
+                                log::error!("failed to open directory {}: {}", directory_name, e);
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::UploadFiles(files_path) => {
+                        let mut script = main_script.replace("$IS_DRAGGING", "true");
+                        script.push_str(ANIMATION_DASH_SCRIPT);
+                        window.eval(&script);
+
+                        let (tx, mut rx) =
+                            mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::UploadFiles {
+                                files_path,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to upload files {}", e);
+                            continue;
+                        }
+                        while let Some(msg) = rx.recv().await {
+                            match msg {
+                                FileTransferProgress::Step(steps) => {
+                                    match steps {
+                                        FileTransferStep::Start(name) => {
+                                            let file_name_formatted = format_item_name(name);
+                                            let script = FILE_NAME_SCRIPT
+                                                .replace("$FILE_NAME", &file_name_formatted);
+                                            window.eval(&script);
+                                            sleep(Duration::from_millis(100)).await;
+                                        }
+                                        FileTransferStep::DuplicateName(duplicate_name_step) => {
+                                            match duplicate_name_step {
+                                                None => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text(
+                                                            "files.renaming-duplicated",
+                                                        ),
+                                                    );
+                                                    window.eval(&script);
+                                                }
+                                                Some(name) => {
+                                                    let file_name_formatted =
+                                                        format_item_name(name);
+                                                    let script = FILE_NAME_SCRIPT.replace(
+                                                        "$FILE_NAME",
+                                                        &file_name_formatted,
+                                                    );
+                                                    window.eval(&script);
+                                                }
+                                            }
+                                            sleep(Duration::from_millis(200)).await;
+                                        }
+                                        FileTransferStep::Upload(progress) => {
+                                            let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                "$TEXT",
+                                                &format!(
+                                                    "{} {}",
+                                                    progress,
+                                                    get_local_text("files.uploaded")
+                                                ),
+                                            );
+                                            window.eval(&script);
+                                            sleep(Duration::from_millis(3)).await;
+                                        }
+                                        FileTransferStep::Thumbnail(thumb_type) => {
+                                            match thumb_type {
+                                                Some(_) => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text("files.thumbnail-uploaded"),
+                                                    );
+                                                    window.eval(&script);
+                                                }
+                                                None => {
+                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
+                                                        "$TEXT",
+                                                        &get_local_text("files.no-thumbnail"),
+                                                    );
+                                                    window.eval(&script);
+                                                }
+                                            }
+                                            sleep(Duration::from_millis(200)).await;
+                                        }
+                                    };
+                                }
+                                FileTransferProgress::Finished(storage) => {
+                                    *drag_event.write_silent() = None;
+                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
+                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
+                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
+                                    window.eval(&script);
+                                    storage_state.set(Some(storage));
+                                    break;
+                                }
+                                FileTransferProgress::Error(_) => {
+                                    *drag_event.write_silent() = None;
+                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
+                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
+                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
+                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
+                                    window.eval(&script);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    ChanCmd::DownloadFile {
+                        file_name,
+                        local_path_to_save_file,
+                    } => {
+                        let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::DownloadFile {
+                                file_name,
+                                local_path_to_save_file,
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to download file {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+
+                        if let Err(error) = rsp {
+                            log::error!("failed to download file: {}", error);
+                            continue;
+                        }
+                    }
+                    ChanCmd::RenameItem { old_name, new_name } => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
+                                old_name,
+                                new_name,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to rename item {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    "failed to update uplink storage with renamed item: {}",
+                                    e
+                                );
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::DeleteItems(item) => {
+                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::DeleteItems {
+                                item: item.clone(),
+                                rsp: tx,
+                            },
+                        )) {
+                            log::error!("failed to delete items {}, item {:?}", e, item.name());
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(storage) => {
+                                storage_state.set(Some(storage));
+                            }
+                            Err(e) => {
+                                log::error!("failed to delete items {}, item {:?}", e, item.name());
+                                continue;
+                            }
+                        }
+                    }
+                    ChanCmd::GetStorageSize => {
+                        let (tx, rx) = oneshot::channel::<Result<usize, warp::error::Error>>();
+
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::GetStorageSize { rsp: tx },
+                        )) {
+                            log::error!("failed to get storage size: {}", e);
+                            continue;
+                        }
+
+                        let rsp = rx.await.expect("command canceled");
+                        match rsp {
+                            Ok(size) => {
+                                println!("usize: {:?}", size);
+                                storage_size.with_mut(|i| *i = Some(size));
+                            }
+                            Err(e) => {
+                                log::error!("failed to get storage size: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    ch
 }
