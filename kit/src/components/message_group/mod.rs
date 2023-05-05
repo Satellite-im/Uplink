@@ -25,7 +25,7 @@ pub fn MessageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "message-group-wrap",
             aria_label: {
-                format_args!("message-group-wrap{}", if remote { "-remote" } else { "local" })
+                format_args!("message-group-wrap-{}", if remote { "remote" } else { "local" })
             },
             remote.then(|| rsx!(
                 &cx.props.user_image
