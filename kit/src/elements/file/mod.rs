@@ -127,24 +127,28 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 },
                 with_rename.then(||
                     rsx! (
+                        div {
+                            margin_top: "12px",
+                        },
                         Input {
                                 disabled: disabled,
                                 placeholder: placeholder,
                                 focus: true,
-                                max_length: 64,
                                 size: Size::Small,
                                 options: Options {
                                     react_to_esc_key: true,
                                     with_validation: Some(Validation {
                                         alpha_numeric_only: true,
                                         special_chars: Some((SpecialCharsAction::Block, vec!['\\', '/'])),
+                                        min_length: Some(1),
+                                        max_length: Some(64),
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
                                 }
                                 // todo: use is_valid
                                 onreturn: move |(s, is_valid, key_code)| {
-                                    if is_valid  {
+                                    if is_valid || key_code == Code::Escape  {
                                         let new_name = format!("{}{}", s, file_extension);
                                         emit(&cx, new_name, key_code)
                                     }
