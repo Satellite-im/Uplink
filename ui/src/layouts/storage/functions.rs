@@ -24,7 +24,7 @@ use crate::layouts::storage::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT, FILE_
 
 use super::{ChanCmd, Props, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
 
-pub fn run_component_verifications(
+pub fn run_verifications_and_update_storage(
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
     storage_state: &UseState<Option<Storage>>,
@@ -33,11 +33,6 @@ pub fn run_component_verifications(
     current_dir: &UseRef<Directory>,
     dirs_opened_ref: &UseRef<Vec<Directory>>,
     ch: &Coroutine<ChanCmd>,
-    cx: &Scoped<Props>,
-    drag_event: &UseRef<Option<FileDropEvent>>,
-    window: &dioxus_desktop::DesktopContext,
-    main_script: &str,
-    storage_size: &UseRef<String>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
@@ -55,7 +50,15 @@ pub fn run_component_verifications(
         storage_state.set(None);
         ch.send(ChanCmd::GetStorageSize);
     }
+}
 
+pub fn allow_drag_event_for_non_macos_systems(
+    cx: &Scoped<Props>,
+    drag_event: &UseRef<Option<FileDropEvent>>,
+    window: &dioxus_desktop::DesktopContext,
+    main_script: &str,
+    ch: &Coroutine<ChanCmd>,
+) {
     if !STATIC_ARGS.use_mock {
         use_future(cx, (), |_| {
             #[cfg(not(target_os = "macos"))]
@@ -79,10 +82,6 @@ pub fn run_component_verifications(
             }
         });
     };
-
-    if storage_size.read().is_empty() {
-        ch.send(ChanCmd::GetStorageSize);
-    }
 }
 
 pub fn update_items_with_mock_data(

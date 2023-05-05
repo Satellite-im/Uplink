@@ -116,7 +116,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         drag_event,
     );
 
-    functions::run_component_verifications(
+    functions::run_verifications_and_update_storage(
         first_render,
         state,
         storage_state,
@@ -125,12 +125,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         current_dir,
         dirs_opened_ref,
         ch,
-        cx,
-        drag_event,
-        window,
-        main_script,
-        storage_size,
     );
+
+    functions::allow_drag_event_for_non_macos_systems(cx, drag_event, window, main_script, ch);
 
     cx.render(rsx!(
         div {
