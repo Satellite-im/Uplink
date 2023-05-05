@@ -13,7 +13,8 @@ env:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on:
+      labels: windows-latest-8-cores
 
     permissions:
       contents: write
@@ -49,6 +50,16 @@ jobs:
       
       - name: Build Installer 
         run: cargo wix --package uplink --no-build --nocapture
+        
+      - name: Sign Windows Installer
+        uses: dlemstra/code-sign-action@v1
+        with:
+          certificate: '${{ secrets.WINDOWS_CERTIFICATE }}'
+          password: '${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}'
+          folder: 'target/wix'
+          recursive: true
+          files: |
+            target/wix/*.msi
 
       - name: Github Release
         uses: softprops/action-gh-release@v1
