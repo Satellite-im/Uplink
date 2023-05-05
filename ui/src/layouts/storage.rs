@@ -103,10 +103,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
 
-    let free_space_text = get_local_text("files.free-space");
-    let total_space_text = get_local_text("files.total-space");
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
-    let storage_size: &UseRef<Option<usize>> = use_ref(cx, || None);
+    let storage_size: &UseRef<String> = use_ref(cx, || {
+        String::from(get_local_text("files.no-data-available"))
+    });
     let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
     let files_list = use_ref(cx, || state.read().storage.files.clone());
@@ -120,7 +120,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let window = use_window(cx);
 
-    let ch = storage_coroutine(
+    let ch: &Coroutine<ChanCmd> = storage_coroutine(
         cx,
         storage_state,
         storage_size,
@@ -134,7 +134,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
-        ch.send(ChanCmd::GetStorageSize);
     }
 
     if let Some(storage) = storage_state.get().clone() {
@@ -146,6 +145,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         };
         state.write().storage = storage;
         storage_state.set(None);
+        ch.send(ChanCmd::GetStorageSize);
     }
 
     if !STATIC_ARGS.use_mock {
@@ -171,6 +171,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         });
     };
+
+    if storage_size.read().is_empty() {
+        ch.send(ChanCmd::GetStorageSize);
+    }
 
     cx.render(rsx!(
         div {
@@ -253,15 +257,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         aria_label: "files-info",
                         p {
                             class: "free-space",
-                            "{free_space_text}",
+                            format!("{}", get_local_text("files.free-space")),
                             span {
                                 class: "count",
-                                "0MB"
+                               format!("{}", storage_size.read()),
                             }
                         },
                         p {
                             class: "total-space",
-                            "{total_space_text}",
+                            format!("{}", get_local_text("files.total-space")),
                             span {
                                 class: "count",
                                 "10MB"
@@ -673,7 +677,7 @@ pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
 fn storage_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
     storage_state: &'a UseState<Option<Storage>>,
-    storage_size: &'a UseRef<Option<usize>>,
+    storage_size: &'a UseRef<String>,
     main_script: String,
     window: &'a DesktopContext,
     drag_event: &'a UseRef<Option<FileDropEvent>>,
@@ -976,9 +980,13 @@ fn storage_coroutine<'a>(
                         match rsp {
                             Ok(size) => {
                                 println!("usize: {:?}", size);
-                                storage_size.with_mut(|i| *i = Some(size));
+                                let all_storage_size = format_item_size(size);
+                                storage_size.with_mut(|i| *i = all_storage_size);
                             }
                             Err(e) => {
+                                storage_size.with_mut(|i| {
+                                    *i = String::from(get_local_text("files.no-data-available"))
+                                });
                                 log::error!("failed to get storage size: {}", e);
                                 continue;
                             }
@@ -989,4 +997,27 @@ fn storage_coroutine<'a>(
         }
     });
     ch
+}
+
+pub fn format_item_size(item_size: usize) -> String {
+    if item_size == 0 {
+        return String::from("0 bytes");
+    }
+    let base_1024: f64 = 1024.0;
+    let size_f64: f64 = item_size as f64;
+
+    let i = (size_f64.log10() / base_1024.log10()).floor();
+    let size_formatted = size_f64 / base_1024.powf(i);
+
+    let item_size_suffix = ["bytes", "KB", "MB", "GB", "TB"][i as usize];
+    let mut size_formatted_string = format!(
+        "{size:.*} {size_suffix}",
+        1,
+        size = size_formatted,
+        size_suffix = item_size_suffix
+    );
+    if size_formatted_string.contains(".0") {
+        size_formatted_string = size_formatted_string.replace(".0", "");
+    }
+    size_formatted_string
 }

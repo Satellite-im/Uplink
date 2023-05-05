@@ -131,6 +131,7 @@ files = Files
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .file-already-with-name = There is already a file with this name
+    .no-data-available = No data available
 
 settings = Settings
     .settings = Settings
