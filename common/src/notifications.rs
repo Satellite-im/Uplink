@@ -16,7 +16,7 @@ pub fn push_notification(
             .body(&content)
             .timeout(timeout)
             .show();
-        
+
         if let Some(sound) = notification_sound {
             Play(sound);
         }
