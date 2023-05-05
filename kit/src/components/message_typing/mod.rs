@@ -15,6 +15,7 @@ pub fn MessageTyping<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             &cx.props.user_image,
             div {
                 class: "message-typing",
+                aria_label: "message-typing-indicator",
                 div { class: "dot dot-1" },
                 div { class: "dot dot-2" },
                 div { class: "dot dot-3" }
