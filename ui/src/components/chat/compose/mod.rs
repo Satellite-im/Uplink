@@ -33,8 +33,8 @@ use wry::webview::FileDropEvent;
 use crate::{
     components::{chat::edit_group::EditGroup, media::player::MediaPlayer},
     layouts::storage::{
-        decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths, ANIMATION_DASH_SCRIPT,
-        FEEDBACK_TEXT_SCRIPT,
+        functions::{decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths},
+        ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
     },
     utils::build_participants,
 };
