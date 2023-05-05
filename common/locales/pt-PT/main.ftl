@@ -22,6 +22,7 @@ uplink = Uplink
     .username = Nome de utilizador
     .status = Estado
     .characters = caracteres
+    .character = caracter
     .exceeded = excedido
     .reached = atingido
     .delete = Eliminar
@@ -125,7 +126,9 @@ files = Ficheiros
     .image-thumb = Miniatura de pré-visualização
     .doc-thumb = Miniatura de pré-visualização de documento
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
-
+    .directory-already-with-name = Já existe um directório com este nome
+    .file-already-with-name = Já existe um ficheiro com este nome
+    
 settings = Definições
     .settings = Definições
     .profile = Perfil
@@ -244,7 +247,9 @@ settings-about = Sobre as definições
     .open-website-description = Abre o nosso sítio Web no seu navegador Web predefinido.
     .open-codebase = Código-fonte aberto
     .open-codebase-description = Abre a base de código no seu browser predefinido.
-
+    .no-update-available = O seu software está actualizado!
+    .update-check-error = Falha ao obter a actualização. Verifique a sua ligação à Internet.
+    
 media-player = Leitor de multimédia 
     .enable-camera = Activar a câmara 
     .fullscreen = Ecrã completo
