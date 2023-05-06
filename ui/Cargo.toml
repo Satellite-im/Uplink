@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
+nix = "0.26.2"
 dioxus.workspace = true
 dioxus-hooks.workspace = true
 dioxus-router.workspace = true

@@ -27,6 +27,7 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
+use nix::sys::statvfs::statvfs;
 use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use uuid::Uuid;
@@ -213,7 +214,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             format!("{}", get_local_text("files.free-space")),
                             span {
                                 class: "count",
-                               format!("{}", storage_size.read()),
+                               format!("{}", get_hard_disk_size()),
                             }
                         },
                         p {
@@ -221,9 +222,21 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             format!("{}", get_local_text("files.total-space")),
                             span {
                                 class: "count",
-                                "10MB"
+                                format!("{}", get_hard_disk_total_size())
                             }
                         }
+                    }
+                    div {
+                        class: "files-info",
+                        aria_label: "files-info",
+                        p {
+                            class: "free-space",
+                            format!("{}", get_local_text("files.storage-total-space")),
+                            span {
+                                class: "count",
+                               format!("{}", storage_size.read()),
+                            }
+                        },
                     }
                 }
                 div {
@@ -507,4 +520,26 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
+}
+
+fn get_hard_disk_size() -> String {
+    let path = Path::new("/");
+    let fs_stats = match statvfs(path) {
+        Ok(stats) => stats,
+        Err(e) => panic!("Failed to get file system stats: {}", e),
+    };
+    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size() as u64;
+    let formatted_size = functions::format_item_size(free_space as usize);
+    formatted_size
+}
+
+fn get_hard_disk_total_size() -> String {
+    let path = Path::new("/");
+    let fs_stats = match statvfs(path) {
+        Ok(stats) => stats,
+        Err(e) => panic!("Failed to get file system stats: {}", e),
+    };
+    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size() as u64;
+    let formatted_size = functions::format_item_size(free_space as usize);
+    formatted_size
 }
