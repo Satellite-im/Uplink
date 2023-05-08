@@ -236,9 +236,9 @@ pub fn get_hard_disk_size() -> String {
         Ok(stats) => stats,
         Err(e) => panic!("Failed to get file system stats: {}", e),
     };
-    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size() as u64;
-    let formatted_size = format_item_size(free_space as usize);
-    formatted_size
+    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size();
+    
+    format_item_size(free_space as usize)
 }
 
 pub fn get_hard_disk_total_size() -> String {
@@ -247,9 +247,9 @@ pub fn get_hard_disk_total_size() -> String {
         Ok(stats) => stats,
         Err(e) => panic!("Failed to get file system stats: {}", e),
     };
-    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size() as u64;
-    let formatted_size = format_item_size(free_space as usize);
-    formatted_size
+    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size();
+    
+    format_item_size(free_space as usize)
 }
 
 pub fn storage_coroutine<'a>(
@@ -562,7 +562,7 @@ pub fn storage_coroutine<'a>(
                             }
                             Err(e) => {
                                 storage_size.with_mut(|i| {
-                                    *i = String::from(get_local_text("files.no-data-available"))
+                                    *i = get_local_text("files.no-data-available")
                                 });
                                 log::error!("failed to get storage size: {}", e);
                                 continue;

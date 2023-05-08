@@ -95,7 +95,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
     let storage_size: &UseRef<String> = use_ref(cx, || {
-        String::from(get_local_text("files.no-data-available"))
+        get_local_text("files.no-data-available")
     });
     let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
