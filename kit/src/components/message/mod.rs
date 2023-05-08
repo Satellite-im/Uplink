@@ -147,9 +147,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             aria_label: {
                 format_args!(
                     "{}-{}",
-                    if cx.props.order.is_some() {
-                        order.to_string()
-                    } else { "".into() },
+                    cx.props.order.map(|o| o.to_string()).unwrap_or_default(),
                     if is_remote {
                         "remote"
                     } else { "local" }
