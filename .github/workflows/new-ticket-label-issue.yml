@@ -1,0 +1,18 @@
+name: Add new ticket label on issues
+on:
+  issue:
+    types:
+      - opened
+jobs:
+  add-label:
+    name: Add Label - new ticket added
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: christianvuerings/add-labels@v1
+        with:
+          labels: |
+            New Ticket
+            Don't merge yet
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
