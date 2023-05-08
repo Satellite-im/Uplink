@@ -1,6 +1,6 @@
 name: Add new ticket label on issues
 on:
-  issue:
+  issues:
     types:
       - opened
 jobs:
