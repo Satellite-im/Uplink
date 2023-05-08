@@ -47,16 +47,18 @@ pub fn push_notification(
     notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
 ) {
-    let summary = format!("Uplink - {title}");
-    let _n = Notification::new()
-        .summary(summary.as_ref())
-        .body(&content)
-        .timeout(timeout)
-        .show();
+    std::thread::spawn(move || {
+        let summary = format!("Uplink - {title}");
+        let _n = Notification::new()
+            .summary(summary.as_ref())
+            .body(&content)
+            .timeout(timeout)
+            .show();
 
-    if let Some(sound) = notification_sound {
-        Play(sound);
-    }
+        if let Some(sound) = notification_sound {
+            Play(sound);
+        }
+    });
 }
 
 #[allow(non_snake_case)]
