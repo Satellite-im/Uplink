@@ -27,7 +27,6 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
-use nix::sys::statvfs::statvfs;
 use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use uuid::Uuid;
@@ -40,6 +39,7 @@ pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::get_window_builder;
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
+use crate::layouts::storage::functions::{get_hard_disk_size, get_hard_disk_total_size};
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
 
@@ -520,26 +520,4 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
-}
-
-fn get_hard_disk_size() -> String {
-    let path = Path::new("/");
-    let fs_stats = match statvfs(path) {
-        Ok(stats) => stats,
-        Err(e) => panic!("Failed to get file system stats: {}", e),
-    };
-    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size() as u64;
-    let formatted_size = functions::format_item_size(free_space as usize);
-    formatted_size
-}
-
-fn get_hard_disk_total_size() -> String {
-    let path = Path::new("/");
-    let fs_stats = match statvfs(path) {
-        Ok(stats) => stats,
-        Err(e) => panic!("Failed to get file system stats: {}", e),
-    };
-    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size() as u64;
-    let formatted_size = functions::format_item_size(free_space as usize);
-    formatted_size
 }

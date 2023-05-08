@@ -1,4 +1,8 @@
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use common::{
     language::get_local_text,
@@ -13,6 +17,7 @@ use dioxus_hooks::{
     UseState,
 };
 use futures::{channel::oneshot, StreamExt};
+use nix::sys::statvfs::statvfs;
 use tokio::{
     sync::mpsc::{self},
     time::sleep,
@@ -223,6 +228,28 @@ pub fn format_item_size(item_size: usize) -> String {
         size_formatted_string = size_formatted_string.replace(".0", "");
     }
     size_formatted_string
+}
+
+pub fn get_hard_disk_size() -> String {
+    let path = Path::new("/");
+    let fs_stats = match statvfs(path) {
+        Ok(stats) => stats,
+        Err(e) => panic!("Failed to get file system stats: {}", e),
+    };
+    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size() as u64;
+    let formatted_size = format_item_size(free_space as usize);
+    formatted_size
+}
+
+pub fn get_hard_disk_total_size() -> String {
+    let path = Path::new("/");
+    let fs_stats = match statvfs(path) {
+        Ok(stats) => stats,
+        Err(e) => panic!("Failed to get file system stats: {}", e),
+    };
+    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size() as u64;
+    let formatted_size = format_item_size(free_space as usize);
+    formatted_size
 }
 
 pub fn storage_coroutine<'a>(
