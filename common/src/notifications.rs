@@ -110,7 +110,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
 
     #[cfg(target_os = "macos")]
     {
-        let action_name = &get_local_text(action_id);
+        let action_name = &get_local_text(&action_id);
         let response = mac_notification_sys::Notification::default()
             .title(notification.summary.as_str())
             .message(&notification.body)
