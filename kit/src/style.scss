@@ -226,6 +226,7 @@ pre code {
   --text-color-muted: #a3a3c7;
   --text-color-dark: #676795;
   --text-color-bright: #dfdff7;
+  --text-color-link: #0000ee;
 
   --placeholder: #aaaac9;
 
@@ -315,7 +316,7 @@ p {
 
 .disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 1;
 }
 
 @keyframes pulse {
@@ -353,4 +354,11 @@ p {
 pre[class*="language-"] {
   overflow: hidden;
   border-radius: var(--border-radius);
+}
+a {
+  color: var(--text-color-link);
+}
+
+a:hover {
+  text-decoration: underline;
 }

@@ -36,6 +36,8 @@ pub struct Props<'a> {
     // used to show download button, if nothing is passed, button will render
     with_download_button: Option<bool>,
 
+    download_pending: Option<bool>,
+
     // called shen the icon is clicked
     on_press: EventHandler<'a, ()>,
 }
@@ -43,6 +45,12 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let filename = &cx.props.filename;
+    let download_pending = cx.props.download_pending.unwrap_or(false);
+    let btn_icon = if !download_pending {
+        cx.props.button_icon.unwrap_or(Icon::ArrowDown)
+    } else {
+        Icon::DocumentArrowDown
+    };
 
     let with_download_button = if let Some(with_download_button) = cx.props.with_download_button {
         with_download_button

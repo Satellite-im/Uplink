@@ -26,14 +26,12 @@ jobs:
           toolchain: 1.68.2
           override: true
       - run: cargo build --release -F production_mode
-      - run: ./build_linux_installer uplink ${{ github.ref_name }} amd64
+      - run: bash build_linux_installer.sh uplink ${{ github.ref_name }} amd64
 
       - name: Github Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            target/release/*.so
-            target/release/uplink
             target/release/*.deb
             target/release/SHA256SUM

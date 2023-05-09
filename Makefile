@@ -1,95 +1,89 @@
+
+# the relevant documentation is provided by apple.developer.com, specifically regarding code signing and CFBundles. 
+# code signing resource guide:
+# https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Procedures/Procedures.html
+
+# name of the executable
 TARGET = uplink
 
-SIGNING_KEY = LOCAL
-ASSETS_DIR = ui/extra
-RELEASE_DIR = target/release
+# stuff to copy over to RESOURCES_DIR
+ASSETS_SOURCE_DIR = ui/extra
 
-APP_NAME = Uplink.app
-APP_TEMPLATE = $(ASSETS_DIR)/macos/$(APP_NAME)
-APP_DIR = $(RELEASE_DIR)/macos
-APP_BINARY = $(RELEASE_DIR)/$(TARGET)
-CONTENTS = $(APP_DIR)/$(APP_NAME)/Contents
-APP_BINARY_DIR = $(APP_DIR)/$(APP_NAME)/Contents/MacOS
-APP_EXTRAS_DIR = $(APP_DIR)/$(APP_NAME)/Contents/Resources
+# directory structure for .dmg :
+# https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW8
 
-DMG_NAME = Uplink.dmg
-DMG_DIR = $(RELEASE_DIR)/macos
+BUNDLE_DIR = target/macos_bundle
+# folder used for the universal installer
+DMG_NAME = $(BUNDLE_DIR)/Uplink.dmg
+# folder used to build the .app
+APP_DIR = $(BUNDLE_DIR)/Uplink.app
 
-vpath $(TARGET) $(RELEASE_DIR)
-vpath $(APP_NAME) $(APP_DIR)
-vpath $(DMG_NAME) $(APP_DIR)
+# contains all subfolders: MacOs, Resources, Frameworks
+# https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/20001119-110730
+APP_CONTENTS_DIR = $(APP_DIR)/Contents
+
+# contains standalone executables
+MACOS_DIR = $(APP_CONTENTS_DIR)/MacOs
+# contains resources 
+RESOURCES_DIR = $(APP_CONTENTS_DIR)/Resources
+# contains shared libraries (.dylib)
+FRAMEWORKS_DIR = $(APP_CONTENTS_DIR)/Frameworks
 
 all: help
 
 help: ## Print this help message
 	@grep -E '^[a-zA-Z._-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-binary: $(TARGET)-native ## Build a release binary
-binary-universal: $(TARGET)-universal ## Build a universal release binary
-$(TARGET)-native:
-	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release -F production_mode
-	@lipo target/release/$(TARGET) -create -output $(APP_BINARY)
-$(TARGET)-universal:
+folders: ## creates build directory and copies assets
+# 	clean up from previous build
+	@rm -rf $(APP_DIR)
+	@rm -f $(DMG_NAME)
+	@mkdir -p $(APP_DIR)
+
+# 	this copy command also creates $(APP_CONTENTS_DIR) and $(RESOURCES_DIR)
+	@cp -fRp $(ASSETS_SOURCE_DIR)/macos/Uplink.App/Contents $(APP_DIR)
+	@mkdir    $(MACOS_DIR)
+	@mkdir    $(FRAMEWORKS_DIR)
+
+	@cp -R $(ASSETS_SOURCE_DIR)/assets      $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/images      $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/prism_langs $(RESOURCES_DIR)
+	@cp -R $(ASSETS_SOURCE_DIR)/themes      $(RESOURCES_DIR) 
+
+app: folders ## Build the release binary and Uplink.app
+	@echo "make app ..."
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
-	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(APP_BINARY)
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_BINARY)
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_BINARY)
-endif
-app: $(APP_NAME)-native ## Create a Uplink.app
-app-universal: $(APP_NAME)-universal ## Create a universal Uplink.app
-$(APP_NAME)-%: $(TARGET)-%
-	@mkdir -p $(APP_BINARY_DIR)
-	@mkdir -p $(APP_EXTRAS_DIR)
-	@cp -fRp $(APP_TEMPLATE) $(APP_DIR)
-	@cp -fp $(APP_BINARY) $(APP_BINARY_DIR)
-	@touch -r "$(APP_BINARY)" "$(APP_DIR)/$(APP_NAME)"
-	@echo "Created '$(APP_NAME)' in '$(APP_DIR)'"
-	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Info.plist
-	xattr -c $(APP_DIR)/$(APP_NAME)/Contents/Resources/uplink.icns
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(MACOS_DIR)/$(TARGET)
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(FRAMEWORKS_DIR)/libclear_all.dylib
+	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(FRAMEWORKS_DIR)/libemoji_selector.dylib
+	
+# 	delete all special attributes. not sure why/if this is needed 
+	xattr -c $(APP_CONTENTS_DIR)/Info.plist
+	xattr -c $(RESOURCES_DIR)/uplink.icns
 
-	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/assets      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/images      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/prism_langs $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
-	cp -r ./ui/extra/themes      $(APP_DIR)/$(APP_NAME)/Contents/Resources/extra
+signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
+	@echo "make signed-app ..."
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(FRAMEWORKS_DIR)/libclear_all.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(FRAMEWORKS_DIR)/libemoji_selector.dylib
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)
 
-	mkdir -p $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-	cp -r $(RELEASE_DIR)/*.dylib $(APP_DIR)/$(APP_NAME)/Contents/Resources/extensions
-
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)/$(APP_NAME)
-endif
-dmg: $(DMG_NAME)-native ## Create a Uplink.dmg
-dmg-universal: $(DMG_NAME)-universal ## Create a universal Uplink.dmg
-$(DMG_NAME)-%: $(APP_NAME)-%
+unsigned-dmg: app ## build the universal Uplink.dmg file without signing
 	@echo "Packing disk image..."
-	@ln -sf /Applications $(DMG_DIR)/Applications
-	@hdiutil create $(DMG_DIR)/$(DMG_NAME) \
+	@ln -sf /Applications $(BUNDLE_DIR)/Applications
+	@hdiutil create $(DMG_NAME) \
 		-volname "Uplink" \
 		-fs HFS+ \
-		-srcfolder $(APP_DIR) \
+		-srcfolder $(BUNDLE_DIR) \
 		-ov -format UDZO
-	@echo "Packed '$(APP_NAME)' in '$(APP_DIR)'"
+	@echo "Packed '$(BUNDLE_DIR)' into dmg"
 
-ifeq ($(SIGNING_KEY),LOCAL)
-	@echo "Local Build, no signing"
-else
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(DMG_DIR)/$(DMG_NAME)
-endif
-install: $(INSTALL)-native ## Mount disk image
-install-universal: $(INSTALL)-native ## Mount universal disk image
-$(INSTALL)-%: $(DMG_NAME)-%
-	@open $(DMG_DIR)/$(DMG_NAME)
+dmg: signed-app unsigned-dmg ## sign Uplink.dmg
+	@echo "make dmg..."
+	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(DMG_NAME)
 
-.PHONY: app binary clean dmg install $(TARGET) $(TARGET)-universal
-
+# tell Make that these targets don't correspond to physical files
+.PHONY: dmg unsigned-dmg signed-app app folders help all clean
 clean: ## Remove all build artifacts
 	@cargo clean
-watch: ## run this first: `cargo install cargo-watch`
-	@cargo watch -x 'run'
+

@@ -7,7 +7,7 @@
 
 <br/>
 
-Uplink is written in pure Rust with a UI in [Dioxus](https://github.com/DioxusLabs) (which is also written in Rust). It was developed to be a new foundation for implementing Warp features in a universal application.
+Uplink is written in pure Rust with a UI in [Dioxus](https://github.com/DioxusLabs) (which is also written in Rust). It was developed as a new foundation for implementing Warp features in a universal application.
 
 The goal should be to build a hyper-customizable application that can run anywhere and support extensions.
 
@@ -36,7 +36,7 @@ cargo run --bin ui --profile=rapid
 
 ## Dependency List
 
-**MacOS M1+**
+**macOS M1+**
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
 | Build Tools| xcode-select --install |
@@ -46,7 +46,7 @@ cargo run --bin ui --profile=rapid
 | Protoc | brew install protobuf |
 | ffmpeg | brew install ffmpeg |
 
-a. For it works, we need to install ffmpeg -> brew install ffmpeg for MacOS
+For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
 And for Windows, I followed the steps on this site here
 
 **Windows 10+**

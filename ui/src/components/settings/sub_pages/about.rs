@@ -1,7 +1,8 @@
+use std::path::PathBuf;
 use std::process::Command;
 
 use common::language::get_local_text;
-use common::state::Action;
+use common::state::{Action, ToastNotification};
 use common::{icons::outline::Shape as Icon, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
@@ -10,9 +11,8 @@ use kit::elements::{button::Button, Appearance};
 
 use warp::logging::tracing::log;
 
-use crate::utils::auto_updater::{
-    get_download_dest, DownloadProgress, DownloadState, SoftwareDownloadCmd,
-};
+use crate::get_download_modal;
+use crate::utils::auto_updater::{DownloadProgress, DownloadState, SoftwareDownloadCmd};
 use crate::{
     components::settings::SettingSection,
     utils::{self, auto_updater::GitHubRelease},
@@ -29,14 +29,32 @@ pub fn AboutPage(cx: Scope) -> Element {
     let desktop = use_window(cx);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![download_available, update_button_loading];
+        to_owned![download_available, update_button_loading, state];
         async move {
             while rx.next().await.is_some() {
                 match utils::auto_updater::check_for_release().await {
                     Ok(opt) => {
+                        if opt.is_none() {
+                            state.write().mutate(Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    get_local_text("settings-about.no-update-available"),
+                                    None,
+                                    2,
+                                ),
+                            ))
+                        }
                         download_available.set(opt);
                     }
                     Err(e) => {
+                        state.write().mutate(Action::AddToastNotification(
+                            ToastNotification::init(
+                                "".into(),
+                                get_local_text("settings-about.update-check-error"),
+                                None,
+                                4,
+                            ),
+                        ));
                         log::error!("failed to check for updates: {e}");
                     }
                 }
@@ -77,15 +95,20 @@ pub fn AboutPage(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArrowDown,
                     onpress: move |_| {
-                        if let Some(dest) = get_download_dest() {
-                            download_state.write().stage = DownloadProgress::Pending;
-                            download_state.write().destination = Some(dest.clone());
-                            update_button_loading.set(true);
-                            download_ch.send(SoftwareDownloadCmd(dest));
-                        }
+                        download_state.write().stage = DownloadProgress::PickFolder;
                     }
                 })
             }
+            DownloadProgress::PickFolder => rsx!(get_download_modal {
+                on_dismiss: move |_| {
+                    download_state.write().stage = DownloadProgress::Idle;
+                },
+                on_submit: move |dest: PathBuf| {
+                    download_state.write().stage = DownloadProgress::Pending;
+                    download_state.write().destination = Some(dest.clone());
+                    download_ch.send(SoftwareDownloadCmd(dest));
+                }
+            }),
             DownloadProgress::Pending => {
                 rsx!(Button {
                     key: "{pending_key}",

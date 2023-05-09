@@ -22,7 +22,9 @@ uplink = Uplink
     .username = Username
     .status = Status
     .characters = characters
+    .character = character
     .exceeded = exceeded
+    .reached = reached
     .delete = Delete
     .dismiss = Dismiss
     .pick-download-directory = Choose a location to download the update
@@ -34,6 +36,16 @@ uplink = Uplink
     .update-menu-install = Install
     .check-for-updates = Check for updates
     .download-update = Download Update
+
+updates = Updates
+    .title = Uplink has an update available. Follow these steps to download and install the latest update.
+    .instruction1 = 1. Download the update from our release page.
+    .instruction2 = 2. Close Uplink.
+    .instruction3 = 3. Run the installer. The older version of uplink will be overwritten, leaving your account intact.
+    .instruction4 = 4. Open Uplink and start chatting again!
+    .instruction5 = *We are going to streamline this process in a future update.
+    .button-label = Pick Download Folder
+    .download-label = Download Update
 
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
@@ -57,6 +69,10 @@ messages = Messages
     .msg-banner = Messages are secured by end-to-end encryption and sent over a peer-to-peer network.
     .create-group-chat = Create Group Chat
     .group-name = Group Name
+    .view = View Messages
+    .hide = Hide Messages
+    .blocked = { $amount } messages blocked
+    .group-name-invalid = Group Name Invalid
     
 favorites = Favorites
     .favorites = Favorites
@@ -111,7 +127,10 @@ files = Files
     .video-thumb = Video Thumb
     .image-thumb = Image Thumb 
     .doc-thumb = First Page Thumb
-    .no-thumbnail-preview = There is no preview thumb for this file
+    .no-thumbnail-preview = No thumbnail file preview
+    .file-already-opened = File already opened
+    .directory-already-with-name = There is already a directory with this name
+    .file-already-with-name = There is already a file with this name
 
 settings = Settings
     .settings = Settings
@@ -231,7 +250,9 @@ settings-about = About Settings
     .open-website-description = Opens our website in your default web browser.
     .open-codebase = Open Source Code
     .open-codebase-description = Opens the codebase in your default web browser.
-
+    .no-update-available = Your software is up to date!
+    .update-check-error = Failed to fetch update. Please check your internet connection.
+    
 media-player = Media Player 
     .enable-camera = Enable Camera 
     .fullscreen = Fullscreen

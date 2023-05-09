@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::bail;
 
 use common::language::get_local_text;
-use futures::StreamExt;
+use futures::TryStreamExt;
 use reqwest::header;
 use reqwest::Client;
 
@@ -21,6 +21,7 @@ pub struct SoftwareDownloadCmd(pub PathBuf);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum DownloadProgress {
     Idle,
+    PickFolder,
     Pending,
     Finished,
 }
@@ -69,6 +70,25 @@ pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {
     let latest_release =
         get_github_release("https://api.github.com/repos/Satellite-im/Uplink/releases/latest")
             .await?;
+
+    // ensure installer is released - .deb, .msi, or .dpkg
+    let extension = if cfg!(target_os = "windows") {
+        ".msi"
+    } else if cfg!(target_os = "linux") {
+        ".deb"
+    } else if cfg!(target_os = "macos") {
+        ".dmg"
+    } else {
+        bail!("unknown OS");
+    };
+
+    if !latest_release
+        .assets
+        .iter()
+        .any(|x| x.name.contains(extension))
+    {
+        bail!("{extension} file not found in software release");
+    }
 
     if versions_match(&latest_release.tag_name) {
         Ok(None)
@@ -158,12 +178,11 @@ async fn download_file<P: AsRef<Path>>(
     let mut bytes = client.get(url).send().await?.bytes_stream();
     let mut file = tokio::fs::File::create(dest).await?;
 
-    while let Some(v) = bytes.next().await {
-        let bytes = v?;
-        let _ = ch.send(Ok(bytes.len()));
+    while let Some(bytes) = bytes.try_next().await? {
         file.write_all(&bytes).await?;
+        let _ = ch.send(Ok(bytes.len()));
     }
-    file.flush().await?;
+    file.sync_all().await?;
     Ok(())
 }
 

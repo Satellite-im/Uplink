@@ -29,12 +29,12 @@ pub struct Props<'a> {
     #[props(default = "".to_owned())]
     id: String,
     #[props(default = false)]
-    focus: bool,
+    ignore_focus: bool,
     #[props(default = false)]
     loading: bool,
     #[props(default = "".to_owned())]
     placeholder: String,
-    #[props(default = 1024)]
+    #[props(default = 1025)]
     max_length: i32,
     #[props(default = Size::Normal)]
     size: Size,
@@ -54,7 +54,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let Props {
         id: _,
-        focus,
+        ignore_focus: _,
         loading,
         placeholder,
         max_length,
@@ -73,7 +73,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
 
     let height_script = include_str!("./update_input_height.js");
-    let focus_script = include_str!("./focus.js").replace("$UUID", &id);
+    let focus_script = if cx.props.ignore_focus {
+        String::new()
+    } else {
+        include_str!("./focus.js").replace("$UUID", &id)
+    };
+
     eval(height_script.to_string());
     eval(focus_script.clone());
 
@@ -99,11 +104,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: format_args!("input {}", if disabled { "disabled" } else { " " }),
                 height: "{size.get_height()}",
                 textarea {
-                    key: "{element_id}",
+                    key: "textarea-key-{id}",
                     class: "input_textarea",
                     id: "{id}",
-                    // todo: troubleshoot this. it isn't working
-                    autofocus: *focus,
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{current_val}",

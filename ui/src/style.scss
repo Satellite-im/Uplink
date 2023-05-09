@@ -39,13 +39,10 @@ body {
   cursor: pointer;
   min-height: 1.6rem;
   .btn-wrap {
-    height: var(--titlebar-height);
-    width: var(--titlebar-height);
     padding: unset;
     .btn {
       font-size: var(--text-size-less);
       height: 100%;
-      opacity: 0.5;
     }
   }
 }
@@ -163,4 +160,39 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+.disp-flex {
+  display: inline-flex;
+
+  &.row {
+    flex-direction: row;
+  }
+
+  &.col {
+    flex-direction: column;
+  }
+}
+
+.instruction-list {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.download-modal {
+  color: var(--text-color-bright);
+  li {
+    padding: 5px;
+  }
+}
+
+.download-button .btn-wrap {
+  height: 45px;
+  .btn {
+    font-size: 16px;
+  }
+}
+
+.instruction-list .btn-wrap .btn {
+  font-size: 20px;
 }

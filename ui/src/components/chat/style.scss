@@ -51,6 +51,13 @@
   }
 }
 
+.chatbar-error-input-message {
+  margin-bottom: 1%;
+  margin-top: -2%;
+  margin-left: 12%;
+  color: var(--warning);
+}
+
 #compose {
   flex: 1;
   min-width: 0;
@@ -61,6 +68,7 @@
 
 #create-group {
   color: var(--text-color);
+  border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
   padding-bottom: var(--padding);
   display: inline-flex;
@@ -139,6 +147,14 @@
   align-items: stretch;
 }
 
+.create-group-name {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
 .sidebar {
   .searchbar-dropdown {
     position: absolute;
@@ -198,6 +214,21 @@
     .msg-wrapper {
       display: flex;
       flex-direction: column;
+    }
+  }
+
+  .blocked-container {
+    color: var(--text-color);
+    display: flex;
+    padding: var(--padding-less);
+    cursor: default;
+
+    .pressable {
+      cursor: pointer;
+      &:hover {
+        color: var(--text-color-bright);
+        text-decoration: underline;
+      }
     }
   }
 }
