@@ -1,22 +1,31 @@
+use common::icons::outline::Shape as Icon;
+use common::language::get_local_text;
 use dioxus::prelude::*;
+use kit::components::context_menu::{ContextItem, ContextMenu};
 use warp::constellation::file::File;
 
-#[inline_props]
+#[derive(Props)]
+pub struct Props<'a> {
+    file: File,
+    on_download: EventHandler<'a, ()>,
+}
+
 #[allow(non_snake_case)]
-pub fn FilePreview(cx: Scope, file: File) -> Element {
-    let thumbnail = file.thumbnail();
+pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let thumbnail = cx.props.file.thumbnail();
 
-    let script_to_avoid_right_click = r#"
-        var img = document.getElementById('file_preview_img');
-        img.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-        });"#;
-
-    cx.render(rsx!(
-        script {
-            script_to_avoid_right_click
-        },
-        rsx!(div {
+    cx.render(rsx!(rsx!(div {
+        ContextMenu {
+            id: "file-preview-context-menu".into(),
+            items: cx.render(rsx!(
+                ContextItem {
+                    icon: Icon::ArrowDownCircle,
+                    aria_label: "files-download-preview".into(),
+                    text: get_local_text("files.download"),
+                    onpress: move |_| {
+                        cx.props.on_download.call(());
+                    }
+                },)),
             img {
                 id: "file_preview_img",
                 src: "{thumbnail}",
@@ -27,6 +36,6 @@ pub fn FilePreview(cx: Scope, file: File) -> Element {
                 max_height: "80%",
                 max_width: "80%",
             },
-        })
-    ))
+        },
+    })))
 }
