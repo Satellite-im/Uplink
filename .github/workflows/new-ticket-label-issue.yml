@@ -4,14 +4,10 @@ on:
     types: [opened]
 
 jobs:
-  add-label:
-    name: Add Label - new ticket added
+  automate-issues-labels:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: christianvuerings/add-labels@v1
+      - name: initial labeling
+        uses: andymckay/labeler@master
         with:
-          labels: |
-            New Ticket
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          add-labels: "New ticket"
