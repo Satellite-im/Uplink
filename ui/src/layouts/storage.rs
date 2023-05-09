@@ -650,6 +650,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Pencil,
+                                            aria_label: "folder-rename".into(),
                                             text: get_local_text("files.rename"),
                                             onpress: move |_| {
                                                 is_renaming_map.with_mut(|i| *i = Some(key));
@@ -659,6 +660,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
+                                            aria_label: "folder-delete".into(),
                                             text: get_local_text("uplink.delete"),
                                             onpress: move |_| {
                                                 let item = Item::from(dir2.clone());
@@ -709,6 +711,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::Pencil,
+                                                aria_label: "files-rename".into(),
                                                 text: get_local_text("files.rename"),
                                                 onpress: move |_| {
                                                     is_renaming_map.with_mut(|i| *i = Some(key));
@@ -716,6 +719,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             ContextItem {
                                                 icon: Icon::ArrowDownCircle,
+                                                aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
                                                 onpress: move |_| {
                                                     let file_extension = std::path::Path::new(&file_name2)
@@ -739,6 +743,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
+                                                aria_label: "files-delete".into(),
                                                 text: get_local_text("uplink.delete"),
                                                 onpress: move |_| {
                                                     let item = Item::from(file2.clone());

@@ -108,13 +108,16 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                     class: format_args!("link-embed-container {}", if cx.props.remote {"link-embed-remote"} else {""}),
                     div {
                         class: "link-embed",
+                        aria_label: "link-embed",
                         div {
                             class: "embed-icon",
+                            aria_label: "embed-icon",
                             img {
                                 src: "{meta.icon}"
                             },
                             a {
                                 class: "link-title",
+                                aria_label: "link-title",
                                 href: "{cx.props.link}",
                                 "{title}"
                             }
@@ -122,6 +125,7 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                         h2 {},
                         div {
                             class: "embed-details",
+                            aria_label: "embed-details",
                             p {
                                 "{desc}"
                             }

@@ -269,6 +269,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     id: chat_id.to_string(),
                                     items: cx.render(rsx!(
                                         ContextItem {
+                                            aria_label: "favorites-chat".into(),
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
                                             onpress: move |_| {
@@ -282,6 +283,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                         ContextItem {
+                                            aria_label: "favorites-remove".into(),
                                             icon: Icon::HeartSlash,
                                             text: get_local_text("favorites.remove"),
                                             onpress: move |_| {
@@ -402,6 +404,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             items: cx.render(rsx!(
                                 ContextItem {
                                     icon: Icon::BellSlash,
+                                    aria_label: "chats-clear-unreads".into(),
                                     text: get_local_text("uplink.clear-unreads"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::ClearUnreads(clear_unreads.id));
@@ -410,6 +413,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 hr{ }
                                 ContextItem {
                                     icon: Icon::EyeSlash,
+                                    aria_label: "chats-hide-chat".into(),
                                     text: get_local_text("uplink.hide-chat"),
                                     onpress: move |_| {
                                         state.write().mutate(Action::RemoveFromSidebar(chat.id));
@@ -424,6 +428,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")} 
                                             else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")} 
                                             else {get_local_text("uplink.delete-conversation")},
+                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()} 
+                                            else if is_group_conv && !is_creator {"chats-leave-group".into()}
+                                            else {"chats-delete-conversation".into()},
                                             onpress: move |_| {
                                                 ch.send(MessagesCommand::DeleteConversation { conv_id: chat.id });
                                             }
