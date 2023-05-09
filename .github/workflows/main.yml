@@ -1,0 +1,34 @@
+name: autofix.ci
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [ "dev" ]
+permissions:
+  contents: read
+
+env:
+  rust_clippy: 1.65  # MSRV
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: autofix-${{ hashFiles('**/Cargo.lock') }}
+          
+      - run: rustup toolchain install ${{ env.rust_clippy }} --profile minimal --component rustfmt --component clippy
+      - run: rustup default ${{ env.rust_clippy }}
+
+      - run: cargo clippy --fix --workspace
+      - run: cargo fmt --all
+
+      - uses: autofix-ci/action@8bc06253bec489732e5f9c52884c7cace15c0160
