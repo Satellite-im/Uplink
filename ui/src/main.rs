@@ -891,12 +891,14 @@ fn get_update_icon(cx: Scope) -> Element {
                 id: "update-available-menu".to_string(),
                 items: cx.render(rsx!(
                     ContextItem {
+                        aria_label: "update-menu-dismiss".into(),
                         text: get_local_text("uplink.update-menu-dismiss"),
                         onpress: move |_| {
                             state.write().mutate(Action::DismissUpdate);
                         }
                     },
                     ContextItem {
+                        aria_label: "update-menu-download".into(),
                         text: get_local_text("uplink.update-menu-download"),
                         onpress: move |_| {
                             download_state.write().stage = DownloadProgress::PickFolder;

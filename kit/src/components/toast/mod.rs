@@ -54,8 +54,10 @@ pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             )),
             div {
                 class: "toast-content",
+                aria_label: "toast-content",
                 Label {
                     text: title,
+                    aria_label: "toast-title".into(),
                 },
                 p {
                     "{content}",
@@ -65,6 +67,7 @@ pub fn Toast<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 icon: Icon::XMark,
                 appearance: Appearance::Secondary,
                 onpress: move |_| cx.props.on_close.call(cx.props.id),
+                aria_label: "close-toast".into(),
             }
         }
     ))

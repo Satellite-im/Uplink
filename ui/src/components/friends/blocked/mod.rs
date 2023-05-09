@@ -77,6 +77,7 @@ pub fn BlockedUsers(cx: Scope) -> Element {
                             ContextItem {
                                 danger: true,
                                 icon: Icon::XMark,
+                                aria_label: "friends-unblock".into(),
                                 text: get_local_text("friends.unblock"),
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
