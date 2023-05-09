@@ -6,23 +6,27 @@ use warp::constellation::file::File;
 pub fn FilePreview(cx: Scope, file: File) -> Element {
     let thumbnail = file.thumbnail();
 
-    cx.render(rsx! (
-        div {
-            {
-                rsx!{
-                    div {
-                        img {
-                            src: "{thumbnail}",
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            max_height: "80%",
-                            max_width: "80%",
-                        },
-                    }
-                }
-            }
+    let script_to_avoid_right_click = r#"
+        var img = document.getElementById('file_preview_img');
+        img.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+        });"#;
+
+    cx.render(rsx!(
+        script {
+            script_to_avoid_right_click
         },
+        rsx!(div {
+            img {
+                id: "file_preview_img",
+                src: "{thumbnail}",
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                max_height: "80%",
+                max_width: "80%",
+            },
+        })
     ))
 }
