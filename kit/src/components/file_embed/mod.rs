@@ -113,7 +113,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if with_download_button {
                             rsx!(
                                 Button {
-                                    icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
+                                    icon: btn_icon,
                                     appearance: Appearance::Primary,
                                     aria_label: "attachment-button".into(),
                                     onpress: move |_| cx.props.on_press.call(()),
@@ -148,7 +148,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if with_download_button {
                         rsx!(
                             Button {
-                                icon: cx.props.button_icon.unwrap_or(Icon::ArrowDown),
+                                icon: btn_icon,
                                 appearance: Appearance::Primary,
                                 aria_label: "attachment-button".into(),
                                 onpress: move |_| cx.props.on_press.call(()),
