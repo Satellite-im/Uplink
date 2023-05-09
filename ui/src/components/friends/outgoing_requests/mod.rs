@@ -71,6 +71,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
                             ContextItem {
                                 danger: true,
                                 icon: Icon::XMark,
+                                aria_label: "friends-cancel".into(),
                                 text: get_local_text("friends.cancel"),
                                 should_render: !any_button_disabled,
                                 onpress: move |_| {
