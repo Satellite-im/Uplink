@@ -61,21 +61,24 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "request-info",
                 aria_label: "Friend Info",
                 p {
+                    aria_label: "friend-username",
                     "{cx.props.username}",
                     (!state.read().ui.is_minimal_view()).then(|| rsx!(
                         span {
                             "#{cx.props.suffix}"
                         }
-                    ))
+                    )),
                 },
                 if relationship.friends() {
                    rsx!(p {
                         class: "status-message",
+                        aria_label: "status-message",
                         (!state.read().ui.is_minimal_view()).then(|| rsx!( "{status_message}" ))
                     })
                 } else  {
                     rsx!(Label {
                         // TODO: this is stubbed for now, wire up to the actual request time
+                        aria_label: "friendship-status".into(),
                         text: get_local_text(
                             if relationship.blocked() {
                                 "friends.blocked-desc"
