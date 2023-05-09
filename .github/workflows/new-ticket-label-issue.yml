@@ -1,5 +1,4 @@
 name: Add new ticket label on issues
-
 on:
   issues:
     types: [opened]
