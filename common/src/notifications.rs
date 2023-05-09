@@ -113,7 +113,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
     #[cfg(target_os = "windows")]
     {
         // Notify-rust does not support windows actions so we use the underlying system directly
-        // See https://gist.github.com/allenbenz/a0fb225aef43df4b1be1c005fb4c2811
+        // See https://gist.github.com/allenbenz/a0fb225aef43df4b1be1c005fb4c2811 for general idea
         let duration = match notification.timeout {
             notify_rust::Timeout::Default => "duration=\"short\"",
             notify_rust::Timeout::Never => "duration=\"long\"",
@@ -127,24 +127,14 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
         };
         //TODO set proper app id
         let app_id = POWERSHELL_APP_ID.to_string();
-        let toast_xml = windows::Data::Xml::Dom::XmlDocument::new().unwrap();
         let template_binding = "ToastGeneric";
-        /*if is_newer_than_windows81() {
-            "ToastGeneric"
-        } else {
-            // Need to do this or an empty placeholder will be shown if no image is set
-            if notification.icon.is_empty() {
-                "ToastText04"
-            } else {
-                "ToastImageAndText04"
-            }
-        };*/
         let actions = format!(
             r#"<action content="{}" arguments="{}"/>"#,
             &get_local_text(&action_id),
             &action_id
         );
 
+        let toast_xml = windows::Data::Xml::Dom::XmlDocument::new().unwrap();
         toast_xml
             .LoadXml(&windows::runtime::HSTRING::from(format!(
                 "<toast {} {}>
