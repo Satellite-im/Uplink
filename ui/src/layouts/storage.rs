@@ -937,5 +937,6 @@ pub fn get_file_modal<'a>(
     cx.render(rsx!(Modal {
         on_dismiss: move |_| on_dismiss.call(()),
         children: cx.render(rsx!(FilePreview { file: file.clone() }))
+        is_file_preview: true,
     }))
 }

@@ -17,8 +17,8 @@ pub fn FilePreview(cx: Scope, file: File) -> Element {
                             top: "50%",
                             left: "50%",
                             transform: "translate(-50%, -50%)",
-                            max_height: "95%",
-                            max_width: "95%",
+                            max_height: "80%",
+                            max_width: "80%",
                         },
                     }
                 }
