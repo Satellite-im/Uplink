@@ -13,10 +13,10 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let (opacity, background, border) = if cx.props.is_file_preview {
-        ("0", "transparent", "0px solid transparent")
+    let (opacity, size) = if cx.props.is_file_preview {
+        ("0", "0px")
     } else {
-        ("1", "", "")
+        ("1", "")
     };
 
     cx.render(rsx!(
@@ -25,8 +25,8 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             onclick: move |_| cx.props.on_dismiss.call(()),
             div {
                 class: "modal",
-                background: "{background}",
-                border: "{border}",
+                width: "{size}",
+                height: "{size}",
                 onclick: move |evt| {
                     evt.stop_propagation();
                 },
