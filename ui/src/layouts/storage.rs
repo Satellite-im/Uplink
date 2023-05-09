@@ -471,7 +471,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     });
                 }
                 },
-            onclick: |_| is_renaming_map.with_mut(|i| *i = None),
+            onclick: |_| {
+                add_new_folder.set(false);
+                is_renaming_map.with_mut(|i| *i = None);
+            },
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
@@ -597,6 +600,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
+                                    if directories_list.read().iter().any(|dir| dir.name() == new_name) {
+                                        state
+                                        .write()
+                                        .mutate(common::state::Action::AddToastNotification(
+                                            ToastNotification::init(
+                                                "".into(),
+                                                get_local_text("files.directory-already-with-name"),
+                                                None,
+                                                3,
+                                            ),
+                                        ));
+                                        return;
+                                    }
                                     if key_code == Code::Enter {
                                         if STATIC_ARGS.use_mock {
                                             directories_list
@@ -608,7 +624,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     directories_list,
                                                     files_list,
                                                 );
-                                        } else {
+                                        } else if !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
                                             ch.send(ChanCmd::CreateNewDirectory(new_name));
                                             ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                         }
@@ -629,6 +645,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     items: cx.render(rsx!(
                                         ContextItem {
                                             icon: Icon::Pencil,
+                                            aria_label: "folder-rename".into(),
                                             text: get_local_text("files.rename"),
                                             onpress: move |_| {
                                                 is_renaming_map.with_mut(|i| *i = Some(key));
@@ -638,6 +655,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
+                                            aria_label: "folder-delete".into(),
                                             text: get_local_text("uplink.delete"),
                                             onpress: move |_| {
                                                 let item = Item::from(dir2.clone());
@@ -651,6 +669,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: dir.name(),
                                     with_rename: *is_renaming_map.read() == Some(key),
                                     onrename: move |(val, key_code)| {
+                                        if directories_list.read().iter().any(|dir| dir.name() == val) {
+                                            state
+                                            .write()
+                                            .mutate(common::state::Action::AddToastNotification(
+                                                ToastNotification::init(
+                                                    "".into(),
+                                                    get_local_text("files.directory-already-with-name"),
+                                                    None,
+                                                    3,
+                                                ),
+                                            ));
+                                            return;
+                                        }
                                         is_renaming_map.with_mut(|i| *i = None);
                                         if key_code == Code::Enter {
                                             ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
@@ -675,6 +706,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         items: cx.render(rsx!(
                                             ContextItem {
                                                 icon: Icon::Pencil,
+                                                aria_label: "files-rename".into(),
                                                 text: get_local_text("files.rename"),
                                                 onpress: move |_| {
                                                     is_renaming_map.with_mut(|i| *i = Some(key));
@@ -682,6 +714,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             ContextItem {
                                                 icon: Icon::ArrowDownCircle,
+                                                aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
                                                 onpress: move |_| {
                                                     let file_extension = std::path::Path::new(&file_name2)
@@ -705,6 +738,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             ContextItem {
                                                 icon: Icon::Trash,
                                                 danger: true,
+                                                aria_label: "files-delete".into(),
                                                 text: get_local_text("uplink.delete"),
                                                 onpress: move |_| {
                                                     let item = Item::from(file2.clone());
@@ -761,9 +795,23 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 }
                                             },
                                             onrename: move |(val, key_code)| {
+                                                let new_name: String = val;
+                                                if  files_list.read().iter().any(|file| file.name() == new_name) {
+                                                    state
+                                                    .write()
+                                                    .mutate(common::state::Action::AddToastNotification(
+                                                        ToastNotification::init(
+                                                            "".into(),
+                                                            get_local_text("files.file-alrady-with-name"),
+                                                            None,
+                                                            3,
+                                                        ),
+                                                    ));
+                                                    return;
+                                                }
                                                 is_renaming_map.with_mut(|i| *i = None);
-                                                if key_code == Code::Enter {
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name: val});
+                                                if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                                 }
                                             }
                                         }

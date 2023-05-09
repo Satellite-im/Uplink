@@ -77,7 +77,7 @@ pub async fn check_for_release() -> anyhow::Result<Option<GitHubRelease>> {
     } else if cfg!(target_os = "linux") {
         ".deb"
     } else if cfg!(target_os = "macos") {
-        ".dpkg"
+        ".dmg"
     } else {
         bail!("unknown OS");
     };

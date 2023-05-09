@@ -18,6 +18,7 @@ pub struct ItemProps<'a> {
     #[props(optional)]
     danger: Option<bool>,
     should_render: Option<bool>,
+    aria_label: Option<String>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -39,10 +40,12 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
     } else {
         "context-item"
     };
+
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     cx.render(rsx! {
         button {
             class: "{class}",
-            aria_label: "Context Item",
+            aria_label: "{aria_label}",
             onclick: move |e| emit(&cx, e),
             (cx.props.icon.is_some()).then(|| {
                 let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);

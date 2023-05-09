@@ -13,10 +13,12 @@ pub struct Props {
     #[props(optional)]
     label_with_ellipsis: Option<LabelWithEllipsis>,
     text: String,
+    aria_label: Option<String>,
 }
 
 #[allow(non_snake_case)]
 pub fn Label(cx: Scope<Props>) -> Element {
+    let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     let (apply_ellipsis, padding_right) =
         if let Some(label_with_ellipsis) = cx.props.label_with_ellipsis.clone() {
             (
@@ -29,6 +31,7 @@ pub fn Label(cx: Scope<Props>) -> Element {
 
     cx.render(rsx!(
         label {
+            aria_label: "{aria_label}",
             class: if apply_ellipsis {"wrap-text"} else {""},
             padding_right: "{padding_right}px",
             "{cx.props.text}"

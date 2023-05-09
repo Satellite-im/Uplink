@@ -144,7 +144,14 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "".into() }
                 )
             },
-            aria_label: "Message",
+            aria_label: {
+                format_args!(
+                    "message-{}",
+                    if is_remote {
+                        "remote"
+                    } else { "local" }
+                )
+            },
             white_space: "pre-wrap",
             (cx.props.with_content.is_some()).then(|| rsx! (
                     div {
@@ -222,10 +229,16 @@ struct EditProps<'a> {
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
+    let mut input = cx.props.text.clone();
+    let length = input.len();
+    if input.ends_with('\n') {
+        input.truncate(length - 1);
+    }
+
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
         ignore_focus: false,
-        value: cx.props.text.clone(),
+        value: input,
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
