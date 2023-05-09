@@ -1,8 +1,8 @@
 name: Add new ticket label on issues
 on:
   issues:
-    types:
-      - opened
+    types: [opened]
+
 jobs:
   add-label:
     name: Add Label - new ticket added
