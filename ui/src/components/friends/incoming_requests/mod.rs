@@ -114,6 +114,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                                 danger: true,
                                 icon: Icon::Check,
                                 text: get_local_text("friends.accept"),
+                                aria_label: "friends-accept".into(),
                                 should_render: !any_button_disabled,
                                 onpress: move |_| {
                                     if STATIC_ARGS.use_mock {
@@ -127,6 +128,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
                             ContextItem {
                                 danger: true,
                                 icon: Icon::XMark,
+                                aria_label: "friends-deny".into(),
                                 text: get_local_text("friends.deny"),
                                 should_render: !any_button_disabled,
                                 onpress: move |_| {
