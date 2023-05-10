@@ -409,7 +409,8 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     }
 
     let desktop = use_window(cx);
-    if state.configuration.general.enable_overlay {
+    // TODO: This overlay needs to be fixed in windows
+    if cfg!(not(target_os = "windows")) && state.configuration.general.enable_overlay {
         let overlay_test = VirtualDom::new(OverlayDom);
         let window = desktop.new_window(overlay_test, make_config());
         state.ui.overlays.push(window);
