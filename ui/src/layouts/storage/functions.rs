@@ -17,7 +17,7 @@ use dioxus_hooks::{
     UseState,
 };
 use futures::{channel::oneshot, StreamExt};
-use nix::sys::statvfs::statvfs;
+// use nix::sys::statvfs::statvfs;
 use tokio::{
     sync::mpsc::{self},
     time::sleep,
@@ -231,31 +231,33 @@ pub fn format_item_size(item_size: usize) -> String {
 }
 
 pub fn get_hard_disk_size() -> String {
-    let path = Path::new("/");
-    let fs_stats = match statvfs(path) {
-        Ok(stats) => stats,
-        Err(e) => panic!("Failed to get file system stats: {}", e),
-    };
-    let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size();
-    
-    format_item_size(free_space as usize)
+    // let path = Path::new("/");
+    // let fs_stats = match statvfs(path) {
+    //     Ok(stats) => stats,
+    //     Err(e) => panic!("Failed to get file system stats: {}", e),
+    // };
+    // let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size();
+
+    // format_item_size(free_space as usize)
+    String::new()
 }
 
 pub fn get_hard_disk_total_size() -> String {
-    let path = Path::new("/");
-    let fs_stats = match statvfs(path) {
-        Ok(stats) => stats,
-        Err(e) => panic!("Failed to get file system stats: {}", e),
-    };
-    let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size();
-    
-    format_item_size(free_space as usize)
+    // let path = Path::new("/");
+    // let fs_stats = match statvfs(path) {
+    //     Ok(stats) => stats,
+    //     Err(e) => panic!("Failed to get file system stats: {}", e),
+    // };
+    // let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size();
+
+    // format_item_size(free_space as usize)
+    String::new()
 }
 
 pub fn storage_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
     storage_state: &'a UseState<Option<Storage>>,
-    storage_size: &'a UseRef<String>,
+    storage_size: &'a UseRef<(String, String)>,
     main_script: String,
     window: &'a DesktopContext,
     drag_event: &'a UseRef<Option<FileDropEvent>>,
@@ -545,7 +547,8 @@ pub fn storage_coroutine<'a>(
                         }
                     }
                     ChanCmd::GetStorageSize => {
-                        let (tx, rx) = oneshot::channel::<Result<usize, warp::error::Error>>();
+                        let (tx, rx) =
+                            oneshot::channel::<Result<(usize, usize), warp::error::Error>>();
 
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::GetStorageSize { rsp: tx },
@@ -556,13 +559,18 @@ pub fn storage_coroutine<'a>(
 
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
-                            Ok(size) => {
-                                let all_storage_size = format_item_size(size);
-                                storage_size.with_mut(|i| *i = all_storage_size);
+                            Ok((max_size, current_size)) => {
+                                let max_storage_size = format_item_size(max_size);
+                                let current_storage_size = format_item_size(current_size);
+                                storage_size
+                                    .with_mut(|i| *i = (max_storage_size, current_storage_size));
                             }
                             Err(e) => {
                                 storage_size.with_mut(|i| {
-                                    *i = get_local_text("files.no-data-available")
+                                    *i = (
+                                        get_local_text("files.no-data-available"),
+                                        get_local_text("files.no-data-available"),
+                                    )
                                 });
                                 log::error!("failed to get storage size: {}", e);
                                 continue;

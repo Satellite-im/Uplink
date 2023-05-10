@@ -94,8 +94,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Storage;
 
     let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
-    let storage_size: &UseRef<String> = use_ref(cx, || {
-        get_local_text("files.no-data-available")
+    let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
+        (
+            get_local_text("files.no-data-available"),
+            get_local_text("files.no-data-available"),
+        )
     });
     let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
     let directories_list = use_ref(cx, || state.read().storage.directories.clone());
@@ -206,35 +209,43 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         )
                     ),
+                    // div {
+                    //     class: "files-info",
+                    //     aria_label: "files-info",
+                    //     p {
+                    //         class: "free-space",
+                    //         format!("{}", get_local_text("files.free-space")),
+                    //         span {
+                    //             class: "count",
+                    //            format!("{}", get_hard_disk_size()),
+                    //         }
+                    //     },
+                    //     p {
+                    //         class: "total-space",
+                    //         format!("{}", get_local_text("files.total-space")),
+                    //         span {
+                    //             class: "count",
+                    //             format!("{}", get_hard_disk_total_size())
+                    //         }
+                    //     }
+                    // }
                     div {
                         class: "files-info",
                         aria_label: "files-info",
                         p {
                             class: "free-space",
-                            format!("{}", get_local_text("files.free-space")),
+                            format!("{}", get_local_text("files.storage-max-size")),
                             span {
                                 class: "count",
-                               format!("{}", get_hard_disk_size()),
+                               format!("{}", storage_size.read().0),
                             }
                         },
                         p {
-                            class: "total-space",
-                            format!("{}", get_local_text("files.total-space")),
-                            span {
-                                class: "count",
-                                format!("{}", get_hard_disk_total_size())
-                            }
-                        }
-                    }
-                    div {
-                        class: "files-info",
-                        aria_label: "files-info",
-                        p {
                             class: "free-space",
-                            format!("{}", get_local_text("files.storage-total-space")),
+                            format!("{}", get_local_text("files.storage-current-size")),
                             span {
                                 class: "count",
-                               format!("{}", storage_size.read()),
+                               format!("{}", storage_size.read().1),
                             }
                         },
                     }

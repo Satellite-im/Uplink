@@ -91,7 +91,7 @@ pub enum ConstellationCmd {
     },
     #[display(fmt = "GetStorageSize")]
     GetStorageSize {
-        rsp: oneshot::Sender<Result<usize, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<(usize, usize), warp::error::Error>>,
     },
 }
 
@@ -270,8 +270,8 @@ async fn rename_item(
     get_items_from_current_directory(warp_storage)
 }
 
-fn get_storage_size(warp_storage: &mut warp_storage) -> Result<usize, Error> {
-    Ok(warp_storage.root_directory().size())
+fn get_storage_size(warp_storage: &mut warp_storage) -> Result<(usize, usize), Error> {
+    Ok((warp_storage.max_size(), warp_storage.current_size()))
 }
 
 async fn create_new_directory(
@@ -409,10 +409,7 @@ async fn upload_files(
             Some(filename.clone()),
         )));
 
-        match warp_storage
-            .put(&filename, &local_path)
-            .await
-        {
+        match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
                 let mut previous_percentage: usize = 0;
                 let mut upload_process_started = false;
