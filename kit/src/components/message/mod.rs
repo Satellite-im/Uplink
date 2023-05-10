@@ -146,7 +146,14 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "".into() }
                 )
             },
-            aria_label: "Message",
+            aria_label: {
+                format_args!(
+                    "message-{}",
+                    if is_remote {
+                        "remote"
+                    } else { "local" }
+                )
+            },
             white_space: "pre-wrap",
             (cx.props.with_content.is_some()).then(|| rsx! (
                     div {

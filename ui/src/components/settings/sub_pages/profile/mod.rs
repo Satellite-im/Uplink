@@ -173,6 +173,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
             (!show_welcome).then(|| rsx!(
                 div {
                     class: "new-profile-welcome",
+                    aria_label: "new-profile-welcome",
                     div {
                         class: "welcome",
                         img {
@@ -183,6 +184,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         class: "welcome-content",
                         Button {
                             text: get_local_text("uplink.dismiss"),
+                            aria_label: "welcome-message-dismiss".into(),
                             icon: Icon::XMark,
                             onpress: move |_| {
                                 state.write().ui.settings_welcome();
@@ -190,13 +192,16 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             }
                         },
                         Label {
+                            aria_label: "welcome-message".into(),
                             text: get_local_text("settings-profile.welcome")
                         },
                         p {
+                            aria_label: "welcome-message-desc",
                             get_local_text("settings-profile.welcome-desc")
                         }
                         br {},
                         p {
+                            aria_label: "welcome-message-cta",
                             get_local_text("settings-profile.welcome-cta")
                         }
                     }
@@ -213,6 +218,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         ContextItem {
                             icon: Icon::Trash,
                             text: get_local_text("settings-profile.clear-banner"),
+                            aria_label: "clear-banner".into(),
                             onpress: move |_| {
                                 ch.send(ChanCmd::Banner(String::from('\0')));
                             }
@@ -233,6 +239,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
+                            aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
                                 ch.send(ChanCmd::Profile(String::from('\0')));

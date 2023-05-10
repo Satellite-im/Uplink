@@ -82,6 +82,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
             aria_label: "inline-reply",
             Label {
                 text: cx.props.label.clone(),
+                aria_label: "inline-reply-header".into(),
             },
             Button {
                 small: true,

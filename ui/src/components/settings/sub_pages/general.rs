@@ -36,9 +36,11 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
-                    active: state.read().configuration.general.enable_overlay,
+                    // TODO: This overlay causes a crash in windows
+                    disabled: cfg!(target_os = "windows"),
+                    active: cfg!(not(target_os = "windows")) && state.read().configuration.general.enable_overlay,
                     onflipped: move |e| {
-                        state.write().mutate(Action::Config(ConfigAction::SetOverlayEnabled(e)));
+                        state.write().mutate(Action::Config(ConfigAction::SetOverlayEnabled(cfg!(not(target_os = "windows")) && e )));
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }
