@@ -270,7 +270,7 @@ async fn rename_item(
     get_items_from_current_directory(warp_storage)
 }
 
-fn get_storage_size(warp_storage: &mut warp_storage) -> Result<(usize, usize), Error> {
+fn get_storage_size(warp_storage: &warp_storage) -> Result<(usize, usize), Error> {
     Ok((warp_storage.max_size(), warp_storage.current_size()))
 }
 
