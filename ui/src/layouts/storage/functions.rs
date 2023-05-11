@@ -22,12 +22,12 @@ use wry::webview::FileDropEvent;
 
 use crate::layouts::storage::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT, FILE_NAME_SCRIPT};
 
-use super::{ChanCmd, Props, StorageStateVariables, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
+use super::{controller::StorageController, ChanCmd, Props, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
 
 pub fn run_verifications_and_update_storage(
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
-    storage_state_vars: StorageStateVariables,
+    storage_controller: StorageController,
     ch: &Coroutine<ChanCmd>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
@@ -35,13 +35,13 @@ pub fn run_verifications_and_update_storage(
         first_render.set(false);
     }
 
-    if let Some(storage) = storage_state_vars.storage_state.get().clone() {
-        *(storage_state_vars.directories_list).write_silent() = storage.directories.clone();
-        *(storage_state_vars.files_list).write_silent() = storage.files.clone();
-        *(storage_state_vars.current_dir).write_silent() = storage.current_dir.clone();
-        *(storage_state_vars.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
+    if let Some(storage) = storage_controller.storage_state.get().clone() {
+        *(storage_controller.directories_list).write_silent() = storage.directories.clone();
+        *(storage_controller.files_list).write_silent() = storage.files.clone();
+        *(storage_controller.current_dir).write_silent() = storage.current_dir.clone();
+        *(storage_controller.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
         state.write().storage = storage;
-        storage_state_vars.storage_state.set(None);
+        storage_controller.storage_state.set(None);
         ch.send(ChanCmd::GetStorageSize);
     }
 }

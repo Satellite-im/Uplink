@@ -7,8 +7,7 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
-use common::state::{storage::Storage, ui, Action, State};
-
+use common::state::{ui, Action, State};
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window, Config};
 use dioxus_router::*;
@@ -34,6 +33,7 @@ use warp::constellation::item::Item;
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
 
+pub mod controller;
 pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::get_window_builder;
@@ -41,6 +41,8 @@ use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
 
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
+
+use self::controller::StorageController;
 
 pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
@@ -63,15 +65,6 @@ pub const ROOT_DIR_NAME: &str = "root";
 
 pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
     Lazy::new(|| RwLock::new(FileDropEvent::Cancelled));
-
-#[derive(PartialEq, Clone)]
-pub struct StorageStateVariables<'a> {
-    storage_state: &'a UseState<Option<Storage>>,
-    directories_list: &'a UseRef<Vec<Directory>>,
-    files_list: &'a UseRef<Vec<warp::constellation::file::File>>,
-    current_dir: &'a UseRef<Directory>,
-    dirs_opened_ref: &'a UseRef<Vec<Directory>>,
-}
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -101,13 +94,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
 
-    let storage_state_vars = StorageStateVariables {
-        storage_state: use_state(cx, || None),
-        directories_list: use_ref(cx, || state.read().storage.directories.clone()),
-        files_list: use_ref(cx, || state.read().storage.files.clone()),
-        current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
-        dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
-    };
+    let storage_controller = StorageController::new(cx, state.clone());
 
     let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
         (
@@ -125,7 +112,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
         cx,
-        storage_state_vars.storage_state,
+        storage_controller.storage_state,
         storage_size,
         main_script.to_string(),
         window,
@@ -135,7 +122,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     functions::run_verifications_and_update_storage(
         first_render,
         state,
-        storage_state_vars.clone(),
+        storage_controller.clone(),
         ch,
     );
 
@@ -247,7 +234,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
-                    storage_state_vars.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
+                    storage_controller.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
                         if dir_name == ROOT_DIR_NAME && index == 0 {
@@ -291,7 +278,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
-                                    if storage_state_vars.directories_list.read().iter().any(|dir| dir.name() == new_name) {
+                                    if storage_controller.directories_list.read().iter().any(|dir| dir.name() == new_name) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(
@@ -312,7 +299,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                  }
                             })
                         }),
-                        storage_state_vars.directories_list.read().iter().map(|dir| {
+                        storage_controller.directories_list.read().iter().map(|dir| {
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
                             let key = dir.id();
@@ -348,7 +335,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: dir.name(),
                                     with_rename: *is_renaming_map.read() == Some(key),
                                     onrename: move |(val, key_code)| {
-                                        if storage_state_vars.directories_list.read().iter().any(|dir| dir.name() == val) {
+                                        if storage_controller.directories_list.read().iter().any(|dir| dir.name() == val) {
                                             state
                                             .write()
                                             .mutate(common::state::Action::AddToastNotification(
@@ -372,7 +359,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                             }})
                         }),
-                        storage_state_vars.files_list.read().iter().map(|file| {
+                        storage_controller.files_list.read().iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file2 = file.clone();
@@ -475,7 +462,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
-                                                if  storage_state_vars.files_list.read().iter().any(|file| file.name() == new_name) {
+                                                if  storage_controller.files_list.read().iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
                                                     .mutate(common::state::Action::AddToastNotification(
