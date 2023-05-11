@@ -1,14 +1,10 @@
-use std::{
-    ffi::OsStr,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
     language::get_local_text,
     state::{storage::Storage, Action, State},
     warp_runner::{ConstellationCmd, FileTransferProgress, FileTransferStep, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    WARP_CMD_CH,
 };
 use dioxus_core::Scoped;
 use dioxus_desktop::DesktopContext;
@@ -22,21 +18,16 @@ use tokio::{
     sync::mpsc::{self},
     time::sleep,
 };
-use warp::constellation::{directory::Directory, file::File};
 use wry::webview::FileDropEvent;
 
 use crate::layouts::storage::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT, FILE_NAME_SCRIPT};
 
-use super::{ChanCmd, Props, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
+use super::{ChanCmd, Props, StorageStateVariables, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
 
 pub fn run_verifications_and_update_storage(
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
-    storage_state: &UseState<Option<Storage>>,
-    directories_list: &UseRef<Vec<Directory>>,
-    files_list: &UseRef<Vec<warp::constellation::file::File>>,
-    current_dir: &UseRef<Directory>,
-    dirs_opened_ref: &UseRef<Vec<Directory>>,
+    storage_state_vars: StorageStateVariables,
     ch: &Coroutine<ChanCmd>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
@@ -44,15 +35,13 @@ pub fn run_verifications_and_update_storage(
         first_render.set(false);
     }
 
-    if let Some(storage) = storage_state.get().clone() {
-        if !STATIC_ARGS.use_mock {
-            *directories_list.write_silent() = storage.directories.clone();
-            *files_list.write_silent() = storage.files.clone();
-            *current_dir.write_silent() = storage.current_dir.clone();
-            *dirs_opened_ref.write_silent() = storage.directories_opened.clone();
-        };
+    if let Some(storage) = storage_state_vars.storage_state.get().clone() {
+        *(storage_state_vars.directories_list).write_silent() = storage.directories.clone();
+        *(storage_state_vars.files_list).write_silent() = storage.files.clone();
+        *(storage_state_vars.current_dir).write_silent() = storage.current_dir.clone();
+        *(storage_state_vars.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
         state.write().storage = storage;
-        storage_state.set(None);
+        storage_state_vars.storage_state.set(None);
         ch.send(ChanCmd::GetStorageSize);
     }
 }
@@ -64,46 +53,27 @@ pub fn allow_drag_event_for_non_macos_systems(
     main_script: &str,
     ch: &Coroutine<ChanCmd>,
 ) {
-    if !STATIC_ARGS.use_mock {
-        use_future(cx, (), |_| {
+    use_future(cx, (), |_| {
+        #[cfg(not(target_os = "macos"))]
+        to_owned![ch, main_script, window, drag_event];
+        #[cfg(target_os = "macos")]
+        to_owned![ch];
+        async move {
+            sleep(Duration::from_millis(300)).await;
+            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+            // ondragover function from div does not work on windows
             #[cfg(not(target_os = "macos"))]
-            to_owned![ch, main_script, window, drag_event];
-            #[cfg(target_os = "macos")]
-            to_owned![ch];
-            async move {
-                sleep(Duration::from_millis(300)).await;
-                ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-                // ondragover function from div does not work on windows
-                #[cfg(not(target_os = "macos"))]
-                loop {
-                    sleep(Duration::from_millis(100)).await;
-                    if let FileDropEvent::Hovered { .. } = get_drag_event() {
-                        if drag_event.with(|i| i.clone()).is_none() {
-                            drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch)
-                                .await;
-                        }
+            loop {
+                sleep(Duration::from_millis(100)).await;
+                if let FileDropEvent::Hovered { .. } = get_drag_event() {
+                    if drag_event.with(|i| i.clone()).is_none() {
+                        drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch)
+                            .await;
                     }
                 }
             }
-        });
-    };
-}
-
-pub fn update_items_with_mock_data(
-    storage_state: &UseState<Option<Storage>>,
-    current_dir: &UseRef<Directory>,
-    directories_opened: &UseRef<Vec<Directory>>,
-    directories_list: &UseRef<Vec<Directory>>,
-    files_list: &UseRef<Vec<File>>,
-) {
-    let storage_mock = Storage {
-        initialized: true,
-        directories_opened: directories_opened.read().clone(),
-        current_dir: current_dir.read().clone(),
-        directories: directories_list.read().clone(),
-        files: files_list.read().clone(),
-    };
-    storage_state.set(Some(storage_mock));
+        }
+    });
 }
 
 pub fn get_drag_event() -> FileDropEvent {
@@ -228,30 +198,6 @@ pub fn format_item_size(item_size: usize) -> String {
         size_formatted_string = size_formatted_string.replace(".0", "");
     }
     size_formatted_string
-}
-
-pub fn get_hard_disk_size() -> String {
-    // let path = Path::new("/");
-    // let fs_stats = match statvfs(path) {
-    //     Ok(stats) => stats,
-    //     Err(e) => panic!("Failed to get file system stats: {}", e),
-    // };
-    // let free_space = fs_stats.blocks_available() as u64 * fs_stats.fragment_size();
-
-    // format_item_size(free_space as usize)
-    String::new()
-}
-
-pub fn get_hard_disk_total_size() -> String {
-    // let path = Path::new("/");
-    // let fs_stats = match statvfs(path) {
-    //     Ok(stats) => stats,
-    //     Err(e) => panic!("Failed to get file system stats: {}", e),
-    // };
-    // let free_space = fs_stats.blocks() as u64 * fs_stats.fragment_size();
-
-    // format_item_size(free_space as usize)
-    String::new()
 }
 
 pub fn storage_coroutine<'a>(

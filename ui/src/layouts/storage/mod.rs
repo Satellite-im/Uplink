@@ -8,7 +8,6 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{storage::Storage, ui, Action, State};
-use common::STATIC_ARGS;
 
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window, Config};
@@ -39,7 +38,7 @@ pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::get_window_builder;
 use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
-use crate::layouts::storage::functions::{get_hard_disk_size, get_hard_disk_total_size};
+
 use crate::utils::WindowDropHandler;
 use crate::window_manager::WindowManagerCmd;
 
@@ -64,6 +63,15 @@ pub const ROOT_DIR_NAME: &str = "root";
 
 pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
     Lazy::new(|| RwLock::new(FileDropEvent::Cancelled));
+
+#[derive(PartialEq, Clone)]
+pub struct StorageStateVariables<'a> {
+    storage_state: &'a UseState<Option<Storage>>,
+    directories_list: &'a UseRef<Vec<Directory>>,
+    files_list: &'a UseRef<Vec<warp::constellation::file::File>>,
+    current_dir: &'a UseRef<Directory>,
+    dirs_opened_ref: &'a UseRef<Vec<Directory>>,
+}
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -93,27 +101,31 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
 
-    let storage_state: &UseState<Option<Storage>> = use_state(cx, || None);
+    let storage_state_vars = StorageStateVariables {
+        storage_state: use_state(cx, || None),
+        directories_list: use_ref(cx, || state.read().storage.directories.clone()),
+        files_list: use_ref(cx, || state.read().storage.files.clone()),
+        current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
+        dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
+    };
+
     let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
         (
             get_local_text("files.no-data-available"),
             get_local_text("files.no-data-available"),
         )
     });
-    let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
-    let directories_list = use_ref(cx, || state.read().storage.directories.clone());
-    let files_list = use_ref(cx, || state.read().storage.files.clone());
-    let dirs_opened_ref = use_ref(cx, || state.read().storage.directories_opened.clone());
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let first_render = use_state(cx, || true);
+
     let main_script = include_str!("./storage.js");
     let window = use_window(cx);
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
         cx,
-        storage_state,
+        storage_state_vars.storage_state,
         storage_size,
         main_script.to_string(),
         window,
@@ -123,11 +135,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     functions::run_verifications_and_update_storage(
         first_render,
         state,
-        storage_state,
-        directories_list,
-        files_list,
-        current_dir,
-        dirs_opened_ref,
+        storage_state_vars.clone(),
         ch,
     );
 
@@ -209,26 +217,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         )
                     ),
-                    // div {
-                    //     class: "files-info",
-                    //     aria_label: "files-info",
-                    //     p {
-                    //         class: "free-space",
-                    //         format!("{}", get_local_text("files.free-space")),
-                    //         span {
-                    //             class: "count",
-                    //            format!("{}", get_hard_disk_size()),
-                    //         }
-                    //     },
-                    //     p {
-                    //         class: "total-space",
-                    //         format!("{}", get_local_text("files.total-space")),
-                    //         span {
-                    //             class: "count",
-                    //             format!("{}", get_hard_disk_total_size())
-                    //         }
-                    //     }
-                    // }
                     div {
                         class: "files-info",
                         aria_label: "files-info",
@@ -259,7 +247,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
-                    dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
+                    storage_state_vars.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
                         if dir_name == ROOT_DIR_NAME && index == 0 {
@@ -303,7 +291,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 with_rename: true,
                                 onrename: |(val, key_code)| {
                                     let new_name: String = val;
-                                    if directories_list.read().iter().any(|dir| dir.name() == new_name) {
+                                    if storage_state_vars.directories_list.read().iter().any(|dir| dir.name() == new_name) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(
@@ -317,26 +305,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         return;
                                     }
                                     if key_code == Code::Enter {
-                                        if STATIC_ARGS.use_mock {
-                                            directories_list
-                                                .with_mut(|i| i.insert(0, Directory::new(&new_name)));
-                                            functions::update_items_with_mock_data(
-                                                    storage_state,
-                                                    current_dir,
-                                                    dirs_opened_ref,
-                                                    directories_list,
-                                                    files_list,
-                                                );
-                                        } else if !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                            ch.send(ChanCmd::CreateNewDirectory(new_name));
-                                            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
-                                        }
+                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                     }
                                     add_new_folder.set(false);
                                  }
                             })
                         }),
-                        directories_list.read().iter().map(|dir| {
+                        storage_state_vars.directories_list.read().iter().map(|dir| {
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
                             let key = dir.id();
@@ -372,7 +348,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: dir.name(),
                                     with_rename: *is_renaming_map.read() == Some(key),
                                     onrename: move |(val, key_code)| {
-                                        if directories_list.read().iter().any(|dir| dir.name() == val) {
+                                        if storage_state_vars.directories_list.read().iter().any(|dir| dir.name() == val) {
                                             state
                                             .write()
                                             .mutate(common::state::Action::AddToastNotification(
@@ -396,7 +372,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                             }})
                         }),
-                       files_list.read().iter().map(|file| {
+                        storage_state_vars.files_list.read().iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file2 = file.clone();
@@ -499,7 +475,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
-                                                if  files_list.read().iter().any(|file| file.name() == new_name) {
+                                                if  storage_state_vars.files_list.read().iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
                                                     .mutate(common::state::Action::AddToastNotification(
