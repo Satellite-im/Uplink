@@ -6,7 +6,6 @@ members = [
     "common",
     "extensions",
     "native_extensions/emoji_selector",
-    "native_extensions/clear_all",
 ]
 
 [profile.rapid]
