@@ -11,8 +11,8 @@ div.input-checkbox {
   margin-right: 1rem;
 
   svg {
-    fill: var(--text-color-dark);
-    stroke: var(--text-color);
+    fill: transparent;
+    stroke: var(--text-color-dark);
   }
 
   &:hover {
