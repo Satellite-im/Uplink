@@ -23,6 +23,10 @@ pub enum Platform {
     // The user is using a headless device (e.g. a server)
     #[display(fmt = "headless")]
     Headless,
+
+    // We don't know the status of the user.
+    #[display(fmt = "unknown")]
+    Unknown,
 }
 
 impl Platform {
@@ -33,6 +37,7 @@ impl Platform {
             Platform::Mobile => Icon::DevicePhoneMobile,
             Platform::Tv => Icon::Tv,
             Platform::Headless => Icon::WrenchScrewdriver,
+            Platform::Unknown => Icon::Circle,
         }
     }
 }
@@ -43,7 +48,7 @@ impl From<identity::Platform> for Platform {
             identity::Platform::Desktop => Self::Desktop,
             identity::Platform::Mobile => Self::Mobile,
             identity::Platform::Web => Self::Tv,
-            identity::Platform::Unknown => Self::Headless,
+            identity::Platform::Unknown => Self::Unknown,
         }
     }
 }
@@ -65,6 +70,10 @@ pub enum Status {
     // The user has enabled do-not-disturb mode
     #[display(fmt = "do-not-disturb")]
     DoNotDisturb,
+
+    // The user has an unknown status
+    #[display(fmt = "unknown")]
+    Unknown,
 }
 
 impl From<identity::IdentityStatus> for Status {
