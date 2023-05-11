@@ -460,7 +460,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             rsx!(get_file_modal {
                 on_dismiss: |_| {
                     show_file_modal.set(None);
-                }, 
+                },
                 on_download: |_| {
                 let file_name = file.name();
                 download_file(&file_name, ch);
