@@ -397,10 +397,7 @@ async fn upload_files(
             Some(filename.clone()),
         )));
 
-        match warp_storage
-            .put(&filename, &local_path)
-            .await
-        {
+        match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
                 let mut previous_percentage: usize = 0;
                 let mut upload_process_started = false;
