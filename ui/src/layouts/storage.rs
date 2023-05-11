@@ -456,14 +456,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
-        if let Some(file) = show_file_modal.get() {
+        if let Some(file) = show_file_modal.current().as_ref().clone() {
+            let file2 = file.clone();
             rsx!(get_file_modal {
                 on_dismiss: |_| {
                     show_file_modal.set(None);
                 },
-                on_download: |_| {
-                let file_name = file.name();
-                download_file(&file_name, ch);
+                on_download: move |_| {
+                    let file_name = file2.clone().name();
+                    download_file(&file_name, ch);
                 }
                 file: file.clone()})
         }
