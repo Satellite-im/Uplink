@@ -1,3 +1,5 @@
+#[cfg(target_os = "linux")]
+use std::path::Path;
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
