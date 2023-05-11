@@ -295,6 +295,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             div {
                 // key: "encrypted-notification-0001",
                 class: "msg-container-end",
+                aria_label: "messages-secured-alert",
                 IconElement {
                     icon:  Icon::LockClosed,
                 },
@@ -563,6 +564,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             items: cx.render(rsx!(
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
+                    aria_label: "messages-reply".into(),
                     text: get_local_text("messages.reply"),
                     onpress: move |_| {
                         state
@@ -572,6 +574,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 },
                 ContextItem {
                     icon: Icon::FaceSmile,
+                    aria_label: "messages-react".into(),
                     text: get_local_text("messages.react"),
                     onpress: move |_| {
                         state.write().ui.ignore_focus = true;
@@ -580,6 +583,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 },
                 ContextItem {
                     icon: Icon::Pencil,
+                    aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
                         && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
@@ -590,6 +594,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 },
                 ContextItem {
                     icon: Icon::Pencil,
+                    aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
                         && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
@@ -601,6 +606,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 ContextItem {
                     icon: Icon::Trash,
                     danger: true,
+                    aria_label: "messages-delete".into(),
                     text: get_local_text("uplink.delete"),
                     should_render: sender_is_self,
                     onpress: move |_| {

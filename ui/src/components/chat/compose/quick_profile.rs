@@ -262,6 +262,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
             if is_self {
                 rsx!(ContextItem {
                     icon: Icon::UserCircle,
+                    aria_label: "quick-profile-self-edit".into(),
                     text: get_local_text("quickprofile.self-edit"),
                     onpress: move |_| {
                         router.replace_route(UPLINK_ROUTES.settings, None, None);
@@ -280,6 +281,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             rsx!(
                                 ContextItem {
                                 icon: Icon::ChatBubbleBottomCenterText,
+                                aria_label: "quick-profile-message".into(),
                                 text: get_local_text("quickprofile.message"),
                                 onpress: move |_| {
                                     ch.send(QuickProfileCmd::CreateConversation(chat_of.clone(), identity.did_key()));
@@ -298,6 +300,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     rsx!(ContextItem {
                         icon: Icon::UserMinus,
                         text: get_local_text("quickprofile.friend-remove"),
+                        aria_label: "quick-profile-friend-remove".into(),
                         onpress: move |_| {
                             ch.send(QuickProfileCmd::RemoveFriend(remove_identity.did_key()));
                             ch.send(QuickProfileCmd::RemoveDirectConvs(remove_identity.did_key()));
@@ -306,6 +309,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 }
                 ContextItem {
                     icon: if blocked {Icon::UserBlocked} else {Icon::UserBlock},
+                    aria_label: if blocked {"quick-profile-unblock".into()} else {"quick-profile-block".into()},
                     text: if blocked {get_local_text("quickprofile.unblock")} else {get_local_text("quickprofile.block")},
                     onpress: move |_| {
                         if blocked {

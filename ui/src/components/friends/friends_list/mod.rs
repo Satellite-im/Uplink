@@ -198,6 +198,7 @@ pub fn Friends(cx: Scope) -> Element {
                                         ContextItem {
                                             icon: Icon::ChatBubbleBottomCenterText,
                                             text: get_local_text("uplink.chat"),
+                                            aria_label: "friends-chat".into(),
                                             onpress: move |_| {
                                                 ch.send(ChanCmd::CreateConversation{recipient: context_friend.did_key(), chat: chat2.clone()});
                                             }
@@ -206,6 +207,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             rsx!(ContextItem {
                                                 icon: if f {Icon::HeartSlash} else {Icon::Heart},
                                                 text: get_local_text(if f {"favorites.remove"} else {"favorites.favorites"}),
+                                                aria_label: if f {"favorites-remove".into()} else {"favorites-add".into()},
                                                 onpress: move |_| {
                                                     // can't favorite a non-existent conversation
                                                     // todo: don't even allow favoriting from the friends page unless there's a conversation
@@ -220,6 +222,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::UserMinus,
                                             text: get_local_text("uplink.remove"),
+                                            aria_label: "friends-remove".into(),
                                             should_render: !remove_in_progress.current().contains(&remove_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = remove_friend.did_key();
@@ -236,6 +239,7 @@ pub fn Friends(cx: Scope) -> Element {
                                             danger: true,
                                             icon: Icon::NoSymbol,
                                             text: get_local_text("friends.block"),
+                                            aria_label: "friends-block".into(),
                                             should_render: !block_in_progress.current().contains(&block_friend.did_key()),
                                             onpress: move |_| {
                                                 let did = block_friend.did_key();
