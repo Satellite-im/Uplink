@@ -85,3 +85,6 @@ core-foundation = "0.9.3"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
+
+[profile.release]
+panic = 'abort'

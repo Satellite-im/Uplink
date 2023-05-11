@@ -273,15 +273,12 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         friend_prefix.set(v);
                     },
                 }
-            }
-            div {
-                key: "render_friends",
-                render_friends {
-                    friends: if *edit_group_action.get() == EditGroupAction::Add {_friends_not_in_group} else {_friends_in_group},
-                    name_prefix: friend_prefix.clone(),
-                    selected_friends: selected_friends.clone()
-                },
-            }
+            },
+            render_friends {
+                friends: if *edit_group_action.get() == EditGroupAction::Add {_friends_not_in_group} else {_friends_in_group},
+                name_prefix: friend_prefix.clone(),
+                selected_friends: selected_friends.clone()
+            },
             if *edit_group_action.current() == EditGroupAction::Add {
                 rsx!(
                     div {
