@@ -162,25 +162,6 @@ fn main() {
         let logs = logger::dump_logs();
         let crash_report = format!("{intro}{location}\n{logs}\n");
         println!("{crash_report}");
-
-        let save_path = FileDialog::new()
-            .set_directory(dirs::home_dir().unwrap_or(".".into()))
-            .set_title(&get_local_text("uplink.crash-report"))
-            .pick_folder();
-
-        if let Some(p) = save_path {
-            let time = Local::now();
-            let file_name = format!(
-                "uplink-crash-report_{}-{}-{}_{}:{}:{}.txt",
-                time.year(),
-                time.month(),
-                time.day(),
-                time.hour(),
-                time.minute(),
-                time.second()
-            );
-            let _ = fs::write(p.join(file_name), crash_report);
-        }
     }));
 
     // Initializes the cache dir if needed
