@@ -193,7 +193,6 @@ impl State {
             Action::ForgetFilePreview(id) => {
                 let _ = self.ui.file_previews.remove(&id);
             }
-            Action::ClearFilePreviews(window) => self.ui.clear_file_previews(&window),
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),

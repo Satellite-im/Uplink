@@ -82,7 +82,7 @@ files = Files
     .video-thumb = Thumbnail de vídeo
     .image-thumb = Thumbnail de imagem
     .doc-thumb = Thumbnail da primeira página
-    .no-thumbnail-preview = Não há thumbnail para pré-visualização deste arquivo
+    .no-thumbnail-preview = Não há thumbnail para visualizar
 
 settings = Settings
     .settings = Configurações
