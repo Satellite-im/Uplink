@@ -2,39 +2,34 @@
 .indicator {
 	height: fit-content;
 	width: fit-content;
-	stroke: transparent;
+	stroke: var(--background);
 	fill: var(--background);
 	display: inline-flex;
 	justify-content: center;
 	align-items: flex-end;
 
-	.circle {
+	.circle, .unknown {
 		transform: scale(0.75);
 		transform-origin: bottom center;
 	}
 }
+.indicator-offline {
+	.circle, .unknown {
+		fill: var(--background-light);
+	}
+}
 .indicator-online {
-	stroke: var(--success-light);
-
-	.circle {
+	.circle, .unknown {
 		fill: var(--success-light);
 	}
 }
-.indicator-offline {
-	stroke: var(--secondary-light);
-	.circle {
-		fill: var(--secondary-light);
-	}
-}
 .indicator-do-not-disturb {
-	stroke: var(--danger);
-	.circle {
+	.circle, .unknown {
 		fill: var(--danger);
 	}
 }
 .indicator-idle {
-	stroke: var(--warning-light);
-	.circle {
+	.circle, .unknown {
 		fill: var(--warning-light);
 	}
 }

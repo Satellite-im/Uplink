@@ -79,6 +79,7 @@
     display: inline-flex;
     flex-direction: column;
     gap: 0;
+    max-height: 20vh;
 
     .friend-group {
       display: inline-flex;
@@ -111,11 +112,15 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  overflow: hidden;
 
   .friend-list {
     display: inline-flex;
     flex-direction: column;
     gap: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: scroll;
 
     .friend-group {
       display: inline-flex;
