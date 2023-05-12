@@ -23,7 +23,6 @@ pub struct WindowManagerCmdChannels {
 pub enum WindowManagerCmd {
     ClosePopout,
     CloseDebugLogger,
-    CloseFilePreview,
     ForgetFilePreview(Uuid),
 }
 
@@ -39,9 +38,6 @@ pub async fn handle_cmd(
         }
         WindowManagerCmd::CloseDebugLogger => {
             state.write().mutate(Action::ClearDebugLogger(desktop));
-        }
-        WindowManagerCmd::CloseFilePreview => {
-            state.write().mutate(Action::ClearFilePreviews(desktop));
         }
         WindowManagerCmd::ForgetFilePreview(id) => {
             state.write().mutate(Action::ForgetFilePreview(id));
