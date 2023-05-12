@@ -497,11 +497,12 @@ pub fn get_file_modal<'a>(
         on_dismiss: move |_| on_dismiss.call(()),
         children: cx.render(rsx!(
             FilePreview {
-            file: file.clone(),
-            on_download: |_| {
-                on_download.call(());
-            },
-         }))
+                file: file,
+                on_download: |_| {
+                    on_download.call(());
+                },
+            }
+        ))
         is_file_preview: true,
     }))
 }
