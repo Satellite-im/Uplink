@@ -192,7 +192,7 @@ pub fn Compose(cx: Scope) -> Element {
         )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
-                GroupUsers {}
+                GroupUsers {active_chat: state.read().get_active_chat()}
         )),
         (show_edit_group
                 .map_or(true, |group_chat_id| group_chat_id != chat_id)

@@ -3,12 +3,10 @@ use std::collections::{BTreeMap, HashMap};
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
-    state::{Identity, State},
-    warp_runner::{MultiPassCmd, WarpCmd},
-    WARP_CMD_CH,
+    state::{Chat, Identity, State},
 };
 use dioxus::prelude::*;
-use futures::{channel::oneshot, StreamExt};
+
 use kit::{
     components::user_image::UserImage,
     elements::{
@@ -16,88 +14,79 @@ use kit::{
         label::Label,
     },
 };
-use warp::{crypto::DID, logging::tracing::log};
+use warp::logging::tracing::log;
+
+#[derive(Props, Eq, PartialEq)]
+pub struct Props {
+    #[props(!optional)]
+    active_chat: Option<Chat>,
+}
 
 #[allow(non_snake_case)]
-pub fn GroupUsers(cx: Scope) -> Element {
+
+pub fn GroupUsers(cx: Scope<Props>) -> Element {
     log::trace!("rendering group_users");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
-    let conv_id = state.read().get_active_chat().unwrap().id;
-    let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
-    let group_participants: &UseRef<HashMap<DID, Identity>> = use_ref(cx, HashMap::new);
 
-    let _friends_in_group = State::get_friends_by_first_letter(group_participants.read().clone());
+    let active_chat = match cx.props.active_chat.as_ref() {
+        Some(r) => r,
+        None => return cx.render(rsx!(div {})),
+    };
+    if active_chat.participants.is_empty() {
+        return cx.render(rsx!(div {}));
+    }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<()>| {
-        to_owned![friends_did_already_in_group, group_participants];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                let recipients: Vec<DID> = friends_did_already_in_group.iter().cloned().collect();
-                let (tx, rx) = oneshot::channel();
-                if let Err(e) = warp_cmd_tx.send(WarpCmd::MultiPass(MultiPassCmd::GetIdentities {
-                    dids: recipients,
-                    rsp: tx,
-                })) {
-                    log::error!("failed to send warp command: {}", e);
-                    continue;
+    let conv_id = active_chat.id;
+    let participant_dids = Vec::from_iter(active_chat.participants.iter().cloned());
+    let group_participants = state.read().get_identities(&participant_dids);
+    let hash_map = HashMap::from_iter(
+        group_participants
+            .iter()
+            .map(|ident| (ident.did_key(), ident.clone())),
+    );
+    let _friends_in_group = State::get_friends_by_first_letter(hash_map);
+
+    cx.render(rsx!(
+        div {
+            id: "group-users",
+            aria_label: "group-users",
+            div {
+                class: "search-input",
+                Label {
+                    text: format!("{} {}", _friends_in_group.len(),  get_local_text(
+                        if _friends_in_group.len() > 1 {
+                            "messages.participants"
+                        } else {
+                            "messages.participant"
+                        }
+                        )),
+                },
+                Input {
+                    // todo: filter friends on input
+                    placeholder: get_local_text("uplink.search-placeholder"),
+                    disabled: false,
+                    aria_label: "chat-search-input".into(),
+                    icon: Icon::MagnifyingGlass,
+                    options: Options {
+                        with_clear_btn: true,
+                        react_to_esc_key: true,
+                        ..Options::default()
+                    },
+                    onchange: move |(v, _): (String, _)| {
+                        friend_prefix.set(v);
+                    },
                 }
-                let res = rx.await.expect("command canceled");
-                if let Ok(identities) = res {
-                    group_participants.with_mut(|i| i.extend(identities.clone()));
-                } else {
-                    log::error!("failed to get identities for group");
-                }
+            }
+            div {
+                key: "render_friends",
+                render_friends {
+                    friends: _friends_in_group,
+                    name_prefix: friend_prefix.clone(),
+                },
             }
         }
-    });
-
-    if group_participants.read().is_empty() {
-        ch.send(());
-        cx.render(rsx!(div {}))
-    } else {
-        cx.render(rsx!(
-            div {
-                id: "group-users",
-                aria_label: "group-users",
-                div {
-                    class: "search-input",
-                    Label {
-                        text: format!("{} {}", _friends_in_group.len(),  get_local_text(
-                            if _friends_in_group.len() > 1 {
-                                "messages.participants"
-                            } else {
-                                "messages.participant"
-                            }
-                            )),
-                    },
-                    Input {
-                        // todo: filter friends on input
-                        placeholder: get_local_text("uplink.search-placeholder"),
-                        disabled: false,
-                        aria_label: "chat-search-input".into(),
-                        icon: Icon::MagnifyingGlass,
-                        options: Options {
-                            with_clear_btn: true,
-                            react_to_esc_key: true,
-                            ..Options::default()
-                        },
-                        onchange: move |(v, _): (String, _)| {
-                            friend_prefix.set(v);
-                        },
-                    }
-                }
-                div {
-                    key: "render_friends",
-                    render_friends {
-                        friends: _friends_in_group,
-                        name_prefix: friend_prefix.clone(),
-                    },
-                }
-            }
-        ))
-    }
+    ))
 }
 
 #[derive(PartialEq, Props)]

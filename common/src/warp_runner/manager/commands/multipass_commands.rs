@@ -99,11 +99,11 @@ pub enum MultiPassCmd {
         username: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "GetIdentities")]
-    GetIdentities {
-        dids: Vec<DID>,
-        rsp: oneshot::Sender<Result<HashMap<DID, state::Identity>, warp::error::Error>>,
-    },
+    //#[display(fmt = "GetIdentities")]
+    //GetIdentities {
+    //    dids: Vec<DID>,
+    //    rsp: oneshot::Sender<Result<HashMap<DID, state::Identity>, warp::error::Error>>,
+    //},
 }
 
 // hide sensitive information from debug logs
@@ -276,11 +276,10 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     rsp.send(Err(e))
                 }
             };
-        }
-        MultiPassCmd::GetIdentities { dids, rsp } => {
-            let r = multipass_get_identities(dids, &mut warp.multipass).await;
-            let _ = rsp.send(r);
-        }
+        } //MultiPassCmd::GetIdentities { dids, rsp } => {
+          //    let r = _multipass_get_identities(dids, &mut warp.multipass).await;
+          //    let _ = rsp.send(r);
+          //}
     }
 }
 
@@ -297,7 +296,7 @@ async fn multipass_refresh_friends(
     Ok(friends)
 }
 
-async fn multipass_get_identities(
+async fn _multipass_get_identities(
     ids: Vec<DID>,
     account: &mut Account,
 ) -> Result<HashMap<DID, state::Identity>, Error> {
