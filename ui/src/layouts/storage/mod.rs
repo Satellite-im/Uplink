@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use std::path::Path;
-use std::rc::Weak;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -9,8 +8,9 @@ use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window, Config};
+use dioxus_desktop::use_window;
 use dioxus_router::*;
+use kit::components::modal::Modal;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -29,18 +29,14 @@ use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
-use warp::constellation::item::Item;
+use warp::constellation::{file::File, item::Item};
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
 
 pub mod controller;
 pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
-use crate::get_window_builder;
-use crate::layouts::file_preview::{FilePreview, FilePreviewProps};
-
-use crate::utils::WindowDropHandler;
-use crate::window_manager::WindowManagerCmd;
+use crate::layouts::file_preview::FilePreview;
 
 use self::controller::StorageController;
 
@@ -106,6 +102,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let add_new_folder = use_state(cx, || false);
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let first_render = use_state(cx, || true);
+    let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
 
     let main_script = include_str!("./storage.js");
     let window = use_window(cx);
@@ -136,6 +133,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
+        if let Some(file) = show_file_modal.current().as_ref().clone() {
+            let file2 = file.clone();
+            rsx!(get_file_modal {
+                on_dismiss: |_| {
+                    show_file_modal.set(None);
+                },
+                on_download: move |_| {
+                    let file_name = file2.clone().name();
+                    download_file(&file_name, ch);
+                }
+                file: file.clone()})
+        }
         div {
             id: "files-layout",
             aria_label: "files-layout",
@@ -383,21 +392,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
                                                 onpress: move |_| {
-                                                    let file_extension = std::path::Path::new(&file_name2)
-                                                        .extension()
-                                                        .and_then(OsStr::to_str)
-                                                        .map(|s| s.to_string())
-                                                        .unwrap_or_default();
-                                                    let file_stem = PathBuf::from(&file_name2)
-                                                        .file_stem()
-                                                        .and_then(OsStr::to_str)
-                                                        .map(str::to_string)
-                                                        .unwrap_or_default();
-                                                    let file_path_buf = match FileDialog::new().set_directory(".").set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                                                        Some(path) => path,
-                                                        None => return,
-                                                    };
-                                                    ch.send(ChanCmd::DownloadFile { file_name: file_name2.clone(), local_path_to_save_file: file_path_buf } );
+                                                    download_file(&file_name2, ch);
                                                 },
                                             },
                                             hr {},
@@ -447,18 +442,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     return;
                                                 }
 
-                                                let drop_handler = WindowDropHandler::new(WindowManagerCmd::ForgetFilePreview(key));
-                                                let file_preview = VirtualDom::new_with_props(FilePreview, FilePreviewProps {
-                                                    file: file3.clone(),
-                                                    _drop_handler: drop_handler
-                                                });
-                                                let config = Config::default().with_window(get_window_builder(false, false));
-
-                                                let window = window.new_window(file_preview, config);
-                                                if let Some(wv) = Weak::upgrade(&window) {
-                                                    let id = wv.window().id();
-                                                    state.write().mutate(Action::AddFilePreview(key, id));
-                                                }
+                                                let file4 = file3.clone();
+                                                show_file_modal.set(Some(file4));
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
@@ -499,4 +484,50 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
+}
+
+#[inline_props]
+pub fn get_file_modal<'a>(
+    cx: Scope<'a>,
+    on_dismiss: EventHandler<'a, ()>,
+    on_download: EventHandler<'a, ()>,
+    file: File,
+) -> Element<'a> {
+    cx.render(rsx!(Modal {
+        on_dismiss: move |_| on_dismiss.call(()),
+        children: cx.render(rsx!(
+            FilePreview {
+            file: file.clone(),
+            on_download: |_| {
+                on_download.call(());
+            },
+         }))
+        is_file_preview: true,
+    }))
+}
+
+fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
+    let file_extension = std::path::Path::new(&file_name)
+        .extension()
+        .and_then(OsStr::to_str)
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+    let file_stem = PathBuf::from(&file_name)
+        .file_stem()
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+        .unwrap_or_default();
+    let file_path_buf = match FileDialog::new()
+        .set_directory(".")
+        .set_file_name(&file_stem)
+        .add_filter("", &[&file_extension])
+        .save_file()
+    {
+        Some(path) => path,
+        None => return,
+    };
+    ch.send(ChanCmd::DownloadFile {
+        file_name: file_name.to_string(),
+        local_path_to_save_file: file_path_buf,
+    });
 }

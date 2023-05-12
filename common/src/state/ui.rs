@@ -169,14 +169,8 @@ impl UI {
     pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
         self.file_previews.insert(key, window_id);
     }
-    pub fn clear_file_previews(&mut self, desktop_context: &DesktopContext) {
-        for (_, id) in self.file_previews.iter() {
-            desktop_context.close_window(*id);
-        }
-    }
 
     pub fn clear_all_popout_windows(&mut self, desktop_context: &DesktopContext) {
-        self.clear_file_previews(desktop_context);
         self.clear_debug_logger(desktop_context);
         self.clear_call_popout(desktop_context);
         self.clear_overlays();
