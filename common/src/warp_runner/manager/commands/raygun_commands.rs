@@ -221,6 +221,7 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.send(conv_id, msg).await
             } else {
+                //TODO: Pass stream off to attachment events
                 match messaging
                     .attach(conv_id, None, Location::Disk, attachments, msg)
                     .await
@@ -275,6 +276,7 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.reply(conv_id, reply_to, msg).await
             } else {
+                //TODO: Pass stream off to attachment events
                 match messaging
                     .attach(conv_id, Some(reply_to), Location::Disk, attachments, msg)
                     .await
