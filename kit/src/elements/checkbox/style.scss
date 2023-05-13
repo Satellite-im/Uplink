@@ -8,10 +8,11 @@ div.input-checkbox {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin-right: 1rem;
 
   svg {
-    fill: none;
-    stroke: var(--text-color);
+    fill: transparent;
+    stroke: var(--text-color-dark);
   }
 
   &:hover {

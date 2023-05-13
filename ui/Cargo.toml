@@ -14,7 +14,6 @@ dioxus-router.workspace = true
 dioxus-desktop = { workspace = true, features = ["transparent"] }
 raw-window-handle.workspace = true
 dioxus-core.workspace = true
-fermi.workspace = true
 kit.workspace = true
 common.workspace = true
 extensions.workspace = true
@@ -58,7 +57,6 @@ isolang.workspace = true
 regex.workspace = true
 image.workspace = true
 clap = { workspace = true, features = ["derive"] }
-fs_extra.workspace = true
 walkdir.workspace = true
 zip.workspace = true
 filetime = "0.2.20"
@@ -85,3 +83,6 @@ core-foundation = "0.9.3"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
+
+[profile.release]
+panic = 'abort'
