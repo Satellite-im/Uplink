@@ -73,6 +73,8 @@ messages = Messages
     .hide = Hide Messages
     .blocked = { $amount } messages blocked
     .group-name-invalid = Group Name Invalid
+    .participant = Participant
+    .participants = Participants
     
 favorites = Favorites
     .favorites = Favorites
@@ -114,8 +116,8 @@ files = Files
     .files = Files
     .new-folder = New Folder
     .upload = Upload
-    .free-space = Free Space:
-    .total-space = Total Space:
+    .storage-max-size = Max Size:
+    .storage-current-size = Current Space:
     .rename = Rename
     .download = Download
     .uploaded = Uploaded
@@ -131,6 +133,7 @@ files = Files
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
     .file-already-with-name = There is already a file with this name
+    .no-data-available = No data available
 
 settings = Settings
     .settings = Settings

@@ -1,5 +1,5 @@
 use derive_more::Display;
-use futures::channel::oneshot;
+use futures::{channel::oneshot, StreamExt};
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
@@ -10,7 +10,7 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, ConversationType, Location, ReactionState},
+    raygun::{self, AttachmentKind, ConversationType, Location, ReactionState},
 };
 
 use crate::{
@@ -221,9 +221,18 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.send(conv_id, msg).await
             } else {
-                messaging
+                //TODO: Pass stream off to attachment events
+                match messaging
                     .attach(conv_id, None, Location::Disk, attachments, msg)
                     .await
+                {
+                    Ok(mut stream) => loop {
+                        if let Some(AttachmentKind::Pending(result)) = stream.next().await {
+                            break result;
+                        }
+                    },
+                    Err(e) => Err(e),
+                }
             };
 
             let _ = rsp.send(r);
@@ -267,9 +276,18 @@ pub async fn handle_raygun_cmd(
             let r = if attachments.is_empty() {
                 messaging.reply(conv_id, reply_to, msg).await
             } else {
-                messaging
+                //TODO: Pass stream off to attachment events
+                match messaging
                     .attach(conv_id, Some(reply_to), Location::Disk, attachments, msg)
                     .await
+                {
+                    Ok(mut stream) => loop {
+                        if let Some(AttachmentKind::Pending(result)) = stream.next().await {
+                            break result;
+                        }
+                    },
+                    Err(e) => Err(e),
+                }
             };
 
             let _ = rsp.send(r);
