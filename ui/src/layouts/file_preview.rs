@@ -6,7 +6,7 @@ use warp::constellation::file::File;
 
 #[derive(Props)]
 pub struct Props<'a> {
-    file: File,
+    file: &'a File,
     on_download: EventHandler<'a, ()>,
 }
 
