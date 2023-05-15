@@ -4,7 +4,7 @@ Vendor: Satellite Im
 Description: P2P chat application
 Section: net
 Priority: required
-Depends: libwebkit2gtk-4.1-0 libopus0 ffmpeg
+Depends: libwebkit2gtk-4.1-0 libopus0, ffmpeg
 Maintainer: matt.wisniewski@deepspaceshipping.co
 Architecture: {{architecture}}
 Homepage: https://satellite.im/
