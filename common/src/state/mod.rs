@@ -4,6 +4,7 @@ pub mod configuration;
 pub mod friends;
 pub mod identity;
 pub mod notifications;
+pub mod pending_message;
 pub mod route;
 pub mod scope_ids;
 pub mod settings;
@@ -36,6 +37,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
+use std::path::PathBuf;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
@@ -49,6 +51,7 @@ use warp::{
     raygun::{self},
 };
 
+use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
 use self::utils::get_available_themes;
@@ -669,7 +672,12 @@ impl State {
     pub fn active_chat_send_in_progress(&self) -> bool {
         self.get_active_chat()
             .as_ref()
-            .map(|d| d.pending_outgoing_messages > 0)
+            .map(|d| {
+                d.pending_outgoing_messages
+                    .get(&d.id)
+                    .map(|m| m.len() > 0)
+                    .unwrap_or_default()
+            })
             .unwrap_or(false)
     }
 
@@ -866,17 +874,20 @@ impl State {
 
     // indicates that a conversation has a pending outgoing message
     // can only send messages to the active chat
-    pub fn increment_outgoing_messages(&mut self) {
+    pub fn increment_outgoing_messages(&mut self, msg: Vec<String>, attachments: Vec<PathBuf>) {
         if let Some(id) = self.chats.active {
             if let Some(chat) = self.chats.all.get_mut(&id) {
-                chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_add(1);
+                chat.pending_outgoing_messages
+                    .entry(chat.id)
+                    .or_insert(vec![])
+                    .push(PendingMessage::new(msg, vec![]));
             }
         }
     }
 
     pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_sub(1);
+            chat.pending_outgoing_messages; // = chat.pending_outgoing_messages.saturating_sub(1);
         }
     }
 

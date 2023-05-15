@@ -12,6 +12,8 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
+use super::pending_message::PendingMessage;
+
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
 // scroll up by window_extra (this allows an onmouseout event to trigger)
@@ -62,7 +64,7 @@ pub struct Chat {
     #[serde(skip)]
     pub has_more_messages: bool,
     #[serde(skip)]
-    pub pending_outgoing_messages: usize,
+    pub pending_outgoing_messages: HashMap<Uuid, Vec<PendingMessage>>,
 }
 
 // warning: Chats implements Serialize

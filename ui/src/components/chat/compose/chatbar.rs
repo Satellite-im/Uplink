@@ -258,7 +258,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(id));
             }
-            state.write().increment_outgoing_messages();
+            state
+                .write()
+                .increment_outgoing_messages(msg, files_to_upload);
             msg_ch.send((msg, id, replying_to));
         }
     };
