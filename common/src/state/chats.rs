@@ -12,7 +12,7 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::pending_message::PendingMessage;
+use super::pending_message::{PendingSentMessage, PendingSentMessages};
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -64,7 +64,7 @@ pub struct Chat {
     #[serde(skip)]
     pub has_more_messages: bool,
     #[serde(skip)]
-    pub pending_outgoing_messages: HashMap<Uuid, Vec<PendingMessage>>,
+    pub pending_outgoing_messages: HashMap<Uuid, PendingSentMessages>,
 }
 
 // warning: Chats implements Serialize
