@@ -71,6 +71,9 @@ messages = Mensagens
     .view = Ver Mensagens
     .hide = Esconder Mensagens
     .blocked = { $amount } mensagens bloqueadas
+    .group-name-invalid = Nome do grupo inválido
+    .participant = Participante
+    .participants = Participantes
     
 favorites = Favoritos
     .favorites = Favoritos
@@ -128,6 +131,7 @@ files = Ficheiros
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
     .directory-already-with-name = Já existe um directório com este nome
     .file-already-with-name = Já existe um ficheiro com este nome
+    .no-data-available = Sem informação disponível
     
 settings = Definições
     .settings = Definições
