@@ -1,14 +1,10 @@
 use crate::elements::{button::Button, Appearance};
-use common::{
-    icons::outline::Shape as Icon,
-    state::{Action, State},
-};
+use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 
 #[allow(non_snake_case)]
 pub fn Topbar_Controls(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
     if cfg!(not(target_os = "macos")) {
         cx.render(rsx!(
@@ -35,9 +31,6 @@ pub fn Topbar_Controls(cx: Scope) -> Element {
                     icon: Icon::XMark,
                     appearance: Appearance::Transparent,
                     onpress: move |_| {
-                        state
-                        .write()
-                            .mutate(Action::ClearAllPopoutWindows(desktop.clone()));
                         desktop.close();
                     }
                 },
