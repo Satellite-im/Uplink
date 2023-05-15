@@ -119,14 +119,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     files_to_upload.set(vec![]);
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
-                        state.write().decrement_outgoing_messages(conv_id);
+                        state
+                            .write()
+                            .decrement_outgoing_messages(conv_id, msg, attachments.len());
                         continue;
                     }
 
                     let rsp = rx.await.expect("command canceled");
                     if let Err(e) = rsp {
                         log::error!("failed to send message: {}", e);
-                        state.write().decrement_outgoing_messages(conv_id);
+                        state
+                            .write()
+                            .decrement_outgoing_messages(conv_id, msg, attachments.len());
                     }
                 }
             }

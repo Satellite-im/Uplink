@@ -23,6 +23,7 @@ pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
+use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
@@ -51,7 +52,7 @@ use warp::{
     raygun::{self},
 };
 
-use self::pending_message::PendingMessage;
+use self::pending_message::{PendingSentMessage, PendingSentMessages};
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
 use self::utils::get_available_themes;
@@ -412,7 +413,11 @@ impl State {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
-                self.decrement_outgoing_messages(conversation_id);
+                self.decrement_outgoing_messages(
+                    conversation_id,
+                    message.inner.value(),
+                    message.inner.attachments().len(),
+                );
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -879,15 +884,35 @@ impl State {
             if let Some(chat) = self.chats.all.get_mut(&id) {
                 chat.pending_outgoing_messages
                     .entry(chat.id)
-                    .or_insert(vec![])
-                    .push(PendingMessage::new(msg, vec![]));
+                    .or_insert(PendingSentMessages::new())
+                    .append(msg, attachments);
             }
         }
     }
 
-    pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid) {
+    pub fn update_outgoing_messages(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        progress: (PathBuf, Progression),
+    ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages; // = chat.pending_outgoing_messages.saturating_sub(1);
+            if let Some(v) = chat.pending_outgoing_messages.get(&chat.id) {
+                v.update(msg, progress);
+            }
+        }
+    }
+
+    pub fn decrement_outgoing_messages(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        attachments: usize,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
+            if let Some(v) = chat.pending_outgoing_messages.get(&chat.id) {
+                v.finish(msg, attachments);
+            }
         }
     }
 
