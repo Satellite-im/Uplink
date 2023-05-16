@@ -676,11 +676,7 @@ async fn set_thumbnail_if_file_is_document(
             let path_2 = format!("{}.jpg", temp_path.to_string_lossy());
             std::thread::sleep(std::time::Duration::from_secs(1));
             let image = std::fs::read(path_2)?;
-
-            let prefix = format!("data:{};base64,", IMAGE_JPEG);
-            let base64_image = base64::encode(image);
-            let img = prefix + base64_image.as_str();
-            item.set_thumbnail(img.as_bytes());
+            item.set_thumbnail(&image);
             Ok(())
         } else {
             log::warn!("Failed to save thumbnail from a document file");
@@ -712,7 +708,8 @@ pub fn thumbnail_to_base64(file: &File) -> String {
                 "image" => mime.to_string(),
                 //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
                 "video" => "image/jpeg".into(),
-                _ => mime.to_string(),
+                "application" if mime.subty().as_str().eq("pdf") => "image/jpeg".into(),
+                _ => mime.to_string(), 
             }
         }
         FileType::Generic => "application/octet-stream".into(),
