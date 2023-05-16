@@ -9,7 +9,6 @@ use derive_more::Display;
 
 use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
-use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
 use tokio::sync::mpsc;
