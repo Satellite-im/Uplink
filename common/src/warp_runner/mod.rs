@@ -25,7 +25,7 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
-pub use manager::commands::{FileTransferProgress, FileTransferStep};
+pub use manager::commands::{thumbnail_to_base64, FileTransferProgress, FileTransferStep};
 pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
@@ -338,10 +338,12 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         .await
         .map(|mp| Box::new(mp) as Account)?;
 
-    let storage =
-        warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(FsIpfsConfig::production(path)))
-            .await
-            .map(|ct| Box::new(ct) as Storage)?;
+    let mut config = FsIpfsConfig::production(path);
+    config.thumbnail_size = (500, 500);
+
+    let storage = warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(config))
+        .await
+        .map(|ct| Box::new(ct) as Storage)?;
 
     // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
     let rg_config = RgIpfsConfig::production(path);

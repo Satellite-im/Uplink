@@ -14,12 +14,13 @@ use once_cell::sync::Lazy;
 use tempfile::TempDir;
 use tokio::sync::mpsc;
 
-use crate::{state::storage::Storage as uplink_storage, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
+use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
 
 use warp::{
     constellation::{
         directory::Directory,
+        file::{File, FileType},
         item::{Item, ItemType},
         Progression,
     },
@@ -473,7 +474,6 @@ async fn upload_files(
                 }
 
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
-                let image_formats = IMAGE_EXTENSIONS.to_vec();
                 let doc_formats = DOC_EXTENSIONS.to_vec();
 
                 let file_extension = std::path::Path::new(&filename)
@@ -481,23 +481,6 @@ async fn upload_files(
                     .and_then(OsStr::to_str)
                     .map(|s| format!(".{s}"))
                     .unwrap_or_default();
-
-                if image_formats.iter().any(|f| f == &file_extension) {
-                    match set_thumbnail_if_file_is_image(warp_storage, filename.clone()).await {
-                        Ok(_) => {
-                            log::info!("Image Thumbnail uploaded");
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(Some(())),
-                            ));
-                        }
-                        Err(error) => {
-                            log::error!("Not possible to update thumbnail for image: {:?}", error);
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(None),
-                            ));
-                        }
-                    };
-                }
 
                 if video_formats.iter().any(|f| f == &file_extension) {
                     match set_thumbnail_if_file_is_video(
@@ -635,15 +618,11 @@ async fn set_thumbnail_if_file_is_video(
 
         if let Some(mut child) = output.stdout {
             let mut contents = vec![];
-
             child.read_to_end(&mut contents)?;
 
             let image = std::fs::read(temp_path)?;
 
-            let prefix = format!("data:{};base64,", IMAGE_JPEG);
-            let base64_image = base64::encode(image);
-            let img = prefix + base64_image.as_str();
-            item.set_thumbnail(&img);
+            item.set_thumbnail(&image);
             Ok(())
         } else {
             log::warn!("Failed to save thumbnail from a video file");
@@ -701,7 +680,7 @@ async fn set_thumbnail_if_file_is_document(
             let prefix = format!("data:{};base64,", IMAGE_JPEG);
             let base64_image = base64::encode(image);
             let img = prefix + base64_image.as_str();
-            item.set_thumbnail(&img);
+            item.set_thumbnail(img.as_bytes());
             Ok(())
         } else {
             log::warn!("Failed to save thumbnail from a document file");
@@ -710,50 +689,6 @@ async fn set_thumbnail_if_file_is_document(
     })
     .await
     .map_err(anyhow::Error::from)?
-}
-
-async fn set_thumbnail_if_file_is_image(
-    warp_storage: &warp_storage,
-    filename_to_save: String,
-) -> Result<(), Error> {
-    let item = warp_storage
-        .current_directory()?
-        .get_item(&filename_to_save)?;
-    let file = warp_storage.get_buffer(&filename_to_save).await?;
-
-    // Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
-    let extension = Path::new(&filename_to_save)
-        .extension()
-        .and_then(OsStr::to_str)
-        .map(|ext| ext.to_lowercase());
-
-    let mime = match extension {
-        Some(m) => match m.as_str() {
-            "png" => IMAGE_PNG.to_string(),
-            "jpg" => IMAGE_JPEG.to_string(),
-            "jpeg" => IMAGE_JPEG.to_string(),
-            "svg" => IMAGE_SVG.to_string(),
-            _ => {
-                log::warn!("invalid mime type: {m:?}");
-                return Err(Error::InvalidItem);
-            }
-        },
-        None => {
-            log::warn!("thumbnail has no mime type");
-            return Err(Error::InvalidItem);
-        }
-    };
-
-    if !file.is_empty() {
-        let prefix = format!("data:{mime};base64,");
-        let base64_image = base64::encode(&file);
-        let img = prefix + base64_image.as_str();
-        item.set_thumbnail(&img);
-        Ok(())
-    } else {
-        log::warn!("thumbnail file is empty");
-        Err(Error::InvalidItem)
-    }
 }
 
 async fn download_file(
@@ -766,4 +701,25 @@ async fn download_file(
         .await?;
     log::info!("{file_name} downloaded");
     Ok(())
+}
+
+pub fn thumbnail_to_base64(file: &File) -> String {
+    let ty = file.file_type();
+
+    let mime = match ty {
+        FileType::Mime(mime) => {
+            match mime.ty().as_str() {
+                "image" => mime.to_string(),
+                //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
+                "video" => "image/jpeg".into(),
+                _ => mime.to_string(),
+            }
+        }
+        FileType::Generic => "application/octet-stream".into(),
+    };
+
+    let prefix = format!("data:{mime};base64,");
+    let base64_image = base64::encode(file.thumbnail());
+
+    prefix + &base64_image
 }
