@@ -709,7 +709,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
                 //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
                 "video" => "image/jpeg".into(),
                 "application" if mime.subty().as_str().eq("pdf") => "image/jpeg".into(),
-                _ => mime.to_string(), 
+                _ => mime.to_string(),
             }
         }
         FileType::Generic => "application/octet-stream".into(),
