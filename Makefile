@@ -55,7 +55,6 @@ app: folders ## Build the release binary and Uplink.app
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=x86_64-apple-darwin -F production_mode
 	MACOSX_DEPLOYMENT_TARGET="10.11" cargo build --release --target=aarch64-apple-darwin -F production_mode
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/$(TARGET) -create -output $(MACOS_DIR)/$(TARGET)
-	@lipo target/{x86_64,aarch64}-apple-darwin/release/libclear_all.dylib -create -output $(FRAMEWORKS_DIR)/libclear_all.dylib
 	@lipo target/{x86_64,aarch64}-apple-darwin/release/libemoji_selector.dylib -create -output $(FRAMEWORKS_DIR)/libemoji_selector.dylib
 	
 # 	delete all special attributes. not sure why/if this is needed 
@@ -64,7 +63,6 @@ app: folders ## Build the release binary and Uplink.app
 
 signed-app: app ## sign the executable, .dylibs, and Uplink.app directory
 	@echo "make signed-app ..."
-	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(FRAMEWORKS_DIR)/libclear_all.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(FRAMEWORKS_DIR)/libemoji_selector.dylib
 	/usr/bin/codesign -vvv --deep --entitlements $(ASSETS_SOURCE_DIR)/entitlements.plist --strict --options=runtime --force -s $(SIGNING_KEY) $(APP_DIR)
 
