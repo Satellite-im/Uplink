@@ -321,7 +321,7 @@ pub async fn handle_raygun_cmd(
 
 pub struct WarpInit {
     pub friends: Friends,
-    // at some point we may want to initialize identities on demand, such as ony initialize the ones needed for the chats sidebar
+    // at some point we may want to initialize identities on demand, such as only initialize the ones needed for the chats sidebar
     //all_identities: HashSet<DID>,
     pub converted_identities: HashMap<DID, identity::Identity>,
     // todo: don't init all conversations at once. instead, store list of all conv ids
