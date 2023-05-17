@@ -699,6 +699,12 @@ async fn download_file(
 }
 
 pub fn thumbnail_to_base64(file: &File) -> String {
+    let thumbnail = file.thumbnail();
+
+    if thumbnail.is_empty() {
+        return String::new();
+    }
+
     let ty = file.file_type();
 
     let mime = match ty {
@@ -715,7 +721,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
     };
 
     let prefix = format!("data:{mime};base64,");
-    let base64_image = base64::encode(file.thumbnail());
+    let base64_image = base64::encode(thumbnail);
 
-    prefix + &base64_image
+    prefix + &base64_image 
 }
