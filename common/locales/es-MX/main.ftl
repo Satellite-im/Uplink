@@ -42,7 +42,7 @@ updates = Updates
     .instruction1 = 1. Descarga la actualización de nuestra página de lanzamientos.
     .instruction2 = 2. Cierra Uplink.
     .instruction3 = 3. Ejecuta el instalador. La versión anterior de uplink será sobreescrita, dejando tu cuenta intacta.
-    .instruction4 = 4. Abre Uplink y comienza a chatear de nuevo!
+    .instruction4 = 4. ¡Abre Uplink y comienza a chatear de nuevo!
     .instruction5 = *Vamos a simplificar este proceso en una futura actualización.
     .button-label = Selecciona la carpeta de descarga
     .download-label = Descargar Actualización
@@ -253,7 +253,7 @@ settings-about = About Settings
     .open-website-description = Abre nuestro sitio en tu navegador web predeterminado.
     .open-codebase = Abrir Código Fuente
     .open-codebase-description = Abre el sitio con nuestro código fuente en tu navegador web predeterminado.
-    .no-update-available = Tu software está al día!
+    .no-update-available = ¡Tu software está al día!
     .update-check-error = Error al obtener actualizaciones. Por favor, revisa tu conexión a internet.
 
 media-player = Media Player 
