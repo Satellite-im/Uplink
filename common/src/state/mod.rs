@@ -409,14 +409,20 @@ impl State {
                 message,
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                let message_clone = message.clone();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
                 self.decrement_outgoing_messages(
                     conversation_id,
-                    message.inner.value(),
-                    message.inner.attachments().len(),
+                    message_clone.inner.value(),
+                    message_clone
+                        .inner
+                        .attachments()
+                        .iter()
+                        .map(|f| f.name())
+                        .collect(),
                 );
             }
             MessageEvent::Edited {
@@ -487,6 +493,11 @@ impl State {
                     chat.conversation_name = conversation.name();
                 }
             }
+            MessageEvent::AttachmentProgress {
+                progress,
+                conversation_id,
+                msg,
+            } => self.update_outgoing_messages(conversation_id, msg, progress),
         }
     }
 }
@@ -674,16 +685,9 @@ impl State {
             .unwrap_or(false)
     }
 
-    pub fn active_chat_send_in_progress(&self) -> bool {
+    pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingSentMessage>> {
         self.get_active_chat()
-            .as_ref()
-            .map(|d| {
-                d.pending_outgoing_messages
-                    .get(&d.id)
-                    .map(|m| m.len() > 0)
-                    .unwrap_or_default()
-            })
-            .unwrap_or(false)
+            .map(|chat| chat.pending_outgoing_messages.msg.clone())
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -879,13 +883,12 @@ impl State {
 
     // indicates that a conversation has a pending outgoing message
     // can only send messages to the active chat
-    pub fn increment_outgoing_messages(&mut self, msg: Vec<String>, attachments: Vec<PathBuf>) {
+    pub fn increment_outgoing_messages(&mut self, msg: Vec<String>, attachments: &Vec<PathBuf>) {
+        let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
             if let Some(chat) = self.chats.all.get_mut(&id) {
                 chat.pending_outgoing_messages
-                    .entry(chat.id)
-                    .or_insert(PendingSentMessages::new())
-                    .append(msg, attachments);
+                    .append(id, did, msg, attachments);
             }
         }
     }
@@ -893,13 +896,11 @@ impl State {
     pub fn update_outgoing_messages(
         &mut self,
         conv_id: Uuid,
-        msg: Vec<String>,
-        progress: (PathBuf, Progression),
+        msg: PendingSentMessage,
+        progress: Progression,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            if let Some(v) = chat.pending_outgoing_messages.get(&chat.id) {
-                v.update(msg, progress);
-            }
+            chat.pending_outgoing_messages.update(msg, progress);
         }
     }
 
@@ -907,12 +908,10 @@ impl State {
         &mut self,
         conv_id: Uuid,
         msg: Vec<String>,
-        attachments: usize,
+        attachments: Vec<String>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            if let Some(v) = chat.pending_outgoing_messages.get(&chat.id) {
-                v.finish(msg, attachments);
-            }
+            chat.pending_outgoing_messages.finish(msg, attachments);
         }
     }
 
@@ -1458,4 +1457,39 @@ pub fn group_messages<'a>(
     }
 
     messages
+}
+
+pub fn pending_group_messages<'a>(
+    pending: &'a Vec<PendingSentMessage>,
+    own_did: DID,
+) -> Option<MessageGroup<'a>> {
+    if pending.len() == 0 {
+        return None;
+    };
+    let mut messages: Vec<GroupedMessage<'a>> = vec![];
+    let size = pending.len();
+    for (i, msg) in pending.iter().enumerate() {
+        if i == size - 1 {
+            let g = GroupedMessage {
+                message: &msg.message,
+                is_first: false,
+                is_last: true,
+                should_fetch_more: false,
+            };
+            messages.push(g);
+            continue;
+        }
+        let g = GroupedMessage {
+            message: &msg.message,
+            is_first: true,
+            is_last: true,
+            should_fetch_more: false,
+        };
+        messages.push(g);
+    }
+    Some(MessageGroup {
+        sender: own_did,
+        remote: false,
+        messages: messages,
+    })
 }

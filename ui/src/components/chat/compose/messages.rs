@@ -22,7 +22,10 @@ use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
-    state::{group_messages, GroupedMessage, MessageGroup},
+    state::{
+        group_messages, pending_group_messages, pending_message::PendingSentMessage,
+        GroupedMessage, MessageGroup,
+    },
     warp_runner::ui_adapter::{self},
 };
 use common::{
@@ -318,7 +321,11 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         num_to_take: num_to_take.clone(),
                         has_more: data.active_chat.has_more_messages,
-                        pending_outgoing_message: state.read().active_chat_send_in_progress(),
+                        pending_outgoing_message: pending_group_messages(
+                            &data.active_chat.pending_outgoing_messages.msg,
+                            data.my_id.did_key(),
+                        ),
+                        own_id: data.my_id.did_key(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             if !identity_profile.get().eq(&id) {
                                 let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
@@ -356,8 +363,10 @@ struct AllMessageGroupsProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
-    pending_outgoing_message: bool,
+    #[props(!optional)]
+    pending_outgoing_message: Option<MessageGroup<'a>>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    own_id: DID,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -375,9 +384,16 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
                 on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
             },)
         }),
-        cx.props
-            .pending_outgoing_message
-            .then(|| rsx!(MessageGroupSkeletal { alt: true }))
+        cx.props.pending_outgoing_message.as_ref().map(|group| {
+            rsx!(render_message_group {
+                group: group,
+                active_chat_id: cx.props.active_chat_id,
+                num_messages_in_conversation: cx.props.num_messages_in_conversation,
+                num_to_take: cx.props.num_to_take.clone(),
+                has_more: false,
+                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+            },)
+        }),
     ))
 }
 
@@ -389,6 +405,7 @@ struct MessageGroupProps<'a> {
     num_to_take: UseState<usize>,
     has_more: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    pending: Option<bool>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -401,6 +418,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         num_to_take: _,
         has_more: _,
         on_context_menu_action: _,
+        pending: _,
     } = cx.props;
 
     let messages = &group.messages;
