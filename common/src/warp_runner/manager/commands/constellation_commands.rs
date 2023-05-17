@@ -13,7 +13,6 @@ use mime::*;
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
 use tokio::sync::mpsc;
-use tokio_util::io::ReaderStream;
 
 use crate::{state::storage::Storage as uplink_storage, IMAGE_EXTENSIONS, VIDEO_FILE_EXTENSIONS};
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
@@ -90,6 +89,10 @@ pub enum ConstellationCmd {
         item: Item,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
+    #[display(fmt = "GetStorageSize")]
+    GetStorageSize {
+        rsp: oneshot::Sender<Result<(usize, usize), warp::error::Error>>,
+    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -137,6 +140,10 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::DeleteItems { item, rsp } => {
             let r = delete_items(warp_storage, item).await;
+            let _ = rsp.send(r);
+        }
+        ConstellationCmd::GetStorageSize { rsp } => {
+            let r = get_storage_size(warp_storage);
             let _ = rsp.send(r);
         }
     }
@@ -261,6 +268,10 @@ async fn rename_item(
     }
 
     get_items_from_current_directory(warp_storage)
+}
+
+fn get_storage_size(warp_storage: &warp_storage) -> Result<(usize, usize), Error> {
+    Ok((warp_storage.max_size(), warp_storage.current_size()))
 }
 
 async fn create_new_directory(
@@ -397,30 +408,8 @@ async fn upload_files(
         let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
             Some(filename.clone()),
         )));
-        let tokio_file = match tokio::fs::File::open(&local_path).await {
-            Ok(file) => file,
-            Err(error) => {
-                log::error!("Error on get tokio file, cancelling upload action, error: {error}");
-                continue;
-            }
-        };
 
-        let total_size_for_stream = match tokio_file.metadata().await {
-            Ok(data) => Some(data.len() as usize),
-            Err(error) => {
-                log::error!("Error getting metadata: {:?}", error);
-                None
-            }
-        };
-
-        let file_stream = ReaderStream::new(tokio_file)
-            .filter_map(|x| async { x.ok() })
-            .map(|x| x.into());
-
-        match warp_storage
-            .put_stream(&filename, total_size_for_stream, file_stream.boxed())
-            .await
-        {
+        match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
                 let mut previous_percentage: usize = 0;
                 let mut upload_process_started = false;

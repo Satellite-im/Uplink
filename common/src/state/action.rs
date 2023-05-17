@@ -28,7 +28,6 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
-
     // hang up for the active media stream
     #[display(fmt = "DisableMedia")]
     DisableMedia,
@@ -72,8 +71,6 @@ pub enum Action<'a> {
     AddFilePreview(Uuid, WindowId),
     #[display(fmt = "ForgetFilePreview")]
     ForgetFilePreview(Uuid),
-    #[display(fmt = "ClearFilePreview")]
-    ClearFilePreviews(DesktopContext),
     #[display(fmt = "ClearAllPopoutWindows")]
     ClearAllPopoutWindows(DesktopContext),
     // Notifications

@@ -461,7 +461,6 @@ body {
     width: unset;
     padding: var(--padding-more);
     border-radius: var(--border-radius-more);
-    height: fit-content;
 } 
 
 #unlock-layout .idle {
