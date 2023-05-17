@@ -101,6 +101,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 while let Some((msg, conv_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let attachments = files_to_upload.current().to_vec();
+                    let msg_clone = msg.clone();
                     let cmd = match reply {
                         Some(reply_to) => RayGunCmd::Reply {
                             conv_id,
@@ -116,21 +117,35 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             rsp: tx,
                         },
                     };
+                    let attachments = files_to_upload.current().to_vec();
                     files_to_upload.set(vec![]);
+                    let attachment_files: Vec<String> = attachments
+                        .iter()
+                        .map(|p| {
+                            p.file_name()
+                                .map(|os| os.to_str().unwrap_or_default())
+                                .unwrap_or_default()
+                                .to_string()
+                        })
+                        .collect();
                     if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                         log::error!("failed to send warp command: {}", e);
-                        state
-                            .write()
-                            .decrement_outgoing_messages(conv_id, msg, attachments.len());
+                        state.write().decrement_outgoing_messages(
+                            conv_id,
+                            msg_clone,
+                            attachment_files,
+                        );
                         continue;
                     }
 
                     let rsp = rx.await.expect("command canceled");
                     if let Err(e) = rsp {
                         log::error!("failed to send message: {}", e);
-                        state
-                            .write()
-                            .decrement_outgoing_messages(conv_id, msg, attachments.len());
+                        state.write().decrement_outgoing_messages(
+                            conv_id,
+                            msg_clone,
+                            attachment_files,
+                        );
                     }
                 }
             }
@@ -264,7 +279,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             }
             state
                 .write()
-                .increment_outgoing_messages(msg, files_to_upload);
+                .increment_outgoing_messages(msg.clone(), files_to_upload);
             msg_ch.send((msg, id, replying_to));
         }
     };

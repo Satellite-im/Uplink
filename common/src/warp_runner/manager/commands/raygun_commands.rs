@@ -14,15 +14,16 @@ use warp::{
 };
 
 use crate::{
-    state::{chats, identity, Friends},
+    state::{chats, identity, pending_message::PendingSentMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            get_uninitialized_identity,
+            get_uninitialized_identity, MessageEvent,
         },
-        Account, Messaging,
+        Account, Messaging, WarpEvent,
     },
+    WARP_EVENT_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -223,12 +224,42 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, None, Location::Disk, attachments, msg)
+                    .attach(
+                        conv_id,
+                        None,
+                        Location::Disk,
+                        attachments.clone(),
+                        msg.clone(),
+                    )
                     .await
                 {
                     Ok(mut stream) => loop {
-                        if let Some(AttachmentKind::Pending(result)) = stream.next().await {
-                            break result;
+                        let msg_clone = msg.clone();
+                        //let attachment_clone = attachments.clone();
+                        if let Some(kind) = stream.next().await {
+                            match kind {
+                                AttachmentKind::Pending(result) => {
+                                    break result;
+                                }
+                                AttachmentKind::AttachedProgress(progress) => {
+                                    if WARP_EVENT_CH
+                                        .tx
+                                        .send(WarpEvent::Message(
+                                            MessageEvent::AttachmentProgress {
+                                                progress,
+                                                conversation_id: conv_id,
+                                                msg: PendingSentMessage::for_compare(
+                                                    msg_clone,
+                                                    &attachments,
+                                                ),
+                                            },
+                                        ))
+                                        .is_err()
+                                    {
+                                        log::error!("failed to send warp_event");
+                                    }
+                                }
+                            }
                         }
                     },
                     Err(e) => Err(e),
