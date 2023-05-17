@@ -7,7 +7,6 @@ use notify_rust::Notification;
 use std::sync::Arc;
 use uuid::Uuid;
 use warp::logging::tracing::log;
-use windows::{runtime::IInspectable, UI::Notifications::ToastActivatedEventArgs};
 
 use once_cell::sync::Lazy;
 use tokio::sync::{
@@ -168,9 +167,12 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
 
         toast_notification
             .Activated(windows::Foundation::TypedEventHandler::new(
-                move |_sender, result: &Option<IInspectable>| {
-                    let event: Option<windows::runtime::Result<ToastActivatedEventArgs>> =
-                        result.as_ref().map(windows::runtime::Interface::cast);
+                move |_sender, result: &Option<windows::runtime::IInspectable>| {
+                    let event: Option<
+                        windows::runtime::Result<
+                            windows::UI::Notifications::ToastActivatedEventArgs,
+                        >,
+                    > = result.as_ref().map(windows::runtime::Interface::cast);
                     let arguments = event
                         .and_then(|val| val.ok())
                         .and_then(|args| args.Arguments().ok());
