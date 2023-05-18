@@ -73,6 +73,7 @@ pub struct Props<'a> {
     parse_markdown: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
+    pending: bool,
 }
 
 #[allow(non_snake_case)]
@@ -132,7 +133,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "message {} {} {}",
+                    "message {} {} {} {}",
                     if loading {
                         "loading"
                     } else { "" },
@@ -141,7 +142,10 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" },
                     if cx.props.order.is_some() {
                         order.to_string()
-                    } else { "".into() }
+                    } else { "".into() },
+                    if cx.props.pending {
+                        "message-pending"
+                    } else { "" }
                 )
             },
             aria_label: {
@@ -179,7 +183,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
                     text: formatted_text_clone,
-                    remote: is_remote
+                    remote: is_remote,
+                    pending: cx.props.pending,
                 }
             )),
             has_attachments.then(|| {
@@ -254,6 +259,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 struct ChatMessageProps {
     text: String,
     remote: bool,
+    pending: bool,
 }
 
 #[allow(non_snake_case)]
@@ -283,9 +289,19 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
     cx.render(rsx!(
         div {
-            class: "text",
+            class: format_args!(
+                "{}",
+                if cx.props.pending {
+                    "pending-text"
+                } else { "text" }
+            ),
             p {
-                class: "text",
+                class: format_args!(
+                    "{}",
+                    if cx.props.pending {
+                        "pending-text"
+                    } else { "text" }
+                ),
                 aria_label: "message-text",
                 dangerous_inner_html: "{dangerous_text}",
             },

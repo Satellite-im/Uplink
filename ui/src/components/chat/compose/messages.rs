@@ -22,10 +22,7 @@ use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
-    state::{
-        group_messages, pending_group_messages, pending_message::PendingSentMessage,
-        GroupedMessage, MessageGroup,
-    },
+    state::{group_messages, pending_group_messages, GroupedMessage, MessageGroup},
     warp_runner::ui_adapter::{self},
 };
 use common::{
@@ -391,7 +388,8 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
                 num_messages_in_conversation: cx.props.num_messages_in_conversation,
                 num_to_take: cx.props.num_to_take.clone(),
                 has_more: false,
-                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
+                pending: true
             },)
         }),
     ))
@@ -512,6 +510,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 has_more: cx.props.has_more,
                 num_messages_in_conversation: cx.props.num_messages_in_conversation,
                 num_to_take: cx.props.num_to_take.clone(),
+                pending: cx.props.pending.unwrap_or_default()
             }))
         },
     ))
@@ -525,6 +524,7 @@ struct MessagesProps<'a> {
     num_to_take: UseState<usize>,
     is_remote: bool,
     has_more: bool,
+    pending: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -578,63 +578,68 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 message_key: _message_key,
                 reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
+                pending: cx.props.pending
             })),
-            items: cx.render(rsx!(
-                ContextItem {
-                    icon: Icon::ArrowLongLeft,
-                    aria_label: "messages-reply".into(),
-                    text: get_local_text("messages.reply"),
-                    onpress: move |_| {
-                        state
-                            .write()
-                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
-                    }
-                },
-                ContextItem {
-                    icon: Icon::FaceSmile,
-                    aria_label: "messages-react".into(),
-                    text: get_local_text("messages.react"),
-                    onpress: move |_| {
-                        state.write().ui.ignore_focus = true;
-                        reacting_to.set(Some(_msg_uuid));
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Pencil,
-                    aria_label: "messages-edit".into(),
-                    text: get_local_text("messages.edit"),
-                    should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
-                    onpress: move |_| {
-                        edit_msg.set(Some(_msg_uuid));
-                        state.write().ui.ignore_focus = true;
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Pencil,
-                    aria_label: "messages-cancel-edit".into(),
-                    text: get_local_text("messages.cancel-edit"),
-                    should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
-                    onpress: move |_| {
-                        edit_msg.set(None);
-                        state.write().ui.ignore_focus = false;
-                    }
-                },
-                ContextItem {
-                    icon: Icon::Trash,
-                    danger: true,
-                    aria_label: "messages-delete".into(),
-                    text: get_local_text("uplink.delete"),
-                    should_render: sender_is_self,
-                    onpress: move |_| {
-                        ch.send(MessagesCommand::DeleteMessage {
-                            conv_id: message.inner.conversation_id(),
-                            msg_id: message.inner.id(),
-                        });
-                    }
-                },
-            )) // end of context menu items
+            items: if cx.props.pending {
+                cx.render(rsx!(()))
+            } else {
+                cx.render(rsx!(
+                    ContextItem {
+                        icon: Icon::ArrowLongLeft,
+                        aria_label: "messages-reply".into(),
+                        text: get_local_text("messages.reply"),
+                        onpress: move |_| {
+                            state
+                                .write()
+                                .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
+                        }
+                    },
+                    ContextItem {
+                        icon: Icon::FaceSmile,
+                        aria_label: "messages-react".into(),
+                        text: get_local_text("messages.react"),
+                        onpress: move |_| {
+                            state.write().ui.ignore_focus = true;
+                            reacting_to.set(Some(_msg_uuid));
+                        }
+                    },
+                    ContextItem {
+                        icon: Icon::Pencil,
+                        aria_label: "messages-edit".into(),
+                        text: get_local_text("messages.edit"),
+                        should_render: !cx.props.is_remote
+                            && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                        onpress: move |_| {
+                            edit_msg.set(Some(_msg_uuid));
+                            state.write().ui.ignore_focus = true;
+                        }
+                    },
+                    ContextItem {
+                        icon: Icon::Pencil,
+                        aria_label: "messages-cancel-edit".into(),
+                        text: get_local_text("messages.cancel-edit"),
+                        should_render: !cx.props.is_remote
+                            && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                        onpress: move |_| {
+                            edit_msg.set(None);
+                            state.write().ui.ignore_focus = false;
+                        }
+                    },
+                    ContextItem {
+                        icon: Icon::Trash,
+                        danger: true,
+                        aria_label: "messages-delete".into(),
+                        text: get_local_text("uplink.delete"),
+                        should_render: sender_is_self,
+                        onpress: move |_| {
+                            ch.send(MessagesCommand::DeleteMessage {
+                                conv_id: message.inner.conversation_id(),
+                                msg_id: message.inner.id(),
+                            });
+                        }
+                    },
+                ))
+            } // end of context menu items
         }) // end context menu
     }))) // end outer cx.render
 }
@@ -647,6 +652,7 @@ struct MessageProps<'a> {
     msg_uuid: Uuid,
     reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
+    pending: bool,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
@@ -672,6 +678,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         message_key,
         reacting_to,
         edit_msg,
+        pending,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
@@ -762,6 +769,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
+                pending: cx.props.pending,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();

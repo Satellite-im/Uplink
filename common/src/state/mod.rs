@@ -52,7 +52,7 @@ use warp::{
     raygun::{self},
 };
 
-use self::pending_message::{PendingSentMessage, PendingSentMessages};
+use self::pending_message::PendingSentMessage;
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
 use self::utils::get_available_themes;

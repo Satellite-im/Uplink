@@ -5,8 +5,6 @@ use warp::{constellation::Progression, crypto::DID};
 
 use crate::warp_runner::ui_adapter::Message;
 
-use super::State;
-
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PendingSentMessages {
     pub msg: Vec<PendingSentMessage>,
@@ -95,7 +93,9 @@ impl PendingSentMessage {
     }
 
     pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &Vec<PathBuf>) -> Self {
+        // Create a dummy message
         let mut inner = warp::raygun::Message::default();
+        inner.set_id(Uuid::new_v4());
         inner.set_sender(did);
         inner.set_conversation_id(chat_id);
         inner.set_value(text.clone());
@@ -103,7 +103,7 @@ impl PendingSentMessage {
         let message = Message {
             inner,
             in_reply_to: None,
-            key: String::new(),
+            key: Uuid::new_v4().to_string(),
         };
         PendingSentMessage {
             text,
