@@ -723,5 +723,5 @@ pub fn thumbnail_to_base64(file: &File) -> String {
     let prefix = format!("data:{mime};base64,");
     let base64_image = base64::encode(thumbnail);
 
-    prefix + &base64_image 
+    prefix + &base64_image
 }
