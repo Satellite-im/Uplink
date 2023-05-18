@@ -19,7 +19,7 @@ use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
 use warp::{
     constellation::{
         directory::Directory,
-        file::{File, FileType},
+        file::File,
         item::{Item, ItemType},
         Progression,
     },
@@ -705,22 +705,22 @@ pub fn thumbnail_to_base64(file: &File) -> String {
         return String::new();
     }
 
-    let ty = file.file_type();
+    // Note: This is commented out, but left in, in case thumbnail is using the exact format as the image
+    // let ty = file.file_type();
+    // let mime = match ty {
+    //     FileType::Mime(mime) => {
+    //         match mime.ty().as_str() {
+    //             "image" => mime.to_string(),
+    //             //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
+    //             "video" => "image/jpeg".into(),
+    //             "application" if mime.subty().as_str().eq("pdf") => "image/jpeg".into(),
+    //             _ => mime.to_string(),
+    //         }
+    //     }
+    //     FileType::Generic => "application/octet-stream".into(),
+    // };
 
-    let mime = match ty {
-        FileType::Mime(mime) => {
-            match mime.ty().as_str() {
-                "image" => mime.to_string(),
-                //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
-                "video" => "image/jpeg".into(),
-                "application" if mime.subty().as_str().eq("pdf") => "image/jpeg".into(),
-                _ => mime.to_string(),
-            }
-        }
-        FileType::Generic => "application/octet-stream".into(),
-    };
-
-    let prefix = format!("data:{mime};base64,");
+    let prefix = "data:image/jpeg;base64,".to_string();
     let base64_image = base64::encode(thumbnail);
 
     prefix + &base64_image
