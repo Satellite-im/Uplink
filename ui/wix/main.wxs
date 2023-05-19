@@ -173,9 +173,6 @@
       </DirectoryRef>
       <!-- end of ExtraFolder -->
       <DirectoryRef Id="ExtensionFolder">
-            <Component Id="cmpLibClearAll.dll" Guid="8A156548-9269-4D20-8FC8-213D865E3252">
-               <File Id="ClearAll.dll" Name="clear_all.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\clear_all.dll" />
-            </Component>
             <Component Id="cmpLibEmojiSelector.dll" Guid="8C8B04BE-FAAE-418B-8CD9-5AADF2859C67">
                <File Id="EmojiSelector.dll" Name="emoji_selector.dll" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\release\emoji_selector.dll" />
             </Component>
@@ -211,7 +208,6 @@
          <ComponentRef Id="cmpNord.scss" />
          <ComponentRef Id="cmpPink.scss" />
          <ComponentRef Id="cmpPolar.scss" />
-         <ComponentRef Id="cmpLibClearAll.dll" />
          <ComponentRef Id="cmpLibEmojiSelector.dll" />
          <Feature Id="Environment" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executable to the PATH system environment variable. This allows the [ProductName] executable to be called from any location." Level="1" Absent="allow">
             <ComponentRef Id="Path" />
