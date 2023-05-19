@@ -7,6 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::state::pending_message::MESSAGE_CHANNEL;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -613,6 +614,28 @@ fn app(cx: Scope) -> Element {
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
                 state.write().process_warp_event(evt);
+            }
+        }
+    });
+
+    use_future(cx, (), |_| {
+        to_owned![state];
+        async move {
+            // don't process warp events until friends and chats have been loaded
+            while !state.read().initialized {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+            let warp_event_rx = MESSAGE_CHANNEL.rx.clone();
+            log::trace!("starting warp_runner use_future");
+            // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
+            // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
+            let mut ch = warp_event_rx.lock().await;
+            while let Some(evt) = ch.recv().await {
+                state.write_silent().update_outgoing_messages(
+                    evt.conversation_id,
+                    evt.msg,
+                    evt.progress,
+                );
             }
         }
     });

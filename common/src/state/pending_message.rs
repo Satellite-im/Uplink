@@ -1,9 +1,33 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
+use once_cell::sync::Lazy;
+use tokio::sync::{
+    mpsc::{UnboundedReceiver, UnboundedSender},
+    Mutex,
+};
 use uuid::Uuid;
 use warp::{constellation::Progression, crypto::DID};
 
 use crate::warp_runner::ui_adapter::Message;
+
+pub struct AttachmentProgress {
+    pub progress: Progression,
+    pub conversation_id: Uuid,
+    pub msg: PendingSentMessage,
+}
+
+pub struct PendingMessageChannels {
+    pub tx: UnboundedSender<AttachmentProgress>,
+    pub rx: Arc<Mutex<UnboundedReceiver<AttachmentProgress>>>,
+}
+
+pub static MESSAGE_CHANNEL: Lazy<PendingMessageChannels> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    PendingMessageChannels {
+        tx,
+        rx: Arc::new(Mutex::new(rx)),
+    }
+});
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PendingSentMessages {
@@ -42,17 +66,19 @@ impl PendingSentMessages {
         };
         for m in &mut self.msg {
             if msg.eq(m) {
-                m.attachments.insert(file, Some(progress));
+                m.attachments_progress.insert(file, Some(progress));
                 break;
             }
         }
     }
 
     pub fn finish(&mut self, msg: Vec<String>, attachments: Vec<String>) {
-        let opt = self
-            .msg
-            .iter()
-            .position(|e| e.text.eq(&msg) && e.attachments.keys().all(|a| attachments.contains(a)));
+        let opt = self.msg.iter().position(|e| {
+            e.text.eq(&msg)
+                && e.attachments_progress
+                    .keys()
+                    .all(|a| attachments.contains(a))
+        });
         if let Some(pending) = opt {
             self.msg.remove(pending);
         }
@@ -62,7 +88,8 @@ impl PendingSentMessages {
 #[derive(Clone, Debug)]
 pub struct PendingSentMessage {
     text: Vec<String>,
-    attachments: HashMap<String, Option<Progression>>,
+    attachments: Vec<String>,
+    pub attachments_progress: HashMap<String, Option<Progression>>,
     pub message: Message,
 }
 
@@ -76,18 +103,17 @@ impl PendingSentMessage {
         };
         PendingSentMessage {
             text,
-            attachments: {
-                let mut m = HashMap::new();
-                attachments.iter().for_each(|p| {
+            attachments: attachments
+                .iter()
+                .map(|p| {
                     if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
                     {
-                        if !name.is_empty() {
-                            m.insert(name.to_string(), None);
-                        }
+                        return name.to_string();
                     }
-                });
-                m
-            },
+                    String::new()
+                })
+                .collect(),
+            attachments_progress: HashMap::new(),
             message,
         }
     }
@@ -107,18 +133,17 @@ impl PendingSentMessage {
         };
         PendingSentMessage {
             text,
-            attachments: {
-                let mut m = HashMap::new();
-                attachments.iter().for_each(|p| {
+            attachments: attachments
+                .iter()
+                .map(|p| {
                     if let Some(name) = p.file_name().map(|ostr| ostr.to_str().unwrap_or_default())
                     {
-                        if !name.is_empty() {
-                            m.insert(name.to_string(), None);
-                        }
+                        return name.to_string();
                     }
-                });
-                m
-            },
+                    String::new()
+                })
+                .collect(),
+            attachments_progress: HashMap::new(),
             message,
         }
     }
@@ -129,8 +154,8 @@ impl PartialEq for PendingSentMessage {
         self.text.eq(&other.text)
             && self
                 .attachments
-                .keys()
-                .all(|k| other.attachments.contains_key(k))
+                .iter()
+                .all(|k| other.attachments.contains(k))
     }
 }
 

@@ -4,7 +4,10 @@ use std::collections::HashSet;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use warp::{constellation::file::File, logging::tracing::log};
+use warp::{
+    constellation::{file::File, Progression},
+    logging::tracing::log,
+};
 
 use crate::{components::file_embed::FileEmbed, elements::textarea};
 
@@ -73,7 +76,10 @@ pub struct Props<'a> {
     parse_markdown: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
+
     pending: bool,
+
+    pending_attachments: Option<Vec<(String, Progression)>>,
 }
 
 #[allow(non_snake_case)]
@@ -113,6 +119,20 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     .map(|x| x.contains(file))
                     .unwrap_or(false),
                 on_press: move |_| cx.props.on_download.call(file.clone()),
+            })
+        })
+    });
+
+    let pending_attachment_list = cx.props.pending_attachments.as_ref().map(|vec| {
+        vec.iter().map(|(file, prog)| {
+            rsx!(FileEmbed {
+                key: "{file}",
+                filename: file.clone(),
+                remote: is_remote,
+                download_pending: false,
+                with_download_button: false,
+                progress: prog,
+                on_press: move |_| {},
             })
         })
     });
@@ -197,7 +217,9 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             })
-
+            pending_attachment_list.map(|node|{
+                rsx!(node)
+            })
         },
         div {
             class: "{reactions_class}",

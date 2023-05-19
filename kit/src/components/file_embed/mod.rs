@@ -7,6 +7,7 @@ use dioxus::prelude::*;
 
 use humansize::format_size;
 use humansize::DECIMAL;
+use warp::constellation::Progression;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -35,11 +36,13 @@ pub struct Props<'a> {
 
     // called shen the icon is clicked
     on_press: EventHandler<'a, ()>,
+
+    progress: Option<&'a Progression>,
 }
 
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let filename = &cx.props.filename;
+    let mut filename = cx.props.filename.clone();
     let download_pending = cx.props.download_pending.unwrap_or(false);
     let btn_icon = if !download_pending {
         cx.props.button_icon.unwrap_or(Icon::ArrowDown)
@@ -51,6 +54,40 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         with_download_button
     } else {
         true
+    };
+
+    let is_pending = cx.props.progress.is_some();
+
+    let perc = if let Some(p) = cx.props.progress {
+        match p {
+            Progression::CurrentProgress {
+                name: _,
+                current,
+                total,
+            } => match total {
+                Some(size) => {
+                    filename.push_str(&format_args!("- {}", size).to_string());
+                    current / size
+                }
+                None => 0,
+            },
+            Progression::ProgressComplete { name: _, total } => {
+                if let Some(size) = total {
+                    filename.push_str(&format_args!("- {}", size).to_string());
+                };
+                100
+            }
+            Progression::ProgressFailed {
+                name: _,
+                last_size: _,
+                error: _,
+            } => {
+                filename.push_str("- Failed");
+                0
+            }
+        }
+    } else {
+        0
     };
 
     // show one of the 3:
@@ -106,6 +143,15 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     class: "meta",
                     aria_label: "file-meta",
                     "{file_description}"
+                },
+                if is_pending {
+                    rsx!(div {
+                        class: "upload-bar",
+                        div {
+                            class: "upload-progress",
+                            style: format_args!("width: {}%", perc)
+                        }
+                    })
                 }
             },
             if with_download_button {
@@ -119,7 +165,6 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             }
-
         }
     ))
 }
