@@ -1202,9 +1202,9 @@ fn notification_action_handler<'a>(cx: Scope<'a, NotificationProps<'a>>) -> Elem
     use_future(cx, (), |_| {
         to_owned![state, route, friend_state];
         async move {
-            let warp_cmd_tx = NOTIFICATION_LISTENER.rx.clone();
+            let listener_channel = NOTIFICATION_LISTENER.rx.clone();
             log::trace!("starting notification action listener");
-            let mut ch = warp_cmd_tx.lock().await;
+            let mut ch = listener_channel.lock().await;
             while let Some(cmd) = ch.recv().await {
                 log::debug!("handling notification action {:#?}", cmd);
                 match cmd {
