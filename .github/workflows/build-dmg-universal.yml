@@ -41,6 +41,7 @@ jobs:
           MACOS_CERTIFICATE_NAME: ${{ secrets.MACOS_CERTIFICATE_NAME }}
           MACOS_CI_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
           MACOS_KEYCHAIN_NAME: ${{ secrets.MACOS_KEYCHAIN_NAME }}
+          MACOS_CERT_ID: ${{secrets.MACOS_CERT_ID}}
         run: |
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
           security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
@@ -51,7 +52,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
           security find-identity -p codesigning -v
           security list-keychains
-          make dmg SIGNING_KEY=7KLQJQ3MKD
+          make dmg SIGNING_KEY="$MACOS_CERT_ID"
       - name: "Notarize executable"
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
