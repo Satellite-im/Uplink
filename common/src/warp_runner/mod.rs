@@ -341,7 +341,6 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     let mut config = FsIpfsConfig::production(path);
     config.thumbnail_size = (500, 500);
 
-    //Note: If this is set to true, uncomment logic in `thumbnail_to_base64`
     config.thumbnail_exact_format = false;
 
     let storage = warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(config))
