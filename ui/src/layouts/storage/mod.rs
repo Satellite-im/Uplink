@@ -7,6 +7,7 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
+use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::*;
@@ -409,7 +410,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         )),
                                         File {
                                             key: "{key}-file",
-                                            thumbnail: file.thumbnail(),
+                                            thumbnail: thumbnail_to_base64(file),
                                             text: file.name(),
                                             aria_label: file.name(),
                                             with_rename: *is_renaming_map.read() == Some(key),
