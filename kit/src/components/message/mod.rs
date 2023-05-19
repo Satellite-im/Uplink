@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use common::warp_runner::thumbnail_to_base64;
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
@@ -104,7 +105,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
-                thumbnail: file.thumbnail(),
+                thumbnail: thumbnail_to_base64(file),
                 big: true,
                 remote: is_remote,
                 download_pending: cx

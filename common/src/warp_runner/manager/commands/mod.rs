@@ -6,7 +6,8 @@ mod tesseract_commands;
 
 // this shortens the path required to use the functions and structs
 pub use constellation_commands::{
-    handle_constellation_cmd, ConstellationCmd, FileTransferProgress, FileTransferStep,
+    handle_constellation_cmd, thumbnail_to_base64, ConstellationCmd, FileTransferProgress,
+    FileTransferStep,
 };
 pub use multipass_commands::{handle_multipass_cmd, MultiPassCmd};
 pub use other_commands::*;
