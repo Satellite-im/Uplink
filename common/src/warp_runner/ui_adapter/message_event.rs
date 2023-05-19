@@ -1,7 +1,6 @@
 use derive_more::Display;
 use uuid::Uuid;
 use warp::{
-    constellation::Progression,
     crypto::DID,
     error::Error,
     raygun::{self, MessageEventKind},
@@ -9,7 +8,7 @@ use warp::{
 
 use super::Message;
 use crate::{
-    state::{self, pending_message::PendingSentMessage},
+    state::{self},
     warp_runner::ui_adapter::{convert_raygun_message, did_to_identity},
 };
 
@@ -53,12 +52,6 @@ pub enum MessageEvent {
     RecipientRemoved { conversation: raygun::Conversation },
     #[display(fmt = "ConversationNameUpdated")]
     ConversationNameUpdated { conversation: raygun::Conversation },
-    #[display(fmt = "AttachmentProgress")]
-    AttachmentProgress {
-        progress: Progression,
-        conversation_id: Uuid,
-        msg: PendingSentMessage,
-    },
 }
 
 pub async fn convert_message_event(

@@ -493,11 +493,6 @@ impl State {
                     chat.conversation_name = conversation.name();
                 }
             }
-            MessageEvent::AttachmentProgress {
-                progress,
-                conversation_id,
-                msg,
-            } => self.update_outgoing_messages(conversation_id, msg, progress),
         }
     }
 }
@@ -1395,6 +1390,8 @@ impl<'a> MessageGroup<'a> {
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
+    pub attachment_progress: Option<&'a HashMap<String, Option<Progression>>>,
+    pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
     // if the user scrolls over this message, more messages should be loaded
@@ -1430,6 +1427,8 @@ pub fn group_messages<'a>(
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {
                     message: msg,
+                    attachment_progress: None,
+                    is_pending: false,
                     is_first: false,
                     is_last: true,
                     should_fetch_more: need_more(),
@@ -1448,6 +1447,8 @@ pub fn group_messages<'a>(
         let mut grp = MessageGroup::new(msg.inner.sender(), &my_did);
         let g = GroupedMessage {
             message: msg,
+            attachment_progress: None,
+            is_pending: false,
             is_first: true,
             is_last: true,
             should_fetch_more: need_more(),
@@ -1472,6 +1473,8 @@ pub fn pending_group_messages<'a>(
         if i == size - 1 {
             let g = GroupedMessage {
                 message: &msg.message,
+                attachment_progress: Some(&msg.attachments_progress),
+                is_pending: true,
                 is_first: false,
                 is_last: true,
                 should_fetch_more: false,
@@ -1481,6 +1484,8 @@ pub fn pending_group_messages<'a>(
         }
         let g = GroupedMessage {
             message: &msg.message,
+            attachment_progress: Some(&msg.attachments_progress),
+            is_pending: true,
             is_first: true,
             is_last: true,
             should_fetch_more: false,

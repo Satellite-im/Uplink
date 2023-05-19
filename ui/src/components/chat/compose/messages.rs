@@ -37,6 +37,7 @@ use rfd::FileDialog;
 
 use uuid::Uuid;
 use warp::{
+    constellation::Progression,
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
@@ -709,6 +710,22 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let remote_class = if *is_remote { "" } else { "remote" };
     let reactions_class = format!("message-reactions-container {remote_class}");
     let user_did_2 = user_did.clone();
+    let pending_attachments: Vec<(String, Progression)> = grouped_message
+        .attachment_progress
+        .map(|m| {
+            m.iter()
+                .map(|(f, p)| {
+                    (
+                        f.clone(),
+                        p.to_owned().unwrap_or(Progression::ProgressComplete {
+                            name: f.clone(),
+                            total: None,
+                        }),
+                    )
+                })
+                .collect()
+        })
+        .unwrap_or(vec![]);
 
     cx.render(rsx!(
         (*reacting_to.current() == Some(*msg_uuid)).then(|| {
@@ -764,12 +781,15 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 with_text: message.inner.value().join("\n"),
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                attachments: message.inner.attachments(),
+                attachments: message
+                .inner
+                .attachments(),
                 attachments_pending_download: pending_downloads.read().get(&message.inner.conversation_id()).cloned(),
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
                 pending: cx.props.pending,
+                pending_attachments: pending_attachments,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();
