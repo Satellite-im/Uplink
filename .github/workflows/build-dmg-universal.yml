@@ -51,7 +51,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" builduplink.keychain
           security find-identity -p codesigning -v
           security list-keychains
-          make dmg SIGNING_KEY='"$MACOS_KEYCHAIN_NAME"'
+          make dmg SIGNING_KEY=7KLQJQ3MKD
       - name: "Notarize executable"
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}
@@ -62,14 +62,14 @@ jobs:
           echo "Create keychain profile"
           xcrun notarytool store-credentials "uplink-notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
           echo "Creating temp notarization archive"
-          ditto -c -k --keepParent "target/macos_bundle/Uplink.app" "notarization.zip"
+          ditto -c -k --keepParent "target/release/macos/Uplink.app" "notarization.zip"
           echo "Notarize app"
           xcrun notarytool submit "notarization.zip" --keychain-profile "uplink-notarytool-profile" --wait
           echo "Attach staple"
-          xcrun stapler staple "target/macos_bundle/Uplink.app"
+          xcrun stapler staple "target/release/macos/Uplink.app"
       - name: Create ZIP archive
         run: |
-          ditto -c -k --sequesterRsrc --keepParent target/macos_bundle/Uplink.app Uplink-Mac-Universal.zip
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
       - name: Calculate hashes
         run: |
           shasum -a 256 Uplink-Mac-Universal.zip > Uplink-Mac-Universal.zip.sha256.txt
