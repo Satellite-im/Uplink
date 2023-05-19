@@ -713,15 +713,7 @@ pub fn thumbnail_to_base64(file: &File) -> String {
 
     let ty = file.thumbnail_format();
     let mime = match ty {
-        FormatType::Mime(mime) => {
-            match mime.ty().as_str() {
-                "image" => mime.to_string(),
-                //Videos thumbnails here are saved as jpeg, so we need to set the mime type manually
-                "video" => "image/jpeg".into(),
-                "application" if mime.subty().as_str().eq("pdf") => "image/jpeg".into(),
-                _ => mime.to_string(),
-            }
-        }
+        FormatType::Mime(mime) => mime.to_string(),
         FormatType::Generic => "application/octet-stream".into(),
     };
 
