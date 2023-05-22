@@ -631,11 +631,9 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
-                state.write_silent().update_outgoing_messages(
-                    evt.conversation_id,
-                    evt.msg,
-                    evt.progress,
-                );
+                state
+                    .write()
+                    .update_outgoing_messages(evt.conversation_id, evt.msg, evt.progress);
             }
         }
     });

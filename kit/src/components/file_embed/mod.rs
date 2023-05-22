@@ -42,7 +42,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let mut filename = cx.props.filename.clone();
+    let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
     let btn_icon = if !download_pending {
         cx.props.button_icon.unwrap_or(Icon::ArrowDown)
@@ -58,6 +58,8 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let is_pending = cx.props.progress.is_some();
 
+    let mut file_size_pending = String::new();
+
     let perc = if let Some(p) = cx.props.progress {
         match p {
             Progression::CurrentProgress {
@@ -66,14 +68,16 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 total,
             } => match total {
                 Some(size) => {
-                    filename.push_str(&format_args!("- {}", size).to_string());
+                    file_size_pending
+                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
                     current / size
                 }
                 None => 0,
             },
             Progression::ProgressComplete { name: _, total } => {
                 if let Some(size) = total {
-                    filename.push_str(&format_args!("- {}", size).to_string());
+                    file_size_pending
+                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
                 };
                 100
             }
@@ -82,7 +86,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 last_size: _,
                 error: _,
             } => {
-                filename.push_str("- Failed");
+                file_size_pending.push_str("Failed");
                 0
             }
         }
@@ -102,7 +106,13 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 None => size,
             }
         }
-        None => cx.props.kind.clone().unwrap_or_default(),
+        None => {
+            if file_size_pending.is_empty() {
+                cx.props.kind.clone().unwrap_or_default()
+            } else {
+                file_size_pending
+            }
+        }
     };
     let remote = cx.props.remote.unwrap_or_default();
 
