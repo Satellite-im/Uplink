@@ -45,12 +45,12 @@ jobs:
         run: cargo update
 
       - name: Build executable 🖥️
-        run: make unsigned-dmg
+        run: make dmg
         continue-on-error: true
 
       - name: Create ZIP archive 🗳️
         run: |
-          ditto -c -k --sequesterRsrc --keepParent target/macos_bundle/Uplink.app Uplink-Mac-Universal.zip
+          ditto -c -k --sequesterRsrc --keepParent target/release/macos/Uplink.app Uplink-Mac-Universal.zip
 
       - name: Calculate hashes 🧮
         run: |

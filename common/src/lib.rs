@@ -161,11 +161,6 @@ pub const VIDEO_FILE_EXTENSIONS: &[&str] = &[
     ".mp4", ".mov", ".mkv", ".avi", ".flv", ".wmv", ".m4v", ".3gp",
 ];
 
-pub const IMAGE_EXTENSIONS: &[&str] = &[
-    ".png", ".jpg", ".jpeg", ".svg", ".heic", ".tiff", ".gif", ".webp", ".apng", ".avif", ".ico",
-    ".bmp", ".svgz",
-];
-
 pub const DOC_EXTENSIONS: &[&str] = &[".doc", ".docx", ".pdf", ".txt"];
 
 pub fn get_images_dir() -> anyhow::Result<PathBuf> {

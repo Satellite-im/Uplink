@@ -1,5 +1,5 @@
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use warp::constellation::file::File;
@@ -12,7 +12,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
-    let thumbnail = cx.props.file.thumbnail();
+    let thumbnail = thumbnail_to_base64(cx.props.file);
 
     cx.render(rsx!(rsx!(div {
         ContextMenu {
