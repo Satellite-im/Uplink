@@ -3,6 +3,7 @@ use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
+use common::state::pending_message::progression_percent;
 use dioxus::prelude::*;
 
 use humansize::format_size;
@@ -70,7 +71,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Some(size) => {
                     file_size_pending
                         .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
-                    current / size
+                    current * 100 / size
                 }
                 None => 0,
             },

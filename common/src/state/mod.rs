@@ -888,6 +888,17 @@ impl State {
         }
     }
 
+    pub fn get_current_pending(
+        &self,
+        conv_id: Uuid,
+        msg: PendingSentMessage,
+    ) -> Option<&PendingSentMessage> {
+        if let Some(chat) = self.chats.all.get(&conv_id) {
+            return chat.pending_outgoing_messages.get(msg);
+        }
+        None
+    }
+
     pub fn update_outgoing_messages(
         &mut self,
         conv_id: Uuid,
@@ -1390,7 +1401,7 @@ impl<'a> MessageGroup<'a> {
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
-    pub attachment_progress: Option<&'a HashMap<String, Option<Progression>>>,
+    pub attachment_progress: Option<&'a HashMap<String, Progression>>,
     pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
@@ -1495,6 +1506,6 @@ pub fn pending_group_messages<'a>(
     Some(MessageGroup {
         sender: own_did,
         remote: false,
-        messages: messages,
+        messages,
     })
 }
