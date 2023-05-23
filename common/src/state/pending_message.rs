@@ -39,6 +39,10 @@ impl PendingSentMessages {
         PendingSentMessages { msg: vec![] }
     }
 
+    pub fn get(&self, msg: PendingSentMessage) -> Option<&PendingSentMessage> {
+        self.msg.iter().find(|m| msg.eq(*m))
+    }
+
     pub fn append(
         &mut self,
         chat_id: Uuid,
@@ -66,7 +70,7 @@ impl PendingSentMessages {
         };
         for m in &mut self.msg {
             if msg.eq(m) {
-                m.attachments_progress.insert(file, Some(progress));
+                m.attachments_progress.insert(file, progress);
                 break;
             }
         }
@@ -85,11 +89,13 @@ impl PendingSentMessages {
     }
 }
 
+//We can improve message equality detection if warp e.g. can send us their assigned uuid.
+//Else it is just a guesswork
 #[derive(Clone, Debug)]
 pub struct PendingSentMessage {
     text: Vec<String>,
     attachments: Vec<String>,
-    pub attachments_progress: HashMap<String, Option<Progression>>,
+    pub attachments_progress: HashMap<String, Progression>,
     pub message: Message,
 }
 
@@ -160,3 +166,20 @@ impl PartialEq for PendingSentMessage {
 }
 
 impl Eq for PendingSentMessage {}
+
+// Returns the progression value as an int between 0-100
+pub fn progression_percent(prog: &Progression) -> usize {
+    match prog {
+        Progression::CurrentProgress {
+            name: _,
+            current,
+            total,
+        } => current * 100 / total.unwrap_or(*current),
+        Progression::ProgressComplete { name: _, total: _ } => 100,
+        Progression::ProgressFailed {
+            name: _,
+            last_size: _,
+            error: _,
+        } => 0,
+    }
+}

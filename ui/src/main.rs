@@ -7,7 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::pending_message::MESSAGE_CHANNEL;
+use common::state::pending_message::{progression_percent, MESSAGE_CHANNEL};
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -27,6 +27,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use warp::constellation::Progression;
 
 use std::collections::HashMap;
 
@@ -619,21 +620,59 @@ fn app(cx: Scope) -> Element {
     });
 
     use_future(cx, (), |_| {
-        to_owned![state];
+        to_owned![cx, state];
+        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
         async move {
-            // don't process warp events until friends and chats have been loaded
             while !state.read().initialized {
                 tokio::time::sleep(std::time::Duration::from_millis(10)).await;
             }
-            let warp_event_rx = MESSAGE_CHANNEL.rx.clone();
+            let message_receiver = MESSAGE_CHANNEL.rx.clone();
             log::trace!("starting warp_runner use_future");
-            // it should be sufficient to lock once at the start of the use_future. this is the only place the channel should be read from. in the off change that
-            // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
-            let mut ch = warp_event_rx.lock().await;
+            let mut ch = message_receiver.lock().await;
             while let Some(evt) = ch.recv().await {
-                state
-                    .write()
-                    .update_outgoing_messages(evt.conversation_id, evt.msg, evt.progress);
+                //Only update when reaching a threshold. Here just 5% progress.
+                let silent = if let Some(p) = state
+                    .read()
+                    .get_current_pending(evt.conversation_id.clone(), evt.msg.clone())
+                {
+                    if let Progression::CurrentProgress {
+                        name,
+                        current,
+                        total,
+                    } = evt.progress.clone()
+                    {
+                        let new_percent = current * 100 / total.unwrap_or(current);
+                        p.attachments_progress
+                            .get(&name)
+                            .map(|prog| {
+                                let percent = progression_percent(prog);
+                                new_percent <= percent + 5_usize
+                            })
+                            .unwrap_or_default()
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                };
+                if !silent {
+                    state.write_silent().update_outgoing_messages(
+                        evt.conversation_id,
+                        evt.msg,
+                        evt.progress,
+                    );
+                    let read = state.read();
+                    if read
+                        .get_active_chat()
+                        .map(|c| c.id.eq(&evt.conversation_id))
+                        .unwrap_or_default()
+                    {
+                        //Update the component only instead of whole state
+                        if let Some(v) = read.scope_ids.pending_message_component {
+                            schedule(ScopeId(v))
+                        }
+                    }
+                }
             }
         }
     });
