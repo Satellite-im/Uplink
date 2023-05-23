@@ -621,6 +621,18 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let _msg_uuid = message.inner.id();
 
+        if cx.props.pending {
+            return rsx!(render_message {
+                message: grouped_message,
+                is_remote: cx.props.is_remote,
+                msg_uuid: _msg_uuid,
+                message_key: _message_key,
+                reacting_to: reacting_to.clone(),
+                edit_msg: edit_msg.clone(),
+                pending: cx.props.pending
+            });
+        }
+
         // todo: add onblur event
         rsx!(ContextMenu {
             key: "{context_key}",
@@ -654,66 +666,62 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             })),
-            items: if cx.props.pending {
-                cx.render(rsx!(()))
-            } else {
-                cx.render(rsx!(
-                    ContextItem {
-                        icon: Icon::ArrowLongLeft,
-                        aria_label: "messages-reply".into(),
-                        text: get_local_text("messages.reply"),
-                        onpress: move |_| {
-                            state
-                                .write()
-                                .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::FaceSmile,
-                        aria_label: "messages-react".into(),
-                        text: get_local_text("messages.react"),
-                        onpress: move |_| {
-                            state.write().ui.ignore_focus = true;
-                            reacting_to.set(Some(_msg_uuid));
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Pencil,
-                        aria_label: "messages-edit".into(),
-                        text: get_local_text("messages.edit"),
-                        should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
-                        onpress: move |_| {
-                            edit_msg.set(Some(_msg_uuid));
-                            state.write().ui.ignore_focus = true;
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Pencil,
-                        aria_label: "messages-cancel-edit".into(),
-                        text: get_local_text("messages.cancel-edit"),
-                        should_render: !cx.props.is_remote
-                            && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
-                        onpress: move |_| {
-                            edit_msg.set(None);
-                            state.write().ui.ignore_focus = false;
-                        }
-                    },
-                    ContextItem {
-                        icon: Icon::Trash,
-                        danger: true,
-                        aria_label: "messages-delete".into(),
-                        text: get_local_text("uplink.delete"),
-                        should_render: sender_is_self,
-                        onpress: move |_| {
-                            ch.send(MessagesCommand::DeleteMessage {
-                                conv_id: message.inner.conversation_id(),
-                                msg_id: message.inner.id(),
-                            });
-                        }
-                    },
-                ))
-            } // end of context menu items
+            items: cx.render(rsx!(
+                ContextItem {
+                    icon: Icon::ArrowLongLeft,
+                    aria_label: "messages-reply".into(),
+                    text: get_local_text("messages.reply"),
+                    onpress: move |_| {
+                        state
+                            .write()
+                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::FaceSmile,
+                    aria_label: "messages-react".into(),
+                    text: get_local_text("messages.react"),
+                    onpress: move |_| {
+                        state.write().ui.ignore_focus = true;
+                        reacting_to.set(Some(_msg_uuid));
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    aria_label: "messages-edit".into(),
+                    text: get_local_text("messages.edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                    onpress: move |_| {
+                        edit_msg.set(Some(_msg_uuid));
+                        state.write().ui.ignore_focus = true;
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Pencil,
+                    aria_label: "messages-cancel-edit".into(),
+                    text: get_local_text("messages.cancel-edit"),
+                    should_render: !cx.props.is_remote
+                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                    onpress: move |_| {
+                        edit_msg.set(None);
+                        state.write().ui.ignore_focus = false;
+                    }
+                },
+                ContextItem {
+                    icon: Icon::Trash,
+                    danger: true,
+                    aria_label: "messages-delete".into(),
+                    text: get_local_text("uplink.delete"),
+                    should_render: sender_is_self,
+                    onpress: move |_| {
+                        ch.send(MessagesCommand::DeleteMessage {
+                            conv_id: message.inner.conversation_id(),
+                            msg_id: message.inner.id(),
+                        });
+                    }
+                },
+            )) // end of context menu items
         }) // end context menu
     }))) // end outer cx.render
 }
