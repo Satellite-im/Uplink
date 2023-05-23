@@ -49,9 +49,11 @@ impl PendingSentMessages {
         did: DID,
         msg: Vec<String>,
         attachments: &Vec<PathBuf>,
-    ) {
-        self.msg
-            .push(PendingSentMessage::new(chat_id, did, msg, &attachments));
+    ) -> Uuid {
+        let new = PendingSentMessage::new(chat_id, did, msg, &attachments);
+        let uuid = new.message.inner.id();
+        self.msg.push(new);
+        uuid
     }
 
     pub fn update(&mut self, msg: PendingSentMessage, progress: Progression) {
@@ -76,12 +78,13 @@ impl PendingSentMessages {
         }
     }
 
-    pub fn finish(&mut self, msg: Vec<String>, attachments: Vec<String>) {
+    pub fn finish(&mut self, msg: Vec<String>, attachments: Vec<String>, uuid: Option<Uuid>) {
         let opt = self.msg.iter().position(|e| {
             e.text.eq(&msg)
                 && e.attachments_progress
                     .keys()
                     .all(|a| attachments.contains(a))
+                && uuid.map(|id| id.eq(&e.id())).unwrap_or(true)
         });
         if let Some(pending) = opt {
             self.msg.remove(pending);
@@ -101,9 +104,13 @@ pub struct PendingSentMessage {
 
 impl PendingSentMessage {
     // Use this for comparison cases
-    pub fn for_compare(text: Vec<String>, attachments: &Vec<PathBuf>) -> Self {
+    pub fn for_compare(text: Vec<String>, attachments: &Vec<PathBuf>, id: Option<Uuid>) -> Self {
+        let mut inner = warp::raygun::Message::default();
+        if let Some(m_id) = id {
+            inner.set_id(m_id);
+        }
         let message = Message {
-            inner: warp::raygun::Message::default(),
+            inner,
             in_reply_to: None,
             key: String::new(),
         };
@@ -153,6 +160,12 @@ impl PendingSentMessage {
             message,
         }
     }
+
+    // UI side id. Messages arriving at warp have a different id!
+    // This is only for messages that have not been sent to warp yet
+    pub fn id(&self) -> Uuid {
+        self.message.inner.id()
+    }
 }
 
 impl PartialEq for PendingSentMessage {
@@ -162,6 +175,7 @@ impl PartialEq for PendingSentMessage {
                 .attachments
                 .iter()
                 .all(|k| other.attachments.contains(k))
+            && self.id().eq(&other.id())
     }
 }
 

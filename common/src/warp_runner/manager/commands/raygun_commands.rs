@@ -85,6 +85,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<PathBuf>,
+        ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "EditMessage")]
@@ -220,6 +221,7 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
+            ui_msg_id: ui_id,
             rsp,
         } => {
             let r = if attachments.is_empty() {
@@ -253,6 +255,7 @@ pub async fn handle_raygun_cmd(
                                             msg: PendingSentMessage::for_compare(
                                                 msg_clone,
                                                 &attachments,
+                                                ui_id,
                                             ),
                                         })
                                         .is_err()

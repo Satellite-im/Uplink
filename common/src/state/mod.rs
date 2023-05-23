@@ -423,6 +423,7 @@ impl State {
                         .iter()
                         .map(|f| f.name())
                         .collect(),
+                    None,
                 );
             }
             MessageEvent::Edited {
@@ -878,14 +879,21 @@ impl State {
 
     // indicates that a conversation has a pending outgoing message
     // can only send messages to the active chat
-    pub fn increment_outgoing_messages(&mut self, msg: Vec<String>, attachments: &Vec<PathBuf>) {
+    pub fn increment_outgoing_messages(
+        &mut self,
+        msg: Vec<String>,
+        attachments: &Vec<PathBuf>,
+    ) -> Option<Uuid> {
         let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
             if let Some(chat) = self.chats.all.get_mut(&id) {
-                chat.pending_outgoing_messages
-                    .append(id, did, msg, attachments);
+                return Some(
+                    chat.pending_outgoing_messages
+                        .append(id, did, msg, attachments),
+                );
             }
         }
+        None
     }
 
     pub fn get_current_pending(
@@ -915,9 +923,22 @@ impl State {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<String>,
+        uuid: Option<Uuid>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages.finish(msg, attachments);
+            chat.pending_outgoing_messages
+                .finish(msg, attachments, uuid);
+        }
+    }
+
+    pub fn decrement_outgoing_messagess(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        uuid: Option<Uuid>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
+            chat.pending_outgoing_messages.finish(msg, vec![], uuid);
         }
     }
 

@@ -94,11 +94,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let msg_ch = use_coroutine(
         cx,
-        |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>)>| {
+        |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)>| {
             to_owned![files_to_upload, state];
             async move {
                 let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                while let Some((msg, conv_id, reply)) = rx.next().await {
+                while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
                     let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                     let attachments = files_to_upload.current().to_vec();
                     let msg_clone = msg.clone();
@@ -114,6 +114,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             conv_id,
                             msg,
                             attachments,
+                            ui_msg_id,
                             rsp: tx,
                         },
                     };
@@ -134,6 +135,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             conv_id,
                             msg_clone,
                             attachment_files,
+                            ui_msg_id,
                         );
                         continue;
                     }
@@ -145,6 +147,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                             conv_id,
                             msg_clone,
                             attachment_files,
+                            ui_msg_id,
                         );
                     }
                 }
@@ -277,10 +280,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             if replying_to.is_some() {
                 state.write().mutate(Action::CancelReply(id));
             }
-            state
+            let ui_id = state
                 .write()
                 .increment_outgoing_messages(msg.clone(), files_to_upload);
-            msg_ch.send((msg, id, replying_to));
+            msg_ch.send((msg, id, ui_id, replying_to));
         }
     };
     let id = match active_chat_id {
