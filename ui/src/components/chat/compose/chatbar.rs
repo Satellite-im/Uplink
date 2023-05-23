@@ -478,10 +478,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 ))
             })
         })
-        chatbar,
         Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
             update_send();
-        }}
+        }},
+        chatbar,
     ))
 }
 
