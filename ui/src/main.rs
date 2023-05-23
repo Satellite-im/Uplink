@@ -7,7 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::pending_message::{progression_percent, MESSAGE_CHANNEL};
+use common::state::pending_message::MESSAGE_CHANNEL;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -27,7 +27,6 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
-use warp::constellation::Progression;
 
 use std::collections::HashMap;
 
@@ -631,46 +630,20 @@ fn app(cx: Scope) -> Element {
             let mut ch = message_receiver.lock().await;
             while let Some(evt) = ch.recv().await {
                 //Only update when reaching a threshold. Here just 5% progress.
-                let silent = if let Some(p) = state
-                    .read()
-                    .get_current_pending(evt.conversation_id.clone(), evt.msg.clone())
+                state.write_silent().update_outgoing_messages(
+                    evt.conversation_id,
+                    evt.msg,
+                    evt.progress,
+                );
+                let read = state.read();
+                if read
+                    .get_active_chat()
+                    .map(|c| c.id.eq(&evt.conversation_id))
+                    .unwrap_or_default()
                 {
-                    if let Progression::CurrentProgress {
-                        name,
-                        current,
-                        total,
-                    } = evt.progress.clone()
-                    {
-                        let new_percent = current * 100 / total.unwrap_or(current);
-                        p.attachments_progress
-                            .get(&name)
-                            .map(|prog| {
-                                let percent = progression_percent(prog);
-                                new_percent <= percent + 5_usize
-                            })
-                            .unwrap_or_default()
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                };
-                if !silent {
-                    state.write_silent().update_outgoing_messages(
-                        evt.conversation_id,
-                        evt.msg,
-                        evt.progress,
-                    );
-                    let read = state.read();
-                    if read
-                        .get_active_chat()
-                        .map(|c| c.id.eq(&evt.conversation_id))
-                        .unwrap_or_default()
-                    {
-                        //Update the component only instead of whole state
-                        if let Some(v) = read.scope_ids.pending_message_component {
-                            schedule(ScopeId(v))
-                        }
+                    //Update the component only instead of whole state
+                    if let Some(v) = read.scope_ids.pending_message_component {
+                        schedule(ScopeId(v))
                     }
                 }
             }
