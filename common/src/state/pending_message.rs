@@ -48,7 +48,7 @@ impl PendingSentMessages {
         chat_id: Uuid,
         did: DID,
         msg: Vec<String>,
-        attachments: &Vec<PathBuf>,
+        attachments: &[PathBuf],
     ) -> Uuid {
         let new = PendingSentMessage::new(chat_id, did, msg, attachments);
         let uuid = new.message.inner.id();
