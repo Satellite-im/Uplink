@@ -683,7 +683,7 @@ impl State {
 
     pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingSentMessage>> {
         self.get_active_chat()
-            .map(|chat| chat.pending_outgoing_messages.msg.clone())
+            .map(|chat| chat.pending_outgoing_messages.msg)
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -1496,7 +1496,7 @@ pub fn pending_group_messages<'a>(
     pending: &'a Vec<PendingSentMessage>,
     own_did: DID,
 ) -> Option<MessageGroup<'a>> {
-    if pending.len() == 0 {
+    if pending.is_empty() {
         return None;
     };
     let mut messages: Vec<GroupedMessage<'a>> = vec![];

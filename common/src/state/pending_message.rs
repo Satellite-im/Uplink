@@ -50,7 +50,7 @@ impl PendingSentMessages {
         msg: Vec<String>,
         attachments: &Vec<PathBuf>,
     ) -> Uuid {
-        let new = PendingSentMessage::new(chat_id, did, msg, &attachments);
+        let new = PendingSentMessage::new(chat_id, did, msg, attachments);
         let uuid = new.message.inner.id();
         self.msg.push(new);
         uuid
@@ -104,7 +104,7 @@ pub struct PendingSentMessage {
 
 impl PendingSentMessage {
     // Use this for comparison cases
-    pub fn for_compare(text: Vec<String>, attachments: &Vec<PathBuf>, id: Option<Uuid>) -> Self {
+    pub fn for_compare(text: Vec<String>, attachments: &[PathBuf], id: Option<Uuid>) -> Self {
         let mut inner = warp::raygun::Message::default();
         if let Some(m_id) = id {
             inner.set_id(m_id);
@@ -131,7 +131,7 @@ impl PendingSentMessage {
         }
     }
 
-    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &Vec<PathBuf>) -> Self {
+    pub fn new(chat_id: Uuid, did: DID, text: Vec<String>, attachments: &[PathBuf]) -> Self {
         // Create a dummy message
         let mut inner = warp::raygun::Message::default();
         inner.set_id(Uuid::new_v4());
@@ -180,20 +180,3 @@ impl PartialEq for PendingSentMessage {
 }
 
 impl Eq for PendingSentMessage {}
-
-// Returns the progression value as an int between 0-100
-pub fn progression_percent(prog: &Progression) -> usize {
-    match prog {
-        Progression::CurrentProgress {
-            name: _,
-            current,
-            total,
-        } => current * 100 / total.unwrap_or(*current),
-        Progression::ProgressComplete { name: _, total: _ } => 100,
-        Progression::ProgressFailed {
-            name: _,
-            last_size: _,
-            error: _,
-        } => 0,
-    }
-}
