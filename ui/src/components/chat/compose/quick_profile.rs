@@ -336,7 +336,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             onreturn: move |(val, _,_): (String,bool,Code)|{
                                 let ui_id = state
                                     .write_silent()
-                                    .increment_outgoing_messages(vec![val.clone()], &vec![]);
+                                    .increment_outgoing_messages(vec![val.clone()], &[]);
                                 ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
                             }
                         }

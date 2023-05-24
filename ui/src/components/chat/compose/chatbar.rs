@@ -39,6 +39,8 @@ const MAX_CHARS_LIMIT: usize = 1024;
 
 use crate::utils::build_user_from_identity;
 
+type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
+
 #[derive(Eq, PartialEq)]
 enum TypingIndicator {
     // reset the typing indicator timer
@@ -92,68 +94,65 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let is_typing = !users_typing.is_empty();
     let users_typing = state.read().get_identities(&users_typing);
 
-    let msg_ch = use_coroutine(
-        cx,
-        |mut rx: UnboundedReceiver<(Vec<String>, Uuid, Option<Uuid>, Option<Uuid>)>| {
-            to_owned![files_to_upload, state];
-            async move {
-                let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-                while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
-                    let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                    let attachments = files_to_upload.current().to_vec();
-                    let msg_clone = msg.clone();
-                    let cmd = match reply {
-                        Some(reply_to) => RayGunCmd::Reply {
-                            conv_id,
-                            reply_to,
-                            msg,
-                            attachments,
-                            rsp: tx,
-                        },
-                        None => RayGunCmd::SendMessage {
-                            conv_id,
-                            msg,
-                            attachments,
-                            ui_msg_id,
-                            rsp: tx,
-                        },
-                    };
-                    let attachments = files_to_upload.current().to_vec();
-                    files_to_upload.set(vec![]);
-                    let attachment_files: Vec<String> = attachments
-                        .iter()
-                        .map(|p| {
-                            p.file_name()
-                                .map(|os| os.to_str().unwrap_or_default())
-                                .unwrap_or_default()
-                                .to_string()
-                        })
-                        .collect();
-                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
-                        log::error!("failed to send warp command: {}", e);
-                        state.write().decrement_outgoing_messages(
-                            conv_id,
-                            msg_clone,
-                            attachment_files,
-                            ui_msg_id,
-                        );
-                        continue;
-                    }
+    let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
+        to_owned![files_to_upload, state];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
+                let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
+                let attachments = files_to_upload.current().to_vec();
+                let msg_clone = msg.clone();
+                let cmd = match reply {
+                    Some(reply_to) => RayGunCmd::Reply {
+                        conv_id,
+                        reply_to,
+                        msg,
+                        attachments,
+                        rsp: tx,
+                    },
+                    None => RayGunCmd::SendMessage {
+                        conv_id,
+                        msg,
+                        attachments,
+                        ui_msg_id,
+                        rsp: tx,
+                    },
+                };
+                let attachments = files_to_upload.current().to_vec();
+                files_to_upload.set(vec![]);
+                let attachment_files: Vec<String> = attachments
+                    .iter()
+                    .map(|p| {
+                        p.file_name()
+                            .map(|os| os.to_str().unwrap_or_default())
+                            .unwrap_or_default()
+                            .to_string()
+                    })
+                    .collect();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
+                    log::error!("failed to send warp command: {}", e);
+                    state.write().decrement_outgoing_messages(
+                        conv_id,
+                        msg_clone,
+                        attachment_files,
+                        ui_msg_id,
+                    );
+                    continue;
+                }
 
-                    let rsp = rx.await.expect("command canceled");
-                    if let Err(e) = rsp {
-                        log::error!("failed to send message: {}", e);
-                        state.write().decrement_outgoing_messages(
-                            conv_id,
-                            msg_clone,
-                            attachment_files,
-                            ui_msg_id,
-                        );
-                    }
+                let rsp = rx.await.expect("command canceled");
+                if let Err(e) = rsp {
+                    log::error!("failed to send message: {}", e);
+                    state.write().decrement_outgoing_messages(
+                        conv_id,
+                        msg_clone,
+                        attachment_files,
+                        ui_msg_id,
+                    );
                 }
             }
-        },
-    );
+        }
+    });
 
     // typing indicator notes
     // consider side A, the local side, and side B, the remote side

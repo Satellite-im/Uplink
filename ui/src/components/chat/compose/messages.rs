@@ -343,7 +343,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
                     },
                     render_pending_messages_listener {
-                        data: &data,
+                        data: data,
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             if !identity_profile.get().eq(&id) {
                                 let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
