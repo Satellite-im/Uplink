@@ -882,7 +882,7 @@ impl State {
     pub fn increment_outgoing_messages(
         &mut self,
         msg: Vec<String>,
-        attachments: &Vec<PathBuf>,
+        attachments: &[PathBuf],
     ) -> Option<Uuid> {
         let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
