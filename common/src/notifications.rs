@@ -38,6 +38,16 @@ pub static NOTIFICATION_LISTENER: Lazy<NotificationChannel> = Lazy::new(|| {
     }
 });
 
+// On mac clicking on notifications does not focus the app unlike other os.
+// We also dont always have a reference to the current window when pushing a notification
+// As such we use a channel to notify the app to refocus the window instead
+#[cfg(target_os = "macos")]
+pub static FOCUS_SCHEDULER: Lazy<(UnboundedSender<()>, Arc<Mutex<UnboundedReceiver<()>>>)> =
+    Lazy::new(|| {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        (tx, Arc::new(Mutex::new(rx)))
+    });
+
 // Implementation to create and push new notifications
 #[allow(non_snake_case)]
 pub fn push_notification(
@@ -209,13 +219,26 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
             .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
             .send()
             .unwrap();
-        if let mac_notification_sys::NotificationResponse::ActionButton(id) = response {
-            if action_name.eq(&id) {
-                let tx = NOTIFICATION_LISTENER.tx.clone();
-                if let Err(e) = tx.send(action) {
-                    log::error!("failed to send command to initialize warp {}", e);
+        match response {
+            mac_notification_sys::NotificationResponse::ActionButton(id) => {
+                if action_name.eq(&id) {
+                    let tx = NOTIFICATION_LISTENER.tx.clone();
+                    if let Err(e) = tx.send(action) {
+                        log::error!("failed to send command to initialize warp {}", e);
+                    }
+                    let focus = FOCUS_SCHEDULER.0.clone();
+                    if let Err(e) = focus.send(()) {
+                        log::error!("failed to send focus command {}", e);
+                    }
+                };
+            }
+            mac_notification_sys::NotificationResponse::Click => {
+                let focus = FOCUS_SCHEDULER.0.clone();
+                if let Err(e) = focus.send(()) {
+                    log::error!("failed to send focus command {}", e);
                 }
-            };
+            }
+            _ => {}
         }
     }
 

@@ -619,6 +619,21 @@ fn app(cx: Scope) -> Element {
         }
     });
 
+    // focus handler for notifications. macos only
+    #[cfg(target_os = "macos")]
+    {
+        use_future(cx, (), |_| {
+            to_owned![desktop];
+            async move {
+                let channel = common::notifications::FOCUS_SCHEDULER.1.clone();
+                let mut ch = channel.lock().await;
+                while let Some(_) = ch.recv().await {
+                    desktop.set_focus();
+                }
+            }
+        });
+    }
+
     // clear toasts
     use_future(cx, (), |_| {
         to_owned![state];
