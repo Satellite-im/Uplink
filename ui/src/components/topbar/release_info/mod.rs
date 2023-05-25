@@ -10,7 +10,7 @@ pub fn Release_Info(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "pre-release",
-            class : if cfg!(target_os = "macos") {"topbar-item mac-spacer"}  else {"topbar-item"},
+            class : if cfg!(target_os = "macos") {"topbar-item mac-spacer topbar-item-background"}  else {"topbar-item topbar-item-background"},
             aria_label: "pre-release",
             IconElement {
                 icon: Icon::Beaker,

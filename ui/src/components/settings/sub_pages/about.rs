@@ -87,17 +87,32 @@ pub fn AboutPage(cx: Scope) -> Element {
         }
         _ => match stage {
             DownloadProgress::Idle => {
-                rsx!(Button {
-                    key: "btn-idle",
-                    text: get_local_text("uplink.download-update"),
-                    loading: *update_button_loading.current(),
-                    aria_label: "check-for-updates-button".into(),
-                    appearance: Appearance::Secondary,
-                    icon: Icon::ArrowDown,
-                    onpress: move |_| {
-                        download_state.write().stage = DownloadProgress::PickFolder;
+                rsx!(
+                    Button {
+                        key: "btn-idle",
+                        text: get_local_text("uplink.download-update"),
+                        loading: *update_button_loading.current(),
+                        aria_label: "check-for-updates-button".into(),
+                        appearance: Appearance::Secondary,
+                        icon: Icon::ArrowDown,
+                        onpress: move |_| {
+                            download_state.write().stage = DownloadProgress::PickFolder;
+                        }
+                    },
+                    if state.read().settings.update_dismissed
+                        != state.read().settings.update_available
+                    {
+                        rsx!(Button {
+                            aria_label: "update-menu-dismiss".into(),
+                            text: get_local_text("uplink.update-menu-dismiss"),
+                            appearance: Appearance::Secondary,
+                            icon: Icon::XCircle,
+                            onpress: move |_| {
+                                state.write().mutate(Action::DismissUpdate);
+                            }
+                        })
                     }
-                })
+                )
             }
             DownloadProgress::PickFolder => rsx!(get_download_modal {
                 on_dismiss: move |_| {

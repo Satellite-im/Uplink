@@ -661,6 +661,7 @@ fn app(cx: Scope) -> Element {
 
     // check for updates
     use_future(cx, (), |_| {
+        let version = env!("CARGO_PKG_VERSION");
         to_owned![state];
         async move {
             loop {
@@ -668,6 +669,7 @@ fn app(cx: Scope) -> Element {
                     Ok(opt) => match opt {
                         Some(r) => r,
                         None => {
+                            state.write().settings.update_available = Some(version.to_owned());
                             sleep(Duration::from_secs(3600 * 24)).await;
                             continue;
                         }
@@ -841,6 +843,7 @@ fn app(cx: Scope) -> Element {
 }
 
 fn get_update_icon(cx: Scope) -> Element {
+    let version = env!("CARGO_PKG_VERSION");
     log::trace!("rendering get_update_icon");
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
@@ -851,12 +854,11 @@ fn get_update_icon(cx: Scope) -> Element {
         Some(u) => u.clone(),
         None => return cx.render(rsx!("")),
     };
+    let dismissed_version = match state.read().settings.update_dismissed.as_ref() {
+        Some(u) => u.clone(),
+        None => return cx.render(rsx!("")),
+    };
 
-    let update_msg = format!(
-        "{}: {}",
-        get_local_text("uplink.update-available"),
-        new_version,
-    );
     let downloading_msg = format!(
         "{}: {}%",
         get_local_text("uplink.update-downloading"),
@@ -887,18 +889,23 @@ fn get_update_icon(cx: Scope) -> Element {
                         }
                     }
                 )),
-                div {
-                    id: "update-available",
-                    aria_label: "update-available",
-                    onclick: move |_| {
-                        download_state.write().stage = DownloadProgress::PickFolder;
+                if new_version != version && new_version != dismissed_version {
+                    cx.render(rsx! {
+                        div {
+                            id: "update-available",
+                            aria_label: "update-available",
+                            onclick: move |_| {
+                                download_state.write().stage = DownloadProgress::PickFolder;
 
-                    },
-                    IconElement {
-                        icon: common::icons::solid::Shape::ArrowDownCircle,
-                    },
-                    "{update_msg}",
+                            },
+                            IconElement {
+                                icon: common::icons::solid::Shape::ArrowDownCircle,
+                            },
+                            get_local_text("uplink.update-available"),
+                        }
+                    })
                 }
+
             }
         )),
         DownloadProgress::PickFolder => cx.render(rsx!(get_download_modal {
@@ -963,7 +970,7 @@ pub fn get_download_modal<'a>(
     on_dismiss: EventHandler<'a, ()>,
 ) -> Element<'a> {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
-
+    let state = use_shared_state::<State>(cx)?;
     let dl = download_location.current();
     let disp_download_location = dl
         .as_ref()
@@ -992,7 +999,7 @@ pub fn get_download_modal<'a>(
                         onpress: |_| {
                             let _ = open::that("https://github.com/Satellite-im/Uplink/releases/latest");
                         }
-                    }
+                    },
                 },
                 li {
                     get_local_text("updates.instruction2")
@@ -1056,7 +1063,7 @@ fn get_titlebar(cx: Scope) -> Element {
             onmousedown: move |_| { desktop.drag(); },
             Release_Info{},
             cx.render(rsx!(span {
-                class: "inline-controls",
+                class: "topbar-item",
                 get_update_icon{},
                 Topbar_Controls {}
             })),

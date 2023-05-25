@@ -151,7 +151,7 @@ impl State {
                     .insert(Uuid::new_v4(), notification);
             }
             Action::DismissUpdate => {
-                self.settings.update_dismissed = self.settings.update_available.take();
+                self.settings.update_dismissed = self.settings.update_available.clone();
                 self.ui
                     .notifications
                     .decrement(notifications::NotificationKind::Settings, 1);

@@ -141,18 +141,16 @@ body {
 }
 
 .topbar-item {
-  background-color: var(--secondary-dark);
   border-radius: var(--border-radius-less);
   display: inline-flex;
   gap: var(--gap-less);
   width: fit-content;
   padding: var(--gap-less);
   user-select: none;
-  margin-right: var(--gap-less);
 }
 
-.inline-controls {
-  display: inline-flex;
+.topbar-item-background {
+  background-color: var(--secondary-dark);
 }
 
 .disable-select {
