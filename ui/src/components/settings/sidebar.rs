@@ -22,7 +22,7 @@ pub enum Page {
     Extensions,
     General,
     Files,
-    Privacy,
+    //Privacy,
     Profile,
     Notifications,
     Accessibility,
@@ -37,7 +37,7 @@ impl FromStr for Page {
             "extensions" => Ok(Page::Extensions),
             "files" => Ok(Page::Files),
             "general" => Ok(Page::General),
-            "privacy" => Ok(Page::Privacy),
+            //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
             "accessibility" => Ok(Page::Accessibility),
@@ -86,12 +86,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::MusicalNote,
         ..UIRoute::default()
     };
-    let privacy = UIRoute {
+    /*let privacy = UIRoute {
         to: "privacy",
         name: get_local_text("settings.privacy"),
         icon: Icon::LockClosed,
         ..UIRoute::default()
-    };
+    };*/
     let files = UIRoute {
         to: "files",
         name: get_local_text("settings.files"),
@@ -131,7 +131,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let routes = vec![
         profile,
         general,
-        privacy,
+        //privacy,
         audio,
         files,
         extensions,

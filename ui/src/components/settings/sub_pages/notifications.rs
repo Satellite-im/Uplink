@@ -1,7 +1,8 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
+#[allow(unused_imports)]
 use kit::elements::{button::Button, switch::Switch};
-
+#[allow(unused_imports)]
 use common::icons::outline::Shape as Icon;
 use common::sounds;
 use common::state::{action::ConfigAction, Action, State};
@@ -16,7 +17,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
         div {
             id: "settings-notifications",
             aria_label: "settings-notifications",
-            SettingSection {
+            /*SettingSection {
                 section_label: get_local_text("settings-notifications.grant-permissions"),
                 section_description: get_local_text("settings-notifications.grant-permissions-description"),
                 Button {
@@ -27,7 +28,7 @@ pub fn NotificationSettings(cx: Scope) -> Element {
                         // TODO: Grant permissions this should prompt the user to grant permissions for their system
                     }
                 }
-            },
+            },*/
             SettingSection {
                 section_label: get_local_text("settings-notifications.enabled"),
                 section_description: get_local_text("settings-notifications.enabled-description"),
