@@ -242,6 +242,7 @@
     display: inline-flex;
     flex-direction: row;
     justify-content: center;
+    padding: var(--padding-less);
   }
 
   .message-group {
