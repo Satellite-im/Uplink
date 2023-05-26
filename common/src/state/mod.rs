@@ -346,12 +346,6 @@ impl State {
         }
     }
 
-    // fn disable_all_notifications(&mut self) {
-    //     if let Some(t) = self.configuration.notifications {
-    //         t = true;
-    //     }
-    // }
-
     fn process_message_event(&mut self, event: MessageEvent) {
         match event {
             MessageEvent::Received {
