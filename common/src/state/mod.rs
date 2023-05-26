@@ -430,9 +430,6 @@ impl State {
             } => {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
-                    if chat.unreads > 0 {
-                        chat.unreads -= 1;
-                    }
                 }
             }
             MessageEvent::MessageReactionAdded { message } => {
