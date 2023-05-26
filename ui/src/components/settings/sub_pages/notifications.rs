@@ -1,11 +1,11 @@
+#[allow(unused_imports)]
+use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::sounds;
+use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
 #[allow(unused_imports)]
 use kit::elements::{button::Button, switch::Switch};
-#[allow(unused_imports)]
-use common::icons::outline::Shape as Icon;
-use common::sounds;
-use common::state::{action::ConfigAction, Action, State};
 
 use crate::components::settings::SettingSection;
 

@@ -6,9 +6,14 @@ use crate::components::{
     settings::{
         sidebar::{Page, Sidebar},
         sub_pages::{
-            about::AboutPage, accessibility::AccessibilitySettings, audio::AudioSettings,
-            developer::DeveloperSettings, extensions::ExtensionSettings, files::FilesSettings,
-            general::GeneralSettings, notifications::NotificationSettings,
+            about::AboutPage,
+            accessibility::AccessibilitySettings,
+            audio::AudioSettings,
+            developer::DeveloperSettings,
+            extensions::ExtensionSettings,
+            files::FilesSettings,
+            general::GeneralSettings,
+            notifications::NotificationSettings,
             // privacy::PrivacySettings,
             profile::ProfileSettings,
         },
