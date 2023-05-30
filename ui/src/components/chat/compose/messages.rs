@@ -791,9 +791,9 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let remote_class = if *is_remote { "" } else { "remote" };
     let reactions_class = format!("message-reactions-container {remote_class}");
     let user_did_2 = user_did.clone();
-    let pending_attachments: Vec<(String, Progression)> = grouped_message
+    let pending_uploads = grouped_message
         .attachment_progress
-        .map(|m| m.iter().map(|(f, p)| (f.clone(), p.to_owned())).collect())
+        .map(|m| m.values().cloned().collect())
         .unwrap_or(vec![]);
 
     cx.render(rsx!(
@@ -858,7 +858,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
                 pending: cx.props.pending,
-                pending_attachments: pending_attachments,
+                attachments_pending_uploads: pending_uploads,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();

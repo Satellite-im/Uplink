@@ -57,19 +57,7 @@ impl PendingSentMessages {
     }
 
     pub fn update(&mut self, msg: PendingSentMessage, progress: Progression) {
-        let file = match progress.clone() {
-            Progression::CurrentProgress {
-                name,
-                current: _,
-                total: _,
-            } => name,
-            Progression::ProgressComplete { name, total: _ } => name,
-            Progression::ProgressFailed {
-                name,
-                last_size: _,
-                error: _,
-            } => name,
-        };
+        let file = progress_file(&progress);
         for m in &mut self.msg {
             if msg.eq(m) {
                 m.attachments_progress.insert(file, progress);
@@ -180,3 +168,19 @@ impl PartialEq for PendingSentMessage {
 }
 
 impl Eq for PendingSentMessage {}
+
+pub fn progress_file(progress: &Progression) -> String {
+    match progress {
+        Progression::CurrentProgress {
+            name,
+            current: _,
+            total: _,
+        } => name.clone(),
+        Progression::ProgressComplete { name, total: _ } => name.clone(),
+        Progression::ProgressFailed {
+            name,
+            last_size: _,
+            error: _,
+        } => name.clone(),
+    }
+}

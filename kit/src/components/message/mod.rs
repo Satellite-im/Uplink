@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use common::state::pending_message::progress_file;
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
@@ -77,9 +78,11 @@ pub struct Props<'a> {
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
 
+    // Indicates whether this message is pending to be uploaded or not
     pending: bool,
 
-    pending_attachments: Option<Vec<(String, Progression)>>,
+    // Progress for attachments which are being uploaded
+    attachments_pending_uploads: Option<Vec<Progression>>,
 }
 
 #[allow(non_snake_case)]
@@ -123,11 +126,12 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
-    let pending_attachment_list = cx.props.pending_attachments.as_ref().map(|vec| {
-        vec.iter().map(|(file, prog)| {
+    let pending_attachment_list = cx.props.attachments_pending_uploads.as_ref().map(|vec| {
+        vec.iter().map(|prog| {
+            let file = progress_file(prog);
             rsx!(FileEmbed {
                 key: "{file}",
-                filename: file.clone(),
+                filename: file,
                 remote: is_remote,
                 download_pending: false,
                 with_download_button: false,
