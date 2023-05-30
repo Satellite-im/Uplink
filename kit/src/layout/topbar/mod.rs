@@ -11,6 +11,8 @@ pub struct Props<'a> {
     #[props(optional)]
     onback: Option<EventHandler<'a>>,
     #[props(optional)]
+    onclick: Option<EventHandler<'a>>,
+    #[props(optional)]
     controls: Option<Element<'a>>,
     #[props(optional)]
     children: Option<Element<'a>>,
@@ -36,6 +38,11 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "topbar",
             aria_label: "Topbar",
+            onclick: move |_| {
+                if let Some(f) = &cx.props.onclick {
+                    f.call(())
+                }
+            },
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
                     aria_label: "back-button".into(),
