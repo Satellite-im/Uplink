@@ -8,6 +8,8 @@ use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::pending_message::MESSAGE_CHANNEL;
+use common::warp_runner::ui_adapter::MessageEvent;
+use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -601,7 +603,8 @@ fn app(cx: Scope) -> Element {
 
     // update state in response to warp events
     use_future(cx, (), |_| {
-        to_owned![state];
+        to_owned![cx, state];
+        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
         async move {
             // don't process warp events until friends and chats have been loaded
             while !state.read().initialized {
@@ -613,11 +616,39 @@ fn app(cx: Scope) -> Element {
             // the future restarts (it shouldn't), the lock should be dropped and this wouldn't block.
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
+                // Update only relevant components for attachment progress events
+                if let WarpEvent::Message(msg_evt) = &evt {
+                    if let MessageEvent::AttachmentProgress {
+                        progress,
+                        conversation_id,
+                        msg,
+                    } = msg_evt
+                    {
+                        state.write_silent().update_outgoing_messages(
+                            *conversation_id,
+                            msg.clone(),
+                            progress.clone(),
+                        );
+                        let read = state.read();
+                        if read
+                            .get_active_chat()
+                            .map(|c| c.id.eq(conversation_id))
+                            .unwrap_or_default()
+                        {
+                            //Update the component only instead of whole state
+                            if let Some(v) = read.scope_ids.pending_message_component {
+                                schedule(ScopeId(v))
+                            }
+                        }
+                        continue;
+                    }
+                }
                 state.write().process_warp_event(evt);
             }
         }
     });
 
+    /** temp
     use_future(cx, (), |_| {
         to_owned![cx, state];
         let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
@@ -648,8 +679,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    });
-
+    });*/
     // clear toasts
     use_future(cx, (), |_| {
         to_owned![state];

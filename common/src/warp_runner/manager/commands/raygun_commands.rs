@@ -23,10 +23,11 @@ use crate::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            get_uninitialized_identity,
+            get_uninitialized_identity, Message, MessageEvent,
         },
-        Account, Messaging,
+        Account, Messaging, WarpEvent,
     },
+    WARP_EVENT_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -247,17 +248,19 @@ pub async fn handle_raygun_cmd(
                                     break result;
                                 }
                                 AttachmentKind::AttachedProgress(progress) => {
-                                    if MESSAGE_CHANNEL
+                                    if WARP_EVENT_CH
                                         .tx
-                                        .send(AttachmentProgress {
-                                            progress,
-                                            conversation_id: conv_id,
-                                            msg: PendingSentMessage::for_compare(
-                                                msg_clone,
-                                                &attachments,
-                                                ui_id,
-                                            ),
-                                        })
+                                        .send(WarpEvent::Message(
+                                            MessageEvent::AttachmentProgress {
+                                                progress,
+                                                conversation_id: conv_id,
+                                                msg: PendingSentMessage::for_compare(
+                                                    msg_clone,
+                                                    &attachments,
+                                                    ui_id,
+                                                ),
+                                            },
+                                        ))
                                         .is_err()
                                     {
                                         log::error!("failed to send warp_event");

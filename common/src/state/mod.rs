@@ -494,6 +494,7 @@ impl State {
                     chat.conversation_name = conversation.name();
                 }
             }
+            _ => {}
         }
     }
 }
