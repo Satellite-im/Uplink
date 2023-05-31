@@ -1,8 +1,10 @@
 use common::language::{change_language, get_available_languages, get_local_text};
 use common::state::utils::{get_available_fonts, get_available_themes};
+#[allow(unused_imports)]
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
 use kit::components::slide_selector::{ButtonsFormat, SlideSelector};
+#[allow(unused_imports)]
 use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
@@ -32,7 +34,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         div {
             id: "settings-general",
             aria_label: "settings-general",
-            SettingSection {
+            /*SettingSection {
                 section_label: get_local_text("settings-general.overlay"),
                 section_description: get_local_text("settings-general.overlay-description"),
                 Switch {
@@ -44,7 +46,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                         state.write().mutate(Action::SetOverlay(e));
                     }
                 }
-            },
+            },*/
             SettingSection {
                 section_label: get_local_text("settings-general.app-language"),
                 section_description: get_local_text("settings-general.change-language"),
