@@ -14,16 +14,12 @@ use warp::{
 };
 
 use crate::{
-    state::{
-        chats, identity,
-        pending_message::{AttachmentProgress, PendingSentMessage, MESSAGE_CHANNEL},
-        Friends,
-    },
+    state::{chats, identity, pending_message::PendingSentMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            get_uninitialized_identity, Message, MessageEvent,
+            get_uninitialized_identity, MessageEvent,
         },
         Account, Messaging, WarpEvent,
     },

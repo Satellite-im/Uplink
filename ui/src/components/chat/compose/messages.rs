@@ -40,7 +40,6 @@ use rfd::FileDialog;
 
 use uuid::Uuid;
 use warp::{
-    constellation::Progression,
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,

@@ -7,7 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::pending_message::MESSAGE_CHANNEL;
+
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -617,69 +617,33 @@ fn app(cx: Scope) -> Element {
             let mut ch = warp_event_rx.lock().await;
             while let Some(evt) = ch.recv().await {
                 // Update only relevant components for attachment progress events
-                if let WarpEvent::Message(msg_evt) = &evt {
-                    if let MessageEvent::AttachmentProgress {
-                        progress,
-                        conversation_id,
-                        msg,
-                    } = msg_evt
+                if let WarpEvent::Message(MessageEvent::AttachmentProgress {
+                    progress,
+                    conversation_id,
+                    msg,
+                }) = evt
+                {
+                    state
+                        .write_silent()
+                        .update_outgoing_messages(conversation_id, msg, progress);
+                    let read = state.read();
+                    if read
+                        .get_active_chat()
+                        .map(|c| c.id.eq(&conversation_id))
+                        .unwrap_or_default()
                     {
-                        state.write_silent().update_outgoing_messages(
-                            *conversation_id,
-                            msg.clone(),
-                            progress.clone(),
-                        );
-                        let read = state.read();
-                        if read
-                            .get_active_chat()
-                            .map(|c| c.id.eq(conversation_id))
-                            .unwrap_or_default()
-                        {
-                            //Update the component only instead of whole state
-                            if let Some(v) = read.scope_ids.pending_message_component {
-                                schedule(ScopeId(v))
-                            }
+                        //Update the component only instead of whole state
+                        if let Some(v) = read.scope_ids.pending_message_component {
+                            schedule(ScopeId(v))
                         }
-                        continue;
                     }
+                } else {
+                    state.write().process_warp_event(evt);
                 }
-                state.write().process_warp_event(evt);
             }
         }
     });
 
-    /** temp
-    use_future(cx, (), |_| {
-        to_owned![cx, state];
-        let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
-        async move {
-            while !state.read().initialized {
-                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-            }
-            let message_receiver = MESSAGE_CHANNEL.rx.clone();
-            log::trace!("starting warp_runner use_future");
-            let mut ch = message_receiver.lock().await;
-            while let Some(evt) = ch.recv().await {
-                //Only update when reaching a threshold. Here just 5% progress.
-                state.write_silent().update_outgoing_messages(
-                    evt.conversation_id,
-                    evt.msg,
-                    evt.progress,
-                );
-                let read = state.read();
-                if read
-                    .get_active_chat()
-                    .map(|c| c.id.eq(&evt.conversation_id))
-                    .unwrap_or_default()
-                {
-                    //Update the component only instead of whole state
-                    if let Some(v) = read.scope_ids.pending_message_component {
-                        schedule(ScopeId(v))
-                    }
-                }
-            }
-        }
-    });*/
     // clear toasts
     use_future(cx, (), |_| {
         to_owned![state];

@@ -1,33 +1,9 @@
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::PathBuf};
 
-use once_cell::sync::Lazy;
-use tokio::sync::{
-    mpsc::{UnboundedReceiver, UnboundedSender},
-    Mutex,
-};
 use uuid::Uuid;
 use warp::{constellation::Progression, crypto::DID};
 
 use crate::warp_runner::ui_adapter::Message;
-
-pub struct AttachmentProgress {
-    pub progress: Progression,
-    pub conversation_id: Uuid,
-    pub msg: PendingSentMessage,
-}
-
-pub struct PendingMessageChannels {
-    pub tx: UnboundedSender<AttachmentProgress>,
-    pub rx: Arc<Mutex<UnboundedReceiver<AttachmentProgress>>>,
-}
-
-pub static MESSAGE_CHANNEL: Lazy<PendingMessageChannels> = Lazy::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    PendingMessageChannels {
-        tx,
-        rx: Arc::new(Mutex::new(rx)),
-    }
-});
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PendingSentMessages {
