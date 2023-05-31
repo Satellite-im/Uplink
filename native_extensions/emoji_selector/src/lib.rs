@@ -141,13 +141,15 @@ fn render_selector<'a>(
         }
     }
 
-    let emojis_to_display: Vec<&Emoji> = emojis::Group::iter()
-        .filter(|group| {
-            group
+    let emojis_to_display: Vec<(Group, Vec<&Emoji>)> = emojis::Group::iter()
+        .map(|group| {
+            let filtered_emojis: Vec<&Emoji> = group
                 .emojis()
-                .iter()
-                .any(|emoji| should_display_emoji(emoji))
+                .filter(|emoji| should_display_emoji(emoji))
+                .collect();
+            (group, filtered_emojis)
         })
+        .filter(|(_, emojis)| !emojis.is_empty())
         .collect();
 
     cx.render(rsx! (
@@ -183,18 +185,18 @@ fn render_selector<'a>(
                 },
                 div {
                     id: "scrolling",
-                    emojis_to_display.iter().map(|group| {
-                        let name: String = group_to_str(group.group());
+                    emojis_to_display.into_iter().for_each(|(group, emojis)| {
+                        let group_name = group_to_str(group);
                         rsx!(
                             div {
-                                id: "{group_to_str(group.group())}",
+                                id: "{group_name}",
                                 Label {
-                                    text: name
-                                },
+                                    text: group_name
+                                }
                             }
                             div {
                                 class: "emojis-container",
-                                emojis_to_display.iter().map(|emoji| {
+                                emojis.iter().map(|emoji| {
                                     rsx!(
                                         div {
                                             class: "emoji",
