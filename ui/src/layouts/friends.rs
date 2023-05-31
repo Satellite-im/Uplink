@@ -19,9 +19,9 @@ use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
 
 #[derive(PartialEq, Props)]
-pub struct Props<'a> {
+pub struct Props {
     route_info: RouteInfo,
-    initial_page: &'a UseRef<FriendRoute>,
+    initial_page: UseRef<FriendRoute>,
 }
 
 #[derive(PartialEq, Clone)]
@@ -32,7 +32,7 @@ pub enum FriendRoute {
 }
 
 #[allow(non_snake_case)]
-pub fn FriendsLayout<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || cx.props.initial_page.read().clone());
     *cx.props.initial_page.write_silent() = FriendRoute::All;

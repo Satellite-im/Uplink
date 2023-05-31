@@ -1182,7 +1182,7 @@ fn get_router(cx: Scope) -> Element {
                         routes: routes.clone(),
                         active: friends_route.clone(),
                     },
-                    initial_page: initial_friend_page
+                    initial_page: initial_friend_page.clone()
                 }
             },
             Route {
