@@ -21,7 +21,7 @@ pub enum Page {
     Developer,
     Extensions,
     General,
-    Files,
+    //Files,
     //Privacy,
     Profile,
     Notifications,
@@ -35,7 +35,7 @@ impl FromStr for Page {
             "audio" => Ok(Page::Audio),
             "developer" => Ok(Page::Developer),
             "extensions" => Ok(Page::Extensions),
-            "files" => Ok(Page::Files),
+            //"files" => Ok(Page::Files),
             "general" => Ok(Page::General),
             //"privacy" => Ok(Page::Privacy),
             "profile" => Ok(Page::Profile),
@@ -92,12 +92,12 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::LockClosed,
         ..UIRoute::default()
     };*/
-    let files = UIRoute {
+    /*let files = UIRoute {
         to: "files",
         name: get_local_text("settings.files"),
         icon: Icon::Folder,
         ..UIRoute::default()
-    };
+    };*/
     let extensions = UIRoute {
         to: "extensions",
         name: get_local_text("settings.extensions"),
@@ -133,7 +133,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         general,
         //privacy,
         audio,
-        files,
+        // files,
         extensions,
         accessibility,
         notifications,
