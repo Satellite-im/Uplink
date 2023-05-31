@@ -21,10 +21,12 @@ pub fn emit(cx: &Scope<Props>, s: String) {
 }
 
 fn remove_duplicates(values: Vec<String>) -> Vec<String> {
-    let unique_values: HashSet<_> = values.iter().cloned().collect();
-    let mut unique_values_vec: Vec<String> = Vec::new();
-    unique_values_vec.extend(unique_values);
-    unique_values_vec
+    let mut set = HashSet::new();
+    values
+        .iter()
+        .filter(|v| set.insert(v.to_string()))
+        .cloned()
+        .collect()
 }
 
 #[allow(non_snake_case)]
