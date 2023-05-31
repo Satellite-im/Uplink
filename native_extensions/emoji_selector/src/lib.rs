@@ -4,7 +4,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
-use emojis::Group;
+use emojis::{Emoji, Group};
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use kit::{
     components::nav::{Nav, Route},
@@ -128,6 +128,28 @@ fn render_selector<'a>(
             emoji_selector.focus();
         "#;
 
+    fn should_display_emoji(emoji: &Emoji) -> bool {
+        #[cfg(target_os = "windows")]
+        {
+            // Check the Unicode version using a helper function or method provided by the Emoji struct
+            emoji.unicode_version().major() >= 15
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            // All emojis are supported on non-Windows platforms
+            true
+        }
+    }
+
+    let emojis_to_display: Vec<&Emoji> = emojis::Group::iter()
+        .filter(|group| {
+            group
+                .emojis()
+                .iter()
+                .any(|emoji| should_display_emoji(emoji))
+        })
+        .collect();
+
     cx.render(rsx! (
             div {
                 onmouseenter: |_| {
@@ -161,22 +183,23 @@ fn render_selector<'a>(
                 },
                 div {
                     id: "scrolling",
-                    emojis::Group::iter().map(|group| {
-                        let name: String = group_to_str(group);
+                    emojis_to_display.iter().map(|group| {
+                        let name: String = group_to_str(group.group());
                         rsx!(
                             div {
-                                id: "{group_to_str(group)}",
+                                id: "{group_to_str(group.group())}",
                                 Label {
                                     text: name
                                 },
                             }
                             div {
                                 class: "emojis-container",
-                                group.emojis().map(|emoji| {
+                                emojis_to_display.iter().map(|emoji| {
                                     rsx!(
                                         div {
                                             class: "emoji",
                                             onclick: move |_| {
+                                                println!("{:?}", emoji);
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
                                                 let c =  match state.read().get_active_chat() {
                                                     Some(c) => c,
