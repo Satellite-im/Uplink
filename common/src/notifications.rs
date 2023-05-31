@@ -188,10 +188,10 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                         .and_then(|args| args.Arguments().ok());
                     if let Some(val) = arguments {
                         if val.to_string_lossy().eq(&action_id) {
-                            log::trace!("windows action activated {:?}", val);
+                            log::trace!("toast action activated {:?}", val);
                             let tx = NOTIFICATION_LISTENER.tx.clone();
                             if let Err(e) = tx.send(action.to_owned()) {
-                                log::error!("failed to send command to initialize warp {}", e);
+                                log::error!("failed to send notification action {}", e);
                             }
                         }
                     };
@@ -224,7 +224,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                 if action_name.eq(&id) {
                     let tx = NOTIFICATION_LISTENER.tx.clone();
                     if let Err(e) = tx.send(action) {
-                        log::error!("failed to send command to initialize warp {}", e);
+                        log::error!("failed to send notification action {}", e);
                     }
                     let focus = FOCUS_SCHEDULER.0.clone();
                     if let Err(e) = focus.send(()) {
@@ -249,7 +249,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
             if action_id.eq(id) {
                 let tx = NOTIFICATION_LISTENER.tx.clone();
                 if let Err(e) = tx.send(action) {
-                    log::error!("failed to send command to initialize warp {}", e);
+                    log::error!("failed to send notification action {}", e);
                 }
             };
         });
