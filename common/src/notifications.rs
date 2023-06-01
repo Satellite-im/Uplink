@@ -151,86 +151,93 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
 
         // Create the toast
         let toast_notification =
-            windows::UI::Notifications::ToastNotification::CreateToastNotification(&toast_xml)
-                .unwrap();
-
-        toast_notification
-            .Activated(windows::Foundation::TypedEventHandler::new(
-                move |_sender, result: &Option<windows::runtime::IInspectable>| {
-                    let event: Option<
-                        windows::runtime::Result<
-                            windows::UI::Notifications::ToastActivatedEventArgs,
-                        >,
-                    > = result.as_ref().map(windows::runtime::Interface::cast);
-                    let arguments = event
-                        .and_then(|val| val.ok())
-                        .and_then(|args| args.Arguments().ok());
-                    if let Some(val) = arguments {
-                        if val.to_string_lossy().eq(&action_id) {
-                            log::trace!("toast action activated {:?}", val);
-                            let tx = NOTIFICATION_LISTENER.tx.clone();
-                            if let Err(e) = tx.send(action.to_owned()) {
-                                log::error!("failed to send notification action {}", e);
-                            }
+            match windows::UI::Notifications::ToastNotification::CreateToastNotification(&toast_xml)
+            {
+                Ok(toast_notification) => toast_notification,
+                Err(err) => {
+                    log::error!("Error creating windows toast {}", err);
+                    return;
+                }
+            };
+        toast_notification.Activated(windows::Foundation::TypedEventHandler::new(
+            move |_sender, result: &Option<windows::runtime::IInspectable>| {
+                let event: Option<
+                    windows::runtime::Result<windows::UI::Notifications::ToastActivatedEventArgs>,
+                > = result.as_ref().map(windows::runtime::Interface::cast);
+                let arguments = event
+                    .and_then(|val| val.ok())
+                    .and_then(|args| args.Arguments().ok());
+                if let Some(val) = arguments {
+                    if val.to_string_lossy().eq(&action_id) {
+                        log::trace!("toast action activated {:?}", val);
+                        let tx = NOTIFICATION_LISTENER.tx.clone();
+                        if let Err(e) = tx.send(action.to_owned()) {
+                            log::error!("failed to send notification action {}", e);
                         }
-                    };
-                    Ok(())
-                },
-            ))
-            .unwrap();
+                    }
+                };
+                Ok(())
+            },
+        ));
 
-        let toast_notifier =
-            windows::UI::Notifications::ToastNotificationManager::CreateToastNotifierWithId(
-                &windows::runtime::HSTRING::from(&app_id),
-            )
-            .unwrap();
-        let _n = toast_notifier.Show(&toast_notification);
+        match windows::UI::Notifications::ToastNotificationManager::CreateToastNotifierWithId(
+            &windows::runtime::HSTRING::from(&app_id),
+        ) {
+            Ok(toast_notifier) => {
+                toast_notifier.Show(&toast_notification);
+            }
+            Err(err) => log::error!("Error handling notification {}", err),
+        }
     }
 
     #[cfg(target_os = "macos")]
     {
         // Notify-rust does not support macos actions but the underlying mac_notification library does
         let action_name = &get_local_text(&action_id);
-        let response = mac_notification_sys::Notification::default()
+        match mac_notification_sys::Notification::default()
             .title(notification.summary.as_str())
             .message(&notification.body)
             .maybe_subtitle(notification.subtitle.as_deref())
             .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
             .send()
-            .unwrap();
-        match response {
-            mac_notification_sys::NotificationResponse::ActionButton(id) => {
-                if action_name.eq(&id) {
-                    let tx = NOTIFICATION_LISTENER.tx.clone();
-                    if let Err(e) = tx.send(action) {
-                        log::error!("failed to send notification action {}", e);
-                    }
+        {
+            Ok(response) => match response {
+                mac_notification_sys::NotificationResponse::ActionButton(id) => {
+                    if action_name.eq(&id) {
+                        let tx = NOTIFICATION_LISTENER.tx.clone();
+                        if let Err(e) = tx.send(action) {
+                            log::error!("failed to send notification action {}", e);
+                        }
+                        let focus = FOCUS_SCHEDULER.0.clone();
+                        if let Err(e) = focus.send(()) {
+                            log::error!("failed to send focus command {}", e);
+                        }
+                    };
+                }
+                mac_notification_sys::NotificationResponse::Click => {
                     let focus = FOCUS_SCHEDULER.0.clone();
                     if let Err(e) = focus.send(()) {
                         log::error!("failed to send focus command {}", e);
                     }
-                };
-            }
-            mac_notification_sys::NotificationResponse::Click => {
-                let focus = FOCUS_SCHEDULER.0.clone();
-                if let Err(e) = focus.send(()) {
-                    log::error!("failed to send focus command {}", e);
                 }
-            }
-            _ => {}
+                _ => {}
+            },
+            Err(err) => log::error!("Error handling notification {}", err),
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        let handle = notification.show().unwrap();
-        handle.wait_for_action(|id| {
-            if action_id.eq(id) {
-                let tx = NOTIFICATION_LISTENER.tx.clone();
-                if let Err(e) = tx.send(action) {
-                    log::error!("failed to send notification action {}", e);
-                }
-            };
-        });
+        match notification.show() {
+            Ok(handle) => handle.wait_for_action(|id| {
+                if action_id.eq(id) {
+                    let tx = NOTIFICATION_LISTENER.tx.clone();
+                    if let Err(e) = tx.send(action) {
+                        log::error!("failed to send notification action {}", e);
+                    }
+                };
+            }),
+            Err(err) => log::error!("Error handling notification {}", err),
+        }
     }
 }
