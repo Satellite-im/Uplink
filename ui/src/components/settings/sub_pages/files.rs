@@ -1,5 +1,6 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
+#[allow(unused_imports)]
 use kit::elements::{button::Button, switch::Switch};
 use warp::logging::tracing::log;
 
@@ -19,7 +20,7 @@ pub fn FilesSettings(cx: Scope) -> Element {
 
                 }
             },
-            SettingSection {
+            /*SettingSection {
                 section_label: get_local_text("settings-files.open-sync-folder"),
                 section_description: get_local_text("settings-files.open-sync-folder-description"),
                 Button {
@@ -30,7 +31,7 @@ pub fn FilesSettings(cx: Scope) -> Element {
                     onpress: |_| {
                     }
                 }
-            },
+            },*/
         }
     ))
 }
