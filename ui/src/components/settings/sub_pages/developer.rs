@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use common::notifications::{push_notification_actionable, NotificationAction};
+use common::notifications::{push_notification, NotificationAction};
 use common::warp_runner::{OtherCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
@@ -83,7 +83,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
-                        push_notification_actionable(
+                        push_notification(
                             get_local_text("settings-developer.test-popup"),
                             get_local_text("settings-developer.test-popup"),
                             Some(Sounds::General),

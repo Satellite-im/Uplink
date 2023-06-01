@@ -50,7 +50,7 @@ pub static FOCUS_SCHEDULER: Lazy<(UnboundedSender<()>, Arc<Mutex<UnboundedReceiv
     });
 
 #[allow(non_snake_case)]
-pub fn push_notification_actionable(
+pub fn push_notification(
     title: String,
     content: String,
     notification_sound: Option<Sounds>,

@@ -282,7 +282,7 @@ impl State {
                 let notifications_enabled = self.configuration.notifications.friends_notifications;
 
                 if !self.ui.metadata.focused && notifications_enabled {
-                    crate::notifications::push_notification_actionable(
+                    crate::notifications::push_notification(
                         get_local_text("friends.new-request"),
                         format!("{} sent a request.", identity.username()),
                         Some(crate::sounds::Sounds::Notification),
@@ -391,7 +391,7 @@ impl State {
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
-                    crate::notifications::push_notification_actionable(
+                    crate::notifications::push_notification(
                         get_local_text("messages.new"),
                         text,
                         sound,
