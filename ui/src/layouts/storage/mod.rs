@@ -93,12 +93,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let storage_controller = StorageController::new(cx, state.clone());
 
-    let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
-        (
-           String::new(),
-           String::new(),
-        )
-    });
+    let storage_size: &UseRef<(String, String)> = use_ref(cx, || (String::new(), String::new()));
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
@@ -227,7 +222,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         class: "skeletal-text-content skeletal",
                                     }
                                 },
-                            }, 
+                            },
                             div {
                                 class: "skeletal-texts",
                                 div {
@@ -255,7 +250,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                        format!("{}", storage_size.read().1),
                                     }
                                 },
-
                             )
                         }
                        
