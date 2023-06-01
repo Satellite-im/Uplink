@@ -157,6 +157,14 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
+                onclick: move |_| {
+                    if show_group_users.is_none() {
+                        show_group_users.set(Some(chat_id));
+                        show_edit_group.set(None);
+                    } else {
+                        show_group_users.set(None);
+                    }
+                },
                 controls: cx.render(rsx!(get_controls{
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
