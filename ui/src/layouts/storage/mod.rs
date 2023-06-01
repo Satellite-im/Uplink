@@ -95,8 +95,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
         (
-            get_local_text("files.no-data-available"),
-            get_local_text("files.no-data-available"),
+           String::new(),
+           String::new(),
         )
     });
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
@@ -218,22 +218,47 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     div {
                         class: "files-info",
                         aria_label: "files-info",
-                        p {
-                            class: "free-space",
-                            format!("{}", get_local_text("files.storage-max-size")),
-                            span {
-                                class: "count",
-                               format!("{}", storage_size.read().0),
-                            }
-                        },
-                        p {
-                            class: "free-space",
-                            format!("{}", get_local_text("files.storage-current-size")),
-                            span {
-                                class: "count",
-                               format!("{}", storage_size.read().1),
-                            }
-                        },
+                        if storage_size.read().0.is_empty() {
+                            rsx!(div {
+                                class: "skeletal-texts",
+                                div {
+                                    class: "skeletal-text",
+                                    div {
+                                        class: "skeletal-text-content skeletal",
+                                    }
+                                },
+                            }, 
+                            div {
+                                class: "skeletal-texts",
+                                div {
+                                    class: "skeletal-text",
+                                    div {
+                                        class: "skeletal-text-content skeletal",
+                                    }
+                                },
+                            })
+                        } else {
+                            rsx!(
+                                p {
+                                    class: "free-space",
+                                    format!("{}", get_local_text("files.storage-max-size")),
+                                    span {
+                                        class: "count",
+                                       format!("{}", storage_size.read().0),
+                                    }
+                                },
+                                p {
+                                    class: "free-space",
+                                    format!("{}", get_local_text("files.storage-current-size")),
+                                    span {
+                                        class: "count",
+                                       format!("{}", storage_size.read().1),
+                                    }
+                                },
+
+                            )
+                        }
+                       
                     }
                 }
                 div {
