@@ -1,3 +1,4 @@
+use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 
@@ -63,6 +64,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
+                thumbnail: thumbnail_to_base64(file),
                 with_download_button: false,
                 remote: remote,
                 on_press: move |_| {},
