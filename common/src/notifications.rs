@@ -3,6 +3,7 @@ use std::thread;
 use crate::language::get_local_text;
 
 use super::sounds::{Play, Sounds};
+use derive_more::Display;
 use notify_rust::Notification;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -18,7 +19,7 @@ use tokio::sync::{
 pub const POWERSHELL_APP_ID: &'static str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\
 \\WindowsPowerShell\\v1.0\\powershell.exe";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Display)]
 pub enum NotificationAction {
     DisplayChat(Uuid),
     FriendListPending,
@@ -48,39 +49,17 @@ pub static FOCUS_SCHEDULER: Lazy<(UnboundedSender<()>, Arc<Mutex<UnboundedReceiv
         (tx, Arc::new(Mutex::new(rx)))
     });
 
-// Implementation to create and push new notifications
-#[allow(non_snake_case)]
-pub fn push_notification(
-    title: String,
-    content: String,
-    notification_sound: Option<Sounds>,
-    timeout: notify_rust::Timeout,
-) {
-    std::thread::spawn(move || {
-        let summary = format!("Uplink - {title}");
-        let _n = Notification::new()
-            .summary(summary.as_ref())
-            .body(&content)
-            .timeout(timeout)
-            .show();
-
-        if let Some(sound) = notification_sound {
-            Play(sound);
-        }
-    });
-}
-
 #[allow(non_snake_case)]
 pub fn push_notification_actionable(
     title: String,
     content: String,
     notification_sound: Option<Sounds>,
     timeout: notify_rust::Timeout,
-    action_id: String,
     action: NotificationAction,
 ) {
     let summary = format!("Uplink - {title}");
     thread::spawn(move || {
+        let action_id = format!("toast_actions.{}", action);
         show_with_action(
             Notification::new()
                 .summary(summary.as_ref())

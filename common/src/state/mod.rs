@@ -287,7 +287,6 @@ impl State {
                         format!("{} sent a request.", identity.username()),
                         Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
-                        String::from("friends.action-request"),
                         NotificationAction::FriendListPending,
                     );
                 }
@@ -397,7 +396,6 @@ impl State {
                         text,
                         sound,
                         notify_rust::Timeout::Milliseconds(4),
-                        String::from("messages.action-message"),
                         NotificationAction::DisplayChat(conversation_id),
                     );
                 // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
