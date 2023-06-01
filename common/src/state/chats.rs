@@ -14,7 +14,7 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::pending_message::{progress_file, PendingSentMessage};
+use super::pending_message::{progress_file, PendingMessage};
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -66,7 +66,7 @@ pub struct Chat {
     #[serde(skip)]
     pub has_more_messages: bool,
     #[serde(skip)]
-    pub pending_outgoing_messages: Vec<PendingSentMessage>,
+    pub pending_outgoing_messages: Vec<PendingMessage>,
 }
 
 impl Chat {
@@ -77,13 +77,13 @@ impl Chat {
         msg: Vec<String>,
         attachments: &[PathBuf],
     ) -> Uuid {
-        let new = PendingSentMessage::new(chat_id, did, msg, attachments);
+        let new = PendingMessage::new(chat_id, did, msg, attachments);
         let uuid = new.message.inner.id();
         self.pending_outgoing_messages.push(new);
         uuid
     }
 
-    pub fn update_pending_msg(&mut self, msg: PendingSentMessage, progress: Progression) {
+    pub fn update_pending_msg(&mut self, msg: PendingMessage, progress: Progression) {
         let file = progress_file(&progress);
         for m in &mut self.pending_outgoing_messages {
             if msg.eq(m) {

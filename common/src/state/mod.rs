@@ -52,7 +52,7 @@ use warp::{
     raygun::{self},
 };
 
-use self::pending_message::PendingSentMessage;
+use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Call, Font, Layout};
 use self::utils::get_available_themes;
@@ -682,7 +682,7 @@ impl State {
             .unwrap_or(false)
     }
 
-    pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingSentMessage>> {
+    pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingMessage>> {
         self.get_active_chat()
             .map(|chat| chat.pending_outgoing_messages)
     }
@@ -897,7 +897,7 @@ impl State {
     pub fn update_outgoing_messages(
         &mut self,
         conv_id: Uuid,
-        msg: PendingSentMessage,
+        msg: PendingMessage,
         progress: Progression,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
@@ -1477,7 +1477,7 @@ pub fn group_messages<'a>(
 }
 
 pub fn pending_group_messages<'a>(
-    pending: &'a Vec<PendingSentMessage>,
+    pending: &'a Vec<PendingMessage>,
     own_did: DID,
 ) -> Option<MessageGroup<'a>> {
     if pending.is_empty() {

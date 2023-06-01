@@ -14,7 +14,7 @@ use warp::{
 };
 
 use crate::{
-    state::{chats, identity, pending_message::PendingSentMessage, Friends},
+    state::{chats, identity, pending_message::PendingMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
@@ -250,7 +250,7 @@ pub async fn handle_raygun_cmd(
                                             MessageEvent::AttachmentProgress {
                                                 progress,
                                                 conversation_id: conv_id,
-                                                msg: PendingSentMessage::for_compare(
+                                                msg: PendingMessage::for_compare(
                                                     msg_clone,
                                                     &attachments,
                                                     ui_id,

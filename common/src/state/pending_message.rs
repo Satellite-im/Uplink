@@ -7,13 +7,13 @@ use crate::warp_runner::ui_adapter::Message;
 // We can improve message equality detection if warp e.g. can send us their assigned uuid.
 // Else it is just a guesswork
 #[derive(Clone, Debug)]
-pub struct PendingSentMessage {
+pub struct PendingMessage {
     attachments: Vec<String>,
     pub attachments_progress: HashMap<String, Progression>,
     pub message: Message,
 }
 
-impl PendingSentMessage {
+impl PendingMessage {
     // Use this for comparison cases
     pub fn for_compare(text: Vec<String>, attachments: &[PathBuf], id: Option<Uuid>) -> Self {
         let mut inner = warp::raygun::Message::default();
@@ -26,7 +26,7 @@ impl PendingSentMessage {
             in_reply_to: None,
             key: String::new(),
         };
-        PendingSentMessage {
+        PendingMessage {
             attachments: attachments
                 .iter()
                 .map(|p| {
@@ -60,7 +60,7 @@ impl PendingSentMessage {
             in_reply_to: None,
             key: Uuid::new_v4().to_string(),
         };
-        PendingSentMessage {
+        PendingMessage {
             attachments: attachments
                 .iter()
                 .map(|p| {
@@ -83,7 +83,7 @@ impl PendingSentMessage {
     }
 }
 
-impl PartialEq for PendingSentMessage {
+impl PartialEq for PendingMessage {
     fn eq(&self, other: &Self) -> bool {
         self.message.inner.value().eq(&other.message.inner.value())
             && self
@@ -94,7 +94,7 @@ impl PartialEq for PendingSentMessage {
     }
 }
 
-impl Eq for PendingSentMessage {}
+impl Eq for PendingMessage {}
 
 pub fn progress_file(progress: &Progression) -> String {
     match progress {

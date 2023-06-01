@@ -23,8 +23,8 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
     state::{
-        group_messages, pending_group_messages, pending_message::PendingSentMessage,
-        GroupedMessage, MessageGroup,
+        group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
+        MessageGroup,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -417,7 +417,7 @@ fn render_pending_messages_listener<'a>(
         None => return cx.render(rsx!(())),
     };
     cx.render(rsx!(pending_wrapper {
-        msg: chat.pending_outgoing_messages.msg,
+        msg: chat.pending_outgoing_messages,
         data: cx.props.data.clone(),
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
@@ -425,7 +425,7 @@ fn render_pending_messages_listener<'a>(
 
 #[derive(Props)]
 struct PendingWrapperProps<'a> {
-    msg: Vec<PendingSentMessage>,
+    msg: Vec<PendingMessage>,
     data: Rc<super::ComposeData>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
