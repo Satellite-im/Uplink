@@ -123,9 +123,8 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
         );
 
         let toast_xml = windows::Data::Xml::Dom::XmlDocument::new().unwrap();
-        toast_xml
-            .LoadXml(&windows::runtime::HSTRING::from(format!(
-                "<toast {} {}>
+        if let Err(err) = toast_xml.LoadXml(&windows::runtime::HSTRING::from(format!(
+            "<toast {} {}>
                     <visual>
                         <binding template=\"{}\">
                         {}
@@ -137,17 +136,19 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                         {}
                     </actions>
                 </toast>",
-                duration,
-                String::new(), //Scenario
-                template_binding,
-                &notification.icon,
-                &notification.summary,
-                notification.subtitle.as_ref().map_or("", AsRef::as_ref),
-                &notification.body,
-                r#"<audio silent='true'/>"#, //Already handled in uplink
-                actions
-            )))
-            .unwrap();
+            duration,
+            String::new(), //Scenario
+            template_binding,
+            &notification.icon,
+            &notification.summary,
+            notification.subtitle.as_ref().map_or("", AsRef::as_ref),
+            &notification.body,
+            r#"<audio silent='true'/>"#, //Already handled in uplink
+            actions
+        ))) {
+            log::error!("Error creating windows toast xml {}", err);
+            return;
+        };
 
         // Create the toast
         let toast_notification =
