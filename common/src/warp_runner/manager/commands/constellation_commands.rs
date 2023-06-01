@@ -1,5 +1,6 @@
 use std::{
     ffi::OsStr,
+    fs,
     io::Read,
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -32,6 +33,7 @@ static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
 
 pub enum FileTransferStep {
+    SizeNotAvailable(String),
     Start(String),
     DuplicateName(Option<String>),
     Upload(String),
@@ -385,6 +387,10 @@ async fn upload_files(
             return;
         }
     };
+
+    let max_size_ipfs = warp_storage.max_size();
+    let current_size_ipfs = warp_storage.current_size();
+
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -394,6 +400,29 @@ async fn upload_files(
             None => continue,
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
+
+        let file_size = match fs::metadata(&local_path) {
+            Ok(size) => size.len() as usize,
+            Err(e) => {
+                log::error!("Not possible to get file size, error: {}", e);
+                continue;
+            }
+        };
+
+        if (current_size_ipfs + file_size) > max_size_ipfs {
+            log::error!(
+                "Not available space for this file, {}",
+                file_path.to_string_lossy()
+            );
+            let file_name = match Path::new(&local_path).file_name() {
+                Some(name) => name.to_str().unwrap_or(&local_path).to_string(),
+                None => local_path.to_string(),
+            };
+            let _ = tx.send(FileTransferProgress::Step(
+                FileTransferStep::SizeNotAvailable(file_name),
+            ));
+            continue;
+        }
 
         let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Start(
             filename.clone(),

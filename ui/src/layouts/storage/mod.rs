@@ -110,6 +110,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
         cx,
+        state,
         storage_controller.storage_state,
         storage_size,
         main_script.to_string(),
