@@ -252,7 +252,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                             )
                         }
-                       
                     }
                 }
                 div {
