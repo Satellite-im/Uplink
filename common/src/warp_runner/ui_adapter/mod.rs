@@ -11,7 +11,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats, pending_message::PendingSentMessages};
+use crate::state::{self, chats};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -190,7 +190,7 @@ pub async fn conversation_to_chat(
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages,
-        pending_outgoing_messages: PendingSentMessages::new(),
+        pending_outgoing_messages: vec![],
     })
 }
 

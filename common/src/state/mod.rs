@@ -684,7 +684,7 @@ impl State {
 
     pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingSentMessage>> {
         self.get_active_chat()
-            .map(|chat| chat.pending_outgoing_messages.msg)
+            .map(|chat| chat.pending_outgoing_messages)
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -888,22 +888,8 @@ impl State {
         let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
             if let Some(chat) = self.chats.all.get_mut(&id) {
-                return Some(
-                    chat.pending_outgoing_messages
-                        .append(id, did, msg, attachments),
-                );
+                return Some(chat.append_pending_msg(id, did, msg, attachments));
             }
-        }
-        None
-    }
-
-    pub fn get_current_pending(
-        &self,
-        conv_id: Uuid,
-        msg: PendingSentMessage,
-    ) -> Option<&PendingSentMessage> {
-        if let Some(chat) = self.chats.all.get(&conv_id) {
-            return chat.pending_outgoing_messages.get(msg);
         }
         None
     }
@@ -915,8 +901,17 @@ impl State {
         progress: Progression,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages.update(msg, progress);
+            chat.update_pending_msg(msg, progress);
         }
+    }
+
+    pub fn decrement_outgoing_messagess(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        uuid: Option<Uuid>,
+    ) {
+        self.decrement_outgoing_messages(conv_id, msg, vec![], uuid);
     }
 
     pub fn decrement_outgoing_messages(
@@ -927,19 +922,7 @@ impl State {
         uuid: Option<Uuid>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages
-                .finish(msg, attachments, uuid);
-        }
-    }
-
-    pub fn decrement_outgoing_messagess(
-        &mut self,
-        conv_id: Uuid,
-        msg: Vec<String>,
-        uuid: Option<Uuid>,
-    ) {
-        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages.finish(msg, vec![], uuid);
+            chat.remove_pending_msg(msg, attachments, uuid);
         }
     }
 

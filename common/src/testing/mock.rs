@@ -19,10 +19,7 @@ use warp::{
     raygun::{ConversationType, Message},
 };
 
-use crate::state::{
-    pending_message::PendingSentMessages, storage::Storage, Chat, Chats, Friends, Identity, State,
-    ToastNotification,
-};
+use crate::state::{storage::Storage, Chat, Chats, Friends, Identity, State, ToastNotification};
 
 use crate::warp_runner::ui_adapter;
 
@@ -131,7 +128,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages: false,
-        pending_outgoing_messages: PendingSentMessages::new(),
+        pending_outgoing_messages: vec![],
     }
 }
 

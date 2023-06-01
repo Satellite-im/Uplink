@@ -4,63 +4,10 @@ use uuid::Uuid;
 use warp::{constellation::Progression, crypto::DID};
 
 use crate::warp_runner::ui_adapter::Message;
-
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct PendingSentMessages {
-    pub msg: Vec<PendingSentMessage>,
-}
-
-impl PendingSentMessages {
-    pub fn new() -> Self {
-        PendingSentMessages { msg: vec![] }
-    }
-
-    pub fn get(&self, msg: PendingSentMessage) -> Option<&PendingSentMessage> {
-        self.msg.iter().find(|m| msg.eq(*m))
-    }
-
-    pub fn append(
-        &mut self,
-        chat_id: Uuid,
-        did: DID,
-        msg: Vec<String>,
-        attachments: &[PathBuf],
-    ) -> Uuid {
-        let new = PendingSentMessage::new(chat_id, did, msg, attachments);
-        let uuid = new.message.inner.id();
-        self.msg.push(new);
-        uuid
-    }
-
-    pub fn update(&mut self, msg: PendingSentMessage, progress: Progression) {
-        let file = progress_file(&progress);
-        for m in &mut self.msg {
-            if msg.eq(m) {
-                m.attachments_progress.insert(file, progress);
-                break;
-            }
-        }
-    }
-
-    pub fn finish(&mut self, msg: Vec<String>, attachments: Vec<String>, uuid: Option<Uuid>) {
-        let opt = self.msg.iter().position(|e| {
-            e.text.eq(&msg)
-                && e.attachments_progress
-                    .keys()
-                    .all(|a| attachments.contains(a))
-                && uuid.map(|id| id.eq(&e.id())).unwrap_or(true)
-        });
-        if let Some(pending) = opt {
-            self.msg.remove(pending);
-        }
-    }
-}
-
-//We can improve message equality detection if warp e.g. can send us their assigned uuid.
-//Else it is just a guesswork
+// We can improve message equality detection if warp e.g. can send us their assigned uuid.
+// Else it is just a guesswork
 #[derive(Clone, Debug)]
 pub struct PendingSentMessage {
-    text: Vec<String>,
     attachments: Vec<String>,
     pub attachments_progress: HashMap<String, Progression>,
     pub message: Message,
@@ -73,13 +20,13 @@ impl PendingSentMessage {
         if let Some(m_id) = id {
             inner.set_id(m_id);
         }
+        inner.set_value(text.clone());
         let message = Message {
             inner,
             in_reply_to: None,
             key: String::new(),
         };
         PendingSentMessage {
-            text,
             attachments: attachments
                 .iter()
                 .map(|p| {
@@ -102,6 +49,11 @@ impl PendingSentMessage {
         inner.set_sender(did);
         inner.set_conversation_id(chat_id);
         inner.set_value(text.clone());
+        let attachments = attachments
+            .iter()
+            .filter(|path| path.is_file())
+            .cloned()
+            .collect::<Vec<_>>();
 
         let message = Message {
             inner,
@@ -109,7 +61,6 @@ impl PendingSentMessage {
             key: Uuid::new_v4().to_string(),
         };
         PendingSentMessage {
-            text,
             attachments: attachments
                 .iter()
                 .map(|p| {
@@ -134,7 +85,7 @@ impl PendingSentMessage {
 
 impl PartialEq for PendingSentMessage {
     fn eq(&self, other: &Self) -> bool {
-        self.text.eq(&other.text)
+        self.message.inner.value().eq(&other.message.inner.value())
             && self
                 .attachments
                 .iter()
