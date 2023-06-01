@@ -6,7 +6,7 @@ use crate::{
     elements::{button::Button, label::Label, textarea, Appearance},
 };
 
-use common::{icons, language::get_local_text};
+use common::{icons, language::get_local_text, warp_runner::thumbnail_to_base64};
 
 pub type To = &'static str;
 
@@ -68,6 +68,7 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
                 key: "{key}",
                 filename: file.name(),
                 filesize: file.size(),
+                thumbnail: thumbnail_to_base64(file),
                 with_download_button: false,
                 remote: remote,
                 on_press: move |_| {},
