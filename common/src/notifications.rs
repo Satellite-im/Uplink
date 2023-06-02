@@ -193,7 +193,9 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
             &windows::runtime::HSTRING::from(&app_id),
         ) {
             Ok(toast_notifier) => {
-                toast_notifier.Show(&toast_notification);
+                if let Err(err) = toast_notifier.Show(&toast_notification) {
+                    log::error!("Error showing windows toast {}", err);
+                }
             }
             Err(err) => log::error!("Error handling notification {}", err),
         }
