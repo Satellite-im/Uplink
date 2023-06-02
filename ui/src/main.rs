@@ -625,7 +625,7 @@ fn app(cx: Scope) -> Element {
         async move {
             let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
             let mut ch = channel.lock().await;
-            while let Some(_) = ch.recv().await {
+            while (ch.recv().await).is_some() {
                 desktop.set_focus();
             }
         }
