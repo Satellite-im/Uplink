@@ -7,6 +7,7 @@ use warp::{
 use crate::{
     warp_runner::{
         conv_stream,
+        manager::commands::handle_blink_cmd,
         ui_adapter::{self, did_to_identity, MultiPassEvent},
         WarpCmd, WarpEvent,
     },
@@ -154,6 +155,7 @@ pub async fn handle_warp_command(
         }
 
         WarpCmd::Constellation(cmd) => handle_constellation_cmd(cmd, &mut warp.constellation).await,
+        WarpCmd::Blink(cmd) => handle_blink_cmd(cmd, &mut warp.blink).await,
     }
     Ok(())
 }

@@ -6,6 +6,7 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
+    blink::Blink::{self},
     constellation::Constellation,
     error::Error,
     logging::tracing::log,
@@ -19,14 +20,14 @@ use warp_rg_ipfs::config::RgIpfsConfig;
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
 
-use self::ui_adapter::{MultiPassEvent, RayGunEvent};
+use self::ui_adapter::{BlinkEvent, MultiPassEvent, RayGunEvent};
 
 mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
 pub use manager::commands::{thumbnail_to_base64, FileTransferProgress, FileTransferStep};
-pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -46,6 +47,7 @@ pub struct WarpEventChannels {
 type Account = Box<dyn MultiPass>;
 type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
+type Calling = Box<dyn Blink>;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
@@ -56,6 +58,8 @@ pub enum WarpEvent {
     Message(ui_adapter::MessageEvent),
     #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
+    #[display(fmt = "BlinkEvent {{ {_0} }} ")]
+    Blink(BlinkEvent),
 }
 
 #[derive(Display)]
@@ -68,6 +72,8 @@ pub enum WarpCmd {
     RayGun(RayGunCmd),
     #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
+    #[display(fmt = "Blink {{ {_0} }} ")]
+    Blink(BlinkCmd),
     // these commands may not actually be warp commands, but just require a long running
     // async task, executed separately from the UI
     #[display(fmt = "Other {{ {_0} }} ")]

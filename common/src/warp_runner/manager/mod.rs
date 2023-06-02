@@ -10,10 +10,10 @@ use warp::{
     tesseract::Tesseract,
 };
 
-use super::{conv_stream, Account, Messaging, Storage};
+use super::{conv_stream, Account, Calling, Messaging, Storage};
 use crate::WARP_CMD_CH;
 
-pub use commands::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use commands::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 /// Contains the structs needed for run() to handle various events
 pub struct Warp {
@@ -21,6 +21,7 @@ pub struct Warp {
     pub multipass: Account,
     pub raygun: Messaging,
     pub constellation: Storage,
+    pub blink: Calling,
 }
 
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
