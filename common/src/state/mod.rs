@@ -260,6 +260,7 @@ impl State {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
+            WarpEvent::Blink(evt) => todo!(),
         };
 
         let _ = self.save();

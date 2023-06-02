@@ -365,11 +365,14 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     .await
     .map(|rg| Box::new(rg) as Messaging)?;
 
+    let blink = warp_blink_wrtc::BlinkImpl::new(account.clone()).await?;
+
     Ok(manager::Warp {
         tesseract,
         multipass: account,
         raygun: messaging,
         constellation: storage,
+        blink,
     })
 }
 
