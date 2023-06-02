@@ -1,4 +1,5 @@
 pub mod action;
+pub mod call;
 pub mod chats;
 pub mod configuration;
 pub mod friends;
@@ -62,6 +63,8 @@ pub struct State {
     id: DID,
     pub route: route::Route,
     chats: chats::Chats,
+    #[serde(skip)]
+    pub call_info: call::CallInfo,
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
@@ -93,6 +96,7 @@ impl Clone for State {
             id: self.did_key(),
             route: self.route.clone(),
             chats: self.chats.clone(),
+            call_info: self.call_info.clone(),
             friends: self.friends.clone(),
             storage: self.storage.clone(),
             settings: Default::default(),
@@ -260,7 +264,7 @@ impl State {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
-            WarpEvent::Blink(evt) => todo!(),
+            WarpEvent::Blink(_evt) => todo!(),
         };
 
         let _ = self.save();
