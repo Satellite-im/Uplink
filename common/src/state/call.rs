@@ -23,6 +23,9 @@ impl CallInfo {
     pub fn active_call(&self) -> Option<Call> {
         self.active_call.clone()
     }
+    pub fn active_call_id(&self) -> Option<Uuid> {
+        self.active_call.as_ref().map(|x| x.id).clone()
+    }
     pub fn pending_calls(&self) -> HashMap<Uuid, Call> {
         self.pending_calls.clone()
     }
@@ -48,20 +51,26 @@ impl CallInfo {
         }
     }
 
-    pub fn participant_joined(&mut self, id: DID) -> anyhow::Result<()> {
+    pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
+        if call.id != call_id {
+            bail!("wrong call id");
+        }
         call.participant_joined(id);
         Ok(())
     }
 
-    pub fn participant_left(&mut self, id: DID) -> anyhow::Result<()> {
+    pub fn participant_left(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
+        if call.id != call_id {
+            bail!("wrong call id");
+        }
         call.participant_left(id);
         Ok(())
     }

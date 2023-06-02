@@ -6,7 +6,10 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
-    blink::Blink::{self},
+    blink::{
+        Blink::{self},
+        BlinkEventKind,
+    },
     constellation::Constellation,
     error::Error,
     logging::tracing::log,
@@ -20,7 +23,7 @@ use warp_rg_ipfs::config::RgIpfsConfig;
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
 
-use self::ui_adapter::{BlinkEvent, MultiPassEvent, RayGunEvent};
+use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
 mod conv_stream;
 mod manager;
@@ -59,7 +62,7 @@ pub enum WarpEvent {
     #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
     #[display(fmt = "BlinkEvent {{ {_0} }} ")]
-    Blink(BlinkEvent),
+    Blink(BlinkEventKind),
 }
 
 #[derive(Display)]

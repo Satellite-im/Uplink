@@ -23,6 +23,7 @@ pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
+use warp::blink::BlinkEventKind;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
@@ -264,7 +265,7 @@ impl State {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
-            WarpEvent::Blink(_evt) => todo!(),
+            WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
         let _ = self.save();
@@ -483,6 +484,42 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
                     chat.conversation_name = conversation.name();
                 }
+            }
+        }
+    }
+
+    fn process_blink_event(&mut self, event: BlinkEventKind) {
+        match event {
+            BlinkEventKind::IncomingCall {
+                call_id,
+                sender: _,
+                participants,
+            } => {
+                if let Err(e) = self.call_info.pending_call(call_id, participants) {
+                    log::error!("failed to process IncomingCall event: {e}");
+                }
+            }
+            BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
+                if let Err(e) = self.call_info.participant_joined(call_id, peer_id) {
+                    log::error!("failed to process ParticipantJoined event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
+                if let Err(e) = self.call_info.participant_left(call_id, peer_id) {
+                    log::error!("failed to process ParticipantLeft event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantSpeaking { peer_id } => {
+                if let Err(e) = self.call_info.participant_speaking(peer_id) {
+                    log::error!("failed to process ParticipantSpeaking event : {e}");
+                }
+            }
+            BlinkEventKind::SelfSpeaking => {
+                // todo
+            }
+            BlinkEventKind::AudioDegredation { peer_id } => {
+                // todo
+                log::info!("audio degredation for peer {}", peer_id);
             }
         }
     }

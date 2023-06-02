@@ -2,12 +2,10 @@
 //! a translation must be performed by WarpRunner.
 //!
 
-mod blink_event;
 mod message_event;
 mod multipass_event;
 mod raygun_event;
 
-pub use blink_event::BlinkEvent;
 pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
