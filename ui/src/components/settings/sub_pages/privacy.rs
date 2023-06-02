@@ -1,3 +1,4 @@
+/*
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use dioxus::prelude::*;
@@ -26,3 +27,4 @@ pub fn PrivacySettings(cx: Scope) -> Element {
         }
     ))
 }
+*/

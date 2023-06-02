@@ -7,7 +7,9 @@
 	align-items: center;
 	width: fit-content;
 	align-self: flex-end;
+	align-items: flex-end;
 	position: relative;
+	flex-direction: column;
 	.user-image {
 		transform: scale(0.75);
 		opacity: 0.75;
@@ -35,6 +37,7 @@
 	}
 	&.remote {
 		align-self: flex-start;
+		align-items: flex-start;
 		.remote-text {
 			border-radius: var(--border-radius-more);
 			border-bottom-left-radius: var(--border-radius);
