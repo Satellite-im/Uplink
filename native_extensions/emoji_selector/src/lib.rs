@@ -132,7 +132,7 @@ fn render_selector<'a>(
         #[cfg(target_os = "windows")]
         {
             // Check the Unicode version using a helper function or method provided by the Emoji struct
-            emoji.unicode_version().major() >= 15
+            emoji.unicode_version().major() < 15
         }
         #[cfg(not(target_os = "windows"))]
         {
