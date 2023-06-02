@@ -1,6 +1,5 @@
 use std::{
     ffi::OsStr,
-    fs,
     io::Read,
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -401,8 +400,8 @@ async fn upload_files(
         };
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
 
-        let file_size = match fs::metadata(&local_path) {
-            Ok(size) => size.len() as usize,
+        let file_size = match tokio::fs::metadata(&local_path).await {
+            Ok(metadata) => metadata.len() as usize,
             Err(e) => {
                 log::error!("Not possible to get file size, error: {}", e);
                 continue;
