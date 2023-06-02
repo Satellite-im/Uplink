@@ -21,8 +21,11 @@ pub const POWERSHELL_APP_ID: &'static str = "{1AC14E77-02E7-4E5D-B744-2EB1AE5198
 
 #[derive(Debug, Clone, Display)]
 pub enum NotificationAction {
+    #[display(fmt = "DisplayChat")]
     DisplayChat(Uuid),
+    #[display(fmt = "FriendListPending")]
     FriendListPending,
+    #[display(fmt = "Dummy")]
     Dummy,
 }
 
@@ -39,10 +42,8 @@ pub static NOTIFICATION_LISTENER: Lazy<NotificationChannel> = Lazy::new(|| {
     }
 });
 
-// On mac clicking on notifications does not focus the app unlike other os.
 // We also dont always have a reference to the current window when pushing a notification
 // As such we use a channel to notify the app to refocus the window instead
-#[cfg(target_os = "macos")]
 pub static FOCUS_SCHEDULER: Lazy<(UnboundedSender<()>, Arc<Mutex<UnboundedReceiver<()>>>)> =
     Lazy::new(|| {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -160,7 +161,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                     return;
                 }
             };
-        toast_notification.Activated(windows::Foundation::TypedEventHandler::new(
+        if let Err(err) = toast_notification.Activated(windows::Foundation::TypedEventHandler::new(
             move |_sender, result: &Option<windows::runtime::IInspectable>| {
                 let event: Option<
                     windows::runtime::Result<windows::UI::Notifications::ToastActivatedEventArgs>,
@@ -175,11 +176,18 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                         if let Err(e) = tx.send(action.to_owned()) {
                             log::error!("failed to send notification action {}", e);
                         }
+                        let focus = FOCUS_SCHEDULER.0.clone();
+                        if let Err(e) = focus.send(()) {
+                            log::error!("failed to send focus command {}", e);
+                        }
                     }
                 };
                 Ok(())
             },
-        ));
+        )) {
+            log::error!("Error creating windows toast action {}", err);
+            return;
+        };
 
         match windows::UI::Notifications::ToastNotificationManager::CreateToastNotifierWithId(
             &windows::runtime::HSTRING::from(&app_id),
@@ -235,6 +243,10 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                     let tx = NOTIFICATION_LISTENER.tx.clone();
                     if let Err(e) = tx.send(action) {
                         log::error!("failed to send notification action {}", e);
+                    }
+                    let focus = FOCUS_SCHEDULER.0.clone();
+                    if let Err(e) = focus.send(()) {
+                        log::error!("failed to send focus command {}", e);
                     }
                 };
             }),
