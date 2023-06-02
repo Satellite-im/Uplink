@@ -185,18 +185,18 @@ fn render_selector<'a>(
                 },
                 div {
                     id: "scrolling",
-                    emojis_to_display.into_iter().for_each(|(group, emojis)| {
-                        let group_name = group_to_str(group);
+                    emojis_to_display.iter().cloned().map(|(group, emojis)| {
+                        let group_name = group_to_str(group.clone());
                         rsx!(
                             div {
                                 id: "{group_name}",
                                 Label {
-                                    text: group_name
+                                    text: group_name.clone()
                                 }
                             }
                             div {
                                 class: "emojis-container",
-                                emojis.iter().map(|emoji| {
+                                emojis.iter().cloned().map(|emoji| {
                                     rsx!(
                                         div {
                                             class: "emoji",
