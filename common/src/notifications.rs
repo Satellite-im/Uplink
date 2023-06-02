@@ -42,13 +42,20 @@ pub static NOTIFICATION_LISTENER: Lazy<NotificationChannel> = Lazy::new(|| {
     }
 });
 
+pub struct FocusChannel {
+    pub tx: UnboundedSender<()>,
+    pub rx: Arc<Mutex<UnboundedReceiver<()>>>,
+}
+
 // We also dont always have a reference to the current window when pushing a notification
 // As such we use a channel to notify the app to refocus the window instead
-pub static FOCUS_SCHEDULER: Lazy<(UnboundedSender<()>, Arc<Mutex<UnboundedReceiver<()>>>)> =
-    Lazy::new(|| {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        (tx, Arc::new(Mutex::new(rx)))
-    });
+pub static FOCUS_SCHEDULER: Lazy<FocusChannel> = Lazy::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    FocusChannel {
+        tx,
+        rx: Arc::new(Mutex::new(rx)),
+    }
+});
 
 #[allow(non_snake_case)]
 pub fn push_notification(
@@ -246,7 +253,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                     if let Err(e) = tx.send(action) {
                         log::error!("failed to send notification action {}", e);
                     }
-                    let focus = FOCUS_SCHEDULER.0.clone();
+                    let focus = FOCUS_SCHEDULER.tx.clone();
                     if let Err(e) = focus.send(()) {
                         log::error!("failed to send focus command {}", e);
                     }

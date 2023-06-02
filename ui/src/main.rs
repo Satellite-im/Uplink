@@ -623,7 +623,7 @@ fn app(cx: Scope) -> Element {
     use_future(cx, (), |_| {
         to_owned![desktop];
         async move {
-            let channel = common::notifications::FOCUS_SCHEDULER.1.clone();
+            let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
             let mut ch = channel.lock().await;
             while let Some(_) = ch.recv().await {
                 desktop.set_focus();
