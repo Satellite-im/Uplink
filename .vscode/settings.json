@@ -3,5 +3,12 @@
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true
     },
-    "editor.codeActionsOnSave": {"source.fixAll": true, "source.organizeImports": true}
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true,
+        "source.organizeImports": true
+    },
+    "rust-analyzer.linkedProjects": [
+        "./ui/Cargo.toml",
+        "./ui/Cargo.toml"
+    ]
 }
