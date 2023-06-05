@@ -7,6 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::warp_runner::BlinkCmd;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -26,6 +27,7 @@ use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use uuid::Uuid;
 
 use std::collections::HashMap;
 
@@ -45,6 +47,7 @@ use warp::logging::tracing::log::{self, LevelFilter};
 use dioxus_desktop::use_wry_event_handler;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 
+use crate::components::calldialog::CallDialog;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
@@ -1064,32 +1067,122 @@ fn get_titlebar(cx: Scope) -> Element {
     ))
 }
 
-fn get_call_dialog(_cx: Scope) -> Element {
-    // CallDialog {
-    //     caller: cx.render(rsx!(UserImage {
-    //         platform: Platform::Mobile,
-    //         status: Status::Online
-    //     })),
-    //     callee: cx.render(rsx!(UserImage {
-    //         platform: Platform::Mobile,
-    //         status: Status::Online
-    //     })),
-    //     description: "Call Description".into(),
-    //     // with_accept_btn: cx.render(rsx! (
-    //     //     Button {
-    //     //         icon: Icon::Phone,
-    //     //         appearance: Appearance::Success,
-    //     //     }
-    //     // )),
-    //     with_deny_btn: cx.render(rsx! (
-    //         Button {
-    //             icon: Icon::PhoneXMark,
-    //             appearance: Appearance::Danger,
-    //             text: "End".into(),
-    //         }
-    //     )),
-    // }
-    None
+enum CallDialogCmd {
+    Accept(Uuid),
+    Reject(Uuid),
+    Hangup(Uuid),
+}
+
+// todo: don't render this if on the compose page for the active call...
+fn get_call_dialog(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let desktop = use_window(cx);
+
+    let ch = use_coroutine(cx, |mut rx| {
+        to_owned![state, desktop];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    CallDialogCmd::Accept(id) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                if let Err(e) = state.write().call_info.answer_call(id) {
+                                    log::error!("failed to answer call: {e}");
+                                    continue;
+                                }
+                                state
+                                    .write_silent()
+                                    .mutate(Action::ClearCallPopout(desktop.clone()));
+                                state.write_silent().mutate(Action::DisableMedia);
+                                state.write().mutate(Action::SetActiveMedia(id));
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::Reject(id) => {
+                        state.write().call_info.reject_call(id);
+                    }
+                    CallDialogCmd::Hangup(_id) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::LeaveCall { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().call_info.end_call();
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    let call_info = state.read().call_info.clone();
+    let (call, is_active) = match call_info.active_call() {
+        Some(call) => (call, true),
+        None => match call_info.pending_calls().iter().next() {
+            Some((_id, call)) => (call.clone(), false),
+            None => return None,
+        },
+    };
+
+    cx.render(rsx!(CallDialog {
+        caller: /*cx.render(rsx!(UserImage {
+            platform: Platform::Mobile,
+            status: Status::Online
+        }))*/ None,
+        callee: /*cx.render(rsx!(UserImage {
+            platform: Platform::Mobile,
+            status: Status::Online
+        }))*/ None,
+        description: "Call Description".into(),
+        with_accept_btn: match is_active {
+            true => None,
+            false => cx.render(rsx! (
+                Button {
+                    icon: Icon::Phone,
+                    appearance: Appearance::Success,
+                    onpress: move |_| {
+                        ch.send(CallDialogCmd::Accept(call.id));
+                    }
+                }
+            ))
+        },
+        with_deny_btn: cx.render(rsx! (
+            Button {
+                icon: Icon::PhoneXMark,
+                appearance: Appearance::Danger,
+                text: "End".into(),
+                onpress: move |_| {
+                    if is_active {
+                        ch.send(CallDialogCmd::Hangup(call.id));
+                    } else {
+                        ch.send(CallDialogCmd::Reject(call.id));
+                    }
+                }
+            }
+        )),
+    }))
 }
 
 fn get_router(cx: Scope) -> Element {
