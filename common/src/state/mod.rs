@@ -436,6 +436,10 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                 }
+                self.mutate(Action::RemoveNotification(
+                    notifications::NotificationKind::Message,
+                    1,
+                ));
             }
             MessageEvent::MessageReactionAdded { message } => {
                 self.update_message(message);
