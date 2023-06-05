@@ -211,8 +211,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 let is_maximized = desktop.is_maximized();
                                 state.write_silent().ui.window_height = outer_size.height;
                                 state.write_silent().ui.window_width = outer_size.width;
-                                state.write_silent().ui.window_maximized = is_maximized; 
-                                let _ = state.write_silent().save();    
+                                state.write_silent().ui.window_maximized = is_maximized;
+                                let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
                                 ch.send(val);
                                 validation_failure.set(None);
