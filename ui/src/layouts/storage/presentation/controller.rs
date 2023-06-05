@@ -1,9 +1,27 @@
-use common::state::{storage::Storage, State};
-use dioxus_core::ScopeState;
-use dioxus_hooks::{use_ref, use_state, UseRef, UseSharedState, UseState};
-use warp::constellation::directory::Directory;
+use std::{ffi::OsStr, path::PathBuf};
 
-#[derive(PartialEq, Clone)]
+use common::{
+    state::{storage::Storage, State},
+    warp_runner::ConstellationCmd,
+    WARP_CMD_CH,
+};
+use dioxus_core::{ScopeState, Scoped};
+use dioxus_desktop::DesktopContext;
+use dioxus_hooks::{
+    to_owned, use_coroutine, use_ref, use_state, Coroutine, UnboundedReceiver, UseRef,
+    UseSharedState, UseState,
+};
+use futures::StreamExt;
+use warp::constellation::directory::Directory;
+use wry::webview::FileDropEvent;
+
+use crate::layouts::storage::{
+    datasource::remote::StorageRemoteDataSource, domain::repository::StorageRepository,
+};
+
+use super::ui::{ChanCmd, Props, DRAG_EVENT};
+
+#[derive(Clone)]
 pub struct StorageController<'a> {
     pub storage_state: &'a UseState<Option<Storage>>,
     pub directories_list: &'a UseRef<Vec<Directory>>,
@@ -21,6 +39,7 @@ impl<'a> StorageController<'a> {
             files_list: use_ref(cx, || state.read().storage.files.clone()),
             current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
             dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
+            storage_repository: &StorageRepository::new(),
         }
     }
 }
@@ -28,15 +47,16 @@ impl<'a> StorageController<'a> {
 pub trait ControllerFunctions {
     fn get_drag_event(&self) -> FileDropEvent;
     fn format_item_name(file_name: String) -> String;
-    fn storage_coroutine<'a>(
-        cx: &'a Scoped<'a, Props>,
+    fn storage_coroutine<'b>(
+        &self,
+        cx: &'b Scoped<'b, Props>,
         state: &UseSharedState<State>,
-        storage_state: &'a UseState<Option<Storage>>,
-        storage_size: &'a UseRef<(String, String)>,
+        storage_state: &'b UseState<Option<Storage>>,
+        storage_size: &'b UseRef<(String, String)>,
         main_script: String,
-        window: &'a DesktopContext,
-        drag_event: &'a UseRef<Option<FileDropEvent>>,
-    ) -> &'a Coroutine<ChanCmd>;
+        window: &'b DesktopContext,
+        drag_event: &'b UseRef<Option<FileDropEvent>>,
+    ) -> &'b Coroutine<ChanCmd>;
 }
 
 impl<'a> ControllerFunctions for StorageController<'a> {
@@ -57,7 +77,7 @@ impl<'a> ControllerFunctions for StorageController<'a> {
             .get(0..15)
             .map(|x| x.to_string())
             .map(|x| {
-                if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
+                if file_stem.len() > 15 {
                     format!("{x}...")
                 } else {
                     x
@@ -66,15 +86,16 @@ impl<'a> ControllerFunctions for StorageController<'a> {
             .unwrap_or_else(|| file_name.clone())
     }
 
-    fn storage_coroutine<'a>(
-        cx: &'a Scoped<'a, Props>,
+    fn storage_coroutine<'b>(
+        &self,
+        cx: &'b Scoped<'b, Props>,
         state: &UseSharedState<State>,
-        storage_state: &'a UseState<Option<Storage>>,
-        storage_size: &'a UseRef<(String, String)>,
+        storage_state: &'b UseState<Option<Storage>>,
+        storage_size: &'b UseRef<(String, String)>,
         main_script: String,
-        window: &'a DesktopContext,
-        drag_event: &'a UseRef<Option<FileDropEvent>>,
-    ) -> &'a Coroutine<ChanCmd> {
+        window: &'b DesktopContext,
+        drag_event: &'b UseRef<Option<FileDropEvent>>,
+    ) -> &'b Coroutine<ChanCmd> {
         let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
             to_owned![
                 storage_state,
@@ -89,31 +110,25 @@ impl<'a> ControllerFunctions for StorageController<'a> {
                 while let Some(cmd) = rx.next().await {
                     match cmd {
                         ChanCmd::CreateNewDirectory(directory_name) => {
-                            match self.datasource.create_new_directory(directory_name).await {
+                            match self
+                                .storage_repository
+                                .create_new_directory(directory_name)
+                                .await
+                            {
                                 Ok(()) => log::info!("New directory added: {}", directory_name),
                                 Err(e) => continue,
                             }
                         }
                         ChanCmd::GetItemsFromCurrentDirectory => {
-                            let (tx, rx) =
-                                oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                                ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
-                            )) {
-                                log::error!("failed to get items from current directory {}", e);
-                                continue;
-                            }
-
-                            let rsp = rx.await.expect("command canceled");
-                            match rsp {
+                            match self
+                                .storage_repository
+                                .get_items_from_current_directory()
+                                .await
+                            {
                                 Ok(storage) => {
                                     storage_state.set(Some(storage));
                                 }
-                                Err(e) => {
-                                    log::error!("failed to add new directory: {}", e);
-                                    continue;
-                                }
+                                Err(e) => continue,
                             }
                         }
                         ChanCmd::OpenDirectory(directory_name) => {

@@ -34,12 +34,10 @@ use warp::constellation::{file::File, item::Item};
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
 
-pub mod controller;
-pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::layouts::file_preview::FilePreview;
 
-use self::controller::StorageController;
+use crate::layouts::storage::presentation::controller::StorageController;
 
 pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     const feedback_element = document.getElementById('overlay-text');
@@ -103,7 +101,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let main_script = include_str!("./storage.js");
     let window = use_window(cx);
 
-    let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
+    let ch: &Coroutine<ChanCmd> = storage_controller.(
         cx,
         state,
         storage_controller.storage_state,
