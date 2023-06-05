@@ -339,7 +339,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
                 match cmd {
-                    ControlsCmd::VoiceCall { participants, conversation_id } => {
+                    ControlsCmd::VoiceCall {
+                        participants,
+                        conversation_id,
+                    } => {
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
                             participants,
@@ -361,7 +364,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                                     .write_silent()
                                     .mutate(Action::ClearCallPopout(desktop.clone()));
                                 state.write_silent().mutate(Action::DisableMedia);
-                                state.write().mutate(Action::SetActiveMedia(conversation_id));
+                                state
+                                    .write()
+                                    .mutate(Action::SetActiveMedia(conversation_id));
                             }
                             Err(e) => {
                                 log::error!("BlinkCmd::OfferCall failed: {e}");
@@ -450,7 +455,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
                     ch.send(ControlsCmd::VoiceCall{
-                        participants: chat.participants.iter().cloned().collect(), 
+                        participants: chat.participants.iter().cloned().collect(),
                         conversation_id: chat.id
                     });
                     call_pending.set(true);
