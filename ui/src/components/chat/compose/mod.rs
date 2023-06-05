@@ -19,8 +19,8 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, Chat, Identity, State};
+use common::{icons::outline::Shape as Icon, STATIC_ARGS};
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
@@ -377,12 +377,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: true,
+            disabled: STATIC_ARGS.production_mode,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.coming-soon")
+                text: if STATIC_ARGS.production_mode { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
