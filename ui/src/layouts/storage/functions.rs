@@ -4,7 +4,7 @@ use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
     language::get_local_text,
-    state::{storage::Storage, Action, State},
+    state::{storage::Storage, Action, State, ToastNotification},
     warp_runner::{ConstellationCmd, FileTransferProgress, FileTransferStep, WarpCmd},
     WARP_CMD_CH,
 };
@@ -204,6 +204,7 @@ pub fn format_item_size(item_size: usize) -> String {
 
 pub fn storage_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
+    state: &UseSharedState<State>,
     storage_state: &'a UseState<Option<Storage>>,
     storage_size: &'a UseRef<(String, String)>,
     main_script: String,
@@ -211,7 +212,14 @@ pub fn storage_coroutine<'a>(
     drag_event: &'a UseRef<Option<FileDropEvent>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, main_script, window, drag_event, storage_size];
+        to_owned![
+            storage_state,
+            main_script,
+            window,
+            drag_event,
+            storage_size,
+            state
+        ];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -333,6 +341,25 @@ pub fn storage_coroutine<'a>(
                             match msg {
                                 FileTransferProgress::Step(steps) => {
                                     match steps {
+                                        FileTransferStep::SizeNotAvailable(file_name) => {
+                                            state.write().mutate(
+                                                common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        format!(
+                                                            "{} {}",
+                                                            get_local_text(
+                                                                "files.no-size-available"
+                                                            ),
+                                                            file_name
+                                                        ),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ),
+                                            );
+                                            sleep(Duration::from_millis(1000)).await;
+                                        }
                                         FileTransferStep::Start(name) => {
                                             let file_name_formatted = format_item_name(name);
                                             let script = FILE_NAME_SCRIPT

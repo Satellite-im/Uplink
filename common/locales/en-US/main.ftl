@@ -132,6 +132,7 @@ files = Files
     .no-thumbnail-preview = No thumbnail to see
     .file-already-opened = File already opened
     .directory-already-with-name = There is already a directory with this name
+    .no-size-available = No size available for file:
     .file-already-with-name = There is already a file with this name
     .no-data-available = No data available
 
