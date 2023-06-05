@@ -33,6 +33,13 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     if fut.value().is_some() && desktop_resized.value().is_some() && state.read().initialized {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
     }
+    let desktop = use_window(cx);
+    if state.read().ui.window_maximized {
+        desktop.set_inner_size(LogicalSize {
+            width: state.read().ui.window_width,
+            height: state.read().ui.window_height,
+        });
+    }
 
     let img_path = get_images_dir().unwrap_or_default().join("uplink.gif");
     let img_path = img_path.to_string_lossy().to_string();

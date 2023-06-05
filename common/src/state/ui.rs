@@ -53,6 +53,9 @@ pub struct UI {
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
+    pub window_maximized: bool,
+    pub window_width: u32,
+    pub window_height: u32,
     pub metadata: WindowMeta,
     #[serde(skip)]
     pub current_layout: Layout,
