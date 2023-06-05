@@ -183,7 +183,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                         if let Err(e) = tx.send(action.to_owned()) {
                             log::error!("failed to send notification action {}", e);
                         }
-                        let focus = FOCUS_SCHEDULER.0.clone();
+                        let focus = FOCUS_SCHEDULER.tx.clone();
                         if let Err(e) = focus.send(()) {
                             log::error!("failed to send focus command {}", e);
                         }
@@ -226,14 +226,14 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
                         if let Err(e) = tx.send(action) {
                             log::error!("failed to send notification action {}", e);
                         }
-                        let focus = FOCUS_SCHEDULER.0.clone();
+                        let focus = FOCUS_SCHEDULER.tx.clone();
                         if let Err(e) = focus.send(()) {
                             log::error!("failed to send focus command {}", e);
                         }
                     };
                 }
                 mac_notification_sys::NotificationResponse::Click => {
-                    let focus = FOCUS_SCHEDULER.0.clone();
+                    let focus = FOCUS_SCHEDULER.tx.clone();
                     if let Err(e) = focus.send(()) {
                         log::error!("failed to send focus command {}", e);
                     }
