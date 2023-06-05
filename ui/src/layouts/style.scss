@@ -249,3 +249,23 @@
     z-index: 0;
     align-self: flex-end;
 }
+
+.skeletal-texts {
+  display: block;
+  width: 100px;
+
+  .skeletal-text {
+      background: transparent;
+      padding-bottom: 4px;
+      width: 100%;
+      padding-top: 0px;
+      padding-left: 0px;
+
+      .skeletal-text-content {
+          background-color: var(--secondary);
+          height: var(--text-size);
+          border-radius: var(--border-radius-less);
+          width: 100%;
+      }
+  }
+}
