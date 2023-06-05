@@ -128,6 +128,19 @@ fn render_selector<'a>(
             emoji_selector.focus();
         "#;
 
+    fn should_display_emoji(emoji: &Emoji) -> bool {
+        #[cfg(target_os = "windows")]
+        {
+            // Check the Unicode version using a helper function or method provided by the Emoji struct
+            emoji.unicode_version().major() >= 15
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            // All emojis are supported on non-Windows platforms
+            true
+        }
+    }
+
     let emojis_to_display: Vec<(Group, Vec<&Emoji>)> = emojis::Group::iter()
         .map(|group| {
             let filtered_emojis: Vec<&Emoji> = group
