@@ -1,11 +1,4 @@
-use std::rc::Weak;
-
-use crate::{
-    components::media::popout_player::{PopoutPlayer, PopoutPlayerProps},
-    utils::WindowDropHandler,
-    window_manager::WindowManagerCmd,
-    UPLINK_ROUTES,
-};
+use crate::UPLINK_ROUTES;
 use common::state::{Action, State};
 
 use dioxus::prelude::*;
@@ -40,6 +33,11 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let window = use_window(cx);
+
+    //let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<_>| {
+    //    //to_owned![];
+    //    async move {}
+    //});
 
     let silenced = state
         .read()
@@ -78,7 +76,8 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
         },
         div {
             id: "media-renderer",
-            div {
+            // video not yet supported.
+            /*div {
                 class: "video-wrap",
                 Button {
                     icon: Icon::Square2Stack,
@@ -123,7 +122,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         muted: "{silenced_str}"
                     }
                 ))
-            }
+            }*/
         },
         div {
             class: "media-controls",

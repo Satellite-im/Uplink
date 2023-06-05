@@ -6,6 +6,7 @@ use std::{path::PathBuf, rc::Rc};
 
 use dioxus::prelude::*;
 
+use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
@@ -19,14 +20,26 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use common::state::{ui, Action, Chat, Identity, State};
-use common::{icons::outline::Shape as Icon, STATIC_ARGS};
+use common::{
+    icons::outline::Shape as Icon,
+    warp_runner::{BlinkCmd, WarpCmd},
+    STATIC_ARGS,
+};
+use common::{
+    state::{ui, Action, Chat, Identity, State},
+    WARP_CMD_CH,
+};
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
+use warp::{
+    blink::{self},
+    crypto::DID,
+    logging::tracing::log,
+    raygun::ConversationType,
+};
 
 use wry::webview::FileDropEvent;
 
@@ -284,6 +297,13 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
     Some(data)
 }
 
+enum ControlsCmd {
+    VoiceCall {
+        participants: Vec<DID>,
+        conversation_id: Uuid,
+    },
+}
+
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
@@ -310,6 +330,49 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     } else {
         false
     };
+
+    let call_pending = use_state(cx, || false);
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
+        to_owned![call_pending, state, desktop];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    ControlsCmd::VoiceCall { participants, conversation_id } => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
+                            participants,
+                            rsp: tx,
+                            webrtc_codec: blink::AudioCodec {
+                                mime: blink::MimeType::OPUS,
+                                sample_rate: blink::AudioSampleRate::High,
+                                channels: 1,
+                            },
+                        })) {
+                            log::error!("failed to send command to warp_runner: {e}");
+                            call_pending.set(false);
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state
+                                    .write_silent()
+                                    .mutate(Action::ClearCallPopout(desktop.clone()));
+                                state.write_silent().mutate(Action::DisableMedia);
+                                state.write().mutate(Action::SetActiveMedia(conversation_id));
+                            }
+                            Err(e) => {
+                                log::error!("BlinkCmd::OfferCall failed: {e}");
+                            }
+                        }
+                        call_pending.set(false);
+                    }
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(
         if conversation_type == ConversationType::Group {
@@ -377,7 +440,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: STATIC_ARGS.production_mode,
+            disabled: STATIC_ARGS.production_mode || *call_pending.current(),
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
@@ -386,11 +449,11 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
-                    state
-                        .write_silent()
-                        .mutate(Action::ClearCallPopout(desktop.clone()));
-                    state.write_silent().mutate(Action::DisableMedia);
-                    state.write().mutate(Action::SetActiveMedia(chat.id));
+                    ch.send(ControlsCmd::VoiceCall{
+                        participants: chat.participants.iter().cloned().collect(), 
+                        conversation_id: chat.id
+                    });
+                    call_pending.set(true);
                 }
             }
         },

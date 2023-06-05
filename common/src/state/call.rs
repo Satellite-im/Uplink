@@ -24,7 +24,7 @@ impl CallInfo {
         self.active_call.clone()
     }
     pub fn active_call_id(&self) -> Option<Uuid> {
-        self.active_call.as_ref().map(|x| x.id).clone()
+        self.active_call.as_ref().map(|x| x.id)
     }
     pub fn pending_calls(&self) -> HashMap<Uuid, Call> {
         self.pending_calls.clone()
@@ -42,10 +42,7 @@ impl CallInfo {
     }
 
     pub fn pending_call(&mut self, id: Uuid, participants: Vec<DID>) -> anyhow::Result<()> {
-        match self
-            .pending_calls
-            .insert(id.clone(), Call::new(id, participants))
-        {
+        match self.pending_calls.insert(id, Call::new(id, participants)) {
             None => Ok(()),
             Some(_) => bail!("call with that id was already pending"),
         }
