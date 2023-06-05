@@ -436,6 +436,10 @@ impl State {
                         chat.unreads -= 1;
                     }
                 }
+                self.mutate(Action::RemoveNotification(
+                    notifications::NotificationKind::Message,
+                    1,
+                ));
             }
             MessageEvent::MessageReactionAdded { message } => {
                 self.update_message(message);
