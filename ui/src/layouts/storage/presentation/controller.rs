@@ -2,8 +2,8 @@ use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
     language::get_local_text,
-    state::{storage::Storage, Action, State},
-    warp_runner::ConstellationCmd,
+    state::{storage::Storage, Action, State, ToastNotification},
+    warp_runner::{FileTransferProgress, FileTransferStep},
 };
 
 use dioxus_core::Scoped;
@@ -17,7 +17,10 @@ use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
 use wry::webview::FileDropEvent;
 
-use crate::layouts::storage::domain::repository::StorageRepository;
+use crate::layouts::storage::{
+    domain::repository::StorageRepository,
+    presentation::ui::{ANIMATION_DASH_SCRIPT, FILE_NAME_SCRIPT},
+};
 
 use super::ui::{Props, DRAG_EVENT, FEEDBACK_TEXT_SCRIPT};
 
@@ -285,23 +288,59 @@ impl<'a> StorageController<'a> {
                                 Err(_) => continue,
                             }
                         }
+                        ChanCmd::DownloadFile {
+                            file_name,
+                            local_path_to_save_file,
+                        } => {
+                            match self
+                                .repository
+                                .download_file(file_name, local_path_to_save_file)
+                                .await
+                            {
+                                Ok(()) => log::info!("File downloaded: {}", file_name),
+                                Err(_) => continue,
+                            }
+                        }
+                        ChanCmd::RenameItem { old_name, new_name } => {
+                            match self.repository.rename_item(old_name, new_name).await {
+                                Ok(storage) => self.storage_state.set(Some(storage)),
+                                Err(_) => continue,
+                            }
+                        }
+                        ChanCmd::DeleteItems(item) => {
+                            match self.repository.delete_item(item).await {
+                                Ok(storage) => self.storage_state.set(Some(storage)),
+                                Err(_) => continue,
+                            }
+                        }
+                        ChanCmd::GetStorageSize => match self.repository.get_storage_size().await {
+                            Ok((max_size, current_size)) => {
+                                let max_storage_size = self.format_item_size(max_size);
+                                let current_storage_size = self.format_item_size(current_size);
+                                self.storage_size
+                                    .with_mut(|i| *i = (max_storage_size, current_storage_size));
+                            }
+                            Err(e) => {
+                                self.storage_size.with_mut(|i| {
+                                    *i = (
+                                        get_local_text("files.no-data-available"),
+                                        get_local_text("files.no-data-available"),
+                                    )
+                                });
+                                log::error!("failed to get storage size: {}", e);
+                                continue;
+                            }
+                        },
                         ChanCmd::UploadFiles(files_path) => {
-                            let mut script = main_script.replace("$IS_DRAGGING", "true");
+                            let mut script = MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "true");
                             script.push_str(ANIMATION_DASH_SCRIPT);
                             window.eval(&script);
 
-                            let (tx, mut rx) =
-                                mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
+                            let rx = match self.repository.upload_files(files_path).await {
+                                Ok(rx) => rx,
+                                Err(_) => continue,
+                            };
 
-                            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                                ConstellationCmd::UploadFiles {
-                                    files_path,
-                                    rsp: tx,
-                                },
-                            )) {
-                                log::error!("failed to upload files {}", e);
-                                continue;
-                            }
                             while let Some(msg) = rx.recv().await {
                                 match msg {
                                     FileTransferProgress::Step(steps) => {
@@ -326,7 +365,8 @@ impl<'a> StorageController<'a> {
                                                 sleep(Duration::from_millis(1000)).await;
                                             }
                                             FileTransferStep::Start(name) => {
-                                                let file_name_formatted = format_item_name(name);
+                                                let file_name_formatted =
+                                                    self.format_item_name(name);
                                                 let script = FILE_NAME_SCRIPT
                                                     .replace("$FILE_NAME", &file_name_formatted);
                                                 window.eval(&script);
@@ -347,7 +387,7 @@ impl<'a> StorageController<'a> {
                                                     }
                                                     Some(name) => {
                                                         let file_name_formatted =
-                                                            format_item_name(name);
+                                                            self.format_item_name(name);
                                                         let script = FILE_NAME_SCRIPT.replace(
                                                             "$FILE_NAME",
                                                             &file_name_formatted,
@@ -393,22 +433,22 @@ impl<'a> StorageController<'a> {
                                         };
                                     }
                                     FileTransferProgress::Finished(storage) => {
-                                        *drag_event.write_silent() = None;
+                                        *self.drag_event.write_silent() = None;
                                         let mut script =
-                                            main_script.replace("$IS_DRAGGING", "false");
+                                            MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "false");
                                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                         script
                                             .push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
                                         script
                                             .push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
                                         window.eval(&script);
-                                        storage_state.set(Some(storage));
+                                        self.storage_state.set(Some(storage));
                                         break;
                                     }
                                     FileTransferProgress::Error(_) => {
-                                        *drag_event.write_silent() = None;
+                                        *self.drag_event.write_silent() = None;
                                         let mut script =
-                                            main_script.replace("$IS_DRAGGING", "false");
+                                            MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "false");
                                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                         script
                                             .push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
@@ -417,86 +457,6 @@ impl<'a> StorageController<'a> {
                                         window.eval(&script);
                                         break;
                                     }
-                                }
-                            }
-                        }
-                        ChanCmd::DownloadFile {
-                            file_name,
-                            local_path_to_save_file,
-                        } => {
-                            match self
-                                .repository
-                                .download_file(file_name, local_path_to_save_file)
-                                .await
-                            {
-                                Ok(()) => log::info!("File downloaded: {}", file_name),
-                                Err(_) => continue,
-                            }
-                        }
-                        ChanCmd::RenameItem { old_name, new_name } => {
-                            let (tx, rx) =
-                                oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                                ConstellationCmd::RenameItem {
-                                    old_name,
-                                    new_name,
-                                    rsp: tx,
-                                },
-                            )) {
-                                log::error!("failed to rename item {}", e);
-                                continue;
-                            }
-
-                            let rsp = rx.await.expect("command canceled");
-                            match rsp {
-                                Ok(storage) => {
-                                    storage_state.set(Some(storage));
-                                }
-                                Err(e) => {
-                                    log::error!(
-                                        "failed to update uplink storage with renamed item: {}",
-                                        e
-                                    );
-                                    continue;
-                                }
-                            }
-                        }
-                        ChanCmd::DeleteItems(item) => {
-                            match self.repository.delete_item(item).await {
-                                Ok(storage) => self.storage_state.set(Some(storage)),
-                                Err(_) => continue,
-                            }
-                        }
-                        ChanCmd::GetStorageSize => {
-                            let (tx, rx) =
-                                oneshot::channel::<Result<(usize, usize), warp::error::Error>>();
-
-                            if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                                ConstellationCmd::GetStorageSize { rsp: tx },
-                            )) {
-                                log::error!("failed to get storage size: {}", e);
-                                continue;
-                            }
-
-                            let rsp = rx.await.expect("command canceled");
-                            match rsp {
-                                Ok((max_size, current_size)) => {
-                                    let max_storage_size = self.format_item_size(max_size);
-                                    let current_storage_size = self.format_item_size(current_size);
-                                    self.storage_size.with_mut(|i| {
-                                        *i = (max_storage_size, current_storage_size)
-                                    });
-                                }
-                                Err(e) => {
-                                    self.storage_size.with_mut(|i| {
-                                        *i = (
-                                            get_local_text("files.no-data-available"),
-                                            get_local_text("files.no-data-available"),
-                                        )
-                                    });
-                                    log::error!("failed to get storage size: {}", e);
-                                    continue;
                                 }
                             }
                         }

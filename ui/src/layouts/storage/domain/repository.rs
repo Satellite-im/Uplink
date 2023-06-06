@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use common::state::storage::Storage;
+use common::{state::storage::Storage, warp_runner::FileTransferProgress};
+use tokio::sync::mpsc::UnboundedReceiver;
 use warp::constellation::{directory::Directory, item::Item};
 
 use crate::layouts::storage::datasource::remote::StorageRemoteDataSource;
@@ -62,5 +63,26 @@ impl StorageRepository {
 
     pub async fn delete_item(&self, item: Item) -> Result<Storage, warp::error::Error> {
         self.storageRemoteDataSource.delete_items(item).await
+    }
+
+    pub async fn get_storage_size(&self) -> Result<(usize, usize), warp::error::Error> {
+        self.storageRemoteDataSource.get_storage_size().await
+    }
+
+    pub async fn rename_item(
+        &self,
+        old_name: String,
+        new_name: String,
+    ) -> Result<Storage, warp::error::Error> {
+        self.storageRemoteDataSource
+            .rename_item(old_name, new_name)
+            .await
+    }
+
+    pub async fn upload_files(
+        &self,
+        files_path: Vec<PathBuf>,
+    ) -> Result<UnboundedReceiver<FileTransferProgress<Storage>>, warp::error::Error> {
+        self.storageRemoteDataSource.upload_files(files_path).await
     }
 }

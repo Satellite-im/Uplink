@@ -2,11 +2,11 @@ use std::path::PathBuf;
 
 use common::{
     state::storage::Storage,
-    warp_runner::{ConstellationCmd, WarpCmd},
+    warp_runner::{ConstellationCmd, FileTransferProgress, WarpCmd},
     WARP_CMD_CH,
 };
 use futures::channel::oneshot;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use warp::constellation::{directory::Directory, item::Item};
 
 #[derive(Clone)]
@@ -190,5 +190,73 @@ impl StorageRemoteDataSource {
             log::error!("Failed to delete item {}: {}", item_name, e);
             e
         })
+    }
+
+    pub async fn get_storage_size(&self) -> Result<(usize, usize), warp::error::Error> {
+        let (tx, rx) = oneshot::channel::<Result<(usize, usize), warp::error::Error>>();
+
+        self.warp_cmd_tx
+            .send(WarpCmd::Constellation(ConstellationCmd::GetStorageSize {
+                rsp: tx,
+            }))
+            .map_err(|e| {
+                log::error!("Failed to use send channel on get storage size: {}", e);
+                warp::error::Error::SenderChannelUnavailable
+            })?;
+
+        let rsp = rx.await.expect("command canceled");
+
+        rsp.map_err(|e| {
+            log::error!("Failed to get storage size: {}", e);
+            e
+        })
+    }
+
+    pub async fn rename_item(
+        &self,
+        old_name: String,
+        new_name: String,
+    ) -> Result<Storage, warp::error::Error> {
+        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
+        let old_name_clone = old_name.clone();
+        self.warp_cmd_tx
+            .send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
+                old_name,
+                new_name,
+                rsp: tx,
+            }))
+            .map_err(|e| {
+                log::error!(
+                    "Failed to use send channel on rename item {}: {}",
+                    old_name_clone,
+                    e
+                );
+                warp::error::Error::SenderChannelUnavailable
+            })?;
+
+        let rsp = rx.await.expect("command canceled");
+
+        rsp.map_err(|e| {
+            log::error!("Failed to rename item {}: {}", old_name_clone, e);
+            e
+        })
+    }
+
+    pub async fn upload_files(
+        &self,
+        files_path: Vec<PathBuf>,
+    ) -> Result<UnboundedReceiver<FileTransferProgress<Storage>>, warp::error::Error> {
+        let (tx, rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
+
+        self.warp_cmd_tx
+            .send(WarpCmd::Constellation(ConstellationCmd::UploadFiles {
+                files_path,
+                rsp: tx,
+            }))
+            .map_err(|e| {
+                log::error!("Failed to use send channel on upload files: {}", e);
+                warp::error::Error::SenderChannelUnavailable
+            })?;
+        Ok(rx)
     }
 }

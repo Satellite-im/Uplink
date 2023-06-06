@@ -29,7 +29,6 @@ use kit::{
 use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
@@ -44,7 +43,7 @@ pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     feedback_element.textContent = '$TEXT';
 "#;
 
-const FILE_NAME_SCRIPT: &str = r#"
+pub const FILE_NAME_SCRIPT: &str = r#"
     const filename = document.getElementById('overlay-text0');
     filename.textContent = '$FILE_NAME';
 "#;
@@ -428,7 +427,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
-                                                if  controller.files_list.read().iter().any(|file| file.name() == new_name) {
+                                                if controller.files_list.read().iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
                                                     .mutate(common::state::Action::AddToastNotification(
