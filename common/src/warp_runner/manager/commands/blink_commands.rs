@@ -9,6 +9,7 @@ use crate::warp_runner::Calling;
 pub enum BlinkCmd {
     #[display(fmt = "OfferCall")]
     OfferCall {
+        conversation_id: Uuid,
         participants: Vec<DID>,
         webrtc_codec: AudioCodec,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
@@ -35,11 +36,16 @@ pub enum BlinkCmd {
 pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
     match cmd {
         BlinkCmd::OfferCall {
+            conversation_id,
             participants,
             webrtc_codec,
             rsp,
         } => {
-            let _ = rsp.send(blink.offer_call(participants, webrtc_codec).await);
+            let _ = rsp.send(
+                blink
+                    .offer_call(Some(conversation_id), participants, webrtc_codec)
+                    .await,
+            );
         }
         BlinkCmd::AnswerCall { call_id, rsp } => {
             let _ = rsp.send(blink.answer_call(call_id).await);

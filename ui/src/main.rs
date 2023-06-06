@@ -1096,7 +1096,7 @@ fn get_call_dialog(cx: Scope) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                if let Err(e) = state.write().call_info.answer_call(id) {
+                                if let Err(e) = state.write().ui.call_info.answer_call(id) {
                                     log::error!("failed to answer call: {e}");
                                     continue;
                                 }
@@ -1112,7 +1112,7 @@ fn get_call_dialog(cx: Scope) -> Element {
                         }
                     }
                     CallDialogCmd::Reject(id) => {
-                        state.write().call_info.reject_call(id);
+                        state.write().ui.call_info.reject_call(id);
                     }
                     CallDialogCmd::Hangup(_id) => {
                         let (tx, rx) = oneshot::channel();
@@ -1125,7 +1125,7 @@ fn get_call_dialog(cx: Scope) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                state.write().call_info.end_call();
+                                state.write().ui.call_info.end_call();
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to answer call: {e}");
@@ -1137,7 +1137,7 @@ fn get_call_dialog(cx: Scope) -> Element {
         }
     });
 
-    let call_info = state.read().call_info.clone();
+    let call_info = state.read().ui.call_info.clone();
     let (call, is_active) = match call_info.active_call() {
         Some(call) => (call, true),
         None => match call_info.pending_calls().iter().next() {

@@ -52,7 +52,7 @@ use warp::{
 };
 
 use self::storage::Storage;
-use self::ui::{Call, Font, Layout};
+use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
@@ -64,8 +64,6 @@ pub struct State {
     id: DID,
     pub route: route::Route,
     chats: chats::Chats,
-    #[serde(skip)]
-    pub call_info: call::CallInfo,
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
@@ -97,7 +95,6 @@ impl Clone for State {
             id: self.did_key(),
             route: self.route.clone(),
             chats: self.chats.clone(),
-            call_info: self.call_info.clone(),
             friends: self.friends.clone(),
             storage: self.storage.clone(),
             settings: Default::default(),
@@ -495,22 +492,22 @@ impl State {
                 sender: _,
                 participants,
             } => {
-                if let Err(e) = self.call_info.pending_call(call_id, participants) {
+                if let Err(e) = self.ui.call_info.pending_call(call_id, participants) {
                     log::error!("failed to process IncomingCall event: {e}");
                 }
             }
             BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
-                if let Err(e) = self.call_info.participant_joined(call_id, peer_id) {
+                if let Err(e) = self.ui.call_info.participant_joined(call_id, peer_id) {
                     log::error!("failed to process ParticipantJoined event : {e}");
                 }
             }
             BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
-                if let Err(e) = self.call_info.participant_left(call_id, peer_id) {
+                if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
                     log::error!("failed to process ParticipantLeft event : {e}");
                 }
             }
             BlinkEventKind::ParticipantSpeaking { peer_id } => {
-                if let Err(e) = self.call_info.participant_speaking(peer_id) {
+                if let Err(e) = self.ui.call_info.participant_speaking(peer_id) {
                     log::error!("failed to process ParticipantSpeaking event : {e}");
                 }
             }
@@ -1110,7 +1107,6 @@ impl State {
     fn disable_media(&mut self) {
         self.chats.active_media = None;
         self.ui.popout_media_player = false;
-        self.ui.current_call = None;
     }
     pub fn has_toasts(&self) -> bool {
         !self.ui.toast_notifications.is_empty()
@@ -1137,7 +1133,6 @@ impl State {
     /// Sets the active media to the specified conversation id
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
-        self.ui.current_call = Some(Call::new(None));
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;

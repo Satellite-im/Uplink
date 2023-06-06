@@ -3,11 +3,14 @@ use std::collections::{HashMap, HashSet};
 use anyhow::bail;
 use uuid::Uuid;
 use warp::crypto::DID;
+use wry::application::window::WindowId;
 
 #[derive(Clone, Default)]
 pub struct CallInfo {
     active_call: Option<Call>,
     pending_calls: HashMap<Uuid, Call>,
+    // associated with the active_call
+    pub popout_window_id: Option<WindowId>,
 }
 
 #[derive(Clone)]
@@ -116,6 +119,24 @@ impl CallInfo {
         call.unmute_self();
         Ok(())
     }
+
+    pub fn silence_call(&mut self) -> anyhow::Result<()> {
+        let call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        call.silence_call();
+        Ok(())
+    }
+
+    pub fn unsilence_call(&mut self) -> anyhow::Result<()> {
+        let call = match self.active_call.as_mut() {
+            Some(c) => c,
+            None => bail!("call not in progress"),
+        };
+        call.unsilence_call();
+        Ok(())
+    }
 }
 
 impl Call {
@@ -152,5 +173,13 @@ impl Call {
 
     fn unmute_self(&mut self) {
         self.self_muted = false;
+    }
+
+    fn silence_call(&mut self) {
+        self.call_silenced = true;
+    }
+
+    fn unsilence_call(&mut self) {
+        self.call_silenced = false;
     }
 }

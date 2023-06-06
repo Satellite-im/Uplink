@@ -42,9 +42,9 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
     let silenced = state
         .read()
         .ui
-        .current_call
-        .clone()
-        .map(|x| x.silenced)
+        .call_info
+        .active_call()
+        .map(|x| x.call_silenced)
         .unwrap_or(false);
 
     let silenced_str = silenced.to_string();

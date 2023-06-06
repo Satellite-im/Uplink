@@ -345,8 +345,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                     } => {
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
+                            conversation_id,
                             participants,
                             rsp: tx,
+                            // todo: make this configurable
                             webrtc_codec: blink::AudioCodec {
                                 mime: blink::MimeType::OPUS,
                                 sample_rate: blink::AudioSampleRate::High,

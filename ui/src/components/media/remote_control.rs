@@ -24,7 +24,7 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let call = state.read().ui.current_call.clone();
+    let call = state.read().ui.call_info.active_call();
     let window = use_window(cx);
 
     let call = match call {
@@ -51,11 +51,11 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
             Button {
                 // TODO: we need to add an icon for this `if state.read().ui.silenced { Icon::Microphone } else { Icon::Microphone }`
                 icon: Icon::Microphone,
-                appearance: if call.muted { Appearance::Danger } else { Appearance::Secondary },
+                appearance: if call.self_muted { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if call.muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
+                        text: if call.self_muted { cx.props.unmute_text.clone() } else { cx.props.mute_text.clone() }
                     }
                 )),
                 onpress: move |_| {
@@ -63,12 +63,12 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 }
             },
             Button {
-                icon: if call.silenced { Icon::SignalSlash } else { Icon::Signal },
-                appearance: if call.silenced { Appearance::Danger } else { Appearance::Secondary },
+                icon: if call.call_silenced { Icon::SignalSlash } else { Icon::Signal },
+                appearance: if call.call_silenced { Appearance::Danger } else { Appearance::Secondary },
                 tooltip: cx.render(rsx!(
                     Tooltip {
                         arrow_position: ArrowPosition::Bottom,
-                        text: if call.silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
+                        text: if call.call_silenced { cx.props.listen_text.clone() } else { cx.props.silence_text.clone() }
                     }
                 )),
                 onpress: move |_| {

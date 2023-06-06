@@ -7,9 +7,10 @@ use std::{
     rc::Weak,
 };
 use uuid::Uuid;
+use warp::logging::tracing::log;
 use wry::webview::WebView;
 
-use super::notifications::Notifications;
+use super::{call, notifications::Notifications};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
@@ -39,7 +40,7 @@ pub struct UI {
     pub notifications: Notifications,
     // stores information related to the current call
     #[serde(skip)]
-    pub current_call: Option<Call>,
+    pub call_info: call::CallInfo,
     #[serde(skip)]
     pub current_debug_logger: Option<DebugLogger>,
     // false: the media player is anchored in place
@@ -117,14 +118,7 @@ impl Drop for UI {
 impl UI {
     fn take_call_popout_id(&mut self) -> Option<WindowId> {
         self.popout_media_player = false;
-        match self.current_call.take() {
-            Some(mut call) => {
-                let id = call.take_window_id();
-                self.current_call = Some(call);
-                id
-            }
-            None => None,
-        }
+        self.call_info.popout_window_id.take()
     }
 
     fn take_debug_logger_id(&mut self) -> Option<WindowId> {
@@ -152,7 +146,7 @@ impl UI {
         };
     }
     pub fn set_call_popout(&mut self, id: WindowId) {
-        self.current_call = Some(Call::new(Some(id)));
+        self.call_info.popout_window_id = Some(id);
         self.popout_media_player = true;
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
@@ -208,43 +202,23 @@ impl UI {
     }
 
     pub fn toggle_muted(&mut self) {
-        self.current_call = self.current_call.clone().map(|mut x| {
-            x.muted = !x.muted;
-            x
-        });
-    }
-
-    pub fn toggle_silenced(&mut self) {
-        self.current_call = self.current_call.clone().map(|mut x| {
-            x.silenced = !x.silenced;
-            x
-        });
-    }
-}
-
-#[derive(Clone, Default, Deserialize, Serialize)]
-pub struct Call {
-    // displays the current  video stream
-    // may need changing later to accommodate video streams from multiple participants
-    #[serde(skip)]
-    pub popout_window_id: Option<WindowId>,
-    #[serde(default)]
-    pub muted: bool,
-    #[serde(default)]
-    pub silenced: bool,
-}
-
-impl Call {
-    pub fn new(popout_window_id: Option<WindowId>) -> Self {
-        Self {
-            popout_window_id,
-            muted: false,
-            silenced: false,
+        if let Err(e) = match self.call_info.active_call().map(|x| x.self_muted) {
+            Some(true) => self.call_info.unmute_self(),
+            Some(false) => self.call_info.mute_self(),
+            _ => Ok(()),
+        } {
+            log::error!("failed to toggle_muted: {e}");
         }
     }
 
-    pub fn take_window_id(&mut self) -> Option<WindowId> {
-        self.popout_window_id.take()
+    pub fn toggle_silenced(&mut self) {
+        if let Err(e) = match self.call_info.active_call().map(|x| x.call_silenced) {
+            Some(true) => self.call_info.unsilence_call(),
+            Some(false) => self.call_info.silence_call(),
+            _ => Ok(()),
+        } {
+            log::error!("failed to toggle_silenced: {e}");
+        }
     }
 }
 
