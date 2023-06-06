@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use anyhow::bail;
 use uuid::Uuid;
@@ -8,12 +8,12 @@ use wry::application::window::WindowId;
 #[derive(Clone, Default)]
 pub struct CallInfo {
     active_call: Option<Call>,
-    pending_calls: HashMap<Uuid, Call>,
+    pending_calls: Vec<Call>,
     // associated with the active_call
     pub popout_window_id: Option<WindowId>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Call {
     pub id: Uuid,
     pub conversation_id: Uuid,
@@ -31,7 +31,7 @@ impl CallInfo {
     pub fn active_call_id(&self) -> Option<Uuid> {
         self.active_call.as_ref().map(|x| x.id)
     }
-    pub fn pending_calls(&self) -> HashMap<Uuid, Call> {
+    pub fn pending_calls(&self) -> Vec<Call> {
         self.pending_calls.clone()
     }
     pub fn offer_call(&mut self, id: Uuid, conversation_id: Uuid, participants: Vec<DID>) {
@@ -44,8 +44,9 @@ impl CallInfo {
     }
 
     pub fn answer_call(&mut self, id: Uuid) -> anyhow::Result<Call> {
-        match self.pending_calls.remove(&id) {
-            Some(call) => {
+        match self.pending_calls.iter().position(|x| x.id == id) {
+            Some(idx) => {
+                let call = self.pending_calls.remove(idx);
                 self.active_call.replace(call.clone());
                 Ok(call)
             }
@@ -54,7 +55,7 @@ impl CallInfo {
     }
 
     pub fn reject_call(&mut self, id: Uuid) {
-        self.pending_calls.remove(&id);
+        self.pending_calls.retain(|x| x.id != id);
     }
 
     pub fn pending_call(
@@ -63,13 +64,12 @@ impl CallInfo {
         conversation_id: Uuid,
         participants: Vec<DID>,
     ) -> anyhow::Result<()> {
-        match self
-            .pending_calls
-            .insert(id, Call::new(id, conversation_id, participants))
-        {
-            None => Ok(()),
-            Some(_) => bail!("call with that id was already pending"),
+        if self.pending_calls.iter().any(|x| x.id == id) {
+            bail!("call with that id was already pending");
         }
+        self.pending_calls
+            .push(Call::new(id, conversation_id, participants));
+        Ok(())
     }
 
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {

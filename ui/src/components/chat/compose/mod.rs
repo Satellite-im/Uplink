@@ -45,10 +45,7 @@ use warp::{
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::{
-        chat::{edit_group::EditGroup, group_users::GroupUsers},
-        media::player::MediaPlayer,
-    },
+    components::chat::{edit_group::EditGroup, group_users::GroupUsers},
     layouts::storage::{
         functions::{decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths},
         ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
@@ -194,16 +191,17 @@ pub fn Compose(cx: Scope) -> Element {
                     ignore_focus: should_ignore_focus,
                 }
             },
-            data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
-                MediaPlayer {
-                    settings_text: get_local_text("settings.settings"), 
-                    enable_camera_text: get_local_text("media-player.enable-camera"),
-                    fullscreen_text: get_local_text("media-player.fullscreen"),
-                    popout_player_text: get_local_text("media-player.popout-player"),
-                    screenshare_text: get_local_text("media-player.screenshare"),
-                    end_text: get_local_text("uplink.end"),
-                },
-            ))),
+            // may need this later when video calling is possible. 
+            // data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
+            //     MediaPlayer {
+            //         settings_text: get_local_text("settings.settings"), 
+            //         enable_camera_text: get_local_text("media-player.enable-camera"),
+            //         fullscreen_text: get_local_text("media-player.fullscreen"),
+            //         popout_player_text: get_local_text("media-player.popout-player"),
+            //         screenshare_text: get_local_text("media-player.screenshare"),
+            //         end_text: get_local_text("uplink.end"),
+            //     },
+            // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
             EditGroup {

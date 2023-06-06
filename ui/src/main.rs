@@ -7,6 +7,7 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::state::call;
 use common::warp_runner::BlinkCmd;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
 use dioxus::prelude::*;
@@ -22,6 +23,7 @@ use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
+use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -47,7 +49,6 @@ use warp::logging::tracing::log::{self, LevelFilter};
 use dioxus_desktop::use_wry_event_handler;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 
-use crate::components::calldialog::CallDialog;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
@@ -62,6 +63,7 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
+use crate::utils::build_participants;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -483,7 +485,6 @@ fn app(cx: Scope) -> Element {
                 id: "app-wrap",
                 get_titlebar{},
                 get_toasts{},
-                get_call_dialog{},
                 get_router{},
                 get_logger{},
             },
@@ -1064,6 +1065,7 @@ fn get_titlebar(cx: Scope) -> Element {
                 Topbar_Controls {}
             })),
         },
+        get_call_titlebar{}
     ))
 }
 
@@ -1073,12 +1075,13 @@ enum CallDialogCmd {
     Hangup(Uuid),
 }
 
-// todo: don't render this if on the compose page for the active call...
-fn get_call_dialog(cx: Scope) -> Element {
+// todo: look at media::remote_control::RemoteControls and add stuff from there.
+fn get_call_titlebar(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
+    let call_info = &state.read().ui.call_info;
 
-    let ch = use_coroutine(cx, |mut rx| {
+    let _ch = use_coroutine(cx, |mut rx| {
         to_owned![state, desktop];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -1133,52 +1136,85 @@ fn get_call_dialog(cx: Scope) -> Element {
         }
     });
 
-    let call_info = state.read().ui.call_info.clone();
-    let (call, is_active) = match call_info.active_call() {
-        Some(call) => (call, true),
-        None => match call_info.pending_calls().iter().next() {
-            Some((_id, call)) => (call.clone(), false),
-            None => return None,
-        },
-    };
-
-    cx.render(rsx!(CallDialog {
-        caller: /*cx.render(rsx!(UserImage {
-            platform: Platform::Mobile,
-            status: Status::Online
-        }))*/ None,
-        callee: /*cx.render(rsx!(UserImage {
-            platform: Platform::Mobile,
-            status: Status::Online
-        }))*/ None,
-        description: "Call Description".into(),
-        with_accept_btn: match is_active {
-            true => None,
-            false => cx.render(rsx! (
-                Button {
-                    icon: Icon::Phone,
-                    appearance: Appearance::Success,
-                    onpress: move |_| {
-                        ch.send(CallDialogCmd::Accept(call.id));
-                    }
-                }
-            ))
-        },
-        with_deny_btn: cx.render(rsx! (
-            Button {
-                icon: Icon::PhoneXMark,
-                appearance: Appearance::Danger,
-                text: "End".into(),
-                onpress: move |_| {
-                    if is_active {
-                        ch.send(CallDialogCmd::Hangup(call.id));
-                    } else {
-                        ch.send(CallDialogCmd::Reject(call.id));
-                    }
+    cx.render(rsx!(
+        div {
+            class: "call-titlebar",
+             match call_info.pending_calls().first() {
+                Some(pending_call) =>  cx.render(rsx!(disp_pending_call { call: pending_call.clone() })),
+                None => match call_info.active_call() {
+                    Some(active_call) =>
+                    cx.render(rsx!(disp_active_call { call: active_call.clone() })),
+                    None => cx.render(rsx!(""))
                 }
             }
-        )),
-    }))
+        }
+    ))
+}
+
+#[inline_props]
+fn disp_pending_call(cx: Scope, call: call::Call) -> Element {
+    let ch = use_coroutine_handle::<CallDialogCmd>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
+
+    let mut participants = state.read().get_identities(&call.participants);
+    let own_id = state.read().did_key();
+    participants.retain(|x| x.did_key() != own_id);
+
+    cx.render(rsx!(
+        span { "Incoming Call" },
+        UserImageGroup {
+            participants: build_participants(&participants),
+            with_username: State::join_usernames(&participants),
+        },
+        Button {
+            icon: Icon::Phone,
+            appearance: Appearance::Success,
+            text: "Accept".into(),
+            onpress: move |_| {
+                ch.send(CallDialogCmd::Accept(call.id));
+            }
+        },
+        Button {
+            icon: Icon::PhoneXMark,
+            appearance: Appearance::Danger,
+            text: "Reject".into(),
+            onpress: move |_| {
+                ch.send(CallDialogCmd::Reject(call.id));
+            }
+        }
+    ))
+}
+
+#[inline_props]
+fn disp_active_call(cx: Scope, call: call::Call) -> Element {
+    let ch = use_coroutine_handle::<CallDialogCmd>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
+
+    // if you offer a call, it becomes the active call. But that doesn't mean anyone joined.
+    let call_text = match call.participants_joined.len() {
+        0 => "Calling".into(),
+        _ => get_local_text("remote-controls.in-call"),
+    };
+
+    let mut participants = state.read().get_identities(&call.participants);
+    let own_id = state.read().did_key();
+    participants.retain(|x| x.did_key() != own_id);
+
+    cx.render(rsx!(
+        span { call_text },
+        UserImageGroup {
+            participants: build_participants(&participants),
+            with_username: State::join_usernames(&participants),
+        },
+        Button {
+            icon: Icon::PhoneXMark,
+            appearance: Appearance::Danger,
+            text: "Hang Up".into(),
+            onpress: move |_| {
+                ch.send(CallDialogCmd::Hangup(call.id));
+            }
+        }
+    ))
 }
 
 fn get_router(cx: Scope) -> Element {

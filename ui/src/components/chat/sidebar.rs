@@ -33,11 +33,7 @@ use warp::{
 };
 
 use crate::components::chat::create_group::CreateGroup;
-use crate::{
-    components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    utils::build_participants,
-    UPLINK_ROUTES,
-};
+use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
@@ -514,16 +510,16 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 ))
             },
-            active_media_chat.is_some().then(|| rsx!(
-                RemoteControls {
-                    in_call_text: get_local_text("remote-controls.in-call"),
-                    mute_text: get_local_text("remote-controls.mute"),
-                    unmute_text: get_local_text("remote-controls.unmute"),
-                    listen_text: get_local_text("remote-controls.listen"),
-                    silence_text: get_local_text("remote-controls.silence"),
-                    end_text: get_local_text("remote-controls.end"),
-                }
-            )),
+            // active_media_chat.is_some().then(|| rsx!(
+            //     RemoteControls {
+            //         in_call_text: get_local_text("remote-controls.in-call"),
+            //         mute_text: get_local_text("remote-controls.mute"),
+            //         unmute_text: get_local_text("remote-controls.unmute"),
+            //         listen_text: get_local_text("remote-controls.listen"),
+            //         silence_text: get_local_text("remote-controls.silence"),
+            //         end_text: get_local_text("remote-controls.end"),
+            //     }
+            // )),
         }
     ))
 }
