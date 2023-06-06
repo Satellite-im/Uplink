@@ -1,16 +1,20 @@
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    path::PathBuf,
     time::Instant,
 };
 
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::{
+    constellation::Progression,
     crypto::DID,
     raygun::{self, ConversationType},
 };
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
+
+use super::pending_message::{progress_file, PendingMessage};
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -62,7 +66,50 @@ pub struct Chat {
     #[serde(skip)]
     pub has_more_messages: bool,
     #[serde(skip)]
-    pub pending_outgoing_messages: usize,
+    pub pending_outgoing_messages: Vec<PendingMessage>,
+}
+
+impl Chat {
+    pub fn append_pending_msg(
+        &mut self,
+        chat_id: Uuid,
+        did: DID,
+        msg: Vec<String>,
+        attachments: &[PathBuf],
+    ) -> Uuid {
+        let new = PendingMessage::new(chat_id, did, msg, attachments);
+        let uuid = new.message.inner.id();
+        self.pending_outgoing_messages.push(new);
+        uuid
+    }
+
+    pub fn update_pending_msg(&mut self, msg: PendingMessage, progress: Progression) {
+        let file = progress_file(&progress);
+        for m in &mut self.pending_outgoing_messages {
+            if msg.eq(m) {
+                m.attachments_progress.insert(file, progress);
+                break;
+            }
+        }
+    }
+
+    pub fn remove_pending_msg(
+        &mut self,
+        msg: Vec<String>,
+        attachments: Vec<String>,
+        uuid: Option<Uuid>,
+    ) {
+        let opt = self.pending_outgoing_messages.iter().position(|e| {
+            e.message.inner.value().eq(&msg)
+                && e.attachments_progress
+                    .keys()
+                    .all(|a| attachments.contains(a))
+                && uuid.map(|id| id.eq(&e.id())).unwrap_or(true)
+        });
+        if let Some(pending) = opt {
+            self.pending_outgoing_messages.remove(pending);
+        }
+    }
 }
 
 // warning: Chats implements Serialize
