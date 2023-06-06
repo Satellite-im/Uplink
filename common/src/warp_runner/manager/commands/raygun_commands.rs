@@ -14,15 +14,16 @@ use warp::{
 };
 
 use crate::{
-    state::{chats, identity, Friends},
+    state::{chats, identity, pending_message::PendingMessage, Friends},
     warp_runner::{
         conv_stream,
         ui_adapter::{
             self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            get_uninitialized_identity,
+            get_uninitialized_identity, MessageEvent,
         },
-        Account, Messaging,
+        Account, Messaging, WarpEvent,
     },
+    WARP_EVENT_CH,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -81,6 +82,7 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         msg: Vec<String>,
         attachments: Vec<PathBuf>,
+        ui_msg_id: Option<Uuid>,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "EditMessage")]
@@ -216,6 +218,7 @@ pub async fn handle_raygun_cmd(
             conv_id,
             msg,
             attachments,
+            ui_msg_id: ui_id,
             rsp,
         } => {
             let r = if attachments.is_empty() {
@@ -223,12 +226,43 @@ pub async fn handle_raygun_cmd(
             } else {
                 //TODO: Pass stream off to attachment events
                 match messaging
-                    .attach(conv_id, None, Location::Disk, attachments, msg)
+                    .attach(
+                        conv_id,
+                        None,
+                        Location::Disk,
+                        attachments.clone(),
+                        msg.clone(),
+                    )
                     .await
                 {
                     Ok(mut stream) => loop {
-                        if let Some(AttachmentKind::Pending(result)) = stream.next().await {
-                            break result;
+                        let msg_clone = msg.clone();
+                        //let attachment_clone = attachments.clone();
+                        if let Some(kind) = stream.next().await {
+                            match kind {
+                                AttachmentKind::Pending(result) => {
+                                    break result;
+                                }
+                                AttachmentKind::AttachedProgress(progress) => {
+                                    if WARP_EVENT_CH
+                                        .tx
+                                        .send(WarpEvent::Message(
+                                            MessageEvent::AttachmentProgress {
+                                                progress,
+                                                conversation_id: conv_id,
+                                                msg: PendingMessage::for_compare(
+                                                    msg_clone,
+                                                    &attachments,
+                                                    ui_id,
+                                                ),
+                                            },
+                                        ))
+                                        .is_err()
+                                    {
+                                        log::error!("failed to send warp_event");
+                                    }
+                                }
+                            }
                         }
                     },
                     Err(e) => Err(e),

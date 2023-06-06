@@ -1,11 +1,15 @@
 use std::collections::HashSet;
 
+use common::state::pending_message::progress_file;
 use common::warp_runner::thumbnail_to_base64;
 //use common::icons::outline::Shape as Icon;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use warp::{constellation::file::File, logging::tracing::log};
+use warp::{
+    constellation::{file::File, Progression},
+    logging::tracing::log,
+};
 
 use crate::{components::file_embed::FileEmbed, elements::textarea};
 
@@ -74,6 +78,12 @@ pub struct Props<'a> {
     parse_markdown: bool,
     // called when a reaction is clicked
     on_click_reaction: EventHandler<'a, String>,
+
+    // Indicates whether this message is pending to be uploaded or not
+    pending: bool,
+
+    // Progress for attachments which are being uploaded
+    attachments_pending_uploads: Option<Vec<Progression>>,
 }
 
 #[allow(non_snake_case)]
@@ -119,6 +129,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         })
     });
 
+    let pending_attachment_list = cx.props.attachments_pending_uploads.as_ref().map(|vec| {
+        vec.iter().map(|prog| {
+            let file = progress_file(prog);
+            rsx!(FileEmbed {
+                key: "{file}",
+                filename: file,
+                remote: is_remote,
+                download_pending: false,
+                with_download_button: false,
+                progress: prog,
+                on_press: move |_| {},
+            })
+        })
+    });
+
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
     let formatted_text = if cx.props.parse_markdown {
         let parser = pulldown_cmark::Parser::new(&text);
@@ -135,7 +160,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: {
                 format_args!(
-                    "message {} {} {}",
+                    "message {} {} {} {}",
                     if loading {
                         "loading"
                     } else { "" },
@@ -144,7 +169,10 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     } else { "" },
                     if cx.props.order.is_some() {
                         order.to_string()
-                    } else { "".into() }
+                    } else { "".into() },
+                    if cx.props.pending {
+                        "message-pending"
+                    } else { "" }
                 )
             },
             aria_label: {
@@ -182,7 +210,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (cx.props.with_text.is_some() && !cx.props.editing).then(|| rsx!(
                 ChatText {
                     text: formatted_text_clone,
-                    remote: is_remote
+                    remote: is_remote,
+                    pending: cx.props.pending,
                 }
             )),
             has_attachments.then(|| {
@@ -195,7 +224,9 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             })
-
+            pending_attachment_list.map(|node|{
+                rsx!(node)
+            })
         },
         div {
             class: "{reactions_class}",
@@ -257,6 +288,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 struct ChatMessageProps {
     text: String,
     remote: bool,
+    pending: bool,
 }
 
 #[allow(non_snake_case)]
@@ -286,9 +318,19 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
     cx.render(rsx!(
         div {
-            class: "text",
+            class: format_args!(
+                "{}",
+                if cx.props.pending {
+                    "pending-text"
+                } else { "text" }
+            ),
             p {
-                class: "text",
+                class: format_args!(
+                    "{}",
+                    if cx.props.pending {
+                        "pending-text"
+                    } else { "text" }
+                ),
                 aria_label: "message-text",
                 dangerous_inner_html: "{dangerous_text}",
             },

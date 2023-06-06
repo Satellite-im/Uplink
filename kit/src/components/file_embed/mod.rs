@@ -7,6 +7,7 @@ use dioxus::prelude::*;
 
 use humansize::format_size;
 use humansize::DECIMAL;
+use warp::constellation::Progression;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -40,6 +41,8 @@ pub struct Props<'a> {
 
     // called shen the icon is clicked
     on_press: EventHandler<'a, ()>,
+
+    progress: Option<&'a Progression>,
 }
 
 #[allow(non_snake_case)]
@@ -58,6 +61,44 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         true
     };
 
+    let is_pending = cx.props.progress.is_some();
+
+    let mut file_size_pending = String::new();
+
+    let perc = if let Some(p) = cx.props.progress {
+        match p {
+            Progression::CurrentProgress {
+                name: _,
+                current,
+                total,
+            } => match total {
+                Some(size) => {
+                    file_size_pending
+                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
+                    current * 100 / size
+                }
+                None => 0,
+            },
+            Progression::ProgressComplete { name: _, total } => {
+                if let Some(size) = total {
+                    file_size_pending
+                        .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
+                };
+                100
+            }
+            Progression::ProgressFailed {
+                name: _,
+                last_size: _,
+                error: _,
+            } => {
+                file_size_pending.push_str("Failed");
+                0
+            }
+        }
+    } else {
+        0
+    };
+
     // show one of the 3:
     // kind
     // kind - size
@@ -70,7 +111,13 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 None => size,
             }
         }
-        None => cx.props.kind.clone().unwrap_or_default(),
+        None => {
+            if file_size_pending.is_empty() {
+                cx.props.kind.clone().unwrap_or_default()
+            } else {
+                file_size_pending
+            }
+        }
     };
     let remote = cx.props.remote.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
@@ -120,6 +167,15 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 }
                             )
                         }
+                        if is_pending {
+                            rsx!(div {
+                                class: "upload-bar",
+                                div {
+                                    class: "upload-progress",
+                                    style: format_args!("width: {}%", perc)
+                                }
+                            })
+                        }
                     }
                 )
             } else {
@@ -154,6 +210,15 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 onpress: move |_| cx.props.on_press.call(()),
                             }
                         )
+                    }
+                    if is_pending {
+                        rsx!(div {
+                            class: "upload-bar",
+                            div {
+                                class: "upload-progress",
+                                style: format_args!("width: {}%", perc)
+                            }
+                        })
                     }
                 )
             }
