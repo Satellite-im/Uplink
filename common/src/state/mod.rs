@@ -240,17 +240,14 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_own_identity(identity),
-            Action::AnswerCall(id) => {
-                if let Err(e) = self.ui.call_info.answer_call(id) {
-                    log::error!("failed to answer call: {e}");
-                } else {
-                    if let Some(call) = self.ui.call_info.active_call() {
-                        self.set_active_media(call.conversation_id);
-                    } else {
-                        log::error!("should never happen: {}, {}", file!(), line!());
-                    }
+            Action::AnswerCall(id) => match self.ui.call_info.answer_call(id) {
+                Ok(call) => {
+                    self.set_active_media(call.conversation_id);
                 }
-            }
+                Err(e) => {
+                    log::error!("failed to answer call: {e}");
+                }
+            },
             Action::OfferCall(call) => {
                 let _ = self.ui.call_info.pending_call(
                     call.id,

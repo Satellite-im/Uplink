@@ -43,12 +43,14 @@ impl CallInfo {
         self.active_call.take();
     }
 
-    pub fn answer_call(&mut self, id: Uuid) -> anyhow::Result<()> {
+    pub fn answer_call(&mut self, id: Uuid) -> anyhow::Result<Call> {
         match self.pending_calls.remove(&id) {
-            Some(call) => self.active_call.replace(call),
+            Some(call) => {
+                self.active_call.replace(call.clone());
+                Ok(call)
+            }
             None => bail!("call not pending"),
-        };
-        Ok(())
+        }
     }
 
     pub fn reject_call(&mut self, id: Uuid) {
