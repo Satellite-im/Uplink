@@ -25,6 +25,7 @@ use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
+use kit::elements::tooltip::{ArrowPosition, Tooltip};
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -1073,6 +1074,8 @@ enum CallDialogCmd {
     Accept(Uuid),
     Reject(Uuid),
     Hangup(Uuid),
+    MuteSelf,
+    UnmuteSelf,
 }
 
 // todo: look at media::remote_control::RemoteControls and add stuff from there.
@@ -1128,6 +1131,44 @@ fn get_call_titlebar(cx: Scope) -> Element {
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::MuteSelf => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::MuteSelf { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                // disaster waiting to happen if State ever gets out of sync with blink.
+                                state.write().mutate(Action::ToggleMute);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to mute self: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::UnmuteSelf => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx }))
+                        {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                // disaster waiting to happen if State ever gets out of sync with blink.
+                                state.write().mutate(Action::ToggleMute);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to unmute self: {e}");
                             }
                         }
                     }
@@ -1190,18 +1231,12 @@ fn disp_active_call(cx: Scope, call: call::Call) -> Element {
     let ch = use_coroutine_handle::<CallDialogCmd>(cx)?;
     let state = use_shared_state::<State>(cx)?;
 
-    // if you offer a call, it becomes the active call. But that doesn't mean anyone joined.
-    let call_text = match call.participants_joined.len() {
-        0 => "Calling".into(),
-        _ => get_local_text("remote-controls.in-call"),
-    };
-
-    let mut participants = state.read().get_identities(&call.participants);
+    let mut participants = state.read().get_identities(&call.participants_joined);
     let own_id = state.read().did_key();
     participants.retain(|x| x.did_key() != own_id);
 
     cx.render(rsx!(
-        span { call_text },
+        span { get_local_text("remote-controls.in-call") },
         UserImageGroup {
             participants: build_participants(&participants),
             with_username: State::join_usernames(&participants),
@@ -1213,7 +1248,30 @@ fn disp_active_call(cx: Scope, call: call::Call) -> Element {
             onpress: move |_| {
                 ch.send(CallDialogCmd::Hangup(call.id));
             }
-        }
+        },
+        Button {
+            icon: Icon::Microphone,
+            appearance: if call.self_muted {
+                Appearance::Danger
+            } else {
+                Appearance::Secondary
+            },
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::Bottom,
+                text: if call.self_muted {
+                    get_local_text("remote-controls.unmute")
+                } else {
+                    get_local_text("remote-controls.mute")
+                }
+            })),
+            onpress: move |_| {
+                if call.self_muted {
+                    ch.send(CallDialogCmd::UnmuteSelf);
+                } else {
+                    ch.send(CallDialogCmd::MuteSelf);
+                }
+            }
+        },
     ))
 }
 

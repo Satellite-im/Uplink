@@ -18,7 +18,7 @@ pub struct Call {
     pub id: Uuid,
     pub conversation_id: Uuid,
     pub participants: Vec<DID>,
-    pub participants_joined: HashSet<DID>,
+    pub participants_joined: Vec<DID>,
     pub participants_speaking: HashSet<DID>,
     pub self_muted: bool,
     pub call_silenced: bool,
@@ -157,7 +157,7 @@ impl Call {
             id,
             conversation_id,
             participants,
-            participants_joined: HashSet::new(),
+            participants_joined: vec![],
             participants_speaking: HashSet::new(),
             self_muted: false,
             call_silenced: false,
@@ -165,11 +165,13 @@ impl Call {
     }
 
     fn participant_joined(&mut self, id: DID) {
-        self.participants_joined.insert(id);
+        if !self.participants_joined.iter().any(|x| x == &id) {
+            self.participants_joined.push(id);
+        }
     }
 
     fn participant_left(&mut self, id: DID) {
-        self.participants_joined.remove(&id);
+        self.participants_joined.retain(|x| x != &id);
     }
 
     fn participant_speaking(&mut self, id: DID) {
