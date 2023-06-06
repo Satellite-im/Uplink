@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 
-use dioxus_desktop::use_window;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::{
     button::Button,
@@ -37,7 +36,6 @@ enum CallDialogCmd {
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let call = state.read().ui.call_info.active_call();
-    let window = use_window(cx);
 
     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
         to_owned![state];
@@ -50,7 +48,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::LeaveCall { rsp: tx }))
                         {
-                            log::error!("failed to send blink command");
+                            log::error!("failed to send blink command: {e}");
                             continue;
                         }
 
@@ -68,7 +66,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::MuteSelf { rsp: tx }))
                         {
-                            log::error!("failed to send blink command");
+                            log::error!("failed to send blink command: {e}");
                             continue;
                         }
 
@@ -87,7 +85,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx }))
                         {
-                            log::error!("failed to send blink command");
+                            log::error!("failed to send blink command: {e}");
                             continue;
                         }
 

@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
@@ -23,12 +21,14 @@ use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
+use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use utils::build_user_from_identity;
 use uuid::Uuid;
 
 use std::collections::HashMap;
@@ -910,11 +910,12 @@ fn get_update_icon(cx: Scope) -> Element {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
             },
-            on_submit: move |dest: PathBuf| {
-                download_state.write().stage = DownloadProgress::Pending;
-                download_state.write().destination = Some(dest.clone());
-                download_ch.send(SoftwareDownloadCmd(dest));
-            }
+            // is never used
+            // on_submit: move |dest: PathBuf| {
+            //     download_state.write().stage = DownloadProgress::Pending;
+            //     download_state.write().destination = Some(dest.clone());
+            //     download_ch.send(SoftwareDownloadCmd(dest));
+            // }
         })),
         DownloadProgress::Pending => cx.render(rsx!(div {
             id: "update-available",
@@ -964,13 +965,13 @@ fn get_update_icon(cx: Scope) -> Element {
 #[inline_props]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
-    on_submit: EventHandler<'a, PathBuf>,
+    //on_submit: EventHandler<'a, PathBuf>,
     on_dismiss: EventHandler<'a, ()>,
 ) -> Element<'a> {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
 
     let dl = download_location.current();
-    let disp_download_location = dl
+    let _disp_download_location = dl
         .as_ref()
         .clone()
         .map(|x| x.to_string_lossy().to_string())
@@ -1120,12 +1121,18 @@ fn get_call_dialog(cx: Scope) -> Element {
     let own_id = state.read().did_key();
     participants.retain(|x| x.did_key() != own_id);
 
+    let my_identity = build_user_from_identity(state.read().get_own_identity());
+
     cx.render(rsx!(CallDialog {
         caller: cx.render(rsx!(UserImageGroup {
             participants: build_participants(&participants),
             with_username: State::join_usernames(&participants),
         },)),
-        callee: None,
+        callee: cx.render(rsx!(UserImage {
+            platform: my_identity.platform,
+            status: my_identity.status,
+            image: my_identity.photo,
+        })),
         description: "Call Description".into(),
         with_accept_btn: cx.render(rsx!(Button {
             icon: Icon::Phone,

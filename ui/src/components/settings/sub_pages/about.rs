@@ -103,11 +103,12 @@ pub fn AboutPage(cx: Scope) -> Element {
                 on_dismiss: move |_| {
                     download_state.write().stage = DownloadProgress::Idle;
                 },
-                on_submit: move |dest: PathBuf| {
-                    download_state.write().stage = DownloadProgress::Pending;
-                    download_state.write().destination = Some(dest.clone());
-                    download_ch.send(SoftwareDownloadCmd(dest));
-                }
+                // is never used
+                // on_submit: move |dest: PathBuf| {
+                //     download_state.write().stage = DownloadProgress::Pending;
+                //     download_state.write().destination = Some(dest.clone());
+                //     download_ch.send(SoftwareDownloadCmd(dest));
+                // }
             }),
             DownloadProgress::Pending => {
                 rsx!(Button {

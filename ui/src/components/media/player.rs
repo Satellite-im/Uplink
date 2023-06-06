@@ -47,7 +47,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
         .map(|x| x.call_silenced)
         .unwrap_or(false);
 
-    let silenced_str = silenced.to_string();
+    let _silenced_str = silenced.to_string();
 
     cx.render(rsx!(div {
         id: "media-player",
