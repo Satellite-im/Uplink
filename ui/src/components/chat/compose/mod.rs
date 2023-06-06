@@ -331,6 +331,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     };
 
     let call_pending = use_state(cx, || false);
+    let active_call = state.read().ui.call_info.active_call();
+    let call_in_progress =
+        active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
         to_owned![call_pending, state, desktop];
@@ -449,7 +452,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: STATIC_ARGS.production_mode || *call_pending.current(),
+            disabled: STATIC_ARGS.production_mode || *call_pending.current() || call_in_progress,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
