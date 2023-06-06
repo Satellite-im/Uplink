@@ -332,11 +332,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
     let call_pending = use_state(cx, || false);
     let active_call = state.read().ui.call_info.active_call();
-    let call_in_progress =
-        active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
+    let call_in_progress = active_call.is_some(); // active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
-        to_owned![call_pending, state, desktop];
+        to_owned![call_pending, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -365,10 +364,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                         let res = rx.await.expect("warp runner failed");
                         match res {
                             Ok(call_id) => {
-                                state
-                                    .write_silent()
-                                    .mutate(Action::ClearCallPopout(desktop.clone()));
-                                state.write_silent().mutate(Action::DisableMedia);
                                 state.write().mutate(Action::OfferCall(call::Call::new(
                                     call_id,
                                     conversation_id,

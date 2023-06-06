@@ -257,8 +257,11 @@ impl State {
                 let _ = self.ui.call_info.answer_call(call.id);
                 self.set_active_media(call.conversation_id);
             }
-            Action::DisableMedia => self.disable_media(),
-
+            Action::EndCall => {
+                self.chats.active_media = None;
+                self.ui.popout_media_player = false;
+                self.ui.call_info.end_call();
+            }
             // ===== Configuration =====
             Action::Config(action) => self.configuration.mutate(action),
         }
@@ -1134,11 +1137,6 @@ impl State {
         } else {
             false
         }
-    }
-    /// Analogous to Hang Up
-    fn disable_media(&mut self) {
-        self.chats.active_media = None;
-        self.ui.popout_media_player = false;
     }
     pub fn has_toasts(&self) -> bool {
         !self.ui.toast_notifications.is_empty()

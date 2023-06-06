@@ -153,7 +153,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
                     state.write().mutate(Action::ClearCallPopout(window.clone()));
-                    state.write().mutate(Action::DisableMedia);
+                   // state.write().mutate(Action::DisableMedia);
                 }
             },
             Button {

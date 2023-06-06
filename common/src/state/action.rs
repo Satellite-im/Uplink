@@ -29,9 +29,6 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
-    // hang up for the active media stream
-    #[display(fmt = "DisableMedia")]
-    DisableMedia,
     #[display(fmt = "ToggleSilence")]
     ToggleSilence,
     #[display(fmt = "ToggleMute")]
@@ -55,6 +52,8 @@ pub enum Action<'a> {
     /// creates a Call struct and joins the call
     #[display(fmt = "OfferCall")]
     OfferCall(call::Call),
+    #[display(fmt = "EndCall")]
+    EndCall,
     // Account
     /// Sets the ID for the user.
     #[display(fmt = "SetId")]

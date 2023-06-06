@@ -7,9 +7,9 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::call;
 use common::warp_runner::BlinkCmd;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -25,7 +25,6 @@ use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
-use kit::elements::tooltip::{ArrowPosition, Tooltip};
 use kit::elements::Appearance;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -486,6 +485,7 @@ fn app(cx: Scope) -> Element {
                 id: "app-wrap",
                 get_titlebar{},
                 get_toasts{},
+                get_call_dialog{},
                 get_router{},
                 get_logger{},
             },
@@ -1066,26 +1066,18 @@ fn get_titlebar(cx: Scope) -> Element {
                 Topbar_Controls {}
             })),
         },
-        get_call_titlebar{}
     ))
 }
 
 enum CallDialogCmd {
     Accept(Uuid),
     Reject(Uuid),
-    Hangup(Uuid),
-    MuteSelf,
-    UnmuteSelf,
 }
 
-// todo: look at media::remote_control::RemoteControls and add stuff from there.
-fn get_call_titlebar(cx: Scope) -> Element {
+fn get_call_dialog(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let desktop = use_window(cx);
-    let call_info = &state.read().ui.call_info;
-
-    let _ch = use_coroutine(cx, |mut rx| {
-        to_owned![state, desktop];
+    let ch = use_coroutine(cx, |mut rx| {
+        to_owned![state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -1102,10 +1094,6 @@ fn get_call_titlebar(cx: Scope) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                state
-                                    .write_silent()
-                                    .mutate(Action::ClearCallPopout(desktop.clone()));
-                                state.write_silent().mutate(Action::DisableMedia);
                                 state.write().mutate(Action::AnswerCall(id));
                             }
                             Err(e) => {
@@ -1116,163 +1104,45 @@ fn get_call_titlebar(cx: Scope) -> Element {
                     CallDialogCmd::Reject(id) => {
                         state.write().ui.call_info.reject_call(id);
                     }
-                    CallDialogCmd::Hangup(_id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::LeaveCall { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().ui.call_info.end_call();
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
-                    }
-                    CallDialogCmd::MuteSelf => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::MuteSelf { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                // disaster waiting to happen if State ever gets out of sync with blink.
-                                state.write().mutate(Action::ToggleMute);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to mute self: {e}");
-                            }
-                        }
-                    }
-                    CallDialogCmd::UnmuteSelf => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::UnmuteSelf { rsp: tx }))
-                        {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                // disaster waiting to happen if State ever gets out of sync with blink.
-                                state.write().mutate(Action::ToggleMute);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to unmute self: {e}");
-                            }
-                        }
-                    }
                 }
             }
         }
     });
 
-    cx.render(rsx!(
-        div {
-            class: "call-titlebar",
-             match call_info.pending_calls().first() {
-                Some(pending_call) =>  cx.render(rsx!(disp_pending_call { call: pending_call.clone() })),
-                None => match call_info.active_call() {
-                    Some(active_call) =>
-                    cx.render(rsx!(disp_active_call { call: active_call })),
-                    None => cx.render(rsx!(""))
-                }
-            }
-        }
-    ))
-}
-
-#[inline_props]
-fn disp_pending_call(cx: Scope, call: call::Call) -> Element {
-    let ch = use_coroutine_handle::<CallDialogCmd>(cx)?;
-    let state = use_shared_state::<State>(cx)?;
-
+    let call = match state.read().ui.call_info.active_call() {
+        Some(_) => return None,
+        None => match state.read().ui.call_info.pending_calls().first() {
+            Some(call) => call.clone(),
+            None => return None,
+        },
+    };
     let mut participants = state.read().get_identities(&call.participants);
     let own_id = state.read().did_key();
     participants.retain(|x| x.did_key() != own_id);
 
-    cx.render(rsx!(
-        span { "Incoming Call" },
-        UserImageGroup {
+    cx.render(rsx!(CallDialog {
+        caller: cx.render(rsx!(UserImageGroup {
             participants: build_participants(&participants),
             with_username: State::join_usernames(&participants),
-        },
-        Button {
+        },)),
+        callee: None,
+        description: "Call Description".into(),
+        with_accept_btn: cx.render(rsx!(Button {
             icon: Icon::Phone,
             appearance: Appearance::Success,
-            text: "Accept".into(),
             onpress: move |_| {
                 ch.send(CallDialogCmd::Accept(call.id));
             }
-        },
-        Button {
+        })),
+        with_deny_btn: cx.render(rsx!(Button {
             icon: Icon::PhoneXMark,
             appearance: Appearance::Danger,
             text: "Reject".into(),
             onpress: move |_| {
                 ch.send(CallDialogCmd::Reject(call.id));
             }
-        }
-    ))
-}
-
-#[inline_props]
-fn disp_active_call(cx: Scope, call: call::Call) -> Element {
-    let ch = use_coroutine_handle::<CallDialogCmd>(cx)?;
-    let state = use_shared_state::<State>(cx)?;
-
-    let mut participants = state.read().get_identities(&call.participants_joined);
-    let own_id = state.read().did_key();
-    participants.retain(|x| x.did_key() != own_id);
-
-    cx.render(rsx!(
-        span { get_local_text("remote-controls.in-call") },
-        UserImageGroup {
-            participants: build_participants(&participants),
-            with_username: State::join_usernames(&participants),
-        },
-        Button {
-            icon: Icon::PhoneXMark,
-            appearance: Appearance::Danger,
-            text: "Hang Up".into(),
-            onpress: move |_| {
-                ch.send(CallDialogCmd::Hangup(call.id));
-            }
-        },
-        Button {
-            icon: Icon::Microphone,
-            appearance: if call.self_muted {
-                Appearance::Danger
-            } else {
-                Appearance::Secondary
-            },
-            tooltip: cx.render(rsx!(Tooltip {
-                arrow_position: ArrowPosition::Bottom,
-                text: if call.self_muted {
-                    get_local_text("remote-controls.unmute")
-                } else {
-                    get_local_text("remote-controls.mute")
-                }
-            })),
-            onpress: move |_| {
-                if call.self_muted {
-                    ch.send(CallDialogCmd::UnmuteSelf);
-                } else {
-                    ch.send(CallDialogCmd::MuteSelf);
-                }
-            }
-        },
-    ))
+        })),
+    }))
 }
 
 fn get_router(cx: Scope) -> Element {
