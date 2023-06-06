@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct ScopeIds {
     #[serde(skip)]
     pub chatbar: Option<usize>,
+    #[serde(skip)]
+    pub pending_message_component: Option<usize>,
 }
 
 impl ScopeIds {

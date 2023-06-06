@@ -70,3 +70,20 @@
   }
   align-self: flex-start;
 }
+
+.upload-bar {
+  position: relative;
+  margin-top: 5px;
+  width: 400px;
+  height: 10px;
+  background-color: var(--background-dark);
+  border-radius: var(--border-radius-more);
+  .upload-progress {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-more);
+    transition: 1s;
+  }
+}

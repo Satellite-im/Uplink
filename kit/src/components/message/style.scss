@@ -20,7 +20,17 @@
 		display: inline-flex;
 		flex-direction: column;
 	}
+	.pending-text {
+		color: var(--text-color-dark);
+		display: inline-flex;
+		flex-direction: column;
+	}
 }
+
+.message.message-pending {
+	opacity: 0.6;
+}
+
 .message.message-loading {
 	opacity: 0.5;
 }
