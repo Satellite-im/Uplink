@@ -17,6 +17,7 @@ pub struct Call {
     pub participants_joined: HashSet<DID>,
     pub participants_speaking: HashSet<DID>,
     pub self_muted: bool,
+    pub call_silenced: bool,
 }
 
 impl CallInfo {
@@ -125,6 +126,7 @@ impl Call {
             participants_joined: HashSet::new(),
             participants_speaking: HashSet::new(),
             self_muted: false,
+            call_silenced: false,
         }
     }
 
