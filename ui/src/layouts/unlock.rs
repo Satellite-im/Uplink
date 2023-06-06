@@ -193,7 +193,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {
                                 apply_ellipsis: true,
-                                padding_rigth_for_ellipsis: 105,
+                                padding_right_for_ellipsis: 105,
                             }),
                             ..Default::default()
                         }
