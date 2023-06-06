@@ -1184,7 +1184,7 @@ fn get_call_titlebar(cx: Scope) -> Element {
                 Some(pending_call) =>  cx.render(rsx!(disp_pending_call { call: pending_call.clone() })),
                 None => match call_info.active_call() {
                     Some(active_call) =>
-                    cx.render(rsx!(disp_active_call { call: active_call.clone() })),
+                    cx.render(rsx!(disp_active_call { call: active_call })),
                     None => cx.render(rsx!(""))
                 }
             }
