@@ -1132,6 +1132,7 @@ fn get_call_dialog(cx: Scope) -> Element {
             platform: my_identity.platform,
             status: my_identity.status,
             image: my_identity.photo,
+            with_username: my_identity.username,
         })),
         description: "Call Description".into(),
         with_accept_btn: cx.render(rsx!(Button {
