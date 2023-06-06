@@ -12,7 +12,7 @@ pub enum BlinkCmd {
         conversation_id: Uuid,
         participants: Vec<DID>,
         webrtc_codec: AudioCodec,
-        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+        rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
     #[display(fmt = "AnswerCall")]
     AnswerCall {

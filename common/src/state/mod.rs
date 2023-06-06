@@ -240,7 +240,26 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_own_identity(identity),
-            Action::SetActiveMedia(id) => self.set_active_media(id),
+            Action::AnswerCall(id) => {
+                if let Err(e) = self.ui.call_info.answer_call(id) {
+                    log::error!("failed to answer call: {e}");
+                } else {
+                    if let Some(call) = self.ui.call_info.active_call() {
+                        self.set_active_media(call.conversation_id);
+                    } else {
+                        log::error!("should never happen: {}, {}", file!(), line!());
+                    }
+                }
+            }
+            Action::OfferCall(call) => {
+                let _ = self.ui.call_info.pending_call(
+                    call.id,
+                    call.conversation_id,
+                    call.participants,
+                );
+                let _ = self.ui.call_info.answer_call(call.id);
+                self.set_active_media(call.conversation_id);
+            }
             Action::DisableMedia => self.disable_media(),
 
             // ===== Configuration =====
@@ -489,10 +508,22 @@ impl State {
         match event {
             BlinkEventKind::IncomingCall {
                 call_id,
+                conversation_id,
                 sender: _,
                 participants,
             } => {
-                if let Err(e) = self.ui.call_info.pending_call(call_id, participants) {
+                let conversation_id = match conversation_id {
+                    Some(r) => r,
+                    None => {
+                        log::error!("received incoming call with no conversation id");
+                        return;
+                    }
+                };
+                if let Err(e) =
+                    self.ui
+                        .call_info
+                        .pending_call(call_id, conversation_id, participants)
+                {
                     log::error!("failed to process IncomingCall event: {e}");
                 }
             }

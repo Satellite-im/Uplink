@@ -22,6 +22,7 @@ use kit::{
 
 use common::{
     icons::outline::Shape as Icon,
+    state::call,
     warp_runner::{BlinkCmd, WarpCmd},
     STATIC_ARGS,
 };
@@ -346,7 +347,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                         let (tx, rx) = oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
                             conversation_id,
-                            participants,
+                            participants: participants.clone(),
                             rsp: tx,
                             // todo: make this configurable
                             webrtc_codec: blink::AudioCodec {
@@ -360,15 +361,18 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                             continue;
                         }
 
-                        match rx.await {
-                            Ok(_) => {
+                        let res = rx.await.expect("warp runner failed");
+                        match res {
+                            Ok(call_id) => {
                                 state
                                     .write_silent()
                                     .mutate(Action::ClearCallPopout(desktop.clone()));
                                 state.write_silent().mutate(Action::DisableMedia);
-                                state
-                                    .write()
-                                    .mutate(Action::SetActiveMedia(conversation_id));
+                                state.write().mutate(Action::OfferCall(call::Call::new(
+                                    call_id,
+                                    conversation_id,
+                                    participants,
+                                )));
                             }
                             Err(e) => {
                                 log::error!("BlinkCmd::OfferCall failed: {e}");

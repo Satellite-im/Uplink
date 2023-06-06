@@ -1096,15 +1096,11 @@ fn get_call_dialog(cx: Scope) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                if let Err(e) = state.write().ui.call_info.answer_call(id) {
-                                    log::error!("failed to answer call: {e}");
-                                    continue;
-                                }
                                 state
                                     .write_silent()
                                     .mutate(Action::ClearCallPopout(desktop.clone()));
                                 state.write_silent().mutate(Action::DisableMedia);
-                                state.write().mutate(Action::SetActiveMedia(id));
+                                state.write().mutate(Action::AnswerCall(id));
                             }
                             Err(e) => {
                                 log::error!("warp_runner failed to answer call: {e}");

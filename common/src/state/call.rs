@@ -16,6 +16,7 @@ pub struct CallInfo {
 #[derive(Clone)]
 pub struct Call {
     pub id: Uuid,
+    pub conversation_id: Uuid,
     pub participants: Vec<DID>,
     pub participants_joined: HashSet<DID>,
     pub participants_speaking: HashSet<DID>,
@@ -33,8 +34,9 @@ impl CallInfo {
     pub fn pending_calls(&self) -> HashMap<Uuid, Call> {
         self.pending_calls.clone()
     }
-    pub fn offer_call(&mut self, id: Uuid, participants: Vec<DID>) {
-        self.active_call.replace(Call::new(id, participants));
+    pub fn offer_call(&mut self, id: Uuid, conversation_id: Uuid, participants: Vec<DID>) {
+        self.active_call
+            .replace(Call::new(id, conversation_id, participants));
     }
 
     pub fn end_call(&mut self) {
@@ -53,8 +55,16 @@ impl CallInfo {
         self.pending_calls.remove(&id);
     }
 
-    pub fn pending_call(&mut self, id: Uuid, participants: Vec<DID>) -> anyhow::Result<()> {
-        match self.pending_calls.insert(id, Call::new(id, participants)) {
+    pub fn pending_call(
+        &mut self,
+        id: Uuid,
+        conversation_id: Uuid,
+        participants: Vec<DID>,
+    ) -> anyhow::Result<()> {
+        match self
+            .pending_calls
+            .insert(id, Call::new(id, conversation_id, participants))
+        {
             None => Ok(()),
             Some(_) => bail!("call with that id was already pending"),
         }
@@ -140,9 +150,10 @@ impl CallInfo {
 }
 
 impl Call {
-    fn new(id: Uuid, participants: Vec<DID>) -> Self {
+    pub fn new(id: Uuid, conversation_id: Uuid, participants: Vec<DID>) -> Self {
         Self {
             id,
+            conversation_id,
             participants,
             participants_joined: HashSet::new(),
             participants_speaking: HashSet::new(),
