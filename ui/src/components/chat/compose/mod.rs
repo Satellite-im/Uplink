@@ -67,7 +67,6 @@ pub struct ComposeData {
     is_favorite: bool,
     first_image: String,
     other_participants_names: String,
-    active_media: bool,
     platform: Platform,
 }
 
@@ -271,7 +270,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
     let first_image = active_participant.profile_picture();
     let other_participants_names = State::join_usernames(&other_participants);
-    let active_media = Some(active_chat.id) == s.chats().active_media;
 
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
@@ -289,7 +287,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         is_favorite,
         first_image,
         other_participants_names,
-        active_media,
         platform,
     });
 

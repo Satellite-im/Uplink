@@ -850,7 +850,7 @@ fn get_update_icon(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
-    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -917,7 +917,7 @@ fn get_update_icon(cx: Scope) -> Element {
             //     download_ch.send(SoftwareDownloadCmd(dest));
             // }
         })),
-        DownloadProgress::Pending => cx.render(rsx!(div {
+        DownloadProgress::_Pending => cx.render(rsx!(div {
             id: "update-available",
             class: "topbar-item",
             aria_label: "update-available",
@@ -1085,7 +1085,7 @@ fn get_call_dialog(cx: Scope) -> Element {
                 match cmd {
                     CallDialogCmd::Accept(id) => {
                         let (tx, rx) = oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
                             call_id: id,
                             rsp: tx,
                         })) {

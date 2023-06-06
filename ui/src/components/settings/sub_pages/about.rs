@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::process::Command;
 
 use common::language::get_local_text;
@@ -63,7 +62,7 @@ pub fn AboutPage(cx: Scope) -> Element {
         }
     });
 
-    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
 
     let opt = download_available.get().clone();
     let stage = download_state.read().stage;
@@ -110,7 +109,7 @@ pub fn AboutPage(cx: Scope) -> Element {
                 //     download_ch.send(SoftwareDownloadCmd(dest));
                 // }
             }),
-            DownloadProgress::Pending => {
+            DownloadProgress::_Pending => {
                 rsx!(Button {
                     key: "{pending_key}",
                     text: format!("{}%", download_state.read().progress as u32),

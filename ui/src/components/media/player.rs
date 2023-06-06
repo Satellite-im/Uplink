@@ -29,7 +29,7 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn MediaPlayer(cx: Scope<Props>) -> Element {
+pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     let window = use_window(cx);
