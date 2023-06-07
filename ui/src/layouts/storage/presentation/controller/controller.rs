@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf, rc::Rc, sync::Arc, time::Duration};
+use std::{cell::RefCell, ffi::OsStr, path::PathBuf, rc::Rc, sync::Arc, time::Duration};
 
 use common::{
     language::get_local_text,
@@ -42,26 +42,18 @@ pub struct StorageController<'a> {
     pub dirs_opened_ref: &'a UseRef<Vec<Directory>>,
     pub drag_event: &'a UseRef<Option<FileDropEvent>>,
     coroutine: Option<&'a Coroutine<ChanCmd>>,
-    cx: &'a ScopeState,
     repository: StorageRepository,
 }
 
 impl<'a> StorageController<'a> {
-    pub fn new(
-        cx: &'static Scope<Props>,
-        state: &'a UseSharedState<State>,
-        window: &'a DesktopContext,
-    ) -> Self {
-        let scope_state = cx;
-        let storage_state = use_state(&scope_state, || None);
-        let storage_size = use_ref(&scope_state, || (String::new(), String::new()));
-        let directories_list = use_ref(&scope_state, || state.read().storage.directories.clone());
-        let files_list = use_ref(&scope_state, || state.read().storage.files.clone());
-        let current_dir = use_ref(&scope_state, || state.read().storage.current_dir.clone());
-        let dirs_opened_ref = use_ref(&scope_state, || {
-            state.read().storage.directories_opened.clone()
-        });
-        let drag_event = use_ref(&scope_state, || None);
+    pub fn new(cx: &'a ScopeState, state: &'a UseSharedState<State>) -> Rc<RefCell<Self>> {
+        let storage_state = use_state(cx, || None);
+        let storage_size = use_ref(cx, || (String::new(), String::new()));
+        let directories_list = use_ref(cx, || state.read().storage.directories.clone());
+        let files_list = use_ref(cx, || state.read().storage.files.clone());
+        let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
+        let dirs_opened_ref = use_ref(cx, || state.read().storage.directories_opened.clone());
+        let drag_event = use_ref(cx, || None);
         let repository = StorageRepository::new();
 
         let controller = Self {
@@ -73,17 +65,13 @@ impl<'a> StorageController<'a> {
             dirs_opened_ref,
             drag_event,
             coroutine: None,
-            cx: &scope_state,
             repository,
         };
-        // let controller_ref = use_ref(&cx, || controller);
-        // let coroutine = controller.init_coroutine(&state, &window);
-        // controller.coroutine = Some(coroutine);
-        controller
+        Rc::new(RefCell::new(controller))
     }
 
     pub fn run_verifications_and_update_storage(
-        &self,
+        &'a self,
         first_render: &UseState<bool>,
         state: &UseSharedState<State>,
     ) {
@@ -126,11 +114,15 @@ impl<'a> StorageController<'a> {
         size_formatted_string
     }
 
-    pub fn allow_drag_event_for_non_macos_systems(&'static self, window: &'a DesktopContext) {
-        let cx = self.cx.clone();
+    pub fn allow_drag_event_for_non_macos_systems(
+        &'static self,
+        cx: &ScopeState,
+        window: &'a DesktopContext,
+    ) {
+        let controller = self.clone();
         use_future(cx, (), |_| {
             // #[cfg(not(target_os = "macos"))]
-            to_owned![window];
+            to_owned![window, controller];
             // let controller2 = controller.clone();
             async move {
                 sleep(Duration::from_millis(300)).await;
@@ -140,8 +132,8 @@ impl<'a> StorageController<'a> {
                 loop {
                     sleep(Duration::from_millis(100)).await;
                     if let FileDropEvent::Hovered { .. } = get_drag_event() {
-                        if self.drag_event.with(|i| i.clone()).is_none() {
-                            self.drag_and_drop_function(&window).await;
+                        if controller.drag_event.with(|i| i.clone()).is_none() {
+                            controller.drag_and_drop_function(&window).await;
                         }
                     }
                 }
@@ -174,7 +166,7 @@ impl<'a> StorageController<'a> {
 
 // Impl for drag and drop operations
 impl<'a> StorageController<'a> {
-    pub async fn drag_and_drop_function(&'a self, window: &DesktopContext) {
+    pub async fn drag_and_drop_function(&self, window: &DesktopContext) {
         *self.drag_event.write_silent() = Some(get_drag_event());
         loop {
             let file_drop_event = get_drag_event();
@@ -249,10 +241,10 @@ impl<'a> StorageController<'a> {
 
     fn init_coroutine<'b>(
         &'static self,
+        cx: &'b ScopeState,
         state: &'b UseSharedState<State>,
         window: &'b DesktopContext,
     ) -> &'b Coroutine<ChanCmd> {
-        let cx = self.cx.clone();
         let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
             to_owned![window, state];
             async move {
