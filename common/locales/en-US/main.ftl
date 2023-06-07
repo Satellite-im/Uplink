@@ -299,3 +299,8 @@ quickprofile = Quick Profile
     .unblock = Unblock User
     .chat-placeholder = Message
     .self-edit = Edit Profile
+
+toast_actions = Toast Actions
+    .DisplayChat = Open Chat
+    .FriendListPending = Friend List
+    .Dummy = Dummy Action
