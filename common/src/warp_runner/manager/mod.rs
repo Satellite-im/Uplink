@@ -6,8 +6,11 @@ use futures::StreamExt;
 use std::sync::Arc;
 use tokio::sync::Notify;
 use warp::{
-    blink::BlinkEventStream, logging::tracing::log, multipass::MultiPassEventStream,
-    raygun::RayGunEventStream, tesseract::Tesseract,
+    blink::{BlinkEventKind, BlinkEventStream},
+    logging::tracing::log,
+    multipass::MultiPassEventStream,
+    raygun::RayGunEventStream,
+    tesseract::Tesseract,
 };
 
 use super::{conv_stream, Account, Calling, Messaging, Storage};
@@ -57,6 +60,10 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
             },
             opt = blink_stream.next() => {
                 if let Some(evt) = opt {
+                    // filter noisy events which aren't being used right now anyway.
+                    if matches!(evt, BlinkEventKind::ParticipantSpeaking{..} | BlinkEventKind::SelfSpeaking ) {
+                        continue;
+                    }
                     if warp_event_tx.send(WarpEvent::Blink(evt)).is_err() {
                         break;
                     }
