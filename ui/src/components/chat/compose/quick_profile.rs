@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 
 use dioxus_router::use_router;
 use futures::{channel::oneshot, StreamExt};
@@ -38,7 +38,7 @@ enum QuickProfileCmd {
     BlockFriend(DID),
     UnBlockFriend(DID),
     RemoveDirectConvs(DID),
-    Chat(Option<Chat>, String),
+    Chat(Option<Chat>, Vec<String>, Option<Uuid>),
 }
 
 // Create a quick profile context menu
@@ -91,7 +91,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
-        to_owned![chat_with];
+        to_owned![chat_with, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -194,26 +194,34 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                             );
                         }
                     }
-                    QuickProfileCmd::Chat(chat, msg) => {
+                    QuickProfileCmd::Chat(chat, msg, uuid) => {
                         let c = match chat {
                             Some(c) => c.id,
                             None => return,
                         };
+                        let msg_vec = msg.clone();
                         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                         let cmd = RayGunCmd::SendMessage {
                             conv_id: c,
-                            msg: vec![msg],
+                            msg,
                             attachments: Vec::new(),
+                            ui_msg_id: uuid,
                             rsp: tx,
                         };
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(cmd)) {
                             log::error!("failed to send warp command: {}", e);
+                            state
+                                .write_silent()
+                                .decrement_outgoing_messagess(c, msg_vec, uuid);
                             continue;
                         }
 
                         let rsp = rx.await.expect("command canceled");
                         if let Err(e) = rsp {
                             log::error!("failed to send message: {}", e);
+                            state
+                                .write_silent()
+                                .decrement_outgoing_messagess(c, msg_vec, uuid);
                         }
                         chat_with.set(Some(c));
                     }
@@ -325,8 +333,11 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         hr{},
                         Input {
                             placeholder: get_local_text("quickprofile.chat-placeholder"),
-                            onreturn: move |(val, _,_)|{
-                                ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), val));
+                            onreturn: move |(val, _,_): (String,bool,Code)|{
+                                let ui_id = state
+                                    .write_silent()
+                                    .increment_outgoing_messages(vec![val.clone()], &[]);
+                                ch.send(QuickProfileCmd::Chat(chat_send.to_owned(), vec![val], ui_id));
                             }
                         }
                     )

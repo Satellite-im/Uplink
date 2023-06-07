@@ -22,7 +22,10 @@ use common::{
     icons::outline::Shape as Icon,
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
-    state::{group_messages, GroupedMessage, MessageGroup},
+    state::{
+        group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
+        MessageGroup,
+    },
     warp_runner::ui_adapter::{self},
 };
 use common::{
@@ -318,7 +321,28 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         num_to_take: num_to_take.clone(),
                         has_more: data.active_chat.has_more_messages,
-                        pending_outgoing_message: state.read().active_chat_send_in_progress(),
+                        own_id: data.my_id.did_key(),
+                        on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                            if !identity_profile.get().eq(&id) {
+                                let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                    let mut id = id;
+                                    id.set_identity_status(IdentityStatus::Online);
+                                    id
+                                } else {
+                                    id
+                                };
+                                identity_profile.set(id);
+                            }
+                            //Dont think there is any way of manually moving elements via dioxus
+                            let script = include_str!("../show_context.js")
+                                .replace("UUID", quick_profile_uuid)
+                                .replace("$PAGE_X", &e.page_coordinates().x.to_string())
+                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
+                            update_script.set(script);
+                        }
+                    },
+                    render_pending_messages_listener {
+                        data: data,
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             if !identity_profile.get().eq(&id) {
                                 let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
@@ -356,29 +380,93 @@ struct AllMessageGroupsProps<'a> {
     num_messages_in_conversation: usize,
     num_to_take: UseState<usize>,
     has_more: bool,
-    pending_outgoing_message: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    own_id: DID,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
 // temporary location
 fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Element<'a> {
     log::trace!("render message groups");
-    cx.render(rsx!(
-        cx.props.groups.iter().map(|_group| {
+    cx.render(rsx!(cx.props.groups.iter().map(|_group| {
+        rsx!(render_message_group {
+            group: _group,
+            active_chat_id: cx.props.active_chat_id,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
+            has_more: cx.props.has_more,
+            on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+        },)
+    })))
+}
+
+#[derive(Props)]
+struct PendingMessagesListenerProps<'a> {
+    data: &'a Rc<super::ComposeData>,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+//The component that listens for upload events
+fn render_pending_messages_listener<'a>(
+    cx: Scope<'a, PendingMessagesListenerProps>,
+) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+    state.write_silent().scope_ids.pending_message_component = Some(cx.scope_id().0);
+    let chat = match state.read().get_active_chat() {
+        Some(c) => c,
+        None => return cx.render(rsx!(())),
+    };
+    cx.render(rsx!(pending_wrapper {
+        msg: chat.pending_outgoing_messages,
+        data: cx.props.data.clone(),
+        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+    }))
+}
+
+#[derive(Props)]
+struct PendingWrapperProps<'a> {
+    msg: Vec<PendingMessage>,
+    data: Rc<super::ComposeData>,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+//We need to do it this way due to reference ownership
+fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
+    let num_to_take = use_state(cx, || cx.props.msg.len());
+    cx.render(rsx!(render_pending_messages {
+        pending_outgoing_message: pending_group_messages(
+            &cx.props.msg,
+            cx.props.data.my_id.did_key(),
+        ),
+        num_to_take: num_to_take.clone(),
+        active: cx.props.data.active_chat.id,
+        on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+    }))
+}
+
+#[derive(Props)]
+struct PendingMessagesProps<'a> {
+    #[props(!optional)]
+    pending_outgoing_message: Option<MessageGroup<'a>>,
+    active: Uuid,
+    num_to_take: UseState<usize>,
+    on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+}
+
+fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'a> {
+    cx.render(rsx!(cx.props.pending_outgoing_message.as_ref().map(
+        |group| {
             rsx!(render_message_group {
-                group: _group,
-                active_chat_id: cx.props.active_chat_id,
-                num_messages_in_conversation: cx.props.num_messages_in_conversation,
+                group: group,
+                active_chat_id: cx.props.active,
+                num_messages_in_conversation: group.messages.len(),
                 num_to_take: cx.props.num_to_take.clone(),
-                has_more: cx.props.has_more,
-                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
+                has_more: false,
+                on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
+                pending: true
             },)
-        }),
-        cx.props
-            .pending_outgoing_message
-            .then(|| rsx!(MessageGroupSkeletal { alt: true }))
-    ))
+        }
+    )))
 }
 
 #[derive(Props)]
@@ -389,6 +477,7 @@ struct MessageGroupProps<'a> {
     num_to_take: UseState<usize>,
     has_more: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
+    pending: Option<bool>,
 }
 
 fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a> {
@@ -401,6 +490,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         num_to_take: _,
         has_more: _,
         on_context_menu_action: _,
+        pending: _,
     } = cx.props;
 
     let messages = &group.messages;
@@ -494,6 +584,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 has_more: cx.props.has_more,
                 num_messages_in_conversation: cx.props.num_messages_in_conversation,
                 num_to_take: cx.props.num_to_take.clone(),
+                pending: cx.props.pending.unwrap_or_default()
             }))
         },
     ))
@@ -507,6 +598,7 @@ struct MessagesProps<'a> {
     num_to_take: UseState<usize>,
     is_remote: bool,
     has_more: bool,
+    pending: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
@@ -514,7 +606,6 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
         let should_fetch_more = grouped_message.should_fetch_more;
         let message = &grouped_message.message;
@@ -528,6 +619,18 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
         let _msg_uuid = message.inner.id();
+
+        if cx.props.pending {
+            return rsx!(render_message {
+                message: grouped_message,
+                is_remote: cx.props.is_remote,
+                msg_uuid: _msg_uuid,
+                message_key: _message_key,
+                reacting_to: reacting_to.clone(),
+                edit_msg: edit_msg.clone(),
+                pending: cx.props.pending
+            });
+        }
 
         // todo: add onblur event
         rsx!(ContextMenu {
@@ -560,6 +663,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 message_key: _message_key,
                 reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
+                pending: cx.props.pending
             })),
             items: cx.render(rsx!(
                 ContextItem {
@@ -629,6 +733,7 @@ struct MessageProps<'a> {
     msg_uuid: Uuid,
     reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
+    pending: bool,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
@@ -654,6 +759,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         message_key,
         reacting_to,
         edit_msg,
+        pending,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;
@@ -684,6 +790,10 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let remote_class = if *is_remote { "" } else { "remote" };
     let reactions_class = format!("message-reactions-container {remote_class}");
     let user_did_2 = user_did.clone();
+    let pending_uploads = grouped_message
+        .attachment_progress
+        .map(|m| m.values().cloned().collect())
+        .unwrap_or(vec![]);
 
     cx.render(rsx!(
         (*reacting_to.current() == Some(*msg_uuid)).then(|| {
@@ -739,11 +849,15 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 with_text: message.inner.value().join("\n"),
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                attachments: message.inner.attachments(),
+                attachments: message
+                .inner
+                .attachments(),
                 attachments_pending_download: pending_downloads.read().get(&message.inner.conversation_id()).cloned(),
                 on_click_reaction: move |emoji: String| {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
+                pending: cx.props.pending,
+                attachments_pending_uploads: pending_uploads,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
                     let file_name = file.name();
