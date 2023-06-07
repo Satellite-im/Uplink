@@ -13,10 +13,17 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     let desktop = use_window(cx);
 
     let desktop_resized = use_future(cx, (), |_| {
-        to_owned![desktop];
+        to_owned![desktop, state];
         async move {
             // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
-            desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+            if state.read().ui.window_maximized {
+                desktop.set_inner_size(LogicalSize {
+                    width: state.read().ui.window_width,
+                    height: state.read().ui.window_height,
+                });
+            } else {
+                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+            }
             desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
         }
     });
@@ -32,13 +39,6 @@ pub fn LoadingLayout(cx: Scope) -> Element {
 
     if fut.value().is_some() && desktop_resized.value().is_some() && state.read().initialized {
         router.replace_route(UPLINK_ROUTES.chat, None, None);
-    }
-    let desktop = use_window(cx);
-    if state.read().ui.window_maximized {
-        desktop.set_inner_size(LogicalSize {
-            width: state.read().ui.window_width,
-            height: state.read().ui.window_height,
-        });
     }
 
     let img_path = get_images_dir().unwrap_or_default().join("uplink.gif");
