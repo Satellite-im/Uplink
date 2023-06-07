@@ -23,8 +23,10 @@ pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
                 aria_label: "settings-info",
                 Label {
                     text: cx.props.section_label.clone(),
+                    aria_label: cx.props.section_label.clone().into(),
                 },
                 p {
+                    aria_label: "settings-info-description",
                     "{cx.props.section_description}"
                 }
             },
