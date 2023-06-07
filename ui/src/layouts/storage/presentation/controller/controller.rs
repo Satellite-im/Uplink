@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
+use std::{ffi::OsStr, path::PathBuf, rc::Rc, sync::Arc, time::Duration};
 
 use common::{
     language::get_local_text,
@@ -6,7 +6,7 @@ use common::{
     warp_runner::{FileTransferProgress, FileTransferStep},
 };
 
-use dioxus_core::Scoped;
+use dioxus_core::{Scope, ScopeState, Scoped};
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, use_ref, use_state, Coroutine, UnboundedReceiver, UseRef,
@@ -17,14 +17,20 @@ use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
 use wry::webview::FileDropEvent;
 
-use crate::layouts::storage::{
-    domain::repository::StorageRepository,
-    presentation::ui::{ANIMATION_DASH_SCRIPT, FILE_NAME_SCRIPT},
+use crate::{
+    layouts::storage::{
+        domain::repository::StorageRepository,
+        presentation::view::{
+            files_page::Props,
+            scripts::{
+                ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT, FILE_NAME_SCRIPT, MAIN_SCRIPT_JS,
+            },
+        },
+    },
+    utils::drag_and_drop_files::*,
 };
 
-use super::ui::{Props, DRAG_EVENT, FEEDBACK_TEXT_SCRIPT};
-
-const MAIN_SCRIPT_JS: &str = include_str!("./storage.js");
+const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 #[derive(Clone)]
 pub struct StorageController<'a> {
@@ -36,27 +42,43 @@ pub struct StorageController<'a> {
     pub dirs_opened_ref: &'a UseRef<Vec<Directory>>,
     pub drag_event: &'a UseRef<Option<FileDropEvent>>,
     coroutine: Option<&'a Coroutine<ChanCmd>>,
-    repository: &'a StorageRepository,
+    cx: &'a ScopeState,
+    repository: StorageRepository,
 }
 
 impl<'a> StorageController<'a> {
     pub fn new(
-        cx: &'a Scoped<'a, Props>,
-        state: UseSharedState<State>,
-        window: &DesktopContext,
+        cx: &'static Scope<Props>,
+        state: &'a UseSharedState<State>,
+        window: &'a DesktopContext,
     ) -> Self {
-        let mut controller = Self {
-            storage_state: use_state(cx, || None),
-            storage_size: use_ref(cx, || (String::new(), String::new())),
-            directories_list: use_ref(cx, || state.read().storage.directories.clone()),
-            files_list: use_ref(cx, || state.read().storage.files.clone()),
-            current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
-            dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
-            drag_event: use_ref(cx, || None),
+        let scope_state = cx;
+        let storage_state = use_state(&scope_state, || None);
+        let storage_size = use_ref(&scope_state, || (String::new(), String::new()));
+        let directories_list = use_ref(&scope_state, || state.read().storage.directories.clone());
+        let files_list = use_ref(&scope_state, || state.read().storage.files.clone());
+        let current_dir = use_ref(&scope_state, || state.read().storage.current_dir.clone());
+        let dirs_opened_ref = use_ref(&scope_state, || {
+            state.read().storage.directories_opened.clone()
+        });
+        let drag_event = use_ref(&scope_state, || None);
+        let repository = StorageRepository::new();
+
+        let controller = Self {
+            storage_state,
+            storage_size,
+            directories_list,
+            files_list,
+            current_dir,
+            dirs_opened_ref,
+            drag_event,
             coroutine: None,
-            repository: &StorageRepository::new(),
+            cx: &scope_state,
+            repository,
         };
-        controller.coroutine = Some(controller.init_coroutine(cx, &state, window));
+        // let controller_ref = use_ref(&cx, || controller);
+        // let coroutine = controller.init_coroutine(&state, &window);
+        // controller.coroutine = Some(coroutine);
         controller
     }
 
@@ -104,14 +126,12 @@ impl<'a> StorageController<'a> {
         size_formatted_string
     }
 
-    pub fn allow_drag_event_for_non_macos_systems(
-        &self,
-        cx: &'a Scoped<'a, Props>,
-        window: &dioxus_desktop::DesktopContext,
-    ) {
+    pub fn allow_drag_event_for_non_macos_systems(&'static self, window: &'a DesktopContext) {
+        let cx = self.cx.clone();
         use_future(cx, (), |_| {
-            #[cfg(not(target_os = "macos"))]
+            // #[cfg(not(target_os = "macos"))]
             to_owned![window];
+            // let controller2 = controller.clone();
             async move {
                 sleep(Duration::from_millis(300)).await;
                 self.ch_send(ChanCmd::GetItemsFromCurrentDirectory);
@@ -119,7 +139,7 @@ impl<'a> StorageController<'a> {
                 // #[cfg(not(target_os = "macos"))]
                 loop {
                     sleep(Duration::from_millis(100)).await;
-                    if let FileDropEvent::Hovered { .. } = self.get_drag_event() {
+                    if let FileDropEvent::Hovered { .. } = get_drag_event() {
                         if self.drag_event.with(|i| i.clone()).is_none() {
                             self.drag_and_drop_function(&window).await;
                         }
@@ -139,10 +159,10 @@ impl<'a> StorageController<'a> {
             .unwrap_or_default();
 
         file_name
-            .get(0..15)
+            .get(0..MAX_LEN_TO_FORMAT_NAME)
             .map(|x| x.to_string())
             .map(|x| {
-                if file_stem.len() > 15 {
+                if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
                     format!("{x}...")
                 } else {
                     x
@@ -150,43 +170,17 @@ impl<'a> StorageController<'a> {
             })
             .unwrap_or_else(|| file_name.clone())
     }
-
-    fn verify_if_there_are_valid_paths(&self, files_local_path: &Vec<PathBuf>) -> bool {
-        if files_local_path.is_empty() {
-            false
-        } else {
-            files_local_path.first().map_or(false, |path| path.exists())
-        }
-    }
-
-    fn decoded_pathbufs(&self, paths: Vec<PathBuf>) -> Vec<PathBuf> {
-        #[allow(unused_mut)]
-        let mut paths = paths;
-        #[cfg(target_os = "linux")]
-        {
-            let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
-            paths = paths
-                .iter()
-                .map(|p| PathBuf::from(decode(p)))
-                .collect::<Vec<PathBuf>>();
-        }
-        paths
-    }
 }
 
 // Impl for drag and drop operations
 impl<'a> StorageController<'a> {
-    pub fn get_drag_event(&self) -> FileDropEvent {
-        DRAG_EVENT.read().clone()
-    }
-
-    pub async fn drag_and_drop_function(&self, window: &DesktopContext) {
-        *self.drag_event.write_silent() = Some(self.get_drag_event());
+    pub async fn drag_and_drop_function(&'a self, window: &DesktopContext) {
+        *self.drag_event.write_silent() = Some(get_drag_event());
         loop {
-            let file_drop_event = self.get_drag_event();
+            let file_drop_event = get_drag_event();
             match file_drop_event {
                 FileDropEvent::Hovered { paths, .. } => {
-                    if self.verify_if_there_are_valid_paths(&paths) {
+                    if verify_if_there_are_valid_paths(&paths) {
                         let mut script = MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "true");
                         if paths.len() > 1 {
                             script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
@@ -211,8 +205,8 @@ impl<'a> StorageController<'a> {
                     }
                 }
                 FileDropEvent::Dropped { paths, .. } => {
-                    if self.verify_if_there_are_valid_paths(&paths) {
-                        let new_files_to_upload = self.decoded_pathbufs(paths);
+                    if verify_if_there_are_valid_paths(&paths) {
+                        let new_files_to_upload = decoded_pathbufs(paths);
                         self.ch_send(ChanCmd::UploadFiles(new_files_to_upload));
                         break;
                     }
@@ -254,19 +248,22 @@ impl<'a> StorageController<'a> {
     }
 
     fn init_coroutine<'b>(
-        &self,
-        cx: &'b Scoped<'b, Props>,
-        state: &UseSharedState<State>,
+        &'static self,
+        state: &'b UseSharedState<State>,
         window: &'b DesktopContext,
     ) -> &'b Coroutine<ChanCmd> {
+        let cx = self.cx.clone();
         let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
             to_owned![window, state];
             async move {
                 while let Some(cmd) = rx.next().await {
                     match cmd {
                         ChanCmd::CreateNewDirectory(directory_name) => {
+                            let directory_name_clone = directory_name.clone();
                             match self.repository.create_new_directory(directory_name).await {
-                                Ok(()) => log::info!("New directory added: {}", directory_name),
+                                Ok(()) => {
+                                    log::info!("New directory added: {}", directory_name_clone)
+                                }
                                 Err(e) => continue,
                             }
                         }
@@ -292,12 +289,13 @@ impl<'a> StorageController<'a> {
                             file_name,
                             local_path_to_save_file,
                         } => {
+                            let file_name_clone = file_name.clone();
                             match self
                                 .repository
                                 .download_file(file_name, local_path_to_save_file)
                                 .await
                             {
-                                Ok(()) => log::info!("File downloaded: {}", file_name),
+                                Ok(()) => log::info!("File downloaded: {}", file_name_clone),
                                 Err(_) => continue,
                             }
                         }
@@ -336,7 +334,7 @@ impl<'a> StorageController<'a> {
                             script.push_str(ANIMATION_DASH_SCRIPT);
                             window.eval(&script);
 
-                            let rx = match self.repository.upload_files(files_path).await {
+                            let mut rx = match self.repository.upload_files(files_path).await {
                                 Ok(rx) => rx,
                                 Err(_) => continue,
                             };

@@ -35,11 +35,8 @@ use crate::{
         chat::{edit_group::EditGroup, group_users::GroupUsers},
         media::player::MediaPlayer,
     },
-    layouts::storage::{
-        functions::{decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths},
-        ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT,
-    },
-    utils::build_participants,
+    layouts::storage::presentation::view::scripts::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT},
+    utils::{build_participants, drag_and_drop_files::*},
 };
 
 pub const SELECT_CHAT_BAR: &str = r#"

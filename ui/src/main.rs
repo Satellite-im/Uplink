@@ -52,13 +52,14 @@ use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
+use crate::layouts::storage::presentation::view::files_page::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
+use crate::utils::drag_and_drop_files::set_drag_event;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -184,7 +185,7 @@ fn main() {
         )
         .with_file_drop_handler(|_w, drag_event| {
             log::info!("Drag Event: {:?}", drag_event);
-            *DRAG_EVENT.write() = drag_event;
+            set_drag_event(drag_event);
             true
         });
 
