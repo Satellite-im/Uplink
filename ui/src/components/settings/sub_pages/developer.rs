@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use common::notifications::{push_notification, NotificationAction};
 use common::warp_runner::{OtherCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
@@ -7,7 +8,6 @@ use dioxus::prelude::*;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::{
-    notifications::push_notification,
     sounds::{self, Sounds},
     state::{action::ConfigAction, notifications::NotificationKind, Action, State},
     STATIC_ARGS,
@@ -88,6 +88,7 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                             get_local_text("settings-developer.test-popup"),
                             Some(Sounds::General),
                             notify_rust::Timeout::Milliseconds(4),
+                            NotificationAction::Dummy
                         );
                         state
                             .write()
