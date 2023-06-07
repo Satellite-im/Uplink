@@ -260,6 +260,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let chat_id = chat.id;
                             let participants = state.read().chat_participants(&chat);
                             let other_participants: Vec<_> = state.read().remove_self(&participants);
+                            let participants_name = match chat.conversation_name {
+                                Some(name) => name,
+                                None => State::join_usernames(&other_participants)
+                            };
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -290,7 +294,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     )),
                                     UserImageGroup {
                                         participants: build_participants(&other_participants),
-                                        with_username: State::join_usernames(&other_participants),
+                                        with_username: participants_name,
                                         typing: users_typing,
                                         onpress: move |_| {
                                             if state.read().ui.is_minimal_view() {
