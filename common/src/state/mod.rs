@@ -370,13 +370,14 @@ impl State {
                     1,
                 ));
 
-                // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self.configuration.notifications.messages_notifications;
+                let message_notifications_enabled =
+                    self.configuration.notifications.messages_notifications;
+                let notifications_enabled = self.configuration.notifications.enabled;
                 let should_play_sound = self.ui.current_layout != Layout::Compose
                     && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
-                    notifications_enabled && !self.ui.metadata.focused;
+                    should_play_sound && message_notifications_enabled && notifications_enabled;
 
                 // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
@@ -399,9 +400,6 @@ impl State {
                         sound,
                         notify_rust::Timeout::Milliseconds(4),
                     );
-                // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
-                } else if should_play_sound {
-                    crate::sounds::Play(crate::sounds::Sounds::Notification);
                 }
             }
             MessageEvent::Sent {
