@@ -118,7 +118,7 @@ impl Drop for UI {
 impl UI {
     fn take_call_popout_id(&mut self) -> Option<WindowId> {
         self.popout_media_player = false;
-        self.call_info.popout_window_id.take()
+        self.call_info.take_popout_window_id()
     }
 
     fn take_debug_logger_id(&mut self) -> Option<WindowId> {
@@ -146,7 +146,7 @@ impl UI {
         };
     }
     pub fn set_call_popout(&mut self, id: WindowId) {
-        self.call_info.popout_window_id = Some(id);
+        self.call_info.set_popout_window_id(id);
         self.popout_media_player = true;
     }
     pub fn set_debug_logger(&mut self, id: WindowId) {
@@ -202,7 +202,7 @@ impl UI {
     }
 
     pub fn toggle_muted(&mut self) {
-        if let Err(e) = match self.call_info.active_call().map(|x| x.self_muted) {
+        if let Err(e) = match self.call_info.active_call().map(|x| x.call.self_muted) {
             Some(true) => self.call_info.unmute_self(),
             Some(false) => self.call_info.mute_self(),
             _ => Ok(()),
@@ -212,7 +212,7 @@ impl UI {
     }
 
     pub fn toggle_silenced(&mut self) {
-        if let Err(e) = match self.call_info.active_call().map(|x| x.call_silenced) {
+        if let Err(e) = match self.call_info.active_call().map(|x| x.call.call_silenced) {
             Some(true) => self.call_info.unsilence_call(),
             Some(false) => self.call_info.silence_call(),
             _ => Ok(()),

@@ -1,16 +1,32 @@
 use std::collections::HashSet;
 
 use anyhow::bail;
+use chrono::{DateTime, Local};
 use uuid::Uuid;
 use warp::crypto::DID;
 use wry::application::window::WindowId;
 
 #[derive(Clone, Default)]
 pub struct CallInfo {
-    active_call: Option<Call>,
+    active_call: Option<ActiveCall>,
     pending_calls: Vec<Call>,
-    // associated with the active_call
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct ActiveCall {
+    pub call: Call,
+    pub answer_time: DateTime<Local>,
     pub popout_window_id: Option<WindowId>,
+}
+
+impl From<Call> for ActiveCall {
+    fn from(value: Call) -> Self {
+        Self {
+            call: value,
+            answer_time: Local::now(),
+            popout_window_id: None,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -25,18 +41,18 @@ pub struct Call {
 }
 
 impl CallInfo {
-    pub fn active_call(&self) -> Option<Call> {
+    pub fn active_call(&self) -> Option<ActiveCall> {
         self.active_call.clone()
     }
     pub fn active_call_id(&self) -> Option<Uuid> {
-        self.active_call.as_ref().map(|x| x.id)
+        self.active_call.as_ref().map(|x| x.call.id)
     }
     pub fn pending_calls(&self) -> Vec<Call> {
         self.pending_calls.clone()
     }
     pub fn offer_call(&mut self, id: Uuid, conversation_id: Uuid, participants: Vec<DID>) {
         self.active_call
-            .replace(Call::new(id, conversation_id, participants));
+            .replace(Call::new(id, conversation_id, participants).into());
     }
 
     pub fn end_call(&mut self) {
@@ -47,7 +63,7 @@ impl CallInfo {
         match self.pending_calls.iter().position(|x| x.id == id) {
             Some(idx) => {
                 let call = self.pending_calls.remove(idx);
-                self.active_call.replace(call.clone());
+                self.active_call.replace(call.clone().into());
                 Ok(call)
             }
             None => bail!("call not pending"),
@@ -73,81 +89,94 @@ impl CallInfo {
     }
 
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        if call.id != call_id {
+        if active_call.call.id != call_id {
             bail!("wrong call id");
         }
-        call.participant_joined(id);
+        active_call.call.participant_joined(id);
         Ok(())
     }
 
     pub fn participant_left(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        if call.id != call_id {
+        if active_call.call.id != call_id {
             bail!("wrong call id");
         }
-        call.participant_left(id);
+        active_call.call.participant_left(id);
         Ok(())
     }
 
     pub fn participant_speaking(&mut self, id: DID) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.participant_speaking(id);
+        active_call.call.participant_speaking(id);
         Ok(())
     }
 
     pub fn participant_not_speaking(&mut self, id: DID) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.participant_not_speaking(id);
+        active_call.call.participant_not_speaking(id);
         Ok(())
     }
 
     pub fn mute_self(&mut self) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.mute_self();
+        active_call.call.mute_self();
         Ok(())
     }
 
     pub fn unmute_self(&mut self) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.unmute_self();
+        active_call.call.unmute_self();
         Ok(())
     }
 
     pub fn silence_call(&mut self) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.silence_call();
+        active_call.call.silence_call();
         Ok(())
     }
 
     pub fn unsilence_call(&mut self) -> anyhow::Result<()> {
-        let call = match self.active_call.as_mut() {
+        let active_call = match self.active_call.as_mut() {
             Some(c) => c,
             None => bail!("call not in progress"),
         };
-        call.unsilence_call();
+        active_call.call.unsilence_call();
         Ok(())
+    }
+
+    pub fn set_popout_window_id(&mut self, popout_window_id: WindowId) {
+        if let Some(ac) = self.active_call.as_mut() {
+            ac.popout_window_id = Some(popout_window_id);
+        }
+    }
+    pub fn take_popout_window_id(&mut self) -> Option<WindowId> {
+        if let Some(ac) = self.active_call.as_mut() {
+            ac.popout_window_id.take()
+        } else {
+            None
+        }
     }
 }
 

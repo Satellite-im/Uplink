@@ -44,7 +44,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
         .ui
         .call_info
         .active_call()
-        .map(|x| x.call_silenced)
+        .map(|x| x.call.call_silenced)
         .unwrap_or(false);
 
     let _silenced_str = silenced.to_string();

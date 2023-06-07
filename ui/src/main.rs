@@ -1161,7 +1161,7 @@ fn get_call_dialog(cx: Scope) -> Element {
             image: my_identity.photo,
             with_username: my_identity.username,
         })),
-        description: "Call Description".into(),
+        description: get_local_text("remote-controls.incoming-call"),
         with_accept_btn: cx.render(rsx!(Button {
             icon: Icon::Phone,
             appearance: Appearance::Success,
@@ -1172,7 +1172,6 @@ fn get_call_dialog(cx: Scope) -> Element {
         with_deny_btn: cx.render(rsx!(Button {
             icon: Icon::PhoneXMark,
             appearance: Appearance::Danger,
-            text: "Reject".into(),
             onpress: move |_| {
                 ch.send(CallDialogCmd::Reject(call.id));
             }

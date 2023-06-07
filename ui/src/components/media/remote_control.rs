@@ -16,6 +16,8 @@ use common::{
 };
 use uuid::Uuid;
 
+use crate::utils::format_timestamp::format_timestamp_timeago;
+
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
     in_call_text: String,
@@ -35,7 +37,7 @@ enum CallDialogCmd {
 #[allow(non_snake_case)]
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let call = state.read().ui.call_info.active_call();
+    let active_call = state.read().ui.call_info.active_call();
 
     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
         to_owned![state];
@@ -104,13 +106,14 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
         }
     });
 
-    let call = match call {
+    let active_call = match active_call {
         None => {
             // RemoteControls should only be rendered when there's a call
             return cx.render(rsx!(""));
         }
         Some(c) => c,
     };
+    let call = active_call.call;
 
     cx.render(rsx!(div {
         id: "remote-controls",
@@ -120,7 +123,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 text: cx.props.in_call_text.clone(),
             },
             p {
-                "1h 34m",
+                format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
             }
         },
         div {
