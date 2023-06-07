@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use chrono::Local;
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
@@ -38,6 +41,41 @@ enum CallDialogCmd {
 pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let active_call = state.read().ui.call_info.active_call();
+    let active_call_id = active_call.as_ref().map(|x| x.call.id);
+    let active_call_answer_time = active_call.as_ref().map(|x| x.answer_time);
+    let scope_id = cx.scope_id();
+    let update_fn = cx.schedule_update_any();
+    use_future(
+        cx,
+        (&scope_id, &active_call_id, &active_call_answer_time),
+        |(scope_id, active_call_id, answer_time)| async move {
+            if active_call_id.is_none() {
+                return;
+            }
+            let answer_time = match answer_time {
+                Some(r) => r,
+                None => return,
+            };
+            loop {
+                let dur_sec = Duration::from_secs(1);
+                let dur_min = Duration::from_secs(60);
+
+                let to_sleep = match Local::now().signed_duration_since(answer_time).to_std() {
+                    Ok(duration) => {
+                        if duration < dur_min {
+                            dur_sec
+                        } else {
+                            dur_min
+                        }
+                    }
+                    Err(_) => dur_sec,
+                };
+
+                tokio::time::sleep(to_sleep).await;
+                update_fn(scope_id);
+            }
+        },
+    );
 
     let ch: &Coroutine<CallDialogCmd> = use_coroutine(cx, |mut rx| {
         to_owned![state];
