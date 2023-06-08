@@ -168,6 +168,7 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 onclick: move |_| {
+                    println!("{:?},{:?}", show_edit_group.clone(), show_group_users.clone());
                     if show_group_users.is_none() {
                         show_group_users.set(Some(chat_id));
                         show_edit_group.set(None);
@@ -517,8 +518,18 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         }
     };
 
+    let direct_message = data.active_chat.conversation_type == ConversationType::Direct;
+
+    let active_participant = data.my_id.clone();
+    let mut all_participants = data.other_participants.clone();
+    all_participants.push(active_participant.clone());
+    let members_count = format!(
+        "{} ({})",
+        get_local_text("uplink.members"),
+        all_participants.len()
+    );
     cx.render(rsx!(
-        if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
+        if direct_message {rsx! (
             UserImage {
                 loading: false,
                 platform: data.platform,
@@ -528,17 +539,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         )} else {rsx! (
             UserImageGroup {
                 loading: false,
-                participants: build_participants(&data.other_participants),
-                onpress: move |_| {
-                    active_show_group_users();
-                },
+                participants: build_participants(&all_participants),
             }
         )}
         div {
             class: "user-info",
-            onclick: move |_| {
-                active_show_group_users();
-            },
             aria_label: "user-info",
             p {
                 class: "username",
@@ -546,7 +551,15 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             },
             p {
                 class: "status",
-                "{subtext}"
+                if direct_message {
+                    rsx! (span {
+                        "{subtext}"
+                    })
+                } else {
+                    rsx! (
+                        span {"{members_count}"}
+                    )
+                }
             }
         }
     ))
