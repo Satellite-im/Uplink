@@ -5,7 +5,7 @@
   min-width: var(--width-sidebar);
   height: 100%;
   border-right: 1px solid var(--border-subtle-color);
-  transition: margin-left var(--animation-speed);
+  transition: left var(--animation-speed);
 
   .search {
 		display: inline-flex;
@@ -37,24 +37,14 @@
   }
 
 	&.hidden {
-		margin-left: -100vw;
-		border-right: none;
-	}
-
-	&.minimal {
-		display: inline-flex;
-		width: fit-content;
-		min-width: fit-content;
+		left: calc(var(--width-sidebar) * -1);
+    border-right: none;
+    position: absolute;
 	}
 
 	.hamburger {
 		gap: var(--gap);
 		margin-left: var(--gap);
-		//border-bottom: 1px solid transparent;
-		&.minimal {
-			margin-left: 0px;
-			padding: var(--gap);
-		}
 	}
 }
 
@@ -67,7 +57,6 @@
     border-right: none;
   }
 }
-
 
 @media only screen and (max-width: 600px) {
   .sidebar {
