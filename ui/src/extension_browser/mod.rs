@@ -54,8 +54,10 @@ pub fn Explore(cx: Scope) -> Element {
     cx.render(rsx! (
         div {
             class: "extensions-explore",
+            aria_label: "extensions-explore",
             span {
                 class: "banner",
+                aria_label: "extensions-explore-banner",
                 get_local_text("settings-extensions.banner")
             },
             Input {
@@ -136,6 +138,7 @@ pub fn ExtensionsBrowser(cx: Scope) -> Element {
     cx.render(rsx!(
         div {
             id: "extensions-browser",
+            aria_label: "extensions-browser",
             Nav {
                 active: routes[0].clone(),
                 bubble: true,
