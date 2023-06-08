@@ -13,7 +13,7 @@ use kit::components::{
     context_menu::{ContextItem, ContextMenu},
     indicator::Status,
     message::{Message, Order, ReactionAdapter},
-    message_group::{MessageGroup, MessageGroupSkeletal},
+    message_group::MessageGroup,
     message_reply::MessageReply,
     user_image::UserImage,
 };
