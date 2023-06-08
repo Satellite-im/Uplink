@@ -34,7 +34,7 @@ pub fn get_time_ago(cx: &Scope<Props>) -> String {
     let duration: std::time::Duration = match c.to_std() {
         // for the sidebar, don't want the timestamp to increment a few seconds every time the typing indicator comes over.
         // prevent this by rounding down and giving a duration in minutes only.
-        Ok(d) => std::time::Duration::from_secs(d.as_secs() / 60),
+        Ok(d) => std::time::Duration::from_secs(d.as_secs() / 60 * 60),
         Err(_e) => std::time::Duration::ZERO,
     };
 
