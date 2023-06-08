@@ -5,7 +5,7 @@
   height: var(--height-input);
   border-radius: var(--border-radius-more);
   background-color: var(--primary);
-  color: var(--text-color-bright);
+  color: var(--text-color-dark);
   gap: var(--gap);
   padding: 0 var(--padding);
   justify-content: center;
@@ -18,7 +18,7 @@
   }
 
   svg {
-    stroke: var(--text-color-bright);
+    stroke: var(--text-color-dark);
     fill: transparent;
   }
   &:hover {
@@ -31,6 +31,11 @@
 
   &.appearance-secondary {
     background-color: var(--secondary);
+    color: var(--text-color-bright);
+    svg {
+      stroke: var(--text-color-bright);
+      fill: transparent;
+    }
     &:hover {
       background-color: var(--secondary-light);
     }
@@ -38,6 +43,7 @@
   &.appearance-secondary-less {
     border-radius: var(--border-radius-less);
     background-color: var(--secondary);
+    color: var(--text-color-muted);
     &:hover {
       background-color: var(--secondary-light);
     }
@@ -64,8 +70,17 @@
   }
   &.appearance-transparent {
     background-color: transparent;
+    color: var(--text-color);
+    
     &:hover {
       background-color: var(--secondary);
+      color: var(--text-color-bright);
+      svg {
+        stroke: var(--text-color-bright);
+      }
+    }
+    svg {
+      stroke: var(--text-color);
     }
   }
   &.appearance-disabled {

@@ -35,7 +35,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let hamburger = cx.render(rsx!(Button {
         aria_label: "hamburger-button".into(),
-        icon: Icon::Bars3,
+        icon: Icon::SidebarArrowLeft,
         appearance: Appearance::Transparent,
         onpress: move |_| {
             state.write().mutate(Action::SidebarHidden(true));

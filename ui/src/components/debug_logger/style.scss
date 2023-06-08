@@ -1,7 +1,7 @@
 .debug-logger {
     height: calc(var(--text-size) + (var(--gap) * 6));
     width: 100%;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle-color);
     font-size: var(--text-size-less);
     display: inline-flex;
     flex-direction: column;

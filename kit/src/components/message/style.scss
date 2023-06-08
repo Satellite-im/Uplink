@@ -1,5 +1,5 @@
 .message {
-	background: var(--primary);
+	background: var(--secondary);
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
 	min-height: var(--height-input);
@@ -21,7 +21,7 @@
 		flex-direction: column;
 	}
 	.pending-text {
-		color: var(--text-color-dark);
+		color: var(--text-color-muted);
 		display: inline-flex;
 		flex-direction: column;
 	}
@@ -50,7 +50,7 @@
 .message.remote {
 	align-self: flex-start;
 	align-items: flex-start;
-	background: var(--secondary);
+	background: var(--secondary-dark);
 	border-radius: var(--border-radius-more);
 	border-bottom-left-radius: var(--border-radius);
 }

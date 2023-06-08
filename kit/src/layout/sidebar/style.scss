@@ -4,7 +4,7 @@
   width: var(--width-sidebar);
   min-width: var(--width-sidebar);
   height: 100%;
-  border-right: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-subtle-color);
   transition: margin-left var(--animation-speed);
 
   .search {

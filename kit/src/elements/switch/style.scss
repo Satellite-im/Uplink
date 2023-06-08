@@ -28,7 +28,7 @@
     input {
         &:checked {
             & + .slider {
-                background-color: var(--primary);
+                background-color: var(--secondary-light);
                 &:before {
                     transform: translateX(20px);
                 }
@@ -36,7 +36,7 @@
         }
         &:focus {
             & + .slider {
-                box-shadow: 0 0 1px var(--primary);
+                box-shadow: 0 0 1px var(--secondary-dark);
             }
         }
     }   
