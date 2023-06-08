@@ -81,10 +81,12 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             aria_label: "User Badge",
                             span {
                                 class: "badge-prefix",
+                                aria_label: "badge-prefix",
                                 "{time_ago}"
                             }
                             span {
                                 class: "badge-count",
+                                aria_label: "badge-count",
                                 "{badge}"
                             }
                         }

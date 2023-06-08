@@ -38,6 +38,7 @@ pub fn Welcome(cx: Scope) -> Element {
                 }
                 img {
                     class: "image",
+                    aria_label: "welcome-image",
                     src:"{image_path}"
                 },
                 p {

@@ -130,6 +130,7 @@ files = Ficheiros
     .doc-thumb = Miniatura de pré-visualização de documento
     .no-thumbnail-preview = Não existe uma miniatura de pré-visualização para este ficheiro
     .directory-already-with-name = Já existe um directório com este nome
+    .no-size-available = Sem tamanho disponível para o ficheiro:
     .file-already-with-name = Já existe um ficheiro com este nome
     .no-data-available = Sem informação disponível
     

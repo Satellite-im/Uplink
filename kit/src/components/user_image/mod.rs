@@ -74,11 +74,13 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "User Image",
                     div {
                         class: "image",
+                        aria_label: "user-image-profile",
                         style: "background-image: url('{image_data}');"
                     },
                     typing.then(|| rsx!(
                         div {
                             class: "profile-typing",
+                            aria_label: "profile-typing",
                             div { class: "dot dot-1" },
                             div { class: "dot dot-2" },
                             div { class: "dot dot-3" }

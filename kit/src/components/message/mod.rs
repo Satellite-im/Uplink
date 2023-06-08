@@ -230,6 +230,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         },
         div {
             class: "{reactions_class}",
+            aria_label: "message-reaction-container",
             cx.props.reactions.iter().map(|reaction| {
                 let reaction_count = reaction.reaction_count;
                 let emoji = &reaction.emoji;
@@ -242,6 +243,14 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             format_args!("emoji-reaction {}", if reaction.self_reacted {
                             "emoji-reaction-self"
                         } else { "" }),
+                        aria_label: {
+                            format_args!(
+                                "emoji-reaction-{}",
+                                if reaction.self_reacted {
+                                    "self"
+                                } else { "remote" }
+                            )
+                        },
                         onclick: move |_| {
                             cx.props.on_click_reaction.call(emoji.clone());
                         },
