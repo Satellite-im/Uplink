@@ -157,6 +157,7 @@ fn render_selector<'a>(
                     }
                 },
                 id: "emoji_selector",
+                aria_label: "emoji-selector",
                 tabindex: "0",
                 onblur: |_| {
                     #[cfg(target_os = "macos")] 
@@ -188,6 +189,7 @@ fn render_selector<'a>(
                                 emojis.iter().cloned().map(|emoji| {
                                     rsx!(
                                         div {
+                                            aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
