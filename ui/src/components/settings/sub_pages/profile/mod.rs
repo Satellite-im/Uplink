@@ -270,6 +270,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     class: "content-item",
                     Label {
                         text: get_local_text("uplink.username"),
+                        aria_label: "profile-username-label".into(),
                     },
                     div {
                         class: "profile-group-username",
@@ -294,6 +295,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             class: "profile-id-btn",
                             Button {
                                 appearance: Appearance::SecondaryLess,
+                                aria_label: "copy-id-button".into(),
                                 text: did_short.to_string(),
                                 tooltip: cx.render(rsx!(
                                     Tooltip{
@@ -320,6 +322,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     class: "content-item",
                     Label {
                         text: get_local_text("uplink.status"),
+                        aria_label: "profile-status-label".into(),
                     },
                     Input {
                         placeholder: get_local_text("uplink.status"),
