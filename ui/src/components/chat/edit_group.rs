@@ -221,6 +221,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 class: "edit-group-name", 
                 Label {
                     text: get_local_text("messages.group-name"),
+                    aria_label: "group-name-label".into(),
                 },
                 Input {
                         placeholder:  get_local_text("messages.group-name"),
@@ -262,7 +263,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
-                    aria_label: "chat-search-input".into(),
+                    aria_label: "friend-search-input".into(),
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,
@@ -284,6 +285,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         key: "add-button",
                         Button {
+                            aria_label: "add-button".into(),
                             text: get_local_text("uplink.add"),
                             appearance: Appearance::Primary,
                             onpress: move |e| {
@@ -299,6 +301,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         key: "remove-button",
                         Button {
+                            aria_label: "remove-button".into(),
                             text: get_local_text("uplink.remove"),
                             appearance: Appearance::Primary,
                             onpress: move |e| {
@@ -326,6 +329,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
+            aria_label: "friends-list",
             cx.props.friends.iter().map(
                 |(letter, sorted_friends)| {
                     let group_letter = letter.to_string();
@@ -333,6 +337,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                         div {
                             key: "friend-group-{group_letter}",
                             class: "friend-group",
+                            aria_label: "friend-group",
                             sorted_friends.iter().filter(|friend| {
                                 let name = friend.username();
                                 if name.len() < name_prefix.len() {
@@ -403,6 +408,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     onclick: move |_| {
                         update_fn();
                     },
+                    aria_label: "friend-username",
                     cx.props.friend.username(),
                 },
             },

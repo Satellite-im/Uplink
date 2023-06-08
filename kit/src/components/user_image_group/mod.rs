@@ -75,6 +75,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     cx.props.with_username.as_ref().map(|username| rsx!(
                         Label {
+                            aria_label: username.into(),
                             text: username.to_string()
                         }
                     ))
