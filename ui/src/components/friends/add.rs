@@ -165,6 +165,7 @@ pub fn AddFriend(cx: Scope) -> Element {
             class: "add-friend",
             Label {
                 text: get_local_text("friends.add"),
+                aria_label: "add-friend-label".into(),
             },
             div {
                 class: "body",

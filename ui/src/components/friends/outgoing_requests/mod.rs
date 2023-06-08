@@ -56,6 +56,7 @@ pub fn OutgoingRequests(cx: Scope) -> Element {
             aria_label: "Outgoing Requests List",
             Label {
                 text: get_local_text("friends.outgoing_requests"),
+                aria_label: "outgoing-list-label".into(),
             },
             friends_list.into_iter().map(|friend| {
                 let did = friend.did_key();

@@ -107,10 +107,12 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             aria_label: "Create Group",
             div {
                 id: "create-group-name",
+                aria_label: "create-group-name",
                 class: "create-group-name",
                 div {
                     align_items: "start",
                     Label {
+                        aria_label: "group-name-label".into(),
                         text: get_local_text("messages.group-name"),
                     },
                 }
@@ -134,13 +136,14 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             div {
                 class: "search-input",
                 Label {
+                    aria_label: "users-label".into(),
                     text: "Users".into(),
                 },
                 Input {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
-                    aria_label: "chat-search-input".into(),
+                    aria_label: "friend-search-input".into(),
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,
@@ -196,6 +199,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
+            aria_label: "friends-list",
             cx.props.friends.iter().map(
                 |(letter, sorted_friends)| {
                     let group_letter = letter.to_string();

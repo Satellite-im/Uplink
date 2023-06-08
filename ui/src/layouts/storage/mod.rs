@@ -236,6 +236,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             rsx!(
                                 p {
                                     class: "free-space",
+                                    aria_label: "free-space-max-size",
                                     format!("{}", get_local_text("files.storage-max-size")),
                                     span {
                                         class: "count",
@@ -244,6 +245,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                                 p {
                                     class: "free-space",
+                                    aria_label: "free-space-current-size",
                                     format!("{}", get_local_text("files.storage-current-size")),
                                     span {
                                         class: "count",
@@ -278,6 +280,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     icon: Icon::Home,
                                 },
                                 p {
+                                    aria_label: "home-dir",
                                     "{home_text}",
                                 }
                             })
@@ -290,6 +293,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                                 aria_label: "crumb",
                                 p {
+                                    aria_label: "{folder_name_formatted}",
                                     "{folder_name_formatted}"
                                 }
                             },)

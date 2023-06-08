@@ -43,6 +43,7 @@ where
         class: "slide-selector",
         aria_label: "slide-selector",
         Button {
+            aria_label: "slide-selector-minus".into(),
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Minus} else {Shape::ArrowLeft},
             disabled: *index.get() == 0,
             onpress: move |_| {
@@ -57,10 +58,12 @@ where
             },
         },
         span {
+            aria_label: "slide-selector-value",
             class: "slide-selector__value",
             "{converted_display}",
         },
         Button {
+            aria_label: "slide-selector-plus".into(),
             icon: if buttons_format == ButtonsFormat::PlusAndMinus {Shape::Plus} else {Shape::ArrowRight},
             disabled: *index.get() >= (cx.props.values.len() - 1),
             onpress: move |_| {

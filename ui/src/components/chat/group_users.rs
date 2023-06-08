@@ -54,6 +54,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
             div {
                 class: "search-input",
                 Label {
+                    aria_label: "number-of-participants".into(),
                     text: format!("{} {}", _friends_in_group.len(),  get_local_text(
                         if _friends_in_group.len() > 1 {
                             "messages.participants"
@@ -66,7 +67,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),
                     disabled: false,
-                    aria_label: "chat-search-input".into(),
+                    aria_label: "friend-search-input".into(),
                     icon: Icon::MagnifyingGlass,
                     options: Options {
                         with_clear_btn: true,
@@ -100,6 +101,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
+            aria_label: "friends-list",
             cx.props.friends.iter().map(
                 |(letter, sorted_friends)| {
                     let group_letter = letter.to_string();
@@ -145,6 +147,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             div {
                 class: "flex-1",
                 p {
+                    aria_label: "friend-username",
                     cx.props.friend.username(),
                 },
             },
