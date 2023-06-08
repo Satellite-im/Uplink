@@ -37,7 +37,7 @@
   }
 
 	&.hidden {
-		margin-left: calc(var(--width-sidebar) * -1);
+		margin-left: -100vw;
 		border-right: none;
 	}
 
@@ -67,3 +67,10 @@
     border-right: none;
   }
 }
+
+
+@media only screen and (max-width: 600px) {
+  .sidebar {
+    min-width: 100%;
+  }
+} 

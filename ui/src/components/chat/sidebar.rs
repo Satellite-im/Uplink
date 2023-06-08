@@ -233,6 +233,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
+                        if state.read().ui.is_minimal_view() {
+                            state.write().mutate(Action::SidebarHidden(true));
+                        }
                         router.replace_route(r, None, None);
                     }
                 },
