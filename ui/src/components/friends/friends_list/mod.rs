@@ -165,6 +165,7 @@ pub fn Friends(cx: Scope) -> Element {
             aria_label: "Friends List",
             Label {
                 text: get_local_text("friends.friends"),
+                aria_label: "friends-list-label".into(),
             },
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
@@ -173,6 +174,7 @@ pub fn Friends(cx: Scope) -> Element {
                         key: "friend-group-{group_letter}",
                         Label {
                             text: letter.into(),
+                            aria_label: letter.into()
                         },
                         sorted_friends.into_iter().map(|friend| {
                             let did = friend.did_key();

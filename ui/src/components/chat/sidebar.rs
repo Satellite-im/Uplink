@@ -253,6 +253,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     aria_label: "Favorites",
                     Label {
                         text: get_local_text("favorites.favorites"),
+                        aria_label: "favorites-label".into(),
                     },
                     div {
                         class: "vertically-scrollable",
@@ -323,6 +324,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         class: "sidebar-chats-header",
                         Label {
                             text: get_local_text("uplink.chats"),
+                            aria_label: "chats-label".into(),
                         },
                         Button {
                             appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
