@@ -809,6 +809,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             rsx!(
                 div {
                     id: "add-message-reaction",
+                    aria_label: "add-message-reaction",
                     class: "{reactions_class} pointer",
                     tabindex: "0",
                     onmouseleave: |_| {
@@ -824,6 +825,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     reactions.iter().cloned().map(|reaction| {
                         rsx!(
                             div {
+                                aria_label: "{reaction}",
                                 onclick: move |_|  {
                                     reacting_to.set(None);
                                     state.write().ui.ignore_focus = false;
