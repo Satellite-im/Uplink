@@ -5,6 +5,7 @@ mod events;
 use futures::StreamExt;
 use std::sync::Arc;
 use tokio::sync::Notify;
+
 use warp::{
     blink::{BlinkEventKind, BlinkEventStream},
     logging::tracing::log,
@@ -14,7 +15,7 @@ use warp::{
 };
 
 use super::{conv_stream, Account, Calling, Messaging, Storage};
-use crate::{warp_runner::WarpEvent, WARP_CMD_CH, WARP_EVENT_CH};
+use crate::WARP_CMD_CH;
 
 pub use commands::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
@@ -43,8 +44,6 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
     let mut blink_stream = get_blink_stream(&mut warp.blink).await;
 
-    let warp_event_tx = WARP_EVENT_CH.tx.clone();
-
     log::debug!("warp_runner::manager::run");
     loop {
         tokio::select! {
@@ -64,7 +63,8 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                     if matches!(evt, BlinkEventKind::ParticipantSpeaking{..} | BlinkEventKind::SelfSpeaking ) {
                         continue;
                     }
-                    if warp_event_tx.send(WarpEvent::Blink(evt)).is_err() {
+                    if let Err(e) = events::handle_blink_event(evt, &mut warp).await {
+                        log::error!("failed to handle blink event: {e}");
                         break;
                     }
                 }

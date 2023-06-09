@@ -65,6 +65,12 @@ pub enum WarpEvent {
     Blink(BlinkEventKind),
 }
 
+impl std::fmt::Debug for WarpEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Display)]
 pub enum WarpCmd {
     #[display(fmt = "Tesseract {{ {_0} }} ")]

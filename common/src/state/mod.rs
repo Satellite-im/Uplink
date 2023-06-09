@@ -554,7 +554,10 @@ impl State {
                 }
             }
             BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
-                if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
+                // seems like kind of a hack but...
+                if peer_id == self.did_key() {
+                    self.ui.call_info.end_call();
+                } else if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
                     log::error!("failed to process ParticipantLeft event : {e}");
                 }
             }

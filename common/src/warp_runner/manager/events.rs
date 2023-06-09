@@ -1,4 +1,5 @@
 use warp::{
+    blink::BlinkEventKind,
     logging::tracing::log,
     multipass::MultiPassEventKind,
     raygun::{MessageEventKind, RayGunEventKind},
@@ -97,6 +98,36 @@ pub async fn handle_message_event(
         }
         Err(e) => {
             log::error!("failed to convert message event: {}", e);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn handle_blink_event(evt: BlinkEventKind, warp: &mut super::Warp) -> anyhow::Result<()> {
+    let warp_event_tx = WARP_EVENT_CH.tx.clone();
+    warp_event_tx.send(WarpEvent::Blink(evt.clone()))?;
+
+    if let BlinkEventKind::ParticipantLeft {
+        call_id,
+        peer_id: _,
+    } = &evt
+    {
+        if warp
+            .blink
+            .current_call()
+            .await
+            .map(|call_info| &call_info.call_id() == call_id && call_info.participants().len() == 2)
+            .unwrap_or(false)
+        {
+            if let Err(e) = warp.blink.leave_call().await {
+                anyhow::bail!("failed to leave call: {e}")
+            } else {
+                warp_event_tx.send(WarpEvent::Blink(BlinkEventKind::ParticipantLeft {
+                    call_id: *call_id,
+                    peer_id: warp.multipass.get_own_identity().await?.did_key(),
+                }))?;
+            }
         }
     }
 
