@@ -18,7 +18,7 @@ use crate::{
     utils::drag_and_drop_files::get_drag_event,
 };
 
-use super::controller::{ChanCmd, StorageController};
+use super::{controller::StorageController, coroutine::ChanCmd};
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
@@ -26,6 +26,7 @@ pub fn run_verifications_and_update_storage(
     storage_controller: StorageController,
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
+    ch: &Coroutine<ChanCmd>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
@@ -39,7 +40,7 @@ pub fn run_verifications_and_update_storage(
         *(storage_controller.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
         state.write().storage = storage;
         storage_controller.storage_state.set(None);
-        storage_controller.ch_send(ChanCmd::GetStorageSize);
+        ch.send(ChanCmd::GetStorageSize);
     }
 }
 

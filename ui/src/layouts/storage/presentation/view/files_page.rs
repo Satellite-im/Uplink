@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use std::path::Path;
-use std::rc::Rc;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -32,10 +31,9 @@ use warp::constellation::{file::File, item::Item};
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
-use crate::layouts::storage::presentation::controller::controller::{
-    init_coroutine, ChanCmd, StorageController,
-};
-use crate::layouts::storage::presentation::controller::events;
+use crate::layouts::storage::presentation::controller::controller::StorageController;
+use crate::layouts::storage::presentation::controller::coroutine::ChanCmd;
+use crate::layouts::storage::presentation::controller::{coroutine, events};
 use crate::layouts::storage::presentation::view::file_modal;
 
 const ROOT_DIR_NAME: &str = "root";
@@ -50,30 +48,22 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let window = use_window(cx);
-    let controller = StorageController::new(cx, state);
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
     let first_render = use_state(cx, || true);
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
-    let main_script = include_str!("./storage.js");
 
-    events::run_verifications_and_update_storage(controller.clone(), first_render, state);
-    events::allow_drag_event_for_non_macos_systems(
-        cx,
-        window,
-        controller.drag_event,
-        controller.coroutine,
-    );
-    let cltr = controller.clone();
-    let ch = init_coroutine(
+    let controller = StorageController::new(cx, state);
+    let ch = coroutine::init_coroutine(
         cx,
         state,
         window,
         controller.drag_event,
         controller.storage_state,
         controller.storage_size,
-        controller.repository.clone(),
     );
+    events::run_verifications_and_update_storage(controller.clone(), first_render, state, ch);
+    events::allow_drag_event_for_non_macos_systems(cx, window, controller.drag_event, ch);
 
     cx.render(rsx!(
         div {
@@ -91,7 +81,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 },
                 on_download: move |_| {
                     let file_name = file2.clone().name();
-                    // download_file(&file_name, controller.clone());
+                    download_file(&file_name, ch);
                 }
                 file: file.clone()})
         }
@@ -99,13 +89,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                let drag_event = cltr.drag_event;
-                let coroutine = cltr.coroutine;
+                let drag_event = controller.drag_event;
                 if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
-                        to_owned![window, drag_event, coroutine];
+                        to_owned![window, drag_event, ch];
                         async move {
-                            events::drag_and_drop_function(&window, &drag_event, &coroutine).await;
+                            events::drag_and_drop_function(&window, &drag_event, &ch).await;
                         }
                     });
                 }
@@ -188,14 +177,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 },
                             })
                         } else {
-                            let cltr = controller.clone();
+                            let controller = controller.clone();
                             rsx!(
                                 p {
                                     class: "free-space",
                                     format!("{}", get_local_text("files.storage-max-size")),
                                     span {
                                         class: "count",
-                                       format!("{}", cltr.storage_size.read().0),
+                                       format!("{}", controller.storage_size.read().0),
                                     }
                                 },
                                 p {
@@ -203,7 +192,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     format!("{}", get_local_text("files.storage-current-size")),
                                     span {
                                         class: "count",
-                                       format!("{}", cltr.storage_size.read().1),
+                                       format!("{}", controller.storage_size.read().1),
                                     }
                                 },
                             )
@@ -222,14 +211,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     controller.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
-                        let controller_clone = controller.clone();
                         if dir_name == ROOT_DIR_NAME && index == 0 {
                             let home_text = get_local_text("uplink.home");
                             rsx!(div {
                                 class: "crumb",
                                 aria_label: "crumb",
                                 onclick: move |_| {
-                                    controller_clone.ch_send(ChanCmd::BackToPreviousDirectory(directory.clone()));
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.clone()));
                                 },
                                 IconElement {
                                     icon: Icon::Home,
@@ -243,7 +231,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             rsx!(div {
                                 class: "crumb",
                                 onclick: move |_| {
-                                    controller_clone.ch_send(ChanCmd::BackToPreviousDirectory(directory.clone()));
+                                    ch.send(ChanCmd::BackToPreviousDirectory(directory.clone()));
                                 },
                                 aria_label: "crumb",
                                 p {
@@ -259,13 +247,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         class: "files-list",
                         aria_label: "files-list",
                         add_new_folder.then(|| {
-                            let cltr = controller.clone();
                             rsx!(
                             Folder {
                                 with_rename: true,
                                 onrename: move |(val, key_code)| {
                                     let new_name: String = val;
-                                    if cltr.directories_list.read().iter().any(|dir| dir.name() == new_name) {
+                                    if controller.directories_list.read().iter().any(|dir| dir.name() == new_name) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(
@@ -279,15 +266,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         return;
                                     }
                                     if key_code == Code::Enter {
-                                        cltr.ch_send(ChanCmd::CreateNewDirectory(new_name));
-                                        cltr.ch_send(ChanCmd::GetItemsFromCurrentDirectory);
+                                        ch.send(ChanCmd::CreateNewDirectory(new_name));
+                                        ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                     }
                                     add_new_folder.set(false);
                                  }
                             })
                         }),
                         controller.directories_list.read().iter().map(|dir| {
-                            let cltr = controller.clone();
+                            let controller = controller.clone();
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
                             let key = dir.id();
@@ -323,7 +310,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: dir.name(),
                                     with_rename: *is_renaming_map.read() == Some(key),
                                     onrename: move |(val, key_code)| {
-                                        if cltr.directories_list.read().iter().any(|dir| dir.name() == val) {
+                                        if controller.directories_list.read().iter().any(|dir| dir.name() == val) {
                                             state
                                             .write()
                                             .mutate(common::state::Action::AddToastNotification(
@@ -371,7 +358,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 aria_label: "files-download".into(),
                                                 text: get_local_text("files.download"),
                                                 onpress: move |_| {
-                                                    // download_file(&file_name2, controller);
+                                                    download_file(&file_name2, ch);
                                                 },
                                             },
                                             hr {},
@@ -465,7 +452,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
-fn download_file(file_name: &str, controller: Rc<StorageController>) {
+fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
         .and_then(OsStr::to_str)
@@ -485,7 +472,7 @@ fn download_file(file_name: &str, controller: Rc<StorageController>) {
         Some(path) => path,
         None => return,
     };
-    controller.ch_send(ChanCmd::DownloadFile {
+    ch.send(ChanCmd::DownloadFile {
         file_name: file_name.to_string(),
         local_path_to_save_file: file_path_buf,
     });
