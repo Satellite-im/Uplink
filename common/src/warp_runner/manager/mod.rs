@@ -5,15 +5,19 @@ mod events;
 use futures::StreamExt;
 use std::sync::Arc;
 use tokio::sync::Notify;
+
 use warp::{
-    logging::tracing::log, multipass::MultiPassEventStream, raygun::RayGunEventStream,
+    blink::{BlinkEventKind, BlinkEventStream},
+    logging::tracing::log,
+    multipass::MultiPassEventStream,
+    raygun::RayGunEventStream,
     tesseract::Tesseract,
 };
 
-use super::{conv_stream, Account, Messaging, Storage};
+use super::{conv_stream, Account, Calling, Messaging, Storage};
 use crate::WARP_CMD_CH;
 
-pub use commands::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use commands::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 /// Contains the structs needed for run() to handle various events
 pub struct Warp {
@@ -21,6 +25,7 @@ pub struct Warp {
     pub multipass: Account,
     pub raygun: Messaging,
     pub constellation: Storage,
+    pub blink: Calling,
 }
 
 pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
@@ -37,6 +42,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
     // receive events from RayGun and MultiPass
     let mut raygun_stream = get_raygun_stream(&mut warp.raygun).await;
     let mut multipass_stream = get_multipass_stream(&mut warp.multipass).await;
+    let mut blink_stream = get_blink_stream(&mut warp.blink).await;
 
     log::debug!("warp_runner::manager::run");
     loop {
@@ -51,6 +57,18 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                     break;
                 }
             },
+            opt = blink_stream.next() => {
+                if let Some(evt) = opt {
+                    // filter noisy events which aren't being used right now anyway.
+                    if matches!(evt, BlinkEventKind::ParticipantSpeaking{..} | BlinkEventKind::SelfSpeaking ) {
+                        continue;
+                    }
+                    if let Err(e) = events::handle_blink_event(evt, &mut warp).await {
+                        log::error!("failed to handle blink event: {e}");
+                        break;
+                    }
+                }
+            },
             opt = conversation_msg_rx.recv() => {
                 if events::handle_message_event(opt, &mut warp).await.is_err() {
                     break;
@@ -60,7 +78,7 @@ pub async fn run(mut warp: Warp, notify: Arc<Notify>) {
                 if events::handle_warp_command(opt, &mut warp, &mut conversation_manager).await.is_err() {
                     break;
                 }
-            } ,
+            },
             // the WarpRunner has been dropped. stop the task
             _ = notify.notified() => break,
         }
@@ -102,5 +120,16 @@ async fn get_multipass_stream(account: &mut Account) -> MultiPassEventStream {
                 }
             },
         };
+    }
+}
+
+async fn get_blink_stream(blink: &mut Calling) -> BlinkEventStream {
+    loop {
+        match blink.get_event_stream().await {
+            Ok(stream) => break stream,
+            Err(_e) => {
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            }
+        }
     }
 }

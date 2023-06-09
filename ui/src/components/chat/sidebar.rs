@@ -33,11 +33,8 @@ use warp::{
 };
 
 use crate::components::chat::create_group::CreateGroup;
-use crate::{
-    components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    utils::build_participants,
-    UPLINK_ROUTES,
-};
+use crate::components::media::remote_control::RemoteControls;
+use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
@@ -236,6 +233,18 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         router.replace_route(r, None, None);
                     }
                 },
+            )),
+            with_call_controls: cx.render(rsx!(
+                active_media_chat.is_some().then(|| rsx!(
+                    RemoteControls {
+                        in_call_text: get_local_text("remote-controls.in-call"),
+                        mute_text: get_local_text("remote-controls.mute"),
+                        unmute_text: get_local_text("remote-controls.unmute"),
+                        listen_text: get_local_text("remote-controls.listen"),
+                        silence_text: get_local_text("remote-controls.silence"),
+                        end_text: get_local_text("remote-controls.end"),
+                    }
+                )),
             )),
             search_friends{ identities: search_results.clone(), onclick: move |entry| {
                 select_entry(entry);
@@ -520,16 +529,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 ))
             },
-            active_media_chat.is_some().then(|| rsx!(
-                RemoteControls {
-                    in_call_text: get_local_text("remote-controls.in-call"),
-                    mute_text: get_local_text("remote-controls.mute"),
-                    unmute_text: get_local_text("remote-controls.unmute"),
-                    listen_text: get_local_text("remote-controls.listen"),
-                    silence_text: get_local_text("remote-controls.silence"),
-                    end_text: get_local_text("remote-controls.end"),
-                }
-            )),
         }
     ))
 }
