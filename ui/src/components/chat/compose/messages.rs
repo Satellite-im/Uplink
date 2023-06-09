@@ -321,7 +321,6 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         num_messages_in_conversation: data.active_chat.messages.len(),
                         num_to_take: num_to_take.clone(),
                         has_more: data.active_chat.has_more_messages,
-                        own_id: data.my_id.did_key(),
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -385,7 +384,6 @@ struct AllMessageGroupsProps<'a> {
     num_to_take: UseState<usize>,
     has_more: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
-    own_id: DID,
 }
 
 // attempting to move the contents of this function into the above rsx! macro causes an error: cannot return vale referencing
@@ -763,7 +761,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         message_key,
         reacting_to,
         edit_msg,
-        pending,
+        pending: _,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message;

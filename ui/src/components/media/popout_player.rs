@@ -11,6 +11,7 @@ use kit::elements::{
 
 use crate::{utils::WindowDropHandler, window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
+#[allow(dead_code)]
 pub const SCRIPT: &str = include_str!("./script.js");
 
 #[inline_props]

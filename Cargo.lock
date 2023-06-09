@@ -172,6 +172,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "alsa"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8512c9117059663fb5606788fbca3619e2a91dac0e3fe516242eab1fa6be5e44"
+dependencies = [
+ "alsa-sys",
+ "bitflags",
+ "libc",
+ "nix 0.24.3",
+]
+
+[[package]]
 name = "alsa-sys"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -578,6 +590,17 @@ dependencies = [
  "hermit-abi 0.1.19",
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "audiopus_sys"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62314a1546a2064e033665d658e88c620a62904be945f8147e6b16c3db9f8651"
+dependencies = [
+ "cmake",
+ "log",
+ "pkg-config",
 ]
 
 [[package]]
@@ -1244,6 +1267,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.50"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "cocoa"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1349,6 +1381,7 @@ dependencies = [
  "uuid",
  "walkdir",
  "warp",
+ "warp-blink-wrtc",
  "warp-fs-ipfs",
  "warp-mp-ipfs",
  "warp-rg-ipfs",
@@ -1406,9 +1439,15 @@ version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "194a7a9e6de53fa55116934067c844d9d749312f75c6f6d0980e8c252f8c2146"
 dependencies = [
- "core-foundation-sys",
+ "core-foundation-sys 0.8.4",
  "libc",
 ]
+
+[[package]]
+name = "core-foundation-sys"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7ca8a5221364ef15ce201e8ed2f609fc312682a8f4e0e3d4aa5879764e0fa3b"
 
 [[package]]
 name = "core-foundation-sys"
@@ -1461,6 +1500,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "coreaudio-rs"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb17e2d1795b1996419648915df94bc7103c28f7b48062d7acf4652fc371b2ff"
+dependencies = [
+ "bitflags",
+ "core-foundation-sys 0.6.2",
+ "coreaudio-sys",
+]
+
+[[package]]
 name = "coreaudio-sys"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1475,22 +1525,47 @@ version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f342c1b63e185e9953584ff2199726bf53850d96610a310e3aca09e9405a2d0b"
 dependencies = [
- "alsa",
- "core-foundation-sys",
- "coreaudio-rs",
+ "alsa 0.6.0",
+ "core-foundation-sys 0.8.4",
+ "coreaudio-rs 0.10.0",
  "jni 0.19.0",
  "js-sys",
  "libc",
  "mach",
  "ndk 0.7.0",
  "ndk-context",
- "oboe",
+ "oboe 0.4.6",
  "once_cell",
  "parking_lot 0.12.1",
  "stdweb",
  "thiserror",
  "web-sys",
  "windows 0.37.0",
+]
+
+[[package]]
+name = "cpal"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d959d90e938c5493000514b446987c07aed46c668faaa7d34d6c7a67b1a578c"
+dependencies = [
+ "alsa 0.7.0",
+ "core-foundation-sys 0.8.4",
+ "coreaudio-rs 0.11.2",
+ "dasp_sample",
+ "jni 0.19.0",
+ "js-sys",
+ "libc",
+ "mach2",
+ "ndk 0.7.0",
+ "ndk-context",
+ "oboe 0.5.0",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "windows 0.46.0",
 ]
 
 [[package]]
@@ -1774,6 +1849,12 @@ dependencies = [
  "quote",
  "syn 2.0.16",
 ]
+
+[[package]]
+name = "dasp_sample"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
 
 [[package]]
 name = "data-encoding"
@@ -2435,7 +2516,7 @@ checksum = "bdd2162b720141a91a054640662d3edce3d50a944a50ffca5313cd951abb35b4"
 dependencies = [
  "bit_field",
  "flume",
- "half",
+ "half 2.2.1",
  "lebe",
  "miniz_oxide 0.6.2",
  "rayon-core",
@@ -3361,6 +3442,12 @@ dependencies = [
 
 [[package]]
 name = "half"
+version = "1.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
+
+[[package]]
+name = "half"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02b4af3693f1b705df946e9fe5631932443781d0aabb423b62fcd4d73f6d2fd0"
@@ -3669,7 +3756,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0722cd7114b7de04316e7ea5456a0bbb20e4adb46fd27a3697adb812cff0f37c"
 dependencies = [
  "android_system_properties",
- "core-foundation-sys",
+ "core-foundation-sys 0.8.4",
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
@@ -5162,6 +5249,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mach2"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d0d1830bcd151a6fc4aea1369af235b36c1528fe976b8ff678683c9995eade8"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5820,7 +5916,21 @@ dependencies = [
  "ndk-context",
  "num-derive",
  "num-traits",
- "oboe-sys",
+ "oboe-sys 0.4.5",
+]
+
+[[package]]
+name = "oboe"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8868cc237ee02e2d9618539a23a8d228b9bb3fc2e7a5b11eed3831de77c395d0"
+dependencies = [
+ "jni 0.20.0",
+ "ndk 0.7.0",
+ "ndk-context",
+ "num-derive",
+ "num-traits",
+ "oboe-sys 0.5.0",
 ]
 
 [[package]]
@@ -5828,6 +5938,15 @@ name = "oboe-sys"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3370abb7372ed744232c12954d920d1a40f1c4686de9e79e800021ef492294bd"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "oboe-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f44155e7fb718d3cfddcf70690b2b51ac4412f347cd9e4fbe511abe9cd7b5f2"
 dependencies = [
  "cc",
 ]
@@ -5933,6 +6052,16 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "opus"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6526409b274a7e98e55ff59d96aafd38e6cd34d46b7dbbc32ce126dffcd75e8e"
+dependencies = [
+ "audiopus_sys",
+ "libc",
 ]
 
 [[package]]
@@ -6931,6 +7060,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ringbuf"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79abed428d1fd2a128201cec72c5f6938e2da607c6f3745f769fabea399d950a"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "rlimit"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6946,7 +7084,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb10b653d5ec0e9411a2e7d46e2c7f4046fd87d35b9955bd73ba4108d69072b5"
 dependencies = [
  "claxon",
- "cpal",
+ "cpal 0.14.2",
  "hound",
  "lewton",
  "minimp3",
@@ -7318,7 +7456,7 @@ checksum = "ca2855b3715770894e67cbfa3df957790aa0c9edc3bf06efa1a84d77fa0839d1"
 dependencies = [
  "bitflags",
  "core-foundation",
- "core-foundation-sys",
+ "core-foundation-sys 0.8.4",
  "libc",
  "security-framework-sys",
 ]
@@ -7329,7 +7467,7 @@ version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f51d0c0d83bec45f16480d0ce0058397a69e48fcdc52d1dc8855fb68acbd31a7"
 dependencies = [
- "core-foundation-sys",
+ "core-foundation-sys 0.8.4",
  "libc",
 ]
 
@@ -7439,6 +7577,16 @@ version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "416bda436f9aab92e02c8e10d49a15ddd339cea90b6e340fe51ed97abb548294"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "serde_cbor"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bef2ebfde456fb76bbcf9f59315333decc4fda0b2b44b420243c11e0f5ec1f5"
+dependencies = [
+ "half 1.8.2",
  "serde",
 ]
 
@@ -8030,7 +8178,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
 dependencies = [
- "core-foundation-sys",
+ "core-foundation-sys 0.8.4",
  "libc",
 ]
 
@@ -8921,7 +9069,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=08486f1607d14c8702090030a39ab5687f2a00e4#08486f1607d14c8702090030a39ab5687f2a00e4"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
 dependencies = [
  "aes-gcm 0.10.1",
  "anyhow",
@@ -8958,6 +9106,7 @@ dependencies = [
  "sata",
  "serde",
  "serde-wasm-bindgen",
+ "serde_cbor",
  "serde_json",
  "serde_yaml",
  "sha1 0.10.5",
@@ -8980,9 +9129,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "warp-blink-wrtc"
+version = "0.1.0"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
+dependencies = [
+ "anyhow",
+ "async-stream",
+ "async-trait",
+ "bs58",
+ "bytes",
+ "cbindgen",
+ "cpal 0.15.2",
+ "derive_more",
+ "futures",
+ "libipld",
+ "log",
+ "once_cell",
+ "opus",
+ "rand 0.8.5",
+ "ringbuf",
+ "rust-ipfs",
+ "serde",
+ "serde_cbor",
+ "tokio",
+ "uuid",
+ "warp",
+ "webrtc",
+]
+
+[[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=08486f1607d14c8702090030a39ab5687f2a00e4#08486f1607d14c8702090030a39ab5687f2a00e4"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
 dependencies = [
  "paste",
  "quote",
@@ -8992,7 +9170,7 @@ dependencies = [
 [[package]]
 name = "warp-fs-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=08486f1607d14c8702090030a39ab5687f2a00e4#08486f1607d14c8702090030a39ab5687f2a00e4"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9016,7 +9194,7 @@ dependencies = [
 [[package]]
 name = "warp-mp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=08486f1607d14c8702090030a39ab5687f2a00e4#08486f1607d14c8702090030a39ab5687f2a00e4"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9039,7 +9217,7 @@ dependencies = [
 [[package]]
 name = "warp-rg-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=08486f1607d14c8702090030a39ab5687f2a00e4#08486f1607d14c8702090030a39ab5687f2a00e4"
+source = "git+https://github.com/Satellite-im/Warp?rev=357ff1df73141c61e211a7defbc4adc737d9bb25#357ff1df73141c61e211a7defbc4adc737d9bb25"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9654,6 +9832,15 @@ checksum = "9e745dab35a0c4c77aa3ce42d595e13d2003d6902d6b08c9ef5fc326d08da12b"
 dependencies = [
  "windows-implement",
  "windows-interface",
+ "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows"
+version = "0.46.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdacb41e6a96a052c6cb63a144f24900236121c6f63f4f8219fef5977ecb0c25"
+dependencies = [
  "windows-targets 0.42.2",
 ]
 
