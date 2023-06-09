@@ -11,6 +11,7 @@ use wry::webview::WebView;
 use crate::warp_runner::ui_adapter;
 
 use super::{
+    call,
     identity::Identity,
     notifications::NotificationKind,
     route::To,
@@ -28,9 +29,6 @@ pub enum Action<'a> {
     // UI
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
-    // hang up for the active media stream
-    #[display(fmt = "DisableMedia")]
-    DisableMedia,
     #[display(fmt = "ToggleSilence")]
     ToggleSilence,
     #[display(fmt = "ToggleMute")]
@@ -48,9 +46,14 @@ pub enum Action<'a> {
     #[display(fmt = "SetFontScale")]
     SetFontScale(f32),
     // RemoveToastNotification,
-    /// sets the active media to the corresponding conversation uuid
-    #[display(fmt = "SetActiveMedia")]
-    SetActiveMedia(Uuid),
+    /// Sets the active call and active media id
+    #[display(fmt = "AnswerCall")]
+    AnswerCall(Uuid),
+    /// creates a Call struct and joins the call
+    #[display(fmt = "OfferCall")]
+    OfferCall(call::Call),
+    #[display(fmt = "EndCall")]
+    EndCall,
     // Account
     /// Sets the ID for the user.
     #[display(fmt = "SetId")]
