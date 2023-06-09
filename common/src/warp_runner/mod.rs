@@ -6,6 +6,10 @@ use tokio::sync::{
     Mutex, Notify,
 };
 use warp::{
+    blink::{
+        Blink::{self},
+        BlinkEventKind,
+    },
     constellation::Constellation,
     error::Error,
     logging::tracing::log,
@@ -26,7 +30,7 @@ mod manager;
 pub mod ui_adapter;
 
 pub use manager::commands::{thumbnail_to_base64, FileTransferProgress, FileTransferStep};
-pub use manager::{ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
+pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
 pub type WarpCmdRx = Arc<Mutex<UnboundedReceiver<WarpCmd>>>;
@@ -46,6 +50,7 @@ pub struct WarpEventChannels {
 type Account = Box<dyn MultiPass>;
 type Storage = Box<dyn Constellation>;
 type Messaging = Box<dyn RayGun>;
+type Calling = Box<dyn Blink>;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Display)]
@@ -56,6 +61,14 @@ pub enum WarpEvent {
     Message(ui_adapter::MessageEvent),
     #[display(fmt = "MultiPassEvent {{ {_0} }} ")]
     MultiPass(MultiPassEvent),
+    #[display(fmt = "BlinkEvent {{ {_0} }} ")]
+    Blink(BlinkEventKind),
+}
+
+impl std::fmt::Debug for WarpEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
 }
 
 #[derive(Display)]
@@ -68,6 +81,8 @@ pub enum WarpCmd {
     RayGun(RayGunCmd),
     #[display(fmt = "Constellation {{ {_0} }} ")]
     Constellation(ConstellationCmd),
+    #[display(fmt = "Blink {{ {_0} }} ")]
+    Blink(BlinkCmd),
     // these commands may not actually be warp commands, but just require a long running
     // async task, executed separately from the UI
     #[display(fmt = "Other {{ {_0} }} ")]
@@ -359,11 +374,14 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     .await
     .map(|rg| Box::new(rg) as Messaging)?;
 
+    let blink = warp_blink_wrtc::BlinkImpl::new(account.clone()).await?;
+
     Ok(manager::Warp {
         tesseract,
         multipass: account,
         raygun: messaging,
         constellation: storage,
+        blink,
     })
 }
 
