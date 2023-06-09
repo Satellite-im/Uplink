@@ -37,7 +37,6 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
         return cx.render(rsx!(div {}));
     }
 
-    let conv_id = active_chat.id;
     let participant_dids = Vec::from_iter(active_chat.participants.iter().cloned());
     let group_participants = state.read().get_identities(&participant_dids);
     let hash_map = HashMap::from_iter(

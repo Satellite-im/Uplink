@@ -1,4 +1,5 @@
 pub mod action;
+pub mod call;
 pub mod chats;
 pub mod configuration;
 pub mod friends;
@@ -24,6 +25,7 @@ pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
+use warp::blink::BlinkEventKind;
 use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
@@ -55,7 +57,7 @@ use warp::{
 
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
-use self::ui::{Call, Font, Layout};
+use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
@@ -243,9 +245,28 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_own_identity(identity),
-            Action::SetActiveMedia(id) => self.set_active_media(id),
-            Action::DisableMedia => self.disable_media(),
-
+            Action::AnswerCall(id) => match self.ui.call_info.answer_call(id) {
+                Ok(call) => {
+                    self.set_active_media(call.conversation_id);
+                }
+                Err(e) => {
+                    log::error!("failed to answer call: {e}");
+                }
+            },
+            Action::OfferCall(call) => {
+                let _ = self.ui.call_info.pending_call(
+                    call.id,
+                    call.conversation_id,
+                    call.participants,
+                );
+                let _ = self.ui.call_info.answer_call(call.id);
+                self.set_active_media(call.conversation_id);
+            }
+            Action::EndCall => {
+                self.chats.active_media = None;
+                self.ui.popout_media_player = false;
+                self.ui.call_info.end_call();
+            }
             // ===== Configuration =====
             Action::Config(action) => self.configuration.mutate(action),
         }
@@ -265,6 +286,7 @@ impl State {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
+            WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
         let _ = self.save();
@@ -503,6 +525,57 @@ impl State {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn process_blink_event(&mut self, event: BlinkEventKind) {
+        match event {
+            BlinkEventKind::IncomingCall {
+                call_id,
+                conversation_id,
+                sender: _,
+                participants,
+            } => {
+                let conversation_id = match conversation_id {
+                    Some(r) => r,
+                    None => {
+                        log::error!("received incoming call with no conversation id");
+                        return;
+                    }
+                };
+                if let Err(e) =
+                    self.ui
+                        .call_info
+                        .pending_call(call_id, conversation_id, participants)
+                {
+                    log::error!("failed to process IncomingCall event: {e}");
+                }
+            }
+            BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_joined(call_id, peer_id) {
+                    log::error!("failed to process ParticipantJoined event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
+                // seems like kind of a hack but...
+                if peer_id == self.did_key() {
+                    self.ui.call_info.end_call();
+                } else if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
+                    log::error!("failed to process ParticipantLeft event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantSpeaking { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_speaking(peer_id) {
+                    log::error!("failed to process ParticipantSpeaking event : {e}");
+                }
+            }
+            BlinkEventKind::SelfSpeaking => {
+                // todo
+            }
+            BlinkEventKind::AudioDegredation { peer_id } => {
+                // todo
+                log::info!("audio degredation for peer {}", peer_id);
+            }
         }
     }
 }
@@ -1118,12 +1191,6 @@ impl State {
             false
         }
     }
-    /// Analogous to Hang Up
-    fn disable_media(&mut self) {
-        self.chats.active_media = None;
-        self.ui.popout_media_player = false;
-        self.ui.current_call = None;
-    }
     pub fn has_toasts(&self) -> bool {
         !self.ui.toast_notifications.is_empty()
     }
@@ -1149,7 +1216,6 @@ impl State {
     /// Sets the active media to the specified conversation id
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
-        self.ui.current_call = Some(Call::new(None));
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
