@@ -176,7 +176,7 @@ fn render_selector<'a>(
                 div {
                     id: "scrolling",
                     emojis_to_display.iter().cloned().map(|(group, emojis)| {
-                        let group_name = group_to_str(group.clone());
+                        let group_name = group_to_str(group);
                         rsx!(
                             div {
                                 id: "{group_name}",
@@ -192,6 +192,7 @@ fn render_selector<'a>(
                                             aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
+                                                println!("{:?}", emoji);
                                                 // If we're on an active chat, append the emoji to the end of the chat message.
                                                 let c =  match state.read().get_active_chat() {
                                                     Some(c) => c,
