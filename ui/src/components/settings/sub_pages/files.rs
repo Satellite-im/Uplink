@@ -6,6 +6,7 @@ use warp::logging::tracing::log;
 
 use crate::components::settings::SettingSection;
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 pub fn FilesSettings(cx: Scope) -> Element {
     log::trace!("Files settings page rendered.");
