@@ -1,11 +1,4 @@
-use std::rc::Weak;
-
-use crate::{
-    components::media::popout_player::{PopoutPlayer, PopoutPlayerProps},
-    utils::WindowDropHandler,
-    window_manager::WindowManagerCmd,
-    UPLINK_ROUTES,
-};
+use crate::UPLINK_ROUTES;
 use common::state::{Action, State};
 
 use dioxus::prelude::*;
@@ -36,20 +29,18 @@ pub struct Props {
 }
 
 #[allow(non_snake_case)]
-pub fn MediaPlayer(cx: Scope<Props>) -> Element {
+pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-
     let window = use_window(cx);
-
     let silenced = state
         .read()
         .ui
-        .current_call
-        .clone()
-        .map(|x| x.silenced)
+        .call_info
+        .active_call()
+        .map(|x| x.call.call_silenced)
         .unwrap_or(false);
 
-    let silenced_str = silenced.to_string();
+    let _silenced_str = silenced.to_string();
 
     cx.render(rsx!(div {
         id: "media-player",
@@ -78,7 +69,8 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
         },
         div {
             id: "media-renderer",
-            div {
+            // video not yet supported.
+            /*div {
                 class: "video-wrap",
                 Button {
                     icon: Icon::Square2Stack,
@@ -123,7 +115,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                         muted: "{silenced_str}"
                     }
                 ))
-            }
+            }*/
         },
         div {
             class: "media-controls",
@@ -154,7 +146,7 @@ pub fn MediaPlayer(cx: Scope<Props>) -> Element {
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
                     state.write().mutate(Action::ClearCallPopout(window.clone()));
-                    state.write().mutate(Action::DisableMedia);
+                   // state.write().mutate(Action::DisableMedia);
                 }
             },
             Button {
