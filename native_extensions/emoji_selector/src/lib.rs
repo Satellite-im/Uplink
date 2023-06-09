@@ -133,7 +133,7 @@ fn render_selector<'a>(
             let filtered_emojis: Vec<&Emoji> = group
                 .emojis()
                 .filter(|emoji| {
-                    !(cfg!(target_os = "windows") && emoji.unicode_version().major() >= 15)
+                    !(cfg!(target_os = "windows") && emoji.unicode_version().major() >= 14)
                 })
                 .collect();
             (group, filtered_emojis)
