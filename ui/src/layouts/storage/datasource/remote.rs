@@ -2,33 +2,22 @@ use std::path::PathBuf;
 
 use common::{
     state::storage::Storage,
-    warp_runner::{ConstellationCmd, FileTransferProgress, WarpCmd, WarpCmdChannels},
+    warp_runner::{ConstellationCmd, FileTransferProgress, WarpCmd},
     WARP_CMD_CH,
 };
 use futures::channel::oneshot;
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use warp::constellation::{directory::Directory, item::Item};
 
-// const WARP_CMD: Lazy<WarpCmdChannels> = WARP_CMD_CH.tx.clone();
-
-#[derive(Clone)]
-pub struct WarpCmdSender(UnboundedSender<WarpCmd>);
-
-// impl PartialEq for WarpCmdSender {
-//     fn eq(&self, other: &Self) -> bool {
-//         true
-//     }
-// }
-
 #[derive(Clone)]
 pub struct StorageRemoteDataSource {
-    warp_cmd_sender: WarpCmdSender,
+    warp_cmd_cmd: UnboundedSender<WarpCmd>,
 }
 
 impl StorageRemoteDataSource {
     pub fn new() -> Self {
         Self {
-            warp_cmd_sender: WarpCmdSender(WARP_CMD_CH.tx.clone()),
+            warp_cmd_cmd: WARP_CMD_CH.tx.clone(),
         }
     }
 
@@ -39,8 +28,7 @@ impl StorageRemoteDataSource {
         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
         let directory_name2 = directory_name.clone();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(
                 ConstellationCmd::CreateNewDirectory {
                     directory_name,
@@ -69,8 +57,7 @@ impl StorageRemoteDataSource {
     pub async fn get_items_from_current_directory(&self) -> Result<Storage, warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(
                 ConstellationCmd::GetItemsFromCurrentDirectory { rsp: tx },
             ))
@@ -96,8 +83,7 @@ impl StorageRemoteDataSource {
     ) -> Result<Storage, warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::OpenDirectory {
                 directory_name: directory_name.clone(),
                 rsp: tx,
@@ -126,8 +112,7 @@ impl StorageRemoteDataSource {
         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
         let directory_name = directory.name();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(
                 ConstellationCmd::BackToPreviousDirectory { directory, rsp: tx },
             ))
@@ -159,8 +144,7 @@ impl StorageRemoteDataSource {
     ) -> Result<(), warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::DownloadFile {
                 file_name: file_name.clone(),
                 local_path_to_save_file,
@@ -186,8 +170,7 @@ impl StorageRemoteDataSource {
     pub async fn delete_items(&self, item: Item) -> Result<Storage, warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
         let item_name = item.name();
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::DeleteItems {
                 item,
                 rsp: tx,
@@ -212,8 +195,7 @@ impl StorageRemoteDataSource {
     pub async fn get_storage_size(&self) -> Result<(usize, usize), warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<(usize, usize), warp::error::Error>>();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::GetStorageSize {
                 rsp: tx,
             }))
@@ -237,8 +219,7 @@ impl StorageRemoteDataSource {
     ) -> Result<Storage, warp::error::Error> {
         let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
         let old_name_clone = old_name.clone();
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::RenameItem {
                 old_name,
                 new_name,
@@ -267,8 +248,7 @@ impl StorageRemoteDataSource {
     ) -> Result<UnboundedReceiver<FileTransferProgress<Storage>>, warp::error::Error> {
         let (tx, rx) = mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
-        self.warp_cmd_sender
-            .0
+        self.warp_cmd_cmd
             .send(WarpCmd::Constellation(ConstellationCmd::UploadFiles {
                 files_path,
                 rsp: tx,

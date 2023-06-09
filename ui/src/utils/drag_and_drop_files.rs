@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
 
