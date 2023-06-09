@@ -1,7 +1,6 @@
 use common::state::{storage::Storage, State};
 
 use dioxus_core::ScopeState;
-use dioxus_desktop::use_window;
 use dioxus_hooks::{use_ref, use_state, UseRef, UseSharedState, UseState};
 
 use warp::constellation::directory::Directory;
@@ -20,24 +19,14 @@ pub struct StorageController<'a> {
 
 impl<'a> StorageController<'a> {
     pub fn new(cx: &'a ScopeState, state: &'a UseSharedState<State>) -> Self {
-        let window = use_window(cx);
-        let storage_state = use_state(cx, || None);
-        let storage_size = use_ref(cx, || (String::new(), String::new()));
-        let directories_list = use_ref(cx, || state.read().storage.directories.clone());
-        let files_list = use_ref(cx, || state.read().storage.files.clone());
-        let current_dir = use_ref(cx, || state.read().storage.current_dir.clone());
-        let dirs_opened_ref = use_ref(cx, || state.read().storage.directories_opened.clone());
-        let drag_event = use_ref(cx, || None);
-
-        let controller = Self {
-            storage_state,
-            storage_size,
-            directories_list,
-            files_list,
-            current_dir,
-            dirs_opened_ref,
-            drag_event,
-        };
-        controller
+        Self {
+            storage_state: use_state(cx, || None),
+            storage_size: use_ref(cx, || (String::new(), String::new())),
+            directories_list: use_ref(cx, || state.read().storage.directories.clone()),
+            files_list: use_ref(cx, || state.read().storage.files.clone()),
+            current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
+            dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
+            drag_event: use_ref(cx, || None),
+        }
     }
 }
