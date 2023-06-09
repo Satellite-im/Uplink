@@ -161,7 +161,9 @@ pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool 
     if files_local_path.is_empty() {
         false
     } else {
-        files_local_path.first().map_or(false, |path| path.exists())
+        decoded_pathbufs(files_local_path.clone())
+            .first()
+            .map_or(false, |path| path.exists())
     }
 }
 
