@@ -45,6 +45,7 @@ warp.workspace = true
 warp-mp-ipfs.workspace = true
 warp-rg-ipfs.workspace = true
 warp-fs-ipfs.workspace = true
+warp-blink-wrtc.workspace = true
 
 
 dioxus.workspace = true
