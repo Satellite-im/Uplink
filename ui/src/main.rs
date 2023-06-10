@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
@@ -7,10 +5,13 @@ use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
+use common::warp_runner::BlinkCmd;
+
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
 use dioxus_desktop::tao::event::WindowEvent;
@@ -24,12 +25,16 @@ use kit::components::context_menu::{ContextItem, ContextMenu};
 use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
+use kit::components::user_image::UserImage;
+use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use utils::build_user_from_identity;
+use uuid::Uuid;
 
 use std::collections::HashMap;
 
@@ -63,6 +68,7 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
+use crate::utils::build_participants;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
@@ -885,7 +891,7 @@ fn get_update_icon(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let download_state = use_shared_state::<DownloadState>(cx)?;
     let desktop = use_window(cx);
-    let download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
+    let _download_ch = use_coroutine_handle::<SoftwareDownloadCmd>(cx)?;
 
     let new_version = match state.read().settings.update_available.as_ref() {
         Some(u) => u.clone(),
@@ -945,13 +951,14 @@ fn get_update_icon(cx: Scope) -> Element {
             on_dismiss: move |_| {
                 download_state.write().stage = DownloadProgress::Idle;
             },
-            on_submit: move |dest: PathBuf| {
-                download_state.write().stage = DownloadProgress::Pending;
-                download_state.write().destination = Some(dest.clone());
-                download_ch.send(SoftwareDownloadCmd(dest));
-            }
+            // is never used
+            // on_submit: move |dest: PathBuf| {
+            //     download_state.write().stage = DownloadProgress::Pending;
+            //     download_state.write().destination = Some(dest.clone());
+            //     download_ch.send(SoftwareDownloadCmd(dest));
+            // }
         })),
-        DownloadProgress::Pending => cx.render(rsx!(div {
+        DownloadProgress::_Pending => cx.render(rsx!(div {
             id: "update-available",
             class: "topbar-item",
             aria_label: "update-available",
@@ -999,13 +1006,13 @@ fn get_update_icon(cx: Scope) -> Element {
 #[inline_props]
 pub fn get_download_modal<'a>(
     cx: Scope<'a>,
-    on_submit: EventHandler<'a, PathBuf>,
+    //on_submit: EventHandler<'a, PathBuf>,
     on_dismiss: EventHandler<'a, ()>,
 ) -> Element<'a> {
     let download_location: &UseState<Option<PathBuf>> = use_state(cx, || None);
 
     let dl = download_location.current();
-    let disp_download_location = dl
+    let _disp_download_location = dl
         .as_ref()
         .clone()
         .map(|x| x.to_string_lossy().to_string())
@@ -1104,32 +1111,86 @@ fn get_titlebar(cx: Scope) -> Element {
     ))
 }
 
-fn get_call_dialog(_cx: Scope) -> Element {
-    // CallDialog {
-    //     caller: cx.render(rsx!(UserImage {
-    //         platform: Platform::Mobile,
-    //         status: Status::Online
-    //     })),
-    //     callee: cx.render(rsx!(UserImage {
-    //         platform: Platform::Mobile,
-    //         status: Status::Online
-    //     })),
-    //     description: "Call Description".into(),
-    //     // with_accept_btn: cx.render(rsx! (
-    //     //     Button {
-    //     //         icon: Icon::Phone,
-    //     //         appearance: Appearance::Success,
-    //     //     }
-    //     // )),
-    //     with_deny_btn: cx.render(rsx! (
-    //         Button {
-    //             icon: Icon::PhoneXMark,
-    //             appearance: Appearance::Danger,
-    //             text: "End".into(),
-    //         }
-    //     )),
-    // }
-    None
+enum CallDialogCmd {
+    Accept(Uuid),
+    Reject(Uuid),
+}
+
+fn get_call_dialog(cx: Scope) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let ch = use_coroutine(cx, |mut rx| {
+        to_owned![state];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    CallDialogCmd::Accept(id) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().mutate(Action::AnswerCall(id));
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                    CallDialogCmd::Reject(id) => {
+                        state.write().ui.call_info.reject_call(id);
+                    }
+                }
+            }
+        }
+    });
+
+    let call = match state.read().ui.call_info.active_call() {
+        Some(_) => return None,
+        None => match state.read().ui.call_info.pending_calls().first() {
+            Some(call) => call.clone(),
+            None => return None,
+        },
+    };
+    let mut participants = state.read().get_identities(&call.participants);
+    let own_id = state.read().did_key();
+    participants.retain(|x| x.did_key() != own_id);
+
+    let my_identity = build_user_from_identity(state.read().get_own_identity());
+
+    cx.render(rsx!(CallDialog {
+        caller: cx.render(rsx!(UserImageGroup {
+            participants: build_participants(&participants),
+            with_username: State::join_usernames(&participants),
+        },)),
+        callee: cx.render(rsx!(UserImage {
+            platform: my_identity.platform,
+            status: my_identity.status,
+            image: my_identity.photo,
+            with_username: my_identity.username,
+        })),
+        description: get_local_text("remote-controls.incoming-call"),
+        with_accept_btn: cx.render(rsx!(Button {
+            icon: Icon::Phone,
+            appearance: Appearance::Success,
+            onpress: move |_| {
+                ch.send(CallDialogCmd::Accept(call.id));
+            }
+        })),
+        with_deny_btn: cx.render(rsx!(Button {
+            icon: Icon::PhoneXMark,
+            appearance: Appearance::Danger,
+            onpress: move |_| {
+                ch.send(CallDialogCmd::Reject(call.id));
+            }
+        })),
+    }))
 }
 
 fn get_router(cx: Scope) -> Element {
