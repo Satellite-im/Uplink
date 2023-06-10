@@ -85,7 +85,7 @@
   }
   &.appearance-disabled {
     cursor: default;
-    opacity: 0.5;
+    opacity: var(--opacity-modifier);
     background-color: var(--secondary-dark);
     &:hover {
       background-color: var(--secondary-dark);

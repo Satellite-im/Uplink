@@ -13,7 +13,7 @@
 		height: 0;
 	}
 	&.disabled {
-		opacity: 0.5;
+		opacity: var(--opacity-modifier);
 	}
 	&.switch {
 		&.disabled {

@@ -28,11 +28,11 @@
 }
 
 .message.message-pending {
-	opacity: 0.6;
+	opacity: var(--opacity-modifier);
 }
 
 .message.message-loading {
-	opacity: 0.5;
+	opacity: var(--opacity-modifier);
 }
 .message.message-first {
 	border-radius: var(--border-radius-more);

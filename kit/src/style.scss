@@ -193,6 +193,7 @@ pre code {
 
 :root {
   --animation-time: 0.2s;
+  --opacity-modifier: 0.75;
 
   --text-size: 1rem;
   --text-size-less: 0.75rem;
@@ -317,7 +318,7 @@ p {
 
 .disabled {
   cursor: not-allowed;
-  opacity: 1;
+  opacity: var(--opacity-modifier);
 }
 
 @keyframes pulse {
@@ -337,13 +338,13 @@ p {
 
 @keyframes skeletal {
   0% {
-    opacity: 0.75;
+    opacity: var(--opacity-modifier);
   }
   50% {
     opacity: 1;
   }
   100% {
-    opacity: 0.75;
+    opacity: var(--opacity-modifier);
   }
 }
 
