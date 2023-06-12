@@ -33,11 +33,8 @@ use warp::{
 };
 
 use crate::components::chat::create_group::CreateGroup;
-use crate::{
-    components::{chat::RouteInfo, media::remote_control::RemoteControls},
-    utils::build_participants,
-    UPLINK_ROUTES,
-};
+use crate::components::media::remote_control::RemoteControls;
+use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
@@ -237,6 +234,18 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
+            with_call_controls: cx.render(rsx!(
+                active_media_chat.is_some().then(|| rsx!(
+                    RemoteControls {
+                        in_call_text: get_local_text("remote-controls.in-call"),
+                        mute_text: get_local_text("remote-controls.mute"),
+                        unmute_text: get_local_text("remote-controls.unmute"),
+                        listen_text: get_local_text("remote-controls.listen"),
+                        silence_text: get_local_text("remote-controls.silence"),
+                        end_text: get_local_text("remote-controls.end"),
+                    }
+                )),
+            )),
             search_friends{ identities: search_results.clone(), onclick: move |entry| {
                 select_entry(entry);
                 search_results.set(Vec::new());
@@ -253,6 +262,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     aria_label: "Favorites",
                     Label {
                         text: get_local_text("favorites.favorites"),
+                        aria_label: "favorites-label".into(),
                     },
                     div {
                         class: "vertically-scrollable",
@@ -263,6 +273,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             let chat_id = chat.id;
                             let participants = state.read().chat_participants(&chat);
                             let other_participants: Vec<_> = state.read().remove_self(&participants);
+                            let participants_name = match chat.conversation_name {
+                                Some(name) => name,
+                                None => State::join_usernames(&other_participants)
+                            };
                             rsx! (
                                 ContextMenu {
                                     key: "{chat_id}-favorite",
@@ -293,7 +307,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     )),
                                     UserImageGroup {
                                         participants: build_participants(&other_participants),
-                                        with_username: State::join_usernames(&other_participants),
+                                        with_username: participants_name,
                                         typing: users_typing,
                                         onpress: move |_| {
                                             if state.read().ui.is_minimal_view() {
@@ -319,6 +333,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         class: "sidebar-chats-header",
                         Label {
                             text: get_local_text("uplink.chats"),
+                            aria_label: "chats-label".into(),
                         },
                         Button {
                             appearance: if *show_create_group.get() { Appearance::Primary } else { Appearance::Secondary },
@@ -514,16 +529,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 ))
             },
-            active_media_chat.is_some().then(|| rsx!(
-                RemoteControls {
-                    in_call_text: get_local_text("remote-controls.in-call"),
-                    mute_text: get_local_text("remote-controls.mute"),
-                    unmute_text: get_local_text("remote-controls.unmute"),
-                    listen_text: get_local_text("remote-controls.listen"),
-                    silence_text: get_local_text("remote-controls.silence"),
-                    end_text: get_local_text("remote-controls.end"),
-                }
-            )),
         }
     ))
 }

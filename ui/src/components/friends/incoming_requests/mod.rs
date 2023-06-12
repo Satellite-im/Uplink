@@ -89,6 +89,7 @@ pub fn PendingFriends(cx: Scope) -> Element {
             aria_label: "Incoming Requests List",
             Label {
                 text: get_local_text("friends.incoming_requests"),
+                aria_label: "incoming-list-label".into(),
             },
             friends_list.into_iter().map(|friend| {
                 let friend = Rc::new(friend);

@@ -262,7 +262,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             })
                         }),
                         controller.with(|i| i.directories_list.clone()).iter().map(|dir| {
-                            // let controller = controller.read().clone();
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
                             let key = dir.id();

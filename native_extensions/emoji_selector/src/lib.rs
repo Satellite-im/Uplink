@@ -38,7 +38,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
         Route {
             to: "Smileys & Emotion",
             name: group_to_str(Group::SmileysAndEmotion),
-            icon: Icon::Flag,
+            icon: Icon::FaceSmile,
             with_badge: None,
             loading: None,
         },
@@ -144,6 +144,7 @@ fn render_selector<'a>(
                     }
                 },
                 id: "emoji_selector",
+                aria_label: "emoji-selector",
                 tabindex: "0",
                 onblur: |_| {
                     #[cfg(target_os = "macos")] 
@@ -172,9 +173,11 @@ fn render_selector<'a>(
                             }
                             div {
                                 class: "emojis-container",
+                                aria_label: "emojis-container",
                                 group.emojis().map(|emoji| {
                                     rsx!(
                                         div {
+                                            aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
                                                 // If we're on an active chat, append the emoji to the end of the chat message.

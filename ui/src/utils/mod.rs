@@ -140,6 +140,7 @@ impl PartialEq for WindowDropHandler {
 }
 
 impl WindowDropHandler {
+    #[allow(dead_code)]
     pub fn new(cmd: WindowManagerCmd) -> Self {
         Self { cmd }
     }

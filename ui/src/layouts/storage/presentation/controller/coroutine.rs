@@ -61,7 +61,7 @@ pub fn init_coroutine<'a>(
                             Ok(()) => {
                                 log::info!("New directory added: {}", directory_name_clone)
                             }
-                            Err(e) => continue,
+                            Err(_) => continue,
                         }
                     }
                     ChanCmd::GetItemsFromCurrentDirectory => {

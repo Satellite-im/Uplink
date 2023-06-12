@@ -1,9 +1,11 @@
 pub mod action;
+pub mod call;
 pub mod chats;
 pub mod configuration;
 pub mod friends;
 pub mod identity;
 pub mod notifications;
+pub mod pending_message;
 pub mod route;
 pub mod scope_ids;
 pub mod settings;
@@ -12,6 +14,7 @@ pub mod ui;
 pub mod utils;
 
 use crate::language::change_language;
+use crate::notifications::NotificationAction;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -22,6 +25,8 @@ pub use identity::Identity;
 pub use route::Route;
 pub use settings::Settings;
 pub use ui::{Theme, ToastNotification, UI};
+use warp::blink::BlinkEventKind;
+use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
@@ -36,6 +41,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
+use std::path::PathBuf;
 use std::{
     collections::{BTreeMap, HashMap},
     fmt, fs,
@@ -49,8 +55,9 @@ use warp::{
     raygun::{self},
 };
 
+use self::pending_message::PendingMessage;
 use self::storage::Storage;
-use self::ui::{Call, Font, Layout};
+use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
@@ -238,9 +245,28 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_own_identity(identity),
-            Action::SetActiveMedia(id) => self.set_active_media(id),
-            Action::DisableMedia => self.disable_media(),
-
+            Action::AnswerCall(id) => match self.ui.call_info.answer_call(id) {
+                Ok(call) => {
+                    self.set_active_media(call.conversation_id);
+                }
+                Err(e) => {
+                    log::error!("failed to answer call: {e}");
+                }
+            },
+            Action::OfferCall(call) => {
+                let _ = self.ui.call_info.pending_call(
+                    call.id,
+                    call.conversation_id,
+                    call.participants,
+                );
+                let _ = self.ui.call_info.answer_call(call.id);
+                self.set_active_media(call.conversation_id);
+            }
+            Action::EndCall => {
+                self.chats.active_media = None;
+                self.ui.popout_media_player = false;
+                self.ui.call_info.end_call();
+            }
             // ===== Configuration =====
             Action::Config(action) => self.configuration.mutate(action),
         }
@@ -260,6 +286,7 @@ impl State {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
             WarpEvent::Message(evt) => self.process_message_event(evt),
+            WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
         let _ = self.save();
@@ -286,6 +313,7 @@ impl State {
                         format!("{} sent a request.", identity.username()),
                         Some(crate::sounds::Sounds::Notification),
                         notify_rust::Timeout::Milliseconds(4),
+                        NotificationAction::FriendListPending,
                     );
                 }
             }
@@ -366,13 +394,14 @@ impl State {
                     1,
                 ));
 
-                // TODO: Get state available in this scope.
                 // Dispatch notifications only when we're not already focused on the application.
-                let notifications_enabled = self.configuration.notifications.messages_notifications;
+                let message_notifications_enabled =
+                    self.configuration.notifications.messages_notifications;
+                let notifications_enabled = self.configuration.notifications.enabled;
                 let should_play_sound = self.ui.current_layout != Layout::Compose
                     && self.configuration.audiovideo.message_sounds;
                 let should_dispatch_notification =
-                    notifications_enabled && !self.ui.metadata.focused;
+                    should_play_sound && message_notifications_enabled && notifications_enabled;
 
                 // This should be called if we have notifications enabled for new messages
                 if should_dispatch_notification {
@@ -390,14 +419,12 @@ impl State {
                         None => get_local_text("messages.unknown-sent-message"),
                     };
                     crate::notifications::push_notification(
-                        get_local_text("friends.new-request"),
+                        get_local_text("messages.new"),
                         text,
                         sound,
                         notify_rust::Timeout::Milliseconds(4),
+                        NotificationAction::DisplayChat(conversation_id),
                     );
-                // If we don't have notifications enabled, but we still have sounds enabled, we should play the sound as long as we're not already actively focused on the convo where the message came from.
-                } else if should_play_sound {
-                    crate::sounds::Play(crate::sounds::Sounds::Notification);
                 }
             }
             MessageEvent::Sent {
@@ -405,11 +432,22 @@ impl State {
                 message,
             } => {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
+                let message_clone = message.clone();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.push_back(message);
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
-                self.decrement_outgoing_messages(conversation_id);
+                self.decrement_outgoing_messages(
+                    conversation_id,
+                    message_clone.inner.value(),
+                    message_clone
+                        .inner
+                        .attachments()
+                        .iter()
+                        .map(|f| f.name())
+                        .collect(),
+                    None,
+                );
             }
             MessageEvent::Edited {
                 conversation_id,
@@ -433,6 +471,10 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
                 }
+                self.mutate(Action::RemoveNotification(
+                    notifications::NotificationKind::Message,
+                    1,
+                ));
             }
             MessageEvent::MessageReactionAdded { message } => {
                 self.update_message(message);
@@ -478,6 +520,58 @@ impl State {
                 if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
                     chat.conversation_name = conversation.name();
                 }
+            }
+            _ => {}
+        }
+    }
+
+    fn process_blink_event(&mut self, event: BlinkEventKind) {
+        match event {
+            BlinkEventKind::IncomingCall {
+                call_id,
+                conversation_id,
+                sender: _,
+                participants,
+            } => {
+                let conversation_id = match conversation_id {
+                    Some(r) => r,
+                    None => {
+                        log::error!("received incoming call with no conversation id");
+                        return;
+                    }
+                };
+                if let Err(e) =
+                    self.ui
+                        .call_info
+                        .pending_call(call_id, conversation_id, participants)
+                {
+                    log::error!("failed to process IncomingCall event: {e}");
+                }
+            }
+            BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_joined(call_id, peer_id) {
+                    log::error!("failed to process ParticipantJoined event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantLeft { call_id, peer_id } => {
+                // seems like kind of a hack but...
+                if peer_id == self.did_key() {
+                    self.ui.call_info.end_call();
+                } else if let Err(e) = self.ui.call_info.participant_left(call_id, peer_id) {
+                    log::error!("failed to process ParticipantLeft event : {e}");
+                }
+            }
+            BlinkEventKind::ParticipantSpeaking { peer_id } => {
+                if let Err(e) = self.ui.call_info.participant_speaking(peer_id) {
+                    log::error!("failed to process ParticipantSpeaking event : {e}");
+                }
+            }
+            BlinkEventKind::SelfSpeaking => {
+                // todo
+            }
+            BlinkEventKind::AudioDegredation { peer_id } => {
+                // todo
+                log::info!("audio degredation for peer {}", peer_id);
             }
         }
     }
@@ -666,11 +760,9 @@ impl State {
             .unwrap_or(false)
     }
 
-    pub fn active_chat_send_in_progress(&self) -> bool {
+    pub fn active_chat_send_in_progress(&self) -> Option<Vec<PendingMessage>> {
         self.get_active_chat()
-            .as_ref()
-            .map(|d| d.pending_outgoing_messages > 0)
-            .unwrap_or(false)
+            .map(|chat| chat.pending_outgoing_messages)
     }
 
     /// Cancels a reply within a given chat on `State` struct.
@@ -866,17 +958,49 @@ impl State {
 
     // indicates that a conversation has a pending outgoing message
     // can only send messages to the active chat
-    pub fn increment_outgoing_messages(&mut self) {
+    pub fn increment_outgoing_messages(
+        &mut self,
+        msg: Vec<String>,
+        attachments: &[PathBuf],
+    ) -> Option<Uuid> {
+        let did = self.get_own_identity().did_key();
         if let Some(id) = self.chats.active {
             if let Some(chat) = self.chats.all.get_mut(&id) {
-                chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_add(1);
+                return Some(chat.append_pending_msg(id, did, msg, attachments));
             }
+        }
+        None
+    }
+
+    pub fn update_outgoing_messages(
+        &mut self,
+        conv_id: Uuid,
+        msg: PendingMessage,
+        progress: Progression,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conv_id) {
+            chat.update_pending_msg(msg, progress);
         }
     }
 
-    pub fn decrement_outgoing_messages(&mut self, conv_id: Uuid) {
+    pub fn decrement_outgoing_messagess(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        uuid: Option<Uuid>,
+    ) {
+        self.decrement_outgoing_messages(conv_id, msg, vec![], uuid);
+    }
+
+    pub fn decrement_outgoing_messages(
+        &mut self,
+        conv_id: Uuid,
+        msg: Vec<String>,
+        attachments: Vec<String>,
+        uuid: Option<Uuid>,
+    ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
-            chat.pending_outgoing_messages = chat.pending_outgoing_messages.saturating_sub(1);
+            chat.remove_pending_msg(msg, attachments, uuid);
         }
     }
 
@@ -1064,12 +1188,6 @@ impl State {
             false
         }
     }
-    /// Analogous to Hang Up
-    fn disable_media(&mut self) {
-        self.chats.active_media = None;
-        self.ui.popout_media_player = false;
-        self.ui.current_call = None;
-    }
     pub fn has_toasts(&self) -> bool {
         !self.ui.toast_notifications.is_empty()
     }
@@ -1095,7 +1213,6 @@ impl State {
     /// Sets the active media to the specified conversation id
     fn set_active_media(&mut self, id: Uuid) {
         self.chats.active_media = Some(id);
-        self.ui.current_call = Some(Call::new(None));
     }
     pub fn set_theme(&mut self, theme: Option<Theme>) {
         self.ui.theme = theme;
@@ -1360,6 +1477,8 @@ impl<'a> MessageGroup<'a> {
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
     pub message: &'a ui_adapter::Message,
+    pub attachment_progress: Option<&'a HashMap<String, Progression>>,
+    pub is_pending: bool,
     pub is_first: bool,
     pub is_last: bool,
     // if the user scrolls over this message, more messages should be loaded
@@ -1395,6 +1514,8 @@ pub fn group_messages<'a>(
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {
                     message: msg,
+                    attachment_progress: None,
+                    is_pending: false,
                     is_first: false,
                     is_last: true,
                     should_fetch_more: need_more(),
@@ -1413,6 +1534,8 @@ pub fn group_messages<'a>(
         let mut grp = MessageGroup::new(msg.inner.sender(), &my_did);
         let g = GroupedMessage {
             message: msg,
+            attachment_progress: None,
+            is_pending: false,
             is_first: true,
             is_last: true,
             should_fetch_more: need_more(),
@@ -1422,4 +1545,43 @@ pub fn group_messages<'a>(
     }
 
     messages
+}
+
+pub fn pending_group_messages<'a>(
+    pending: &'a Vec<PendingMessage>,
+    own_did: DID,
+) -> Option<MessageGroup<'a>> {
+    if pending.is_empty() {
+        return None;
+    };
+    let mut messages: Vec<GroupedMessage<'a>> = vec![];
+    let size = pending.len();
+    for (i, msg) in pending.iter().enumerate() {
+        if i == size - 1 {
+            let g = GroupedMessage {
+                message: &msg.message,
+                attachment_progress: Some(&msg.attachments_progress),
+                is_pending: true,
+                is_first: false,
+                is_last: true,
+                should_fetch_more: false,
+            };
+            messages.push(g);
+            continue;
+        }
+        let g = GroupedMessage {
+            message: &msg.message,
+            attachment_progress: Some(&msg.attachments_progress),
+            is_pending: true,
+            is_first: true,
+            is_last: true,
+            should_fetch_more: false,
+        };
+        messages.push(g);
+    }
+    Some(MessageGroup {
+        sender: own_did,
+        remote: false,
+        messages,
+    })
 }

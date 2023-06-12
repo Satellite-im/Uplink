@@ -6,6 +6,7 @@ use std::{path::PathBuf, rc::Rc};
 
 use dioxus::prelude::*;
 
+use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
         indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
@@ -19,22 +20,32 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use common::icons::outline::Shape as Icon;
-use common::state::{ui, Action, Chat, Identity, State};
+use common::{
+    icons::outline::Shape as Icon,
+    state::call,
+    warp_runner::{BlinkCmd, WarpCmd},
+    STATIC_ARGS,
+};
+use common::{
+    state::{ui, Action, Chat, Identity, State},
+    WARP_CMD_CH,
+};
 
 use common::language::get_local_text;
 use dioxus_desktop::{use_window, DesktopContext};
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log, raygun::ConversationType};
+use warp::{
+    blink::{self},
+    crypto::DID,
+    logging::tracing::log,
+    raygun::ConversationType,
+};
 
 use wry::webview::FileDropEvent;
 
 use crate::{
-    components::{
-        chat::{edit_group::EditGroup, group_users::GroupUsers},
-        media::player::MediaPlayer,
-    },
+    components::chat::{edit_group::EditGroup, group_users::GroupUsers},
     layouts::storage::presentation::view::scripts::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT},
     utils::{build_participants, drag_and_drop_files::*},
 };
@@ -53,7 +64,6 @@ pub struct ComposeData {
     is_favorite: bool,
     first_image: String,
     other_participants_names: String,
-    active_media: bool,
     platform: Platform,
 }
 
@@ -177,16 +187,17 @@ pub fn Compose(cx: Scope) -> Element {
                     ignore_focus: should_ignore_focus,
                 }
             },
-            data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
-                MediaPlayer {
-                    settings_text: get_local_text("settings.settings"), 
-                    enable_camera_text: get_local_text("media-player.enable-camera"),
-                    fullscreen_text: get_local_text("media-player.fullscreen"),
-                    popout_player_text: get_local_text("media-player.popout-player"),
-                    screenshare_text: get_local_text("media-player.screenshare"),
-                    end_text: get_local_text("uplink.end"),
-                },
-            ))),
+            // may need this later when video calling is possible. 
+            // data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
+            //     MediaPlayer {
+            //         settings_text: get_local_text("settings.settings"), 
+            //         enable_camera_text: get_local_text("media-player.enable-camera"),
+            //         fullscreen_text: get_local_text("media-player.fullscreen"),
+            //         popout_player_text: get_local_text("media-player.popout-player"),
+            //         screenshare_text: get_local_text("media-player.screenshare"),
+            //         end_text: get_local_text("uplink.end"),
+            //     },
+            // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
             EditGroup {
@@ -256,7 +267,6 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
 
     let first_image = active_participant.profile_picture();
     let other_participants_names = State::join_usernames(&other_participants);
-    let active_media = Some(active_chat.id) == s.chats().active_media;
 
     // TODO: Pending new message divider implementation
     // let _new_message_text = LOCALES
@@ -274,16 +284,21 @@ fn get_compose_data(cx: Scope) -> Option<Rc<ComposeData>> {
         is_favorite,
         first_image,
         other_participants_names,
-        active_media,
         platform,
     });
 
     Some(data)
 }
 
+enum ControlsCmd {
+    VoiceCall {
+        participants: Vec<DID>,
+        conversation_id: Uuid,
+    },
+}
+
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let desktop = use_window(cx);
     let data = &cx.props.data;
     let active_chat = data.as_ref().map(|x| &x.active_chat);
     let favorite = data
@@ -307,6 +322,57 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     } else {
         false
     };
+
+    let call_pending = use_state(cx, || false);
+    let active_call = state.read().ui.call_info.active_call();
+    let call_in_progress = active_call.is_some(); // active_chat.map(|chat| chat.id) == active_call.map(|call| call.conversation_id);
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ControlsCmd>| {
+        to_owned![call_pending, state];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    ControlsCmd::VoiceCall {
+                        participants,
+                        conversation_id,
+                    } => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::OfferCall {
+                            conversation_id,
+                            participants: participants.clone(),
+                            rsp: tx,
+                            // todo: make this configurable
+                            webrtc_codec: blink::AudioCodec {
+                                mime: blink::MimeType::OPUS,
+                                sample_rate: blink::AudioSampleRate::High,
+                                channels: 1,
+                            },
+                        })) {
+                            log::error!("failed to send command to warp_runner: {e}");
+                            call_pending.set(false);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("warp runner failed");
+                        match res {
+                            Ok(call_id) => {
+                                state.write().mutate(Action::OfferCall(call::Call::new(
+                                    call_id,
+                                    conversation_id,
+                                    participants,
+                                )));
+                            }
+                            Err(e) => {
+                                log::error!("BlinkCmd::OfferCall failed: {e}");
+                            }
+                        }
+                        call_pending.set(false);
+                    }
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(
         if conversation_type == ConversationType::Group {
@@ -374,20 +440,20 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: true,
+            disabled: STATIC_ARGS.production_mode || *call_pending.current() || call_in_progress,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: get_local_text("uplink.coming-soon")
+                text: if STATIC_ARGS.production_mode { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {
-                    state
-                        .write_silent()
-                        .mutate(Action::ClearCallPopout(desktop.clone()));
-                    state.write_silent().mutate(Action::DisableMedia);
-                    state.write().mutate(Action::SetActiveMedia(chat.id));
+                    ch.send(ControlsCmd::VoiceCall{
+                        participants: chat.participants.iter().cloned().collect(),
+                        conversation_id: chat.id
+                    });
+                    call_pending.set(true);
                 }
             }
         },
