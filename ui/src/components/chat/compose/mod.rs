@@ -106,6 +106,7 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
+
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, overlay_script, window, drag_event];
@@ -132,6 +133,11 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
+    let is_group = data
+        .as_ref()
+        .map(|data| data.active_chat.conversation_type)
+        .unwrap()
+        == ConversationType::Group;
 
     cx.render(rsx!(
         div {
@@ -168,8 +174,8 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 onclick: move |_| {
-                    println!("{:?},{:?}", show_edit_group.clone(), show_group_users.clone());
-                    if show_group_users.is_none() {
+                    // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
+                    if show_group_users.is_none() && is_group {
                         show_group_users.set(Some(chat_id));
                         show_edit_group.set(None);
                     } else {
