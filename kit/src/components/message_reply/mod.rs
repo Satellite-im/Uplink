@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 use warp::{constellation::file::File, crypto::DID};
 
-use crate::components::file_embed::FileEmbed;
+use crate::components::embeds::file_embed::FileEmbed;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {

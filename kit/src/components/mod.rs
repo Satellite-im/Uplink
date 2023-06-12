@@ -16,8 +16,7 @@ pub mod message_group;
 pub mod message_reply;
 pub mod message_typing;
 
-pub mod file_embed;
-pub mod link_embed;
+pub mod embeds;
 
 pub mod context_menu;
 pub mod topbar_controls;

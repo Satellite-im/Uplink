@@ -80,3 +80,8 @@
 .emoji-reaction-self {
 	border: 1px solid var(--primary);
 }
+
+.attachment-list {
+	display: inline-flex;
+	flex-direction: column;
+}

@@ -47,6 +47,7 @@ pub struct Props<'a> {
 
 #[allow(non_snake_case)]
 pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+    let fullscreen_preview = use_state(cx, || false);
     let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
     let btn_icon = if !download_pending {
@@ -121,6 +122,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     let remote = cx.props.remote.unwrap_or_default();
     let thumbnail = cx.props.thumbnail.clone().unwrap_or_default();
+    let large_thumbnail = thumbnail.clone(); // TODO: This should be the source of the image
     let has_thumbnail = !thumbnail.is_empty();
 
     cx.render(rsx! (
@@ -146,11 +148,28 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             if has_thumbnail {
                 rsx!(
+                    fullscreen_preview.then(|| rsx!(
+                        div {
+                            class: "image-expanded",
+                            onclick: move |_| fullscreen_preview.set(false),
+                            Button {
+                                icon: Icon::XMark,
+                                appearance: Appearance::Primary,
+                                aria_label: "close-image-preview-button".into(),
+                                onpress: move |_| fullscreen_preview.set(false),
+                            },
+                            img {
+                                src: "{large_thumbnail}",
+                                onclick: move |e| e.stop_propagation(),
+                            }
+                        },
+                    )),
                     div {
                         class: "image-container",
                         img {
+                            onclick: move |_| fullscreen_preview.set(true),
                             class: format_args!(
-                                "image {}",
+                                "image {} expandable-image",
                                 if cx.props.big.unwrap_or_default() {
                                     "big"
                                 } else { "" }

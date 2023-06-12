@@ -11,9 +11,9 @@ use warp::{
     logging::tracing::log,
 };
 
-use crate::{components::file_embed::FileEmbed, elements::textarea};
+use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
-use super::link_embed::EmbedLinks;
+use super::embeds::link_embed::EmbedLinks;
 
 #[derive(Eq, PartialEq, Clone, Copy, Display)]
 pub enum Order {
