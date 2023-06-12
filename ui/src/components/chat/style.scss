@@ -311,6 +311,7 @@
   -webkit-line-clamp: 1; /* number of lines to show */
   line-clamp: 1;
   -webkit-box-orient: vertical;
+  word-wrap: anywhere;
 }
 
 #favorites {

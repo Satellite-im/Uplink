@@ -38,7 +38,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
         Route {
             to: "Smileys & Emotion",
             name: group_to_str(Group::SmileysAndEmotion),
-            icon: Icon::Flag,
+            icon: Icon::FaceSmile,
             with_badge: None,
             loading: None,
         },
