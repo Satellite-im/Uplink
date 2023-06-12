@@ -12,6 +12,8 @@
 	overflow-wrap: anywhere;
 	flex-direction: column;
 	align-items: flex-end;
+	white-space:pre-wrap;
+
 	.context-wrap {
 		align-self: flex-end;
 	}
@@ -19,6 +21,7 @@
 		color: var(--text-color);
 		display: inline-flex;
 		flex-direction: column;
+		white-space:pre-wrap;
 	}
 	.pending-text {
 		color: var(--text-color-muted);
