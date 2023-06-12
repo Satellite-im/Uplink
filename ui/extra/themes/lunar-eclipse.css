@@ -498,6 +498,12 @@ body {
 
 .debug-logger .header, .debug-logger .body {
     width: calc(100% - 0.5rem);
+    background-color: var(--secondary-dark);
+}
+
+.debug-logger .header {
+    background-color: var(--secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .identity-header {

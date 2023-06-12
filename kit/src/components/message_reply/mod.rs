@@ -102,7 +102,7 @@ pub fn MessageReply<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: {
                             format_args!("text {}", if remote_message { "remote-text" } else { "" })
                         },
-                        background: if replier_did == sender_did {"var(--primary)"} else {"var(--secondary)"},
+                        background: if replier_did == sender_did {"var(--secondary)"} else {"var(--secondary-dark)"},
                         "{text}"
                         has_attachments.then(|| {
                             rsx!(
