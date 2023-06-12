@@ -54,7 +54,7 @@ impl StorageController {
         }
     }
 
-    pub fn done_renaming_item(&mut self, should_toggle: bool) {
+    pub fn finish_renaming_item(&mut self, should_toggle: bool) {
         self.is_renaming_map.take();
         if should_toggle {
             self.add_new_folder = !self.add_new_folder;

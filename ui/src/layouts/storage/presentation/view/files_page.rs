@@ -88,8 +88,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 }
                 },
             onclick: |_| {
-                controller.with_mut(|i| i.add_new_folder = false);
-                controller.with_mut(|i| i.is_renaming_map = None);
+                controller.write().finish_renaming_item(false);
             },
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
@@ -116,8 +115,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    controller.with_mut(|i| i.is_renaming_map = None);
-                                    controller.with_mut(|i| i.add_new_folder = !i.add_new_folder);
+                                    controller.write().finish_renaming_item(true);
                                 },
                             },
                             Button {
