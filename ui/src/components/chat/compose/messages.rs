@@ -322,8 +322,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         num_to_take: num_to_take.clone(),
                         has_more: data.active_chat.has_more_messages,
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                            let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
-                                let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                let id = if own {
                                     let mut id = id;
                                     id.set_identity_status(IdentityStatus::Online);
                                     id
@@ -336,15 +337,17 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             let script = include_str!("../show_context.js")
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
+                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
+                                .replace("$SELF", &own.to_string());
                             update_script.set(script);
                         }
                     },
                     render_pending_messages_listener {
                         data: data,
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
+                            let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
-                                let id = if state.read().get_own_identity().did_key().eq(&id.did_key()) {
+                                let id = if own {
                                     let mut id = id;
                                     id.set_identity_status(IdentityStatus::Online);
                                     id
@@ -357,7 +360,8 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             let script = include_str!("../show_context.js")
                                 .replace("UUID", quick_profile_uuid)
                                 .replace("$PAGE_X", &e.page_coordinates().x.to_string())
-                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string());
+                                .replace("$PAGE_Y", &e.page_coordinates().y.to_string())
+                                .replace("$SELF", &own.to_string());
                             update_script.set(script);
                         }
                     }
