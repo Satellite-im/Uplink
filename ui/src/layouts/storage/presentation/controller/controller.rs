@@ -16,10 +16,10 @@ pub struct StorageController {
     pub current_dir: Directory,
     pub dirs_opened_ref: Vec<Directory>,
     pub drag_event: Option<FileDropEvent>,
-
     pub is_renaming_map: Option<Uuid>,
     pub add_new_folder: bool,
     pub show_file_modal: Option<File>,
+    pub first_render: bool,
 }
 
 impl StorageController {
@@ -35,6 +35,7 @@ impl StorageController {
             is_renaming_map: None,
             add_new_folder: false,
             show_file_modal: None,
+            first_render: true,
         };
 
         use_ref(cx, || controller)

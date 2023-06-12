@@ -8,7 +8,7 @@ use common::{
 };
 use dioxus_core::Scoped;
 use dioxus_desktop::DesktopContext;
-use dioxus_hooks::{to_owned, use_future, Coroutine, UseRef, UseSharedState, UseState};
+use dioxus_hooks::{to_owned, use_future, Coroutine, UseRef, UseSharedState};
 // use nix::sys::statvfs::statvfs;
 use tokio::time::sleep;
 use wry::webview::FileDropEvent;
@@ -24,13 +24,12 @@ const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub fn run_verifications_and_update_storage(
     storage_controller: &UseRef<StorageController>,
-    first_render: &UseState<bool>,
     state: &UseSharedState<State>,
     ch: &Coroutine<ChanCmd>,
 ) {
-    if *first_render.get() && state.read().ui.is_minimal_view() {
+    if storage_controller.with(|i| i.first_render) && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
-        first_render.set(false);
+        storage_controller.with_mut(|i| i.first_render = false);
     }
 
     if storage_controller.write_silent().update_state(state) {

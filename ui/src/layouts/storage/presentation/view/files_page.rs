@@ -47,12 +47,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let window = use_window(cx);
-    let first_render = use_state(cx, || true);
 
     let controller = StorageController::new(cx, state);
     let ch = coroutine::init_coroutine(cx, state, window, controller);
 
-    events::run_verifications_and_update_storage(controller, first_render, state, ch);
+    events::run_verifications_and_update_storage(controller, state, ch);
     events::allow_drag_event_for_non_macos_systems(cx, window, controller, ch);
 
     cx.render(rsx!(
