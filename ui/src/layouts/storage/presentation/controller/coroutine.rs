@@ -2,19 +2,16 @@ use std::{path::PathBuf, time::Duration};
 
 use common::{
     language::get_local_text,
-    state::{storage::Storage, State, ToastNotification},
+    state::{State, ToastNotification},
     warp_runner::{FileTransferProgress, FileTransferStep},
 };
 
 use dioxus_core::ScopeState;
 use dioxus_desktop::DesktopContext;
-use dioxus_hooks::{
-    to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState, UseState,
-};
+use dioxus_hooks::{to_owned, use_coroutine, Coroutine, UnboundedReceiver, UseRef, UseSharedState};
 use futures::StreamExt;
 use tokio::time::sleep;
 use warp::constellation::{directory::Directory, item::Item};
-use wry::webview::FileDropEvent;
 
 use crate::layouts::storage::{
     domain::repository::StorageRepository,
@@ -25,6 +22,8 @@ use crate::layouts::storage::{
         },
     },
 };
+
+use super::controller::StorageController;
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -48,20 +47,11 @@ pub fn init_coroutine<'a>(
     cx: &'a ScopeState,
     state: &'a UseSharedState<State>,
     window: &'a DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
-    storage_state: &UseState<Option<Storage>>,
-    storage_size: &UseRef<(String, String)>,
+    controller: &UseRef<StorageController>,
 ) -> &'a Coroutine<ChanCmd> {
     let repository = StorageRepository::new();
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![
-            window,
-            state,
-            drag_event,
-            storage_state,
-            storage_size,
-            repository
-        ];
+        to_owned![window, state, controller, repository];
         async move {
             while let Some(cmd) = rx.next().await {
                 match cmd {
@@ -76,19 +66,19 @@ pub fn init_coroutine<'a>(
                     }
                     ChanCmd::GetItemsFromCurrentDirectory => {
                         match repository.get_items_from_current_directory().await {
-                            Ok(storage) => storage_state.set(Some(storage)),
+                            Ok(storage) => controller.with_mut(|i| i.storage_state = Some(storage)),
                             Err(_) => continue,
                         }
                     }
                     ChanCmd::OpenDirectory(directory_name) => {
                         match repository.open_directory(directory_name).await {
-                            Ok(storage) => storage_state.set(Some(storage)),
+                            Ok(storage) => controller.with_mut(|i| i.storage_state = Some(storage)),
                             Err(_) => continue,
                         }
                     }
                     ChanCmd::BackToPreviousDirectory(directory) => {
                         match repository.back_to_previous_directory(directory).await {
-                            Ok(storage) => storage_state.set(Some(storage)),
+                            Ok(storage) => controller.with_mut(|i| i.storage_state = Some(storage)),
                             Err(_) => continue,
                         }
                     }
@@ -107,12 +97,12 @@ pub fn init_coroutine<'a>(
                     }
                     ChanCmd::RenameItem { old_name, new_name } => {
                         match repository.rename_item(old_name, new_name).await {
-                            Ok(storage) => storage_state.set(Some(storage)),
+                            Ok(storage) => controller.with_mut(|i| i.storage_state = Some(storage)),
                             Err(_) => continue,
                         }
                     }
                     ChanCmd::DeleteItems(item) => match repository.delete_item(item).await {
-                        Ok(storage) => storage_state.set(Some(storage)),
+                        Ok(storage) => controller.with_mut(|i| i.storage_state = Some(storage)),
                         Err(_) => continue,
                     },
                     ChanCmd::GetStorageSize => match repository.get_storage_size().await {
@@ -120,12 +110,13 @@ pub fn init_coroutine<'a>(
                             let max_storage_size = events::format_item_size(max_size);
                             let current_storage_size = events::format_item_size(current_size);
 
-                            storage_size
-                                .with_mut(|i| *i = (max_storage_size, current_storage_size));
+                            controller.with_mut(|i| {
+                                i.storage_size = (max_storage_size, current_storage_size)
+                            });
                         }
                         Err(e) => {
-                            storage_size.with_mut(|i| {
-                                *i = (
+                            controller.with_mut(|i| {
+                                i.storage_size = (
                                     get_local_text("files.no-data-available"),
                                     get_local_text("files.no-data-available"),
                                 )
@@ -232,18 +223,18 @@ pub fn init_coroutine<'a>(
                                     };
                                 }
                                 FileTransferProgress::Finished(storage) => {
-                                    *drag_event.write_silent() = None;
+                                    controller.write_silent().drag_event = None;
                                     let mut script =
                                         MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
                                     script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
                                     script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
                                     window.eval(&script);
-                                    storage_state.set(Some(storage));
+                                    controller.with_mut(|i| i.storage_state = Some(storage));
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
-                                    *drag_event.write_silent() = None;
+                                    controller.write_silent().drag_event = None;
                                     let mut script =
                                         MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "false");
                                     script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));

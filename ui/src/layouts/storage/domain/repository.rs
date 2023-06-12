@@ -4,7 +4,7 @@ use common::{state::storage::Storage, warp_runner::FileTransferProgress};
 use tokio::sync::mpsc::UnboundedReceiver;
 use warp::constellation::{directory::Directory, item::Item};
 
-use crate::layouts::storage::datasource::remote::StorageRemoteDataSource;
+use crate::layouts::storage::data::remote::StorageRemoteDataSource;
 
 #[derive(Clone)]
 pub struct StorageRepository {

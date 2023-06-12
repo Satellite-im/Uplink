@@ -23,7 +23,7 @@ use super::{controller::StorageController, coroutine::ChanCmd};
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
 pub fn run_verifications_and_update_storage(
-    storage_controller: StorageController,
+    storage_controller: &UseRef<StorageController>,
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
     ch: &Coroutine<ChanCmd>,
@@ -33,13 +33,7 @@ pub fn run_verifications_and_update_storage(
         first_render.set(false);
     }
 
-    if let Some(storage) = storage_controller.storage_state.get().clone() {
-        *(storage_controller.directories_list).write_silent() = storage.directories.clone();
-        *(storage_controller.files_list).write_silent() = storage.files.clone();
-        *(storage_controller.current_dir).write_silent() = storage.current_dir.clone();
-        *(storage_controller.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
-        state.write().storage = storage;
-        storage_controller.storage_state.set(None);
+    if storage_controller.write_silent().update_state(state) {
         ch.send(ChanCmd::GetStorageSize);
     }
 }
@@ -47,12 +41,12 @@ pub fn run_verifications_and_update_storage(
 pub fn allow_drag_event_for_non_macos_systems(
     cx: &Scoped<Props>,
     window: &dioxus_desktop::DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
+    controller: &UseRef<StorageController>,
     ch: &Coroutine<ChanCmd>,
 ) {
     use_future(cx, (), |_| {
         // #[cfg(not(target_os = "macos"))]
-        to_owned![ch, drag_event, window];
+        to_owned![ch, controller, window];
         // #[cfg(target_os = "macos")]
         // to_owned![ch];
         async move {
@@ -63,8 +57,8 @@ pub fn allow_drag_event_for_non_macos_systems(
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event() {
-                    if drag_event.with(|i| i.clone()).is_none() {
-                        drag_and_drop_function(&window, &drag_event, &ch).await;
+                    if controller.with(|i| i.drag_event.clone()).is_none() {
+                        drag_and_drop_function(&window, &controller, &ch).await;
                     }
                 }
             }
@@ -96,10 +90,10 @@ pub fn format_item_name(file_name: String) -> String {
 
 pub async fn drag_and_drop_function(
     window: &DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
+    controller: &UseRef<StorageController>,
     ch: &Coroutine<ChanCmd>,
 ) {
-    *drag_event.write_silent() = Some(get_drag_event());
+    controller.write_silent().drag_event = Some(get_drag_event());
     loop {
         let file_drop_event = get_drag_event();
         match file_drop_event {
@@ -136,7 +130,7 @@ pub async fn drag_and_drop_function(
                 }
             }
             _ => {
-                *drag_event.write_silent() = None;
+                controller.write_silent().drag_event = None;
                 let script = MAIN_SCRIPT_JS.replace("$IS_DRAGGING", "false");
                 window.eval(&script);
                 break;

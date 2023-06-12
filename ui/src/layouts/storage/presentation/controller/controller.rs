@@ -1,32 +1,64 @@
 use common::state::{storage::Storage, State};
 
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_ref, use_state, UseRef, UseSharedState, UseState};
+use dioxus_hooks::{use_ref, UseRef, UseSharedState};
 
-use warp::constellation::directory::Directory;
+use uuid::Uuid;
+use warp::constellation::{directory::Directory, file::File};
 use wry::webview::FileDropEvent;
 
 #[derive(Clone)]
-pub struct StorageController<'a> {
-    pub storage_state: &'a UseState<Option<Storage>>,
-    pub storage_size: &'a UseRef<(String, String)>,
-    pub directories_list: &'a UseRef<Vec<Directory>>,
-    pub files_list: &'a UseRef<Vec<warp::constellation::file::File>>,
-    pub current_dir: &'a UseRef<Directory>,
-    pub dirs_opened_ref: &'a UseRef<Vec<Directory>>,
-    pub drag_event: &'a UseRef<Option<FileDropEvent>>,
+pub struct StorageController {
+    pub storage_state: Option<Storage>,
+    pub storage_size: (String, String),
+    pub directories_list: Vec<Directory>,
+    pub files_list: Vec<warp::constellation::file::File>,
+    pub current_dir: Directory,
+    pub dirs_opened_ref: Vec<Directory>,
+    pub drag_event: Option<FileDropEvent>,
+
+    pub is_renaming_map: Option<Uuid>,
+    pub add_new_folder: bool,
+    pub show_file_modal: Option<File>,
 }
 
-impl<'a> StorageController<'a> {
-    pub fn new(cx: &'a ScopeState, state: &'a UseSharedState<State>) -> Self {
-        Self {
-            storage_state: use_state(cx, || None),
-            storage_size: use_ref(cx, || (String::new(), String::new())),
-            directories_list: use_ref(cx, || state.read().storage.directories.clone()),
-            files_list: use_ref(cx, || state.read().storage.files.clone()),
-            current_dir: use_ref(cx, || state.read().storage.current_dir.clone()),
-            dirs_opened_ref: use_ref(cx, || state.read().storage.directories_opened.clone()),
-            drag_event: use_ref(cx, || None),
+impl StorageController {
+    pub fn new<'a>(cx: &'a ScopeState, state: &'a UseSharedState<State>) -> &'a UseRef<Self> {
+        let controller = Self {
+            storage_state: None,
+            storage_size: (String::new(), String::new()),
+            directories_list: state.read().storage.directories.clone(),
+            files_list: state.read().storage.files.clone(),
+            current_dir: state.read().storage.current_dir.clone(),
+            dirs_opened_ref: state.read().storage.directories_opened.clone(),
+            drag_event: None,
+            is_renaming_map: None,
+            add_new_folder: false,
+            show_file_modal: None,
+        };
+
+        use_ref(cx, || controller)
+    }
+
+    pub fn update_state<'a>(&mut self, state: &'a UseSharedState<State>) -> bool {
+        if let Some(storage) = self.storage_state.take() {
+            self.directories_list = storage.directories.clone();
+            self.files_list = storage.files.clone();
+            self.current_dir = storage.current_dir.clone();
+            self.dirs_opened_ref = storage.directories_opened.clone();
+            state.write().storage = storage.clone();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn done_renaming_item(&mut self, should_toggle: bool) {
+        self.is_renaming_map.take();
+        if should_toggle {
+            self.add_new_folder = !self.add_new_folder;
+        } else {
+            self.add_new_folder = false;
         }
     }
 }

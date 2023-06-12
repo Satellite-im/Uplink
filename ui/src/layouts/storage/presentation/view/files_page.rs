@@ -26,8 +26,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use uuid::Uuid;
-use warp::constellation::{file::File, item::Item};
+use warp::constellation::item::Item;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
@@ -48,22 +47,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let window = use_window(cx);
-    let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
-    let add_new_folder = use_state(cx, || false);
     let first_render = use_state(cx, || true);
-    let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
 
     let controller = StorageController::new(cx, state);
-    let ch = coroutine::init_coroutine(
-        cx,
-        state,
-        window,
-        controller.drag_event,
-        controller.storage_state,
-        controller.storage_size,
-    );
-    events::run_verifications_and_update_storage(controller.clone(), first_render, state, ch);
-    events::allow_drag_event_for_non_macos_systems(cx, window, controller.drag_event, ch);
+    let ch = coroutine::init_coroutine(cx, state, window, controller);
+
+    events::run_verifications_and_update_storage(controller, first_render, state, ch);
+    events::allow_drag_event_for_non_macos_systems(cx, window, controller, ch);
 
     cx.render(rsx!(
         div {
@@ -73,11 +63,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
-        if let Some(file) = show_file_modal.current().as_ref().clone() {
+        if let Some(file) = controller.with(|i| i.show_file_modal.clone()) {
             let file2 = file.clone();
             rsx!(file_modal::get_file_modal {
                 on_dismiss: |_| {
-                    show_file_modal.set(None);
+                    controller.with_mut(|i| i.show_file_modal = None);
                 },
                 on_download: move |_| {
                     let file_name = file2.clone().name();
@@ -89,19 +79,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                let drag_event = controller.drag_event;
-                if drag_event.with(|i| i.clone()).is_none() {
+                if controller.with(|i| i.drag_event.clone()).is_none() {
                     cx.spawn({
-                        to_owned![window, drag_event, ch];
+                        to_owned![window, controller, ch];
                         async move {
-                            events::drag_and_drop_function(&window, &drag_event, &ch).await;
+                            events::drag_and_drop_function(&window, &controller, &ch).await;
                         }
                     });
                 }
                 },
             onclick: |_| {
-                add_new_folder.set(false);
-                is_renaming_map.with_mut(|i| *i = None);
+                controller.with_mut(|i| i.add_new_folder = false);
+                controller.with_mut(|i| i.is_renaming_map = None);
             },
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
@@ -128,8 +117,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    is_renaming_map.with_mut(|i| *i = None);
-                                    add_new_folder.set(!add_new_folder);
+                                    controller.with_mut(|i| i.is_renaming_map = None);
+                                    controller.with_mut(|i| i.add_new_folder = !i.add_new_folder);
                                 },
                             },
                             Button {
@@ -143,12 +132,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 ))
                                 onpress: move |_| {
-                                    is_renaming_map.with_mut(|i| *i = None);
+                                    controller.with_mut(|i| i.is_renaming_map = None);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
                                         Some(path) => path,
                                         None => return
                                     };
-                                    // controller.ch_send(ChanCmd::UploadFiles(files_local_path));
+                                    ch.send(ChanCmd::UploadFiles(files_local_path));
                                     cx.needs_update();
                                 },
                             }
@@ -157,7 +146,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     div {
                         class: "files-info",
                         aria_label: "files-info",
-                        if controller.storage_size.read().0.is_empty() {
+                        if controller.with(|i| i.storage_size.clone()).0.is_empty() {
                             rsx!(div {
                                 class: "skeletal-texts",
                                 div {
@@ -184,7 +173,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     format!("{}", get_local_text("files.storage-max-size")),
                                     span {
                                         class: "count",
-                                       format!("{}", controller.storage_size.read().0),
+                                       format!("{}", controller.with(|i| i.storage_size.clone()).0),
                                     }
                                 },
                                 p {
@@ -192,7 +181,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     format!("{}", get_local_text("files.storage-current-size")),
                                     span {
                                         class: "count",
-                                       format!("{}", controller.storage_size.read().1),
+                                       format!("{}", controller.with(|i| i.storage_size.clone()).1),
                                     }
                                 },
                             )
@@ -208,7 +197,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
-                    controller.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
+                    controller.with(|i| i.dirs_opened_ref.clone()).iter().enumerate().map(|(index, dir)| {
                         let directory = dir.clone();
                         let dir_name = dir.name();
                         if dir_name == ROOT_DIR_NAME && index == 0 {
@@ -246,13 +235,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     div {
                         class: "files-list",
                         aria_label: "files-list",
-                        add_new_folder.then(|| {
+                        controller.with(|i| i.add_new_folder).then(|| {
                             rsx!(
                             Folder {
                                 with_rename: true,
                                 onrename: move |(val, key_code)| {
                                     let new_name: String = val;
-                                    if controller.directories_list.read().iter().any(|dir| dir.name() == new_name) {
+                                    if controller.with(|i| i.directories_list.clone()).iter().any(|dir| dir.name() == new_name) {
                                         state
                                         .write()
                                         .mutate(common::state::Action::AddToastNotification(
@@ -269,12 +258,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         ch.send(ChanCmd::CreateNewDirectory(new_name));
                                         ch.send(ChanCmd::GetItemsFromCurrentDirectory);
                                     }
-                                    add_new_folder.set(false);
+                                    controller.with_mut(|i| i.add_new_folder = false);
                                  }
                             })
                         }),
-                        controller.directories_list.read().iter().map(|dir| {
-                            let controller = controller.clone();
+                        controller.with(|i| i.directories_list.clone()).iter().map(|dir| {
+                            // let controller = controller.read().clone();
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
                             let key = dir.id();
@@ -289,7 +278,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: "folder-rename".into(),
                                             text: get_local_text("files.rename"),
                                             onpress: move |_| {
-                                                is_renaming_map.with_mut(|i| *i = Some(key));
+                                                controller.with_mut(|i| i.is_renaming_map = Some(key));
                                             }
                                         },
                                         hr {},
@@ -308,9 +297,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     key: "{key}-folder",
                                     text: dir.name(),
                                     aria_label: dir.name(),
-                                    with_rename: *is_renaming_map.read() == Some(key),
+                                    with_rename: controller.with(|i| i.is_renaming_map) == Some(key),
                                     onrename: move |(val, key_code)| {
-                                        if controller.directories_list.read().iter().any(|dir| dir.name() == val) {
+                                        if controller.with(|i| i.directories_list.clone()).iter().any(|dir| dir.name() == val) {
                                             state
                                             .write()
                                             .mutate(common::state::Action::AddToastNotification(
@@ -323,18 +312,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             ));
                                             return;
                                         }
-                                        is_renaming_map.with_mut(|i| *i = None);
+                                        controller.with_mut(|i| i.is_renaming_map = None);
                                         if key_code == Code::Enter {
                                             ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                         }
                                     }
                                     onpress: move |_| {
-                                        is_renaming_map.with_mut(|i| *i = None);
+                                        controller.clone().with_mut(|i| i.is_renaming_map = None);
                                         ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
                                     }
                             }})
                         }),
-                        controller.files_list.read().iter().map(|file| {
+                        controller.with(|i| i.files_list.clone()).iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file2 = file.clone();
@@ -350,7 +339,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 aria_label: "files-rename".into(),
                                                 text: get_local_text("files.rename"),
                                                 onpress: move |_| {
-                                                    is_renaming_map.with_mut(|i| *i = Some(key));
+                                                    controller.with_mut(|i| i.is_renaming_map = Some(key));
                                                 }
                                             },
                                             ContextItem {
@@ -369,7 +358,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 text: get_local_text("uplink.delete"),
                                                 onpress: move |_| {
                                                     let item = Item::from(file2.clone());
-                                                    // controller.ch_send(ChanCmd::DeleteItems(item));
+                                                    ch.send(ChanCmd::DeleteItems(item));
                                                 }
                                             },
                                         )),
@@ -378,7 +367,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             thumbnail: thumbnail_to_base64(file),
                                             text: file.name(),
                                             aria_label: file.name(),
-                                            with_rename: *is_renaming_map.read() == Some(key),
+                                            with_rename: controller.with(|i| i.is_renaming_map) == Some(key),
                                             onpress: move |_| {
                                                 let key = file_id;
                                                 if state.read().ui.file_previews.contains_key(&key) {
@@ -409,11 +398,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 }
 
                                                 let file4 = file3.clone();
-                                                show_file_modal.set(Some(file4));
+                                                controller.with_mut(|i| i.show_file_modal = Some(file4));
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
-                                                if controller.files_list.read().iter().any(|file| file.name() == new_name) {
+                                                if controller.with(|i| i.files_list.clone()).iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
                                                     .mutate(common::state::Action::AddToastNotification(
@@ -426,7 +415,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     ));
                                                     return;
                                                 }
-                                                is_renaming_map.with_mut(|i| *i = None);
+                                                controller.with_mut(|i| i.is_renaming_map = None);
                                                 if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
                                                     ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                                 }
