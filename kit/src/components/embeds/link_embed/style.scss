@@ -12,13 +12,10 @@
     text-align: left;
     padding: var(--gap);
     display: inline-flex;
+    gap: var(--gap-less);
     flex-direction: column;
     overflow: hidden;
     background-color: var(--secondary-dark);
-
-    .link-title {
-        font-weight: bold;
-    }
 
     h2 {
         margin: 0;
@@ -43,10 +40,17 @@
 
     .embed-details {
         padding: var(--padding);
+        padding-top: 0;
         flex: 1;
 
         div {
             width: 100%;
+        }
+
+        p {
+            margin: 0;
+            font-size: var(--text-size-less);
+            color: var(--placeholder);
         }
     }
 }
