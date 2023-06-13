@@ -6,6 +6,7 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
+use regex::Regex;
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -86,6 +87,16 @@ pub struct Props<'a> {
     attachments_pending_uploads: Option<Vec<Progression>>,
 }
 
+fn wrap_links_with_a_tags(text: &str) -> String {
+    let re = Regex::new(r#"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap();
+
+    re.replace_all(text, |caps: &regex::Captures| {
+        let url = caps.get(0).unwrap().as_str();
+        format!("<a href=\"{}\">{}</a>", url, url)
+    })
+    .into_owned()
+}
+
 #[allow(non_snake_case)]
 pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     //  log::trace!("render Message");
@@ -145,7 +156,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     });
 
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
-    let formatted_text = if cx.props.parse_markdown {
+    let mut formatted_text = if cx.props.parse_markdown {
         let parser = pulldown_cmark::Parser::new(&text);
         // Write to a new String buffer.
         let mut html_output = String::new();
@@ -154,6 +165,8 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         text
     };
+
+    formatted_text = wrap_links_with_a_tags(&formatted_text);
     let formatted_text_clone = formatted_text.clone();
 
     cx.render(rsx! (
