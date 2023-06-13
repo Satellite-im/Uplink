@@ -60,7 +60,9 @@ pub fn allow_drag_event_for_non_macos_systems(
     use_future(cx, (), |_| {
         #[cfg(not(target_os = "macos"))]
         to_owned![ch, main_script, window, drag_event];
-        let _ = (drag_event, window, main_script);
+        let _ = drag_event;
+        let _ = window;
+        let _ = main_script;
         #[cfg(target_os = "macos")]
         to_owned![ch];
         async move {
