@@ -71,67 +71,65 @@ pub fn Button<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     );
 
-    cx.render(
-        rsx!(
-            div {
-                class: {
-                    format_args!("btn-wrap {} {}", if disabled { "disabled" } else { "" }, if small { "small" } else { "" })
-                },
-                onmouseenter: move |_| {
-                    if cx.props.tooltip.is_some() {
-                         tooltip_visible.set(true);
-                    }
-                },
-                onmouseleave: move |_| {
-                    if cx.props.tooltip.is_some() {
-                         tooltip_visible.set(false);
-                    }
-                },
-                if *tooltip_visible.current() {
-                    cx.props.tooltip.as_ref().map(|tooltip| {
-                        rsx!(
-                           tooltip
-                        )
-                    })
-                }
-                (!badge.is_empty()).then(|| rsx!(
-                    span {
-                        aria_label: "Button Badge",
-                        class: "badge",
-                        "{badge}" 
-                    }
-                )),
-                button {
-                    aria_label: "{aria_label}",
-                    name: "{aria_label}",
-                    title: "{text}",
-                    disabled: if disabled { "true" } else { "false" },
-                    class: "{button_class}",
-                    // Optionally pass through click events.
-                    onclick: move |e| {
-                        if !cx.props.disabled.unwrap_or_default() {
-                            let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
-                        }
-                    },
-                    if let Some(_icon) = cx.props.icon {
-                        rsx!(
-                            // for props, copy the defaults passed in by IconButton
-                            common::icons::Icon {
-                                ..common::icons::IconProps {
-                                    class: None,
-                                    size: 20,
-                                    fill:"currentColor",
-                                    icon: _icon,
-                                    disabled:  cx.props.disabled.unwrap_or_default(),
-                                    disabled_fill: "#9CA3AF"
-                                },
-                            },
-                        )
-                    }
-                    // We only need to include the text if it contains something.
-                    (!text.is_empty()).then(|| rsx!( "{text2}" )),
-                },
+    cx.render(rsx!(
+        div {
+            class: {
+                format_args!("btn-wrap {}", if small { "small" } else { "" })
             },
-        )
-    )
+            onmouseenter: move |_| {
+                if cx.props.tooltip.is_some() {
+                     tooltip_visible.set(true);
+                }
+            },
+            onmouseleave: move |_| {
+                if cx.props.tooltip.is_some() {
+                     tooltip_visible.set(false);
+                }
+            },
+            if *tooltip_visible.current() {
+                cx.props.tooltip.as_ref().map(|tooltip| {
+                    rsx!(
+                       tooltip
+                    )
+                })
+            }
+            (!badge.is_empty()).then(|| rsx!(
+                span {
+                    aria_label: "Button Badge",
+                    class: "badge",
+                    "{badge}"
+                }
+            )),
+            button {
+                aria_label: "{aria_label}",
+                name: "{aria_label}",
+                title: "{text}",
+                disabled: if disabled { "true" } else { "false" },
+                class: "{button_class}",
+                // Optionally pass through click events.
+                onclick: move |e| {
+                    if !cx.props.disabled.unwrap_or_default() {
+                        let _ = cx.props.onpress.as_ref().map(|f| f.call(e));
+                    }
+                },
+                if let Some(_icon) = cx.props.icon {
+                    rsx!(
+                        // for props, copy the defaults passed in by IconButton
+                        common::icons::Icon {
+                            ..common::icons::IconProps {
+                                class: None,
+                                size: 20,
+                                fill:"currentColor",
+                                icon: _icon,
+                                disabled:  cx.props.disabled.unwrap_or_default(),
+                                disabled_fill: "#9CA3AF"
+                            },
+                        },
+                    )
+                }
+                // We only need to include the text if it contains something.
+                (!text.is_empty()).then(|| rsx!( "{text2}" )),
+            },
+        },
+    ))
 }
