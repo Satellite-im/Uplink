@@ -9,10 +9,7 @@ use dioxus::prelude::*;
 
 use kit::{
     components::user_image::UserImage,
-    elements::{
-        input::{Input, Options},
-        label::Label,
-    },
+    elements::input::{Input, Options},
 };
 use warp::logging::tracing::log;
 
@@ -52,16 +49,6 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
             aria_label: "group-users",
             div {
                 class: "search-input",
-                Label {
-                    aria_label: "number-of-participants".into(),
-                    text: format!("{} {}", _friends_in_group.len(),  get_local_text(
-                        if _friends_in_group.len() > 1 {
-                            "messages.participants"
-                        } else {
-                            "messages.participant"
-                        }
-                        )),
-                },
                 Input {
                     // todo: filter friends on input
                     placeholder: get_local_text("uplink.search-placeholder"),

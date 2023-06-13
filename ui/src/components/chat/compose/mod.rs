@@ -106,6 +106,7 @@ pub fn Compose(cx: Scope) -> Element {
     if state.read().chats().active_chat_has_unreads() {
         state.write().mutate(Action::ClearActiveUnreads);
     }
+
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
         to_owned![files_to_upload, overlay_script, window, drag_event];
@@ -132,6 +133,11 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
+    let is_group = data
+        .as_ref()
+        .map(|data| data.active_chat.conversation_type)
+        .unwrap_or(ConversationType::Direct)
+        == ConversationType::Group;
 
     cx.render(rsx!(
         div {
@@ -168,7 +174,8 @@ pub fn Compose(cx: Scope) -> Element {
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
                 onclick: move |_| {
-                    if show_group_users.is_none() {
+                    // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
+                    if show_group_users.is_none() && is_group {
                         show_group_users.set(Some(chat_id));
                         show_edit_group.set(None);
                     } else {
@@ -475,7 +482,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let chat_did = data.clone().unwrap().active_chat.id;
 
     let data = match data {
         Some(d) => d,
@@ -508,17 +514,18 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     };
     let subtext = data.subtext.clone();
 
-    let active_show_group_users = move || {
-        if cx.props.show_group_users.is_none() {
-            cx.props.show_group_users.set(Some(chat_did));
-            cx.props.show_edit_group.set(None);
-        } else {
-            cx.props.show_group_users.set(None);
-        }
-    };
+    let direct_message = data.active_chat.conversation_type == ConversationType::Direct;
 
+    let active_participant = data.my_id.clone();
+    let mut all_participants = data.other_participants.clone();
+    all_participants.push(active_participant);
+    let members_count = format!(
+        "{} ({})",
+        get_local_text("uplink.members"),
+        all_participants.len()
+    );
     cx.render(rsx!(
-        if data.active_chat.conversation_type == ConversationType::Direct {rsx! (
+        if direct_message {rsx! (
             UserImage {
                 loading: false,
                 platform: data.platform,
@@ -528,17 +535,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         )} else {rsx! (
             UserImageGroup {
                 loading: false,
-                participants: build_participants(&data.other_participants),
-                onpress: move |_| {
-                    active_show_group_users();
-                },
+                participants: build_participants(&all_participants),
             }
         )}
         div {
             class: "user-info",
-            onclick: move |_| {
-                active_show_group_users();
-            },
             aria_label: "user-info",
             p {
                 class: "username",
@@ -546,7 +547,15 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
             },
             p {
                 class: "status",
-                "{subtext}"
+                if direct_message {
+                    rsx! (span {
+                        "{subtext}"
+                    })
+                } else {
+                    rsx! (
+                        span {"{members_count}"}
+                    )
+                }
             }
         }
     ))
