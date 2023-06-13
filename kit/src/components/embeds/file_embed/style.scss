@@ -47,27 +47,6 @@
     cursor: pointer;
   }
 
-  .image-expanded {
-    display: inline-flex;
-    justify-content: center;
-    position: fixed;
-    z-index: 1001;
-    top: 1.5rem;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: rgba(0,0,0, 0.8);
-
-    .btn-wrap {
-      position: absolute;
-      top: var(--gap);
-      right: var(--gap);
-    }
-
-    img {
-      align-self: center;
-    }
-  }
   .meta {
     font-size: var(--text-size-less);
   }

@@ -1,5 +1,6 @@
 use crate::elements::button::Button;
 use crate::elements::Appearance;
+use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
@@ -149,20 +150,14 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             if has_thumbnail {
                 rsx!(
                     fullscreen_preview.then(|| rsx!(
-                        div {
-                            class: "image-expanded",
-                            onclick: move |_| fullscreen_preview.set(false),
-                            Button {
-                                icon: Icon::XMark,
-                                appearance: Appearance::Primary,
-                                aria_label: "close-image-preview-button".into(),
-                                onpress: move |_| fullscreen_preview.set(false),
-                            },
+                        Modal {
+                            open: *fullscreen_preview.clone(),
+                            onclose: move |_| fullscreen_preview.set(false),
                             img {
                                 src: "{large_thumbnail}",
                                 onclick: move |e| e.stop_propagation(),
                             }
-                        },
+                        }
                     )),
                     div {
                         class: "image-container",
