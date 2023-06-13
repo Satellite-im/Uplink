@@ -136,7 +136,7 @@ pub fn Compose(cx: Scope) -> Element {
     let is_group = data
         .as_ref()
         .map(|data| data.active_chat.conversation_type)
-        .unwrap()
+        .unwrap_or(ConversationType::Direct)
         == ConversationType::Group;
 
     cx.render(rsx!(
