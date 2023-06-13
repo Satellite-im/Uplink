@@ -216,7 +216,7 @@ fn show_with_action(notification: Notification, action_id: String, action: Notif
             .title(notification.summary.as_str())
             .message(&notification.body)
             .maybe_subtitle(notification.subtitle.as_deref())
-            .main_button(mac_notification_sys::MainButton::SingleAction(&action_name))
+            .main_button(mac_notification_sys::MainButton::SingleAction(action_name))
             .send()
         {
             Ok(response) => match response {
