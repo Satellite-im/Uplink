@@ -28,7 +28,7 @@
     input {
         &:checked {
             & + .slider {
-                background-color: var(--secondary-light);
+                background-color: var(--success);
                 &:before {
                     transform: translateX(20px);
                 }
