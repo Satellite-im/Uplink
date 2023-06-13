@@ -482,7 +482,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let chat_did = data.clone().unwrap().active_chat.id;
 
     let data = match data {
         Some(d) => d,
@@ -515,20 +514,11 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     };
     let subtext = data.subtext.clone();
 
-    let active_show_group_users = move || {
-        if cx.props.show_group_users.is_none() {
-            cx.props.show_group_users.set(Some(chat_did));
-            cx.props.show_edit_group.set(None);
-        } else {
-            cx.props.show_group_users.set(None);
-        }
-    };
-
     let direct_message = data.active_chat.conversation_type == ConversationType::Direct;
 
     let active_participant = data.my_id.clone();
     let mut all_participants = data.other_participants.clone();
-    all_participants.push(active_participant.clone());
+    all_participants.push(active_participant);
     let members_count = format!(
         "{} ({})",
         get_local_text("uplink.members"),
