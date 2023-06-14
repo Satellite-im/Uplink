@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use warp::constellation::file::File;
 
 use crate::{
-    components::file_embed::FileEmbed,
+    components::embeds::file_embed::FileEmbed,
     elements::{button::Button, label::Label, textarea, Appearance},
 };
 

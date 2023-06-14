@@ -14,7 +14,7 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        file_embed::FileEmbed,
+        embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
         message_typing::MessageTyping,
         user_image::UserImage,
@@ -255,7 +255,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             .and_then(|d| d.draft.clone())
             .unwrap_or_default()
             .lines()
-            .map(|x| x.to_string())
+            .map(|x| x.trim_end().to_string())
             .collect::<Vec<String>>();
 
         if let Some(id) = active_chat_id {

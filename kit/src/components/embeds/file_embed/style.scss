@@ -36,10 +36,15 @@
     max-width: 350px;
     height: 100%;
     max-height: 350px;
+    border-radius: var(--border-radius);
     &.big {
       max-height: 700px;
       max-width: 700px;
     }
+  }
+
+  .expandable-image {
+    cursor: pointer;
   }
 
   .meta {
