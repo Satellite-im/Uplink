@@ -1381,7 +1381,7 @@ impl State {
             .get(&self.did_key())
             .map(|x| x.profile_picture())
             .unwrap_or_default();
-        if pfp_from_identity.is_empty() || pfp_from_identity == String::from('\0') {
+        if pfp_from_identity.is_empty() || pfp_from_identity == String::from("empty_avatar") {
             format!(
                 "data:image/png;base64,{}",
                 base64::encode(
