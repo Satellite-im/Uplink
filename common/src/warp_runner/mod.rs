@@ -3,6 +3,7 @@ use derive_more::Display;
 use plot_icon::generate_png;
 use std::io::{self, Write};
 use std::{fs::File, sync::Arc};
+use warp::multipass::identity::IdentityUpdate;
 
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
@@ -189,7 +190,8 @@ async fn handle_login(notify: Arc<Notify>) {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
-                                        let _ = create_user_default_profile_picture(ident.did_key());
+                                        let pfp = create_user_default_profile_picture(ident.did_key()).unwrap();
+                                        let _ = warp.multipass.update_identity(IdentityUpdate::Picture(pfp));
                                         let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }
@@ -417,12 +419,14 @@ pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Erro
     Ok(())
 }
 
-fn create_user_default_profile_picture(did: DID) -> io::Result<()> {
+fn create_user_default_profile_picture(did_key: DID) -> Result<String, Error> {
     if !STATIC_ARGS.user_default_pfp_path.exists() {
-        let content = generate_png(did.to_string().as_bytes(), 512)
+        let content = generate_png(did_key.to_string().as_bytes(), 512)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
         file.write_all(&content)?;
+        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
+        return Ok(base64_default_image);
     }
-    Ok(())
+    Ok(String::new())
 }
