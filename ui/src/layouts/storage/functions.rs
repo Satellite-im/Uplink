@@ -48,6 +48,8 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
+// #[cfg(not(target_os = "macos"))]
+
 pub fn allow_drag_event_for_non_macos_systems(
     cx: &Scoped<Props>,
     drag_event: &UseRef<Option<FileDropEvent>>,
@@ -58,6 +60,9 @@ pub fn allow_drag_event_for_non_macos_systems(
     use_future(cx, (), |_| {
         #[cfg(not(target_os = "macos"))]
         to_owned![ch, main_script, window, drag_event];
+        let _ = drag_event;
+        let _ = window;
+        let _ = main_script;
         #[cfg(target_os = "macos")]
         to_owned![ch];
         async move {
@@ -161,7 +166,9 @@ pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool 
     if files_local_path.is_empty() {
         false
     } else {
-        files_local_path.first().map_or(false, |path| path.exists())
+        decoded_pathbufs(files_local_path.clone())
+            .first()
+            .map_or(false, |path| path.exists())
     }
 }
 

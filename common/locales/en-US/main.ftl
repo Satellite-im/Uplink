@@ -36,6 +36,7 @@ uplink = Uplink
     .update-menu-install = Install
     .check-for-updates = Check for updates
     .download-update = Download Update
+    .members = Members
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.

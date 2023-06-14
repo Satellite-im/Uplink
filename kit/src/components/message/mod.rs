@@ -156,8 +156,9 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     });
 
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
-    let mut formatted_text = if cx.props.parse_markdown {
-        let parser = pulldown_cmark::Parser::new(&text);
+    let formatted_text = if cx.props.parse_markdown {
+        let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+        let parser = pulldown_cmark::Parser::new(&txt);
         // Write to a new String buffer.
         let mut html_output = String::new();
         pulldown_cmark::html::push_html(&mut html_output, parser);
