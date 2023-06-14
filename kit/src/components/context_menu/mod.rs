@@ -42,10 +42,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
         "context-item"
     };
 
-    let disabled: bool = match cx.props.disabled {
-        Some(data) => data,
-        None => false,
-    };
+    let disabled: bool = cx.props.disabled.unwrap_or(false);
 
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     cx.render(rsx! {
