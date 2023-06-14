@@ -176,6 +176,7 @@
   .friend-list {
     display: inline-flex;
     flex-direction: column;
+    overflow-y: scroll;
     gap: 0;
 
     .friend-group {
