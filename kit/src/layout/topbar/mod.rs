@@ -41,7 +41,7 @@ pub fn Topbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             (show_back_button(&cx)).then(|| rsx!(
                 Button {
                     aria_label: "back-button".into(),
-                    icon: icons::outline::Shape::ChevronLeft,
+                    icon: icons::outline::Shape::Sidebar,
                     onpress: move |_| emit(&cx),
                     appearance: Appearance::Secondary
                 }

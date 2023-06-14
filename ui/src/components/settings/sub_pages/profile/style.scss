@@ -19,7 +19,7 @@
     }
   }
   .new-profile-welcome {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle-color);
     display: inline-flex;
     margin: var(--gap);
     padding: var(--gap);
@@ -94,7 +94,7 @@
     height: calc(var(--width-sidebar) / 3);
     background: var(--secondary-dark);
     background-size: cover;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle-color);
     border-radius: 50%;
     bottom: calc((var(--width-sidebar) / 6.3) / 2 * -1);
     left: var(--gap);

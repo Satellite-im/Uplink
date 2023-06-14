@@ -2,7 +2,6 @@ pub mod nav;
 
 pub mod indicator;
 
-pub mod modal;
 pub mod toast;
 pub mod user;
 pub mod user_image;
@@ -16,8 +15,7 @@ pub mod message_group;
 pub mod message_reply;
 pub mod message_typing;
 
-pub mod file_embed;
-pub mod link_embed;
+pub mod embeds;
 
 pub mod context_menu;
 pub mod topbar_controls;
