@@ -419,8 +419,7 @@ pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Erro
 
 fn create_user_default_profile_picture(did: DID) -> io::Result<()> {
     if !STATIC_ARGS.user_default_pfp_path.exists() {
-        let did_bytes = did.clone();
-        let content = generate_png(did_bytes.to_string().as_bytes(), 512)
+        let content = generate_png(did.to_string().as_bytes(), 512)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
         file.write_all(&content)?;

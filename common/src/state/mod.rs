@@ -1385,7 +1385,7 @@ impl State {
             format!(
                 "data:image/png;base64,{}",
                 base64::encode(
-                    &std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
+                    std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
                 )
             )
         } else {
