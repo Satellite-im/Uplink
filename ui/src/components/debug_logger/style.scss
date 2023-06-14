@@ -1,7 +1,7 @@
 .debug-logger {
     height: calc(var(--text-size) + (var(--gap) * 6));
     width: 100%;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle-color);
     font-size: var(--text-size-less);
     display: inline-flex;
     flex-direction: column;
@@ -10,6 +10,11 @@
         width: 100%;
         padding: var(--gap-less) var(--gap);
         font-size: var(--text-size-less);
+        background-color: var(--secondary-dark);
+    }
+    .header {
+        border-bottom: 1px solid var(--border-muted-color);
+        background-color: var(--secondary);
     }
     .body {
         overflow-y: auto;
@@ -27,8 +32,7 @@
             .muted {
                 color: var(--text-color-muted);
                 white-space: nowrap;
-            }   
-
+            }
             .bold { 
                 font-weight: bold;
                 white-space: nowrap;
