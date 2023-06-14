@@ -1376,10 +1376,21 @@ impl State {
     }
 
     pub fn profile_picture(&self) -> String {
-        self.identities
+        let pfp_from_identity = self
+            .identities
             .get(&self.did_key())
             .map(|x| x.profile_picture())
-            .unwrap_or_default()
+            .unwrap_or_default();
+        if pfp_from_identity.is_empty() {
+            format!(
+                "data:image/png;base64,{}",
+                base64::encode(
+                    &std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
+                )
+            )
+        } else {
+            pfp_from_identity
+        }
     }
 
     pub fn profile_banner(&self) -> String {

@@ -1,6 +1,9 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use derive_more::Display;
-use std::sync::Arc;
+use plot_icon::generate_png;
+use std::io::{self, Write};
+use std::{fs::File, sync::Arc};
+
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
     Mutex, Notify,
@@ -11,6 +14,7 @@ use warp::{
         BlinkEventKind,
     },
     constellation::Constellation,
+    crypto::DID,
     error::Error,
     logging::tracing::log,
     multipass::{self, MultiPass},
@@ -185,6 +189,7 @@ async fn handle_login(notify: Arc<Notify>) {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
+                                        let _ = create_user_default_profile_picture(ident.did_key());
                                         let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }
@@ -409,5 +414,16 @@ pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Erro
         return Err(Error::CorruptedDataStore);
     }
 
+    Ok(())
+}
+
+fn create_user_default_profile_picture(did: DID) -> io::Result<()> {
+    if !STATIC_ARGS.user_default_pfp_path.exists() {
+        let did_bytes = did.clone();
+        let content = generate_png(did_bytes.to_string().as_bytes(), 512)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
+        file.write_all(&content)?;
+    }
     Ok(())
 }

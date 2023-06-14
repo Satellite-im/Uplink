@@ -79,6 +79,8 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
     pub mock_cache_path: PathBuf,
+    /// default user path, if user does not define an profile picture image
+    pub user_default_pfp_path: PathBuf,
     /// houses warp specific data
     pub warp_path: PathBuf,
     /// a debug log which is only written to when the settings are enabled. otherwise logs are only sent to stdout
@@ -126,6 +128,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
+        user_default_pfp_path: uplink_path.join("user_default_profile_pic.png"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
