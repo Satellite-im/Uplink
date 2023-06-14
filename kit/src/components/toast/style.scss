@@ -8,14 +8,15 @@
     z-index: 1000;
     display: inline-flex;
     flex-direction: row;
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
+    background-color: rgba(0,0,0,0.2);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
     padding: var(--gap);
     align-items: center;
     gap: var(--gap);
     user-select: none;
-    background: var(--primary);
     color: var(--text-color);
+
 
     @media only screen and (max-width: 600px) {
         left: 0;

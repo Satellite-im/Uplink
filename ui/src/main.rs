@@ -22,13 +22,13 @@ use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::components::modal::Modal;
 use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
+use kit::layout::modal::Modal;
 use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -1019,7 +1019,8 @@ pub fn get_download_modal<'a>(
         .unwrap_or_default();
 
     cx.render(rsx!(Modal {
-        on_dismiss: move |_| on_dismiss.call(()),
+        onclose: move |_| on_dismiss.call(()),
+        open: true,
         children: cx.render(rsx!(
             div {
             class: "download-modal disp-flex col",

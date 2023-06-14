@@ -1,5 +1,5 @@
 .message {
-	background: var(--primary);
+	background: var(--secondary);
 	border-radius: var(--border-radius-more);
 	border-bottom-right-radius: var(--border-radius);
 	min-height: var(--height-input);
@@ -12,6 +12,8 @@
 	overflow-wrap: anywhere;
 	flex-direction: column;
 	align-items: flex-end;
+	white-space:pre-wrap;
+
 	.context-wrap {
 		align-self: flex-end;
 	}
@@ -19,20 +21,21 @@
 		color: var(--text-color);
 		display: inline-flex;
 		flex-direction: column;
+		white-space:pre-wrap;
 	}
 	.pending-text {
-		color: var(--text-color-dark);
+		color: var(--text-color-muted);
 		display: inline-flex;
 		flex-direction: column;
 	}
 }
 
 .message.message-pending {
-	opacity: 0.6;
+	opacity: var(--opacity-modifier);
 }
 
 .message.message-loading {
-	opacity: 0.5;
+	opacity: var(--opacity-modifier);
 }
 .message.message-first {
 	border-radius: var(--border-radius-more);
@@ -50,7 +53,7 @@
 .message.remote {
 	align-self: flex-start;
 	align-items: flex-start;
-	background: var(--secondary);
+	background: var(--secondary-dark);
 	border-radius: var(--border-radius-more);
 	border-bottom-left-radius: var(--border-radius);
 }
@@ -79,4 +82,9 @@
 
 .emoji-reaction-self {
 	border: 1px solid var(--primary);
+}
+
+.attachment-list {
+	display: inline-flex;
+	flex-direction: column;
 }

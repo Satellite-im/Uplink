@@ -11,7 +11,7 @@ use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::*;
-use kit::components::modal::Modal;
+use kit::layout::modal::Modal;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -37,7 +37,7 @@ use wry::webview::FileDropEvent;
 pub mod controller;
 pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
-use crate::layouts::file_preview::FilePreview;
+use crate::components::files::file_preview::FilePreview;
 
 use self::controller::StorageController;
 
@@ -134,15 +134,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         },
         if let Some(file) = show_file_modal.current().as_ref().clone() {
             let file2 = file.clone();
-            rsx!(get_file_modal {
-                on_dismiss: |_| {
-                    show_file_modal.set(None);
-                },
-                on_download: move |_| {
-                    let file_name = file2.clone().name();
-                    download_file(&file_name, ch);
+            rsx!(
+                get_file_modal {
+                    on_dismiss: |_| {
+                        show_file_modal.set(None);
+                    },
+                    on_download: move |_| {
+                        let file_name = file2.clone().name();
+                        download_file(&file_name, ch);
+                    }
+                    file: file.clone()
                 }
-                file: file.clone()})
+            )
         }
         div {
             id: "files-layout",
@@ -512,6 +515,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
+// TODO: This really shouldn't be in this file
 #[inline_props]
 pub fn get_file_modal<'a>(
     cx: Scope<'a>,
@@ -520,16 +524,14 @@ pub fn get_file_modal<'a>(
     file: File,
 ) -> Element<'a> {
     cx.render(rsx!(Modal {
-        on_dismiss: move |_| on_dismiss.call(()),
-        children: cx.render(rsx!(
-            FilePreview {
-                file: file,
-                on_download: |_| {
-                    on_download.call(());
-                },
-            }
-        ))
-        is_file_preview: true,
+        onclose: move |_| on_dismiss.call(()),
+        open: true,
+        children: cx.render(rsx!(FilePreview {
+            file: file,
+            on_download: |_| {
+                on_download.call(());
+            },
+        }))
     }))
 }
 

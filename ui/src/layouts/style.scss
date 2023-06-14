@@ -41,14 +41,16 @@
 .overlay-element {
   position: absolute;
   display: none;
-  bottom: 2%;
-  left: 8px;
+  bottom: var(--gap);
+  left: var(--gap);
   z-index: 5;
-  width: 285px;
+  width: calc(var(--width-sidebar) - (var(--gap) * 2));
   height: 200px;
-  padding-top: 6%;
-  border-radius: 12px;
-  background-color: var(--primary-light);
+  border-radius: var(--border-radius);
+  background-color: var(--secondary-dark);
+  justify-items: center;
+  align-items: center;
+  padding-top: 6%; // This could be done better, we should use flex to center the text
 
   .overlay-text {
     z-index: 3;
@@ -136,7 +138,7 @@
     align-content: center;
     border-radius: var(--border-radius);
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle-color);
     .crumb {
       display: inline-flex;
       align-content: center;
@@ -213,7 +215,7 @@
       color: var(--text-color);
     }
     span {
-      color: var(--text-color-dark);
+      color: var(--text-color-muted);
       font-size: var(--text-size-less);
       text-align: justify;
     }

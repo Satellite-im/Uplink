@@ -6,7 +6,7 @@
     .extension-setting {
         display: inline-flex;
         flex-direction: column;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--border-subtle-color);
         width: calc(100% - var(--gap) * 2);
         margin: var(--gap);
         border-radius: var(--border-radius);
@@ -14,7 +14,7 @@
         
         .heading {
             display: inline-flex;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-subtle-color);
             padding: var(--padding-less);
             gap: var(--gap);
             align-items: center;
@@ -48,7 +48,7 @@
         justify-content: flex-end;
         align-content: center;
         flex-direction: row;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-subtle-color);
         padding: var(--padding) 0;
 
         .btn-wrap {

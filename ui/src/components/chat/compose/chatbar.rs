@@ -14,7 +14,7 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        file_embed::FileEmbed,
+        embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
         message_typing::MessageTyping,
         user_image::UserImage,
