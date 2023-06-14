@@ -372,10 +372,10 @@ fn set_banner(ch: Coroutine<ChanCmd>) {
 
 fn set_image(defaut_image: bool) -> Result<String, Box<dyn std::error::Error>> {
     let path;
-    if defaut_image {
-        path = STATIC_ARGS.user_default_pfp_path.clone();
+    let path = if defaut_image {
+        STATIC_ARGS.user_default_pfp_path.clone();
     } else {
-        path = match FileDialog::new()
+        match FileDialog::new()
             .add_filter("image", &["jpg", "png", "jpeg", "svg"])
             .set_directory(".")
             .pick_file()
@@ -383,7 +383,7 @@ fn set_image(defaut_image: bool) -> Result<String, Box<dyn std::error::Error>> {
             Some(path_data) => path_data,
             None => return Err(Box::from(Error::InvalidItem)),
         };
-    }
+    };
 
     let file = std::fs::read(&path)?;
 
