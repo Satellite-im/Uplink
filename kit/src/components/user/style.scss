@@ -51,7 +51,7 @@
 		padding: var(--gap-less) var(--gap);
 		border-bottom-left-radius: var(--border-radius-less);
 		border-top-left-radius: var(--border-radius-less);
-		color: var(--text-color-dark);
+		color: var(--text-color-muted);
 	}
 	.badge-count {
 		height: 100%;
@@ -59,6 +59,7 @@
 		padding: var(--gap-less) var(--gap);
 		border-bottom-right-radius: var(--border-radius-less);
 		border-top-right-radius: var(--border-radius-less);
+		color: var(--text-color-dark);
 	}
 }
 

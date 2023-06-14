@@ -9,7 +9,7 @@
     display: inline-flex;
     flex-direction: column;
     padding: var(--gap);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-subtle-color);
 
     .topbar {
         height: fit-content;
@@ -90,7 +90,7 @@
         align-items: center;
         justify-content: center;
         padding: 4px 0;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--border-subtle-color);
 
         svg {
             height: var(--text-size);
@@ -106,7 +106,7 @@
     top: var(--gap);
     right: var(--gap);
     background: var(--secondary-dark);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle-color);
     width: 300px;
     height: 168.75px;
     z-index: 1000;
@@ -167,7 +167,7 @@
 }
 
 #remote-controls {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle-color);
     display: inline-flex;
     gap: var(--gap);
     padding: var(--gap);

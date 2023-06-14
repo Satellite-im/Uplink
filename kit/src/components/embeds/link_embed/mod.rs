@@ -5,6 +5,8 @@ use dioxus_hooks::use_future;
 use select::document::Document;
 use select::predicate::Name;
 
+use crate::components::embeds::youtube::YouTubePlayer;
+
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct SiteMeta {
     pub title: String,
@@ -99,6 +101,12 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
         meta.description.clone()
     };
 
+    let youtube_video = if cx.props.link.contains("youtube.com/watch?v=") {
+        Some(cx.props.link.replace("watch?v=", "embed/"))
+    } else {
+        None
+    };
+
     cx.render(rsx! {
         if meta.title.is_empty() {
             rsx! { span {""} }
@@ -122,10 +130,14 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                                 "{title}"
                             }
                         },
-                        h2 {},
                         div {
                             class: "embed-details",
                             aria_label: "embed-details",
+                            youtube_video.is_some().then(|| rsx!(
+                                YouTubePlayer {
+                                    video_url: youtube_video.unwrap(),
+                                }
+                            ))
                             p {
                                 "{desc}"
                             }

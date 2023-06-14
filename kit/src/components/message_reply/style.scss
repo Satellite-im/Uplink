@@ -12,13 +12,13 @@
 	flex-direction: column;
 	.user-image {
 		transform: scale(0.75);
-		opacity: 0.75;
+		opacity: var(--opacity-modifier);
 	}
 	.context-wrap {
 		align-self: flex-end;
 	}
 	&.loading {
-		opacity: 0.5;
+		opacity: var(--opacity-modifier);
 	}
 	.text {
 		display: flex;
@@ -29,7 +29,6 @@
 		font-size: var(--text-size-less);
 		border-radius: var(--border-radius-more);
 		border-bottom-right-radius: var(--border-radius-less);
-		opacity: 0.5;
 	}
 	.content {
 		position: relative;

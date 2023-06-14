@@ -76,6 +76,7 @@ messages = Messages
     .group-name-invalid = Group Name Invalid
     .participant = Participant
     .participants = Participants
+    .fetching = Fetching more messages...
     
 favorites = Favorites
     .favorites = Favorites

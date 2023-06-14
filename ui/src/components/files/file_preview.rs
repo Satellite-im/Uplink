@@ -14,7 +14,7 @@ pub struct Props<'a> {
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = thumbnail_to_base64(cx.props.file);
 
-    cx.render(rsx!(rsx!(div {
+    cx.render(rsx!(div {
         ContextMenu {
             id: "file-preview-context-menu".into(),
             items: cx.render(rsx!(
@@ -37,5 +37,5 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 max_width: "80%",
             },
         },
-    })))
+    }))
 }
