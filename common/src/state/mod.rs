@@ -1375,21 +1375,23 @@ impl State {
         };
     }
 
-    pub fn profile_picture(&self) -> String {
+    pub fn profile_picture(&self) -> (String, bool) {
+        let default_image = format!(
+            "data:image/png;base64,{}",
+            base64::encode(std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default())
+        );
         let pfp_from_identity = self
             .identities
             .get(&self.did_key())
             .map(|x| x.profile_picture())
             .unwrap_or_default();
-        if pfp_from_identity.is_empty() || pfp_from_identity == String::from("empty_avatar") {
-            format!(
-                "data:image/png;base64,{}",
-                base64::encode(
-                    std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
-                )
-            )
+        if pfp_from_identity.is_empty() || !pfp_from_identity.contains(";base64") {
+            (default_image, true)
         } else {
-            pfp_from_identity
+            (
+                pfp_from_identity.clone(),
+                default_image == pfp_from_identity,
+            )
         }
     }
 

@@ -1,8 +1,8 @@
 use arboard::Clipboard;
-use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::{get_images_dir, STATIC_ARGS};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -38,7 +38,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let image = state.read().profile_picture();
+    let (image, is_default_profile_picture) = state.read().profile_picture();
     let banner = state.read().profile_banner();
 
     if let Some(ident) = should_update.get() {
@@ -239,10 +239,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
+                            disabled: is_default_profile_picture,
                             aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
-                                ch.send(ChanCmd::Profile(String::from("empty_avatar")));
+                                set_profile_picture(ch.clone(), true);
                             }
                         }
                     )),
@@ -251,13 +252,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         aria_label: "profile-picture",
                         style: "background-image: url({image});",
                         onclick: move |_| {
-                            set_profile_picture(ch.clone());
+                            set_profile_picture(ch.clone(), false);
                         },
                         Button {
                             icon: Icon::Plus,
                             aria_label: "add-picture-button".into(),
                             onpress: move |_| {
-                               set_profile_picture(ch.clone());
+                               set_profile_picture(ch.clone(), false);
                             }
                         },
                     },
@@ -347,8 +348,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     ))
 }
 
-fn set_profile_picture(ch: Coroutine<ChanCmd>) {
-    match set_image() {
+fn set_profile_picture(ch: Coroutine<ChanCmd>, default_image: bool) {
+    match set_image(default_image) {
         Ok(img) => {
             ch.send(ChanCmd::Profile(img));
         }
@@ -359,7 +360,7 @@ fn set_profile_picture(ch: Coroutine<ChanCmd>) {
 }
 
 fn set_banner(ch: Coroutine<ChanCmd>) {
-    match set_image() {
+    match set_image(false) {
         Ok(img) => {
             ch.send(ChanCmd::Banner(img));
         }
@@ -369,15 +370,20 @@ fn set_banner(ch: Coroutine<ChanCmd>) {
     };
 }
 
-fn set_image() -> Result<String, Box<dyn std::error::Error>> {
-    let path = match FileDialog::new()
-        .add_filter("image", &["jpg", "png", "jpeg", "svg"])
-        .set_directory(".")
-        .pick_file()
-    {
-        Some(path) => path,
-        None => return Err(Box::from(Error::InvalidItem)),
-    };
+fn set_image(defaut_image: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let path;
+    if defaut_image {
+        path = STATIC_ARGS.user_default_pfp_path.clone();
+    } else {
+        path = match FileDialog::new()
+            .add_filter("image", &["jpg", "png", "jpeg", "svg"])
+            .set_directory(".")
+            .pick_file()
+        {
+            Some(path_data) => path_data,
+            None => return Err(Box::from(Error::InvalidItem)),
+        };
+    }
 
     let file = std::fs::read(&path)?;
 
