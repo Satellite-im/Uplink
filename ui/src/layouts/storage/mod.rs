@@ -120,6 +120,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         ch,
     );
 
+    functions::get_items_from_current_directory(cx, ch);
+    #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(cx, drag_event, window, main_script, ch);
 
     cx.render(rsx!(

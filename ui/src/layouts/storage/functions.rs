@@ -48,6 +48,17 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
+pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanCmd>) {
+    use_future(cx, (), |_| {
+        to_owned![ch];
+        async move {
+            sleep(Duration::from_millis(300)).await;
+            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+        }
+    });
+}
+
+#[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(
     cx: &Scoped<Props>,
     drag_event: &UseRef<Option<FileDropEvent>>,
@@ -56,15 +67,9 @@ pub fn allow_drag_event_for_non_macos_systems(
     ch: &Coroutine<ChanCmd>,
 ) {
     use_future(cx, (), |_| {
-        #[cfg(not(target_os = "macos"))]
         to_owned![ch, main_script, window, drag_event];
-        #[cfg(target_os = "macos")]
-        to_owned![ch];
         async move {
-            sleep(Duration::from_millis(300)).await;
-            ch.send(ChanCmd::GetItemsFromCurrentDirectory);
             // ondragover function from div does not work on windows
-            #[cfg(not(target_os = "macos"))]
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event() {
