@@ -19,10 +19,6 @@ body {
   flex-direction: column;
 }
 
-#app-wrap {
-  border: 1px solid var(--border-color);
-}
-
 :root {
   --titlebar-height: 1.75rem;
 }
@@ -31,7 +27,7 @@ body {
   height: fit-content;
   width: 100%;
   background-color: var(--background);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-subtle-color);
   display: inline-flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -82,7 +78,7 @@ body {
   background-color: var(--background);
   position: relative;
   overflow: hidden;
-  // border: 1px solid var(--border-color);
+  // border: 1px solid var(--border-subtle-color);
 }
 
 .search-input,

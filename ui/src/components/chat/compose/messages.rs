@@ -13,7 +13,7 @@ use kit::components::{
     context_menu::{ContextItem, ContextMenu},
     indicator::Status,
     message::{Message, Order, ReactionAdapter},
-    message_group::{MessageGroup, MessageGroupSkeletal},
+    message_group::MessageGroup,
     message_reply::MessageReply,
     user_image::UserImage,
 };
@@ -292,17 +292,26 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     });
 
     let msg_container_end = if data.active_chat.has_more_messages {
-        rsx!(MessageGroupSkeletal {}, MessageGroupSkeletal { alt: true })
+        rsx!(div {
+            class: "fetching",
+            p {
+                IconElement {
+                    icon: Icon::Loader,
+                    class: "spin",
+                },
+                get_local_text("messages.fetching")
+            }
+        })
     } else {
         rsx!(
             div {
                 // key: "encrypted-notification-0001",
                 class: "msg-container-end",
                 aria_label: "messages-secured-alert",
-                IconElement {
-                    icon:  Icon::LockClosed,
-                },
                 p {
+                    IconElement {
+                        icon:  Icon::LockClosed,
+                    },
                     get_local_text("messages.msg-banner")
                 }
             }
