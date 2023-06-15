@@ -52,7 +52,7 @@ pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanC
     use_future(cx, (), |_| {
         to_owned![ch];
         async move {
-            sleep(Duration::from_millis(300)).await;
+            sleep(Duration::from_secs(1)).await;
             ch.send(ChanCmd::GetItemsFromCurrentDirectory);
         }
     });
