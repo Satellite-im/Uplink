@@ -41,13 +41,13 @@ impl StorageController {
         use_ref(cx, || controller)
     }
 
-    pub fn update_state<'a>(&mut self, state: &'a UseSharedState<State>) -> bool {
+    pub fn update_state(&mut self, state: &UseSharedState<State>) -> bool {
         if let Some(storage) = self.storage_state.take() {
             self.directories_list = storage.directories.clone();
             self.files_list = storage.files.clone();
             self.current_dir = storage.current_dir.clone();
             self.dirs_opened_ref = storage.directories_opened.clone();
-            state.write().storage = storage.clone();
+            state.write().storage = storage;
             true
         } else {
             false
