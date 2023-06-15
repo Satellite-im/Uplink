@@ -1376,17 +1376,7 @@ impl State {
     }
 
     pub fn profile_picture(&self) -> (String, bool) {
-        let default_image = if !STATIC_ARGS.user_default_pfp_path.exists() {
-            create_user_default_profile_picture(self.did_key()).unwrap_or_default()
-        } else {
-            format!(
-                "data:image/png;base64,{}",
-                base64::encode(
-                    std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
-                )
-            )
-        };
-
+        let default_image = create_user_default_profile_picture(self.did_key()).unwrap_or_default();
         let pfp_from_identity = self
             .identities
             .get(&self.did_key())

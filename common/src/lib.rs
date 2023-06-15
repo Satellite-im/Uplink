@@ -242,6 +242,10 @@ pub fn create_user_default_profile_picture(did_key: DID) -> Result<String, Error
         file.write_all(&content)?;
         let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
         return Ok(base64_default_image);
+    } else {
+        Ok(format!(
+            "data:image/png;base64,{}",
+            base64::encode(std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default())
+        ))
     }
-    Ok(String::new())
 }
