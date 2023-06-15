@@ -230,6 +230,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
+                        if state.read().ui.is_minimal_view() {
+                            state.write().mutate(Action::SidebarHidden(true));
+                        }
                         router.replace_route(r, None, None);
                     }
                 },
@@ -476,11 +479,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-                                    if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                    }
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
+                                    }
+                                    if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
                                     }
                                 }
                             }

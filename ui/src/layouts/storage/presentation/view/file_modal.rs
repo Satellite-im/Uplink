@@ -1,7 +1,7 @@
-use crate::layouts::file_preview::FilePreview;
+use crate::components::files::file_preview::FilePreview;
 use dioxus::prelude::*;
 use dioxus_core::{prelude::EventHandler, Scope};
-use kit::components::modal::Modal;
+use kit::layout::modal::Modal;
 use warp::constellation::file::File;
 
 #[inline_props]
@@ -12,15 +12,13 @@ pub fn get_file_modal<'a>(
     file: File,
 ) -> Element<'a> {
     cx.render(rsx!(Modal {
-        on_dismiss: move |_| on_dismiss.call(()),
-        children: cx.render(rsx!(
-            FilePreview {
-                file: file,
-                on_download: |_| {
-                    on_download.call(());
-                },
-            }
-        ))
-        is_file_preview: true,
+        onclose: move |_| on_dismiss.call(()),
+        children: cx.render(rsx!(FilePreview {
+            file: file,
+            on_download: |_| {
+                on_download.call(());
+            },
+        }))
+        open: true,
     }))
 }

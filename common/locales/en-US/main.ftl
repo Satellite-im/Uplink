@@ -36,6 +36,7 @@ uplink = Uplink
     .update-menu-install = Install
     .check-for-updates = Check for updates
     .download-update = Download Update
+    .members = Members
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.
@@ -75,6 +76,7 @@ messages = Messages
     .group-name-invalid = Group Name Invalid
     .participant = Participant
     .participants = Participants
+    .fetching = Fetching more messages...
     
 favorites = Favorites
     .favorites = Favorites

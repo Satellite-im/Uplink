@@ -69,8 +69,8 @@
 
 #create-group {
   color: var(--text-color);
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-subtle-color);
+  border-bottom: 1px solid var(--border-subtle-color);
   padding-bottom: var(--padding);
   display: inline-flex;
   flex-direction: column;
@@ -105,7 +105,7 @@
 
 #edit-group {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-subtle-color);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
@@ -163,7 +163,7 @@
 
 #group-users {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-subtle-color);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
@@ -172,11 +172,15 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  overflow: hidden;
 
   .friend-list {
     display: inline-flex;
     flex-direction: column;
     gap: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: scroll;
 
     .friend-group {
       display: inline-flex;
@@ -244,6 +248,21 @@
     flex-direction: row;
     justify-content: center;
     padding: var(--padding-less);
+    background: var(--secondary-dark);
+    border-radius: var(--border-radius);
+    text-align: center;
+    width: 100%;
+    
+    p {
+      display: inline-flex;
+      align-items: center;
+      font-size: var(--text-size-less);
+      svg {
+        fill: transparent;
+        stroke: var(--text-color);
+        margin-right: var(--gap);
+      }
+    }
   }
 
   .message-group {

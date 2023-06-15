@@ -193,6 +193,7 @@ pre code {
 
 :root {
   --animation-time: 0.2s;
+  --opacity-modifier: 0.75;
 
   --text-size: 1rem;
   --text-size-less: 0.75rem;
@@ -221,34 +222,30 @@ pre code {
   --border-radius-more: 20px;
 
   --border-color: #141414;
+  --border-subtle-color: #212529;
 
-  --text-color: rgb(247, 247, 253);
-  --text-color-muted: #a3a3c7;
-  --text-color-dark: #676795;
-  --text-color-bright: #dfdff7;
-  --text-color-link: #0000ee;
-
-  --placeholder: #aaaac9;
-
-  --primary: #4d4dff;
-  --primary-dark: #4343fa;
-  --primary-light: #6868fa;
-
-  --secondary: #1d1d21;
-  --secondary-light: #8686a3;
-  --secondary-dark: #151518;
-
+  --border-color: #fff;
+  --border-subtle-color: #0f0f0f;
+  --text-color: #f8f9fa;
+  --text-color-muted: #dee2e6;
+  --text-color-dark: #343a40;
+  --text-color-bright: #ffffff;
+  --text-color-link: #ff860d;
+  --placeholder: #fff;
+  --primary: #FCFBF4;
+  --primary-dark: #eae8e1;
+  --primary-light: #fefff7;
+  --secondary: #343a40;
+  --secondary-light: #adb5bd;
+  --secondary-dark: #212529;
   --background: #000000;
   --background-light: var(--secondary-light);
   --background-dark: #000000;
-
   --success: #1dd1a1;
   --success-light: #00c29c;
-
   --warning: #f5af19;
   --warning-light: #feca57;
-
-  --danger: #f93854;
+  --danger: #F93854;
   --danger-light: #fa4662;
 }
 
@@ -316,7 +313,7 @@ p {
 
 .disabled {
   cursor: not-allowed;
-  opacity: 1;
+  opacity: var(--opacity-modifier);
 }
 
 @keyframes pulse {
@@ -336,13 +333,13 @@ p {
 
 @keyframes skeletal {
   0% {
-    opacity: 0.75;
+    opacity: var(--opacity-modifier);
   }
   50% {
     opacity: 1;
   }
   100% {
-    opacity: 0.75;
+    opacity: var(--opacity-modifier);
   }
 }
 
