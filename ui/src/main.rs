@@ -1071,6 +1071,10 @@ pub fn get_download_modal<'a>(
 fn get_logger(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
+    if !state.read().initialized {
+        return cx.render(rsx!(()));
+    }
+
     cx.render(rsx!(state
         .read()
         .configuration
