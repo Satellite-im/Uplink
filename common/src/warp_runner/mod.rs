@@ -1,8 +1,6 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use derive_more::Display;
-use plot_icon::generate_png;
-use std::io::{self, Write};
-use std::{fs::File, sync::Arc};
+use std::sync::Arc;
 use warp::multipass::identity::IdentityUpdate;
 
 use tokio::sync::{
@@ -15,7 +13,6 @@ use warp::{
         BlinkEventKind,
     },
     constellation::Constellation,
-    crypto::DID,
     error::Error,
     logging::tracing::log,
     multipass::{self, MultiPass},
@@ -26,7 +23,7 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::{MpIpfsConfig, UpdateEvents};
 use warp_rg_ipfs::config::RgIpfsConfig;
 
-use crate::{STATIC_ARGS, WARP_CMD_CH};
+use crate::{create_user_default_profile_picture, STATIC_ARGS, WARP_CMD_CH};
 
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
@@ -417,16 +414,4 @@ pub fn save_tesseract(tesseract: &warp::tesseract::Tesseract) -> Result<(), Erro
     }
 
     Ok(())
-}
-
-fn create_user_default_profile_picture(did_key: DID) -> Result<String, Error> {
-    if !STATIC_ARGS.user_default_pfp_path.exists() {
-        let content = generate_png(did_key.to_string().as_bytes(), 512)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
-        file.write_all(&content)?;
-        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
-        return Ok(base64_default_image);
-    }
-    Ok(String::new())
 }

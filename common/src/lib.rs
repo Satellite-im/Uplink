@@ -10,11 +10,15 @@ use clap::Parser;
 // export icons crate
 pub use icons;
 use once_cell::sync::Lazy;
+use plot_icon::generate_png;
 use std::{
+    fs::File,
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
 use tokio::sync::Mutex;
+use warp::{crypto::DID, error::Error};
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
@@ -228,4 +232,16 @@ pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
     };
 
     Ok(extensions_path)
+}
+
+pub fn create_user_default_profile_picture(did_key: DID) -> Result<String, Error> {
+    if !STATIC_ARGS.user_default_pfp_path.exists() {
+        let content = generate_png(did_key.to_string().as_bytes(), 512)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
+        file.write_all(&content)?;
+        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
+        return Ok(base64_default_image);
+    }
+    Ok(String::new())
 }

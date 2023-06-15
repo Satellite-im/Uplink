@@ -30,7 +30,7 @@ use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
-use crate::STATIC_ARGS;
+use crate::{create_user_default_profile_picture, STATIC_ARGS};
 
 use crate::{
     testing::mock::generate_mock,
@@ -1376,16 +1376,23 @@ impl State {
     }
 
     pub fn profile_picture(&self) -> (String, bool) {
-        let default_image = format!(
-            "data:image/png;base64,{}",
-            base64::encode(std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default())
-        );
+        let default_image = if !STATIC_ARGS.user_default_pfp_path.exists() {
+            create_user_default_profile_picture(self.did_key()).unwrap_or_default()
+        } else {
+            format!(
+                "data:image/png;base64,{}",
+                base64::encode(
+                    std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default()
+                )
+            )
+        };
+
         let pfp_from_identity = self
             .identities
             .get(&self.did_key())
             .map(|x| x.profile_picture())
             .unwrap_or_default();
-        if pfp_from_identity.is_empty() || !pfp_from_identity.contains(";base64") {
+        if pfp_from_identity.is_empty() {
             (default_image, true)
         } else {
             (
