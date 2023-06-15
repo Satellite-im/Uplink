@@ -390,7 +390,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onblur: move |_| {
                         if onblur_active {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
-                            valid.set(false);
                             if options.clear_on_submit {
                                 reset_fn();
                             }
@@ -415,17 +414,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
-                            if *valid.current() {
-                                 valid.set(false);
-                            }
                             if options.clear_on_submit {
                                 reset_fn();
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
-                            if *valid.current() {
-                                valid.set(false);
-                           }
                             if options.clear_on_submit {
                                 reset_fn();
                            }
