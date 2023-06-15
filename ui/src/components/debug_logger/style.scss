@@ -5,6 +5,7 @@
     font-size: var(--text-size-less);
     display: inline-flex;
     flex-direction: column;
+    overflow: hidden;
     .header, .body {
         width: 100%;
         padding: var(--gap-less) var(--gap);

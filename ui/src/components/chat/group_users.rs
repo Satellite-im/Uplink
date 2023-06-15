@@ -65,13 +65,10 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                     },
                 }
             }
-            div {
-                key: "render_friends",
                 render_friends {
                     friends: _friends_in_group,
                     name_prefix: friend_prefix.clone(),
                 },
-            }
         }
     ))
 }
