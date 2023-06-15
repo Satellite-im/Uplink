@@ -30,8 +30,8 @@ use warp::constellation::item::Item;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 
-use crate::layouts::storage::presentation::controller::controller::StorageController;
 use crate::layouts::storage::presentation::controller::coroutine::ChanCmd;
+use crate::layouts::storage::presentation::controller::storage_controller::StorageController;
 use crate::layouts::storage::presentation::controller::{coroutine, events};
 use crate::layouts::storage::presentation::view::file_modal;
 
@@ -52,7 +52,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let ch = coroutine::init_coroutine(cx, state, window, controller);
 
     events::run_verifications_and_update_storage(controller, state, ch);
-    events::allow_drag_event_for_non_macos_systems(cx, window, controller, ch);
+    events::get_items_from_current_directory(cx, ch);
+    #[cfg(not(target_os = "macos"))]
+    events::allow_drag_event_for_non_macos_systems(window, controller, ch);
 
     cx.render(rsx!(
         div {

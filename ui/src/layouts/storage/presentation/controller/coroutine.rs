@@ -23,7 +23,7 @@ use crate::layouts::storage::{
     },
 };
 
-use super::controller::StorageController;
+use super::storage_controller::StorageController;
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,

@@ -18,7 +18,7 @@ use crate::{
     utils::drag_and_drop_files::get_drag_event,
 };
 
-use super::{controller::StorageController, coroutine::ChanCmd};
+use super::{coroutine::ChanCmd, storage_controller::StorageController};
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 15;
 
@@ -37,22 +37,27 @@ pub fn run_verifications_and_update_storage(
     }
 }
 
-pub fn allow_drag_event_for_non_macos_systems(
-    cx: &Scoped<Props>,
-    window: &dioxus_desktop::DesktopContext,
-    controller: &UseRef<StorageController>,
-    ch: &Coroutine<ChanCmd>,
-) {
+pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanCmd>) {
     use_future(cx, (), |_| {
-        // #[cfg(not(target_os = "macos"))]
-        to_owned![ch, controller, window];
-        // #[cfg(target_os = "macos")]
-        // to_owned![ch];
+        to_owned![ch];
         async move {
             sleep(Duration::from_millis(300)).await;
             ch.send(ChanCmd::GetItemsFromCurrentDirectory);
+        }
+    });
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn allow_drag_event_for_non_macos_systems(
+    cx: &Scoped<Props>,
+    controller: &UseRef<StorageController>,
+    window: &dioxus_desktop::DesktopContext,
+    ch: &Coroutine<ChanCmd>,
+) {
+    use_future(cx, (), |_| {
+        to_owned![ch, window, controller, ch];
+        async move {
             // ondragover function from div does not work on windows
-            // #[cfg(not(target_os = "macos"))]
             loop {
                 sleep(Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event() {
