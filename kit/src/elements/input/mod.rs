@@ -134,7 +134,7 @@ pub struct Props<'a> {
     default_text: Option<String>,
     aria_label: Option<String>,
     is_password: Option<bool>,
-    show_password_input: Option<bool>,
+    avoid_suggestions: Option<bool>,
     disabled: Option<bool>,
     #[props(optional)]
     icon: Option<Icon>,
@@ -339,7 +339,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    let show_password_input = cx.props.show_password_input.unwrap_or_default();
+    let avoid_suggestions = cx.props.avoid_suggestions.unwrap_or_default();
 
     // Run the script after the component is mounted.
     let eval = use_eval(cx);
@@ -383,7 +383,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
-                    class: format_args!("{loading_class} {}", if show_password_input {"show-password-input"} else {""}),
+                    class: "{loading_class}",
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
@@ -401,7 +401,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     oninput: move |evt| {
                         let mut current_val = evt.value.clone();
-                        if !current_val.starts_with('@') && show_password_input {
+                        if !current_val.starts_with('@') && avoid_suggestions {
                             current_val.insert(0, '@');
                         }
 

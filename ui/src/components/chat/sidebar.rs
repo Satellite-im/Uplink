@@ -76,7 +76,8 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         href: "#{entry.display_name}",
                         prevent_default: "onclick",
                         rel: "noopener noreferrer",
-                        onclick: move |_| {
+                        onclick: move |evt| {
+                            evt.stop_propagation();
                             cx.props.onclick.call(entry.id.clone());
                         },
                         "{entry.display_name}"
@@ -206,8 +207,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: false,
-                        is_password: false,
-                        show_password_input: true,
+                        avoid_suggestions: true,
                         aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         reset: reset_searchbar.clone(),
