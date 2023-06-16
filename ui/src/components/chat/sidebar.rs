@@ -63,11 +63,13 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             cx.props.identities.get().iter().map(|entry| {
                 rsx!(
                     a {
+                        class: "search-friends-dropdown",
                         onclick: move |_| {
                             cx.props.onclick.call(entry.id.clone());
                         },
                         "{entry.display_name}"
-                    }
+                    },
+                    div { class:"border", },
                 )
             })
         }

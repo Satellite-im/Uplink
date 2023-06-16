@@ -208,17 +208,34 @@
     position: absolute;
     display: inline-flex;
     flex-direction: column;
+    box-shadow: 0px 0px 8px var(--text-color-muted);
+    width: 270px;
     z-index: 100;
     cursor: pointer;
     background-color: var(--background);
+    
+    .border {
+      z-index: 101;
+      width: 80%; 
+      height: 1px;
+      background: var(--background-light);
+      margin: 0 auto;
+    }
+
     a {
       color: var(--text-color);
+      text-decoration: none;
+      padding: 8px 12px;
+      word-wrap: break-word;
+      width: 100%;
     }
     a:hover {
       background-color: var(--background-light);
     }
   }
 }
+
+
 
 #compose-attachments {
   display: inline-flex;
