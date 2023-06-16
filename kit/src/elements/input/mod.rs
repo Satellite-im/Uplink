@@ -134,7 +134,6 @@ pub struct Props<'a> {
     default_text: Option<String>,
     aria_label: Option<String>,
     is_password: Option<bool>,
-    avoid_suggestions: Option<bool>,
     disabled: Option<bool>,
     #[props(optional)]
     icon: Option<Icon>,

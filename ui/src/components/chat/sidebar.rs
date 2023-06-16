@@ -207,7 +207,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         placeholder: get_local_text("uplink.search-placeholder"),
                         // TODO: Pending implementation
                         disabled: false,
-                        avoid_suggestions: true,
                         aria_label: "chat-search-input".into(),
                         icon: Icon::MagnifyingGlass,
                         reset: reset_searchbar.clone(),
