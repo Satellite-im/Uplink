@@ -401,7 +401,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     oninput: move |evt| {
                         let mut current_val = evt.value.clone();
-                        if !current_val.starts_with('@') && avoid_suggestions {
+                        if !current_val.starts_with('@') && avoid_suggestions && !current_val.is_empty() {
                             current_val.insert(0, '@');
                         }
 

@@ -218,7 +218,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             ..Options::default()
                         },
                         onreturn: move |(v, _, _): (String, _, _)| {
-                            if !v.is_empty() && on_search_dropdown_hover.with(|i| *i == false) {
+                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
                                  if let Some(entry) = search_results.get().first() {
                                     select_entry(entry.id.clone());
                                 }
