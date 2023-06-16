@@ -467,14 +467,24 @@ impl State {
             MessageEvent::Deleted {
                 conversation_id,
                 message_id,
+                message_time,
             } => {
+                // can't have 2 mutable borrows
+                let mut should_decrement_notifications = false;
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    if chat.is_msg_unread(message_time) {
+                        chat.unreads = chat.unreads.saturating_sub(1);
+                        should_decrement_notifications = true;
+                    }
                 }
-                self.mutate(Action::RemoveNotification(
-                    notifications::NotificationKind::Message,
-                    1,
-                ));
+
+                if should_decrement_notifications {
+                    self.mutate(Action::RemoveNotification(
+                        notifications::NotificationKind::Message,
+                        1,
+                    ));
+                }
             }
             MessageEvent::MessageReactionAdded { message } => {
                 self.update_message(message);
