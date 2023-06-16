@@ -272,8 +272,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
             )),
-            search_friends{ 
-                identities: search_results.clone(), 
+            search_friends{
+                identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
                 onclick: move |entry| {
                 select_entry(entry);
