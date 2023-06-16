@@ -339,8 +339,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
-    let avoid_suggestions = cx.props.avoid_suggestions.unwrap_or_default();
-
     // Run the script after the component is mounted.
     let eval = use_eval(cx);
     use_effect(
