@@ -54,7 +54,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     events::run_verifications_and_update_storage(controller, state, ch);
     events::get_items_from_current_directory(cx, ch);
     #[cfg(not(target_os = "macos"))]
-    events::allow_drag_event_for_non_macos_systems(cx, window, controller, ch);
+    events::allow_drag_event_for_non_macos_systems(cx, controller, window, ch);
 
     cx.render(rsx!(
         div {
