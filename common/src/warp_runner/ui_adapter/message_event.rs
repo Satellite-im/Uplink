@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use derive_more::Display;
 use uuid::Uuid;
 use warp::{
@@ -35,7 +34,6 @@ pub enum MessageEvent {
     Deleted {
         conversation_id: Uuid,
         message_id: Uuid,
-        message_time: DateTime<Utc>,
     },
     #[display(fmt = "MessageReactionAdded")]
     MessageReactionAdded { message: warp::raygun::Message },
@@ -94,14 +92,10 @@ pub async fn convert_message_event(
         MessageEventKind::MessageDeleted {
             conversation_id,
             message_id,
-        } => {
-            let message = messaging.get_message(conversation_id, message_id).await?;
-            MessageEvent::Deleted {
-                conversation_id,
-                message_id,
-                message_time: message.date(),
-            }
-        }
+        } => MessageEvent::Deleted {
+            conversation_id,
+            message_id,
+        },
         MessageEventKind::MessageReactionAdded {
             conversation_id,
             message_id,

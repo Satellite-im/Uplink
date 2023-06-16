@@ -467,16 +467,26 @@ impl State {
             MessageEvent::Deleted {
                 conversation_id,
                 message_id,
-                message_time,
             } => {
                 // can't have 2 mutable borrows
                 let mut should_decrement_notifications = false;
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.retain(|msg| msg.inner.id() != message_id);
-                    if chat.is_msg_unread(message_time) {
-                        chat.unreads = chat.unreads.saturating_sub(1);
-                        should_decrement_notifications = true;
+                    // can't fetch the deleted message from RayGun because it no longer exists there.
+                    // Not going to ask that the RayGun event be updated at this time because having this
+                    // information doesn't guarantee we can determine if the deleted message was unread.
+                    // Knowing this basically requires that RayGun  or warp_runner knows how many
+                    // unread messages there are. But that information is in State.
+                    if let Some(msg) = chat
+                        .messages
+                        .iter()
+                        .find(|msg| msg.inner.id() == message_id)
+                    {
+                        if chat.is_msg_unread(msg.inner.date()) {
+                            chat.unreads = chat.unreads.saturating_sub(1);
+                            should_decrement_notifications = true;
+                        }
                     }
+                    chat.messages.retain(|msg| msg.inner.id() != message_id);
                 }
 
                 if should_decrement_notifications {
