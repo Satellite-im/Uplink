@@ -12,6 +12,8 @@ interact(".resize-vert-top")
         // translate when resizing from top edge
         y += event.deltaRect.top
         target.style.transform = "translate(" + x + "px," + y + "px)"
+        // limit to the headers size
+        target.style.minHeight = target.getElementsByClassName("header")[0].clientHeight  + "px"
       },
     },
   })
