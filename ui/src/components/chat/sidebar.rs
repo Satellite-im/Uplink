@@ -229,12 +229,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
                             } else {
-                                let mut text_to_find_friends = v.clone();
-                                if text_to_find_friends.starts_with('@') {
-                                    text_to_find_friends = v[1..].to_string();
-                                }
-                                let mut friends = state.read().search_identities(&text_to_find_friends);
-                                let chats = state.read().search_group_chats(&text_to_find_friends);
+                                let mut friends = state.read().search_identities(&v);
+                                let chats = state.read().search_group_chats(&v);
                                 // todo: sort this somehow
                                 friends.extend(chats);
                                 search_results.set(friends);

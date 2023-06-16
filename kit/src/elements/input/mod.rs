@@ -385,6 +385,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{input_id}",
                     class: "{loading_class}",
                     aria_label: "{aria_label}",
+                    spellcheck: "{false}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{max_length}",
@@ -400,10 +401,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     oninput: move |evt| {
-                        let mut current_val = evt.value.clone();
-                        if !current_val.starts_with('@') && avoid_suggestions && !current_val.is_empty() {
-                            current_val.insert(0, '@');
-                        }
+                        let current_val = evt.value.clone();
 
                         *val.write_silent() = current_val.clone();
 
