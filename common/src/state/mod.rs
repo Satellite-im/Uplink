@@ -1300,7 +1300,7 @@ impl State {
                 if un.len() < name_prefix.len() {
                     false
                 } else {
-                    &un[..(name_prefix.len())] == name_prefix
+                    un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))

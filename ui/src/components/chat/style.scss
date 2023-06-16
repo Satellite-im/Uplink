@@ -214,15 +214,8 @@
     cursor: pointer;
     background-color: var(--background);
     
-    .border {
-      z-index: 101;
-      width: 80%; 
-      height: 1px;
-      background: var(--background-light);
-      margin: 0 auto;
-    }
-
     a {
+      z-index: 110;
       color: var(--text-color);
       text-decoration: none;
       padding: 8px 12px;
@@ -231,6 +224,13 @@
     }
     a:hover {
       background-color: var(--background-light);
+    }
+
+    .border {
+      width: 80%; 
+      height: 1px;
+      background: var(--background-light);
+      margin: 0 auto;
     }
   }
 }

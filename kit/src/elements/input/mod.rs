@@ -134,6 +134,7 @@ pub struct Props<'a> {
     default_text: Option<String>,
     aria_label: Option<String>,
     is_password: Option<bool>,
+    show_password_input: Option<bool>,
     disabled: Option<bool>,
     #[props(optional)]
     icon: Option<Icon>,
@@ -338,6 +339,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(|b| b.then_some("password"))
         .unwrap_or("text");
 
+    let show_password_input = cx.props.show_password_input.unwrap_or_default();
+
     // Run the script after the component is mounted.
     let eval = use_eval(cx);
     use_effect(
@@ -380,7 +383,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
-                    class: "{loading_class}",
+                    class: format_args!("{loading_class} {}", if show_password_input {"show-password-input"} else {""}),
                     aria_label: "{aria_label}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
@@ -397,7 +400,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                     oninput: move |evt| {
-                        let current_val = evt.value.clone();
+                        let mut current_val = evt.value.clone();
+                        if !current_val.starts_with('@') && show_password_input {
+                            current_val.insert(0, '@');
+                        }
+
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
