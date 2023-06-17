@@ -4,6 +4,7 @@ use std::{
     time::Instant,
 };
 
+use chrono::{DateTime, Utc};
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 use warp::{
@@ -108,6 +109,22 @@ impl Chat {
         });
         if let Some(pending) = opt {
             self.pending_outgoing_messages.remove(pending);
+        }
+    }
+
+    // take the timestamp of a message and determine if it occurs at or after the time of the earliest unread message
+    // WARNING: a chat is loaded with 10 or 20 messages by default. if there are more unread messages in RayGun, then
+    // this function could return a false negative. This is unlikely.
+    pub fn is_msg_unread(&self, message_time: DateTime<Utc>) -> bool {
+        if self.unreads == 0 {
+            return false;
+        }
+        // if you have 1 unread message, skip 0 messages and take the next one.
+        // if you have 2 unread messages, skip 1 and take the next one.
+        let to_skip = self.unreads.saturating_sub(1);
+        match self.messages.iter().rev().nth(to_skip as usize) {
+            Some(msg) => msg.inner.date() <= message_time,
+            _ => false,
         }
     }
 }
