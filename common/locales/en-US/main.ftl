@@ -257,8 +257,10 @@ settings-about = About Settings
     .open-codebase = Open Source Code
     .open-codebase-description = Opens the codebase in your default web browser.
     .no-update-available = Your software is up to date!
-    .update-check-error = Failed to fetch update. Please check your internet connection.
-    
+    .update-check-error = Failed to fetch update! Check your logs for more info.
+    .update-check-error-timeout = Failed to fetch update! Request timed out.
+    .update-check-error-request = Failed to fetch update! Couldn't send update request. Please check your internet connection.
+
 media-player = Media Player 
     .enable-camera = Enable Camera 
     .fullscreen = Fullscreen
