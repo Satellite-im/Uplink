@@ -21,6 +21,12 @@
   }
 }
 
+.help-button {
+  position: fixed;
+  right: var(--gap);
+  bottom: var(--gap);
+}
+
 .hover-effect {
   cursor: pointer;
   &::before {

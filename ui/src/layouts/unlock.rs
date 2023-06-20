@@ -1,3 +1,5 @@
+use std::fs;
+
 use common::{
     get_images_dir,
     language::{get_local_text, get_local_text_args_builder},
@@ -9,10 +11,14 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::elements::{
-    button::Button,
-    input::{Input, Options, Validation},
-    label::LabelWithEllipsis,
+use kit::{
+    components::context_menu::{ContextItem, ContextMenu},
+    elements::{
+        button::Button,
+        input::{Input, Options, Validation},
+        label::LabelWithEllipsis,
+        tooltip::{ArrowPosition, Tooltip},
+    },
 };
 use warp::{logging::tracing::log, multipass};
 
@@ -242,26 +248,56 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         span {
                             get_local_text("unlock.notice")
                         }
-                    }
+                    },
                     Button {
-                            text: match account_exists.current().unwrap_or(true) {
-                                true => get_local_text("unlock.unlock-account"),
-                                false => get_local_text("unlock.create-account"),
-                            },
-                            aria_label: "create-account-button".into(),
-                            appearance: kit::elements::Appearance::Primary,
-                            icon: Icon::Check,
-                            disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
-                            onpress: move |_| {
-                                if let Some(validation_error) = validation_failure.get() {
-                                    shown_error.set(validation_error.translation());
-                                } else if let Some(e) = error.get() {
-                                    shown_error.set(e.translation());
-                                } else {
-                                    page.set(AuthPages::CreateAccount);
-                                }
+                        text: match account_exists.current().unwrap_or(true) {
+                            true => get_local_text("unlock.unlock-account"),
+                            false => get_local_text("unlock.create-account"),
+                        },
+                        aria_label: "create-account-button".into(),
+                        appearance: kit::elements::Appearance::Primary,
+                        icon: Icon::Check,
+                        disabled: validation_failure.current().is_some() || *cmd_in_progress.current(),
+                        onpress: move |_| {
+                            if let Some(validation_error) = validation_failure.get() {
+                                shown_error.set(validation_error.translation());
+                            } else if let Some(e) = error.get() {
+                                shown_error.set(e.translation());
+                            } else {
+                                page.set(AuthPages::CreateAccount);
                             }
                         }
+                    },
+                    ContextMenu {
+                        key: "{key}-menu",
+                        id: "unlock-context-menu".into(),
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                icon: Icon::Trash,
+                                danger: true,
+                                aria_label: "account-reset".into(),
+                                text: get_local_text("uplink.reset-account"),
+                                onpress: |_| {
+                                    let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
+                                    page.set(AuthPages::Unlock);
+                                }
+                            },
+                        )),
+                        div {
+                            class: "help-button",
+                            Button {
+                                aria_label: "help-button".into(),
+                                appearance: kit::elements::Appearance::Secondary,
+                                icon: Icon::QuestionMarkCircle,
+                                tooltip: cx.render(rsx!(
+                                    Tooltip {
+                                        arrow_position: ArrowPosition::Right,
+                                        text: get_local_text("unlock.help"),
+                                    }
+                                )),
+                            }
+                        }
+                    }
                 )
             }
         }
