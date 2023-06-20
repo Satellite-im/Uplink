@@ -36,7 +36,7 @@ use common::{
 
 use common::language::get_local_text;
 use dioxus_desktop::use_eval;
-use rfd::FileDialog;
+// use rfd::FileDialog;
 
 use uuid::Uuid;
 use warp::{
@@ -806,7 +806,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     class: "{reactions_class} pointer",
                     tabindex: "0",
                     onmouseleave: |_| {
-                        #[cfg(not(target_os = "macos"))] 
+                        #[cfg(not(target_os = "macos"))]
                         {
                             eval(focus_script.to_string());
                         }
@@ -875,21 +875,21 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         .and_then(OsStr::to_str)
                         .map(str::to_string)
                         .unwrap_or_default();
-                    if let Some(file_path_to_download) = FileDialog::new()
-                    .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                        let conv_id = message.inner.conversation_id();
-                        if !pending_downloads.read().contains_key(&conv_id) {
-                            pending_downloads.write().insert(conv_id, HashSet::new());
-                        }
-                        pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
+                    // if let Some(file_path_to_download) = FileDialog::new()
+                    // .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
+                    //     let conv_id = message.inner.conversation_id();
+                    //     if !pending_downloads.read().contains_key(&conv_id) {
+                    //         pending_downloads.write().insert(conv_id, HashSet::new());
+                    //     }
+                    //     pending_downloads.write().get_mut(&conv_id).map(|conv| conv.insert(file.clone()));
 
-                        ch.send(MessagesCommand::DownloadAttachment {
-                            conv_id,
-                            msg_id: message.inner.id(),
-                            file,
-                            file_path_to_download
-                        })
-                    }
+                    //     ch.send(MessagesCommand::DownloadAttachment {
+                    //         conv_id,
+                    //         msg_id: message.inner.id(),
+                    //         file,
+                    //         file_path_to_download
+                    //     })
+                    // }
                 },
                 on_edit: move |update: String| {
                     edit_msg.set(None);

@@ -27,12 +27,14 @@ use kit::{
     layout::topbar::Topbar,
 };
 use once_cell::sync::Lazy;
-use rfd::FileDialog;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
 use warp::sync::RwLock;
 use wry::webview::FileDropEvent;
+
+#[cfg(not(target_os = "ios"))]
+use rfd::FileDialog;
 
 pub mod controller;
 pub mod functions;
@@ -200,12 +202,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 ))
                                 onpress: move |_| {
                                     is_renaming_map.with_mut(|i| *i = None);
-                                    let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
-                                        Some(path) => path,
-                                        None => return
-                                    };
-                                    ch.send(ChanCmd::UploadFiles(files_local_path));
-                                    cx.needs_update();
+                                    // let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
+                                    //     Some(path) => path,
+                                    //     None => return
+                                    // };
+                                    // ch.send(ChanCmd::UploadFiles(files_local_path));
+                                    // cx.needs_update();
                                 },
                             }
                         )
@@ -531,6 +533,10 @@ pub fn get_file_modal<'a>(
     }))
 }
 
+#[cfg(target_os = "ios")]
+fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {}
+
+#[cfg(not(target_os = "ios"))]
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()

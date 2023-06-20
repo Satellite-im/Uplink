@@ -4,7 +4,7 @@ use crate::language::get_local_text;
 
 use super::sounds::{Play, Sounds};
 use derive_more::Display;
-use notify_rust::Notification;
+// use notify_rust::Notification;
 use std::sync::Arc;
 use uuid::Uuid;
 use warp::logging::tracing::log;

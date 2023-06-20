@@ -14,7 +14,7 @@ pub mod ui;
 pub mod utils;
 
 use crate::language::change_language;
-use crate::notifications::NotificationAction;
+// use crate::notifications::NotificationAction;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -308,13 +308,13 @@ impl State {
                 let notifications_enabled = self.configuration.notifications.friends_notifications;
 
                 if !self.ui.metadata.focused && notifications_enabled {
-                    crate::notifications::push_notification(
-                        get_local_text("friends.new-request"),
-                        format!("{} sent a request.", identity.username()),
-                        Some(crate::sounds::Sounds::Notification),
-                        notify_rust::Timeout::Milliseconds(4),
-                        NotificationAction::FriendListPending,
-                    );
+                    // crate::notifications::push_notification(
+                    //     get_local_text("friends.new-request"),
+                    //     format!("{} sent a request.", identity.username()),
+                    //     Some(crate::sounds::Sounds::Notification),
+                    //     notify_rust::Timeout::Milliseconds(4),
+                    //     NotificationAction::FriendListPending,
+                    // );
                 }
             }
             MultiPassEvent::FriendRequestSent(identity) => {
@@ -418,13 +418,13 @@ impl State {
                         ),
                         None => get_local_text("messages.unknown-sent-message"),
                     };
-                    crate::notifications::push_notification(
-                        get_local_text("messages.new"),
-                        text,
-                        sound,
-                        notify_rust::Timeout::Milliseconds(4),
-                        NotificationAction::DisplayChat(conversation_id),
-                    );
+                    // crate::notifications::push_notification(
+                    //     get_local_text("messages.new"),
+                    //     text,
+                    //     sound,
+                    //     notify_rust::Timeout::Milliseconds(4),
+                    //     NotificationAction::DisplayChat(conversation_id),
+                    // );
                 }
             }
             MessageEvent::Sent {

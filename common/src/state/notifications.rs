@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::notifications::set_badge;
+// use crate::notifications::set_badge;
 
 use super::configuration::Configuration;
 
@@ -71,7 +71,7 @@ impl Notifications {
         };
 
         if increment_badge {
-            let _ = set_badge(self.badge);
+            // let _ = set_badge(self.badge);
         }
     }
 
@@ -94,7 +94,7 @@ impl Notifications {
         };
 
         // Update the badge any time notifications are removed.
-        let _ = set_badge(self.badge);
+        // let _ = set_badge(self.badge);
     }
 
     // Returns the total count for a given notification kind.
@@ -123,7 +123,7 @@ impl Notifications {
             }
         };
         // Update the badge with new possible totals.
-        let _ = set_badge(self.badge);
+        // let _ = set_badge(self.badge);
     }
 
     // Clears all notifications.
@@ -133,11 +133,11 @@ impl Notifications {
         self.settings = 0;
 
         self.badge = 0;
-        let _ = set_badge(self.badge);
+        // let _ = set_badge(self.badge);
     }
 
     pub fn clear_badge(&mut self) {
         self.badge = 0;
-        let _ = set_badge(self.badge);
+        // let _ = set_badge(self.badge);
     }
 }

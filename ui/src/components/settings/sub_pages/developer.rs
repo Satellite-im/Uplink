@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use common::notifications::{push_notification, NotificationAction};
+// use common::notifications::{push_notification, NotificationAction};
 use common::warp_runner::{OtherCmd, WarpCmd};
 use common::WARP_CMD_CH;
 use dioxus::prelude::*;
@@ -15,7 +15,7 @@ use common::{
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::elements::{button::Button, switch::Switch, Appearance};
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use warp::logging::tracing::log;
 
 use crate::{components::settings::SettingSection, logger};
@@ -83,13 +83,13 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::BellAlert,
                     onpress: move |_| {
-                        push_notification(
-                            get_local_text("settings-developer.test-popup"),
-                            get_local_text("settings-developer.test-popup"),
-                            Some(Sounds::General),
-                            notify_rust::Timeout::Milliseconds(4),
-                            NotificationAction::Dummy
-                        );
+                        // push_notification(
+                        //     get_local_text("settings-developer.test-popup"),
+                        //     get_local_text("settings-developer.test-popup"),
+                        //     Some(Sounds::General),
+                        //     notify_rust::Timeout::Milliseconds(4),
+                        //     NotificationAction::Dummy
+                        // );
                         state
                             .write()
                             .mutate(Action::AddNotification(NotificationKind::Settings, 1));
@@ -118,9 +118,9 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                     appearance: Appearance::Secondary,
                     icon: Icon::ArchiveBoxArrowDown,
                     onpress: |_| {
-                        if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
-                            ch.send(path);
-                        };
+                        // if let Some(path) =  FileDialog::new().set_directory(dirs::home_dir().unwrap_or(".".into())).pick_folder() {
+                        //     ch.send(path);
+                        // };
                     }
                 }
             },

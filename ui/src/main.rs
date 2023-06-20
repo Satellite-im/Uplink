@@ -7,7 +7,7 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::warp_runner::BlinkCmd;
 
-use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
+// use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
@@ -651,17 +651,17 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // focus handler for notifications
-    use_future(cx, (), |_| {
-        to_owned![desktop];
-        async move {
-            let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
-            let mut ch = channel.lock().await;
-            while (ch.recv().await).is_some() {
-                desktop.set_focus();
-            }
-        }
-    });
+    // // focus handler for notifications
+    // use_future(cx, (), |_| {
+    //     to_owned![desktop];
+    //     async move {
+    //         let channel = common::notifications::FOCUS_SCHEDULER.rx.clone();
+    //         let mut ch = channel.lock().await;
+    //         while (ch.recv().await).is_some() {
+    //             desktop.set_focus();
+    //         }
+    //     }
+    // });
 
     // clear toasts
     use_future(cx, (), |_| {
@@ -1298,27 +1298,27 @@ fn notification_action_handler<'a>(cx: Scope<'a, NotificationProps<'a>>) -> Elem
     let route = use_router(cx);
     let friend_state = cx.props.friend_state;
 
-    use_future(cx, (), |_| {
-        to_owned![state, route, friend_state];
-        async move {
-            let listener_channel = NOTIFICATION_LISTENER.rx.clone();
-            log::trace!("starting notification action listener");
-            let mut ch = listener_channel.lock().await;
-            while let Some(cmd) = ch.recv().await {
-                log::debug!("handling notification action {:#?}", cmd);
-                match cmd {
-                    NotificationAction::DisplayChat(uuid) => {
-                        state.write_silent().mutate(Action::ChatWith(&uuid, true));
-                        route.replace_route(UPLINK_ROUTES.chat, None, None);
-                    }
-                    NotificationAction::FriendListPending => {
-                        *friend_state.write_silent() = FriendRoute::Pending;
-                        route.replace_route(UPLINK_ROUTES.friends, None, None);
-                    }
-                    NotificationAction::Dummy => {}
-                }
-            }
-        }
-    });
+    // use_future(cx, (), |_| {
+    //     to_owned![state, route, friend_state];
+    //     async move {
+    //         let listener_channel = NOTIFICATION_LISTENER.rx.clone();
+    //         log::trace!("starting notification action listener");
+    //         let mut ch = listener_channel.lock().await;
+    //         while let Some(cmd) = ch.recv().await {
+    //             log::debug!("handling notification action {:#?}", cmd);
+    //             match cmd {
+    //                 NotificationAction::DisplayChat(uuid) => {
+    //                     state.write_silent().mutate(Action::ChatWith(&uuid, true));
+    //                     route.replace_route(UPLINK_ROUTES.chat, None, None);
+    //                 }
+    //                 NotificationAction::FriendListPending => {
+    //                     *friend_state.write_silent() = FriendRoute::Pending;
+    //                     route.replace_route(UPLINK_ROUTES.friends, None, None);
+    //                 }
+    //                 NotificationAction::Dummy => {}
+    //             }
+    //         }
+    //     }
+    // });
     cx.render(rsx!(()))
 }
