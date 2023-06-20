@@ -2,6 +2,7 @@ uplink = Uplink
     .home = Home
     .add = Add
     .call = Call
+    .reset-account = Reset Account (Irreversable!)
     .coming-soon = Coming soon
     .crash-report = Uplink crashed. Optionally save crash report to selected folder
     .video-call = Video Call
@@ -285,6 +286,7 @@ unlock = Unlock
     .error-pin = Something is wrong with the pin you supplied.
     .invalid-pin = Hmm, that pin didn't work.
     .error-unknown-pin = An unknown error occurred.
+    .help = Help (right-click)
 
 auth = Create Account 
     .enter-username = Enter Username
