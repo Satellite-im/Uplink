@@ -69,7 +69,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             onmouseleave: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
-            identities.iter().cloned().map(|entry| {
+            identities.iter().cloned().enumerate().map(|(k, entry)| {
                 rsx!(
                     a {
                         class: "search-friends-dropdown",
@@ -82,7 +82,9 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         },
                         "{entry.display_name}"
                     },
-                    div { class:"border", },
+                    if (cx.props.identities.get().len() - 1) != k {
+                        rsx!(div { class:"border", })
+                    }
                 )
             })
         }
