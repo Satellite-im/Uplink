@@ -367,35 +367,37 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                     )),
-                                Folder {
-                                    key: "{key}-folder",
-                                    text: dir.name(),
-                                    aria_label: dir.name(),
-                                    with_rename: *is_renaming_map.read() == Some(key),
-                                    onrename: move |(val, key_code)| {
-                                        if storage_controller.directories_list.read().iter().any(|dir| dir.name() == val) {
-                                            state
-                                            .write()
-                                            .mutate(common::state::Action::AddToastNotification(
-                                                ToastNotification::init(
-                                                    "".into(),
-                                                    get_local_text("files.directory-already-with-name"),
-                                                    None,
-                                                    3,
-                                                ),
-                                            ));
-                                            return;
+                                    Folder {
+                                        key: "{key}-folder",
+                                        text: dir.name(),
+                                        aria_label: dir.name(),
+                                        with_rename: *is_renaming_map.read() == Some(key),
+                                        onrename: move |(val, key_code)| {
+                                            if storage_controller.directories_list.read().iter().any(|dir| dir.name() == val) {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.directory-already-with-name"),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            is_renaming_map.with_mut(|i| *i = None);
+                                            if key_code == Code::Enter {
+                                                ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                            }
                                         }
-                                        is_renaming_map.with_mut(|i| *i = None);
-                                        if key_code == Code::Enter {
-                                            ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
+                                        onpress: move |_| {
+                                            is_renaming_map.with_mut(|i| *i = None);
+                                            ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
                                         }
                                     }
-                                    onpress: move |_| {
-                                        is_renaming_map.with_mut(|i| *i = None);
-                                        ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
-                                    }
-                            }})
+                                }
+                            )
                         }),
                         storage_controller.files_list.read().iter().map(|file| {
                             let file_name = file.name();
