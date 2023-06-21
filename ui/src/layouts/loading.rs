@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
 use futures::channel::oneshot;
+use wry::application::dpi::LogicalPosition;
 
 use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
 
@@ -13,10 +14,15 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     let desktop = use_window(cx);
 
     let desktop_resized = use_future(cx, (), |_| {
-        to_owned![desktop];
+        to_owned![desktop, state];
         async move {
             // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
-            desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+            if state.read().ui.window_maximized {
+                desktop.set_outer_position(LogicalPosition::new(0, 0));
+                desktop.set_maximized(true);
+            } else {
+                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+            }
             desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
         }
     });
