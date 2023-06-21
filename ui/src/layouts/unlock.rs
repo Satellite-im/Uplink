@@ -60,8 +60,16 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
-
+    let first_render = use_ref(cx, || true);
     let state = use_ref(cx, State::load);
+
+    // On windows, is necessary use state on topbar controls, without using use_shared_state
+    // So state is loaded thete to use window_maximized and offer better UX
+    if cfg!(target_os = "windows") && *first_render.read() {
+        *first_render.write_silent() = false;
+        state.write_silent().ui.window_maximized = false;
+        let _ = state.write_silent().save();
+    }
 
     // this will be needed later
     use_future(cx, (), |_| {

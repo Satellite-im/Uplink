@@ -588,7 +588,10 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
-                if state.read().ui.window_maximized && *first_resize.read() {
+                if state.read().ui.window_maximized
+                    && *first_resize.read()
+                    && cfg!(not(target_os = "windows"))
+                {
                     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                     *first_resize.write_silent() = false;
                 }
