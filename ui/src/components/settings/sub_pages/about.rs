@@ -46,13 +46,22 @@ pub fn AboutPage(cx: Scope) -> Element {
                         download_available.set(opt);
                     }
                     Err(e) => {
+                        let opt_err: Option<&reqwest::Error> = e.downcast_ref();
+                        let msg = match opt_err {
+                            Some(e) => {
+                                // Most common ones. Else display a generic error message
+                                if e.is_timeout() {
+                                    "settings-about.update-check-error-timeout"
+                                } else if e.is_request() {
+                                    "settings-about.update-check-error-request"
+                                } else {
+                                    "settings-about.update-check-error"
+                                }
+                            }
+                            None => "settings-about.update-check-error",
+                        };
                         state.write().mutate(Action::AddToastNotification(
-                            ToastNotification::init(
-                                "".into(),
-                                get_local_text("settings-about.update-check-error"),
-                                None,
-                                4,
-                            ),
+                            ToastNotification::init("".into(), get_local_text(msg), None, 4),
                         ));
                         log::error!("failed to check for updates: {e}");
                     }
