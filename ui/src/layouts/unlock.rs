@@ -8,6 +8,7 @@ use common::{
     STATIC_ARGS,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::{
@@ -59,8 +60,16 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
+    let first_render = use_ref(cx, || true);
+    let state = use_ref(cx, State::load);
 
-    let state = use_state(cx, State::load);
+    // On windows, is necessary use state on topbar controls, without using use_shared_state
+    // So state is loaded thete to use window_maximized and offer better UX
+    if cfg!(target_os = "windows") && *first_render.read() {
+        *first_render.write_silent() = false;
+        state.write_silent().ui.window_maximized = false;
+        let _ = state.write_silent().save();
+    }
 
     // this will be needed later
     use_future(cx, (), |_| {
@@ -162,7 +171,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         .unwrap_or_default();
 
     cx.render(rsx!(
-        style {update_theme_colors(&state.current())},
+        style {update_theme_colors(&state.read())},
         div {
             id: "unlock-layout",
             aria_label: "unlock-layout",
@@ -194,7 +203,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if STATIC_ARGS.cache_path.exists()
-                            {Some(get_welcome_message(&state.current()))}
+                            {Some(get_welcome_message(&state.read()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {
@@ -210,6 +219,13 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
+                                let desktop = use_window(cx);
+                                let outer_size = desktop.outer_size();
+                                let is_maximized = desktop.is_maximized();
+                                state.write_silent().ui.window_height = outer_size.height;
+                                state.write_silent().ui.window_width = outer_size.width;
+                                state.write_silent().ui.window_maximized = is_maximized;
+                                let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
                                 ch.send(val);
                                 validation_failure.set(None);
