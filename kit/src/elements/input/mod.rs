@@ -382,6 +382,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     id: "{input_id}",
                     class: "{loading_class}",
                     aria_label: "{aria_label}",
+                    spellcheck: "{false}",
                     disabled: "{disabled}",
                     value: "{val.read()}",
                     maxlength: "{max_length}",
@@ -397,6 +398,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                     oninput: move |evt| {
                         let current_val = evt.value.clone();
+
                         *val.write_silent() = current_val.clone();
 
                         let is_valid = if should_validate {
