@@ -343,7 +343,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
-                                    &name[..(name_prefix.len())] == name_prefix.to_lowercase()
+                                    name[..(name_prefix.len())] == name_prefix.to_lowercase()
                                 }
                             } ).map(|_friend| {
                                 rsx!(
