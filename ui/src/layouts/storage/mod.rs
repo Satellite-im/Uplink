@@ -484,7 +484,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     .mutate(common::state::Action::AddToastNotification(
                                                         ToastNotification::init(
                                                             "".into(),
-                                                            get_local_text("files.file-alrady-with-name"),
+                                                            get_local_text("files.file-already-with-name"),
                                                             None,
                                                             3,
                                                         ),
