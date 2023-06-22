@@ -187,11 +187,15 @@ async fn handle_login(notify: Arc<Notify>) {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
-                                        let pfp = create_user_default_profile_picture(ident.did_key()).unwrap_or_default();
-                                        match warp.multipass.update_identity(IdentityUpdate::Picture(pfp)).await {
-                                            Ok(_) => log::info!("Identity updated successfully with default polkadot placeholder"),
-                                            Err(e) => log::warn!("Failed to update identity with default polkadot placeholder: {}", e),
-                                        }
+                                        match create_user_default_profile_picture(ident.did_key()) {
+                                            Ok(pfp) => {
+                                                match warp.multipass.update_identity(IdentityUpdate::Picture(pfp)).await {
+                                                    Ok(_) => log::info!("Identity updated successfully with default polkadot placeholder"),
+                                                    Err(e) => log::warn!("Failed to update identity with default polkadot placeholder: {}", e),
+                                                };
+                                            }
+                                            Err(e) => log::warn!("Failed to create default polkadot placeholder: {}", e),
+                                        };
                                         let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }
