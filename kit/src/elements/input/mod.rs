@@ -439,6 +439,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                             // re-focus the input after clearing it
                             eval(focus_script.clone());
+                            emit(&cx, String::new(), *valid.get());
                         },
                         IconElement {
                             icon: options.clear_btn_icon
