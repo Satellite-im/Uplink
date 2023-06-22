@@ -148,6 +148,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     options: Options {
                         with_clear_btn: true,
                         react_to_esc_key: true,
+                        clear_on_submit: false,
                         ..Options::default()
                     },
                     onchange: move |(v, _): (String, _)| {
