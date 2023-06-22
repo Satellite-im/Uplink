@@ -560,8 +560,9 @@ fn app(cx: Scope) -> Element {
     // There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
+    let first_resize = use_ref(cx, || true);
     use_wry_event_handler(cx, {
-        to_owned![state, desktop];
+        to_owned![state, desktop, first_resize];
         move |event, _| match event {
             WryEvent::WindowEvent {
                 event: WindowEvent::Focused(focused),
@@ -587,7 +588,15 @@ fn app(cx: Scope) -> Element {
                 event: WindowEvent::Resized(_),
                 ..
             } => {
+                if state.read().ui.window_maximized
+                    && *first_resize.read()
+                    && cfg!(not(target_os = "windows"))
+                {
+                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                    *first_resize.write_silent() = false;
+                }
                 let size = webview.inner_size();
+
                 //log::trace!(
                 //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
                 //    size,

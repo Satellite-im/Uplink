@@ -50,6 +50,7 @@ pub struct Props {
 #[derive(Props)]
 pub struct SearchProps<'a> {
     // username, did
+    search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
@@ -57,16 +58,32 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
         return None;
     }
+    let mut identities = cx.props.identities.get().clone();
+    identities.sort_by_key(|entry| entry.display_name.clone());
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
-            cx.props.identities.get().iter().map(|entry| {
+            onmouseenter: |_| {
+                *cx.props.search_dropdown_hover.write_silent() = true;
+            },
+            onmouseleave: |_| {
+                *cx.props.search_dropdown_hover.write_silent() = false;
+            },
+            identities.iter().cloned().enumerate().map(|(k, entry)| {
                 rsx!(
                     a {
-                        onclick: move |_| {
+                        class: "search-friends-dropdown",
+                        href: "#{entry.display_name}",
+                        prevent_default: "onclick",
+                        rel: "noopener noreferrer",
+                        onclick: move |evt| {
+                            evt.stop_propagation();
                             cx.props.onclick.call(entry.id.clone());
                         },
                         "{entry.display_name}"
+                    },
+                    if (cx.props.identities.get().len() - 1) != k {
+                        rsx!(div { class:"border", })
                     }
                 )
             })
@@ -83,6 +100,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
     let show_delete_conversation = use_ref(cx, || true);
+    let on_search_dropdown_hover = use_ref(cx, || false);
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -201,12 +219,12 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             ..Options::default()
                         },
                         onreturn: move |(v, _, _): (String, _, _)| {
-                            if !v.is_empty() {
+                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
                                  if let Some(entry) = search_results.get().first() {
                                     select_entry(entry.id.clone());
                                 }
+                                search_results.set(Vec::new());
                             }
-                            search_results.set(Vec::new());
                         },
                         onchange: move |(v, _): (String, _)| {
                             if v.is_empty() {
@@ -217,6 +235,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 // todo: sort this somehow
                                 friends.extend(chats);
                                 search_results.set(friends);
+                                on_search_dropdown_hover.with_mut(|i| *i = false);
+
                             }
                         },
                     }
@@ -249,11 +269,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
             )),
-            search_friends{ identities: search_results.clone(), onclick: move |entry| {
+            search_friends{
+                identities: search_results.clone(),
+                search_dropdown_hover: on_search_dropdown_hover.clone(),
+                onclick: move |entry| {
                 select_entry(entry);
                 search_results.set(Vec::new());
                 reset_searchbar.set(true);
-            } },
+                on_search_dropdown_hover.with_mut(|i| *i = false);
+            }},
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
