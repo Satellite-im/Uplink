@@ -86,7 +86,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     });
 
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![error, page, cmd_in_progress];
+        to_owned![error, page, cmd_in_progress, account_exists];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -115,9 +115,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
-                            // wrong password
-                            error.set(Some(UnlockError::InvalidPin));
-                            log::warn!("decryption error");
+                            // check if account exist. can be the case when account got reset
+                            if account_exists.get().unwrap_or_default() {
+                                // wrong password
+                                error.set(Some(UnlockError::InvalidPin));
+                                log::warn!("decryption error");
+                            }
                         }
                         warp::error::Error::IdentityNotCreated => {
                             // this is supposed to fail.
@@ -272,6 +275,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
                                     page.set(AuthPages::Unlock);
+                                    account_exists.set(Some(false));
                                 }
                             },
                         )),
