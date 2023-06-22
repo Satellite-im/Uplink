@@ -340,11 +340,11 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                             class: "friend-group",
                             aria_label: "friend-group",
                             sorted_friends.iter().filter(|friend| {
-                                let name = friend.username();
+                                let name = friend.username().to_lowercase();
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
-                                    &name[..(name_prefix.len())] == name_prefix
+                                    name[..(name_prefix.len())] == name_prefix.to_lowercase()
                                 }
                             } ).map(|_friend| {
                                 rsx!(
