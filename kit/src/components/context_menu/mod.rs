@@ -13,6 +13,7 @@ pub struct ItemProps<'a> {
     #[props(optional)]
     onpress: Option<EventHandler<'a, MouseEvent>>,
     text: String,
+    disabled: Option<bool>,
     #[props(optional)]
     icon: Option<icons::outline::Shape>,
     #[props(optional)]
@@ -41,12 +42,18 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
         "context-item"
     };
 
+    let disabled: bool = cx.props.disabled.unwrap_or(false);
+
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
     cx.render(rsx! {
         button {
-            class: "{class}",
+            class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
             aria_label: "{aria_label}",
-            onclick: move |e| emit(&cx, e),
+            onclick: move |e| {
+                if !disabled {
+                    emit(&cx, e);
+                }
+            },
             (cx.props.icon.is_some()).then(|| {
                 let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
                 rsx! {

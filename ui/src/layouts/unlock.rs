@@ -93,7 +93,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             account_exists.set(Some(exists));
         }
     });
-
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![error, page, cmd_in_progress, account_exists];
         async move {
