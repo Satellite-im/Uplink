@@ -1,5 +1,5 @@
 use common::language::{change_language, get_available_languages, get_local_text};
-use common::state::utils::get_available_fonts;
+use common::state::utils::{get_available_fonts, get_available_themes};
 #[allow(unused_imports)]
 use common::state::{action::ConfigAction, Action, State};
 use dioxus::prelude::*;
@@ -15,6 +15,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let initial_lang_value = state.read().settings.language.clone();
 
+    let themes_fut = use_future(cx, (), |_| async move { get_available_themes() });
     let font_fut = use_future(cx, (), |_| async move { get_available_fonts() });
 
     log::trace!("General settings page rendered.");
@@ -55,6 +56,25 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     onselect: move |value| {
                         let new_app_lang = change_language(value);
                         state.write().mutate(Action::SetLanguage(new_app_lang));
+                    }
+                }
+            },
+            SettingSection {
+                section_label: get_local_text("settings-general.theme"),
+                section_description: get_local_text("settings-general.theme-description"),
+                Select {
+                    initial_value: if let Some(theme) = &state.read().ui.theme {
+                        theme.name.clone()
+                    } else {
+                        "Default".into()
+                    },
+                    options: themes_fut.value().cloned().unwrap_or_default().iter().map(|t| t.name.clone()).collect(),
+                    onselect: move |value| {
+                        themes_fut.value().cloned().unwrap_or_default().iter().for_each(|t| {
+                            if t.name == value {
+                                state.write().mutate(Action::SetTheme(Some(t.clone())));
+                            }
+                        })
                     }
                 }
             },
