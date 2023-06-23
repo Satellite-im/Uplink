@@ -196,7 +196,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
-                            with_label: if STATIC_ARGS.cache_path.exists()
+                            with_label: if account_exists.current().unwrap_or_default()
                             {Some(get_welcome_message(&state.current()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
@@ -221,7 +221,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         }
                         onreturn: move |_| {
-                            if !STATIC_ARGS.cache_path.exists() {
+                            if !account_exists.current().unwrap_or_default() {
                                 if let Some(validation_error) = validation_failure.get() {
                                     shown_error.set(validation_error.translation());
                                 } else if let Some(e) = error.get() {
