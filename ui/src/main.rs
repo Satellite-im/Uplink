@@ -173,11 +173,7 @@ fn main() {
         println!("{crash_report}");
     }));
 
-    // Initializes the cache dir if needed
-    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
-    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
-    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
-    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
+    create_uplink_dirs();
 
     let window = get_window_builder(true, true);
 
@@ -207,6 +203,14 @@ fn main() {
     };
 
     dioxus_desktop::launch_cfg(bootstrap, config)
+}
+
+pub fn create_uplink_dirs() {
+    // Initializes the cache dir if needed
+    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
+    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
+    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
+    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 }
 
 pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> WindowBuilder {

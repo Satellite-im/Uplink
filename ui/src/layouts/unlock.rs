@@ -29,7 +29,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::AuthPages;
+use crate::{create_uplink_dirs, AuthPages};
 
 enum UnlockError {
     ValidationError,
@@ -291,6 +291,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
                                     page.set(AuthPages::Unlock);
                                     account_exists.set(Some(false));
+                                    create_uplink_dirs();
                                 }
                             },
                         )),
