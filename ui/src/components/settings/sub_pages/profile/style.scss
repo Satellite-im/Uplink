@@ -2,7 +2,7 @@
   align-items: flex-start;
   .profile-header {
     background: var(--secondary);
-    height: calc(var(--width-sidebar) / 3);
+    height: calc(var(--width-sidebar) / 2);
     width: 100%;
     position: relative;
     margin-bottom: calc((var(--width-sidebar) / 6.3) / 2 + var(--gap));
@@ -51,7 +51,7 @@
   }
   .profile-banner {
     width: 100%;
-    height: calc(var(--width-sidebar) / 3);
+    height: calc(var(--width-sidebar) / 2);
     margin-bottom: calc(var(--width-sidebar) / 6.3);
     background-size: cover;
     display: inline-flex;
