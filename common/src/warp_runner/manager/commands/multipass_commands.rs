@@ -228,7 +228,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                         e
                     });
                     rsp.send(id)
-                },
+                }
                 Err(e) => {
                     log::error!("failed to update profile picture: {e}");
                     rsp.send(Err(e))
