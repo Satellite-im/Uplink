@@ -84,7 +84,15 @@ pub enum MultiPassCmd {
         pfp: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
     },
-    #[display(fmt = "UpdateBanner ")]
+    #[display(fmt = "ClearProfilePicture")]
+    ClearProfilePicture {
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "ClearBanner")]
+    ClearBanner {
+        rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
+    },
+    #[display(fmt = "UpdateBanner")]
     UpdateBanner {
         banner: String,
         rsp: oneshot::Sender<Result<identity::Identity, warp::error::Error>>,
@@ -208,6 +216,25 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = warp.multipass.close_request(&did).await;
             let _ = rsp.send(r);
         }
+        MultiPassCmd::ClearProfilePicture { rsp } => {
+            let _ = match warp
+                .multipass
+                .update_identity(IdentityUpdate::ClearPicture)
+                .await
+            {
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await.map_err(|e| {
+                        log::error!("failed to get own identity: {e}");
+                        e
+                    });
+                    rsp.send(id)
+                },
+                Err(e) => {
+                    log::error!("failed to update profile picture: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
         MultiPassCmd::UpdateProfilePicture { pfp, rsp } => {
             // note: for some reason updating a profile picture would cause your status (locally) to be lost.
             // idk why this happened but this code will get the current identity, update it, and return it
@@ -237,6 +264,22 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
             let r = warp
                 .multipass
                 .update_identity(IdentityUpdate::Banner(banner))
+                .await;
+            let _ = match r {
+                Ok(_) => {
+                    let id = warp.multipass.get_own_identity().await;
+                    rsp.send(id)
+                }
+                Err(e) => {
+                    log::error!("failed to update banner: {e}");
+                    rsp.send(Err(e))
+                }
+            };
+        }
+        MultiPassCmd::ClearBanner { rsp } => {
+            let r = warp
+                .multipass
+                .update_identity(IdentityUpdate::ClearBanner)
                 .await;
             let _ = match r {
                 Ok(_) => {
