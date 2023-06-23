@@ -206,7 +206,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
                             with_label: if account_exists.current().unwrap_or_default()
-                            {Some(get_welcome_message(&state.current()))}
+                            {Some(get_welcome_message(&state.read()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
                             ellipsis_on_label: Some(LabelWithEllipsis {
