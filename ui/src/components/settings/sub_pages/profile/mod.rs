@@ -244,7 +244,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
-                                set_profile_picture(ch.clone());
+                                ch.send(ChanCmd::Profile(String::new()));
                             }
                         }
                     )),
