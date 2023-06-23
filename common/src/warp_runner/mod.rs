@@ -349,6 +349,14 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.store_setting.emit_online_event = true;
     config.store_setting.share_platform = true;
     config.store_setting.update_events = UpdateEvents::Enabled;
+    config.store_setting.default_profile_picture = Some(Arc::new(|identity| {
+        let content = plot_icon::generate_png(identity.did_key().to_string().as_bytes(), 512)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content))
+            .as_bytes()
+            .to_vec();
+        Ok(base64_default_image)
+    }));
 
     let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
         .await
