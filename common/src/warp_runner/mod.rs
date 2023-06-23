@@ -1,7 +1,6 @@
 //! Defines important types and structs, and spawns the main task for warp_runner - manager::run.
 use derive_more::Display;
 use std::sync::Arc;
-use warp::multipass::identity::IdentityUpdate;
 
 use tokio::sync::{
     mpsc::{UnboundedReceiver, UnboundedSender},
@@ -23,7 +22,7 @@ use warp_fs_ipfs::config::FsIpfsConfig;
 use warp_mp_ipfs::config::{MpIpfsConfig, UpdateEvents};
 use warp_rg_ipfs::config::RgIpfsConfig;
 
-use crate::{create_user_default_profile_picture, STATIC_ARGS, WARP_CMD_CH};
+use crate::{STATIC_ARGS, WARP_CMD_CH};
 
 use self::ui_adapter::{MultiPassEvent, RayGunEvent};
 
@@ -187,15 +186,6 @@ async fn handle_login(notify: Arc<Notify>) {
                             Ok(_id) =>  match wait_for_multipass(&mut warp, notify.clone()).await {
                                 Ok(ident) => match save_tesseract(&warp.tesseract) {
                                     Ok(_) => {
-                                        match create_user_default_profile_picture(ident.did_key()) {
-                                            Ok(pfp) => {
-                                                match warp.multipass.update_identity(IdentityUpdate::Picture(pfp)).await {
-                                                    Ok(_) => log::info!("Identity updated successfully with default polkadot placeholder"),
-                                                    Err(e) => log::warn!("Failed to update identity with default polkadot placeholder: {}", e),
-                                                };
-                                            }
-                                            Err(e) => log::warn!("Failed to create default polkadot placeholder: {}", e),
-                                        };
                                         let _ = rsp.send(Ok(ident));
                                         break Some(warp);
                                     }

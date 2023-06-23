@@ -30,7 +30,7 @@ use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
-use crate::{create_user_default_profile_picture, STATIC_ARGS};
+use crate::STATIC_ARGS;
 
 use crate::{
     testing::mock::generate_mock,
@@ -1395,21 +1395,11 @@ impl State {
         };
     }
 
-    pub fn profile_picture(&self) -> (String, bool) {
-        let default_image = create_user_default_profile_picture(self.did_key()).unwrap_or_default();
-        let pfp_from_identity = self
-            .identities
+    pub fn profile_picture(&self) -> String {
+        self.identities
             .get(&self.did_key())
             .map(|x| x.profile_picture())
-            .unwrap_or_default();
-        if pfp_from_identity.is_empty() {
-            (default_image, true)
-        } else {
-            (
-                pfp_from_identity.clone(),
-                default_image == pfp_from_identity,
-            )
-        }
+            .unwrap_or_default()
     }
 
     pub fn profile_banner(&self) -> String {

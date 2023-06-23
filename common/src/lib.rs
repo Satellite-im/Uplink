@@ -12,13 +12,11 @@ pub use icons;
 use once_cell::sync::Lazy;
 use plot_icon::generate_png;
 use std::{
-    fs::File,
-    io::{self, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
 use tokio::sync::Mutex;
-use warp::{crypto::DID, error::Error};
+use warp::{crypto::DID, logging::tracing::log};
 use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
@@ -83,8 +81,6 @@ pub struct StaticArgs {
     pub cache_path: PathBuf,
     /// a fake tesseract_path to prevent anything from mutating the tesseract keypair after it has been created (probably not necessary)
     pub mock_cache_path: PathBuf,
-    /// default user path, if user does not define an profile picture image
-    pub user_default_pfp_path: PathBuf,
     /// houses warp specific data
     pub warp_path: PathBuf,
     /// a debug log which is only written to when the settings are enabled. otherwise logs are only sent to stdout
@@ -132,7 +128,6 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
         cache_path: uplink_path.join("state.json"),
         extensions_path: uplink_container.join("extensions"),
         mock_cache_path: uplink_path.join("mock-state.json"),
-        user_default_pfp_path: uplink_path.join("user_default_profile_pic.png"),
         warp_path: warp_path.clone(),
         logger_path: uplink_path.join("debug.log"),
         typing_indicator_refresh: 5,
@@ -234,18 +229,13 @@ pub fn get_extensions_dir() -> anyhow::Result<PathBuf> {
     Ok(extensions_path)
 }
 
-pub fn create_user_default_profile_picture(did_key: DID) -> Result<String, Error> {
-    if !STATIC_ARGS.user_default_pfp_path.exists() {
-        let content = generate_png(did_key.to_string().as_bytes(), 512)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        let mut file = File::create(STATIC_ARGS.user_default_pfp_path.clone())?;
-        file.write_all(&content)?;
-        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
-        Ok(base64_default_image)
-    } else {
-        Ok(format!(
-            "data:image/png;base64,{}",
-            base64::encode(std::fs::read(&STATIC_ARGS.user_default_pfp_path).unwrap_or_default())
-        ))
-    }
+pub fn get_user_default_profile_picture(did_key: DID) -> String {
+    let content = match generate_png(did_key.to_string().as_bytes(), 512) {
+        Ok(data) => data,
+        Err(e) => {
+            log::warn!("Failed to get default polkadot placeholder: {}", e);
+            return String::new();
+        }
+    };
+    format!("data:image/png;base64,{}", base64::encode(content))
 }
