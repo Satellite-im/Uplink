@@ -23,7 +23,9 @@ use warp::{error::Error, logging::tracing::log};
 #[derive(Clone)]
 enum ChanCmd {
     Profile(String),
+    ClearProfile,
     Banner(String),
+    ClearBanner,
     Username(String),
     Status(String),
 }
@@ -80,7 +82,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 let (tx, rx) = oneshot::channel();
                 let warp_cmd = match cmd {
                     ChanCmd::Profile(pfp) => MultiPassCmd::UpdateProfilePicture { pfp, rsp: tx },
+                    ChanCmd::ClearProfile => MultiPassCmd::ClearProfilePicture { rsp: tx },
                     ChanCmd::Banner(banner) => MultiPassCmd::UpdateBanner { banner, rsp: tx },
+                    ChanCmd::ClearBanner => MultiPassCmd::ClearBanner { rsp: tx },
                     ChanCmd::Username(username) => {
                         MultiPassCmd::UpdateUsername { username, rsp: tx }
                     }
@@ -220,7 +224,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             text: get_local_text("settings-profile.clear-banner"),
                             aria_label: "clear-banner".into(),
                             onpress: move |_| {
-                                ch.send(ChanCmd::Banner(String::from('\0')));
+                                ch.send(ChanCmd::ClearBanner);
                             }
                         }
                     )),
@@ -242,7 +246,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
-                                ch.send(ChanCmd::Profile("\0".into()));
+                                ch.send(ChanCmd::ClearProfile);
                             }
                         }
                     )),
