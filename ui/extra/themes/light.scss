@@ -1,8 +1,4 @@
 :root {
-    --primary: #0984e3;
-    --primary-dark: #0873c5;
-    --primary-light: #1a97f7;
-
     // --animation-time: 0.2s;
     // --opacity-modifier: 0.75;
 
@@ -32,26 +28,30 @@
     // --border-radius-less: 2px;
     // --border-radius-more: 20px;
 
-    // --border-color: #141414;
-    // --border-subtle-color: #212529;
-
-    // --border-color: #fff;
-    // --border-subtle-color: #0f0f0f;
-    // --text-color: #f8f9fa;
-    // --text-color-muted: #dee2e6;
-    // --text-color-dark: #343a40;
-    // --text-color-bright: #ffffff;
+    --border-color: #eee;
+    --border-subtle-color: #dbdbdb;
+    
+    --text-color: #000000;
+    --text-color-muted: #2c2c2c;
+    --text-color-dark: #000;
+    --text-color-bright: #5a5a5a;
     // --text-color-link: #ff860d;
-    // --placeholder: #fff;
+    --placeholder: var(--text-color-muted);
     // --primary: #FCFBF4;
     // --primary-dark: #eae8e1;
     // --primary-light: #fefff7;
-    // --secondary: #343a40;
-    // --secondary-light: #adb5bd;
-    // --secondary-dark: #212529;
-    // --background: #000000;
-    // --background-light: var(--secondary-light);
-    // --background-dark: #000000;
+
+    --primary: #95a5a6;
+    --primary-light: color-mix(in srgb, var(--secondary) 50%, white);
+    --primary-dark: color-mix(in srgb, var(--secondary) 95%, black);
+
+    --secondary: #eaf1f8;
+    --secondary-light: color-mix(in srgb, var(--secondary) 50%, white);
+    --secondary-dark: color-mix(in srgb, var(--secondary) 95%, black);
+
+    --background: #fff;
+    --background-light:  color-mix(in srgb, var(--background) 50%, white);
+    --background-dark:  color-mix(in srgb, var(--background) 95%, black);
     // --success: #1dd1a1;
     // --success-light: #00c29c;
     // --warning: #f5af19;
