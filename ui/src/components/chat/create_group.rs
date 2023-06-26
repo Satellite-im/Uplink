@@ -148,6 +148,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     options: Options {
                         with_clear_btn: true,
                         react_to_esc_key: true,
+                        clear_on_submit: false,
                         ..Options::default()
                     },
                     onchange: move |(v, _): (String, _)| {
@@ -208,11 +209,11 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                             key: "friend-group-{group_letter}",
                             class: "friend-group",
                             sorted_friends.iter().filter(|friend| {
-                                let name = friend.username();
+                                let name = friend.username().to_lowercase();
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
-                                    &name[..(name_prefix.len())] == name_prefix
+                                    name[..(name_prefix.len())] == name_prefix.to_lowercase()
                                 }
                             } ).map(|_friend| {
                                 rsx!(

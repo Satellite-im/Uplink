@@ -1,8 +1,8 @@
 use arboard::Clipboard;
-use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
+use common::{get_images_dir, get_user_default_profile_picture};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -39,6 +39,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().profile_picture();
+    let image2 = image.clone();
     let banner = state.read().profile_banner();
     let no_profile = image.eq("\0") || image.is_empty(); // Assume this changes when e.g. default profile pics get implemented
     let no_banner = banner.eq("\0") || banner.is_empty();
@@ -248,7 +249,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 set_banner(ch.clone());
                             },
                             p {class: "change-banner-text", "{change_banner_text}" },
-                        }
+                        },
                     })
                 }
                 if no_profile {
@@ -264,7 +265,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 icon: Icon::Plus,
                                 aria_label: "add-picture-button".into(),
                                 onpress: move |_| {
-                                set_profile_picture(ch.clone());
+                                   set_profile_picture(ch.clone());
                                 }
                             },
                         }
@@ -276,10 +277,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         items: cx.render(rsx!(
                             ContextItem {
                                 icon: Icon::Trash,
+                                disabled: get_user_default_profile_picture(state.read().did_key()) == image2.clone(),
                                 aria_label: "clear-avatar".into(),
                                 text: get_local_text("settings-profile.clear-avatar"),
                                 onpress: move |_| {
-                                    ch.send(ChanCmd::Profile(String::from('\0')));
+                                    ch.send(ChanCmd::Profile("\0".into()));
                                 }
                             }
                         )),
@@ -294,7 +296,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                 icon: Icon::Plus,
                                 aria_label: "add-picture-button".into(),
                                 onpress: move |_| {
-                                set_profile_picture(ch.clone());
+                                   set_profile_picture(ch.clone());
                                 }
                             },
                         },
