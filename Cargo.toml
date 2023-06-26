@@ -23,7 +23,7 @@ codegen-units = 1
 
 [workspace.package]
 version = "0.1.5"
-rust-version = "1.68"
+rust-version = "1.70"
 
 [workspace.dependencies]
 wry = { version = "0.27.2" }

@@ -26,7 +26,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.68.2
+          toolchain: 1.70.0
           override: true
           components: rustfmt, clippy
       - run: cargo clippy --no-deps -- -D warnings
