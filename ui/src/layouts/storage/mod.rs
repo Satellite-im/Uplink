@@ -264,7 +264,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 div {
                     class: "files-bar-track",
                     div {
-                        class: "files-bar",
+                        class: "upload-progress-bar",
+                        p { 
+                            class: "upload-file-count",
+                            "1 File to Upload! "}
                     }
                 },
                 div {

@@ -1,0 +1,12 @@
+.upload-progress-bar {
+    display: flex;
+    height: 80px;
+    width: 100%,;
+    align-items: center;
+    background: var(--text-color-dark);
+
+    .upload-file-count {
+        color: var(--text-color);
+        padding-left: 24px;
+    }
+}
