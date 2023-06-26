@@ -32,12 +32,19 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
     return cx.render(rsx!(
         div {
-            class: "upload-progress-bar",
+            class: "upload-progress-bar-container",
             p {
                 id: "upload-progress-description",
                 class: "upload-progress-description",
-                "File is uploading... 30%"
+                "File is Uploading... 30%"
+            },
+            div {
+                class: "progress-bar",
+                div {
+                    class: "progress-percentage",
+                }
             }
+
         },
     ));
 
@@ -52,7 +59,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
 
     //     return cx.render(rsx!(
     //         div {
-    //             class: "upload-progress-bar",
+    //             class: "upload-progress-bar-container",
     //             p {
     //                 id: "upload-file-count",
     //                 class: "upload-file-count",

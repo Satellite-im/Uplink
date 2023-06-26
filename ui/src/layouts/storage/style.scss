@@ -1,12 +1,37 @@
-.upload-progress-bar {
+.upload-progress-bar-container {
     display: flex;
     height: 80px;
     width: 100%,;
-    align-items: center;
+    flex-direction: column;
     background: var(--text-color-dark);
 
     .upload-file-count {
-        color: var(--text-color);
+        color: var(--text-color-muted);
         padding-left: 24px;
+    }
+
+    .upload-progress-description {
+        color: var(--text-color-muted);
+        padding-left: 24px;
+        padding-top: 12px;
+        padding-bottom: 16px;
+    }
+
+    .progress-bar {
+        border-radius: 2px;
+        border: 1px solid var(--text-textmed, #A8AABE);
+        height: 20px;
+        margin-left: 24px;
+        margin-right: 20%;
+        background-color: transparent;
+        overflow: hidden;
+
+        .progress-percentage {
+            position: relative;
+            border-radius: 2px;
+            background-color: #A8AABE; /* Cor do preenchimento */
+            height: 19px;
+            width: 90%;
+        }
     }
 }
