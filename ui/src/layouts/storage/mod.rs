@@ -271,13 +271,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 }
                 UploadProgressBar {
                     are_files_hovering_app: are_files_hovering_app,
+                    on_update: |files_to_upload| {
+                        ch.send(ChanCmd::UploadFiles(files_to_upload));
+                    },
                 }
-                // div {
-                //         class: "upload-progress-bar",
-                //         p { 
-                //             class: "upload-file-count",
-                //             "1 File to Upload! "}
-                //     },
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
