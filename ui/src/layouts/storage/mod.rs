@@ -36,8 +36,10 @@ use wry::webview::FileDropEvent;
 
 pub mod controller;
 pub mod functions;
+pub mod upload_progress_bar;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::file_preview::FilePreview;
+use crate::layouts::storage::upload_progress_bar::UploadProgressBar;
 
 use self::controller::StorageController;
 
@@ -99,6 +101,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let first_render = use_state(cx, || true);
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
+    let are_files_hovering_app = use_ref(cx, || false);
 
     let main_script = include_str!("./storage.js");
     let window = use_window(cx);
@@ -151,14 +154,19 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if drag_event.with(|i| i.clone()).is_none() {
-                    cx.spawn({
-                        to_owned![drag_event, window, ch, main_script];
-                        async move {
-                            functions::drag_and_drop_function(&window, &drag_event, main_script, &ch).await;
-                        }
-                    });
+                if are_files_hovering_app.with(|i| *i == false) {
+                    are_files_hovering_app.with_mut(|i| *i = true);
                 }
+
+
+                // if drag_event.with(|i| i.clone()).is_none() {
+                //     cx.spawn({
+                //         to_owned![drag_event, window, ch, main_script];
+                //         async move {
+                //             functions::drag_and_drop_function(&window, &drag_event, main_script, &ch).await;
+                //         }
+                //     });
+                // }
                 },
             onclick: |_| {
                 add_new_folder.set(false);
@@ -261,15 +269,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         }
                     }
                 }
-                div {
-                    class: "files-bar-track",
-                    div {
-                        class: "upload-progress-bar",
-                        p { 
-                            class: "upload-file-count",
-                            "1 File to Upload! "}
-                    }
-                },
+                UploadProgressBar {
+                    are_files_hovering_app: are_files_hovering_app,
+                }
+                // div {
+                //         class: "upload-progress-bar",
+                //         p { 
+                //             class: "upload-file-count",
+                //             "1 File to Upload! "}
+                //     },
                 div {
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
