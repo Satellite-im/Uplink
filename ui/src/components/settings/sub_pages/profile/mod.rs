@@ -40,6 +40,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().profile_picture();
     let banner = state.read().profile_banner();
+    let no_profile = image.eq("\0") || image.is_empty(); // Assume this changes when e.g. default profile pics get implemented
+    let no_banner = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -212,56 +214,92 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 aria_label: "profile-header",
                 // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
                 // ideally this ContextItem would appear when right clicking the profile-banner div.
-                ContextMenu {
-                    id: String::from("profile-banner-context-menu"),
-                    items: cx.render(rsx!(
-                        ContextItem {
-                            icon: Icon::Trash,
-                            text: get_local_text("settings-profile.clear-banner"),
-                            aria_label: "clear-banner".into(),
-                            onpress: move |_| {
-                                ch.send(ChanCmd::Banner(String::from('\0')));
-                            }
+                if no_banner {
+                    rsx!(
+                        div {
+                            class: "profile-banner",
+                            aria_label: "profile-banner",
+                            style: "background-image: url({banner});",
+                            onclick: move |_| {
+                                set_banner(ch.clone());
+                            },
+                            p {class: "change-banner-text", "{change_banner_text}" },
                         }
-                    )),
-                    div {
-                        class: "profile-banner",
-                        aria_label: "profile-banner",
-                        style: "background-image: url({banner});",
-                        onclick: move |_| {
-                            set_banner(ch.clone());
-                        },
-                        p {class: "change-banner-text", "{change_banner_text}" },
-                    },
+                    )
                 }
-                ContextMenu {
-                    id: String::from("profile-picture-context-menu"),
-                    items: cx.render(rsx!(
-                        ContextItem {
-                            icon: Icon::Trash,
-                            aria_label: "clear-avatar".into(),
-                            text: get_local_text("settings-profile.clear-avatar"),
-                            onpress: move |_| {
-                                ch.send(ChanCmd::Profile(String::from('\0')));
+                else {
+                    rsx!(ContextMenu {
+                        id: String::from("profile-banner-context-menu"),
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                icon: Icon::Trash,
+                                text: get_local_text("settings-profile.clear-banner"),
+                                aria_label: "clear-banner".into(),
+                                onpress: move |_| {
+                                    ch.send(ChanCmd::Banner(String::from('\0')));
+                                }
                             }
+                        )),
+                        div {
+                            class: "profile-banner",
+                            aria_label: "profile-banner",
+                            style: "background-image: url({banner});",
+                            onclick: move |_| {
+                                set_banner(ch.clone());
+                            },
+                            p {class: "change-banner-text", "{change_banner_text}" },
                         }
-                    )),
-                    div {
-                        class: "profile-picture",
-                        aria_label: "profile-picture",
-                        style: "background-image: url({image});",
-                        onclick: move |_| {
-                            set_profile_picture(ch.clone());
-                        },
-                        Button {
-                            icon: Icon::Plus,
-                            aria_label: "add-picture-button".into(),
-                            onpress: move |_| {
-                               set_profile_picture(ch.clone());
+                    })
+                }
+                if no_profile {
+                    rsx!(
+                        div {
+                            class: "profile-picture",
+                            aria_label: "profile-picture",
+                            style: "background-image: url({image});",
+                            onclick: move |_| {
+                                set_profile_picture(ch.clone());
+                            },
+                            Button {
+                                icon: Icon::Plus,
+                                aria_label: "add-picture-button".into(),
+                                onpress: move |_| {
+                                set_profile_picture(ch.clone());
+                                }
+                            },
+                        }
+                    )
+                }
+                else {
+                    rsx!(ContextMenu {
+                        id: String::from("profile-picture-context-menu"),
+                        items: cx.render(rsx!(
+                            ContextItem {
+                                icon: Icon::Trash,
+                                aria_label: "clear-avatar".into(),
+                                text: get_local_text("settings-profile.clear-avatar"),
+                                onpress: move |_| {
+                                    ch.send(ChanCmd::Profile(String::from('\0')));
+                                }
                             }
+                        )),
+                        div {
+                            class: "profile-picture",
+                            aria_label: "profile-picture",
+                            style: "background-image: url({image});",
+                            onclick: move |_| {
+                                set_profile_picture(ch.clone());
+                            },
+                            Button {
+                                icon: Icon::Plus,
+                                aria_label: "add-picture-button".into(),
+                                onpress: move |_| {
+                                set_profile_picture(ch.clone());
+                                }
+                            },
                         },
-                    },
-                },
+                    })
+                }
             },
             div{
                 class: "profile-content",
