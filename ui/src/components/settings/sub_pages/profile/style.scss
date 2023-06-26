@@ -1,5 +1,6 @@
 #settings-profile {
   align-items: flex-start;
+  
   .profile-header {
     background: var(--secondary);
     height: calc(var(--width-sidebar) / 2);
@@ -18,6 +19,7 @@
       height: 100%;
     }
   }
+
   .new-profile-welcome {
     border: 1px solid var(--border-subtle-color);
     display: inline-flex;
@@ -49,6 +51,7 @@
       }
     }
   }
+
   .profile-banner {
     width: 100%;
     height: calc(var(--width-sidebar) / 2);
@@ -108,7 +111,6 @@
       margin-right: calc(var(--gap) * -1);
     }
   }
-
 
   .profile-avatar {
     border-radius: 100%;

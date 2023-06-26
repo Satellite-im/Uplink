@@ -484,8 +484,20 @@ fn app(cx: Scope) -> Element {
             .map(|theme| theme.styles.clone())
             .unwrap_or_default();
 
+        let accent_color = state.read().ui.accent_color.clone();
+        let accent_color = if let Some(color) = accent_color {
+            format!(
+                ":root {{
+                    --primary: rgb({},{},{});
+                }}",
+                color.0, color.1, color.2,
+            )
+        } else {
+            "".into()
+        };
+
         rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {font_style} {open_dyslexic} {font_scale}" },
+            style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
                 get_titlebar{},

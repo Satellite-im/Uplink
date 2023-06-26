@@ -2,13 +2,17 @@ use common::language::{change_language, get_available_languages, get_local_text}
 use common::state::utils::{get_available_fonts, get_available_themes};
 #[allow(unused_imports)]
 use common::state::{action::ConfigAction, Action, State};
+use common::{icons::outline::Shape as Icon, STATIC_ARGS};
 use dioxus::prelude::*;
 use kit::components::slide_selector::{ButtonsFormat, SlideSelector};
+use kit::components::swatch::ColorSwatch;
+use kit::elements::button::Button;
+use kit::elements::tooltip::{ArrowPosition, Tooltip};
 #[allow(unused_imports)]
 use kit::elements::{select::Select, switch::Switch};
 use warp::logging::tracing::log;
 
-use crate::components::settings::SettingSection;
+use crate::components::settings::{SettingSection, SettingSectionSimple};
 
 #[allow(non_snake_case)]
 pub fn GeneralSettings(cx: Scope) -> Element {
@@ -30,6 +34,20 @@ pub fn GeneralSettings(cx: Scope) -> Element {
             2
         }
     };
+
+    let active_theme = state.read().ui.theme.clone().unwrap_or_default();
+
+    // TODO: This could go into a config file but I think the better approach is to allow the user to create and remove their own custom colors to create rudementary themes. Until we get there, this is fine.
+    let available_colors = vec![
+        (255, 234, 167),
+        (232, 103, 106),
+        (237, 155, 85),
+        (85, 239, 196),
+        (9, 132, 227),
+        (162, 155, 254),
+        (253, 121, 168),
+    ];
+
     cx.render(rsx!(
         div {
             id: "settings-general",
@@ -60,25 +78,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 }
             },
             SettingSection {
-                section_label: get_local_text("settings-general.theme"),
-                section_description: get_local_text("settings-general.theme-description"),
-                Select {
-                    initial_value: if let Some(theme) = &state.read().ui.theme {
-                        theme.name.clone()
-                    } else {
-                        "Default".into()
-                    },
-                    options: themes_fut.value().cloned().unwrap_or_default().iter().map(|t| t.name.clone()).collect(),
-                    onselect: move |value| {
-                        themes_fut.value().cloned().unwrap_or_default().iter().for_each(|t| {
-                            if t.name == value {
-                                state.write().mutate(Action::SetTheme(Some(t.clone())));
-                            }
-                        })
-                    }
-                }
-            },
-            SettingSection {
                 section_label: get_local_text("settings-general.font"),
                 section_description: get_local_text("settings-general.font-description"),
                 Select {
@@ -95,7 +94,18 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                             }
                         })
                     }
-                }
+                },
+                Button {
+                    icon: Icon::FolderOpen,
+                    aria_label: "open-fonts-folder-button".into(),
+                    onpress: move |_| {
+                        let _ = opener::open(&STATIC_ARGS.fonts_path);
+                    },
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Right,
+                        text: get_local_text("settings-developer.open-cache-folder"),
+                    }))
+                },
             },
             SettingSection {
                 section_label: get_local_text("settings-general.font-scaling"),
@@ -109,6 +119,63 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }
                 }
             },
+            SettingSection {
+                section_label: get_local_text("settings-general.theme"),
+                section_description: get_local_text("settings-general.theme-description"),
+                no_border: true,
+                Select {
+                    initial_value: if let Some(theme) = &state.read().ui.theme {
+                        theme.name.clone()
+                    } else {
+                        "Default".into()
+                    },
+                    options: themes_fut.value().cloned().unwrap_or_default().iter().map(|t| t.name.clone()).collect(),
+                    onselect: move |value| {
+                        themes_fut.value().cloned().unwrap_or_default().iter().for_each(|t| {
+                            if t.name == value {
+                                state.write().mutate(Action::SetTheme(Some(t.clone())));
+                            }
+                        })
+                    }
+                },
+                Button {
+                    icon: Icon::FolderOpen,
+                    aria_label: "open-themes-folder-button".into(),
+                    onpress: move |_| {
+                        let _ = opener::open(&STATIC_ARGS.themes_path);
+                    },
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Right,
+                        text: get_local_text("settings-developer.open-cache-folder"),
+                    }))
+                },
+            },
+            (&active_theme.name == "Default").then(|| rsx!(
+                SettingSectionSimple {
+                    div {
+                        class: "color-swatches",
+                        Button {
+                            icon: Icon::NoSymbol,
+                            onpress: move |_| {
+                                state.write().mutate(Action::ClearAccentColor);
+                            }
+                            tooltip: cx.render(rsx!(Tooltip {
+                                arrow_position: ArrowPosition::Right,
+                                text: get_local_text("settings-general.clear-accent"),
+                            }))
+                        },
+                        for color in available_colors {
+                            ColorSwatch {
+                                color: color,
+                                active: state.read().ui.accent_color == Some(color),
+                                onpress: move |_| {
+                                    state.write().mutate(Action::SetAccentColor(color));
+                                },
+                            }
+                        }
+                    }
+                },
+            )),
         }
     ))
 }
