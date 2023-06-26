@@ -43,7 +43,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image = state.read().profile_picture();
     let image2 = image.clone();
     let banner = state.read().profile_banner();
-    let no_profile = image.eq("\0") || image.is_empty(); // Assume this changes when e.g. default profile pics get implemented
+    let no_profile = image.eq("\0")
+        || get_user_default_profile_picture(state.read().did_key()) == image2.clone()
+        || image.is_empty();
     let no_banner = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
@@ -219,92 +221,57 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                 aria_label: "profile-header",
                 // todo: when I wrap the profile-banner div in a ContextMenu, the onlick and oncontext events stop happening. not sure why.
                 // ideally this ContextItem would appear when right clicking the profile-banner div.
-                if no_banner {
-                    rsx!(
-                        div {
-                            class: "profile-banner",
-                            aria_label: "profile-banner",
-                            style: "background-image: url({banner});",
-                            onclick: move |_| {
-                                set_banner(ch.clone());
-                            },
-                            p {class: "change-banner-text", "{change_banner_text}" },
-                        }
-                    )
-                }
-                else {
-                    rsx!(ContextMenu {
-                        id: String::from("profile-banner-context-menu"),
-                        items: cx.render(rsx!(
-                            ContextItem {
-                                icon: Icon::Trash,
-                                text: get_local_text("settings-profile.clear-banner"),
-                                aria_label: "clear-banner".into(),
-                                onpress: move |_| {
-                                    ch.send(ChanCmd::ClearBanner);
-                                }
+                ContextMenu {
+                    id: String::from("profile-banner-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            disabled: no_banner,
+                            text: get_local_text("settings-profile.clear-banner"),
+                            aria_label: "clear-banner".into(),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::ClearBanner);
                             }
-                        )),
-                        div {
-                            class: "profile-banner",
-                            aria_label: "profile-banner",
-                            style: "background-image: url({banner});",
-                            onclick: move |_| {
-                                set_banner(ch.clone());
-                            },
-                            p {class: "change-banner-text", "{change_banner_text}" },
-                        },
-                    })
-                }
-                if no_profile {
-                    rsx!(
-                        div {
-                            class: "profile-picture",
-                            aria_label: "profile-picture",
-                            style: "background-image: url({image});",
-                            onclick: move |_| {
-                                set_profile_picture(ch.clone());
-                            },
-                            Button {
-                                icon: Icon::Plus,
-                                aria_label: "add-picture-button".into(),
-                                onpress: move |_| {
-                                   set_profile_picture(ch.clone());
-                                }
-                            },
                         }
-                    )
-                }
-                else {
-                    rsx!(ContextMenu {
-                        id: String::from("profile-picture-context-menu"),
-                        items: cx.render(rsx!(
-                            ContextItem {
-                                icon: Icon::Trash,
-                                disabled: get_user_default_profile_picture(state.read().did_key()) == image2.clone(),
-                                aria_label: "clear-avatar".into(),
-                                text: get_local_text("settings-profile.clear-avatar"),
-                                onpress: move |_| {
-                                    ch.send(ChanCmd::ClearProfile);
-                                }
-                            }
-                        )),
-                        div {
-                            class: "profile-picture",
-                            aria_label: "profile-picture",
-                            style: "background-image: url({image});",
-                            onclick: move |_| {
-                                set_profile_picture(ch.clone());
-                            },
-                            Button {
-                                icon: Icon::Plus,
-                                aria_label: "add-picture-button".into(),
-                                onpress: move |_| {
-                                set_profile_picture(ch.clone());
-                                }
-                            },
+                    )),
+                    div {
+                        class: "profile-banner",
+                        aria_label: "profile-banner",
+                        style: "background-image: url({banner});",
+                        onclick: move |_| {
+                            set_banner(ch.clone());
                         },
-                    })
+                        p {class: "change-banner-text", "{change_banner_text}" },
+                    },
+                },
+                ContextMenu {
+                    id: String::from("profile-picture-context-menu"),
+                    items: cx.render(rsx!(
+                        ContextItem {
+                            icon: Icon::Trash,
+                            disabled: no_profile,
+                            aria_label: "clear-avatar".into(),
+                            text: get_local_text("settings-profile.clear-avatar"),
+                            onpress: move |_| {
+                                ch.send(ChanCmd::ClearProfile);
+                            }
+                        }
+                    )),
+                    div {
+                        class: "profile-picture",
+                        aria_label: "profile-picture",
+                        style: "background-image: url({image});",
+                        onclick: move |_| {
+                            set_profile_picture(ch.clone());
+                        },
+                        Button {
+                            icon: Icon::Plus,
+                            aria_label: "add-picture-button".into(),
+                            onpress: move |_| {
+                            set_profile_picture(ch.clone());
+                            }
+                        },
+                    },
                 }
             },
             div{
