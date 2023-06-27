@@ -134,7 +134,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
 
                         if current_theme.name != "Light" {
                             let light_theme = get_available_themes().iter().find(|t| t.name == "Light").unwrap().clone();
-                            state.write().mutate(Action::SetTheme(Some(light_theme.clone())));
+                            state.write().mutate(Action::SetTheme(Some(light_theme)));
                         } else {
                             state.write().mutate(Action::SetTheme(None));
                         }
