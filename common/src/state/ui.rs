@@ -49,6 +49,7 @@ pub struct UI {
     pub popout_media_player: bool,
     #[serde(skip)]
     pub toast_notifications: HashMap<Uuid, ToastNotification>,
+    pub accent_color: Option<(u8, u8, u8)>,
     pub theme: Option<Theme>,
     pub font: Option<Font>,
     pub enable_overlay: bool,
