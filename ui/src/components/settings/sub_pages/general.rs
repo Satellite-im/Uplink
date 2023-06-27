@@ -35,19 +35,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         }
     };
 
-<<<<<<< HEAD
-    let active_theme = state.read().ui.theme.clone().unwrap_or_default();
-
-    // TODO: This could go into a config file but I think the better approach is to allow the user to create and remove their own custom colors to create rudementary themes. Until we get there, this is fine.
-    let available_colors = vec![
-        (255, 234, 167),
-        (232, 103, 106),
-        (237, 155, 85),
-        (85, 239, 196),
-        (9, 132, 227),
-        (162, 155, 254),
-        (253, 121, 168),
-=======
     // TODO: This could go into a config file but I think the better approach is to allow the user to create and remove their own custom colors to create rudementary themes. Until we get there, this is fine.
     let available_colors = vec![
         (255, 95, 87),   // Red
@@ -58,7 +45,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         (162, 155, 254), // Purple
         (253, 167, 223), // Pink
         (210, 218, 226), // Gray
->>>>>>> 3f9f263727dee3d8f49ee50a9e81b94754727b6d
     ];
 
     cx.render(rsx!(
