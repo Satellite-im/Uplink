@@ -5,16 +5,28 @@
     flex-direction: column;
     background: var(--text-color-dark);
 
-    .upload-file-count {
-        color: var(--text-color-muted);
-        padding-left: 24px;
+    .progress-percentage-description-container {
+        padding-top: 12px;
+        display: flex;
+
+      
+    
+        .upload-progress-description {
+            color: var(--text-color-muted);
+            padding-left: 24px;
+            padding-bottom: 16px;
+        }
+
+        .upload-progress-percentage {
+            color: var(--text-color-muted);
+            padding-left: 16px;
+        }
     }
 
-    .upload-progress-description {
+    .upload-file-count {
         color: var(--text-color-muted);
+        padding-top: 25px;
         padding-left: 24px;
-        padding-top: 12px;
-        padding-bottom: 16px;
     }
 
     .progress-bar {
@@ -31,7 +43,7 @@
             border-radius: 2px;
             background-color: #A8AABE; /* Cor do preenchimento */
             height: 19px;
-            width: 90%;
+            width: 0%;
         }
     }
 }

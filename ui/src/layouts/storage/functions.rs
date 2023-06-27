@@ -22,7 +22,7 @@ use tokio::{
 };
 use wry::webview::FileDropEvent;
 
-use crate::layouts::storage::{ANIMATION_DASH_SCRIPT, FEEDBACK_TEXT_SCRIPT, FILE_NAME_SCRIPT};
+use crate::layouts::storage::upload_progress_bar;
 
 use super::{controller::StorageController, ChanCmd, Props, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
 
@@ -97,7 +97,7 @@ pub fn format_item_name(file_name: String) -> String {
         .unwrap_or_default();
 
     file_name
-        .get(0..15)
+        .get(0..64)
         .map(|x| x.to_string())
         .map(|x| {
             if file_stem.len() > MAX_LEN_TO_FORMAT_NAME {
@@ -107,59 +107,6 @@ pub fn format_item_name(file_name: String) -> String {
             }
         })
         .unwrap_or_else(|| file_name.clone())
-}
-
-pub async fn drag_and_drop_function(
-    window: &DesktopContext,
-    drag_event: &UseRef<Option<FileDropEvent>>,
-    main_script: String,
-    ch: &Coroutine<ChanCmd>,
-) {
-    *drag_event.write_silent() = Some(get_drag_event());
-    loop {
-        let file_drop_event = get_drag_event();
-        match file_drop_event {
-            FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_there_are_valid_paths(&paths) {
-                    let mut script = main_script.replace("$IS_DRAGGING", "true");
-                    if paths.len() > 1 {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.files-to-upload")
-                            ),
-                        ));
-                    } else {
-                        script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
-                            "$TEXT",
-                            &format!(
-                                "{} {}!",
-                                paths.len(),
-                                get_local_text("files.one-file-to-upload")
-                            ),
-                        ));
-                    }
-                    window.eval(&script);
-                }
-            }
-            FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_there_are_valid_paths(&paths) {
-                    let new_files_to_upload = decoded_pathbufs(paths);
-                    ch.send(ChanCmd::UploadFiles(new_files_to_upload));
-                    break;
-                }
-            }
-            _ => {
-                *drag_event.write_silent() = None;
-                let script = main_script.replace("$IS_DRAGGING", "false");
-                window.eval(&script);
-                break;
-            }
-        };
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    }
 }
 
 pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool {
@@ -214,19 +161,11 @@ pub fn storage_coroutine<'a>(
     state: &UseSharedState<State>,
     storage_state: &'a UseState<Option<Storage>>,
     storage_size: &'a UseRef<(String, String)>,
-    main_script: String,
     window: &'a DesktopContext,
     drag_event: &'a UseRef<Option<FileDropEvent>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![
-            storage_state,
-            main_script,
-            window,
-            drag_event,
-            storage_size,
-            state
-        ];
+        to_owned![storage_state, window, drag_event, storage_size, state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -328,10 +267,6 @@ pub fn storage_coroutine<'a>(
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
-                        let mut script = main_script.replace("$IS_DRAGGING", "true");
-                        script.push_str(ANIMATION_DASH_SCRIPT);
-                        window.eval(&script);
-
                         let (tx, mut rx) =
                             mpsc::unbounded_channel::<FileTransferProgress<Storage>>();
 
@@ -369,61 +304,53 @@ pub fn storage_coroutine<'a>(
                                         }
                                         FileTransferStep::Start(name) => {
                                             let file_name_formatted = format_item_name(name);
-                                            let script = FILE_NAME_SCRIPT
-                                                .replace("$FILE_NAME", &file_name_formatted);
-                                            window.eval(&script);
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                file_name_formatted,
+                                            );
                                             sleep(Duration::from_millis(100)).await;
                                         }
                                         FileTransferStep::DuplicateName(duplicate_name_step) => {
                                             match duplicate_name_step {
                                                 None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text(
+                                                    upload_progress_bar::change_progress_description(
+                                                        &window,
+                                                        get_local_text(
                                                             "files.renaming-duplicated",
                                                         ),
                                                     );
-                                                    window.eval(&script);
                                                 }
                                                 Some(name) => {
                                                     let file_name_formatted =
                                                         format_item_name(name);
-                                                    let script = FILE_NAME_SCRIPT.replace(
-                                                        "$FILE_NAME",
-                                                        &file_name_formatted,
+                                                    upload_progress_bar::change_progress_description(
+                                                        &window,
+                                                        file_name_formatted,
                                                     );
-                                                    window.eval(&script);
                                                 }
                                             }
                                             sleep(Duration::from_millis(200)).await;
                                         }
                                         FileTransferStep::Upload(progress) => {
-                                            let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                "$TEXT",
-                                                &format!(
-                                                    "{} {}",
-                                                    progress,
-                                                    get_local_text("files.uploaded")
-                                                ),
+                                            upload_progress_bar::change_progress_percentage(
+                                                &window,
+                                                progress.clone(),
                                             );
-                                            window.eval(&script);
                                             sleep(Duration::from_millis(3)).await;
                                         }
                                         FileTransferStep::Thumbnail(thumb_type) => {
                                             match thumb_type {
                                                 Some(_) => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text("files.thumbnail-uploaded"),
+                                                    upload_progress_bar::change_progress_description(
+                                                        &window,
+                                                        get_local_text("files.thumbnail-uploaded"),
                                                     );
-                                                    window.eval(&script);
                                                 }
                                                 None => {
-                                                    let script = FEEDBACK_TEXT_SCRIPT.replace(
-                                                        "$TEXT",
-                                                        &get_local_text("files.no-thumbnail"),
+                                                    upload_progress_bar::change_progress_description(
+                                                        &window,
+                                                        get_local_text("files.no-thumbnail"),
                                                     );
-                                                    window.eval(&script);
                                                 }
                                             }
                                             sleep(Duration::from_millis(200)).await;
@@ -432,21 +359,19 @@ pub fn storage_coroutine<'a>(
                                 }
                                 FileTransferProgress::Finished(storage) => {
                                     *drag_event.write_silent() = None;
-                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
-                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
-                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
-                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
-                                    window.eval(&script);
+                                    upload_progress_bar::change_progress_description(
+                                        &window,
+                                        "Finishing...".into(),
+                                    );
                                     storage_state.set(Some(storage));
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
                                     *drag_event.write_silent() = None;
-                                    let mut script = main_script.replace("$IS_DRAGGING", "false");
-                                    script.push_str(&FEEDBACK_TEXT_SCRIPT.replace("$TEXT", ""));
-                                    script.push_str(&FILE_NAME_SCRIPT.replace("$FILE_NAME", ""));
-                                    script.push_str(&ANIMATION_DASH_SCRIPT.replace("0.5s", "0s"));
-                                    window.eval(&script);
+                                    upload_progress_bar::change_progress_description(
+                                        &window,
+                                        "Error happened, cancelling operation!".into(),
+                                    );
                                     break;
                                 }
                             }

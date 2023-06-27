@@ -12,6 +12,31 @@ static FILES_TO_UPLOAD_SCRIPT: &str = r#"
     element.textContent = '$TEXT';
 "#;
 
+static PROGRESS_UPLOAD_PERCENTAGE_SCRIPT: &str = r#"
+    var element = document.getElementById('upload-progress-percentage');
+    element.textContent = '$TEXT';
+
+    var element_percentage = document.getElementById('progress-percentage');
+    element_percentage.style.width = '$WIDTH';
+"#;
+
+static PROGRESS_UPLOAD_DESCRIPTION_SCRIPT: &str = r#"
+    var element = document.getElementById('upload-progress-description');
+    element.textContent = '$TEXT';
+"#;
+
+pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
+    let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
+        .replace("$TEXT", &new_percentage)
+        .replace("$WIDTH", &new_percentage);
+    window.eval(&new_script);
+}
+
+pub fn change_progress_description(window: &DesktopContext, new_description: String) {
+    let new_script = PROGRESS_UPLOAD_DESCRIPTION_SCRIPT.replace("$TEXT", &new_description);
+    window.eval(&new_script);
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
@@ -28,51 +53,61 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         cx.props
             .on_update
             .call(files_ready_to_upload.read().clone());
+        *files_ready_to_upload.write_silent() = Vec::new();
+
+        return cx.render(rsx!(
+            div {
+                class: "upload-progress-bar-container",
+                div {
+                    class: "progress-percentage-description-container",
+                    p {
+                        id: "upload-progress-description",
+                        class: "upload-progress-description",
+                        "File is Uploading..."
+                    },
+                    p {
+                        id: "upload-progress-percentage",
+                        class: "upload-progress-percentage",
+                        "0%"
+                    },
+                },
+                div {
+                    class: "progress-bar",
+                    div {
+                        id: "progress-percentage",
+                        class: "progress-percentage",
+                    }
+                }
+
+            },
+        ));
     }
 
-    return cx.render(rsx!(
-        div {
-            class: "upload-progress-bar-container",
-            p {
-                id: "upload-progress-description",
-                class: "upload-progress-description",
-                "File is Uploading... 30%"
-            },
-            div {
-                class: "progress-bar",
-                div {
-                    class: "progress-percentage",
-                }
+    if *cx.props.are_files_hovering_app.read() {
+        cx.spawn({
+            to_owned![are_files_hovering_app, window, files_ready_to_upload];
+            async move {
+                drag_and_drop_function(&window, &are_files_hovering_app, &files_ready_to_upload)
+                    .await;
             }
+        });
 
-        },
-    ));
-
-    // if *cx.props.are_files_hovering_app.read() {
-    //     cx.spawn({
-    //         to_owned![are_files_hovering_app, window, files_ready_to_upload];
-    //         async move {
-    //             drag_and_drop_function(&window, &are_files_hovering_app, &files_ready_to_upload)
-    //                 .await;
-    //         }
-    //     });
-
-    //     return cx.render(rsx!(
-    //         div {
-    //             class: "upload-progress-bar-container",
-    //             p {
-    //                 id: "upload-file-count",
-    //                 class: "upload-file-count",
-    //                 ""
-    //             }
-    //         },
-    //     ));
-    // } else {
-    //     return cx.render(rsx!(div {}));
-    // }
+        return cx.render(rsx!(
+            div {
+                class: "upload-progress-bar-container",
+                p {
+                    id: "upload-file-count",
+                    class: "upload-file-count",
+                    "Test"
+                }
+            },
+        ));
+    } else {
+        return cx.render(rsx!(div {}));
+    }
 }
 
-fn get_files_to_upload_message(files_to_upload_len: usize) -> String {
+fn count_files_to_show(files_to_upload_len: usize) -> String {
     if files_to_upload_len > 1 {
         format!(
             "{} {}!",
@@ -84,7 +119,7 @@ fn get_files_to_upload_message(files_to_upload_len: usize) -> String {
     }
 }
 
-pub async fn drag_and_drop_function(
+async fn drag_and_drop_function(
     window: &DesktopContext,
     are_files_hovering_app: &UseRef<bool>,
     files_ready_to_upload: &UseRef<Vec<PathBuf>>,
@@ -95,7 +130,7 @@ pub async fn drag_and_drop_function(
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
                 if verify_if_there_are_valid_paths(&paths) {
-                    let files_to_upload_message = get_files_to_upload_message(paths.len());
+                    let files_to_upload_message = count_files_to_show(paths.len());
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
                     window.eval(&new_script);
@@ -104,7 +139,7 @@ pub async fn drag_and_drop_function(
             FileDropEvent::Dropped { paths, .. } => {
                 if verify_if_there_are_valid_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
-                    files_ready_to_upload.with_mut(|i| *i = new_files_to_upload);
+                    *files_ready_to_upload.write_silent() = new_files_to_upload;
                     break;
                 }
             }

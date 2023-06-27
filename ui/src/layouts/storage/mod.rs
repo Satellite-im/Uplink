@@ -48,17 +48,17 @@ pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
     feedback_element.textContent = '$TEXT';
 "#;
 
-const FILE_NAME_SCRIPT: &str = r#"
-    const filename = document.getElementById('overlay-text0');
-    filename.textContent = '$FILE_NAME';
-"#;
+// const FILE_NAME_SCRIPT: &str = r#"
+//     const filename = document.getElementById('overlay-text0');
+//     filename.textContent = '$FILE_NAME';
+// "#;
 
 pub const ANIMATION_DASH_SCRIPT: &str = r#"
     var dashElement = document.getElementById('dash-element')
     dashElement.style.animation = "border-dance 0.5s infinite linear"
 "#;
 
-const MAX_LEN_TO_FORMAT_NAME: usize = 15;
+const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub const ROOT_DIR_NAME: &str = "root";
 
@@ -103,7 +103,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
 
-    let main_script = include_str!("./storage.js");
     let window = use_window(cx);
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
@@ -111,7 +110,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state,
         storage_controller.storage_state,
         storage_size,
-        main_script.to_string(),
         window,
         drag_event,
     );
@@ -154,19 +152,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             id: "files-layout",
             aria_label: "files-layout",
             ondragover: move |_| {
-                if are_files_hovering_app.with(|i| *i == false) {
-                    are_files_hovering_app.with_mut(|i| *i = true);
-                }
-
-
-                // if drag_event.with(|i| i.clone()).is_none() {
-                //     cx.spawn({
-                //         to_owned![drag_event, window, ch, main_script];
-                //         async move {
-                //             functions::drag_and_drop_function(&window, &drag_event, main_script, &ch).await;
-                //         }
-                //     });
-                // }
+                    if are_files_hovering_app.with(|i| *i == false) {
+                        are_files_hovering_app.with_mut(|i| *i = true);
+                    };
                 },
             onclick: |_| {
                 add_new_folder.set(false);
