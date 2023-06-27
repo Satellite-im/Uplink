@@ -40,3 +40,12 @@
         }
     }
 }
+
+.empty-friends-list {
+    height: 100%;
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    padding: var(--padding);
+    pointer-events: none;
+}

@@ -11,8 +11,8 @@ use kit::{
     elements::label::Label,
 };
 
-use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
+use common::{get_images_dir, icons::outline::Shape as Icon};
 use common::{
     state::{Action, Chat, State},
     warp_runner::{MultiPassCmd, RayGunCmd, WarpCmd},
@@ -159,6 +159,14 @@ pub fn Friends(cx: Scope) -> Element {
         }
     });
 
+    let image_path = get_images_dir()
+        .unwrap_or_default()
+        .join("mascot")
+        .join("party.webp")
+        .to_str()
+        .map(|x| x.to_string())
+        .unwrap_or_default();
+
     cx.render(rsx! (
         div {
             class: "friends-list",
@@ -167,6 +175,14 @@ pub fn Friends(cx: Scope) -> Element {
                 text: get_local_text("friends.friends"),
                 aria_label: "friends-list-label".into(),
             },
+            (friends.len() == 0).then(|| rsx! (
+                div {
+                    class: "empty-friends-list",
+                    img {
+                        src: "{image_path}"
+                    },
+                }
+            )),
             friends.into_iter().map(|(letter, sorted_friends)| {
                 let group_letter = letter.to_string();
                 rsx!(

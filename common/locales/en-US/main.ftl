@@ -187,6 +187,12 @@ settings-privacy = Settings Privacy
     .backup-phrase-description = Back this phrase up! Along with your password this represents your account. If you lose it, we can't help you get it back.
 
 settings-audio = Audio & Sound Settings 
+    .input-device = Input Device
+    .input-device-description = Select your input device (microphone, usually).
+    .output-device = Output Device
+    .output-device-description = This is where all sounds will be played. (Usually your headphones).
+    .sample-rate = Sample rate
+    .sample-rate-description = Higher sample rates will capture more "frames" of your audio and sound "clearer".
     .call-timer = Call Timer
     .call-timer-description = When enabled a timer will display when you're in a call showing it's duration.
     .interface-sounds = Interface Sounds
