@@ -36,8 +36,8 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     initial_value: 100,
                     min: 0,
                     max: 200,
-                    icon_left: Shape::MicrophoneSlash,
-                    icon_right: Shape::Microphone,
+                    icon_left: Shape::Microphone,
+                    icon_right: Shape::MicrophoneWave,
                     onchange: move |_| {}
                 }
             }
