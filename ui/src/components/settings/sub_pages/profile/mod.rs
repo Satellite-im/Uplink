@@ -43,10 +43,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let image = state.read().profile_picture();
     let image2 = image.clone();
     let banner = state.read().profile_banner();
-    let no_profile = image.eq("\0")
-        || get_user_default_profile_picture(state.read().did_key()) == image2.clone()
-        || image.is_empty();
-    let no_banner = banner.eq("\0") || banner.is_empty();
+    let no_profile_picture =
+        get_user_default_profile_picture(state.read().did_key()) == image2 || image.is_empty();
+    let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -226,7 +225,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
-                            disabled: no_banner,
+                            disabled: no_banner_picture,
                             text: get_local_text("settings-profile.clear-banner"),
                             aria_label: "clear-banner".into(),
                             onpress: move |_| {
@@ -249,7 +248,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
-                            disabled: no_profile,
+                            disabled: no_profile_picture,
                             aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
