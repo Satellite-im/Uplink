@@ -27,6 +27,10 @@ pub enum Action<'a> {
     #[display(fmt = "SetExtensionEnabled")]
     SetExtensionEnabled(String, bool),
     // UI
+    #[display(fmt = "SetAccentColor")]
+    SetAccentColor((u8, u8, u8)),
+    #[display(fmt = "ClearAccentColor")]
+    ClearAccentColor,
     #[display(fmt = "WindowMeta")]
     SetMeta(WindowMeta),
     #[display(fmt = "ToggleSilence")]

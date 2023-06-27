@@ -44,7 +44,16 @@ pub fn get_available_themes() -> Vec<Theme> {
     }
 
     themes.sort_by_key(|theme| theme.name.clone());
-    themes.dedup();
+
+    let default = Theme {
+        filename: "".into(),
+        name: "Default".into(),
+        styles: "".into(),
+    };
+
+    themes.push(default);
+
+    themes.dedup(); // Why are we deduping here? We check above to only add if the theme doesn't already exist
 
     themes
 }
