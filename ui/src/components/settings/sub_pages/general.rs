@@ -167,34 +167,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }))
                 },
             },
-<<<<<<< HEAD
-            (&active_theme.name == "Default").then(|| rsx!(
-                SettingSectionSimple {
-                    div {
-                        class: "color-swatches",
-                        Button {
-                            icon: Icon::NoSymbol,
-                            onpress: move |_| {
-                                state.write().mutate(Action::ClearAccentColor);
-                            }
-                            tooltip: cx.render(rsx!(Tooltip {
-                                arrow_position: ArrowPosition::Right,
-                                text: get_local_text("settings-general.clear-accent"),
-                            }))
-                        },
-                        for color in available_colors {
-                            ColorSwatch {
-                                color: color,
-                                active: state.read().ui.accent_color == Some(color),
-                                onpress: move |_| {
-                                    state.write().mutate(Action::SetAccentColor(color));
-                                },
-                            }
-                        }
-                    }
-                },
-            )),
-=======
             SettingSectionSimple {
                 div {
                     class: "color-swatches",
@@ -219,7 +191,6 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }
                 }
             },
->>>>>>> 3f9f263727dee3d8f49ee50a9e81b94754727b6d
         }
     ))
 }
