@@ -484,7 +484,7 @@ fn app(cx: Scope) -> Element {
             .map(|theme| theme.styles.clone())
             .unwrap_or_default();
 
-        let accent_color = state.read().ui.accent_color.clone();
+        let accent_color = state.read().ui.accent_color;
         let accent_color = if let Some(color) = accent_color {
             format!(
                 ":root {{

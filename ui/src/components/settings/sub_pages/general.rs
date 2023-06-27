@@ -35,6 +35,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         }
     };
 
+<<<<<<< HEAD
     let active_theme = state.read().ui.theme.clone().unwrap_or_default();
 
     // TODO: This could go into a config file but I think the better approach is to allow the user to create and remove their own custom colors to create rudementary themes. Until we get there, this is fine.
@@ -46,6 +47,18 @@ pub fn GeneralSettings(cx: Scope) -> Element {
         (9, 132, 227),
         (162, 155, 254),
         (253, 121, 168),
+=======
+    // TODO: This could go into a config file but I think the better approach is to allow the user to create and remove their own custom colors to create rudementary themes. Until we get there, this is fine.
+    let available_colors = vec![
+        (255, 95, 87),   // Red
+        (254, 163, 127), // Orange
+        (255, 234, 167), // Yellow
+        (85, 239, 196),  // Green
+        (24, 220, 255),  // Blue
+        (162, 155, 254), // Purple
+        (253, 167, 223), // Pink
+        (210, 218, 226), // Gray
+>>>>>>> 3f9f263727dee3d8f49ee50a9e81b94754727b6d
     ];
 
     cx.render(rsx!(
@@ -123,6 +136,24 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                 section_label: get_local_text("settings-general.theme"),
                 section_description: get_local_text("settings-general.theme-description"),
                 no_border: true,
+                Button {
+                    icon: if state.read().ui.theme.clone().unwrap_or_default().name == "Light" {
+                        Icon::Sun
+                    } else {
+                        Icon::Moon
+                    },
+                    aria_label: "dark-light-toggle".into(),
+                    onpress: move |_| {
+                        let current_theme = state.read().ui.theme.clone().unwrap_or_default();
+
+                        if current_theme.name != "Light" {
+                            let light_theme = get_available_themes().iter().find(|t| t.name == "Light").unwrap().clone();
+                            state.write().mutate(Action::SetTheme(Some(light_theme)));
+                        } else {
+                            state.write().mutate(Action::SetTheme(None));
+                        }
+                    },
+                },
                 Select {
                     initial_value: if let Some(theme) = &state.read().ui.theme {
                         theme.name.clone()
@@ -150,6 +181,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }))
                 },
             },
+<<<<<<< HEAD
             (&active_theme.name == "Default").then(|| rsx!(
                 SettingSectionSimple {
                     div {
@@ -176,6 +208,32 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                     }
                 },
             )),
+=======
+            SettingSectionSimple {
+                div {
+                    class: "color-swatches",
+                    Button {
+                        icon: Icon::NoSymbol,
+                        onpress: move |_| {
+                            state.write().mutate(Action::ClearAccentColor);
+                        }
+                        tooltip: cx.render(rsx!(Tooltip {
+                            arrow_position: ArrowPosition::Right,
+                            text: get_local_text("settings-general.clear-accent"),
+                        }))
+                    },
+                    for color in available_colors {
+                        ColorSwatch {
+                            color: color,
+                            active: state.read().ui.accent_color == Some(color),
+                            onpress: move |_| {
+                                state.write().mutate(Action::SetAccentColor(color));
+                            },
+                        }
+                    }
+                }
+            },
+>>>>>>> 3f9f263727dee3d8f49ee50a9e81b94754727b6d
         }
     ))
 }

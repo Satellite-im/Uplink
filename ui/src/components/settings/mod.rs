@@ -16,7 +16,11 @@ pub struct SectionProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn SettingSection<'a>(cx: Scope<'a, SectionProps<'a>>) -> Element<'a> {
-    let no_border = cx.props.no_border.then(|| "no-border").unwrap_or_default();
+    let no_border = cx
+        .props
+        .no_border
+        .then_some("no-border")
+        .unwrap_or_default();
 
     cx.render(rsx!(
         div {
