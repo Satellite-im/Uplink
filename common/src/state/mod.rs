@@ -130,6 +130,12 @@ impl State {
         }
 
         match action {
+            Action::SetAccentColor(color) => {
+                self.ui.accent_color = Some(color);
+            }
+            Action::ClearAccentColor => {
+                self.ui.accent_color = None;
+            }
             Action::SetExtensionEnabled(extension, enabled) => {
                 if enabled {
                     self.ui.extensions.enable(extension);

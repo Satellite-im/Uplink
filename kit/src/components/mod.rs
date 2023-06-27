@@ -19,3 +19,5 @@ pub mod embeds;
 
 pub mod context_menu;
 pub mod topbar_controls;
+
+pub mod swatch;
