@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, DesktopContext};
+use kit::elements::{button::Button, Appearance};
 use wry::webview::FileDropEvent;
 
 use super::functions::{decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths};
@@ -41,6 +42,7 @@ pub fn change_progress_description(window: &DesktopContext, new_description: Str
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
+    on_cancel: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
@@ -72,13 +74,23 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     },
                 },
                 div {
-                    class: "progress-bar",
+                    class: "progress-bar-button-container",
                     div {
-                        id: "progress-percentage",
-                        class: "progress-percentage",
+                        class: "progress-bar",
+                        div {
+                            id: "progress-percentage",
+                            class: "progress-percentage",
+                        },
+                    }
+                    Button {
+                        aria_label: "cancel-upload".into(),
+                        appearance: Appearance::Primary,
+                        onpress: move |_| {
+                            cx.props.on_cancel.call(());
+                        },
+                        text: get_local_text("uplink.cancel"),
                     }
                 }
-
             },
         ));
     }
@@ -98,7 +110,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                 p {
                     id: "upload-file-count",
                     class: "upload-file-count",
-                    "Test"
+                    ""
                 }
             },
         ));

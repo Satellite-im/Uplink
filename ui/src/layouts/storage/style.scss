@@ -14,7 +14,6 @@
         .upload-progress-description {
             color: var(--text-color-muted);
             padding-left: 24px;
-            padding-bottom: 16px;
         }
 
         .upload-progress-percentage {
@@ -29,21 +28,31 @@
         padding-left: 24px;
     }
 
-    .progress-bar {
-        border-radius: 2px;
-        border: 1px solid var(--text-textmed, #A8AABE);
-        height: 20px;
-        margin-left: 24px;
-        margin-right: 20%;
-        background-color: transparent;
-        overflow: hidden;
-
-        .progress-percentage {
-            position: relative;
+    .progress-bar-button-container {
+        display: inline-flex;
+        justify-content: space-between;
+        padding-right: 16px;
+        
+        .progress-bar {
             border-radius: 2px;
-            background-color: #A8AABE; /* Cor do preenchimento */
-            height: 19px;
-            width: 0%;
+            border: 1px solid var(--text-textmed, #A8AABE);
+            height: 20px;
+            margin-left: 24px;
+            background-color: transparent;
+            overflow: hidden;
+            margin-top: 16px;
+            margin-right: 5%;
+            width: 100%;
+    
+            .progress-percentage {
+                position: relative;
+                border-radius: 2px;
+                background-color: #A8AABE; /* Cor do preenchimento */
+                height: 19px;
+                width: 0%;
+            }
         }
     }
+
+    
 }

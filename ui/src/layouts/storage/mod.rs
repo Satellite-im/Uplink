@@ -262,6 +262,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     on_update: |files_to_upload| {
                         ch.send(ChanCmd::UploadFiles(files_to_upload));
                     },
+                    on_cancel: |_| {},
                 }
                 div {
                     class: "files-breadcrumbs",

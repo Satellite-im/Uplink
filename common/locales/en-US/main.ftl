@@ -12,6 +12,7 @@ uplink = Uplink
     .remove = Remove
     .more = More
     .welcome = Welcome
+    .cancel = Cancel
     .clear-unreads = Clear Unreads
     .delete-group-chat = Delete Group
     .leave-group = Leave Group
