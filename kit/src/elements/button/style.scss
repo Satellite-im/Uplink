@@ -86,9 +86,13 @@
   &.appearance-disabled {
     cursor: default;
     opacity: var(--opacity-modifier);
+    color: var(--text-color-muted);
     background-color: var(--secondary-dark);
     &:hover {
       background-color: var(--secondary-dark);
+    }
+    svg {
+      stroke: var(--text-color-muted);
     }
   }
 }

@@ -179,6 +179,7 @@ settings-general = General Settings
     .font-scaling-description = Scale the font size up or down to your liking.
     .font = Font
     .font-description = Change the font of the app.
+    .clear-accent = Clear accent color
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Backup Recovery Phrase
