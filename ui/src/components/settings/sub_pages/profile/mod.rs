@@ -42,6 +42,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().profile_picture();
     let banner = state.read().profile_banner();
+    let no_profile_picture =
+        get_user_default_profile_picture(state.read().did_key()) == image2 || image.is_empty();
+    let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
@@ -221,6 +224,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
+                            disabled: no_banner_picture,
                             text: get_local_text("settings-profile.clear-banner"),
                             aria_label: "clear-banner".into(),
                             onpress: move |_| {
@@ -237,12 +241,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         },
                         p {class: "change-banner-text", "{change_banner_text}" },
                     },
-                }
+                },
                 ContextMenu {
                     id: String::from("profile-picture-context-menu"),
                     items: cx.render(rsx!(
                         ContextItem {
                             icon: Icon::Trash,
+                            disabled: no_profile_picture,
                             aria_label: "clear-avatar".into(),
                             text: get_local_text("settings-profile.clear-avatar"),
                             onpress: move |_| {
@@ -261,11 +266,11 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                             icon: Icon::Plus,
                             aria_label: "add-picture-button".into(),
                             onpress: move |_| {
-                               set_profile_picture(ch.clone());
+                            set_profile_picture(ch.clone());
                             }
                         },
                     },
-                },
+                }
             },
             div{
                 class: "profile-content",
