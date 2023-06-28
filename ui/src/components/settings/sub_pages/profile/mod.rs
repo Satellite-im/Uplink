@@ -45,7 +45,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let banner = identity.profile_banner();
 
     //TODO: Remove `\0` as that should not be used to determined if an image is empty
-    let no_profile_picture = image.eq("\0") || image.is_empty() || identity.contains_default_picture();
+    let no_profile_picture =
+        image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
