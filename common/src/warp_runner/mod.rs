@@ -352,9 +352,12 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     config.store_setting.default_profile_picture = Some(Arc::new(|identity| {
         let content = plot_icon::generate_png(identity.did_key().to_string().as_bytes(), 512)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content))
+        let mut base64_default_image = format!("data:image/png;base64,{}", base64::encode(content))
             .as_bytes()
             .to_vec();
+
+        base64_default_image.extend([11, 00, 23]);
+
         Ok(base64_default_image)
     }));
 

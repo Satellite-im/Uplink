@@ -70,6 +70,25 @@ impl Identity {
     pub fn platform(&self) -> Platform {
         self.platform
     }
+
+    pub fn profile_picture(&self) -> String {
+        let picture = self.identity.profile_picture();
+        match self.contains_default_picture() {
+            true => picture[..picture.len() - 3].to_string(),
+            false => picture,
+        }
+    }
+
+    pub fn profile_banner(&self) -> String {
+        self.identity.profile_banner()
+    }
+
+    pub fn contains_default_picture(&self) -> bool {
+        let picture = self.identity.profile_picture();
+        let bytes = picture.as_bytes();
+        let length = bytes.len();
+        bytes[length - 3..] == [11, 00, 23]
+    }
 }
 
 impl Identity {
