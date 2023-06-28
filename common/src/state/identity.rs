@@ -87,7 +87,11 @@ impl Identity {
         let picture = self.identity.profile_picture();
         let bytes = picture.as_bytes();
         let length = bytes.len();
-        bytes[length - 3..] == [11, 00, 23]
+
+        bytes
+            .get(length - 3..)
+            .map(|bytes| bytes == [11, 00, 23])
+            .unwrap_or_default()
     }
 }
 
