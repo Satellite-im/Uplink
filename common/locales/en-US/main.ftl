@@ -140,6 +140,8 @@ files = Files
     .file-already-with-name = There is already a file with this name
     .no-data-available = No data available
     .finishing-upload = Finishing...
+    .cancelling-upload = Cancelling...
+
 
 settings = Settings
     .settings = Settings

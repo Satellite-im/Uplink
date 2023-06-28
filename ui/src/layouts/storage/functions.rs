@@ -163,6 +163,7 @@ pub fn storage_coroutine<'a>(
     storage_size: &'a UseRef<(String, String)>,
     window: &'a DesktopContext,
     files_been_uploaded: &'a UseRef<bool>,
+    tx_to_cancel_upload: &'a UseRef<Option<tokio::sync::mpsc::UnboundedSender<bool>>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
         to_owned![
@@ -170,7 +171,8 @@ pub fn storage_coroutine<'a>(
             window,
             files_been_uploaded,
             storage_size,
-            state
+            state,
+            tx_to_cancel_upload
         ];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -285,10 +287,21 @@ pub fn storage_coroutine<'a>(
                             log::error!("failed to upload files {}", e);
                             continue;
                         }
+
                         while let Some(msg) = rx.recv().await {
                             match msg {
                                 FileTransferProgress::Step(steps) => {
                                     match steps {
+                                        FileTransferStep::UpdateChannelSender(tx2) => {
+                                            *tx_to_cancel_upload.write_silent() = Some(tx2.clone());
+                                        }
+                                        FileTransferStep::Cancelling => {
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                get_local_text("files.cancelling-upload"),
+                                            );
+                                            sleep(Duration::from_millis(250)).await;
+                                        }
                                         FileTransferStep::SizeNotAvailable(file_name) => {
                                             state.write().mutate(
                                                 common::state::Action::AddToastNotification(

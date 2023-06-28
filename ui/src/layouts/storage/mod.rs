@@ -102,6 +102,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
     let files_been_uploaded = use_ref(cx, || false);
+    let tx_to_cancel_upload: &UseRef<Option<tokio::sync::mpsc::UnboundedSender<bool>>> =
+        use_ref(cx, || None);
 
     let window = use_window(cx);
 
@@ -112,6 +114,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         storage_size,
         window,
         files_been_uploaded,
+        tx_to_cancel_upload,
     );
 
     functions::run_verifications_and_update_storage(
@@ -263,7 +266,17 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     on_update: |files_to_upload| {
                         ch.send(ChanCmd::UploadFiles(files_to_upload));
                     },
-                    on_cancel: |_| {},
+                    on_cancel: move |_| {
+                        match tx_to_cancel_upload.read().clone() {
+                            Some(tx) => {
+                                let _ = tx.send(true);
+                                // Reset receiver value
+                                let _ = tx.send(false);
+                            }, 
+                            None => 
+                                log::info!("Not possible to send command to cancel upload!"),
+                        };
+                    },
                 }
                 div {
                     class: "files-breadcrumbs",

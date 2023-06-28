@@ -32,10 +32,12 @@ static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
 
 pub enum FileTransferStep {
+    UpdateChannelSender(mpsc::UnboundedSender<bool>),
     SizeNotAvailable(String),
     Start(String),
     DuplicateName(Option<String>),
     Upload(String),
+    Cancelling,
     Finishing(String),
     Thumbnail(Option<()>),
 }
@@ -391,6 +393,12 @@ async fn upload_files(
     let max_size_ipfs = warp_storage.max_size();
     let current_size_ipfs = warp_storage.current_size();
 
+    let (tx2, mut rx2) = mpsc::unbounded_channel::<bool>();
+
+    let _ = tx.send(FileTransferProgress::Step(
+        FileTransferStep::UpdateChannelSender(tx2),
+    ));
+
     for file_path in files_path {
         let mut filename = match file_path
             .file_name()
@@ -438,6 +446,7 @@ async fn upload_files(
             Some(filename.clone()),
         )));
 
+        let mut upload_cancelled = false;
         match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
                 let mut previous_percentage: usize = 0;
@@ -450,6 +459,16 @@ async fn upload_files(
                             current,
                             total,
                         } => {
+                            if let Ok(received_tx) = rx2.try_recv() {
+                                if received_tx {
+                                    upload_cancelled = true;
+                                    let _ = tx.send(FileTransferProgress::Step(
+                                        FileTransferStep::Cancelling,
+                                    ));
+                                    log::info!("Canceled upload of file: {:?}", name);
+                                    break;
+                                }
+                            }
                             if !upload_process_started {
                                 upload_process_started = true;
                                 log::info!("Starting upload for {name}");
@@ -501,7 +520,9 @@ async fn upload_files(
                         }
                     }
                 }
-
+                if upload_cancelled {
+                    continue;
+                }
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
                 let doc_formats = DOC_EXTENSIONS.to_vec();
 
