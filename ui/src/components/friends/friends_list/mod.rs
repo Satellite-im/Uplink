@@ -175,7 +175,7 @@ pub fn Friends(cx: Scope) -> Element {
                 text: get_local_text("friends.friends"),
                 aria_label: "friends-list-label".into(),
             },
-            (friends.len() == 0).then(|| rsx! (
+            (friends.is_empty()).then(|| rsx! (
                 div {
                     class: "empty-friends-list",
                     img {
