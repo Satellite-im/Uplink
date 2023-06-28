@@ -42,8 +42,9 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let image = state.read().profile_picture();
     let banner = state.read().profile_banner();
-    let no_profile_picture =
-        get_user_default_profile_picture(state.read().did_key()) == image2 || image.is_empty();
+
+    //TODO: Remove `\0` as that should not be used to determined if an image is empty
+    let no_profile_picture = image.eq("\0") || image.is_empty();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
