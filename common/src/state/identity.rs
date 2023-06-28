@@ -85,6 +85,11 @@ impl Identity {
 
     pub fn contains_default_picture(&self) -> bool {
         let picture = self.identity.profile_picture();
+
+        if picture.is_empty() || picture.len() < 4 {
+            return false;
+        }
+
         let bytes = picture.as_bytes();
         let length = bytes.len();
 
