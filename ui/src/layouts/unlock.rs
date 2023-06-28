@@ -29,7 +29,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::AuthPages;
+use crate::{create_uplink_dirs, AuthPages};
 
 enum UnlockError {
     ValidationError,
@@ -94,7 +94,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
         }
     });
     let ch = use_coroutine(cx, |mut rx| {
-        to_owned![error, page, cmd_in_progress];
+        to_owned![error, page, cmd_in_progress, account_exists];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
@@ -123,9 +123,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     }
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
-                            // wrong password
-                            error.set(Some(UnlockError::InvalidPin));
-                            log::warn!("decryption error");
+                            // check if account exist. can be the case when account got reset
+                            if account_exists.get().unwrap_or_default() {
+                                // wrong password
+                                error.set(Some(UnlockError::InvalidPin));
+                                log::warn!("decryption error");
+                            }
                         }
                         warp::error::Error::IdentityNotCreated => {
                             // this is supposed to fail.
@@ -201,7 +204,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
-                            with_label: if STATIC_ARGS.cache_path.exists()
+                            with_label: if account_exists.current().unwrap_or_default()
                             {Some(get_welcome_message(&state.read()))}
                             else
                                 {Some(get_local_text("unlock.create-password"))}, // TODO: Implement this.
@@ -233,7 +236,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             }
                         }
                         onreturn: move |_| {
-                            if !STATIC_ARGS.cache_path.exists() {
+                            if !account_exists.current().unwrap_or_default() {
                                 if let Some(validation_error) = validation_failure.get() {
                                     shown_error.set(validation_error.translation());
                                 } else if let Some(e) = error.get() {
@@ -287,6 +290,8 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
                                     page.set(AuthPages::Unlock);
+                                    account_exists.set(Some(false));
+                                    create_uplink_dirs();
                                 }
                             },
                         )),
