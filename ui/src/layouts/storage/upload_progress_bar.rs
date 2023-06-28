@@ -49,7 +49,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
-    let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, || Vec::new());
+    let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
     let window = use_window(cx);
 
     if files_ready_to_upload.with(|i| !i.is_empty()) {
