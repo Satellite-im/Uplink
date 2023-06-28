@@ -98,10 +98,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let storage_size: &UseRef<(String, String)> = use_ref(cx, || (String::new(), String::new()));
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
-    let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let first_render = use_state(cx, || true);
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
+    let files_been_uploaded = use_ref(cx, || false);
 
     let window = use_window(cx);
 
@@ -111,7 +111,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         storage_controller.storage_state,
         storage_size,
         window,
-        drag_event,
+        files_been_uploaded,
     );
 
     functions::run_verifications_and_update_storage(
@@ -259,6 +259,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 }
                 UploadProgressBar {
                     are_files_hovering_app: are_files_hovering_app,
+                    files_been_uploaded: files_been_uploaded,
                     on_update: |files_to_upload| {
                         ch.send(ChanCmd::UploadFiles(files_to_upload));
                     },

@@ -41,6 +41,7 @@ pub fn change_progress_description(window: &DesktopContext, new_description: Str
 #[derive(Props)]
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
+    files_been_uploaded: &'a UseRef<bool>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
     on_cancel: EventHandler<'a, ()>,
 }
@@ -52,11 +53,14 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let window = use_window(cx);
 
     if files_ready_to_upload.with(|i| !i.is_empty()) {
+        *cx.props.files_been_uploaded.write_silent() = true;
         cx.props
             .on_update
             .call(files_ready_to_upload.read().clone());
         *files_ready_to_upload.write_silent() = Vec::new();
+    }
 
+    if *cx.props.files_been_uploaded.read() {
         return cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container",

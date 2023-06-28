@@ -162,10 +162,16 @@ pub fn storage_coroutine<'a>(
     storage_state: &'a UseState<Option<Storage>>,
     storage_size: &'a UseRef<(String, String)>,
     window: &'a DesktopContext,
-    drag_event: &'a UseRef<Option<FileDropEvent>>,
+    files_been_uploaded: &'a UseRef<bool>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, window, drag_event, storage_size, state];
+        to_owned![
+            storage_state,
+            window,
+            files_been_uploaded,
+            storage_size,
+            state
+        ];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -332,9 +338,22 @@ pub fn storage_coroutine<'a>(
                                             sleep(Duration::from_millis(200)).await;
                                         }
                                         FileTransferStep::Upload(progress) => {
+                                            *files_been_uploaded.write_silent() = true;
                                             upload_progress_bar::change_progress_percentage(
                                                 &window,
                                                 progress.clone(),
+                                            );
+                                            sleep(Duration::from_millis(3)).await;
+                                        }
+                                        FileTransferStep::Finishing(progress) => {
+                                            *files_been_uploaded.write_silent() = true;
+                                            upload_progress_bar::change_progress_percentage(
+                                                &window,
+                                                progress.clone(),
+                                            );
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                get_local_text("files.finishing-upload"),
                                             );
                                             sleep(Duration::from_millis(3)).await;
                                         }
@@ -358,16 +377,12 @@ pub fn storage_coroutine<'a>(
                                     };
                                 }
                                 FileTransferProgress::Finished(storage) => {
-                                    *drag_event.write_silent() = None;
-                                    upload_progress_bar::change_progress_description(
-                                        &window,
-                                        "Finishing...".into(),
-                                    );
+                                    *files_been_uploaded.write_silent() = false;
                                     storage_state.set(Some(storage));
                                     break;
                                 }
                                 FileTransferProgress::Error(_) => {
-                                    *drag_event.write_silent() = None;
+                                    *files_been_uploaded.write_silent() = false;
                                     upload_progress_bar::change_progress_description(
                                         &window,
                                         "Error happened, cancelling operation!".into(),

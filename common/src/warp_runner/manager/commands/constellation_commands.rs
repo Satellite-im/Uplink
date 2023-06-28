@@ -36,6 +36,7 @@ pub enum FileTransferStep {
     Start(String),
     DuplicateName(Option<String>),
     Upload(String),
+    Finishing(String),
     Thumbnail(Option<()>),
 }
 
@@ -481,9 +482,10 @@ async fn upload_files(
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
-                            let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Upload(
-                                readable_total.clone(),
-                            )));
+                            let _ =
+                                tx.send(FileTransferProgress::Step(FileTransferStep::Finishing(
+                                    format!("100% / {}", readable_total.clone()),
+                                )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {

@@ -139,6 +139,7 @@ files = Files
     .no-size-available = No size available for file:
     .file-already-with-name = There is already a file with this name
     .no-data-available = No data available
+    .finishing-upload = Finishing...
 
 settings = Settings
     .settings = Settings
