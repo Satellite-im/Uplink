@@ -1,9 +1,14 @@
+use std::vec;
+
+use common::icons::outline::Shape;
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use kit::elements::range::Range;
+use kit::elements::select::Select;
 use kit::elements::switch::Switch;
 use warp::logging::tracing::log;
 
-use crate::components::settings::SettingSection;
+use crate::components::settings::{SettingSection, SettingSectionSimple};
 use common::sounds;
 use common::state::{action::ConfigAction, Action, State};
 
@@ -16,6 +21,59 @@ pub fn AudioSettings(cx: Scope) -> Element {
         div {
             id: "settings-audio",
             aria_label: "settings-audio",
+            SettingSection {
+                section_label: get_local_text("settings-audio.input-device"),
+                section_description: get_local_text("settings-audio.input-device-description"),
+                no_border: true,
+                Select {
+                    initial_value: "Default".into(),
+                    options: vec!["Default".into()],
+                    onselect: move |_| {}
+                },
+            },
+            SettingSectionSimple {
+                Range {
+                    initial_value: 100,
+                    min: 0,
+                    max: 200,
+                    icon_left: Shape::Microphone,
+                    icon_right: Shape::MicrophoneWave,
+                    onchange: move |_| {}
+                }
+            }
+
+            SettingSection {
+                section_label: get_local_text("settings-audio.output-device"),
+                section_description: get_local_text("settings-audio.output-device-description"),
+                no_border: true,
+                Select {
+                    initial_value: "Default".into(),
+                    options: vec!["Default".into()],
+                    onselect: move |_| {}
+                },
+            },
+            SettingSectionSimple {
+                Range {
+                    initial_value: 100,
+                    min: 0,
+                    max: 200,
+                    icon_left: Shape::Speaker,
+                    icon_right: Shape::SpeakerWave,
+                    onchange: move |_| {}
+                }
+            }
+
+            SettingSection {
+                section_label: get_local_text("settings-audio.sample-rate"),
+                section_description: get_local_text("settings-audio.sample-rate-description"),
+                Select {
+                    initial_value: "48000 Hz".into(),
+                    options: vec!["24000 Hz".into(), "48000 Hz".into(), "96000 Hz".into()],
+                    onselect: move |_| {}
+                },
+            },
+
+
             SettingSection {
                 section_label: get_local_text("settings-audio.interface-sounds"),
                 section_description: get_local_text("settings-audio.interface-sounds-description"),
