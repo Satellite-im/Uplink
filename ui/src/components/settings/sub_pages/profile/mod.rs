@@ -1,8 +1,8 @@
 use arboard::Clipboard;
+use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
-use common::{get_images_dir, get_user_default_profile_picture};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use futures::channel::oneshot;
@@ -40,11 +40,13 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
-    let image = state.read().profile_picture();
-    let image2 = image.clone();
-    let banner = state.read().profile_banner();
+    let identity = state.read().get_own_identity();
+    let image = identity.profile_picture();
+    let banner = identity.profile_banner();
+
+    //TODO: Remove `\0` as that should not be used to determined if an image is empty
     let no_profile_picture =
-        get_user_default_profile_picture(state.read().did_key()) == image2 || image.is_empty();
+        image.eq("\0") || image.is_empty() || identity.contains_default_picture();
     let no_banner_picture = banner.eq("\0") || banner.is_empty();
 
     if let Some(ident) = should_update.get() {
