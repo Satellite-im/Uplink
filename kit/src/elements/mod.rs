@@ -7,6 +7,7 @@ pub mod folder;
 pub mod input;
 pub mod label;
 pub mod multiline;
+pub mod range;
 pub mod select;
 pub mod slider;
 pub mod switch;
