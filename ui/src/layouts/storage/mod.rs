@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use std::path::Path;
+use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -7,7 +8,8 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
-use common::warp_runner::thumbnail_to_base64;
+use common::upload_file_channel::{UPLOAD_FILE_LISTENER, UploadFileAction, CANCEL_FILE_UPLOADLISTENER};
+use common::warp_runner::{thumbnail_to_base64};
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::*;
@@ -28,6 +30,7 @@ use kit::{
 };
 use once_cell::sync::Lazy;
 use rfd::FileDialog;
+use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
@@ -102,19 +105,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
     let files_been_uploaded = use_ref(cx, || false);
-    let tx_to_cancel_upload: &UseRef<Option<tokio::sync::mpsc::UnboundedSender<bool>>> =
-        use_ref(cx, || None);
+
 
     let window = use_window(cx);
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
         cx,
-        state,
         storage_controller.storage_state,
         storage_size,
-        window,
-        files_been_uploaded,
-        tx_to_cancel_upload,
     );
 
     functions::run_verifications_and_update_storage(
@@ -127,6 +125,90 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     functions::get_items_from_current_directory(cx, ch);
     #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(cx, drag_event, window, main_script, ch);
+
+    let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
+    let storage_state = storage_controller.storage_state.clone();
+    log::trace!("starting upload file action listener");
+    use_future(cx, (), |_| {
+        to_owned![files_been_uploaded, window, listener_channel, storage_state, state];
+        async move {    
+            let mut ch = listener_channel.lock().await;
+                    loop {
+                            if let Ok(cmd) = ch.try_recv() {
+                                    match cmd {
+                                        UploadFileAction::SizeNotAvailable(file_name) => {
+                                            state.write().mutate(
+                                            common::state::Action::AddToastNotification(
+                                                ToastNotification::init(
+                                                    "".into(),
+                                                    format!(
+                                                        "{} {}",
+                                                        get_local_text(
+                                                            "files.no-size-available"
+                                                        ),
+                                                        file_name
+                                                    ),
+                                                    None,
+                                                    3,
+                                                ),
+                                            ),
+                                        );
+                                        }
+                                        UploadFileAction::Starting(filename) => {
+                                            upload_progress_bar::update_filename(
+                                                &window,
+                                                filename,
+                                            );
+                                            sleep(Duration::from_millis(500)).await;
+                                        },
+                                        UploadFileAction::Cancelling => {
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                "Cancelling...".into(),
+                                            );
+                                            sleep(Duration::from_millis(500)).await;
+                                        },
+                                        UploadFileAction::Uploading((progress, msg)) => {
+                                            *files_been_uploaded.write_silent() = true;
+                                            upload_progress_bar::change_progress_percentage(
+                                                &window,
+                                                progress.clone(),
+                                            );
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                msg,
+                                            );
+                                        },
+                                        UploadFileAction::Finishing(msg) => {
+                                            *files_been_uploaded.write_silent() = true;
+                                            upload_progress_bar::change_progress_percentage(
+                                                &window,
+                                                msg,
+                                            );
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                "Finishing...".into(),
+                                            );
+                                        },
+                                        UploadFileAction::Finished(storage) => {
+                                            *files_been_uploaded.write_silent() = false;
+                                            upload_progress_bar::change_progress_description(
+                                                &window,
+                                                "Finished".into(),
+                                            );
+                                            storage_state.set(Some(storage));
+                                        },
+                                        _ => println!("failing"),
+                                }
+                        } 
+                    if *files_been_uploaded.read() {
+                        sleep(Duration::from_millis(5)).await;
+                    } else {
+                        sleep(Duration::from_millis(300)).await;
+                    }
+            }
+                            
+}});
 
     cx.render(rsx!(
         div {
@@ -209,7 +291,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         None => return
                                     };
                                     ch.send(ChanCmd::UploadFiles(files_local_path));
-                                    cx.needs_update();
+                                    files_been_uploaded.with_mut(|i| *i = true);
                                 },
                             }
                         )
@@ -263,19 +345,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 UploadProgressBar {
                     are_files_hovering_app: are_files_hovering_app,
                     files_been_uploaded: files_been_uploaded,
-                    on_update: |files_to_upload| {
+                    on_update: move |files_to_upload|  {
                         ch.send(ChanCmd::UploadFiles(files_to_upload));
                     },
                     on_cancel: move |_| {
-                        match tx_to_cancel_upload.read().clone() {
-                            Some(tx) => {
-                                let _ = tx.send(true);
-                                // Reset receiver value
-                                let _ = tx.send(false);
-                            }, 
-                            None => 
-                                log::info!("Not possible to send command to cancel upload!"),
-                        };
+                        let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();  
+                        let _ = tx_cancel_file_upload.send(true);
+                        let _ = tx_cancel_file_upload.send(false);
                     },
                 }
                 div {

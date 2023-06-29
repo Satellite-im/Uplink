@@ -26,6 +26,11 @@ static PROGRESS_UPLOAD_DESCRIPTION_SCRIPT: &str = r#"
     element.textContent = '$TEXT';
 "#;
 
+static UPDATE_FILENAME_SCRIPT: &str = r#"
+    var element = document.getElementById('upload-progress-filename');
+    element.textContent = '$TEXT';
+"#;
+
 pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
     let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
         .replace("$TEXT", &new_percentage)
@@ -35,6 +40,11 @@ pub fn change_progress_percentage(window: &DesktopContext, new_percentage: Strin
 
 pub fn change_progress_description(window: &DesktopContext, new_description: String) {
     let new_script = PROGRESS_UPLOAD_DESCRIPTION_SCRIPT.replace("$TEXT", &new_description);
+    window.eval(&new_script);
+}
+
+pub fn update_filename(window: &DesktopContext, filename: String) {
+    let new_script = UPDATE_FILENAME_SCRIPT.replace("$TEXT", &filename);
     window.eval(&new_script);
 }
 
@@ -69,32 +79,44 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     p {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
-                        "File is Uploading..."
+                        "Updating status..."
                     },
                     p {
                         id: "upload-progress-percentage",
                         class: "upload-progress-percentage",
-                        "0%"
+                        ""
                     },
                 },
                 div {
                     class: "progress-bar-button-container",
                     div {
-                        class: "progress-bar",
+                        class: "progress-bar-filename-container",
                         div {
-                            id: "progress-percentage",
-                            class: "progress-percentage",
+                            class: "progress-bar",
+                            div {
+                                id: "progress-percentage",
+                                class: "progress-percentage",
+                            },
+                        }
+                        p {
+                            id: "upload-progress-filename",
+                            class: "upload-progress-filename",
+                            "File been uploaded:"
                         },
                     }
-                    Button {
-                        aria_label: "cancel-upload".into(),
-                        appearance: Appearance::Primary,
-                        onpress: move |_| {
-                            cx.props.on_cancel.call(());
-                        },
-                        text: get_local_text("uplink.cancel"),
+                    div {
+                        class: "cancel-button",
+                        Button {
+                            aria_label: "cancel-upload".into(),
+                            appearance: Appearance::Primary,
+                            onpress: move |_| {
+                                cx.props.on_cancel.call(());
+                            },
+                            text: get_local_text("uplink.cancel"),
+                        }
                     }
                 }
+
             },
         ));
     }

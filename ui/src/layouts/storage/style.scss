@@ -1,6 +1,6 @@
 .upload-progress-bar-container {
     display: flex;
-    height: 80px;
+    height: 90px;
     width: 100%,;
     flex-direction: column;
     background: var(--text-color-dark);
@@ -9,8 +9,6 @@
         padding-top: 12px;
         display: flex;
 
-      
-    
         .upload-progress-description {
             color: var(--text-color-muted);
             padding-left: 24px;
@@ -32,25 +30,44 @@
         display: inline-flex;
         justify-content: space-between;
         padding-right: 16px;
-        
-        .progress-bar {
-            border-radius: 2px;
-            border: 1px solid var(--text-textmed, #A8AABE);
-            height: 20px;
-            margin-left: 24px;
-            background-color: transparent;
-            overflow: hidden;
-            margin-top: 16px;
-            margin-right: 5%;
+
+  
+        .progress-bar-filename-container {
             width: 100%;
-    
-            .progress-percentage {
-                position: relative;
+            margin-left: 24px;
+            margin-right: 16px;
+
+            .progress-bar {
                 border-radius: 2px;
-                background-color: #A8AABE; /* Cor do preenchimento */
-                height: 19px;
-                width: 0%;
+                border: 1px solid var(--text-textmed, #A8AABE);
+                height: 20px;
+                background-color: transparent;
+                overflow: hidden;
+                margin-top: 12px;
+                width: 100%;
+        
+                .progress-percentage {
+                    position: relative;
+                    border-radius: 2px;
+                    background-color: #A8AABE; /* Cor do preenchimento */
+                    height: 19px;
+                    width: 0%;
+                }
             }
+    
+            .upload-progress-filename {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 12px;
+                margin-top: 4px;
+                color: var(--text-color-muted);
+            }
+        }
+        
+
+        .cancel-button {
+            margin-top: 8px;
         }
     }
 

@@ -9,7 +9,7 @@ mod tesseract_commands;
 pub use blink_commands::{handle_blink_cmd, BlinkCmd};
 pub use constellation_commands::{
     handle_constellation_cmd, thumbnail_to_base64, ConstellationCmd, FileTransferProgress,
-    FileTransferStep,
+    FileTransferStep, FileTransferTest,
 };
 pub use multipass_commands::{handle_multipass_cmd, MultiPassCmd};
 pub use other_commands::*;

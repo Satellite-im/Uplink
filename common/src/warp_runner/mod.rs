@@ -30,7 +30,9 @@ mod conv_stream;
 mod manager;
 pub mod ui_adapter;
 
-pub use manager::commands::{thumbnail_to_base64, FileTransferProgress, FileTransferStep};
+pub use manager::commands::{
+    thumbnail_to_base64, FileTransferProgress, FileTransferStep, FileTransferTest,
+};
 pub use manager::{BlinkCmd, ConstellationCmd, MultiPassCmd, OtherCmd, RayGunCmd, TesseractCmd};
 
 pub type WarpCmdTx = UnboundedSender<WarpCmd>;
