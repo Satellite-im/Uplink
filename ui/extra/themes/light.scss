@@ -42,14 +42,14 @@
     // --primary-light: #fefff7;
 
     --primary: #95a5a6;
-    --primary-light: color-mix(in srgb, var(--secondary) 50%, white);
+    --primary-light: color-mix(in srgb, var(--secondary) 50%, #e8e1e1);
     --primary-dark: color-mix(in srgb, var(--secondary) 95%, black);
 
-    --secondary: #eaf1f8;
-    --secondary-light: color-mix(in srgb, var(--secondary) 50%, #cfcfcf);
+    --secondary: #e4edf6;
+    --secondary-light: color-mix(in srgb, var(--secondary) 50%, #cccccc);
     --secondary-dark: color-mix(in srgb, var(--secondary) 95%, black);
 
-    --background: #fff;
+    --background: white;
     --background-light:  color-mix(in srgb, var(--background) 50%, #bebebe);
     --background-dark:  color-mix(in srgb, var(--background) 95%, black);
     --success: #17b7ba;
