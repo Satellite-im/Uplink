@@ -5,7 +5,6 @@ use warp::multipass::{
     identity::{Identity as WarpIdentity, IdentityStatus, Platform},
 };
 
-use crate::get_user_default_profile_picture;
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct Identity {
     identity: WarpIdentity,
@@ -73,15 +72,22 @@ impl Identity {
     }
 
     pub fn profile_picture(&self) -> String {
-        let identity_profile_picture = self.identity.profile_picture();
-        if identity_profile_picture.is_empty()
-            || identity_profile_picture == "\0"
-            || !identity_profile_picture.contains("data:image/")
-        {
-            get_user_default_profile_picture(self.did_key())
-        } else {
-            identity_profile_picture
+        let picture = self.identity.profile_picture();
+        match self.contains_default_picture() {
+            true => picture[..picture.len() - 3].to_string(),
+            false => picture,
         }
+    }
+
+    pub fn profile_banner(&self) -> String {
+        self.identity.profile_banner()
+    }
+
+    pub fn contains_default_picture(&self) -> bool {
+        let picture = self.identity.profile_picture();
+        let bytes = picture.as_bytes();
+        let length = bytes.len();
+        bytes[length - 3..] == [11, 00, 23]
     }
 }
 
