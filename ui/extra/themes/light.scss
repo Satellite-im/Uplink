@@ -32,9 +32,9 @@
     --border-subtle-color: #dbdbdb;
     
     --text-color: #000000;
-    --text-color-muted: #2c2c2c;
+    --text-color-muted: #333333;
     --text-color-dark: #000;
-    --text-color-bright: #5a5a5a;
+    --text-color-bright: #676767;
     // --text-color-link: #ff860d;
     --placeholder: var(--text-color-muted);
     // --primary: #FCFBF4;
@@ -46,11 +46,11 @@
     --primary-dark: color-mix(in srgb, var(--secondary) 95%, black);
 
     --secondary: #eaf1f8;
-    --secondary-light: color-mix(in srgb, var(--secondary) 50%, white);
+    --secondary-light: color-mix(in srgb, var(--secondary) 50%, #cfcfcf);
     --secondary-dark: color-mix(in srgb, var(--secondary) 95%, black);
 
     --background: #fff;
-    --background-light:  color-mix(in srgb, var(--background) 50%, white);
+    --background-light:  color-mix(in srgb, var(--background) 50%, #bebebe);
     --background-dark:  color-mix(in srgb, var(--background) 95%, black);
     --success: #17b7ba;
     --success-light: #079a7c;
