@@ -19,4 +19,8 @@ pub struct Storage {
     // List of files inside current directory
     #[serde(skip)]
     pub files: Vec<File>,
+    #[serde(skip)]
+    pub max_size: usize,
+    #[serde(skip)]
+    pub current_size: usize,
 }

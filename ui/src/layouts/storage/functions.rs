@@ -24,6 +24,7 @@ pub fn run_verifications_and_update_storage(
     first_render: &UseState<bool>,
     state: &UseSharedState<State>,
     storage_controller: StorageController,
+    storage_size: &UseRef<(String, String)>,
     ch: &Coroutine<ChanCmd>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
@@ -36,6 +37,10 @@ pub fn run_verifications_and_update_storage(
         *(storage_controller.files_list).write_silent() = storage.files.clone();
         *(storage_controller.current_dir).write_silent() = storage.current_dir.clone();
         *(storage_controller.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
+        *storage_size.write_silent() = (
+            format_item_size(storage.max_size),
+            format_item_size(storage.current_size),
+        );
         state.write().storage = storage;
         storage_controller.storage_state.set(None);
         ch.send(ChanCmd::GetStorageSize);

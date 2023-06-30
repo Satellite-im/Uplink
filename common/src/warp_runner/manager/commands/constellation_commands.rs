@@ -315,12 +315,17 @@ fn get_items_from_current_directory(
     directories.sort_by_key(|b| std::cmp::Reverse(b.modified()));
     files.sort_by_key(|b| std::cmp::Reverse(b.modified()));
 
+    let max_size = warp_storage.max_size();
+    let current_size = warp_storage.current_size();
+
     let uplink_storage = uplink_storage {
         initialized: true,
         current_dir,
         directories_opened: get_directories_opened(),
         directories,
         files,
+        max_size,
+        current_size,
     };
     log::info!("Get items from current directory worked!");
     Ok(uplink_storage)

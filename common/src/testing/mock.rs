@@ -282,5 +282,7 @@ fn generate_fake_storage() -> Storage {
         directories_opened: vec![Directory::new("root")],
         directories,
         files,
+        max_size: 1024,
+        current_size: 500,
     }
 }

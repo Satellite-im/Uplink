@@ -98,7 +98,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let storage_controller = StorageController::new(cx, state.clone());
 
-    let storage_size: &UseRef<(String, String)> = use_ref(cx, || (String::new(), String::new()));
+    let storage_size: &UseRef<(String, String)> = use_ref(cx, || 
+        (functions::format_item_size(state.read().storage.max_size), 
+        functions::format_item_size(state.read().storage.current_size)));
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
     let first_render = use_state(cx, || true);
@@ -114,12 +116,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         storage_controller.storage_state,
         storage_size,
     );
-
     functions::run_verifications_and_update_storage(
         first_render,
         state,
         storage_controller.clone(),
+        storage_size,
         ch,
+        
     );
 
     functions::get_items_from_current_directory(cx, ch);
@@ -134,7 +137,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         async move {    
             let mut ch = listener_channel.lock().await;
                     loop {
-                            if let Ok(cmd) = ch.try_recv() {
+                        if let Ok(cmd) = ch.try_recv() {
                                     match cmd {
                                         UploadFileAction::SizeNotAvailable(file_name) => {
                                             state.write().mutate(
@@ -155,6 +158,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         );
                                         }
                                         UploadFileAction::Starting(filename) => {
+                                            *files_been_uploaded.write_silent() = true;
                                             upload_progress_bar::update_filename(
                                                 &window,
                                                 filename,
@@ -167,9 +171,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 "Cancelling...".into(),
                                             );
                                             sleep(Duration::from_millis(500)).await;
+                                            *files_been_uploaded.write_silent() = false;
                                         },
                                         UploadFileAction::Uploading((progress, msg)) => {
-                                            *files_been_uploaded.write_silent() = true;
+                                            if !*files_been_uploaded.read() {
+                                                *files_been_uploaded.write() = true;
+                                            }
                                             upload_progress_bar::change_progress_percentage(
                                                 &window,
                                                 progress.clone(),
@@ -209,6 +216,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
                             
 }});
+
 
     cx.render(rsx!(
         div {
