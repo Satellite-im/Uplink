@@ -64,7 +64,6 @@ derive_more = "0.99"
 colored = "2.0.0"
 notify = "5.1.0"
 rand = "0.8"
-notify-rust = { version = "4.6.0", default-features = false, features = ["d"] }
 titlecase = "2.2.1"
 
 tempfile = "3.0.7"
@@ -89,3 +88,7 @@ common = { path = "common" }
 extensions = { path = "extensions" }
 kit = { path = "kit" }
 icons = { path = "icons" }
+
+# [cfg(]
+notify-rust = { git = "https://github.com/jkelleyrtp/notify-rust.git" }
+# notify-rust = { version = "4" }
