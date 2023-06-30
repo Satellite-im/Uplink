@@ -16,7 +16,7 @@ use kit::elements::{
     label::Label,
 };
 use mime::*;
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use warp::multipass;
 use warp::{error::Error, logging::tracing::log};
 
@@ -382,47 +382,49 @@ fn set_banner(ch: Coroutine<ChanCmd>) {
 }
 
 fn set_image() -> Result<String, Box<dyn std::error::Error>> {
-    let path = match FileDialog::new()
-        .add_filter("image", &["jpg", "png", "jpeg", "svg"])
-        .set_directory(".")
-        .pick_file()
-    {
-        Some(path) => path,
-        None => return Err(Box::from(Error::InvalidItem)),
-    };
+    return Err(Box::from(Error::InvalidItem));
 
-    let file = std::fs::read(&path)?;
+    // // let path = match FileDialog::new()
+    // //     .add_filter("image", &["jpg", "png", "jpeg", "svg"])
+    // //     .set_directory(".")
+    // //     .pick_file()
+    // // {
+    // //     Some(path) => path,
+    // //     None => return Err(Box::from(Error::InvalidItem)),
+    // // };
 
-    let filename = path
-        .file_name()
-        .map(|file| file.to_string_lossy().to_string())
-        .unwrap_or_default();
+    // let file = std::fs::read(&path)?;
 
-    let parts_of_filename: Vec<&str> = filename.split('.').collect();
+    // let filename = path
+    //     .file_name()
+    //     .map(|file| file.to_string_lossy().to_string())
+    //     .unwrap_or_default();
 
-    //Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
-    let mime = match parts_of_filename.last() {
-        Some(m) => match *m {
-            "png" => IMAGE_PNG.to_string(),
-            "jpg" => IMAGE_JPEG.to_string(),
-            "jpeg" => IMAGE_JPEG.to_string(),
-            "svg" => IMAGE_SVG.to_string(),
-            &_ => "".to_string(),
-        },
-        None => "".to_string(),
-    };
+    // let parts_of_filename: Vec<&str> = filename.split('.').collect();
 
-    let image = match &file.len() {
-        0 => "".to_string(),
-        _ => {
-            let prefix = format!("data:{mime};base64,");
-            let base64_image = base64::encode(&file);
-            let img = prefix + base64_image.as_str();
-            img
-        }
-    };
+    // //Since files selected are filtered to be jpg, jpeg, png or svg the last branch is not reachable
+    // let mime = match parts_of_filename.last() {
+    //     Some(m) => match *m {
+    //         "png" => IMAGE_PNG.to_string(),
+    //         "jpg" => IMAGE_JPEG.to_string(),
+    //         "jpeg" => IMAGE_JPEG.to_string(),
+    //         "svg" => IMAGE_SVG.to_string(),
+    //         &_ => "".to_string(),
+    //     },
+    //     None => "".to_string(),
+    // };
 
-    Ok(image)
+    // let image = match &file.len() {
+    //     0 => "".to_string(),
+    //     _ => {
+    //         let prefix = format!("data:{mime};base64,");
+    //         let base64_image = base64::encode(&file);
+    //         let img = prefix + base64_image.as_str();
+    //         img
+    //     }
+    // };
+
+    // Ok(image)
 }
 
 fn get_input_options(validation_options: Validation) -> Options {

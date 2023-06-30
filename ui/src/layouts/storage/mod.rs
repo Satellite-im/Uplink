@@ -27,7 +27,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use once_cell::sync::Lazy;
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
@@ -205,12 +205,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 )),
                                 onpress: move |_| {
                                     is_renaming_map.with_mut(|i| *i = None);
-                                    let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
-                                        Some(path) => path,
-                                        None => return
-                                    };
-                                    ch.send(ChanCmd::UploadFiles(files_local_path));
-                                    cx.needs_update();
+                                    // let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
+                                    //     Some(path) => path,
+                                    //     None => return
+                                    // };
+                                    // ch.send(ChanCmd::UploadFiles(files_local_path));
+                                    // cx.needs_update();
                                 },
                             }
                         )
@@ -548,17 +548,18 @@ fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
         .and_then(OsStr::to_str)
         .map(str::to_string)
         .unwrap_or_default();
-    let file_path_buf = match FileDialog::new()
-        .set_directory(".")
-        .set_file_name(&file_stem)
-        .add_filter("", &[&file_extension])
-        .save_file()
-    {
-        Some(path) => path,
-        None => return,
-    };
-    ch.send(ChanCmd::DownloadFile {
-        file_name: file_name.to_string(),
-        local_path_to_save_file: file_path_buf,
-    });
+    return;
+    // let file_path_buf = match FileDialog::new()
+    //     .set_directory(".")
+    //     .set_file_name(&file_stem)
+    //     .add_filter("", &[&file_extension])
+    //     .save_file()
+    // {
+    //     Some(path) => path,
+    //     None => return,
+    // };
+    // ch.send(ChanCmd::DownloadFile {
+    //     file_name: file_name.to_string(),
+    //     local_path_to_save_file: file_path_buf,
+    // });
 }

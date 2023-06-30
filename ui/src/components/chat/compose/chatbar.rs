@@ -26,7 +26,7 @@ use kit::{
     },
     layout::chatbar::{Chatbar, Reply},
 };
-use rfd::FileDialog;
+// use rfd::FileDialog;
 use uuid::Uuid;
 use warp::{
     crypto::DID,
@@ -417,22 +417,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     if disabled {
                         return;
                     }
-                    if let Some(new_files) = FileDialog::new()
-                        .set_directory(dirs::home_dir().unwrap_or_default())
-                        .pick_files()
-                    {
-                        let mut new_files_to_upload: Vec<_> = cx
-                            .props
-                            .upload_files
-                            .current()
-                            .iter()
-                            .filter(|file_name| !new_files.contains(file_name))
-                            .cloned()
-                            .collect();
-                        new_files_to_upload.extend(new_files);
-                        cx.props.upload_files.set(new_files_to_upload);
-                        update_send();
-                    }
+                    // if let Some(new_files) = FileDialog::new()
+                    //     .set_directory(dirs::home_dir().unwrap_or_default())
+                    //     .pick_files()
+                    // {
+                    //     let mut new_files_to_upload: Vec<_> = cx
+                    //         .props
+                    //         .upload_files
+                    //         .current()
+                    //         .iter()
+                    //         .filter(|file_name| !new_files.contains(file_name))
+                    //         .cloned()
+                    //         .collect();
+                    //     new_files_to_upload.extend(new_files);
+                    //     cx.props.upload_files.set(new_files_to_upload);
+                    //     update_send();
+                    // }
                 },
                 tooltip: cx.render(rsx!(Tooltip {
                     arrow_position: ArrowPosition::Bottom,
