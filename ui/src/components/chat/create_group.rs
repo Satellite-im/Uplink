@@ -267,7 +267,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             UserImage {
                 platform: cx.props.friend.platform().into(),
                 status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture()
+                image: cx.props.friend.profile_picture(),
                 on_press: move |_| {
                     update_fn();
                 },

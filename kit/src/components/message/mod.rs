@@ -358,8 +358,8 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
                 dangerous_inner_html: "{dangerous_text}",
             },
             links.first().and_then(|l| cx.render(rsx!(
-                EmbedLinks {
-                link: l.to_string()
+            EmbedLinks {
+                link: l.to_string(),
                 remote: cx.props.remote
             })))
         }

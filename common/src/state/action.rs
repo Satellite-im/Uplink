@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Weak};
 
 use derive_more::Display;
 
-use dioxus_desktop::{tao::window::WindowId, DesktopContext};
+use dioxus_desktop::{tao::window::WindowId, DesktopContext, DesktopService};
 use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
@@ -64,7 +64,7 @@ pub enum Action<'a> {
     SetId(Identity),
     /// adds an overlay. currently only used for demonstration purposes
     #[display(fmt = "AddOverlay")]
-    AddOverlay(Weak<WebView>),
+    AddOverlay(Weak<DesktopService>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
     SetCallPopout(WindowId),

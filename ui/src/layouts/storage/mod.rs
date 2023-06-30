@@ -142,7 +142,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     on_download: move |_| {
                         let file_name = file2.clone().name();
                         download_file(&file_name, ch);
-                    }
+                    },
                     file: file.clone()
                 }
             )
@@ -202,7 +202,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: get_local_text("files.upload"),
                                     }
-                                ))
+                                )),
                                 onpress: move |_| {
                                     is_renaming_map.with_mut(|i| *i = None);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
@@ -390,7 +390,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             if key_code == Code::Enter {
                                                 ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                             }
-                                        }
+                                        },
                                         onpress: move |_| {
                                             is_renaming_map.with_mut(|i| *i = None);
                                             ch.send(ChanCmd::OpenDirectory(folder_name.clone()));

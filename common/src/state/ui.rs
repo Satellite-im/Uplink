@@ -1,5 +1,5 @@
 use crate::icons::outline::Shape as Icon;
-use dioxus_desktop::{tao::window::WindowId, DesktopContext};
+use dioxus_desktop::{tao::window::WindowId, DesktopContext, DesktopService};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -63,7 +63,7 @@ pub struct UI {
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
-    pub overlays: Vec<Weak<WebView>>,
+    pub overlays: Vec<Weak<DesktopService>>,
     #[serde(default)]
     pub extensions: Extensions,
     #[serde(skip)]
@@ -176,24 +176,20 @@ impl UI {
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
             if let Some(window) = Weak::upgrade(overlay) {
-                window
-                    .evaluate_script("close()")
-                    .expect("failed to close webview");
+                window.eval("close()");
             }
         }
         self.overlays.clear();
     }
     pub fn remove_overlay(&mut self, id: WindowId) {
-        let to_keep: Vec<Weak<WebView>> = self
+        let to_keep: Vec<Weak<DesktopService>> = self
             .overlays
             .iter()
             .filter(|x| match Weak::upgrade(x) {
                 None => false,
                 Some(window) => {
-                    if window.window().id() == id {
-                        window
-                            .evaluate_script("close()")
-                            .expect("failed to close webview");
+                    if window.id() == id {
+                        window.eval("close()");
                         false
                     } else {
                         true

@@ -580,9 +580,11 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 status: sender_status,
                 on_press: move |e| {
                     cx.props.on_context_menu_action.call((e, sender.to_owned()));
-                }
+                },
                 oncontextmenu: move |e| {
-                    cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+                    cx.props
+                        .on_context_menu_action
+                        .call((e, sender_clone.to_owned()));
                 }
             })),
             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
@@ -815,7 +817,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     class: "{reactions_class} pointer",
                     tabindex: "0",
                     onmouseleave: |_| {
-                        #[cfg(not(target_os = "macos"))] 
+                        #[cfg(not(target_os = "macos"))]
                         {
                             eval(focus_script.to_string());
                         }

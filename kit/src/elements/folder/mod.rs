@@ -87,7 +87,7 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
-                                }
+                                },
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape {
                                         emit(&cx, s, key_code);

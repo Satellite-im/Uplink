@@ -42,7 +42,7 @@ pub fn DebugLogger(cx: Scope) -> Element {
                 class: "header",
                 aria_label: "debug-logger-header",
                 Label {
-                    text: "Logger".into()
+                    text: "Logger".into(),
                     aria_label: "logger-label".into()
                 }
             },
