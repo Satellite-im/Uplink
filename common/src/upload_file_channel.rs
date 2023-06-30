@@ -14,6 +14,7 @@ pub enum UploadFileAction<T> {
     Finishing(String),
     UpdatingThumbnail,
     Finished(T),
+    Error(warp::error::Error),
 }
 pub struct UploadFileChannel<T> {
     pub tx: tokio::sync::mpsc::UnboundedSender<UploadFileAction<T>>,
