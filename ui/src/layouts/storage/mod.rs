@@ -28,45 +28,24 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
-use once_cell::sync::Lazy;
 use rfd::FileDialog;
 use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
-use warp::sync::RwLock;
-use wry::webview::FileDropEvent;
 
 pub mod controller;
 pub mod functions;
-pub mod upload_progress_bar;
+
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::file_preview::FilePreview;
-use crate::layouts::storage::upload_progress_bar::UploadProgressBar;
+use crate::components::files::upload_progress_bar::{self, UploadProgressBar};
 
 use self::controller::StorageController;
-
-pub const FEEDBACK_TEXT_SCRIPT: &str = r#"
-    const feedback_element = document.getElementById('overlay-text');
-    feedback_element.textContent = '$TEXT';
-"#;
-
-// const FILE_NAME_SCRIPT: &str = r#"
-//     const filename = document.getElementById('overlay-text0');
-//     filename.textContent = '$FILE_NAME';
-// "#;
-
-pub const ANIMATION_DASH_SCRIPT: &str = r#"
-    var dashElement = document.getElementById('dash-element')
-    dashElement.style.animation = "border-dance 0.5s infinite linear"
-"#;
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub const ROOT_DIR_NAME: &str = "root";
-
-pub static DRAG_EVENT: Lazy<RwLock<FileDropEvent>> =
-    Lazy::new(|| RwLock::new(FileDropEvent::Cancelled));
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -107,22 +86,24 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
     let files_been_uploaded = use_ref(cx, || false);
+    let files_in_queue_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
 
-
+    
     let window = use_window(cx);
 
     let ch: &Coroutine<ChanCmd> = functions::storage_coroutine(
         cx,
         storage_controller.storage_state,
         storage_size,
+        files_in_queue_to_upload,
     );
+    
     functions::run_verifications_and_update_storage(
         first_render,
         state,
         storage_controller.clone(),
         storage_size,
         ch,
-        
     );
 
     functions::get_items_from_current_directory(cx, ch);
@@ -133,7 +114,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let storage_state = storage_controller.storage_state.clone();
     log::trace!("starting upload file action listener");
     use_future(cx, (), |_| {
-        to_owned![files_been_uploaded, window, listener_channel, storage_state, state];
+        to_owned![files_been_uploaded, window, listener_channel, storage_state, files_in_queue_to_upload, state];
         async move {    
             let mut ch = listener_channel.lock().await;
                     loop {
@@ -188,6 +169,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         },
                                         UploadFileAction::Finishing(msg) => {
                                             *files_been_uploaded.write_silent() = true;
+                                            if !files_in_queue_to_upload.read().is_empty() {
+                                                files_in_queue_to_upload.write().remove(0);
+                                            }
                                             upload_progress_bar::change_progress_percentage(
                                                 &window,
                                                 msg,
@@ -353,6 +337,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 UploadProgressBar {
                     are_files_hovering_app: are_files_hovering_app,
                     files_been_uploaded: files_been_uploaded,
+                    files_in_queue_to_upload: files_in_queue_to_upload,
                     on_update: move |files_to_upload|  {
                         ch.send(ChanCmd::UploadFiles(files_to_upload));
                     },

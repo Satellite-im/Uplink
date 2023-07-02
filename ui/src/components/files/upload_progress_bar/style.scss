@@ -18,6 +18,11 @@
             color: var(--text-color-muted);
             padding-left: 16px;
         }
+
+        .upload-progress-drop-files {
+            color: var(--text-color-muted);
+            padding-left: 16px;
+        }
     }
 
     .upload-file-count {
@@ -55,21 +60,54 @@
                 }
             }
     
-            .upload-progress-filename {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                font-size: 12px;
-                margin-top: 4px;
-                color: var(--text-color-muted);
+            .filaname-and-queue-container {
+                display: flex;
+
+             .filename-and-file-queue-text {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 12px;
+                    margin-top: 4px;
+                    color: var(--text-color-muted);
+                }
             }
+           
         }
         
 
         .cancel-button {
             margin-top: 8px;
         }
-    }
-
-    
+    } 
 }
+
+.dots-container {
+    display: inline-block;
+  }
+  
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border-radius: 50%;
+    margin-right: 4px;
+    opacity: 0;
+    animation: fade-in 1s infinite;
+  }
+  
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    33.33% {
+      opacity: 1;
+    }
+    66.66% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }

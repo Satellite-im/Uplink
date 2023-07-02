@@ -11,7 +11,6 @@ use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
-use tokio::sync::mpsc;
 
 use crate::{
     language::get_local_text,
@@ -35,28 +34,6 @@ use warp::{
 
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
-
-pub enum FileTransferTest {
-    Uploading(String),
-    Finished,
-}
-
-pub enum FileTransferStep {
-    UpdateChannelSender(mpsc::UnboundedSender<bool>),
-    SizeNotAvailable(String),
-    Start(String),
-    DuplicateName(Option<String>),
-    Upload(String),
-    Cancelling,
-    Finishing(String),
-    Thumbnail(Option<()>),
-}
-
-pub enum FileTransferProgress<T> {
-    Error(warp::error::Error),
-    Finished(T),
-    Step(FileTransferStep),
-}
 
 #[derive(Display)]
 pub enum ConstellationCmd {

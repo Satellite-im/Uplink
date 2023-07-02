@@ -1,5 +1,3 @@
-#[cfg(target_os = "linux")]
-use std::path::Path;
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
@@ -16,9 +14,8 @@ use dioxus_hooks::{
 use futures::{channel::oneshot, StreamExt};
 // use nix::sys::statvfs::statvfs;
 use tokio::time::sleep;
-use wry::webview::FileDropEvent;
 
-use super::{controller::StorageController, ChanCmd, Props, DRAG_EVENT, MAX_LEN_TO_FORMAT_NAME};
+use super::{controller::StorageController, ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME};
 
 pub fn run_verifications_and_update_storage(
     first_render: &UseState<bool>,
@@ -82,10 +79,6 @@ pub fn allow_drag_event_for_non_macos_systems(
     });
 }
 
-pub fn get_drag_event() -> FileDropEvent {
-    DRAG_EVENT.read().clone()
-}
-
 pub fn format_item_name(file_name: String) -> String {
     let item = PathBuf::from(&file_name);
 
@@ -106,30 +99,6 @@ pub fn format_item_name(file_name: String) -> String {
             }
         })
         .unwrap_or_else(|| file_name.clone())
-}
-
-pub fn verify_if_there_are_valid_paths(files_local_path: &Vec<PathBuf>) -> bool {
-    if files_local_path.is_empty() {
-        false
-    } else {
-        decoded_pathbufs(files_local_path.clone())
-            .first()
-            .map_or(false, |path| path.exists())
-    }
-}
-
-pub fn decoded_pathbufs(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    #[allow(unused_mut)]
-    let mut paths = paths;
-    #[cfg(target_os = "linux")]
-    {
-        let decode = |path: &Path| path.as_os_str().to_string_lossy().replace("%20", " ");
-        paths = paths
-            .iter()
-            .map(|p| PathBuf::from(decode(p)))
-            .collect::<Vec<PathBuf>>();
-    }
-    paths
 }
 
 pub fn format_item_size(item_size: usize) -> String {
@@ -159,9 +128,10 @@ pub fn storage_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
     storage_state: &'a UseState<Option<Storage>>,
     storage_size: &'a UseRef<(String, String)>,
+    files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, storage_size];
+        to_owned![storage_state, storage_size, files_in_queue_to_upload];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -263,128 +233,14 @@ pub fn storage_coroutine<'a>(
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
+                        files_in_queue_to_upload.write().extend(files_path.clone());
+
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::UploadFiles { files_path },
                         )) {
                             log::error!("failed to upload files {}", e);
                             continue;
                         }
-
-                        // while let Some(msg) = rx.recv().await {
-                        //     match msg {
-                        //         FileTransferProgress::Step(steps) => {
-                        //             match steps {
-                        //                 FileTransferStep::UpdateChannelSender(tx2) => {
-                        //                     *tx_to_cancel_file_upload.write_silent() =
-                        //                         Some(tx2.clone());
-                        //                 }
-                        //                 FileTransferStep::Cancelling => {
-                        //                     upload_progress_bar::change_progress_description(
-                        //                         &window,
-                        //                         get_local_text("files.cancelling-upload"),
-                        //                     );
-                        //                     sleep(Duration::from_millis(250)).await;
-                        //                 }
-                        //                 FileTransferStep::SizeNotAvailable(file_name) => {
-                        //                     state.write().mutate(
-                        //                         common::state::Action::AddToastNotification(
-                        //                             ToastNotification::init(
-                        //                                 "".into(),
-                        //                                 format!(
-                        //                                     "{} {}",
-                        //                                     get_local_text(
-                        //                                         "files.no-size-available"
-                        //                                     ),
-                        //                                     file_name
-                        //                                 ),
-                        //                                 None,
-                        //                                 3,
-                        //                             ),
-                        //                         ),
-                        //                     );
-                        //                     sleep(Duration::from_millis(1000)).await;
-                        //                 }
-                        //                 FileTransferStep::Start(name) => {
-                        //                     let file_name_formatted = format_item_name(name);
-                        //                     upload_progress_bar::change_progress_description(
-                        //                         &window,
-                        //                         file_name_formatted,
-                        //                     );
-                        //                     sleep(Duration::from_millis(100)).await;
-                        //                 }
-                        //                 FileTransferStep::DuplicateName(duplicate_name_step) => {
-                        //                     match duplicate_name_step {
-                        //                         None => {
-                        //                             upload_progress_bar::change_progress_description(
-                        //                                 &window,
-                        //                                 get_local_text(
-                        //                                     "files.renaming-duplicated",
-                        //                                 ),
-                        //                             );
-                        //                         }
-                        //                         Some(name) => {
-                        //                             let file_name_formatted =
-                        //                                 format_item_name(name);
-                        //                             upload_progress_bar::change_progress_description(
-                        //                                 &window,
-                        //                                 file_name_formatted,
-                        //                             );
-                        //                         }
-                        //                     }
-                        //                     sleep(Duration::from_millis(200)).await;
-                        //                 }
-                        //                 FileTransferStep::Upload(progress) => {
-                        //                     // *files_been_uploaded.write_silent() = true;
-                        //                     // upload_progress_bar::change_progress_percentage(
-                        //                     //     &window,
-                        //                     //     progress.clone(),
-                        //                     // );
-                        //                     // sleep(Duration::from_millis(3)).await;
-                        //                 }
-                        //                 FileTransferStep::Finishing(progress) => {
-                        //                     *files_been_uploaded.write_silent() = true;
-                        //                     upload_progress_bar::change_progress_percentage(
-                        //                         &window,
-                        //                         progress.clone(),
-                        //                     );
-                        //                     upload_progress_bar::change_progress_description(
-                        //                         &window,
-                        //                         get_local_text("files.finishing-upload"),
-                        //                     );
-                        //                     sleep(Duration::from_millis(3)).await;
-                        //                 }
-                        //                 FileTransferStep::Thumbnail(thumb_type) => {
-                        //                     match thumb_type {
-                        //                         Some(_) => {
-                        //                             upload_progress_bar::change_progress_description(
-                        //                                 &window,
-                        //                                 get_local_text("files.thumbnail-uploaded"),
-                        //                             );
-                        //                         }
-                        //                         None => {
-                        //                             upload_progress_bar::change_progress_description(
-                        //                                 &window,
-                        //                                 get_local_text("files.no-thumbnail"),
-                        //                             );
-                        //                         }
-                        //                     }
-                        //                     sleep(Duration::from_millis(200)).await;
-                        //                 }
-                        //             };
-                        //         }
-                        //         FileTransferProgress::Finished(storage) => {
-                        //             3
-                        //         }
-                        //         FileTransferProgress::Error(_) => {
-                        //             *files_been_uploaded.write_silent() = false;
-                        //             upload_progress_bar::change_progress_description(
-                        //                 &window,
-                        //                 "Error happened, cancelling operation!".into(),
-                        //             );
-                        //             break;
-                        //         }
-                        //     }
-                        // }
                     }
                     ChanCmd::DownloadFile {
                         file_name,

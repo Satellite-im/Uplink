@@ -6,7 +6,10 @@ use dioxus_desktop::{use_window, DesktopContext};
 use kit::elements::{button::Button, Appearance};
 use wry::webview::FileDropEvent;
 
-use super::functions::{decoded_pathbufs, get_drag_event, verify_if_there_are_valid_paths};
+use crate::utils::{
+    get_drag_event,
+    verify_valid_paths::{decoded_pathbufs, verify_if_are_valid_paths},
+};
 
 static FILES_TO_UPLOAD_SCRIPT: &str = r#"
     var element = document.getElementById('upload-file-count');
@@ -52,6 +55,7 @@ pub fn update_filename(window: &DesktopContext, filename: String) {
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     files_been_uploaded: &'a UseRef<bool>,
+    files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
     on_cancel: EventHandler<'a, ()>,
 }
@@ -84,8 +88,13 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     p {
                         id: "upload-progress-percentage",
                         class: "upload-progress-percentage",
-                        ""
+                        "100%"
                     },
+                    // p {
+                    //     id: "upload-progress-drop-files",
+                    //     class: "upload-progress-drop-files",
+                    //     "Drop 3 files to upload"
+                    // },
                 },
                 div {
                     class: "progress-bar-button-container",
@@ -98,11 +107,19 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                                 class: "progress-percentage",
                             },
                         }
-                        p {
-                            id: "upload-progress-filename",
-                            class: "upload-progress-filename",
-                            "File been uploaded:"
-                        },
+                        div {
+                            class: "filaname-and-queue-container",
+                            p {
+                                id: "upload-progress-filename",
+                                class: "filename-and-file-queue-text",
+                                "File been uploaded:"
+                            },
+                            p {
+                                id: "upload-progress-files-queue",
+                                class: "filename-and-file-queue-text",
+                                format!(" / Files in queue ({})", cx.props.files_in_queue_to_upload.read().len())
+                            },
+                        }
                     }
                     div {
                         class: "cancel-button",
@@ -164,10 +181,10 @@ async fn drag_and_drop_function(
 ) {
     *are_files_hovering_app.write_silent() = true;
     loop {
-        let file_drop_event = get_drag_event();
+        let file_drop_event = get_drag_event::get_drag_event();
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
-                if verify_if_there_are_valid_paths(&paths) {
+                if verify_if_are_valid_paths(&paths) {
                     let files_to_upload_message = count_files_to_show(paths.len());
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
@@ -175,7 +192,7 @@ async fn drag_and_drop_function(
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
-                if verify_if_there_are_valid_paths(&paths) {
+                if verify_if_are_valid_paths(&paths) {
                     let new_files_to_upload = decoded_pathbufs(paths);
                     *files_ready_to_upload.write_silent() = new_files_to_upload;
                     break;
