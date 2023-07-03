@@ -1,3 +1,16 @@
+.upload-progress-bar-container-file-count {
+  display: flex;
+  height: 90px;
+  width: 100%,;
+  align-items: center;
+  background: var(--text-color-dark);
+
+  .upload-file-count {
+    color: var(--text-color-muted);
+    padding-left: 24px;
+}
+}
+
 .upload-progress-bar-container {
     display: flex;
     padding-bottom: 8px;
@@ -25,11 +38,7 @@
         }
     }
 
-    .upload-file-count {
-        color: var(--text-color-muted);
-        padding-top: 25px;
-        padding-left: 24px;
-    }
+
 
     .progress-bar-button-container {
         display: inline-flex;

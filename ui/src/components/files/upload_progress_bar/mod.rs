@@ -83,10 +83,10 @@ fn update_files_to_drop_while_upload_other_file(
             .replace(
                 "$TEXT2",
                 &(if files_to_drop > 1 {
-                        get_local_text("files.files")
-                    } else {
-                        get_local_text("files.file")
-                    }),
+                    get_local_text("files.files")
+                } else {
+                    get_local_text("files.file")
+                }),
             )
     } else {
         UPDATE_FILES_TO_DROP
@@ -184,7 +184,6 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             p {
                                 id: "upload-progress-files-queue",
                                 class: "file-queue-text",
-                                "/ Files in queue (0)"
                             },
                         }
                     }
@@ -209,7 +208,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     if *cx.props.are_files_hovering_app.read() {
         return cx.render(rsx!(
             div {
-                class: "upload-progress-bar-container",
+                class: "upload-progress-bar-container-file-count",
                 p {
                     id: "upload-file-count",
                     class: "upload-file-count",
