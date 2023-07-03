@@ -70,6 +70,7 @@ pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     files_been_uploaded: &'a UseRef<bool>,
+    disable_cancel_upload_button: &'a UseRef<bool>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
     on_cancel: EventHandler<'a, ()>,
 }
@@ -119,10 +120,12 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     p {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
+                        get_local_text("files.uploading-file"),
                     },
                     p {
                         id: "upload-progress-percentage",
                         class: "upload-progress-percentage",
+                        "0%",
                     },
                     // p {
                     //     id: "upload-progress-drop-files",
@@ -157,6 +160,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                         class: "cancel-button",
                         Button {
                             aria_label: "cancel-upload".into(),
+                            disabled: *cx.props.disable_cancel_upload_button.read(),
                             appearance: Appearance::Primary,
                             onpress: move |_| {
                                 cx.props.on_cancel.call(());

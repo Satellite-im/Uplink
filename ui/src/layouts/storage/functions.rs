@@ -341,6 +341,7 @@ pub fn start_upload_file_listener(
     state: &UseSharedState<State>,
     first_render: &UseState<bool>,
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+    disable_cancel_upload_button: &UseRef<bool>,
 ) {
     use_future(cx, (), |_| {
         to_owned![
@@ -349,7 +350,8 @@ pub fn start_upload_file_listener(
             storage_state,
             state,
             first_render,
-            files_in_queue_to_upload
+            files_in_queue_to_upload,
+            disable_cancel_upload_button
         ];
         async move {
             let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
@@ -380,6 +382,7 @@ pub fn start_upload_file_listener(
                             sleep(Duration::from_millis(500)).await;
                         }
                         UploadFileAction::Cancelling => {
+                            *disable_cancel_upload_button.write_silent() = true;
                             if !files_in_queue_to_upload.read().is_empty() {
                                 files_in_queue_to_upload.write().remove(0);
                                 upload_progress_bar::update_files_queue_len(
@@ -399,6 +402,9 @@ pub fn start_upload_file_listener(
                         UploadFileAction::Uploading((progress, msg, filename)) => {
                             if !*files_been_uploaded.read() && *first_render.current() {
                                 *files_been_uploaded.write() = true;
+                            }
+                            if disable_cancel_upload_button.with(|i| *i == true) {
+                                disable_cancel_upload_button.with_mut(|i| *i = false);
                             }
                             upload_progress_bar::update_filename(&window, filename);
                             upload_progress_bar::update_files_queue_len(

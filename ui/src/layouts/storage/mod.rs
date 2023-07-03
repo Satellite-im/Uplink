@@ -110,15 +110,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let files_been_uploaded = use_ref(cx, || false);
     let files_in_queue_to_upload: &UseRef<Vec<PathBuf>> =
         use_ref(cx, || state.read().storage.files_in_queue_to_upload.clone());
+    let disable_cancel_upload_button = use_ref(cx, || false);
+
     let window = use_window(cx);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller.storage_state);
-
-    if files_in_queue_to_upload.read().is_empty() {
-        allow_folder_navigation(window, true);
-    } else {
-        allow_folder_navigation(window, false);
-    }
+    allow_folder_navigation(window, files_in_queue_to_upload.read().is_empty());
 
     functions::run_verifications_and_update_storage(
         first_render,
@@ -141,6 +138,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         state,
         first_render,
         files_in_queue_to_upload,
+        disable_cancel_upload_button,
     );
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
@@ -226,7 +224,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         Some(path) => path,
                                         None => return
                                     };
-                                    add_files_in_queue_to_upload(files_in_queue_to_upload, files_local_path, ch);
+                                    add_files_in_queue_to_upload(files_in_queue_to_upload, files_local_path, window, ch);
                                     files_been_uploaded.with_mut(|i| *i = true);
                                 },
                             }
@@ -281,8 +279,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 UploadProgressBar {
                     are_files_hovering_app: are_files_hovering_app,
                     files_been_uploaded: files_been_uploaded,
+                    disable_cancel_upload_button: disable_cancel_upload_button,
                     on_update: move |files_to_upload: Vec<PathBuf>|  {
-                        add_files_in_queue_to_upload(files_in_queue_to_upload, files_to_upload, ch);
+                        add_files_in_queue_to_upload(files_in_queue_to_upload, files_to_upload, window, ch);
                     },
                     on_cancel: move |_| {
                         let _ = tx_cancel_file_upload.send(true);
@@ -590,8 +589,10 @@ fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
 fn add_files_in_queue_to_upload(
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
+    window: &DesktopContext,
     ch: &Coroutine<ChanCmd>,
 ) {
+    allow_folder_navigation(window, false);
     files_in_queue_to_upload
         .write_silent()
         .extend(files_path.clone());
