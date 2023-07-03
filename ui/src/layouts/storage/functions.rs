@@ -355,111 +355,101 @@ pub fn start_upload_file_listener(
             let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
             log::trace!("starting upload file action listener");
             let mut ch = listener_channel.lock().await;
-            loop {
-                if let Ok(cmd) = ch.try_recv() {
-                    match cmd {
-                        UploadFileAction::SizeNotAvailable(file_name) => {
-                            state
-                                .write()
-                                .mutate(common::state::Action::AddToastNotification(
-                                    ToastNotification::init(
-                                        "".into(),
-                                        format!(
-                                            "{} {}",
-                                            get_local_text("files.no-size-available"),
-                                            file_name
-                                        ),
-                                        None,
-                                        3,
+            while let Some(cmd) = ch.recv().await {
+                match cmd {
+                    UploadFileAction::SizeNotAvailable(file_name) => {
+                        state
+                            .write()
+                            .mutate(common::state::Action::AddToastNotification(
+                                ToastNotification::init(
+                                    "".into(),
+                                    format!(
+                                        "{} {}",
+                                        get_local_text("files.no-size-available"),
+                                        file_name
                                     ),
-                                ));
-                        }
-                        UploadFileAction::Starting(filename) => {
-                            *files_been_uploaded.write_silent() = true;
-                            upload_progress_bar::update_filename(&window, filename);
-                            sleep(Duration::from_millis(500)).await;
-                        }
-                        UploadFileAction::Cancelling => {
-                            *disable_cancel_upload_button.write_silent() = true;
-                            if !files_in_queue_to_upload.read().is_empty() {
-                                files_in_queue_to_upload.write().remove(0);
-                                upload_progress_bar::update_files_queue_len(
-                                    &window,
-                                    files_in_queue_to_upload.read().len(),
-                                );
-                            }
-                            upload_progress_bar::change_progress_description(
-                                &window,
-                                get_local_text("files.cancelling-upload"),
-                            );
-                            sleep(Duration::from_millis(500)).await;
-                            if files_in_queue_to_upload.read().is_empty() {
-                                *files_been_uploaded.write_silent() = false;
-                            }
-                        }
-                        UploadFileAction::Uploading((progress, msg, filename)) => {
-                            if !*files_been_uploaded.read() && *first_render.current() {
-                                *files_been_uploaded.write() = true;
-                            }
-                            if disable_cancel_upload_button.with(|i| *i) {
-                                disable_cancel_upload_button.with_mut(|i| *i = false);
-                            }
-                            upload_progress_bar::update_filename(&window, filename);
+                                    None,
+                                    3,
+                                ),
+                            ));
+                    }
+                    UploadFileAction::Starting(filename) => {
+                        *files_been_uploaded.write_silent() = true;
+                        upload_progress_bar::update_filename(&window, filename);
+                        sleep(Duration::from_millis(500)).await;
+                    }
+                    UploadFileAction::Cancelling => {
+                        *disable_cancel_upload_button.write_silent() = true;
+                        if !files_in_queue_to_upload.read().is_empty() {
+                            files_in_queue_to_upload.write().remove(0);
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),
                             );
-                            upload_progress_bar::change_progress_percentage(
-                                &window,
-                                progress.clone(),
-                            );
-                            upload_progress_bar::change_progress_description(&window, msg);
                         }
-                        UploadFileAction::Finishing(msg) => {
-                            *files_been_uploaded.write_silent() = true;
-                            if !files_in_queue_to_upload.read().is_empty() {
-                                files_in_queue_to_upload.write().remove(0);
-                                upload_progress_bar::update_files_queue_len(
-                                    &window,
-                                    files_in_queue_to_upload.read().len(),
-                                );
-                            }
-                            upload_progress_bar::change_progress_percentage(&window, msg);
-                            upload_progress_bar::change_progress_description(
-                                &window,
-                                get_local_text("files.finishing-upload"),
-                            );
-                        }
-                        UploadFileAction::Finished(storage) => {
-                            if files_in_queue_to_upload.read().is_empty() {
-                                *files_been_uploaded.write_silent() = false;
-                            }
-                            upload_progress_bar::change_progress_description(
-                                &window,
-                                "Finished".into(),
-                            );
-                            storage_state.set(Some(storage));
-                        }
-                        UploadFileAction::Error(_) => {
-                            if !files_in_queue_to_upload.read().is_empty() {
-                                files_in_queue_to_upload.write().remove(0);
-                                upload_progress_bar::update_files_queue_len(
-                                    &window,
-                                    files_in_queue_to_upload.read().len(),
-                                );
-                            }
-                            upload_progress_bar::change_progress_percentage(&window, "0%".into());
-                            upload_progress_bar::change_progress_description(
-                                &window,
-                                get_local_text("files.error-to-upload"),
-                            );
+                        upload_progress_bar::change_progress_description(
+                            &window,
+                            get_local_text("files.cancelling-upload"),
+                        );
+                        sleep(Duration::from_millis(500)).await;
+                        if files_in_queue_to_upload.read().is_empty() {
+                            *files_been_uploaded.write_silent() = false;
                         }
                     }
-                }
-                if *files_been_uploaded.read() {
-                    sleep(Duration::from_millis(5)).await;
-                } else {
-                    sleep(Duration::from_millis(300)).await;
+                    UploadFileAction::Uploading((progress, msg, filename)) => {
+                        if !*files_been_uploaded.read() && *first_render.current() {
+                            *files_been_uploaded.write() = true;
+                        }
+                        if disable_cancel_upload_button.with(|i| *i) {
+                            disable_cancel_upload_button.with_mut(|i| *i = false);
+                        }
+                        upload_progress_bar::update_filename(&window, filename);
+                        upload_progress_bar::update_files_queue_len(
+                            &window,
+                            files_in_queue_to_upload.read().len(),
+                        );
+                        upload_progress_bar::change_progress_percentage(&window, progress.clone());
+                        upload_progress_bar::change_progress_description(&window, msg);
+                    }
+                    UploadFileAction::Finishing(msg) => {
+                        *files_been_uploaded.write_silent() = true;
+                        if !files_in_queue_to_upload.read().is_empty() {
+                            files_in_queue_to_upload.write().remove(0);
+                            upload_progress_bar::update_files_queue_len(
+                                &window,
+                                files_in_queue_to_upload.read().len(),
+                            );
+                        }
+                        upload_progress_bar::change_progress_percentage(&window, msg);
+                        upload_progress_bar::change_progress_description(
+                            &window,
+                            get_local_text("files.finishing-upload"),
+                        );
+                    }
+                    UploadFileAction::Finished(storage) => {
+                        if files_in_queue_to_upload.read().is_empty() {
+                            *files_been_uploaded.write_silent() = false;
+                        }
+                        upload_progress_bar::change_progress_description(
+                            &window,
+                            "Finished".into(),
+                        );
+                        storage_state.set(Some(storage));
+                    }
+                    UploadFileAction::Error(_) => {
+                        if !files_in_queue_to_upload.read().is_empty() {
+                            files_in_queue_to_upload.write().remove(0);
+                            upload_progress_bar::update_files_queue_len(
+                                &window,
+                                files_in_queue_to_upload.read().len(),
+                            );
+                        }
+                        upload_progress_bar::change_progress_percentage(&window, "0%".into());
+                        upload_progress_bar::change_progress_description(
+                            &window,
+                            get_local_text("files.error-to-upload"),
+                        );
+                    }
                 }
             }
         }
