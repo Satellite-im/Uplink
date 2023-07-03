@@ -1,5 +1,5 @@
-use std::{ffi::OsStr, path::PathBuf, time::Duration};
-
+#[cfg(not(target_os = "macos"))]
+use crate::utils::get_drag_event;
 use common::{
     language::get_local_text,
     state::{storage::Storage, Action, State, ToastNotification},
@@ -14,8 +14,10 @@ use dioxus_hooks::{
     UseState,
 };
 use futures::{channel::oneshot, StreamExt};
-// use nix::sys::statvfs::statvfs;
+use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
+#[cfg(not(target_os = "macos"))]
+use wry::webview::FileDropEvent;
 
 use crate::components::files::upload_progress_bar;
 
@@ -69,22 +71,18 @@ pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanC
 #[cfg(not(target_os = "macos"))]
 pub fn allow_drag_event_for_non_macos_systems(
     cx: &Scoped<Props>,
-    drag_event: &UseRef<Option<FileDropEvent>>,
-    window: &dioxus_desktop::DesktopContext,
-    main_script: &str,
-    ch: &Coroutine<ChanCmd>,
+    are_files_hovering_app: &UseRef<bool>,
 ) {
     use_future(cx, (), |_| {
-        to_owned![ch, main_script, window, drag_event];
+        to_owned![are_files_hovering_app];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 sleep(Duration::from_millis(100)).await;
-                if let FileDropEvent::Hovered { .. } = get_drag_event() {
-                    if drag_event.with(|i| i.clone()).is_none() {
-                        drag_and_drop_function(&window, &drag_event, main_script.clone(), &ch)
-                            .await;
-                    }
+                if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
+                    if are_files_hovering_app.with(|i| !(*i)) {
+                        are_files_hovering_app.with_mut(|i| *i = true);
+                    };
                 }
             }
         }
