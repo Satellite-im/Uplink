@@ -117,6 +117,7 @@ friends = Friends
     .request-exist = Friend request is already pending!
 
 files = Files
+    .file = File
     .files = Files
     .new-folder = New Folder
     .upload = Upload
@@ -138,7 +139,6 @@ files = Files
     .directory-already-with-name = There is already a directory with this name
     .no-size-available = No size available for file:
     .file-already-with-name = There is already a file with this name
-    .no-data-available = No data available
     .uploading-file = Uploading File...
     .finishing-upload = Finishing...
     .cancelling-upload = Cancelling...

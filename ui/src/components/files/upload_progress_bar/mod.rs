@@ -39,6 +39,11 @@ static UPDATE_FILE_QUEUE_SCRIPT: &str = r#"
     element.textContent = '$TEXT_TRANSLATED ($FILES_IN_QUEUE)';
 "#;
 
+static UPDATE_FILES_TO_DROP: &str = r#"
+    var element = document.getElementById('upload-progress-drop-files');
+    element.textContent = '$TEXT1 $FILES_NUMBER $TEXT2';
+"#;
+
 pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
     let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
         .replace("$TEXT", &new_percentage)
@@ -63,6 +68,35 @@ pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
             &format!(" / {}", get_local_text("files.files-in-queue")),
         )
         .replace("$FILES_IN_QUEUE", &format!("{}", files_in_queue));
+    window.eval(&new_script);
+}
+
+fn update_files_to_drop_while_upload_other_file(
+    window: &DesktopContext,
+    files_to_drop: usize,
+    hovering: bool,
+) {
+    let new_script = if hovering {
+        UPDATE_FILES_TO_DROP
+            .replace("$TEXT1", &format!(" / {}", get_local_text("uplink.add")))
+            .replace("$FILES_NUMBER", &format!("{}", files_to_drop))
+            .replace(
+                "$TEXT2",
+                &format!(
+                    "{}",
+                    if files_to_drop > 1 {
+                        get_local_text("files.files")
+                    } else {
+                        get_local_text("files.file")
+                    }
+                ),
+            )
+    } else {
+        UPDATE_FILES_TO_DROP
+            .replace("$TEXT1", "")
+            .replace("$FILES_NUMBER", "")
+            .replace("$TEXT2", "")
+    };
     window.eval(&new_script);
 }
 
@@ -127,11 +161,10 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                         class: "upload-progress-percentage",
                         "0%",
                     },
-                    // p {
-                    //     id: "upload-progress-drop-files",
-                    //     class: "upload-progress-drop-files",
-                    //     "Drop 3 files to upload"
-                    // },
+                    p {
+                        id: "upload-progress-drop-files",
+                        class: "upload-progress-drop-files",
+                    },
                 },
                 div {
                     class: "progress-bar-button-container",
@@ -217,6 +250,7 @@ async fn drag_and_drop_function(
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
                     window.eval(&new_script);
+                    update_files_to_drop_while_upload_other_file(window, paths.len(), true);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
@@ -232,6 +266,7 @@ async fn drag_and_drop_function(
         };
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+    update_files_to_drop_while_upload_other_file(window, 0, false);
     *called_drag_and_drop_function.write_silent() = false;
     are_files_hovering_app.with_mut(|i| *i = false);
 }
