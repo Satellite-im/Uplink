@@ -1,6 +1,5 @@
 #[allow(unused_imports)]
 use std::path::Path;
-use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -8,10 +7,10 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
-use common::upload_file_channel::{UPLOAD_FILE_LISTENER, UploadFileAction, CANCEL_FILE_UPLOADLISTENER};
-use common::warp_runner::{thumbnail_to_base64};
+use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
+use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_window, DesktopContext};
 use dioxus_router::*;
 use kit::layout::modal::Modal;
 use kit::{
@@ -29,7 +28,6 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
-use tokio::time::sleep;
 use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
@@ -39,13 +37,35 @@ pub mod functions;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::file_preview::FilePreview;
-use crate::components::files::upload_progress_bar::{self, UploadProgressBar};
+use crate::components::files::upload_progress_bar::UploadProgressBar;
 
 use self::controller::StorageController;
 
 const MAX_LEN_TO_FORMAT_NAME: usize = 64;
 
 pub const ROOT_DIR_NAME: &str = "root";
+
+static ALLOW_FOLDER_NAVIGATION: &str = r#"
+    var folders_element = document.getElementById('files-list');
+    folders_element.style.pointerEvents = '$POINTER_EVENT';
+    folders_element.style.opacity = '$OPACITY';
+    var folders_breadcumbs_element = document.getElementById('files-breadcrumbs');
+    folders_breadcumbs_element.style.pointerEvents = '$POINTER_EVENT';
+    folders_breadcumbs_element.style.opacity = '$OPACITY';
+"#;
+
+fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
+    let new_script = if allow_navigation {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "")
+            .replace("$OPACITY", "1")
+    } else {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "none")
+            .replace("$OPACITY", "0.5")
+    };
+    window.eval(&new_script);
+}
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -76,24 +96,30 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
 
     let storage_controller = StorageController::new(cx, state.clone());
 
-    let storage_size: &UseRef<(String, String)> = use_ref(cx, || 
-        (functions::format_item_size(state.read().storage.max_size), 
-        functions::format_item_size(state.read().storage.current_size)));
+    let storage_size: &UseRef<(String, String)> = use_ref(cx, || {
+        (
+            functions::format_item_size(state.read().storage.max_size),
+            functions::format_item_size(state.read().storage.current_size),
+        )
+    });
     let is_renaming_map: &UseRef<Option<Uuid>> = use_ref(cx, || None);
     let add_new_folder = use_state(cx, || false);
     let first_render = use_state(cx, || true);
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
     let are_files_hovering_app = use_ref(cx, || false);
     let files_been_uploaded = use_ref(cx, || false);
-    let files_in_queue_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, 
-        || state.read().storage.files_in_queue_to_upload.clone());
+    let files_in_queue_to_upload: &UseRef<Vec<PathBuf>> =
+        use_ref(cx, || state.read().storage.files_in_queue_to_upload.clone());
     let window = use_window(cx);
 
-    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(
-        cx,
-        storage_controller.storage_state,
-    );
-    
+    let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller.storage_state);
+
+    if files_in_queue_to_upload.read().is_empty() {
+        allow_folder_navigation(window, true);
+    } else {
+        allow_folder_navigation(window, false);
+    }
+
     functions::run_verifications_and_update_storage(
         first_render,
         state,
@@ -106,138 +132,18 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     #[cfg(not(target_os = "macos"))]
     functions::allow_drag_event_for_non_macos_systems(cx, drag_event, window, main_script, ch);
 
-    let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
     let storage_state = storage_controller.storage_state.clone();
-    log::trace!("starting upload file action listener");
-    use_future(cx, (), |_| {
-        to_owned![files_been_uploaded, window, listener_channel, storage_state, state, first_render, files_in_queue_to_upload];
-        async move {    
-            let mut ch = listener_channel.lock().await;
-                    loop {
-                        if let Ok(cmd) = ch.try_recv() {
-                                    match cmd {
-                                        UploadFileAction::SizeNotAvailable(file_name) => {
-                                            state.write().mutate(
-                                            common::state::Action::AddToastNotification(
-                                                ToastNotification::init(
-                                                    "".into(),
-                                                    format!(
-                                                        "{} {}",
-                                                        get_local_text(
-                                                            "files.no-size-available"
-                                                        ),
-                                                        file_name
-                                                    ),
-                                                    None,
-                                                    3,
-                                                ),
-                                            ),
-                                        );
-                                        }
-                                        UploadFileAction::Starting(filename) => {
-                                            *files_been_uploaded.write_silent() = true;
-                                            upload_progress_bar::update_filename(
-                                                &window,
-                                                filename,
-                                            );
-                                            sleep(Duration::from_millis(500)).await;
-                                        },
-                                        UploadFileAction::Cancelling => {
-                                            if !files_in_queue_to_upload.read().is_empty() {
-                                                files_in_queue_to_upload.write().remove(0);
-                                                upload_progress_bar::update_files_queue_len(
-                                                    &window,
-                                                    files_in_queue_to_upload.read().len(),
-                                                );
-                                            }
-                                            upload_progress_bar::change_progress_description(
-                                                &window,
-                                                get_local_text("files.cancelling-upload"),
-                                            );
-                                            sleep(Duration::from_millis(500)).await;
-                                            if files_in_queue_to_upload.read().is_empty() {
-                                                *files_been_uploaded.write_silent() = false;
-                                            }
-                                        },
-                                        UploadFileAction::Uploading((progress, msg, filename)) => {
-                                            if !*files_been_uploaded.read() && *first_render.current() {
-                                                *files_been_uploaded.write() = true;
-                                            }
-                                            upload_progress_bar::update_filename(
-                                                &window,
-                                                filename,
-                                            );
-                                            upload_progress_bar::update_files_queue_len(
-                                                &window,
-                                                files_in_queue_to_upload.read().len(),
-                                            );
-                                            upload_progress_bar::change_progress_percentage(
-                                                &window,
-                                                progress.clone(),
-                                            );
-                                            upload_progress_bar::change_progress_description(
-                                                &window,
-                                                msg,
-                                            );
-                                        },
-                                        UploadFileAction::Finishing(msg) => {
-                                            *files_been_uploaded.write_silent() = true;
-                                            if !files_in_queue_to_upload.read().is_empty() {
-                                                files_in_queue_to_upload.write().remove(0);
-                                                upload_progress_bar::update_files_queue_len(
-                                                    &window,
-                                                    files_in_queue_to_upload.read().len(),
-                                                );
-                                            }
-                                            upload_progress_bar::change_progress_percentage(
-                                                &window,
-                                                msg,
-                                            );
-                                            upload_progress_bar::change_progress_description(
-                                                &window,
-                                                get_local_text("files.finishing-upload"),
-                                            );
-                                        },
-                                        UploadFileAction::Finished(storage) => {
-                                            if files_in_queue_to_upload.read().is_empty() {
-                                                *files_been_uploaded.write_silent() = false;
-                                            }
-                                            upload_progress_bar::change_progress_description(
-                                                &window,
-                                                "Finished".into(),
-                                            );
-                                            storage_state.set(Some(storage));
-                                        },
-                                        UploadFileAction::Error(_) => {
-                                            if !files_in_queue_to_upload.read().is_empty() {
-                                                files_in_queue_to_upload.write().remove(0);
-                                                upload_progress_bar::update_files_queue_len(
-                                                    &window,
-                                                    files_in_queue_to_upload.read().len(),
-                                                );
-                                            }
-                                            upload_progress_bar::change_progress_percentage(
-                                                &window,
-                                                "0%".into(),
-                                            );
-                                            upload_progress_bar::change_progress_description(
-                                                &window,
-                                                get_local_text("files.error-to-upload"),
-                                            );
-                                        },
-                                }
-                        } 
-                    if *files_been_uploaded.read() {
-                        sleep(Duration::from_millis(5)).await;
-                    } else {
-                        sleep(Duration::from_millis(300)).await;
-                    }
-            }
+    functions::start_upload_file_listener(
+        cx,
+        files_been_uploaded,
+        window,
+        &storage_state,
+        state,
+        first_render,
+        files_in_queue_to_upload,
+    );
 
-        
-                            
-}});
-
+    let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
         div {
@@ -264,6 +170,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         }
         div {
             id: "files-layout",
+            color: "red",
             aria_label: "files-layout",
             ondragover: move |_| {
                     if are_files_hovering_app.with(|i| *i == false) {
@@ -378,12 +285,12 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         add_files_in_queue_to_upload(files_in_queue_to_upload, files_to_upload, ch);
                     },
                     on_cancel: move |_| {
-                        let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();  
                         let _ = tx_cancel_file_upload.send(true);
                         let _ = tx_cancel_file_upload.send(false);
                     },
                 }
                 div {
+                    id: "files-breadcrumbs",
                     class: "files-breadcrumbs",
                     aria_label: "files-breadcrumbs",
                     storage_controller.dirs_opened_ref.read().iter().enumerate().map(|(index, dir)| {
@@ -424,6 +331,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 span {
                     class: "file-parent",
                     div {
+                        id: "files-list",
                         class: "files-list",
                         aria_label: "files-list",
                         add_new_folder.then(|| {
@@ -679,8 +587,13 @@ fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     });
 }
 
-fn add_files_in_queue_to_upload(files_in_queue_to_upload: &UseRef<Vec<PathBuf>>, files_path: Vec<PathBuf>,  ch: &Coroutine<ChanCmd>) {
-    files_in_queue_to_upload.write_silent()
-    .extend(files_path.clone());
+fn add_files_in_queue_to_upload(
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+    files_path: Vec<PathBuf>,
+    ch: &Coroutine<ChanCmd>,
+) {
+    files_in_queue_to_upload
+        .write_silent()
+        .extend(files_path.clone());
     ch.send(ChanCmd::UploadFiles(files_path));
 }

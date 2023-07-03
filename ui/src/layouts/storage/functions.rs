@@ -1,11 +1,14 @@
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
-    state::{storage::Storage, Action, State},
+    language::get_local_text,
+    state::{storage::Storage, Action, State, ToastNotification},
+    upload_file_channel::{UploadFileAction, UPLOAD_FILE_LISTENER},
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
 };
 use dioxus_core::Scoped;
+use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
     UseState,
@@ -13,6 +16,8 @@ use dioxus_hooks::{
 use futures::{channel::oneshot, StreamExt};
 // use nix::sys::statvfs::statvfs;
 use tokio::time::sleep;
+
+use crate::components::files::upload_progress_bar;
 
 use super::{controller::StorageController, ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME};
 
@@ -326,4 +331,133 @@ pub fn init_coroutine<'a>(
         }
     });
     ch
+}
+
+pub fn start_upload_file_listener(
+    cx: &Scoped<Props>,
+    files_been_uploaded: &UseRef<bool>,
+    window: &DesktopContext,
+    storage_state: &UseState<Option<Storage>>,
+    state: &UseSharedState<State>,
+    first_render: &UseState<bool>,
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+) {
+    use_future(cx, (), |_| {
+        to_owned![
+            files_been_uploaded,
+            window,
+            storage_state,
+            state,
+            first_render,
+            files_in_queue_to_upload
+        ];
+        async move {
+            let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
+            log::trace!("starting upload file action listener");
+            let mut ch = listener_channel.lock().await;
+            loop {
+                if let Ok(cmd) = ch.try_recv() {
+                    match cmd {
+                        UploadFileAction::SizeNotAvailable(file_name) => {
+                            state
+                                .write()
+                                .mutate(common::state::Action::AddToastNotification(
+                                    ToastNotification::init(
+                                        "".into(),
+                                        format!(
+                                            "{} {}",
+                                            get_local_text("files.no-size-available"),
+                                            file_name
+                                        ),
+                                        None,
+                                        3,
+                                    ),
+                                ));
+                        }
+                        UploadFileAction::Starting(filename) => {
+                            *files_been_uploaded.write_silent() = true;
+                            upload_progress_bar::update_filename(&window, filename);
+                            sleep(Duration::from_millis(500)).await;
+                        }
+                        UploadFileAction::Cancelling => {
+                            if !files_in_queue_to_upload.read().is_empty() {
+                                files_in_queue_to_upload.write().remove(0);
+                                upload_progress_bar::update_files_queue_len(
+                                    &window,
+                                    files_in_queue_to_upload.read().len(),
+                                );
+                            }
+                            upload_progress_bar::change_progress_description(
+                                &window,
+                                get_local_text("files.cancelling-upload"),
+                            );
+                            sleep(Duration::from_millis(500)).await;
+                            if files_in_queue_to_upload.read().is_empty() {
+                                *files_been_uploaded.write_silent() = false;
+                            }
+                        }
+                        UploadFileAction::Uploading((progress, msg, filename)) => {
+                            if !*files_been_uploaded.read() && *first_render.current() {
+                                *files_been_uploaded.write() = true;
+                            }
+                            upload_progress_bar::update_filename(&window, filename);
+                            upload_progress_bar::update_files_queue_len(
+                                &window,
+                                files_in_queue_to_upload.read().len(),
+                            );
+                            upload_progress_bar::change_progress_percentage(
+                                &window,
+                                progress.clone(),
+                            );
+                            upload_progress_bar::change_progress_description(&window, msg);
+                        }
+                        UploadFileAction::Finishing(msg) => {
+                            *files_been_uploaded.write_silent() = true;
+                            if !files_in_queue_to_upload.read().is_empty() {
+                                files_in_queue_to_upload.write().remove(0);
+                                upload_progress_bar::update_files_queue_len(
+                                    &window,
+                                    files_in_queue_to_upload.read().len(),
+                                );
+                            }
+                            upload_progress_bar::change_progress_percentage(&window, msg);
+                            upload_progress_bar::change_progress_description(
+                                &window,
+                                get_local_text("files.finishing-upload"),
+                            );
+                        }
+                        UploadFileAction::Finished(storage) => {
+                            if files_in_queue_to_upload.read().is_empty() {
+                                *files_been_uploaded.write_silent() = false;
+                            }
+                            upload_progress_bar::change_progress_description(
+                                &window,
+                                "Finished".into(),
+                            );
+                            storage_state.set(Some(storage));
+                        }
+                        UploadFileAction::Error(_) => {
+                            if !files_in_queue_to_upload.read().is_empty() {
+                                files_in_queue_to_upload.write().remove(0);
+                                upload_progress_bar::update_files_queue_len(
+                                    &window,
+                                    files_in_queue_to_upload.read().len(),
+                                );
+                            }
+                            upload_progress_bar::change_progress_percentage(&window, "0%".into());
+                            upload_progress_bar::change_progress_description(
+                                &window,
+                                get_local_text("files.error-to-upload"),
+                            );
+                        }
+                    }
+                }
+                if *files_been_uploaded.read() {
+                    sleep(Duration::from_millis(5)).await;
+                } else {
+                    sleep(Duration::from_millis(300)).await;
+                }
+            }
+        }
+    });
 }
