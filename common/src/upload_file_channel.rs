@@ -6,13 +6,11 @@ use tokio::sync::Mutex;
 use crate::state::storage::Storage;
 
 pub enum UploadFileAction<T> {
-    None,
     Starting(String),
     SizeNotAvailable(String),
     Cancelling,
     Uploading((String, String)),
     Finishing(String),
-    UpdatingThumbnail,
     Finished(T),
     Error(warp::error::Error),
 }

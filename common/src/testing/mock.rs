@@ -284,5 +284,6 @@ fn generate_fake_storage() -> Storage {
         files,
         max_size: 1024,
         current_size: 500,
+        files_in_queue_to_upload: Vec::new(),
     }
 }

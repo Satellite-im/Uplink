@@ -143,7 +143,8 @@ files = Files
     .cancelling-upload = Cancelling...
     .checking-duplicated-name = Checking duplicated name...
     .checking-thumbnail = Checking thumbnail...
-
+    .files-in-queue = Files in queue
+    .error-to-upload = Error to upload
 
 settings = Settings
     .settings = Settings

@@ -34,6 +34,11 @@ static UPDATE_FILENAME_SCRIPT: &str = r#"
     element.textContent = '$TEXT';
 "#;
 
+static UPDATE_FILE_QUEUE_SCRIPT: &str = r#"
+    var element = document.getElementById('upload-progress-files-queue');
+    element.textContent = '$TEXT_TRANSLATED $FILES_IN_QUEUE';
+"#;
+
 pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
     let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
         .replace("$TEXT", &new_percentage)
@@ -51,11 +56,20 @@ pub fn update_filename(window: &DesktopContext, filename: String) {
     window.eval(&new_script);
 }
 
+pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
+    let new_script = UPDATE_FILE_QUEUE_SCRIPT
+        .replace(
+            "$TEXT_TRANSLATED",
+            &format!(" / {}", get_local_text("files.files-in-queue")),
+        )
+        .replace("$FILES_IN_QUEUE", &format!("{}", files_in_queue));
+    window.eval(&new_script);
+}
+
 #[derive(Props)]
 pub struct Props<'a> {
     are_files_hovering_app: &'a UseRef<bool>,
     files_been_uploaded: &'a UseRef<bool>,
-    files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
     on_update: EventHandler<'a, Vec<PathBuf>>,
     on_cancel: EventHandler<'a, ()>,
 }
@@ -65,6 +79,16 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
     let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
     let window = use_window(cx);
+
+    if *cx.props.are_files_hovering_app.read() {
+        cx.spawn({
+            to_owned![are_files_hovering_app, window, files_ready_to_upload];
+            async move {
+                drag_and_drop_function(&window, &are_files_hovering_app, &files_ready_to_upload)
+                    .await;
+            }
+        });
+    }
 
     if files_ready_to_upload.with(|i| !i.is_empty()) {
         *cx.props.files_been_uploaded.write_silent() = true;
@@ -112,12 +136,10 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             p {
                                 id: "upload-progress-filename",
                                 class: "filename-and-file-queue-text",
-                                "File been uploaded:"
                             },
                             p {
                                 id: "upload-progress-files-queue",
                                 class: "filename-and-file-queue-text",
-                                format!(" / Files in queue ({})", cx.props.files_in_queue_to_upload.read().len())
                             },
                         }
                     }
@@ -139,21 +161,12 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     }
 
     if *cx.props.are_files_hovering_app.read() {
-        cx.spawn({
-            to_owned![are_files_hovering_app, window, files_ready_to_upload];
-            async move {
-                drag_and_drop_function(&window, &are_files_hovering_app, &files_ready_to_upload)
-                    .await;
-            }
-        });
-
         return cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container",
                 p {
                     id: "upload-file-count",
                     class: "upload-file-count",
-                    ""
                 }
             },
         ));

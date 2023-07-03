@@ -294,6 +294,7 @@ fn get_items_from_current_directory(
 
     let max_size = warp_storage.max_size();
     let current_size = warp_storage.current_size();
+    let files_in_queue_to_upload = Vec::new();
 
     let uplink_storage = uplink_storage {
         initialized: true,
@@ -303,6 +304,7 @@ fn get_items_from_current_directory(
         files,
         max_size,
         current_size,
+        files_in_queue_to_upload,
     };
     log::info!("Get items from current directory worked!");
     Ok(uplink_storage)
