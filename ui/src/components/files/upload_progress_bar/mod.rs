@@ -119,12 +119,10 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     p {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
-                        "Updating status..."
                     },
                     p {
                         id: "upload-progress-percentage",
                         class: "upload-progress-percentage",
-                        "100%"
                     },
                     // p {
                     //     id: "upload-progress-drop-files",
