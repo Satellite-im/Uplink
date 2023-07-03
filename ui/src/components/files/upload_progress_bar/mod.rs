@@ -145,7 +145,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         *files_ready_to_upload.write_silent() = Vec::new();
     }
 
-    if !*cx.props.files_been_uploaded.read() {
+    if *cx.props.files_been_uploaded.read() {
         return cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container",
