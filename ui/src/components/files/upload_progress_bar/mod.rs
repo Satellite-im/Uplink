@@ -36,7 +36,7 @@ static UPDATE_FILENAME_SCRIPT: &str = r#"
 
 static UPDATE_FILE_QUEUE_SCRIPT: &str = r#"
     var element = document.getElementById('upload-progress-files-queue');
-    element.textContent = '$TEXT_TRANSLATED $FILES_IN_QUEUE';
+    element.textContent = '$TEXT_TRANSLATED ($FILES_IN_QUEUE)';
 "#;
 
 pub fn change_progress_percentage(window: &DesktopContext, new_percentage: String) {
@@ -78,14 +78,26 @@ pub struct Props<'a> {
 pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     let are_files_hovering_app = cx.props.are_files_hovering_app.clone();
     let files_ready_to_upload: &UseRef<Vec<PathBuf>> = use_ref(cx, Vec::new);
+    let called_drag_and_drop_function: &UseRef<bool> = use_ref(cx, || false);
     let window = use_window(cx);
 
-    if *cx.props.are_files_hovering_app.read() {
+    if *cx.props.are_files_hovering_app.read() && !*called_drag_and_drop_function.read() {
+        *called_drag_and_drop_function.write_silent() = true;
         cx.spawn({
-            to_owned![are_files_hovering_app, window, files_ready_to_upload];
+            to_owned![
+                are_files_hovering_app,
+                window,
+                files_ready_to_upload,
+                called_drag_and_drop_function
+            ];
             async move {
-                drag_and_drop_function(&window, &are_files_hovering_app, &files_ready_to_upload)
-                    .await;
+                drag_and_drop_function(
+                    &window,
+                    &are_files_hovering_app,
+                    &files_ready_to_upload,
+                    &called_drag_and_drop_function,
+                )
+                .await;
             }
         });
     }
@@ -191,6 +203,7 @@ async fn drag_and_drop_function(
     window: &DesktopContext,
     are_files_hovering_app: &UseRef<bool>,
     files_ready_to_upload: &UseRef<Vec<PathBuf>>,
+    called_drag_and_drop_function: &UseRef<bool>,
 ) {
     *are_files_hovering_app.write_silent() = true;
     loop {
@@ -217,5 +230,6 @@ async fn drag_and_drop_function(
         };
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+    *called_drag_and_drop_function.write_silent() = false;
     are_files_hovering_app.with_mut(|i| *i = false);
 }

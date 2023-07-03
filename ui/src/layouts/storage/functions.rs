@@ -134,10 +134,9 @@ pub fn format_item_size(item_size: usize) -> String {
 pub fn init_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
     storage_state: &'a UseState<Option<Storage>>,
-    files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, files_in_queue_to_upload];
+        to_owned![storage_state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {

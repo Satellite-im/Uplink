@@ -92,7 +92,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(
         cx,
         storage_controller.storage_state,
-        files_in_queue_to_upload,
     );
     
     functions::run_verifications_and_update_storage(
