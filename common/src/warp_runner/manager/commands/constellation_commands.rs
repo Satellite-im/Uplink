@@ -368,8 +368,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
 
     let max_size_ipfs = warp_storage.max_size();
     let current_size_ipfs = warp_storage.current_size();
-
-    for file_path in files_path {
+    for file_path in files_path.clone() {
         let mut filename = match file_path
             .file_name()
             .map(|file| file.to_string_lossy().to_string())

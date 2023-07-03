@@ -239,8 +239,6 @@ pub fn init_coroutine<'a>(
                         }
                     }
                     ChanCmd::UploadFiles(files_path) => {
-                        files_in_queue_to_upload.write().extend(files_path.clone());
-
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
                             ConstellationCmd::UploadFiles { files_path },
                         )) {
