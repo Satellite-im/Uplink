@@ -1,6 +1,6 @@
 .upload-progress-bar-container {
     display: flex;
-    height: 90px;
+    padding-bottom: 8px;
     width: 100%,;
     flex-direction: column;
     background: var(--text-color-dark);
@@ -21,7 +21,7 @@
 
         .upload-progress-drop-files {
             color: var(--text-color-muted);
-            padding-left: 16px;
+            padding-left: 8px;
         }
     }
 
@@ -62,8 +62,11 @@
     
             .filaname-and-queue-container {
                 display: flex;
+                flex-wrap: wrap;
 
              .filename-and-file-queue-text {
+                    display: inline-block;
+                    width: 35vw;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
@@ -72,11 +75,19 @@
                     margin-top: 4px;
                     color: var(--text-color-muted);
                 }
+
+                .file-queue-text {
+                  flex: 1 0 auto;
+                  word-wrap: break-word;
+                  padding-left: 4px;
+                  font-size: 12px;
+                  margin-top: 4px;
+                  color: var(--text-color-muted);
+              }
             }
            
         }
         
-
         .cancel-button {
             margin-top: 8px;
         }
