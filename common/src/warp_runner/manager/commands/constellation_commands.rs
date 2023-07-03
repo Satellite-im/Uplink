@@ -453,7 +453,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                                         ((current as f64) / (total as f64)) * 100.;
                                     let _ = tx_upload_file.send(UploadFileAction::Uploading((
                                         format!("{}%", percentage_number as usize),
-                                        format!("Uploading file..."),
+                                        get_local_text("files.uploading-file"),
                                         filename.clone(),
                                     )));
                                     log::info!(
