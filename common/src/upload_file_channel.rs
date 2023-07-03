@@ -9,7 +9,7 @@ pub enum UploadFileAction<T> {
     Starting(String),
     SizeNotAvailable(String),
     Cancelling,
-    Uploading((String, String)),
+    Uploading((String, String, String)),
     Finishing(String),
     Finished(T),
     Error(warp::error::Error),

@@ -77,10 +77,6 @@ pub enum ConstellationCmd {
         item: Item,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
-    #[display(fmt = "GetStorageSize")]
-    GetStorageSize {
-        rsp: oneshot::Sender<Result<(usize, usize), warp::error::Error>>,
-    },
 }
 
 pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut warp_storage) {
@@ -128,10 +124,6 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::DeleteItems { item, rsp } => {
             let r = delete_items(warp_storage, item).await;
-            let _ = rsp.send(r);
-        }
-        ConstellationCmd::GetStorageSize { rsp } => {
-            let r = get_storage_size(warp_storage);
             let _ = rsp.send(r);
         }
     }
@@ -256,10 +248,6 @@ async fn rename_item(
     }
 
     get_items_from_current_directory(warp_storage)
-}
-
-fn get_storage_size(warp_storage: &warp_storage) -> Result<(usize, usize), Error> {
-    Ok((warp_storage.max_size(), warp_storage.current_size()))
 }
 
 async fn create_new_directory(
@@ -419,6 +407,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         let _ = tx_upload_file.send(UploadFileAction::Uploading((
             "0%".into(),
             get_local_text("files.checking-duplicated-name"),
+            filename.clone(),
         )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
 
@@ -466,6 +455,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                                     let _ = tx_upload_file.send(UploadFileAction::Uploading((
                                         format!("{}%", percentage_number as usize),
                                         format!("Uploading file..."),
+                                        filename.clone(),
                                     )));
                                     log::info!(
                                         "{}% completed -> written {readable_current}",
@@ -502,6 +492,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 let _ = tx_upload_file.send(UploadFileAction::Uploading((
                     "100%".into(),
                     get_local_text("files.checking-thumbnail"),
+                    filename.clone(),
                 )));
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
                 let doc_formats = DOC_EXTENSIONS.to_vec();
@@ -525,6 +516,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                             let _ = tx_upload_file.send(UploadFileAction::Uploading((
                                 "100%".into(),
                                 get_local_text("files.thumbnail-uploaded"),
+                                filename.clone(),
                             )));
                         }
                         Err(error) => {
@@ -546,6 +538,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                             let _ = tx_upload_file.send(UploadFileAction::Uploading((
                                 "100%".into(),
                                 get_local_text("files.thumbnail-uploaded"),
+                                filename.clone(),
                             )));
                         }
                         Err(error) => {

@@ -1,7 +1,6 @@
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 
 use common::{
-    language::get_local_text,
     state::{storage::Storage, Action, State},
     warp_runner::{ConstellationCmd, WarpCmd},
     WARP_CMD_CH,
@@ -22,11 +21,17 @@ pub fn run_verifications_and_update_storage(
     state: &UseSharedState<State>,
     storage_controller: StorageController,
     storage_size: &UseRef<(String, String)>,
-    ch: &Coroutine<ChanCmd>,
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
 ) {
     if *first_render.get() && state.read().ui.is_minimal_view() {
         state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
+    }
+
+    if state.read().storage.files_in_queue_to_upload.len() != files_in_queue_to_upload.read().len()
+    {
+        state.write_silent().storage.files_in_queue_to_upload =
+            files_in_queue_to_upload.read().clone();
     }
 
     if let Some(storage) = storage_controller.storage_state.get().clone() {
@@ -38,9 +43,11 @@ pub fn run_verifications_and_update_storage(
             format_item_size(storage.max_size),
             format_item_size(storage.current_size),
         );
-        state.write().storage = storage;
+        state.write().storage = Storage {
+            files_in_queue_to_upload: files_in_queue_to_upload.read().clone(),
+            ..storage
+        };
         storage_controller.storage_state.set(None);
-        ch.send(ChanCmd::GetStorageSize);
     }
 }
 
@@ -124,14 +131,13 @@ pub fn format_item_size(item_size: usize) -> String {
     size_formatted_string
 }
 
-pub fn storage_coroutine<'a>(
+pub fn init_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
     storage_state: &'a UseState<Option<Storage>>,
-    storage_size: &'a UseRef<(String, String)>,
     files_in_queue_to_upload: &'a UseRef<Vec<PathBuf>>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state, storage_size, files_in_queue_to_upload];
+        to_owned![storage_state, files_in_queue_to_upload];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -314,37 +320,6 @@ pub fn storage_coroutine<'a>(
                             }
                             Err(e) => {
                                 log::error!("failed to delete items {}, item {:?}", e, item.name());
-                                continue;
-                            }
-                        }
-                    }
-                    ChanCmd::GetStorageSize => {
-                        let (tx, rx) =
-                            oneshot::channel::<Result<(usize, usize), warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::GetStorageSize { rsp: tx },
-                        )) {
-                            log::error!("failed to get storage size: {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok((max_size, current_size)) => {
-                                let max_storage_size = format_item_size(max_size);
-                                let current_storage_size = format_item_size(current_size);
-                                storage_size
-                                    .with_mut(|i| *i = (max_storage_size, current_storage_size));
-                            }
-                            Err(e) => {
-                                storage_size.with_mut(|i| {
-                                    *i = (
-                                        get_local_text("files.no-data-available"),
-                                        get_local_text("files.no-data-available"),
-                                    )
-                                });
-                                log::error!("failed to get storage size: {}", e);
                                 continue;
                             }
                         }
