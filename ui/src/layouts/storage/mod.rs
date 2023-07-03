@@ -171,7 +171,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             color: "red",
             aria_label: "files-layout",
             ondragover: move |_| {
-                    if are_files_hovering_app.with(|i| *i == false) {
+                    if are_files_hovering_app.with(|i| !(*i)) {
                         are_files_hovering_app.with_mut(|i| *i = true);
                     };
                 },

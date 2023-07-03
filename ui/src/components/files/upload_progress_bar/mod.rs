@@ -82,14 +82,11 @@ fn update_files_to_drop_while_upload_other_file(
             .replace("$FILES_NUMBER", &format!("{}", files_to_drop))
             .replace(
                 "$TEXT2",
-                &format!(
-                    "{}",
-                    if files_to_drop > 1 {
+                &(if files_to_drop > 1 {
                         get_local_text("files.files")
                     } else {
                         get_local_text("files.file")
-                    }
-                ),
+                    }),
             )
     } else {
         UPDATE_FILES_TO_DROP

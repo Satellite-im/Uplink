@@ -403,7 +403,7 @@ pub fn start_upload_file_listener(
                             if !*files_been_uploaded.read() && *first_render.current() {
                                 *files_been_uploaded.write() = true;
                             }
-                            if disable_cancel_upload_button.with(|i| *i == true) {
+                            if disable_cancel_upload_button.with(|i| *i) {
                                 disable_cancel_upload_button.with_mut(|i| *i = false);
                             }
                             upload_progress_bar::update_filename(&window, filename);
