@@ -11,7 +11,6 @@ use dioxus_core::Scoped;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
-    UseState,
 };
 use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
@@ -21,18 +20,19 @@ use wry::webview::FileDropEvent;
 
 use crate::components::files::upload_progress_bar;
 
-use super::{controller::StorageController, ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME};
+use super::{
+    controller::{StorageController, UploadFileController},
+    ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME,
+};
 
 pub fn run_verifications_and_update_storage(
-    first_render: &UseState<bool>,
     state: &UseSharedState<State>,
-    storage_controller: StorageController,
-    storage_size: &UseRef<(String, String)>,
+    controller: &UseRef<StorageController>,
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
 ) {
-    if *first_render.get() && state.read().ui.is_minimal_view() {
-        state.write().mutate(Action::SidebarHidden(true));
-        first_render.set(false);
+    if controller.read().first_render && state.read().ui.is_minimal_view() {
+        state.write_silent().mutate(Action::SidebarHidden(true));
+        controller.with_mut(|i| i.first_render = false);
     }
 
     if state.read().storage.files_in_queue_to_upload.len() != files_in_queue_to_upload.read().len()
@@ -40,21 +40,11 @@ pub fn run_verifications_and_update_storage(
         state.write_silent().storage.files_in_queue_to_upload =
             files_in_queue_to_upload.read().clone();
     }
-
-    if let Some(storage) = storage_controller.storage_state.get().clone() {
-        *(storage_controller.directories_list).write_silent() = storage.directories.clone();
-        *(storage_controller.files_list).write_silent() = storage.files.clone();
-        *(storage_controller.current_dir).write_silent() = storage.current_dir.clone();
-        *(storage_controller.dirs_opened_ref).write_silent() = storage.directories_opened.clone();
-        *storage_size.write_silent() = (
-            format_item_size(storage.max_size),
-            format_item_size(storage.current_size),
-        );
+    if let Some(storage) = controller.write_silent().update_state() {
         state.write().storage = Storage {
             files_in_queue_to_upload: files_in_queue_to_upload.read().clone(),
             ..storage
         };
-        storage_controller.storage_state.set(None);
     }
 }
 
@@ -136,10 +126,10 @@ pub fn format_item_size(item_size: usize) -> String {
 
 pub fn init_coroutine<'a>(
     cx: &'a Scoped<'a, Props>,
-    storage_state: &'a UseState<Option<Storage>>,
+    controller: &'a UseRef<StorageController>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
-        to_owned![storage_state];
+        to_owned![controller];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -183,7 +173,7 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                storage_state.set(Some(storage));
+                                controller.with_mut(|i| i.storage_state = Some(storage));
                             }
                             Err(e) => {
                                 log::error!("failed to add new directory: {}", e);
@@ -208,7 +198,7 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                storage_state.set(Some(storage));
+                                controller.with_mut(|i| i.storage_state = Some(storage));
                                 log::info!("Folder {} opened", directory_name2);
                             }
                             Err(e) => {
@@ -231,7 +221,7 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                storage_state.set(Some(storage));
+                                controller.with_mut(|i| i.storage_state = Some(storage));
                                 log::info!("Folder {} opened", directory_name);
                             }
                             Err(e) => {
@@ -289,7 +279,7 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                storage_state.set(Some(storage));
+                                controller.with_mut(|i| i.storage_state = Some(storage));
                             }
                             Err(e) => {
                                 log::error!(
@@ -316,7 +306,7 @@ pub fn init_coroutine<'a>(
                         let rsp = rx.await.expect("command canceled");
                         match rsp {
                             Ok(storage) => {
-                                storage_state.set(Some(storage));
+                                controller.with_mut(|i| i.storage_state = Some(storage));
                             }
                             Err(e) => {
                                 log::error!("failed to delete items {}, item {:?}", e, item.name());
@@ -333,21 +323,20 @@ pub fn init_coroutine<'a>(
 
 pub fn start_upload_file_listener(
     cx: &Scoped<Props>,
-    files_been_uploaded: &UseRef<bool>,
     window: &DesktopContext,
-    storage_state: &UseState<Option<Storage>>,
     state: &UseSharedState<State>,
-    first_render: &UseState<bool>,
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
-    disable_cancel_upload_button: &UseRef<bool>,
+    controller: &UseRef<StorageController>,
+    upload_file_controller: UploadFileController,
 ) {
+    let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
+    let disable_cancel_upload_button = upload_file_controller.disable_cancel_upload_button.clone();
     use_future(cx, (), |_| {
         to_owned![
-            files_been_uploaded,
             window,
-            storage_state,
             state,
-            first_render,
+            controller,
+            files_been_uploaded,
             files_in_queue_to_upload,
             disable_cancel_upload_button
         ];
@@ -381,7 +370,7 @@ pub fn start_upload_file_listener(
                     UploadFileAction::Cancelling => {
                         *disable_cancel_upload_button.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.write().remove(0);
+                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),
@@ -397,11 +386,11 @@ pub fn start_upload_file_listener(
                         }
                     }
                     UploadFileAction::Uploading((progress, msg, filename)) => {
-                        if !*files_been_uploaded.read() && *first_render.current() {
-                            *files_been_uploaded.write() = true;
+                        if !*files_been_uploaded.read() && controller.read().first_render {
+                            files_been_uploaded.with_mut(|i| *i = true);
                         }
-                        if disable_cancel_upload_button.with(|i| *i) {
-                            disable_cancel_upload_button.with_mut(|i| *i = false);
+                        if *disable_cancel_upload_button.read() == true {
+                            disable_cancel_upload_button.with_mut(|i| *i = false)
                         }
                         upload_progress_bar::update_filename(&window, filename);
                         upload_progress_bar::update_files_queue_len(
@@ -414,7 +403,7 @@ pub fn start_upload_file_listener(
                     UploadFileAction::Finishing(msg) => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.write().remove(0);
+                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),
@@ -432,13 +421,13 @@ pub fn start_upload_file_listener(
                         }
                         upload_progress_bar::change_progress_description(
                             &window,
-                            "Finished".into(),
+                            get_local_text("files.finishing-upload"),
                         );
-                        storage_state.set(Some(storage));
+                        controller.with_mut(|i| i.storage_state = Some(storage));
                     }
                     UploadFileAction::Error(_) => {
                         if !files_in_queue_to_upload.read().is_empty() {
-                            files_in_queue_to_upload.write().remove(0);
+                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
                                 &window,
                                 files_in_queue_to_upload.read().len(),
