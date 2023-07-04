@@ -230,14 +230,6 @@ pub fn init_coroutine<'a>(
                             }
                         }
                     }
-                    ChanCmd::UploadFiles(files_path) => {
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::UploadFiles { files_path },
-                        )) {
-                            log::error!("failed to upload files {}", e);
-                            continue;
-                        }
-                    }
                     ChanCmd::DownloadFile {
                         file_name,
                         local_path_to_save_file,
@@ -344,8 +336,17 @@ pub fn start_upload_file_listener(
             let listener_channel = UPLOAD_FILE_LISTENER.rx.clone();
             log::trace!("starting upload file action listener");
             let mut ch = listener_channel.lock().await;
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = ch.recv().await {
                 match cmd {
+                    UploadFileAction::UploadFiles(files_path) => {
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
+                            ConstellationCmd::UploadFiles { files_path },
+                        )) {
+                            log::error!("failed to upload files {}", e);
+                            continue;
+                        }
+                    }
                     UploadFileAction::SizeNotAvailable(file_name) => {
                         state
                             .write()
@@ -389,8 +390,13 @@ pub fn start_upload_file_listener(
                         if !*files_been_uploaded.read() && controller.read().first_render {
                             files_been_uploaded.with_mut(|i| *i = true);
                         }
-                        if *disable_cancel_upload_button.read() == true {
+                        if *disable_cancel_upload_button.read() == true && !progress.contains("100")
+                        {
                             disable_cancel_upload_button.with_mut(|i| *i = false)
+                        } else if *disable_cancel_upload_button.read() == false
+                            && progress.contains("100")
+                        {
+                            disable_cancel_upload_button.with_mut(|i| *i = true)
                         }
                         upload_progress_bar::update_filename(&window, filename);
                         upload_progress_bar::update_files_queue_len(

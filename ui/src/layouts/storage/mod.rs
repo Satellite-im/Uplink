@@ -7,7 +7,9 @@ use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
-use common::upload_file_channel::CANCEL_FILE_UPLOADLISTENER;
+use common::upload_file_channel::{
+    UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
+};
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window, DesktopContext};
@@ -71,7 +73,6 @@ pub enum ChanCmd {
     CreateNewDirectory(String),
     OpenDirectory(String),
     BackToPreviousDirectory(Directory),
-    UploadFiles(Vec<PathBuf>),
     DownloadFile {
         file_name: String,
         local_path_to_save_file: PathBuf,
@@ -208,7 +209,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         Some(path) => path,
                                         None => return
                                     };
-                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window, ch);
+                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window);
                                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                 },
                             }
@@ -265,7 +266,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     files_been_uploaded: upload_file_controller.files_been_uploaded,
                     disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
                     on_update: move |files_to_upload: Vec<PathBuf>|  {
-                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, window, ch);
+                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, window);
                     },
                     on_cancel: move |_| {
                         let _ = tx_cancel_file_upload.send(true);
@@ -573,11 +574,11 @@ fn add_files_in_queue_to_upload(
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
     window: &DesktopContext,
-    ch: &Coroutine<ChanCmd>,
 ) {
+    let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
     allow_folder_navigation(window, false);
     files_in_queue_to_upload
         .write_silent()
         .extend(files_path.clone());
-    ch.send(ChanCmd::UploadFiles(files_path));
+    let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }

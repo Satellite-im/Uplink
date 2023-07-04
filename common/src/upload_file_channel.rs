@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
@@ -9,6 +9,7 @@ pub enum UploadFileAction<T> {
     Starting(String),
     SizeNotAvailable(String),
     Cancelling,
+    UploadFiles(Vec<PathBuf>),
     Uploading((String, String, String)),
     Finishing(String),
     Finished(T),

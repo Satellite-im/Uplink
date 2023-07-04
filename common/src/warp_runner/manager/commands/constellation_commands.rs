@@ -466,9 +466,10 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
-                            let _ = tx_upload_file.send(UploadFileAction::Finishing(format!(
-                                "100% / {}",
-                                readable_total.clone()
+                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                format!("100% / {}", readable_total.clone()),
+                                get_local_text("files.finishing-upload"),
+                                filename.clone(),
                             )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
