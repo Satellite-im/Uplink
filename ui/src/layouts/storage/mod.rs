@@ -119,7 +119,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
-        if let Some(file) = storage_controller.read().show_file_modal.as_ref().clone() {
+        if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(
                 get_file_modal {
@@ -479,7 +479,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     ));
                                                     return;
                                                 }
-                                                storage_controller.with(|i| i.is_renaming_map == None);
+                                                storage_controller.with(|i| i.is_renaming_map.is_none());
                                                 if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
                                                     ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                                 }
@@ -558,7 +558,7 @@ fn allow_block_folder_nav(
         }
     });
     // This is to run on all re-renders
-    allow_folder_navigation(&window, files_in_queue_to_upload.read().is_empty());
+    allow_folder_navigation(window, files_in_queue_to_upload.read().is_empty());
 }
 
 fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
