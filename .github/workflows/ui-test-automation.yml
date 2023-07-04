@@ -58,6 +58,7 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=8192"
         with:
           name: app-macos
+          if-no-files-found: error
           path: |
             Uplink-Mac-Universal.zip
             Uplink-Mac-Universal.zip.sha256.txt
@@ -102,6 +103,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Uplink-Windows
+          if-no-files-found: error
           path: |
             target/release/uplink.exe
 
