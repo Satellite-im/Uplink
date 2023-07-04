@@ -123,7 +123,7 @@ pub fn Compose(cx: Scope) -> Element {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                if let FileDropEvent::Hovered { .. } = get_drag_event() {
+                if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
                     let mut new_files_to_upload: Vec<_> = files_to_upload
