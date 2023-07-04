@@ -396,8 +396,7 @@ pub fn start_upload_file_listener(
                         if !*files_been_uploaded.read() && controller.read().first_render {
                             files_been_uploaded.with_mut(|i| *i = true);
                         }
-                        if *disable_cancel_upload_button.read() && !progress.contains("100")
-                        {
+                        if *disable_cancel_upload_button.read() && !progress.contains("100") {
                             disable_cancel_upload_button.with_mut(|i| *i = false)
                         } else if !(*disable_cancel_upload_button.read())
                             && progress.contains("100")
