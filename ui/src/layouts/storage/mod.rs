@@ -14,7 +14,6 @@ use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::{use_window, DesktopContext};
 use dioxus_router::*;
-use kit::layout::modal::Modal;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -31,14 +30,15 @@ use kit::{
 };
 use rfd::FileDialog;
 use warp::constellation::directory::Directory;
-use warp::constellation::{file::File, item::Item};
+use warp::constellation::item::Item;
 
 pub mod controller;
+pub mod file_modal;
 pub mod functions;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
-use crate::components::files::file_preview::FilePreview;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
+use crate::layouts::storage::file_modal::get_file_modal;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -54,19 +54,6 @@ static ALLOW_FOLDER_NAVIGATION: &str = r#"
     folders_breadcumbs_element.style.pointerEvents = '$POINTER_EVENT';
     folders_breadcumbs_element.style.opacity = '$OPACITY';
 "#;
-
-fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
-    let new_script = if allow_navigation {
-        ALLOW_FOLDER_NAVIGATION
-            .replace("$POINTER_EVENT", "")
-            .replace("$OPACITY", "1")
-    } else {
-        ALLOW_FOLDER_NAVIGATION
-            .replace("$POINTER_EVENT", "none")
-            .replace("$OPACITY", "0.5")
-    };
-    window.eval(&new_script);
-}
 
 pub enum ChanCmd {
     GetItemsFromCurrentDirectory,
@@ -95,17 +82,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
-
     let window = use_window(cx);
+    let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
+    allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
-    allow_folder_navigation(
-        window,
-        upload_file_controller
-            .files_in_queue_to_upload
-            .read()
-            .is_empty(),
-    );
 
     functions::run_verifications_and_update_storage(
         state,
@@ -524,26 +505,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
-// TODO: This really shouldn't be in this file
-#[inline_props]
-pub fn get_file_modal<'a>(
-    cx: Scope<'a>,
-    on_dismiss: EventHandler<'a, ()>,
-    on_download: EventHandler<'a, ()>,
-    file: File,
-) -> Element<'a> {
-    cx.render(rsx!(Modal {
-        onclose: move |_| on_dismiss.call(()),
-        open: true,
-        children: cx.render(rsx!(FilePreview {
-            file: file,
-            on_download: |_| {
-                on_download.call(());
-            },
-        }))
-    }))
-}
-
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
@@ -581,4 +542,34 @@ fn add_files_in_queue_to_upload(
         .write_silent()
         .extend(files_path.clone());
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
+}
+
+fn allow_block_folder_nav(
+    cx: &Scoped<'_, Props>,
+    window: &DesktopContext,
+    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
+) {
+    // Block directories navigation if there is a file been uploaded
+    // use_future here to verify before render elements on first render
+    use_future(cx, (), |_| {
+        to_owned![window, files_in_queue_to_upload];
+        async move {
+            allow_folder_navigation(&window, files_in_queue_to_upload.read().is_empty());
+        }
+    });
+    // This is to run on all re-renders
+    allow_folder_navigation(&window, files_in_queue_to_upload.read().is_empty());
+}
+
+fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
+    let new_script = if allow_navigation {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "")
+            .replace("$OPACITY", "1")
+    } else {
+        ALLOW_FOLDER_NAVIGATION
+            .replace("$POINTER_EVENT", "none")
+            .replace("$OPACITY", "0.5")
+    };
+    window.eval(&new_script);
 }

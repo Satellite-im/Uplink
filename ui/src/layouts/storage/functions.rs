@@ -313,6 +313,12 @@ pub fn init_coroutine<'a>(
     ch
 }
 
+// Upload files has many states to manage
+// 1. It is necessary to check if any file is being uploaded, hence the use of `use_future`.
+// 2. It was necessary to use the global channel to send the command to upload the files,
+// to fix a specific behavior (when the user leaves the page, returns,
+// and tries to upload a second file, then leaves and returns again,
+// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
     cx: &Scoped<Props>,
     window: &DesktopContext,
