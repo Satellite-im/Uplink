@@ -179,7 +179,6 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             p {
                                 id: "upload-progress-filename",
                                 class: "filename-and-file-queue-text",
-                                "inteligencia_deltan_big_name_testing_kakssadkasdisaijsdaijdsaijsdaijsadijasdijsadjidsjiasijdsaijsdijasdijasdjiiajsdijsa.mp4"
                             },
                             p {
                                 id: "upload-progress-files-queue",
