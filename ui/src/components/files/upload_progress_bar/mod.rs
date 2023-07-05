@@ -205,7 +205,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
     }
 
     if *cx.props.are_files_hovering_app.read() {
-        return cx.render(rsx!(
+         cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container-file-count",
                 p {
@@ -213,9 +213,9 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                     class: "upload-file-count",
                 }
             },
-        ));
+        ))
     } else {
-        return None;
+        None
     }
 }
 
