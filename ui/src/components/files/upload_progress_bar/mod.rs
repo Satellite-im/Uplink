@@ -215,7 +215,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
             },
         ));
     } else {
-        return cx.render(rsx!(div {}));
+        return None;
     }
 }
 
