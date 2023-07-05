@@ -3,6 +3,7 @@ use std::vec;
 use common::icons::outline::Shape;
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use kit::elements::radio_list::RadioList;
 use kit::elements::range::Range;
 use kit::elements::select::Select;
 use kit::elements::switch::Switch;
@@ -72,6 +73,32 @@ pub fn AudioSettings(cx: Scope) -> Element {
                     onselect: move |_| {}
                 },
             },
+
+            SettingSection {
+                section_label: get_local_text("settings-audio.noise-supression"),
+                section_description: get_local_text("settings-audio.noise-supression-description"),
+                no_border: true,
+            },
+            SettingSectionSimple {
+                RadioList {
+                    initial_value: "None".into(),
+                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
+                    onchange: move |_| {}
+                },
+            }
+
+            SettingSection {
+                section_label: get_local_text("settings-audio.echo-cancellation"),
+                section_description: get_local_text("settings-audio.echo-cancellation-description"),
+                no_border: true,
+            },
+            SettingSectionSimple {
+                RadioList {
+                    initial_value: "None".into(),
+                    values: vec!["None".into(), "Low".into(), "Medium".into(), "High".into()],
+                    onchange: move |_| {}
+                },
+            }
 
 
             SettingSection {
