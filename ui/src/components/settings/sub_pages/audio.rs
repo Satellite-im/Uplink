@@ -100,7 +100,6 @@ pub fn AudioSettings(cx: Scope) -> Element {
                 },
             }
 
-
             SettingSection {
                 section_label: get_local_text("settings-audio.interface-sounds"),
                 section_description: get_local_text("settings-audio.interface-sounds-description"),
