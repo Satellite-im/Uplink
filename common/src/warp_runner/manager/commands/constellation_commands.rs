@@ -376,7 +376,6 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Some(file) => file,
             None => continue,
         };
-        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
 
@@ -387,6 +386,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 continue;
             }
         };
+        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         if (current_size_ipfs + file_size) > max_size_ipfs {
             log::error!(
