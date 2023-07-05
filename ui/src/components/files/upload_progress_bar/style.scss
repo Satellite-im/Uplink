@@ -102,33 +102,3 @@
         }
     } 
 }
-
-.dots-container {
-    display: inline-block;
-  }
-  
-  .dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background-color: black;
-    border-radius: 50%;
-    margin-right: 4px;
-    opacity: 0;
-    animation: fade-in 1s infinite;
-  }
-  
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-    }
-    33.33% {
-      opacity: 1;
-    }
-    66.66% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
