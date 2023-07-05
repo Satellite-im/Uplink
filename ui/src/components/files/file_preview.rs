@@ -1,8 +1,10 @@
 use std::borrow::Cow;
+use std::io::{BufWriter, Read, Write};
 
 use common::language::get_local_text;
 use common::{icons::outline::Shape as Icon, warp_runner::thumbnail_to_base64};
 use dioxus::prelude::*;
+use image::{DynamicImage, ImageBuffer, ImageOutputFormat, RgbaImage};
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use warp::constellation::file::File;
 
@@ -16,6 +18,7 @@ pub struct Props<'a> {
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = thumbnail_to_base64(cx.props.file);
     let thumbnail2 = thumbnail.clone();
+    let image_from_clipboard = use_ref(cx, || String::new());
 
     cx.render(rsx!(div {
         ContextMenu {
@@ -34,7 +37,8 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     aria_label: "files-download-preview".into(),
                     text: "Copy".to_owned(),
                     onpress: move |_| {
-                        copy_base64_image_to_clipboard(&thumbnail2);
+                       let test =  copy_base64_image_to_clipboard(&thumbnail2).unwrap_or_default();
+                       image_from_clipboard.with_mut(|i| *i = test);
                     }
                 },
             )),
@@ -48,38 +52,80 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 max_height: "80%",
                 max_width: "80%",
             },
+            img {
+                id: "file_preview_img",
+                src: format_args!("{}", image_from_clipboard.read()),
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                max_height: "80%",
+                max_width: "80%",
+            },
         },
     }))
 }
 
 use arboard::Clipboard;
 use arboard::ImageData;
+use clipboard::{ClipboardContext, ClipboardProvider};
+use std::process::Command;
+use std::str;
 
-fn copy_base64_image_to_clipboard(base64_image: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let data_start_index = base64_image.find("base64,").unwrap_or(0) + 7;
-    let base64_data = &base64_image[data_start_index..];
-    println!("base64_image: {:?}", base64_data);
+fn copy_base64_image_to_clipboard(
+    base64_image: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let mut clipboard = Clipboard::new().unwrap();
+    let mut clipboard2: ClipboardContext = ClipboardProvider::new()?;
+    let output = Command::new("osascript")
+        .arg("-e")
+        .arg("get the clipboard as «class furl»")
+        .output()?;
+    let file_path = str::from_utf8(&output.stdout)?
+        .trim()
+        .to_owned()
+        .replace("file Macintosh HD:", "")
+        .replace(":", "/");
 
-    // Convert the base64 image to bytes
-    let decoded_image = base64::decode(base64_data)?;
-    println!("Arriving here - 1");
+    println!("file_path: {:?}", file_path);
 
-    let cow_data: Cow<[u8]> = Cow::Owned(decoded_image);
-    println!("Arriving here - 2");
+    let mut file = std::fs::File::open(file_path)?;
+    let mut content = Vec::new();
+    file.read_to_end(&mut content)?;
+    let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
+    return Ok(base64_default_image);
 
-    let image_data = ImageData {
-        bytes: cow_data,
-        width: 264,
-        height: 264,
-    };
-    println!("Arriving here - 3");
+    // let clipboard_content = clipboard2.get_contents()?;
+    // println!("clipboard_content: {:?}", clipboard_content);
 
-    // Create a clipboard context
-    let mut clipboard = Clipboard::new()?;
-    println!("Arriving here - 4");
+    // let image = match clipboard.get_image() {
+    //     Ok(img) => img,
+    //     Err(e) => {
+    //         eprintln!("error getting image: {}", e);
+    //         return Ok("".to_owned());
+    //     }
+    // };
+    // eprintln!("getting {}×{} image", image.width, image.height);
 
-    // Copy the bytes to the clipboard
-    clipboard.set_image(image_data)?;
+    // // let image: RgbaImage = ImageBuffer::from_raw(
+    // //     image.width.try_into().unwrap(),
+    // //     image.height.try_into().unwrap(),
+    // //     image.bytes.into_owned(),
+    // // )
+    // // .unwrap();
+    // // let file_path = "/Users/lucasmarchi/Desktop/output.png";
+    // // let image = DynamicImage::ImageRgba8(image);
+    // // let file = std::fs::File::create(file_path)?;
+    // // println!("Arriving here - 3");
 
-    Ok(())
+    // // let mut buffered_writer = BufWriter::new(file);
+    // // image
+    // //     .write_to(&mut buffered_writer, ImageOutputFormat::Png)
+    // //     .unwrap();
+    // // println!("Arriving here - 4");
+    // // let mut file = std::fs::File::open(file_path)?;
+    // // let mut content = Vec::new();
+    // // file.read_to_end(&mut content)?;
+    // // let base64_default_image = format!("data:image/png;base64,{}", base64::encode(content));
+    // // Ok(base64_default_image)
 }
