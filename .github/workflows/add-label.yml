@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: delivery-much/actions-assigner@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: christianvuerings/add-labels@v1
         with:
           labels: |
