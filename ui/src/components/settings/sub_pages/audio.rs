@@ -75,8 +75,8 @@ pub fn AudioSettings(cx: Scope) -> Element {
             },
 
             SettingSection {
-                section_label: get_local_text("settings-audio.noise-supression"),
-                section_description: get_local_text("settings-audio.noise-supression-description"),
+                section_label: get_local_text("settings-audio.noise-suppression"),
+                section_description: get_local_text("settings-audio.noise-suppression-description"),
                 no_border: true,
             },
             SettingSectionSimple {
