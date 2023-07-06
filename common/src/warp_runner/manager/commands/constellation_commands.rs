@@ -477,8 +477,8 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                                 last_size.unwrap_or_default(),
                                 error.unwrap_or_default()
                             );
-
                             let _ = tx_upload_file.send(UploadFileAction::Error);
+                            continue 'files_parth_loop;
                         }
                     }
                 }
