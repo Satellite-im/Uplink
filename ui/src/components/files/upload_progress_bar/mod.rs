@@ -204,19 +204,19 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         ));
     }
 
-    if *cx.props.are_files_hovering_app.read() {
-         cx.render(rsx!(
-            div {
-                class: "upload-progress-bar-container-file-count",
-                p {
-                    id: "upload-file-count",
-                    class: "upload-file-count",
-                }
-            },
-        ))
-    } else {
-        None
+    if !*cx.props.are_files_hovering_app.read() {
+        return None;
     }
+
+    cx.render(rsx!(
+                div {
+                    class: "upload-progress-bar-container-file-count",
+                    p {
+                        id: "upload-file-count",
+                        class: "upload-file-count",
+                    }
+                },
+    ))
 }
 
 fn count_files_to_show(files_to_upload_len: usize) -> String {

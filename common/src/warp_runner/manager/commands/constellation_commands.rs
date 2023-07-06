@@ -360,15 +360,15 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
 
     let current_directory = match warp_storage.current_directory() {
         Ok(d) => d,
-        Err(e) => {
-            let _ = tx_upload_file.send(UploadFileAction::Error(e));
+        Err(_) => {
+            let _ = tx_upload_file.send(UploadFileAction::Error);
             return;
         }
     };
 
     let max_size_ipfs = warp_storage.max_size();
     let current_size_ipfs = warp_storage.current_size();
-    for file_path in files_path.clone() {
+    'files_parth_loop: for file_path in files_path.clone() {
         let mut filename = match file_path
             .file_name()
             .map(|file| file.to_string_lossy().to_string())
@@ -386,7 +386,6 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 continue;
             }
         };
-        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         if (current_size_ipfs + file_size) > max_size_ipfs {
             log::error!(
@@ -400,6 +399,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_name));
             continue;
         }
+        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         let original = filename.clone();
         let file = PathBuf::from(&original);
@@ -410,7 +410,6 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
         )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
 
-        let mut upload_cancelled = false;
         match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
                 let mut previous_percentage: usize = 0;
@@ -432,9 +431,8 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                                 .try_recv()
                             {
                                 if received_tx {
-                                    upload_cancelled = true;
                                     let _ = tx_upload_file.send(UploadFileAction::Cancelling);
-                                    break;
+                                    continue 'files_parth_loop;
                                 }
                             }
                             if !upload_process_started {
@@ -466,11 +464,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
-                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
-                                format!("100% / {}", readable_total.clone()),
-                                get_local_text("files.finishing-upload"),
-                                filename.clone(),
-                            )));
+                            let _ = tx_upload_file.send(UploadFileAction::Finishing);
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
@@ -483,17 +477,18 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                                 last_size.unwrap_or_default(),
                                 error.unwrap_or_default()
                             );
+
+                            let _ = tx_upload_file.send(UploadFileAction::Error);
                         }
                     }
                 }
-                if upload_cancelled {
-                    continue;
-                }
+
                 let _ = tx_upload_file.send(UploadFileAction::Uploading((
                     "100%".into(),
                     get_local_text("files.checking-thumbnail"),
                     filename.clone(),
                 )));
+
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
                 let doc_formats = DOC_EXTENSIONS.to_vec();
 
@@ -549,7 +544,6 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         }
                     };
                 }
-                let _ = tx_upload_file.send(UploadFileAction::Finishing("100%".into()));
                 log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
@@ -557,7 +551,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     }
     let ret = match get_items_from_current_directory(warp_storage) {
         Ok(r) => UploadFileAction::Finished(r),
-        Err(e) => UploadFileAction::Error(e),
+        Err(_) => UploadFileAction::Error,
     };
 
     let _ = tx_upload_file.send(ret);

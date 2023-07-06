@@ -11,9 +11,9 @@ pub enum UploadFileAction<T> {
     Cancelling,
     UploadFiles(Vec<PathBuf>),
     Uploading((String, String, String)),
-    Finishing(String),
+    Finishing,
     Finished(T),
-    Error(warp::error::Error),
+    Error,
 }
 pub struct UploadFileChannel<T> {
     pub tx: tokio::sync::mpsc::UnboundedSender<UploadFileAction<T>>,

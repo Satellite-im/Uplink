@@ -354,6 +354,13 @@ pub fn start_upload_file_listener(
                         }
                     }
                     UploadFileAction::SizeNotAvailable(file_name) => {
+                        if !files_in_queue_to_upload.read().is_empty() {
+                            files_in_queue_to_upload.with_mut(|i| i.remove(0));
+                            upload_progress_bar::update_files_queue_len(
+                                &window,
+                                files_in_queue_to_upload.read().len(),
+                            );
+                        }
                         state
                             .write()
                             .mutate(common::state::Action::AddToastNotification(
@@ -411,7 +418,7 @@ pub fn start_upload_file_listener(
                         upload_progress_bar::change_progress_percentage(&window, progress.clone());
                         upload_progress_bar::change_progress_description(&window, msg);
                     }
-                    UploadFileAction::Finishing(msg) => {
+                    UploadFileAction::Finishing => {
                         *files_been_uploaded.write_silent() = true;
                         if !files_in_queue_to_upload.read().is_empty() {
                             files_in_queue_to_upload.with_mut(|i| i.remove(0));
@@ -420,7 +427,7 @@ pub fn start_upload_file_listener(
                                 files_in_queue_to_upload.read().len(),
                             );
                         }
-                        upload_progress_bar::change_progress_percentage(&window, msg);
+                        upload_progress_bar::change_progress_percentage(&window, "100%".into());
                         upload_progress_bar::change_progress_description(
                             &window,
                             get_local_text("files.finishing-upload"),
@@ -436,7 +443,7 @@ pub fn start_upload_file_listener(
                         );
                         controller.with_mut(|i| i.storage_state = Some(storage));
                     }
-                    UploadFileAction::Error(_) => {
+                    UploadFileAction::Error => {
                         if !files_in_queue_to_upload.read().is_empty() {
                             files_in_queue_to_upload.with_mut(|i| i.remove(0));
                             upload_progress_bar::update_files_queue_len(
