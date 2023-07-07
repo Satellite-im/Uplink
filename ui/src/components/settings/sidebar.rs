@@ -26,6 +26,7 @@ pub enum Page {
     Profile,
     Notifications,
     Accessibility,
+    Licenses,
 }
 
 impl FromStr for Page {
@@ -41,6 +42,7 @@ impl FromStr for Page {
             "profile" => Ok(Page::Profile),
             "notifications" => Ok(Page::Notifications),
             "accessibility" => Ok(Page::Accessibility),
+            "licenses" => Ok(Page::Licenses),
             _ => Ok(Page::General),
         }
     }
@@ -128,6 +130,13 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         icon: Icon::ExclamationCircle,
         ..UIRoute::default()
     };
+    let licenses = UIRoute {
+        to: "licenses",
+        name: get_local_text("settings.licenses"),
+        icon: Icon::DocumentText,
+        ..UIRoute::default()
+    };
+
     let routes = vec![
         profile,
         general,
@@ -139,6 +148,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         notifications,
         developer,
         about,
+        licenses,
     ];
 
     let active_route = routes[0].clone();
