@@ -1,4 +1,4 @@
-use arboard::Clipboard;
+// use arboard::Clipboard;
 use std::str::FromStr;
 
 use common::language::get_local_text;
@@ -72,8 +72,8 @@ pub fn AddFriend(cx: Scope) -> Element {
     }
 
     if let Some(id) = my_id.get().clone() {
-        let mut clipboard = Clipboard::new().unwrap();
-        clipboard.set_text(id).unwrap();
+        // let mut clipboard = Clipboard::new().unwrap();
+        // clipboard.set_text(id).unwrap();
         state
             .write()
             .mutate(Action::AddToastNotification(ToastNotification::init(

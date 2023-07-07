@@ -1,4 +1,4 @@
-use arboard::Clipboard;
+// use arboard::Clipboard;
 use common::get_images_dir;
 use common::language::get_local_text;
 use common::state::{Action, State, ToastNotification};
@@ -315,8 +315,8 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    let mut clipboard = Clipboard::new().unwrap();
-                                    clipboard.set_text(did_string.clone()).unwrap();
+                                    // let mut clipboard = Clipboard::new().unwrap();
+                                    // clipboard.set_text(did_string.clone()).unwrap();
                                     state
                                         .write()
                                         .mutate(Action::AddToastNotification(ToastNotification::init(
