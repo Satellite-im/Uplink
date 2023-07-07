@@ -9,7 +9,7 @@ use kit::User as UserInfo;
 use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 
 pub mod auto_updater;
-pub mod clipboard;
+pub mod clipboard_data;
 pub mod format_timestamp;
 pub mod lifecycle;
 
