@@ -11,9 +11,10 @@ use crate::components::{
             audio::AudioSettings,
             developer::DeveloperSettings,
             extensions::ExtensionSettings,
-            // files::FilesSettings,
             general::GeneralSettings,
+            licenses::Licenses,
             notifications::NotificationSettings,
+            // files::FilesSettings,
             // privacy::PrivacySettings,
             profile::ProfileSettings,
         },
@@ -50,11 +51,12 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         Page::Accessibility => rsx!(AccessibilitySettings {}),
         Page::Profile => rsx!(ProfileSettings {}),
         Page::Audio => rsx!(AudioSettings {}),
-        //Page::Privacy => rsx!(PrivacySettings {}),
+        // Page::Privacy => rsx!(PrivacySettings {}),
         // Page::Files => rsx!(FilesSettings {}),
         Page::Extensions => rsx!(ExtensionSettings {}),
         Page::Developer => rsx!(DeveloperSettings {}),
         Page::Notifications => rsx!(NotificationSettings {}),
+        Page::Licenses => rsx!(Licenses {}),
     };
 
     cx.render(rsx!(

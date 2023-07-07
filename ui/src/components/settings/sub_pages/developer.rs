@@ -93,8 +93,8 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
                         state
                             .write()
                             .mutate(Action::AddNotification(NotificationKind::Settings, 1));
-                        }
                     }
+                }
             },
             SettingSection {
                 section_label: get_local_text("settings-developer.open-cache"),

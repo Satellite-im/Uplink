@@ -151,6 +151,7 @@ settings = Settings
     .notifications = Notifications
     .developer = Developer
     .about = About
+    .licenses = Licenses
     .search-placeholder = Search Settings...
 
 settings-profile = Profile Settings
