@@ -367,7 +367,6 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
     };
 
     let max_size_ipfs = warp_storage.max_size();
-    let current_size_ipfs = warp_storage.current_size();
     'files_parth_loop: for file_path in files_path.clone() {
         let mut filename = match file_path
             .file_name()
@@ -386,6 +385,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                 continue;
             }
         };
+        let current_size_ipfs = warp_storage.current_size();
 
         if (current_size_ipfs + file_size) > max_size_ipfs {
             log::error!(
@@ -464,7 +464,11 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
-                            let _ = tx_upload_file.send(UploadFileAction::Finishing);
+                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                "100%".into(),
+                                get_local_text("files.uploading-file"),
+                                filename.clone(),
+                            )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
                         Progression::ProgressFailed {
@@ -544,6 +548,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
                         }
                     };
                 }
+                let _ = tx_upload_file.send(UploadFileAction::Finishing);
                 log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
