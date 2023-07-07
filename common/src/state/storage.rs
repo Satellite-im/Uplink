@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 use warp::{constellation::directory::Directory, constellation::file::File};
 
@@ -19,4 +21,10 @@ pub struct Storage {
     // List of files inside current directory
     #[serde(skip)]
     pub files: Vec<File>,
+    #[serde(skip)]
+    pub max_size: usize,
+    #[serde(skip)]
+    pub current_size: usize,
+    #[serde(skip)]
+    pub files_in_queue_to_upload: Vec<PathBuf>,
 }
