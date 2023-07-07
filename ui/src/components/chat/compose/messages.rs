@@ -560,7 +560,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     };
     let sender_clone = sender.clone();
     let sender_name = if sender.username().is_empty() {
-        get_local_text("messages.you")
+        get_local_text("uplink.unknown")
     } else {
         sender.username()
     };
