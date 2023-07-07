@@ -1,4 +1,5 @@
 uplink = Uplink
+    .unknown = Unknown
     .home = Home
     .add = Add
     .call = Call
