@@ -9,7 +9,7 @@ use common::state::ToastNotification;
 use common::state::{ui, Action, State};
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::use_window;
+use dioxus_desktop::{use_global_shortcut, use_window};
 use dioxus_router::*;
 use kit::layout::modal::Modal;
 use kit::{
@@ -32,12 +32,14 @@ use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::{file::File, item::Item};
 use warp::sync::RwLock;
+use wry::application::keyboard::ModifiersState;
 use wry::webview::FileDropEvent;
 
 pub mod controller;
 pub mod functions;
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::file_preview::FilePreview;
+use crate::utils::clipboard_data::get_files_path_from_clipboard;
 
 use self::controller::StorageController;
 
@@ -99,7 +101,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let first_render = use_state(cx, || true);
     let show_file_modal: &UseState<Option<File>> = use_state(cx, || None);
-
     let main_script = include_str!("./storage.js");
     let window = use_window(cx);
 
@@ -132,6 +133,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
+        if state.read().ui.metadata.focused {
+            rsx!(PasteFilesShortcut {
+                ch: ch.clone(),
+            })
+        }
         if let Some(file) = show_file_modal.current().as_ref().clone() {
             let file2 = file.clone();
             rsx!(
@@ -515,6 +521,28 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
+}
+
+#[derive(PartialEq, Props)]
+pub struct ShortCutProps {
+    ch: Coroutine<ChanCmd>,
+}
+
+#[allow(non_snake_case)]
+fn PasteFilesShortcut(cx: Scope<ShortCutProps>) -> Element {
+    let ch = cx.props.ch.clone();
+    let key = KeyCode::V;
+    let modifiers = ModifiersState::SUPER;
+    use_global_shortcut(cx, key, modifiers, {
+        to_owned![ch];
+        move || {
+            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+            if !files_local_path.is_empty() {
+                ch.send(ChanCmd::UploadFiles(files_local_path));
+            }
+        }
+    });
+    None
 }
 
 // TODO: This really shouldn't be in this file

@@ -4,8 +4,6 @@ use dioxus::prelude::*;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 use warp::constellation::file::File;
 
-use crate::utils::clipboard_data;
-
 #[derive(Props)]
 pub struct Props<'a> {
     file: &'a File,
@@ -27,15 +25,6 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     text: get_local_text("files.download"),
                     onpress: move |_| {
                         cx.props.on_download.call(());
-                    }
-                },
-                ContextItem {
-                    icon: Icon::ClipboardDocument,
-                    aria_label: "files-download-preview".into(),
-                    text: "Paste".to_owned(),
-                    onpress: move |_| {
-                       let test =  clipboard_data::paste_file_from_clipboard().unwrap_or_default();
-                    //    image_from_clipboard.with_mut(|i| *i = test);
                     }
                 },
             )),
