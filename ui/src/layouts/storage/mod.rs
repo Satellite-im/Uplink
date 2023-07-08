@@ -528,6 +528,10 @@ pub struct ShortCutProps {
     ch: Coroutine<ChanCmd>,
 }
 
+// HACK: It is not allowed to put hooks inside conditional,
+// and global shortcut keeps working after unfocus app,
+// then solution was to put it into a fake UI, to be build or dropped
+// depending on if app is focused or not
 #[allow(non_snake_case)]
 fn PasteFilesShortcut(cx: Scope<ShortCutProps>) -> Element {
     let ch = cx.props.ch.clone();
