@@ -60,6 +60,10 @@
     display: inline-flex;
     flex-direction: column;
     gap: var(--gap-less);
+
+    p {
+      color: var(--text-color);
+    }
   }
   .settings-control {
     display: inline-flex;

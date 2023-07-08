@@ -61,7 +61,7 @@ use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::LoadingLayout;
 use crate::layouts::settings::SettingsLayout;
-use crate::layouts::storage::{FilesLayout, DRAG_EVENT};
+use crate::layouts::storage::FilesLayout;
 use crate::layouts::unlock::UnlockLayout;
 
 use crate::utils::auto_updater::{
@@ -69,6 +69,7 @@ use crate::utils::auto_updater::{
 };
 
 use crate::utils::build_participants;
+use crate::utils::get_drag_event::DRAG_EVENT;
 use crate::window_manager::WindowManagerCmdChannels;
 use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{

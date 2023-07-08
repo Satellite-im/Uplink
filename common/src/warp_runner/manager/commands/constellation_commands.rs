@@ -11,9 +11,13 @@ use futures::{channel::oneshot, StreamExt};
 use humansize::{format_size, DECIMAL};
 use once_cell::sync::Lazy;
 use tempfile::TempDir;
-use tokio::sync::mpsc;
 
-use crate::{state::storage::Storage as uplink_storage, VIDEO_FILE_EXTENSIONS};
+use crate::{
+    language::get_local_text,
+    state::storage::Storage as uplink_storage,
+    upload_file_channel::{UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER},
+    VIDEO_FILE_EXTENSIONS,
+};
 use crate::{warp_runner::Storage as warp_storage, DOC_EXTENSIONS};
 
 use warp::{
@@ -30,20 +34,6 @@ use warp::{
 
 static DIRECTORIES_AVAILABLE_TO_BROWSE: Lazy<RwLock<Vec<Directory>>> =
     Lazy::new(|| RwLock::new(Vec::new()));
-
-pub enum FileTransferStep {
-    SizeNotAvailable(String),
-    Start(String),
-    DuplicateName(Option<String>),
-    Upload(String),
-    Thumbnail(Option<()>),
-}
-
-pub enum FileTransferProgress<T> {
-    Error(warp::error::Error),
-    Finished(T),
-    Step(FileTransferStep),
-}
 
 #[derive(Display)]
 pub enum ConstellationCmd {
@@ -67,10 +57,7 @@ pub enum ConstellationCmd {
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
     },
     #[display(fmt = "UploadFiles {{ files_path: {files_path:?} }} ")]
-    UploadFiles {
-        files_path: Vec<PathBuf>,
-        rsp: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
-    },
+    UploadFiles { files_path: Vec<PathBuf> },
     #[display(fmt = "RenameItems {{ old_name: {old_name}, new_name: {new_name} }} ")]
     RenameItem {
         old_name: String,
@@ -89,10 +76,6 @@ pub enum ConstellationCmd {
     DeleteItems {
         item: Item,
         rsp: oneshot::Sender<Result<uplink_storage, warp::error::Error>>,
-    },
-    #[display(fmt = "GetStorageSize")]
-    GetStorageSize {
-        rsp: oneshot::Sender<Result<(usize, usize), warp::error::Error>>,
     },
 }
 
@@ -120,8 +103,8 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
             let r = go_back_to_previous_directory(warp_storage, directory);
             let _ = rsp.send(r);
         }
-        ConstellationCmd::UploadFiles { files_path, rsp } => {
-            upload_files(warp_storage, files_path, rsp).await;
+        ConstellationCmd::UploadFiles { files_path } => {
+            upload_files(warp_storage, files_path).await;
         }
         ConstellationCmd::DownloadFile {
             file_name,
@@ -141,10 +124,6 @@ pub async fn handle_constellation_cmd(cmd: ConstellationCmd, warp_storage: &mut 
         }
         ConstellationCmd::DeleteItems { item, rsp } => {
             let r = delete_items(warp_storage, item).await;
-            let _ = rsp.send(r);
-        }
-        ConstellationCmd::GetStorageSize { rsp } => {
-            let r = get_storage_size(warp_storage);
             let _ = rsp.send(r);
         }
     }
@@ -271,10 +250,6 @@ async fn rename_item(
     get_items_from_current_directory(warp_storage)
 }
 
-fn get_storage_size(warp_storage: &warp_storage) -> Result<(usize, usize), Error> {
-    Ok((warp_storage.max_size(), warp_storage.current_size()))
-}
-
 async fn create_new_directory(
     folder_name: &str,
     warp_storage: &mut warp_storage,
@@ -305,12 +280,19 @@ fn get_items_from_current_directory(
     directories.sort_by_key(|b| std::cmp::Reverse(b.modified()));
     files.sort_by_key(|b| std::cmp::Reverse(b.modified()));
 
+    let max_size = warp_storage.max_size();
+    let current_size = warp_storage.current_size();
+    let files_in_queue_to_upload = Vec::new();
+
     let uplink_storage = uplink_storage {
         initialized: true,
         current_dir,
         directories_opened: get_directories_opened(),
         directories,
         files,
+        max_size,
+        current_size,
+        files_in_queue_to_upload,
     };
     log::info!("Get items from current directory worked!");
     Ok(uplink_storage)
@@ -373,24 +355,19 @@ fn go_back_to_previous_directory(
     get_items_from_current_directory(warp_storage)
 }
 
-async fn upload_files(
-    warp_storage: &mut warp_storage,
-    files_path: Vec<PathBuf>,
-    // todo: send FileTransferProgress::Step until done
-    tx: mpsc::UnboundedSender<FileTransferProgress<uplink_storage>>,
-) {
+async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>) {
+    let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
+
     let current_directory = match warp_storage.current_directory() {
         Ok(d) => d,
-        Err(e) => {
-            let _ = tx.send(FileTransferProgress::Error(e));
+        Err(_) => {
+            let _ = tx_upload_file.send(UploadFileAction::Error);
             return;
         }
     };
 
     let max_size_ipfs = warp_storage.max_size();
-    let current_size_ipfs = warp_storage.current_size();
-
-    for file_path in files_path {
+    'files_parth_loop: for file_path in files_path.clone() {
         let mut filename = match file_path
             .file_name()
             .map(|file| file.to_string_lossy().to_string())
@@ -398,6 +375,7 @@ async fn upload_files(
             Some(file) => file,
             None => continue,
         };
+
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
 
         let file_size = match tokio::fs::metadata(&local_path).await {
@@ -407,6 +385,7 @@ async fn upload_files(
                 continue;
             }
         };
+        let current_size_ipfs = warp_storage.current_size();
 
         if (current_size_ipfs + file_size) > max_size_ipfs {
             log::error!(
@@ -417,25 +396,19 @@ async fn upload_files(
                 Some(name) => name.to_str().unwrap_or(&local_path).to_string(),
                 None => local_path.to_string(),
             };
-            let _ = tx.send(FileTransferProgress::Step(
-                FileTransferStep::SizeNotAvailable(file_name),
-            ));
+            let _ = tx_upload_file.send(UploadFileAction::SizeNotAvailable(file_name));
             continue;
         }
-
-        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Start(
-            filename.clone(),
-        )));
+        let _ = tx_upload_file.send(UploadFileAction::Starting(filename.clone()));
 
         let original = filename.clone();
         let file = PathBuf::from(&original);
-        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
-            None,
+        let _ = tx_upload_file.send(UploadFileAction::Uploading((
+            "0%".into(),
+            get_local_text("files.checking-duplicated-name"),
+            filename.clone(),
         )));
         filename = rename_if_duplicate(current_directory.clone(), filename.clone(), file);
-        let _ = tx.send(FileTransferProgress::Step(FileTransferStep::DuplicateName(
-            Some(filename.clone()),
-        )));
 
         match warp_storage.put(&filename, &local_path).await {
             Ok(mut upload_progress) => {
@@ -449,6 +422,19 @@ async fn upload_files(
                             current,
                             total,
                         } => {
+                            log::trace!("starting upload file action listener");
+                            if let Ok(received_tx) = CANCEL_FILE_UPLOADLISTENER
+                                .rx
+                                .clone()
+                                .lock()
+                                .await
+                                .try_recv()
+                            {
+                                if received_tx {
+                                    let _ = tx_upload_file.send(UploadFileAction::Cancelling);
+                                    continue 'files_parth_loop;
+                                }
+                            }
                             if !upload_process_started {
                                 upload_process_started = true;
                                 log::info!("Starting upload for {name}");
@@ -463,14 +449,11 @@ async fn upload_files(
                                     let readable_current = format_size(current, DECIMAL);
                                     let percentage_number =
                                         ((current as f64) / (total as f64)) * 100.;
-
-                                    let _ = tx.send(FileTransferProgress::Step(
-                                        FileTransferStep::Upload(format!(
-                                            "{}%",
-                                            percentage_number as usize
-                                        )),
-                                    ));
-
+                                    let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                        format!("{}%", percentage_number as usize),
+                                        get_local_text("files.uploading-file"),
+                                        filename.clone(),
+                                    )));
                                     log::info!(
                                         "{}% completed -> written {readable_current}",
                                         percentage_number as usize
@@ -481,8 +464,10 @@ async fn upload_files(
                         Progression::ProgressComplete { name, total } => {
                             let total = total.unwrap_or_default();
                             let readable_total = format_size(total, DECIMAL);
-                            let _ = tx.send(FileTransferProgress::Step(FileTransferStep::Upload(
-                                readable_total.clone(),
+                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                "100%".into(),
+                                get_local_text("files.uploading-file"),
+                                filename.clone(),
                             )));
                             log::info!("{name} has been uploaded with {}", readable_total);
                         }
@@ -496,9 +481,17 @@ async fn upload_files(
                                 last_size.unwrap_or_default(),
                                 error.unwrap_or_default()
                             );
+                            let _ = tx_upload_file.send(UploadFileAction::Error);
+                            continue 'files_parth_loop;
                         }
                     }
                 }
+
+                let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                    "100%".into(),
+                    get_local_text("files.checking-thumbnail"),
+                    filename.clone(),
+                )));
 
                 let video_formats = VIDEO_FILE_EXTENSIONS.to_vec();
                 let doc_formats = DOC_EXTENSIONS.to_vec();
@@ -519,15 +512,14 @@ async fn upload_files(
                     {
                         Ok(_) => {
                             log::info!("Video Thumbnail uploaded");
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(Some(())),
-                            ));
+                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                "100%".into(),
+                                get_local_text("files.thumbnail-uploaded"),
+                                filename.clone(),
+                            )));
                         }
                         Err(error) => {
                             log::error!("Not possible to update thumbnail for video: {:?}", error);
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(None),
-                            ));
                         }
                     };
                 }
@@ -542,32 +534,32 @@ async fn upload_files(
                     {
                         Ok(_) => {
                             log::info!("Document Thumbnail uploaded");
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(Some(())),
-                            ));
+                            let _ = tx_upload_file.send(UploadFileAction::Uploading((
+                                "100%".into(),
+                                get_local_text("files.thumbnail-uploaded"),
+                                filename.clone(),
+                            )));
                         }
                         Err(error) => {
                             log::error!(
                                 "Not possible to update thumbnail for document: {:?}",
                                 error
                             );
-                            let _ = tx.send(FileTransferProgress::Step(
-                                FileTransferStep::Thumbnail(None),
-                            ));
                         }
                     };
                 }
-
+                let _ = tx_upload_file.send(UploadFileAction::Finishing);
                 log::info!("{:?} file uploaded!", filename);
             }
             Err(error) => log::error!("Error when upload file: {:?}", error),
         }
     }
     let ret = match get_items_from_current_directory(warp_storage) {
-        Ok(r) => FileTransferProgress::Finished(r),
-        Err(e) => FileTransferProgress::Error(e),
+        Ok(r) => UploadFileAction::Finished(r),
+        Err(_) => UploadFileAction::Error,
     };
-    let _ = tx.send(ret);
+
+    let _ = tx_upload_file.send(ret);
 }
 
 fn rename_if_duplicate(

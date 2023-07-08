@@ -11,7 +11,9 @@ use crate::{window_manager::WindowManagerCmd, WINDOW_CMD_CH};
 pub mod auto_updater;
 pub mod clipboard_data;
 pub mod format_timestamp;
+pub mod get_drag_event;
 pub mod lifecycle;
+pub mod verify_valid_paths;
 
 pub fn unzip_prism_langs() {
     if !STATIC_ARGS.production_mode || !cfg!(target_os = "windows") {
