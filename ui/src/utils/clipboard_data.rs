@@ -14,10 +14,12 @@ static SWIFT_SCRIPT: &str = "ui/src/utils/clip_code.swift";
 
 pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
     let file_path = verify_file_path_in_clipboard().unwrap_or(Vec::new());
+    println!("file_path: {:?}", file_path);
     if !file_path.is_empty() {
         return Ok(file_path);
     } else {
         let image_from_clipboard = get_image_from_clipboard().unwrap_or(Vec::new());
+        println!("image_from_clipboard: {:?}", image_from_clipboard);
         return Ok(image_from_clipboard);
     }
 }
@@ -63,8 +65,10 @@ fn verify_file_path_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
 
     // return from swift script
     let stdout = str::from_utf8(&output.stdout)?.trim().to_owned();
+    if stdout.is_empty() {
+        return Ok(Vec::new());
+    }
     let files_path_str: Vec<&str> = stdout.split(|c| c == '\n').collect();
     let files_path_buf: Vec<PathBuf> = files_path_str.into_iter().map(PathBuf::from).collect();
-    println!("files_path_buf: {:?}", files_path_buf);
     Ok(files_path_buf)
 }

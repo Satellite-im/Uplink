@@ -124,7 +124,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         },
         if state.read().ui.metadata.focused {
             rsx!(PasteFilesShortcut {
-                files_in_queue_to_upload: files_in_queue_to_upload.clone(),
+                on_paste: move |files_local_path| {
+                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, &window);
+                    upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
+                },
             })
         }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
@@ -513,32 +516,48 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
-#[derive(PartialEq, Props)]
-pub struct ShortCutProps {
-    files_in_queue_to_upload: UseRef<Vec<PathBuf>>,
+#[derive(Props)]
+pub struct ShortCutProps<'a> {
+    on_paste: EventHandler<'a, Vec<PathBuf>>,
 }
 
 // HACK: It is not allowed to put hooks inside conditional,
 // and global shortcut keeps working after unfocus app,
 // then solution was to put it into a fake UI, to be build or dropped
-// depending on if app is focused or not
+// depending on if app is focused or not.
+/// It needs to be used if app focus verification
+///
+/// ### Example
+///
+/// ```rust
+/// if state.read().ui.metadata.focused {
+///    rsx!(PasteFilesShortcut {
+///    ...
+/// ```
 #[allow(non_snake_case)]
-fn PasteFilesShortcut(cx: Scope<ShortCutProps>) -> Element {
-    let files_in_queue_to_upload = cx.props.files_in_queue_to_upload.clone();
-    let window = use_window(cx);
+fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
+    let files_local_path_to_upload = use_ref(cx, || Vec::new());
     let key = KeyCode::V;
     let modifiers = ModifiersState::SUPER;
+    if !files_local_path_to_upload.read().is_empty() {
+        cx.props
+            .on_paste
+            .call(files_local_path_to_upload.read().clone());
+        *files_local_path_to_upload.write_silent() = Vec::new();
+    }
+
     use_global_shortcut(cx, key, modifiers, {
-        to_owned![files_in_queue_to_upload, window];
+        to_owned![files_local_path_to_upload];
         move || {
             let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
             if !files_local_path.is_empty() {
-                add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, &window);
+                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
             }
         }
     });
     None
 }
+
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
