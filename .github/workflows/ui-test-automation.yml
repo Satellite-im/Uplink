@@ -396,7 +396,7 @@ jobs:
             Failed Automated Test
           type: add
 
-  publish-windows-results:
+  publish-results:
     if: always()
     needs:
       [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
@@ -485,7 +485,7 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/uplink/${{ github.run_number }})
+            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/Uplink/${{ github.run_number }})
 
   remove-artifacts:
     needs:
@@ -495,7 +495,7 @@ jobs:
         test-mac,
         test-windows-chats,
         test-windows,
-        publish-windows-results,
+        publish-results,
       ]
     runs-on: ubuntu-latest
 
