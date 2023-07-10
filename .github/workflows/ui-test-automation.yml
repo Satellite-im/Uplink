@@ -399,14 +399,7 @@ jobs:
   publish-windows-results:
     if: always()
     needs:
-      [
-        build-mac,
-        build-windows,
-        test-mac,
-        test-windows-chats,
-        test-windows,
-        publish-windows-results,
-      ]
+      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -496,7 +489,14 @@ jobs:
 
   remove-artifacts:
     needs:
-      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
+      [
+        build-mac,
+        build-windows,
+        test-mac,
+        test-windows-chats,
+        test-windows,
+        publish-windows-results,
+      ]
     runs-on: ubuntu-latest
 
     steps:
