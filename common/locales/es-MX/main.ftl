@@ -1,7 +1,9 @@
 uplink = Uplink
+    .unknown = Desconocido
     .home = Inicio
     .add = Añadir
     .call = Llamada
+    .reset-account = Reestablecer Cuenta (Irreversible!)
     .coming-soon = Muy pronto
     .crash-report = Uplink se cerró inesperadamente. Opcionalmente guarde el reporte de fallas en la carpeta seleccionada
     .video-call = Videollamada
@@ -11,6 +13,7 @@ uplink = Uplink
     .remove = Eliminar
     .more = Más
     .welcome = Bienvenido
+    .cancel = Cancelar
     .clear-unreads = Limpiar No Leídos
     .delete-group-chat = Eliminar Grupo
     .leave-group = Salir del Grupo
@@ -36,6 +39,7 @@ uplink = Uplink
     .update-menu-install = Instalar
     .check-for-updates = Buscar actualizaciones
     .download-update = Descargar actualización
+    .members = Miembros
 
 updates = Updates
     .title = Uplink tiene una actualización disponible. Sigue los siguientes pasos para descargar e instalar la actualización más reciente.
@@ -75,6 +79,7 @@ messages = Messages
     .group-name-invalid = Nombre de Group Inválido
     .participant = Participante
     .participants = Participantes
+    .fetching = Obteniendo más mensajes...
 
 favorites = Favorites
     .favorites = Favoritos
@@ -113,6 +118,7 @@ friends = Friends
     .request-exist = ¡La solicitud ya fue enviada antes!
 
 files = Files
+    .file = Archivo
     .files = Archivos
     .new-folder = Nueva carpeta
     .upload = Cargar
@@ -132,8 +138,15 @@ files = Files
     .no-thumbnail-preview = No hay vista previa para este archivo
     .file-already-opened = El archivo ya está abierto
     .directory-already-with-name = Ya existe un directorio con este nombre
+    .no-size-available = No se pudo obtener el tamaño del archivo:
     .file-already-with-name = Ya existe un archivo con este nombre
-    .no-data-available = No hay datos disponibles
+    .uploading-file = Subiendo Archivo...
+    .finishing-upload = Terminando...
+    .cancelling-upload = Cancelando...
+    .checking-duplicated-name = Comprobando nombre duplicado...
+    .checking-thumbnail = Comprobando vista previa...
+    .files-in-queue = Archivos en cola
+    .error-to-upload = Error al subir
 
 settings = Settings
     .settings = Configuración
@@ -147,6 +160,7 @@ settings = Settings
     .notifications = Notificaciones
     .developer = Desarrollador
     .about = Acerca de
+    .licenses = Licencias
     .search-placeholder = Buscar configuraciones...
 
 settings-profile = Profile Settings
@@ -175,6 +189,7 @@ settings-general = General Settings
     .font-scaling-description = Ajuste la escala del tamaño de la fuente, incrementándola o disminuyéndola a tu gusto.
     .font = Fuente
     .font-description = Cambiar la fuente de la aplicación.
+    .clear-accent = Limpiar color acentuado
 
 settings-privacy = Settings Privacy 
     .backup-recovery-phrase = Frase de recuperación de copia de seguridad
@@ -182,6 +197,16 @@ settings-privacy = Settings Privacy
     .backup-phrase-description = ¡Haz una copia de esta frase! Junto con tu contraseña, esto representa tu cuenta. Si la pierdes, no podemos ayudarte a recuperarla.
 
 settings-audio = Audio Settings 
+    .input-device = Dispositivo de Entrada
+    .input-device-description = Selecciona tu dispositivo de entrada (micrófono normalmente).
+    .output-device = Dispositivo de Salida
+    .output-device-description = Aquí es donde todos los sonidos serán reproducidos. (Generalmente tus audífonos).
+    .sample-rate = Frecuencia de Muestreo
+    .sample-rate-description = A mayor frecuencia de muestreo se capturarán más muestras de tu audio, y este sonará más limpio.
+    .noise-suppression = Supresión de ruido
+    .noise-suppression-description = Ayuda a minimizar el ruido de fondo y enfocar el sonido en tu voz.
+    .echo-cancellation = Cancelación de eco
+    .echo-cancellation-description = Ayuda a minimizar la retroalimentación de las bocinas a tu micrófono.
     .call-timer = Temporizador de llamada
     .call-timer-description = Cuando está habilitado, se mostrará un temporizador mientras estés en una llamada para mostrar su duración.
     .interface-sounds = Sonidos de Interfaz
@@ -255,6 +280,8 @@ settings-about = About Settings
     .open-codebase-description = Abre el sitio con nuestro código fuente en tu navegador web predeterminado.
     .no-update-available = ¡Tu software está al día!
     .update-check-error = Error al obtener actualizaciones. Por favor, revisa tu conexión a internet.
+    .update-check-error-timeout = ¡Error al obtener actualizaciones! Tiempo de espera agotado.
+    .update-check-error-request = ¡Error al obtener actualizaciones! No se pudo enviar la solicitud de actualización. Por favor, revisa tu conexión a Internet.
 
 media-player = Media Player 
     .enable-camera = Habilitar Cámara
@@ -269,6 +296,7 @@ remote-controls = Remote Controls
     .listen = Activar Audio
     .silence = Desactivar Audio
     .end = Fin
+    .incoming-call = Transmisión Entrante
 
 unlock = Unlock
     .description = Ingresa tu pin o password para desbloquear tu cuenta.
@@ -281,6 +309,7 @@ unlock = Unlock
     .error-pin = Algo está mal con el pin proporcionado.
     .invalid-pin = Hmm, ese pin no ha funcionado.
     .error-unknown-pin = Un error desconocido ha ocurrido.
+    .help = Ayuda (click derecho)
 
 auth = Create Account 
     .enter-username = Ingresar Nombre de Usuario
@@ -298,3 +327,8 @@ quickprofile = Quick Profile
     .unblock = Desbloquear Usuario
     .chat-placeholder = Mensaje
     .self-edit = Editar Perfil
+
+toast_actions = Toast Actions
+    .DisplayChat = Abrir Chat
+    .FriendListPending = Lista de Amigos
+    .Dummy = Acción Ficticia
