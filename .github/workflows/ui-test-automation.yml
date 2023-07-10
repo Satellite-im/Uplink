@@ -1,8 +1,6 @@
 name: UI Tests on Windows and MacOS 🧪
 
 on:
-  schedule:
-    - cron: "0 0/6 * * 1-5"
   pull_request:
     types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
