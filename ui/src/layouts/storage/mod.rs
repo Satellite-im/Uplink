@@ -12,8 +12,8 @@ use common::upload_file_channel::{
 };
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
+use dioxus_desktop::use_window;
 use dioxus_desktop::DesktopContext;
-use dioxus_desktop::{use_global_shortcut, use_window};
 use dioxus_router::*;
 use kit::{
     components::{
@@ -32,7 +32,6 @@ use kit::{
 use rfd::FileDialog;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
-use wry::application::keyboard::ModifiersState;
 
 pub mod controller;
 pub mod file_modal;
@@ -40,8 +39,8 @@ pub mod functions;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::upload_progress_bar::UploadProgressBar;
+use crate::components::paste_files_with_shortcut;
 use crate::layouts::storage::file_modal::get_file_modal;
-use crate::utils::clipboard_data::get_files_path_from_clipboard;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -123,7 +122,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text", class: "overlay-text"}
         },
         if state.read().ui.metadata.focused {
-            rsx!(PasteFilesShortcut {
+            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
                     add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, &window);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
@@ -514,48 +513,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             }
         }
     ))
-}
-
-#[derive(Props)]
-pub struct ShortCutProps<'a> {
-    on_paste: EventHandler<'a, Vec<PathBuf>>,
-}
-
-// HACK: It is not allowed to put hooks inside conditional,
-// and global shortcut keeps working after unfocus app,
-// then solution was to put it into a fake UI, to be build or dropped
-// depending on if app is focused or not.
-/// It needs to be used if app focus verification
-///
-/// ### Example
-///
-/// ```rust
-/// if state.read().ui.metadata.focused {
-///    rsx!(PasteFilesShortcut {
-///    ...
-/// ```
-#[allow(non_snake_case)]
-fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
-    let files_local_path_to_upload = use_ref(cx, || Vec::new());
-    let key = KeyCode::V;
-    let modifiers = ModifiersState::SUPER;
-    if !files_local_path_to_upload.read().is_empty() {
-        cx.props
-            .on_paste
-            .call(files_local_path_to_upload.read().clone());
-        *files_local_path_to_upload.write_silent() = Vec::new();
-    }
-
-    use_global_shortcut(cx, key, modifiers, {
-        to_owned![files_local_path_to_upload];
-        move || {
-            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-            if !files_local_path.is_empty() {
-                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
-            }
-        }
-    });
-    None
 }
 
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {

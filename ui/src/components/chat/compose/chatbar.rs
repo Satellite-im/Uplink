@@ -37,7 +37,10 @@ use warp::{
 
 const MAX_CHARS_LIMIT: usize = 1024;
 
-use crate::utils::build_user_from_identity;
+use crate::{
+    components::paste_files_with_shortcut,
+    utils::{build_user_from_identity, clipboard_data::get_files_path_or_text_from_clipboard},
+};
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 
@@ -231,6 +234,35 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
+    let enable_paste_shortcut = use_ref(cx, || true);
+    use_future(cx, (), |_| {
+        to_owned![enable_paste_shortcut];
+        async move {
+            loop {
+                let (files_path, text) =
+                    get_files_path_or_text_from_clipboard().unwrap_or_default();
+                println!(
+                    "files_path: {:?}, text: {}, enable_paste_shortcut: {}",
+                    files_path,
+                    text,
+                    enable_paste_shortcut.read()
+                );
+                if !files_path.is_empty() && *enable_paste_shortcut.read() == false
+                    || (files_path.is_empty()
+                        && text.is_empty()
+                        && *enable_paste_shortcut.read() == false)
+                {
+                    println!("true");
+                    *enable_paste_shortcut.write() = true;
+                } else if !text.is_empty() && *enable_paste_shortcut.read() == true {
+                    println!("false");
+                    *enable_paste_shortcut.write() = false;
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+        }
+    });
+
     use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
@@ -477,6 +509,24 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 ))
             })
         })
+        if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
+            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                on_paste: move |files_local_path: Vec<PathBuf>| {
+                    if !files_local_path.is_empty() {
+                        let mut new_files_to_upload: Vec<_> = cx
+                        .props
+                        .upload_files
+                        .current()
+                        .iter()
+                        .filter(|file_name| !files_local_path.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(files_local_path);
+                    cx.props.upload_files.set(new_files_to_upload);
+                    }
+                },
+            })
+        }
         Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
             update_send();
         }},
