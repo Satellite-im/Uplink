@@ -3,7 +3,6 @@ name: UI Tests on Windows and MacOS 🧪
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -399,7 +398,15 @@ jobs:
 
   publish-windows-results:
     if: always()
-    needs: [test-mac, test-windows-chats, test-windows]
+    needs:
+      [
+        build-mac,
+        build-windows,
+        test-mac,
+        test-windows-chats,
+        test-windows,
+        publish-windows-results,
+      ]
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -489,14 +496,7 @@ jobs:
 
   remove-artifacts:
     needs:
-      [
-        build-mac,
-        build-windows,
-        test-mac,
-        test-windows-chats,
-        test-windows,
-        publish-windows-results,
-      ]
+      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
     runs-on: ubuntu-latest
 
     steps:
