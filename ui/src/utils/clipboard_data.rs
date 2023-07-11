@@ -34,6 +34,12 @@ pub enum ClipboardDataType {
     String,
 }
 
+pub fn print_value_in_clipboard() {
+    let mut clipboard = Arboard::new().unwrap();
+    let clipboard_text = clipboard.get_text().unwrap_or_default();
+    println!("clipboard_text: {:?}", clipboard_text);
+}
+
 pub fn check_if_there_is_file_or_string_in_clipboard(
 ) -> Result<ClipboardDataType, Box<dyn std::error::Error>> {
     let macos_clipboard = MacOSClipboard::new()?;
