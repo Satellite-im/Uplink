@@ -13,6 +13,7 @@ pub mod clipboard_data;
 pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod lifecycle;
+pub mod macos_clipboard;
 pub mod verify_valid_paths;
 
 pub fn unzip_prism_langs() {

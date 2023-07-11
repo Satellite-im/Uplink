@@ -3,6 +3,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use arboard::Clipboard;
+use clipboard::{ClipboardContext, ClipboardProvider};
 use common::{
     icons,
     language::get_local_text,
@@ -11,6 +13,7 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -39,7 +42,10 @@ const MAX_CHARS_LIMIT: usize = 1024;
 
 use crate::{
     components::paste_files_with_shortcut,
-    utils::{build_user_from_identity, clipboard_data::get_files_path_or_text_from_clipboard},
+    utils::{
+        build_user_from_identity,
+        clipboard_data::{check_files_path_in_clipboard, get_files_path_or_text_from_clipboard},
+    },
 };
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
@@ -235,28 +241,63 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     let enable_paste_shortcut = use_ref(cx, || true);
+    let checked_already_file_path = use_ref(cx, || false);
+
     use_future(cx, (), |_| {
-        to_owned![enable_paste_shortcut];
+        to_owned![enable_paste_shortcut, state, checked_already_file_path];
         async move {
+            let (files_path, text) = get_files_path_or_text_from_clipboard().unwrap_or_default();
+            let mut clipboard = Clipboard::new().unwrap();
+            if !text.is_empty() && files_path.is_empty() {
+                println!("1 - False");
+                *enable_paste_shortcut.write_silent() = false;
+            }
             loop {
-                let (files_path, text) =
-                    get_files_path_or_text_from_clipboard().unwrap_or_default();
-                println!(
-                    "files_path: {:?}, text: {}, enable_paste_shortcut: {}",
-                    files_path,
-                    text,
-                    enable_paste_shortcut.read()
-                );
-                if !files_path.is_empty() && *enable_paste_shortcut.read() == false
-                    || (files_path.is_empty()
-                        && text.is_empty()
-                        && *enable_paste_shortcut.read() == false)
-                {
-                    println!("true");
-                    *enable_paste_shortcut.write() = true;
-                } else if !text.is_empty() && *enable_paste_shortcut.read() == true {
-                    println!("false");
-                    *enable_paste_shortcut.write() = false;
+                let shortcut_enabled = enable_paste_shortcut.with(|i| i.clone());
+                // if !state.read().ui.metadata.focused {
+                //     *checked_already_file_path.write_silent() = false;
+                //     *enable_paste_shortcut.write_silent() = true;
+                // }
+                // if state.read().ui.metadata.focused {
+                //     let clipboard_text = clipboard.get_text().unwrap_or_default();
+                //     if !clipboard_text.is_empty() && shortcut_enabled {
+                //         if !*checked_already_file_path.read() {
+                //             *checked_already_file_path.write_silent() = true;
+                //             let (files_path, _) =
+                //                 get_files_path_or_text_from_clipboard().unwrap_or_default();
+                //             if files_path.is_empty() {
+                //                 println!("2 - False");
+                //                 *enable_paste_shortcut.write() = false;
+                //             }
+                //         }
+                //     } else if clipboard_text.is_empty() && !shortcut_enabled {
+                //         println!("2 - True");
+                //         *enable_paste_shortcut.write() = true;
+                //     }
+                // }
+                if !state.read().ui.metadata.focused {
+                    *checked_already_file_path.write_silent() = false;
+                    let (files_path, text) =
+                        get_files_path_or_text_from_clipboard().unwrap_or_default();
+                    if !files_path.is_empty() && !shortcut_enabled
+                        || (files_path.is_empty() && text.is_empty() && !shortcut_enabled)
+                    {
+                        *enable_paste_shortcut.write_silent() = true;
+                    } else if !text.is_empty() && shortcut_enabled {
+                        *enable_paste_shortcut.write_silent() = false;
+                    }
+                } else if state.read().ui.metadata.focused {
+                    let clipboard_text = clipboard.get_text().unwrap_or_default();
+                    if !clipboard_text.is_empty() && shortcut_enabled && *checked_already_file_path.read() == false {
+                        *checked_already_file_path.write_silent() = true;
+                        let (files_path, _) =
+                            get_files_path_or_text_from_clipboard().unwrap_or_default();
+                        if files_path.is_empty() {
+                            *enable_paste_shortcut.write() = false;
+                        }
+                    } else if clipboard_text.is_empty() && !shortcut_enabled {
+                        *enable_paste_shortcut.write() = true;
+                    }
                 }
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
