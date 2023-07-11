@@ -1,3 +1,8 @@
+#![cfg(macos)]
+/*!
+This file provide simple means to operate with MacOS clipboard.
+*/
+
 use std::mem::transmute;
 use std::path::PathBuf;
 

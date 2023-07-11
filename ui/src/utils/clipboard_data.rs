@@ -1,4 +1,8 @@
+#[cfg(target_os = "macos")]
+use super::macos_clipboard::MacOSClipboard;
 use arboard::Clipboard as Arboard;
+#[cfg(target_os = "windows")]
+use clipboard_win::{formats, get_clipboard};
 use image::DynamicImage;
 use image::ImageBuffer;
 use image::ImageOutputFormat;
@@ -8,19 +12,35 @@ use std::io::BufWriter;
 use std::path::PathBuf;
 use tempfile::TempDir;
 
-use super::macos_clipboard::MacOSClipboard;
-#[cfg(target_os = "windows")]
-use clipboard_win::{formats, get_clipboard, set_clipboard};
+pub enum ClipboardDataType {
+    File,
+    String,
+}
 
 /// It will verify if data in clipboard are local paths of files to upload them.
 ///
 /// if not, it will grab pixels of image data in clipboard and transform them into
 /// an image file to be possible to upload.
 pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-    let macos_clipboard = MacOSClipboard::new()?;
-    let file_path = macos_clipboard.read().unwrap_or_default();
-    if !file_path.is_empty() {
-        return Ok(file_path);
+    #[cfg(target_os = "windows")]
+    {
+        let file_path: Vec<PathBuf> = get_clipboard(formats::FileList {})
+            .unwrap_or_default()
+            .into_iter()
+            .map(PathBuf::from)
+            .collect();
+        println!("file_path: {:?}", file_path);
+        if !file_path.is_empty() {
+            return Ok(file_path);
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let macos_clipboard = MacOSClipboard::new()?;
+        let file_path = macos_clipboard.read().unwrap_or_default();
+        if !file_path.is_empty() {
+            return Ok(file_path);
+        }
     }
 
     let image_from_clipboard = check_image_pixels_in_clipboard().unwrap_or(Vec::new());
@@ -31,16 +51,22 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
     Ok(Vec::new())
 }
 
-pub enum ClipboardDataType {
-    File,
-    String,
+pub fn print_value_in_clipboard() {
+    let mut clipboard = Arboard::new().unwrap();
+    let clipboard_text = clipboard.get_text().unwrap_or_default();
+    println!("clipboard_text: {:?}", clipboard_text);
 }
 
 pub fn check_if_there_is_file_or_string_in_clipboard(
 ) -> Result<ClipboardDataType, Box<dyn std::error::Error>> {
     #[cfg(target_os = "windows")]
     {
-        let file_path = get_clipboard(formats::FileList {}).map_err(|_| Error::NoFiles);
+        let file_path: Vec<PathBuf> = get_clipboard(formats::FileList {})
+            .unwrap_or_default()
+            .into_iter()
+            .map(PathBuf::from)
+            .collect();
+        println!("file_path: {:?}", file_path);
         if !file_path.is_empty() {
             return Ok(ClipboardDataType::File);
         }
