@@ -41,10 +41,7 @@ use crate::{
     components::paste_files_with_shortcut,
     utils::{
         build_user_from_identity,
-        clipboard_data::{
-            check_if_there_is_file_or_string_in_clipboard, print_value_in_clipboard,
-            ClipboardDataType,
-        },
+        clipboard_data::{check_if_there_is_file_or_string_in_clipboard, ClipboardDataType},
     },
 };
 
@@ -246,22 +243,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         to_owned![enable_paste_shortcut];
         async move {
             loop {
-                let _ = print_value_in_clipboard();
-
-                //     let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
-                //         .unwrap_or(ClipboardDataType::String);
-                //     match clipboard_data_type {
-                //         ClipboardDataType::File => {
-                //             if !*enable_paste_shortcut.read() {
-                //                 enable_paste_shortcut.with_mut(|i| *i = true);
-                //             }
-                //         }
-                //         _ => {
-                //             if *enable_paste_shortcut.read() {
-                //                 enable_paste_shortcut.with_mut(|i| *i = false);
-                //             }
-                //         }
-                //     }
+                let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
+                    .unwrap_or(ClipboardDataType::String);
+                match clipboard_data_type {
+                    ClipboardDataType::File => {
+                        if !*enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = true);
+                        }
+                    }
+                    _ => {
+                        if *enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = false);
+                        }
+                    }
+                }
                 tokio::time::sleep(Duration::from_millis(300)).await;
             }
         }

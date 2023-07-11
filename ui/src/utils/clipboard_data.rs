@@ -9,6 +9,8 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 use super::macos_clipboard::MacOSClipboard;
+#[cfg(target_os = "windows")]
+use clipboard_win::{formats, get_clipboard, set_clipboard};
 
 /// It will verify if data in clipboard are local paths of files to upload them.
 ///
@@ -34,21 +36,27 @@ pub enum ClipboardDataType {
     String,
 }
 
-pub fn print_value_in_clipboard() {
-    let mut clipboard = Arboard::new().unwrap();
-    let clipboard_text = clipboard.get_text().unwrap_or_default();
-    println!("clipboard_text: {:?}", clipboard_text);
-}
-
 pub fn check_if_there_is_file_or_string_in_clipboard(
 ) -> Result<ClipboardDataType, Box<dyn std::error::Error>> {
-    let macos_clipboard = MacOSClipboard::new()?;
-    let file_path = macos_clipboard.read().unwrap_or_default();
+    #[cfg(target_os = "windows")]
+    {
+        let file_path = get_clipboard(formats::FileList {}).map_err(|_| Error::NoFiles);
+        if !file_path.is_empty() {
+            return Ok(ClipboardDataType::File);
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let macos_clipboard = MacOSClipboard::new()?;
+        let file_path = macos_clipboard.read().unwrap_or_default();
+        if !file_path.is_empty() {
+            return Ok(ClipboardDataType::File);
+        }
+    }
+
     let mut clipboard = Arboard::new().unwrap();
     let clipboard_text = clipboard.get_text().unwrap_or_default();
-    if !file_path.is_empty() {
-        return Ok(ClipboardDataType::File);
-    } else if file_path.is_empty() && clipboard_text.is_empty() {
+    if clipboard_text.is_empty() {
         // It means image pixes in clipboard
         return Ok(ClipboardDataType::File);
     } else {
