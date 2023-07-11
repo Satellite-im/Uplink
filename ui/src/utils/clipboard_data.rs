@@ -45,7 +45,8 @@ pub fn get_files_path_or_text_from_clipboard(
     }
     Ok((Vec::new(), String::new()))
 }
-
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
 pub fn check_files_path_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
     #[cfg(not(target_os = "windows"))]
     {
@@ -62,13 +63,17 @@ pub fn check_files_path_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
         let files_path_buf: Vec<PathBuf> = files_path_str.into_iter().map(PathBuf::from).collect();
         Ok(files_path_buf)
     }
-    #[cfg(target_os = "windows")]
-    {
-        let clipboard = ClipboardWin::new().unwrap();
-        let clipboard_data = clipboard_win::get_clipboard_string().unwrap_or_default();
-        println!("clipboard_data: {:?}", clipboard_data);
-        return Ok(Vec::new());
-    }
+    // #[cfg(target_os = "windows")]
+    // {
+    //     let clipboard = ClipboardWin::new().unwrap();
+    //     let clipboard_data = clipboard_win::get_clipboard_string().unwrap_or_default();
+    //     println!("clipboard_data: {:?}", clipboard_data);
+    //     return Ok(Vec::new());
+    // }
+
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+    println!("{:?}", ctx.get_contents());
+    return Ok(Vec::new());
 }
 
 fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
