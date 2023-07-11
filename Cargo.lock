@@ -9079,6 +9079,8 @@ dependencies = [
  "notify",
  "notify-rust",
  "objc",
+ "objc-foundation",
+ "objc_id",
  "once_cell",
  "open",
  "opener",

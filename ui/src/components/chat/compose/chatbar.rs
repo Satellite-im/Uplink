@@ -3,8 +3,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use arboard::Clipboard;
-use clipboard::{ClipboardContext, ClipboardProvider};
 use common::{
     icons,
     language::get_local_text,
@@ -13,7 +11,6 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -44,7 +41,7 @@ use crate::{
     components::paste_files_with_shortcut,
     utils::{
         build_user_from_identity,
-        clipboard_data::{check_files_path_in_clipboard, get_files_path_or_text_from_clipboard},
+        clipboard_data::{check_if_there_is_file_or_string_in_clipboard, ClipboardDataType},
     },
 };
 
@@ -241,49 +238,27 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     let enable_paste_shortcut = use_ref(cx, || true);
-    let checked_already_file_path = use_ref(cx, || false);
 
     use_future(cx, (), |_| {
-        to_owned![enable_paste_shortcut, state, checked_already_file_path];
+        to_owned![enable_paste_shortcut];
         async move {
-            let _ = check_files_path_in_clipboard();
-            // let (files_path, text) = get_files_path_or_text_from_clipboard().unwrap_or_default();
-            // let mut clipboard = Clipboard::new().unwrap();
-            // if !text.is_empty() && files_path.is_empty() {
-            //     println!("1 - False");
-            //     *enable_paste_shortcut.write_silent() = false;
-            // }
-            // loop {
-            //     let shortcut_enabled = enable_paste_shortcut.with(|i| i.clone());
-            //     if !state.read().ui.metadata.focused {
-            //         *checked_already_file_path.write_silent() = false;
-            //         let (files_path, text) =
-            //             get_files_path_or_text_from_clipboard().unwrap_or_default();
-            //         if !files_path.is_empty() && !shortcut_enabled
-            //             || (files_path.is_empty() && text.is_empty() && !shortcut_enabled)
-            //         {
-            //             *enable_paste_shortcut.write_silent() = true;
-            //         } else if !text.is_empty() && shortcut_enabled {
-            //             *enable_paste_shortcut.write_silent() = false;
-            //         }
-            //     } else if state.read().ui.metadata.focused {
-            //         let clipboard_text = clipboard.get_text().unwrap_or_default();
-            //         if !clipboard_text.is_empty()
-            //             && shortcut_enabled
-            //             && *checked_already_file_path.read() == false
-            //         {
-            //             *checked_already_file_path.write_silent() = true;
-            //             let (files_path, _) =
-            //                 get_files_path_or_text_from_clipboard().unwrap_or_default();
-            //             if files_path.is_empty() {
-            //                 *enable_paste_shortcut.write() = false;
-            //             }
-            //         } else if clipboard_text.is_empty() && !shortcut_enabled {
-            //             *enable_paste_shortcut.write() = true;
-            //         }
-            //     }
-            tokio::time::sleep(Duration::from_millis(500)).await;
-            // }
+            loop {
+                let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
+                    .unwrap_or(ClipboardDataType::String);
+                match clipboard_data_type {
+                    ClipboardDataType::File => {
+                        if !*enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = true);
+                        }
+                    }
+                    _ => {
+                        if *enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = false);
+                        }
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(300)).await;
+            }
         }
     });
 
@@ -524,31 +499,30 @@ pub struct AttachmentProps<'a> {
 #[allow(non_snake_case)]
 fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(
-        (cx.props
-            .files
-            .current()
-            .iter()
-            .map(|x| x.to_string_lossy().to_string())
-            .map(|file_name| {
-                rsx!(FileEmbed {
-                    filename: file_name.clone(),
-                    remote: false,
-                    button_icon: icons::outline::Shape::Trash,
-                    on_press: move |_| {
-                        let mut b = false;
-                        cx.props.files.with_mut(|files| {
-                            files.retain(|x| {
-                                let s = x.to_string_lossy().to_string();
-                                s != file_name
-                            });
-                            b = !files.is_empty();
+    let attachments = cx.render(rsx!(cx
+        .props
+        .files
+        .current()
+        .iter()
+        .map(|x| x.to_string_lossy().to_string())
+        .map(|file_name| {
+            rsx!(FileEmbed {
+                filename: file_name.clone(),
+                remote: false,
+                button_icon: icons::outline::Shape::Trash,
+                on_press: move |_| {
+                    let mut b = false;
+                    cx.props.files.with_mut(|files| {
+                        files.retain(|x| {
+                            let s = x.to_string_lossy().to_string();
+                            s != file_name
                         });
-                        cx.props.on_remove.call(());
-                    },
-                })
-            }))
-    ));
+                        b = !files.is_empty();
+                    });
+                    cx.props.on_remove.call(());
+                },
+            })
+        })));
 
     cx.render(rsx!(div {
         id: "compose-attachments",
