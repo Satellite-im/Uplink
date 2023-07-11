@@ -246,61 +246,44 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     use_future(cx, (), |_| {
         to_owned![enable_paste_shortcut, state, checked_already_file_path];
         async move {
-            let (files_path, text) = get_files_path_or_text_from_clipboard().unwrap_or_default();
-            let mut clipboard = Clipboard::new().unwrap();
-            if !text.is_empty() && files_path.is_empty() {
-                println!("1 - False");
-                *enable_paste_shortcut.write_silent() = false;
-            }
-            loop {
-                let shortcut_enabled = enable_paste_shortcut.with(|i| i.clone());
-                // if !state.read().ui.metadata.focused {
-                //     *checked_already_file_path.write_silent() = false;
-                //     *enable_paste_shortcut.write_silent() = true;
-                // }
-                // if state.read().ui.metadata.focused {
-                //     let clipboard_text = clipboard.get_text().unwrap_or_default();
-                //     if !clipboard_text.is_empty() && shortcut_enabled {
-                //         if !*checked_already_file_path.read() {
-                //             *checked_already_file_path.write_silent() = true;
-                //             let (files_path, _) =
-                //                 get_files_path_or_text_from_clipboard().unwrap_or_default();
-                //             if files_path.is_empty() {
-                //                 println!("2 - False");
-                //                 *enable_paste_shortcut.write() = false;
-                //             }
-                //         }
-                //     } else if clipboard_text.is_empty() && !shortcut_enabled {
-                //         println!("2 - True");
-                //         *enable_paste_shortcut.write() = true;
-                //     }
-                // }
-                if !state.read().ui.metadata.focused {
-                    *checked_already_file_path.write_silent() = false;
-                    let (files_path, text) =
-                        get_files_path_or_text_from_clipboard().unwrap_or_default();
-                    if !files_path.is_empty() && !shortcut_enabled
-                        || (files_path.is_empty() && text.is_empty() && !shortcut_enabled)
-                    {
-                        *enable_paste_shortcut.write_silent() = true;
-                    } else if !text.is_empty() && shortcut_enabled {
-                        *enable_paste_shortcut.write_silent() = false;
-                    }
-                } else if state.read().ui.metadata.focused {
-                    let clipboard_text = clipboard.get_text().unwrap_or_default();
-                    if !clipboard_text.is_empty() && shortcut_enabled && *checked_already_file_path.read() == false {
-                        *checked_already_file_path.write_silent() = true;
-                        let (files_path, _) =
-                            get_files_path_or_text_from_clipboard().unwrap_or_default();
-                        if files_path.is_empty() {
-                            *enable_paste_shortcut.write() = false;
-                        }
-                    } else if clipboard_text.is_empty() && !shortcut_enabled {
-                        *enable_paste_shortcut.write() = true;
-                    }
-                }
-                tokio::time::sleep(Duration::from_millis(100)).await;
-            }
+            let _ = check_files_path_in_clipboard();
+            // let (files_path, text) = get_files_path_or_text_from_clipboard().unwrap_or_default();
+            // let mut clipboard = Clipboard::new().unwrap();
+            // if !text.is_empty() && files_path.is_empty() {
+            //     println!("1 - False");
+            //     *enable_paste_shortcut.write_silent() = false;
+            // }
+            // loop {
+            //     let shortcut_enabled = enable_paste_shortcut.with(|i| i.clone());
+            //     if !state.read().ui.metadata.focused {
+            //         *checked_already_file_path.write_silent() = false;
+            //         let (files_path, text) =
+            //             get_files_path_or_text_from_clipboard().unwrap_or_default();
+            //         if !files_path.is_empty() && !shortcut_enabled
+            //             || (files_path.is_empty() && text.is_empty() && !shortcut_enabled)
+            //         {
+            //             *enable_paste_shortcut.write_silent() = true;
+            //         } else if !text.is_empty() && shortcut_enabled {
+            //             *enable_paste_shortcut.write_silent() = false;
+            //         }
+            //     } else if state.read().ui.metadata.focused {
+            //         let clipboard_text = clipboard.get_text().unwrap_or_default();
+            //         if !clipboard_text.is_empty()
+            //             && shortcut_enabled
+            //             && *checked_already_file_path.read() == false
+            //         {
+            //             *checked_already_file_path.write_silent() = true;
+            //             let (files_path, _) =
+            //                 get_files_path_or_text_from_clipboard().unwrap_or_default();
+            //             if files_path.is_empty() {
+            //                 *enable_paste_shortcut.write() = false;
+            //             }
+            //         } else if clipboard_text.is_empty() && !shortcut_enabled {
+            //             *enable_paste_shortcut.write() = true;
+            //         }
+            //     }
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            // }
         }
     });
 
@@ -416,103 +399,57 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     local_typing_ch.send(TypingIndicator::Typing(*id));
                 }
             },
-            value: state
-                .read()
-                .get_active_chat()
-                .as_ref()
-                .and_then(|d| d.draft.clone())
-                .unwrap_or_default(),
+            value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            extensions: cx.render(rsx!(
-                // Load extensions
-                for node in ext_renders {
-                    rsx!(node)
-                }
-            )),
-            controls: cx.render(rsx!(Button {
-                icon: icons::outline::Shape::ChevronDoubleRight,
-                disabled: is_loading || disabled,
-                appearance: if *can_send.get() {
-                    Appearance::Primary
-                } else {
-                    Appearance::Secondary
-                },
-                aria_label: "send-message-button".into(),
-                onpress: move |_| submit_fn(),
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("uplink.send"),
-                })),
-            })),
+            extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
+            controls: cx
+    .render(
+        rsx!(
+            Button { icon : icons::outline::Shape::ChevronDoubleRight, disabled :
+            is_loading || disabled, appearance : if * can_send.get() {
+            Appearance::Primary } else { Appearance::Secondary }, aria_label :
+            "send-message-button".into(), onpress : move | _ | submit_fn(), tooltip : cx
+            .render(rsx!(Tooltip { arrow_position : ArrowPosition::Bottom, text :
+            get_local_text("uplink.send"), })), }
+        ),
+    ),
             with_replying_to: data
-                .as_ref()
-                .filter(|_| !disabled)
-                .map(|data| {
-                    let active_chat = &data.active_chat;
-
-                    cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
-                        let our_did = state.read().did_key();
-                        let msg_owner = if data.my_id.did_key() == msg.sender() {
-                            Some(&data.my_id)
-                        } else {
-                            data.other_participants
-                                .iter()
-                                .find(|x| x.did_key() == msg.sender())
-                        };
-                        let (platform, status, profile_picture) =
-                            get_platform_and_status(msg_owner);
-
-                        rsx!(
-                            Reply {
-                                label: get_local_text("messages.replying"),
-                                remote: our_did != msg.sender(),
-                                onclose: move |_| {
-                                    state.write().mutate(Action::CancelReply(active_chat.id))
-                                },
-                                attachments: msg.attachments(),
-                                message: msg.value().join("\n"),
-                                UserImage {
-                                    image: profile_picture,
-                                    platform: platform,
-                                    status: status,
-                                },
-                            }
-                        )
-                    })))
-                })
-                .unwrap_or(None),
-            with_file_upload: cx.render(rsx!(Button {
-                icon: icons::outline::Shape::Plus,
-                disabled: is_loading || disabled,
-                aria_label: "upload-button".into(),
-                appearance: Appearance::Primary,
-                onpress: move |_| {
-                    if disabled {
-                        return;
-                    }
-                    if let Some(new_files) = FileDialog::new()
-                        .set_directory(dirs::home_dir().unwrap_or_default())
-                        .pick_files()
-                    {
-                        let mut new_files_to_upload: Vec<_> = cx
-                            .props
-                            .upload_files
-                            .current()
-                            .iter()
-                            .filter(|file_name| !new_files.contains(file_name))
-                            .cloned()
-                            .collect();
-                        new_files_to_upload.extend(new_files);
-                        cx.props.upload_files.set(new_files_to_upload);
-                        update_send();
-                    }
-                },
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("files.upload"),
-                }))
-            }))
-        },
+    .as_ref()
+    .filter(|_| !disabled)
+    .map(|data| {
+        let active_chat = &data.active_chat;
+        cx.render(
+            rsx!(
+                active_chat.replying_to.as_ref().map(| msg | { let our_did = state.read()
+                .did_key(); let msg_owner = if data.my_id.did_key() == msg.sender() {
+                Some(& data.my_id) } else { data.other_participants.iter().find(| x | x
+                .did_key() == msg.sender()) }; let (platform, status, profile_picture) =
+                get_platform_and_status(msg_owner); rsx!(Reply { label :
+                get_local_text("messages.replying"), remote : our_did != msg.sender(),
+                onclose : move | _ | { state.write()
+                .mutate(Action::CancelReply(active_chat.id)) }, attachments : msg
+                .attachments(), message : msg.value().join("\n"), UserImage { image :
+                profile_picture, platform : platform, status : status, }, }) })
+            ),
+        )
+    })
+    .unwrap_or(None),
+            with_file_upload: cx
+    .render(
+        rsx!(
+            Button { icon : icons::outline::Shape::Plus, disabled : is_loading ||
+            disabled, aria_label : "upload-button".into(), appearance :
+            Appearance::Primary, onpress : move | _ | { if disabled { return; } if let
+            Some(new_files) = FileDialog::new().set_directory(dirs::home_dir()
+            .unwrap_or_default()).pick_files() { let mut new_files_to_upload : Vec < _ >
+            = cx.props.upload_files.current().iter().filter(| file_name | ! new_files
+            .contains(file_name)).cloned().collect(); new_files_to_upload
+            .extend(new_files); cx.props.upload_files.set(new_files_to_upload);
+            update_send(); } }, tooltip : cx.render(rsx!(Tooltip { arrow_position :
+            ArrowPosition::Bottom, text : get_local_text("files.upload"), })) }
+        ),
+    )
+        }
         error.0.then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
@@ -549,7 +486,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     }
                 ))
             })
-        })
+        }),
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path: Vec<PathBuf>| {
@@ -568,10 +505,13 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 },
             })
         }
-        Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
-            update_send();
-        }},
-        chatbar,
+        Attachments {
+            files: cx.props.upload_files.clone(),
+            on_remove: move |_| {
+                update_send();
+            }
+        }
+        chatbar
     ))
 }
 
@@ -584,30 +524,31 @@ pub struct AttachmentProps<'a> {
 #[allow(non_snake_case)]
 fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(cx
-        .props
-        .files
-        .current()
-        .iter()
-        .map(|x| x.to_string_lossy().to_string())
-        .map(|file_name| {
-            rsx!(FileEmbed {
-                filename: file_name.clone(),
-                remote: false,
-                button_icon: icons::outline::Shape::Trash,
-                on_press: move |_| {
-                    let mut b = false;
-                    cx.props.files.with_mut(|files| {
-                        files.retain(|x| {
-                            let s = x.to_string_lossy().to_string();
-                            s != file_name
+    let attachments = cx.render(rsx!(
+        (cx.props
+            .files
+            .current()
+            .iter()
+            .map(|x| x.to_string_lossy().to_string())
+            .map(|file_name| {
+                rsx!(FileEmbed {
+                    filename: file_name.clone(),
+                    remote: false,
+                    button_icon: icons::outline::Shape::Trash,
+                    on_press: move |_| {
+                        let mut b = false;
+                        cx.props.files.with_mut(|files| {
+                            files.retain(|x| {
+                                let s = x.to_string_lossy().to_string();
+                                s != file_name
+                            });
+                            b = !files.is_empty();
                         });
-                        b = !files.is_empty();
-                    });
-                    cx.props.on_remove.call(());
-                },
-            })
-        })));
+                        cx.props.on_remove.call(());
+                    },
+                })
+            }))
+    ));
 
     cx.render(rsx!(div {
         id: "compose-attachments",

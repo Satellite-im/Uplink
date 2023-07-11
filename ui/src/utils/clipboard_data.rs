@@ -1,4 +1,6 @@
-use arboard::Clipboard;
+use ::clipboard_win::formats::CF_HDROP;
+use arboard::Clipboard as Arboard;
+use clipboard_win::{formats, Clipboard as ClipboardWin};
 use image::DynamicImage;
 use image::ImageBuffer;
 use image::ImageOutputFormat;
@@ -36,7 +38,7 @@ pub fn get_files_path_or_text_from_clipboard(
     if !file_path.is_empty() {
         return Ok((file_path, String::new()));
     }
-    let mut clipboard = Clipboard::new().unwrap();
+    let mut clipboard = Arboard::new().unwrap();
     let clipboard_text = clipboard.get_text().unwrap_or_default();
     if !clipboard_text.is_empty() {
         return Ok((Vec::new(), clipboard_text));
@@ -45,22 +47,32 @@ pub fn get_files_path_or_text_from_clipboard(
 }
 
 pub fn check_files_path_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
-    // TODO: Try other solution with macros to hide call native code
-    // Using swift script
-    let output = Command::new("swift").arg(SWIFT_SCRIPT).output()?;
+    #[cfg(not(target_os = "windows"))]
+    {
+        // TODO: Try other solution with macros to hide call native code
+        // Using swift script
+        let output = Command::new("swift").arg(SWIFT_SCRIPT).output()?;
 
-    // return from swift script
-    let stdout = str::from_utf8(&output.stdout)?.trim().to_owned();
-    if stdout.is_empty() {
+        // return from swift script
+        let stdout = str::from_utf8(&output.stdout)?.trim().to_owned();
+        if stdout.is_empty() {
+            return Ok(Vec::new());
+        }
+        let files_path_str: Vec<&str> = stdout.split(|c| c == '\n').collect();
+        let files_path_buf: Vec<PathBuf> = files_path_str.into_iter().map(PathBuf::from).collect();
+        Ok(files_path_buf)
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let clipboard = ClipboardWin::new().unwrap();
+        let clipboard_data = clipboard_win::get_clipboard_string().unwrap_or_default();
+        println!("clipboard_data: {:?}", clipboard_data);
         return Ok(Vec::new());
     }
-    let files_path_str: Vec<&str> = stdout.split(|c| c == '\n').collect();
-    let files_path_buf: Vec<PathBuf> = files_path_str.into_iter().map(PathBuf::from).collect();
-    Ok(files_path_buf)
 }
 
 fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
-    let mut clipboard = Clipboard::new().unwrap();
+    let mut clipboard = Arboard::new().unwrap();
     let image = match clipboard.get_image() {
         Ok(img) => img,
         Err(e) => {
