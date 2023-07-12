@@ -41,7 +41,10 @@ use crate::{
     components::paste_files_with_shortcut,
     utils::{
         build_user_from_identity,
-        clipboard_data::{check_if_there_is_file_or_string_in_clipboard, ClipboardDataType},
+        clipboard_data::{
+            check_if_there_is_file_or_string_in_clipboard, print_value_in_clipboard,
+            ClipboardDataType,
+        },
     },
 };
 
@@ -243,21 +246,22 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         to_owned![enable_paste_shortcut];
         async move {
             loop {
-                let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
-                    .unwrap_or(ClipboardDataType::String);
-                match clipboard_data_type {
-                    ClipboardDataType::File => {
-                        if !*enable_paste_shortcut.read() {
-                            enable_paste_shortcut.with_mut(|i| *i = true);
-                        }
-                    }
-                    _ => {
-                        if *enable_paste_shortcut.read() {
-                            enable_paste_shortcut.with_mut(|i| *i = false);
-                        }
-                    }
-                }
-                tokio::time::sleep(Duration::from_millis(300)).await;
+                let _ = print_value_in_clipboard();
+                // let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
+                //     .unwrap_or(ClipboardDataType::String);
+                // match clipboard_data_type {
+                //     ClipboardDataType::File => {
+                //         if !*enable_paste_shortcut.read() {
+                //             enable_paste_shortcut.with_mut(|i| *i = true);
+                //         }
+                //     }
+                //     _ => {
+                //         if *enable_paste_shortcut.read() {
+                //             enable_paste_shortcut.with_mut(|i| *i = false);
+                //         }
+                //     }
+                // }
+                tokio::time::sleep(Duration::from_millis(700)).await;
             }
         }
     });
@@ -499,30 +503,31 @@ pub struct AttachmentProps<'a> {
 #[allow(non_snake_case)]
 fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(cx
-        .props
-        .files
-        .current()
-        .iter()
-        .map(|x| x.to_string_lossy().to_string())
-        .map(|file_name| {
-            rsx!(FileEmbed {
-                filename: file_name.clone(),
-                remote: false,
-                button_icon: icons::outline::Shape::Trash,
-                on_press: move |_| {
-                    let mut b = false;
-                    cx.props.files.with_mut(|files| {
-                        files.retain(|x| {
-                            let s = x.to_string_lossy().to_string();
-                            s != file_name
+    let attachments = cx.render(rsx!(
+        (cx.props
+            .files
+            .current()
+            .iter()
+            .map(|x| x.to_string_lossy().to_string())
+            .map(|file_name| {
+                rsx!(FileEmbed {
+                    filename: file_name.clone(),
+                    remote: false,
+                    button_icon: icons::outline::Shape::Trash,
+                    on_press: move |_| {
+                        let mut b = false;
+                        cx.props.files.with_mut(|files| {
+                            files.retain(|x| {
+                                let s = x.to_string_lossy().to_string();
+                                s != file_name
+                            });
+                            b = !files.is_empty();
                         });
-                        b = !files.is_empty();
-                    });
-                    cx.props.on_remove.call(());
-                },
-            })
-        })));
+                        cx.props.on_remove.call(());
+                    },
+                })
+            }))
+    ));
 
     cx.render(rsx!(div {
         id: "compose-attachments",
