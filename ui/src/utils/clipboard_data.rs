@@ -110,7 +110,7 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
             Some(first_path) => Path::new(first_path).exists(),
             None => false,
         };
-        println!("paths_vec: {}", paths_vec);
+        println!("paths_vec: {:?}", paths_vec);
         if is_valid_paths {
             let files_path = decoded_pathbufs(paths_vec);
             if !files_path.is_empty() {
