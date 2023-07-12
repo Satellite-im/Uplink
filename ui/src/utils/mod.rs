@@ -13,6 +13,7 @@ pub mod clipboard_data;
 pub mod format_timestamp;
 pub mod get_drag_event;
 pub mod lifecycle;
+#[cfg(target_os = "macos")]
 pub mod macos_clipboard;
 pub mod verify_valid_paths;
 
