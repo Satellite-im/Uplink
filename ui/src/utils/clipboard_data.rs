@@ -131,35 +131,39 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
 }
 
 fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
-    let mut clipboard = Arboard::new().unwrap();
-    let image = match clipboard.get_image() {
-        Ok(img) => img,
-        Err(e) => {
-            log::warn!("Error to get image from clipboard: {}", e);
-            return Ok(Vec::new());
+    match Arboard::new() {
+        Err(_) => return Ok(Vec::new()),
+        Ok(mut clipboard) => {
+            let image = match clipboard.get_image() {
+                Ok(img) => img,
+                Err(e) => {
+                    log::warn!("Error to get image from clipboard: {}", e);
+                    return Ok(Vec::new());
+                }
+            };
+            let image: RgbaImage = match ImageBuffer::from_raw(
+                image.width.try_into().unwrap_or(256),
+                image.height.try_into().unwrap_or(256),
+                image.bytes.into_owned(),
+            ) {
+                Some(data) => data,
+                None => {
+                    log::warn!("Not possible to transform Image Bytes in Image Buffer");
+                    return Ok(Vec::new());
+                }
+            };
+            let temp_dir = TempDir::new()?;
+            let temp_path = temp_dir
+                .into_path()
+                .join(String::from("image_uplink_clipboard.png"));
+            let image = DynamicImage::ImageRgba8(image);
+            let file = std::fs::File::create(temp_path.clone())?;
+            let mut buffered_writer = BufWriter::new(file);
+            if let Err(e) = image.write_to(&mut buffered_writer, ImageOutputFormat::Png) {
+                log::warn!("Error to write image in a temp file: {}", e);
+                return Ok(Vec::new());
+            };
+            Ok(vec![temp_path])
         }
-    };
-    let image: RgbaImage = match ImageBuffer::from_raw(
-        image.width.try_into().unwrap(),
-        image.height.try_into().unwrap(),
-        image.bytes.into_owned(),
-    ) {
-        Some(data) => data,
-        None => {
-            log::warn!("Not possible to transform Image Bytes in Image Buffer");
-            return Ok(Vec::new());
-        }
-    };
-    let temp_dir = TempDir::new()?;
-    let temp_path = temp_dir
-        .into_path()
-        .join(String::from("image_uplink_clipboard.png"));
-    let image = DynamicImage::ImageRgba8(image);
-    let file = std::fs::File::create(temp_path.clone())?;
-    let mut buffered_writer = BufWriter::new(file);
-    if let Err(e) = image.write_to(&mut buffered_writer, ImageOutputFormat::Png) {
-        log::warn!("Error to write image in a temp file: {}", e);
-        return Ok(Vec::new());
-    };
-    Ok(vec![temp_path])
+    }
 }
