@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use std::path::Path;
+use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -86,9 +87,24 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
+    let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+
     allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
+
+    use_future(cx, (), |_| {
+        to_owned![files_been_uploaded, files_in_queue_to_upload];
+        async move {
+            // Remove load progress bar if anythings goes wrong
+            loop {
+                if files_in_queue_to_upload.read().is_empty() && *files_been_uploaded.read() {
+                    *files_been_uploaded.write() = false;
+                }
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        }
+    });
 
     functions::run_verifications_and_update_storage(
         state,
@@ -172,6 +188,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx! (
                             Button {
                                 icon: Icon::FolderPlus,
+                                disabled: upload_file_controller.files_been_uploaded.read().clone(),
                                 appearance: Appearance::Secondary,
                                 aria_label: "add-folder".into(),
                                 tooltip: cx.render(rsx!(
@@ -181,7 +198,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    storage_controller.write().finish_renaming_item(true);
+                                    if !upload_file_controller.files_been_uploaded.read().clone() {
+                                        storage_controller.write().finish_renaming_item(true);
+                                    }
                                 },
                             },
                             Button {
