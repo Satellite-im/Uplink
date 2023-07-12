@@ -51,17 +51,18 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
 
     #[cfg(target_os = "linux")]
     {
-        let mut clipboard = Arboard::new().unwrap();
-        let clipboard_text = clipboard.get_text().unwrap_or_default();
-        let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-        let is_valid_paths = match paths_vec.first() {
-            Some(first_path) => Path::new(first_path).exists(),
-            None => false,
-        };
-        if is_valid_paths {
-            let files_path = decoded_pathbufs(paths_vec);
-            if !files_path.is_empty() {
-                return Ok(files_path);
+        if let Ok(mut clipboard) = Arboard::new() {
+            let clipboard_text = clipboard.get_text().unwrap_or_default();
+            let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+            let is_valid_paths = match paths_vec.first() {
+                Some(first_path) => Path::new(first_path).exists(),
+                None => false,
+            };
+            if is_valid_paths {
+                let files_path = decoded_pathbufs(paths_vec);
+                if !files_path.is_empty() {
+                    return Ok(files_path);
+                }
             }
         }
     }
@@ -99,29 +100,31 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
         }
     }
 
-    let mut clipboard = Arboard::new().unwrap();
-    let clipboard_text = clipboard.get_text().unwrap_or_default();
-
-    #[cfg(target_os = "linux")]
-    {
-        println!("clipboard_text: {}", clipboard_text);
-        let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-        let is_valid_paths = match paths_vec.first() {
-            Some(first_path) => Path::new(first_path).exists(),
-            None => false,
-        };
-        println!("paths_vec: {:?}", paths_vec);
-        if is_valid_paths {
-            let files_path = decoded_pathbufs(paths_vec);
-            if !files_path.is_empty() {
-                return Ok(ClipboardDataType::File);
+    if let Ok(mut clipboard) = Arboard::new() {
+        let clipboard_text = clipboard.get_text().unwrap_or_default();
+        #[cfg(target_os = "linux")]
+        {
+            println!("clipboard_text: {}", clipboard_text);
+            let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+            let is_valid_paths = match paths_vec.first() {
+                Some(first_path) => Path::new(first_path).exists(),
+                None => false,
+            };
+            println!("paths_vec: {:?}", paths_vec);
+            if is_valid_paths {
+                let files_path = decoded_pathbufs(paths_vec);
+                if !files_path.is_empty() {
+                    return Ok(ClipboardDataType::File);
+                }
             }
         }
-    }
 
-    if clipboard_text.is_empty() {
-        // It means image pixes in clipboard
-        Ok(ClipboardDataType::File)
+        if clipboard_text.is_empty() {
+            // It means image pixes in clipboard
+            Ok(ClipboardDataType::File)
+        } else {
+            Ok(ClipboardDataType::String)
+        }
     } else {
         Ok(ClipboardDataType::String)
     }
