@@ -473,7 +473,7 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
-      - name: Publish report to Github Pages
+      - name: Publish test report to Github Pages
         if: success()
         uses: peaceiris/actions-gh-pages@v3
         with:
