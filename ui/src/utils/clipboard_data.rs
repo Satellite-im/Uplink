@@ -82,9 +82,9 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
     let clipboard_text = clipboard.get_text().unwrap_or_default();
     if clipboard_text.is_empty() {
         // It means image pixes in clipboard
-        return Ok(ClipboardDataType::File);
+        Ok(ClipboardDataType::File)
     } else {
-        return Ok(ClipboardDataType::String);
+        Ok(ClipboardDataType::String)
     }
 }
 

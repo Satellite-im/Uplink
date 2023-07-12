@@ -93,7 +93,7 @@ impl MacOSClipboard {
         nsurl_array
             .to_vec()
             .into_iter()
-            .filter_map(|obj| self.get_path_if_file_url(&obj))
+            .filter_map(|obj| self.get_path_if_file_url(obj))
             .collect()
     }
 

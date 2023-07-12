@@ -34,7 +34,7 @@ pub struct ShortCutProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
-    let files_local_path_to_upload = use_ref(cx, || Vec::new());
+    let files_local_path_to_upload = use_ref(cx, Vec::new);
 
     let key = KeyCode::V;
     let modifiers = ModifiersState::SUPER;

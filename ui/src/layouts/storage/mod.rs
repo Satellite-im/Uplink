@@ -124,7 +124,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         if state.read().ui.metadata.focused {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
-                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, &window);
+                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, window);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                 },
             })

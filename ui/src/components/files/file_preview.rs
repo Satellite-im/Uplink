@@ -13,7 +13,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = thumbnail_to_base64(cx.props.file);
-    let image_from_clipboard = use_ref(cx, || String::new());
+    let image_from_clipboard = use_ref(cx, String::new);
 
     cx.render(rsx!(div {
         ContextMenu {
