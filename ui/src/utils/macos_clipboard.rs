@@ -55,7 +55,7 @@ impl MacOSClipboard {
 
     fn get_classes(&self) -> Id<NSArray<NSObject, Owned>> {
         let nsurl_class: Id<NSObject> = {
-            let cls: Id<Class> = unsafe { Id::from_ptr(Self::class("NSURL")) };
+            let cls: Id<Class> = unsafe { Id::from_ptr(transmute(Class::get("NSURL"))) };
             unsafe { transmute(cls) }
         };
         NSArray::from_vec(vec![nsurl_class])
@@ -105,10 +105,5 @@ impl MacOSClipboard {
         } else {
             None
         }
-    }
-
-    #[inline]
-    fn class(name: &str) -> *mut Class {
-        unsafe { transmute(Class::get(name)) }
     }
 }
