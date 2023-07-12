@@ -9,6 +9,8 @@ use image::ImageOutputFormat;
 use image::RgbaImage;
 use std::error::Error;
 use std::io::BufWriter;
+#[cfg(target_os = "linux")]
+use std::path::Path;
 use std::path::PathBuf;
 use tempfile::TempDir;
 
@@ -80,6 +82,14 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
 
     let mut clipboard = Arboard::new().unwrap();
     let clipboard_text = clipboard.get_text().unwrap_or_default();
+
+    #[cfg(target_os = "linux")]
+    {
+        if Path::new(&clipboard_text).exists() {
+            return Ok(ClipboardDataType::File);
+        }
+    }
+
     if clipboard_text.is_empty() {
         // It means image pixes in clipboard
         Ok(ClipboardDataType::File)
