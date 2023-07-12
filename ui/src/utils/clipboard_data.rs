@@ -61,7 +61,7 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
         if is_valid_paths {
             let files_path = decoded_pathbufs(paths_vec);
             if !files_path.is_empty() {
-                return Ok(ClipboardDataType::File);
+                return Ok(files_path);
             }
         }
     }
