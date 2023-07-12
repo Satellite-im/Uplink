@@ -446,6 +446,7 @@ jobs:
 
       - name: Publish Test Results Summary
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: success()
         with:
           junit_files: "artifacts/**/*.xml"
           ignore_runs: true
@@ -455,7 +456,7 @@ jobs:
 
       - name: Get Allure history
         uses: actions/checkout@v3
-        if: always()
+        if: success()
         continue-on-error: true
         with:
           ref: gh-pages
@@ -463,7 +464,7 @@ jobs:
 
       - name: Allure Report action from marketplace
         uses: simple-elf/allure-report-action@master
-        if: always()
+        if: success()
         id: allure-report
         with:
           gh_pages: gh-pages
@@ -472,8 +473,8 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
-      - name: Publish report to Github Pages
-        if: always()
+      - name: Publish test report to Github Pages
+        if: success()
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -481,7 +482,7 @@ jobs:
           publish_dir: allure-history
 
       - name: Comment PR with the Test Results
-        if: always()
+        if: success()
         uses: mshick/add-pr-comment@v2
         with:
           message: |
