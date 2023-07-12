@@ -1,5 +1,7 @@
 #[cfg(target_os = "macos")]
 use super::macos_clipboard::MacOSClipboard;
+#[cfg(target_os = "linux")]
+use super::verify_valid_paths::decoded_pathbufs;
 use arboard::Clipboard as Arboard;
 #[cfg(target_os = "windows")]
 use clipboard_win::{formats, get_clipboard, set_clipboard};
@@ -85,8 +87,21 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
 
     #[cfg(target_os = "linux")]
     {
-        if Path::new(&clipboard_text).exists() {
-            return Ok(ClipboardDataType::File);
+        println!("clipboard_text: {}", clipboard_text);
+        let paths_vec: Vec<PathBuf> = clipboard_text
+            .lines() // Change this to .split(',') or another method if your paths are separated differently
+            .map(PathBuf::from)
+            .collect();
+        let is_valid_paths = match paths_vec.first() {
+            Some(first_path) => Path::new(first_path).exists(),
+            None => false,
+        };
+        println!("paths_vec: {}", paths_vec);
+        if is_valid_paths {
+            let files_path = decoded_pathbufs(paths_vec);
+            if !files_path.is_empty() {
+                return Ok(ClipboardDataType::File);
+            }
         }
     }
 

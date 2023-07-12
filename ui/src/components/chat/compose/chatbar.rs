@@ -248,16 +248,18 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 match clipboard_data_type {
                     ClipboardDataType::File => {
                         if !*enable_paste_shortcut.read() {
+                            println!("true");
                             enable_paste_shortcut.with_mut(|i| *i = true);
                         }
                     }
                     _ => {
                         if *enable_paste_shortcut.read() {
+                            println!("false");
                             enable_paste_shortcut.with_mut(|i| *i = false);
                         }
                     }
                 }
-                tokio::time::sleep(Duration::from_millis(250)).await;
+                tokio::time::sleep(Duration::from_millis(1500)).await;
             }
         }
     });
