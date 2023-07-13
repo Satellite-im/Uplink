@@ -406,9 +406,9 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     } else {
                         data.other_participants.iter().find(|x| x.did_key() == msg.sender())
                     };
-                    
+
                     let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
-                    
+
                     rsx!(
                         Reply {
                             label: get_local_text("messages.replying"),
@@ -427,7 +427,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     )
                 })
             ),
-        )        
+        )
     })
     .unwrap_or(None),
             with_file_upload: cx
@@ -464,7 +464,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     }
                 )),
             }
-        ),        
+        ),
     )
         }
         error.0.then(|| rsx!(
