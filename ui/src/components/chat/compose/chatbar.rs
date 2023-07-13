@@ -243,8 +243,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         to_owned![enable_paste_shortcut];
         async move {
             loop {
-                let clipboard_data_type = check_if_there_is_file_or_string_in_clipboard()
-                    .unwrap_or(ClipboardDataType::String);
+                let clipboard_data_type = tokio::task::spawn_blocking(|| {
+                    check_if_there_is_file_or_string_in_clipboard()
+                        .unwrap_or(ClipboardDataType::String)
+                })
+                .await
+                .expect("Should succeed");
                 match clipboard_data_type {
                     ClipboardDataType::File => {
                         if !*enable_paste_shortcut.read() {
