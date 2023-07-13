@@ -269,7 +269,14 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     .await
                 {
                     Ok(_) => {
-                        my_id.set_profile_picture(&pfp);
+                        if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await {
+                            my_id.set_profile_picture(&picture);
+                        }
+
+                        if let Ok(banner) = warp.multipass.identity_banner(&my_id.did_key()).await {
+                            my_id.set_profile_banner(&banner);
+                        }
+
                         rsp.send(Ok(my_id))
                     }
                     Err(e) => {
@@ -290,7 +297,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await;
             let _ = match r {
                 Ok(_) => {
-                    let id = warp.multipass.get_own_identity().await.map(Identity::from);
+                    let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
+                    if let Ok(id) = id.as_mut() {
+                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                            id.set_profile_picture(&picture);
+                        }
+
+                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                            id.set_profile_banner(&banner);
+                        }
+                    }
                     rsp.send(id)
                 }
                 Err(e) => {
