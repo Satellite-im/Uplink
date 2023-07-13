@@ -241,7 +241,7 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await
             {
                 Ok(_) => {
-                    let id = warp
+                    let mut id = warp
                         .multipass
                         .get_own_identity()
                         .await
@@ -250,6 +250,15 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                             log::error!("failed to get own identity: {e}");
                             e
                         });
+                    if let Ok(id) = id.as_mut() {
+                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                            id.set_profile_picture(&picture);
+                        }
+
+                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                            id.set_profile_banner(&banner);
+                        }
+                    }
                     rsp.send(id)
                 }
                 Err(e) => {
@@ -269,7 +278,8 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                     .await
                 {
                     Ok(_) => {
-                        if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await {
+                        if let Ok(picture) = warp.multipass.identity_picture(&my_id.did_key()).await
+                        {
                             my_id.set_profile_picture(&picture);
                         }
 
@@ -322,7 +332,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .await;
             let _ = match r {
                 Ok(_) => {
-                    let id = warp.multipass.get_own_identity().await.map(Identity::from);
+                    let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
+                    if let Ok(id) = id.as_mut() {
+                        if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                            id.set_profile_picture(&picture);
+                        }
+
+                        if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                            id.set_profile_banner(&banner);
+                        }
+                    }
                     rsp.send(id)
                 }
                 Err(e) => {
@@ -336,7 +355,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::StatusMessage(status))
                 .await;
-            let id = warp.multipass.get_own_identity().await.map(Identity::from);
+            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
+            if let Ok(id) = id.as_mut() {
+                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                    id.set_profile_picture(&picture);
+                }
+
+                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                    id.set_profile_banner(&banner);
+                }
+            }
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
@@ -350,7 +378,16 @@ pub async fn handle_multipass_cmd(cmd: MultiPassCmd, warp: &mut super::super::Wa
                 .multipass
                 .update_identity(IdentityUpdate::Username(username))
                 .await;
-            let id = warp.multipass.get_own_identity().await.map(Identity::from);
+            let mut id = warp.multipass.get_own_identity().await.map(Identity::from);
+            if let Ok(id) = id.as_mut() {
+                if let Ok(picture) = warp.multipass.identity_picture(&id.did_key()).await {
+                    id.set_profile_picture(&picture);
+                }
+
+                if let Ok(banner) = warp.multipass.identity_banner(&id.did_key()).await {
+                    id.set_profile_banner(&banner);
+                }
+            }
             let _ = match r {
                 Ok(_) => rsp.send(id),
                 Err(e) => {
