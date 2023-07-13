@@ -132,7 +132,7 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
 
 fn check_image_pixels_in_clipboard() -> Result<Vec<PathBuf>, Box<dyn Error>> {
     match Arboard::new() {
-        Err(_) => return Ok(Vec::new()),
+        Err(_) => Ok(Vec::new()),
         Ok(mut clipboard) => {
             let image = match clipboard.get_image() {
                 Ok(img) => img,

@@ -188,7 +188,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx! (
                             Button {
                                 icon: Icon::FolderPlus,
-                                disabled: upload_file_controller.files_been_uploaded.read().clone(),
+                                disabled: *upload_file_controller.files_been_uploaded.read(),
                                 appearance: Appearance::Secondary,
                                 aria_label: "add-folder".into(),
                                 tooltip: cx.render(rsx!(
@@ -198,7 +198,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    if !upload_file_controller.files_been_uploaded.read().clone() {
+                                    if !*upload_file_controller.files_been_uploaded.read() {
                                         storage_controller.write().finish_renaming_item(true);
                                     }
                                 },
