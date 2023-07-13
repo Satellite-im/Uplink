@@ -252,13 +252,11 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 match clipboard_data_type {
                     ClipboardDataType::File => {
                         if !*enable_paste_shortcut.read() {
-                            println!("true");
                             enable_paste_shortcut.with_mut(|i| *i = true);
                         }
                     }
                     _ => {
                         if *enable_paste_shortcut.read() {
-                            println!("false");
                             enable_paste_shortcut.with_mut(|i| *i = false);
                         }
                     }
@@ -401,34 +399,72 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         let active_chat = &data.active_chat;
         cx.render(
             rsx!(
-                active_chat.replying_to.as_ref().map(| msg | { let our_did = state.read()
-                .did_key(); let msg_owner = if data.my_id.did_key() == msg.sender() {
-                Some(& data.my_id) } else { data.other_participants.iter().find(| x | x
-                .did_key() == msg.sender()) }; let (platform, status, profile_picture) =
-                get_platform_and_status(msg_owner); rsx!(Reply { label :
-                get_local_text("messages.replying"), remote : our_did != msg.sender(),
-                onclose : move | _ | { state.write()
-                .mutate(Action::CancelReply(active_chat.id)) }, attachments : msg
-                .attachments(), message : msg.value().join("\n"), UserImage { image :
-                profile_picture, platform : platform, status : status, }, }) })
+                active_chat.replying_to.as_ref().map(|msg| {
+                    let our_did = state.read().did_key();
+                    let msg_owner = if data.my_id.did_key() == msg.sender() {
+                        Some(&data.my_id)
+                    } else {
+                        data.other_participants.iter().find(|x| x.did_key() == msg.sender())
+                    };
+                    
+                    let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
+                    
+                    rsx!(
+                        Reply {
+                            label: get_local_text("messages.replying"),
+                            remote: our_did != msg.sender(),
+                            onclose: move |_| {
+                                state.write().mutate(Action::CancelReply(active_chat.id))
+                            },
+                            attachments: msg.attachments(),
+                            message: msg.value().join("\n"),
+                            UserImage {
+                                image: profile_picture,
+                                platform: platform,
+                                status: status,
+                            },
+                        }
+                    )
+                })
             ),
-        )
+        )        
     })
     .unwrap_or(None),
             with_file_upload: cx
     .render(
         rsx!(
-            Button { icon : icons::outline::Shape::Plus, disabled : is_loading ||
-            disabled, aria_label : "upload-button".into(), appearance :
-            Appearance::Primary, onpress : move | _ | { if disabled { return; } if let
-            Some(new_files) = FileDialog::new().set_directory(dirs::home_dir()
-            .unwrap_or_default()).pick_files() { let mut new_files_to_upload : Vec < _ >
-            = cx.props.upload_files.current().iter().filter(| file_name | ! new_files
-            .contains(file_name)).cloned().collect(); new_files_to_upload
-            .extend(new_files); cx.props.upload_files.set(new_files_to_upload);
-            update_send(); } }, tooltip : cx.render(rsx!(Tooltip { arrow_position :
-            ArrowPosition::Bottom, text : get_local_text("files.upload"), })) }
-        ),
+            Button {
+                icon: icons::outline::Shape::Plus,
+                disabled: is_loading || disabled,
+                aria_label: "upload-button".into(),
+                appearance: Appearance::Primary,
+                onpress: move |_| {
+                    if disabled {
+                        return;
+                    }
+                    if let Some(new_files) = FileDialog::new()
+                        .set_directory(dirs::home_dir().unwrap_or_default())
+                        .pick_files()
+                    {
+                        let mut new_files_to_upload: Vec<_> = cx.props.upload_files
+                            .current()
+                            .iter()
+                            .filter(|file_name| !new_files.contains(file_name))
+                            .cloned()
+                            .collect();
+                        new_files_to_upload.extend(new_files);
+                        cx.props.upload_files.set(new_files_to_upload);
+                        update_send();
+                    }
+                },
+                tooltip: cx.render(rsx!(
+                    Tooltip {
+                        arrow_position: ArrowPosition::Bottom,
+                        text: get_local_text("files.upload"),
+                    }
+                )),
+            }
+        ),        
     )
         }
         error.0.then(|| rsx!(
