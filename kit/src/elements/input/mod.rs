@@ -87,6 +87,7 @@ pub struct Options {
     pub with_label: Option<String>,
     pub ellipsis_on_label: Option<LabelWithEllipsis>,
     pub react_to_esc_key: bool,
+    pub clear_validation_on_submit: bool,
 }
 
 impl Default for Options {
@@ -101,6 +102,7 @@ impl Default for Options {
             with_label: None,
             ellipsis_on_label: None,
             react_to_esc_key: false,
+            clear_validation_on_submit: false,
         }
     }
 }
@@ -395,6 +397,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
                             if options.clear_on_submit {
                                 reset_fn();
+                            } else if options.clear_validation_on_submit {
+                                valid.set(false);
                             }
                         }
                     },
@@ -428,10 +432,11 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 };
                                 emit(&cx, "".to_owned(), is_valid);
                             } else {
-                                emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
-                                if options.clear_on_submit {
-                                    reset_fn();
-                                }
+                            emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
+                            if options.clear_on_submit {
+                                reset_fn();
+                            } else if options.clear_validation_on_submit {
+                                valid.set(false);
                             }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
