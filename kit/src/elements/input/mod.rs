@@ -438,6 +438,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             } else if options.clear_validation_on_submit {
                                 valid.set(false);
                             }
+                        }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {
