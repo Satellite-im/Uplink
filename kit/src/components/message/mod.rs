@@ -92,7 +92,7 @@ fn wrap_links_with_a_tags(text: &str) -> String {
     re.replace_all(text, |caps: &regex::Captures| {
         let url = caps.get(0).unwrap().as_str();
         if url.starts_with("www.") {
-            format!("<a href=\"http://{}\">{}</a>", url, url)
+            format!("<a href=\"https://{}\">{}</a>", url, url)
         } else {
             format!("<a href=\"{}\">{}</a>", url, url)
         }
