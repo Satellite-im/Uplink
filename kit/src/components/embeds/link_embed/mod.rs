@@ -33,7 +33,7 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
         }
     };
     
-    let icon = match fetch_icon(&url, document.clone()).await {
+    let icon = match fetch_icon(url, document.clone()).await {
         Ok(data) => {
             if data.is_none() {
                 get_image_data(document.clone(), meta_selector.clone()).await.unwrap_or_default()
@@ -48,8 +48,8 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
 
     Ok(SiteMeta {
         title,
-        description: description,
-        icon: icon,
+        description,
+        icon,
         url: String::from(url),
     })
 }
