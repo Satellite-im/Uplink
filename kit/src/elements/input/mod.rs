@@ -140,6 +140,7 @@ pub struct Props<'a> {
     #[props(optional)]
     value: Option<String>,
     options: Option<Options>,
+    select_on_focus: Option<bool>,
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     reset: Option<UseState<bool>>,
@@ -308,7 +309,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         true => "progress",
         false => "",
     };
-
     if let Some(value) = &cx.props.value {
         val.set(value.clone());
     }
@@ -380,7 +380,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
-                    class: "{loading_class}",
+                    class: format_args!("{} {}", loading_class, if cx.props.select_on_focus.unwrap_or_default() {"select"} else {""}),
                     aria_label: "{aria_label}",
                     spellcheck: "{false}",
                     disabled: "{disabled}",
