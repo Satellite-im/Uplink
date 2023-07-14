@@ -6,7 +6,6 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use regex::Regex;
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -88,11 +87,15 @@ pub struct Props<'a> {
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
-    let re = Regex::new(r#"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap();
+    let re = regex::Regex::new(r#"(?i)\b((?:(?:https?://|www\.)[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"#).unwrap();
 
     re.replace_all(text, |caps: &regex::Captures| {
         let url = caps.get(0).unwrap().as_str();
-        format!("<a href=\"{}\">{}</a>", url, url)
+        if url.starts_with("www.") {
+            format!("<a href=\"https://{}\">{}</a>", url, url)
+        } else {
+            format!("<a href=\"{}\">{}</a>", url, url)
+        }
     })
     .into_owned()
 }
