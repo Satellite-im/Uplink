@@ -95,12 +95,17 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let update_char_counter_script = include_str!("./update_char_counter.js")
         .replace("$UUID", &id)
         .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+    let clear_counter_script =
+        r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
+            .replace("$UUID", &id)
+            .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
 
     if *show_char_counter {
         eval(update_char_counter_script);
     }
 
     let cv2 = current_val.clone();
+    let cv3 = current_val.clone();
 
     let text_value = Rc::new(RefCell::new(value.to_string()));
     let text_value_onchange = Rc::clone(&text_value);
@@ -138,6 +143,9 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let shift_key_as_modifier = evt.data.modifiers().contains(Modifiers::SHIFT);
 
                         if enter_pressed && !shift_key_as_modifier {
+                            if *show_char_counter {
+                                eval(clear_counter_script.to_string());
+                            }
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         } else if enter_pressed && shift_key_as_modifier {
                             text_value_onkeyup.borrow_mut().push('\n');
@@ -147,12 +155,12 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
                 if *show_char_counter {
                     rsx!( p {
+                        key: "{id_char_counter}-char-counter",
                         id: "{id_char_counter}-char-counter",
                         class: "input-char-counter",
-                        format!("0/{}", max_length - 1),
+                        format!("{}/{}", cv3.len(), max_length - 1),
                     })
                 }
-
             },
         }
         script { script },
