@@ -45,6 +45,8 @@ pub struct Props<'a> {
     value: String,
     #[props(default = false)]
     is_disabled: bool,
+    #[props(default = false)]
+    show_char_counter: bool,
 }
 
 #[allow(non_snake_case)]
@@ -64,6 +66,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         value,
         is_disabled,
+        show_char_counter,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -71,6 +74,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         cx.props.id.clone()
     };
+    let id_char_counter = id.clone();
 
     let height_script = include_str!("./update_input_height.js");
     let focus_script = if cx.props.ignore_focus {
@@ -87,6 +91,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .replace("$MULTI_LINE", &format!("{}", true));
     let current_val = value.to_string();
     let disabled = *loading || *is_disabled;
+
+    let update_char_counter_script = include_str!("./update_char_counter.js")
+        .replace("$UUID", &id)
+        .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+
+    if *show_char_counter {
+        eval(update_char_counter_script.to_string());
+    }
 
     let cv2 = current_val.clone();
 
@@ -133,6 +145,14 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         }
                     },
                 }
+                if *show_char_counter {
+                    rsx!( p {
+                        id: "{id_char_counter}-char-counter",
+                        class: "input-char-counter",
+                        format!("0/{}", max_length - 1),
+                    })
+                }
+
             },
         }
         script { script },
