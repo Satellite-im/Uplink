@@ -97,7 +97,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
 
     if *show_char_counter {
-        eval(update_char_counter_script.to_string());
+        eval(update_char_counter_script);
     }
 
     let cv2 = current_val.clone();
