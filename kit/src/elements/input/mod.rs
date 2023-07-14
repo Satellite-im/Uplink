@@ -419,7 +419,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
                                 let is_valid = if should_validate {
-                                    let validation_result = validate(&cx, &"").unwrap_or_default();
+                                    let validation_result = validate(&cx, "").unwrap_or_default();
                                     valid.set(validation_result.is_empty());
                                     error.set(validation_result);
                                     *valid.current()
