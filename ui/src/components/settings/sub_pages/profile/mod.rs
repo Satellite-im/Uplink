@@ -431,6 +431,7 @@ fn get_input_options(validation_options: Validation) -> Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(validation_options),
         clear_on_submit: false,
+        clear_validation_on_submit: true,
         // Use the default options for the remaining fields
         ..Options::default()
     }
