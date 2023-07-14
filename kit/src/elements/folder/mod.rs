@@ -74,7 +74,9 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx! (
                             Input {
                                 disabled: disabled,
-                                placeholder: placeholder,
+                                placeholder: String::new(),
+                                default_text: placeholder,
+                                select_on_focus: true,
                                 focus: true,
                                 size: Size::Small,
                                 options: Options {

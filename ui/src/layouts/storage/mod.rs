@@ -405,6 +405,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 return;
                                             }
                                             storage_controller.with_mut(|i| i.is_renaming_map = None);
+                                            storage_controller.write().finish_renaming_item(false);
                                             if key_code == Code::Enter {
                                                 ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                             }
@@ -509,6 +510,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                     return;
                                                 }
                                                 storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                storage_controller.write().finish_renaming_item(false);
                                                 if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
                                                     ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                                 }
