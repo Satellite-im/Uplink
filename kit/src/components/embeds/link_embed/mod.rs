@@ -1,12 +1,11 @@
+use crate::components::embeds::youtube::YouTubePlayer;
 use dioxus::prelude::*;
 use dioxus::prelude::{rsx, Props};
 use dioxus_core::{Element, Scope};
 use dioxus_hooks::use_future;
 use scraper::{Html, Selector};
-use crate::components::embeds::youtube::YouTubePlayer;
 
 use self::get_link_data::*;
-
 
 mod get_link_data;
 
@@ -22,7 +21,7 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
     let content = reqwest::get(url).await?.text().await?;
     let document = Html::parse_document(&content);
     let meta_selector = match Selector::parse("meta") {
-        Ok(data) => data, 
+        Ok(data) => data,
         Err(_) => {
             return Ok(SiteMeta {
                 title: String::new(),
@@ -32,16 +31,20 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
             });
         }
     };
-    
+
     let icon = match fetch_icon(url, document.clone()).await {
         Ok(data) => {
             if data.is_none() {
-                get_image_data(document.clone(), meta_selector.clone()).await.unwrap_or_default()
+                get_image_data(document.clone(), meta_selector.clone())
+                    .await
+                    .unwrap_or_default()
             } else {
                 data.unwrap_or_default()
             }
-        },
-        Err(_) => get_image_data(document.clone(), meta_selector.clone()).await.unwrap_or_default(),
+        }
+        Err(_) => get_image_data(document.clone(), meta_selector.clone())
+            .await
+            .unwrap_or_default(),
     };
     let title = get_title_data(document.clone(), meta_selector.clone()).await;
     let description = get_description_data(document.clone(), meta_selector.clone()).await;
@@ -116,10 +119,9 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                                     "{title}"
                                 })
                             }
-                            
                         },
                         if desc.is_empty() && youtube_video.is_none() {
-                            rsx!(div {})
+                           rsx!(div {})
                         } else {
                             rsx!( div {
                                 class: "embed-details",
