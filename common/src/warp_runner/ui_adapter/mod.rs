@@ -104,7 +104,17 @@ pub async fn did_to_identity(
                 .identity_platform(&id.did_key())
                 .await
                 .unwrap_or(Platform::Unknown);
-            state::Identity::new(id, status, platform)
+            let mut id = state::Identity::new(id, status, platform);
+
+            if let Ok(picture) = account.identity_picture(&id.did_key()).await {
+                id.set_profile_picture(&picture);
+            }
+
+            if let Ok(banner) = account.identity_banner(&id.did_key()).await {
+                id.set_profile_banner(&banner);
+            }
+
+            id
         }
         None => get_uninitialized_identity(did)?,
     };
@@ -125,7 +135,17 @@ pub async fn dids_to_identity(
             .identity_platform(&id.did_key())
             .await
             .unwrap_or(Platform::Unknown);
-        state::Identity::new(id, status, platform)
+        let mut id = state::Identity::new(id, status, platform);
+
+        if let Ok(picture) = account.identity_picture(&id.did_key()).await {
+            id.set_profile_picture(&picture);
+        }
+
+        if let Ok(banner) = account.identity_banner(&id.did_key()).await {
+            id.set_profile_banner(&banner);
+        }
+
+        id
     });
     let converted_ids = FuturesOrdered::from_iter(ids).collect().await;
     Ok(converted_ids)

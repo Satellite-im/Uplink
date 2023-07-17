@@ -10,6 +10,9 @@ pub struct Identity {
     identity: WarpIdentity,
     status: IdentityStatus,
     platform: Platform,
+    //TODO: Use `Option<String>` in the future unless this is split away
+    profile_image: String,
+    profile_banner: String,
 }
 
 impl Hash for Identity {
@@ -38,6 +41,8 @@ impl From<WarpIdentity> for Identity {
             identity,
             status: IdentityStatus::Offline,
             platform: Default::default(),
+            profile_image: String::new(),
+            profile_banner: String::new(),
         }
     }
 }
@@ -61,6 +66,8 @@ impl Identity {
             identity,
             status,
             platform,
+            profile_image: String::new(),
+            profile_banner: String::new(),
         }
     }
     pub fn identity_status(&self) -> IdentityStatus {
@@ -71,20 +78,28 @@ impl Identity {
         self.platform
     }
 
+    pub fn set_profile_picture(&mut self, image: &str) {
+        self.profile_image = image.to_string();
+    }
+
+    pub fn set_profile_banner(&mut self, image: &str) {
+        self.profile_banner = image.to_string();
+    }
+
     pub fn profile_picture(&self) -> String {
-        let picture = self.identity.profile_picture();
+        let picture = &self.profile_image;
         match self.contains_default_picture() {
             true => picture[..picture.len() - 3].to_string(),
-            false => picture,
+            false => picture.clone(),
         }
     }
 
     pub fn profile_banner(&self) -> String {
-        self.identity.profile_banner()
+        self.profile_banner.clone()
     }
 
     pub fn contains_default_picture(&self) -> bool {
-        let picture = self.identity.profile_picture();
+        let picture = &self.profile_image;
 
         if picture.is_empty() || picture.len() < 6 {
             return false;
