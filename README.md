@@ -69,6 +69,8 @@ And for Windows, I followed the steps on this site here
 | protobuf| `sudo apt-get install protobuf-compiler` |
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 | ffmpeg| `sudo apt-get install ffmpeg` |
+| libopus-dev| `sudo apt-get install libopus-dev` |
+
 
 ## Contributing
 
