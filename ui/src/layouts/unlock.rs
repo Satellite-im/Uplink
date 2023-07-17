@@ -93,12 +93,12 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
             account_exists.set(Some(exists));
         }
     });
-    let ch = use_coroutine(cx, |mut rx| {
-        to_owned![error, page, cmd_in_progress, account_exists];
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<(String, Option<bool>)>| {
+        to_owned![error, page, cmd_in_progress];
         async move {
             let config = Configuration::load_or_default();
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(password) = rx.next().await {
+            while let Some((password, account)) = rx.next().await {
                 let (tx, rx) =
                     oneshot::channel::<Result<multipass::identity::Identity, warp::error::Error>>();
 
@@ -124,7 +124,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                     Err(err) => match err {
                         warp::error::Error::DecryptionError => {
                             // check if account exist. can be the case when account got reset
-                            if account_exists.get().unwrap_or_default() {
+                            if account.unwrap_or_default() {
                                 // wrong password
                                 error.set(Some(UnlockError::InvalidPin));
                                 log::warn!("decryption error");
@@ -229,21 +229,19 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
-                                ch.send(val);
+                                ch.send((val, account_exists.get().clone()));
                                 validation_failure.set(None);
                             } else {
                                 validation_failure.set(Some(UnlockError::ValidationError));
                             }
                         }
                         onreturn: move |_| {
-                            if !account_exists.current().unwrap_or_default() {
-                                if let Some(validation_error) = validation_failure.get() {
-                                    shown_error.set(validation_error.translation());
-                                } else if let Some(e) = error.get() {
-                                    shown_error.set(e.translation());
-                                } else {
-                                    page.set(AuthPages::CreateAccount);
-                                }
+                            if let Some(validation_error) = validation_failure.get() {
+                                shown_error.set(validation_error.translation());
+                            } else if let Some(e) = error.get() {
+                                shown_error.set(e.translation());
+                            } else {
+                                page.set(AuthPages::CreateAccount);
                             }
                         }
                     },
@@ -290,6 +288,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 onpress: |_| {
                                     let _ = fs::remove_dir_all(&STATIC_ARGS.dot_uplink);
                                     page.set(AuthPages::Unlock);
+                                    error.set(None);
                                     account_exists.set(Some(false));
                                     create_uplink_dirs();
                                 }
