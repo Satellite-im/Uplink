@@ -422,6 +422,14 @@
 
 #profile-name {
   max-width: 240px;
+
+  p {
+    width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    overflow: hidden;
+  }
 }
 
 #profile-status {
