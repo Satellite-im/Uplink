@@ -1,7 +1,9 @@
 uplink = Uplink
+    .unknown = Desconhecido
     .home = Início
     .add = Adicionar
     .call = Chamada
+    .reset-account = Remover conta (irreversível!)
     .coming-soon = Em breve
     .crash-report = O Uplink sofreu um erro. Opcionalmente, guardar o relatório de erro na pasta seleccionada
     .video-call = Chamada de vídeo
@@ -11,6 +13,7 @@ uplink = Uplink
     .remove = Remover
     .more = Mais
     .welcome = Bem-vindo
+    .cancel = Cancelar
     .clear-unreads = Limpar não lidos
     .delete-group-chat = Eliminar grupo
     .leave-group = Deixar o grupo
@@ -36,7 +39,8 @@ uplink = Uplink
     .update-menu-install = Instalar
     .check-for-updates = Verificar se há actualizações
     .download-update = Descarregar actualização
-    
+    .members = Membros
+
 updates = Actualizações
     .title = O Uplink tem uma actualização disponível. Siga estes passos para descarregar e instalar a última actualização.
     .instruction1 = 1. Descarregue a actualização a partir da nossa página de lançamento.
@@ -74,7 +78,8 @@ messages = Mensagens
     .group-name-invalid = Nome do grupo inválido
     .participant = Participante
     .participants = Participantes
-    
+    .fetching = A obter mais mensagens...
+
 favorites = Favoritos
     .favorites = Favoritos
     .add = Adicionar aos favoritos
@@ -112,6 +117,7 @@ friends = Amigos
     .request-exist = O pedido de amizade já está pendente!
 
 files = Ficheiros
+    .file = Ficheiro
     .files = Ficheiros
     .new-folder = Nova pasta
     .upload = Carregar
@@ -132,6 +138,13 @@ files = Ficheiros
     .directory-already-with-name = Já existe um directório com este nome
     .no-size-available = Sem tamanho disponível para o ficheiro:
     .file-already-with-name = Já existe um ficheiro com este nome
+    .uploading-file = Carregar ficheiro...
+    .finishing-upload = A terminar...
+    .cancelling-upload = A cancelar...
+    .checking-duplicated-name = Verificar nome duplicado...
+    .checking-thumbnail = Verificação de miniatura...
+    .files-in-queue = Ficheiros em fila de espera
+    .error-to-upload = Erro ao carregar
     .no-data-available = Sem informação disponível
     
 settings = Definições
@@ -146,6 +159,7 @@ settings = Definições
     .notifications = Notificações
     .developer = Programador
     .about = Sobre
+    .licenses = Licenças
     .search-placeholder = Definições de pesquisa...
 
 settings-profile = Definições de perfil
@@ -174,6 +188,7 @@ settings-general = Definições gerais
     .font-scaling-description = Aumentar ou diminuir o tamanho do tipo de letra a seu gosto.
     .font = Tipo de letra
     .font-description = Alterar o tipo de letra da aplicação.
+    .clear-accent = Cor de acentuação clara
 
 settings-privacy = Definições de privacidade 
     .backup-recovery-phrase = Frase de recuperação da cópia de segurança
@@ -181,6 +196,16 @@ settings-privacy = Definições de privacidade
     .backup-phrase-description = Faz uma cópia de segurança desta frase! Juntamente com a sua palavra-passe, esta frase representa a sua conta. Se a perder, não o podemos ajudar a recuperá-la.
 
 settings-audio = Definições de áudio e som 
+    .input-device = Dispositivo de entrada
+    .input-device-description = Seleccione o seu dispositivo de entrada (normalmente um microfone).
+    .output-device = Dispositivo de saída
+    .output-device-description = É aqui que todos os sons serão reproduzidos. (Normalmente, os auscultadores).
+    .sample-rate = Taxa de amostragem
+    .sample-rate-description = Taxas de amostragem mais elevadas captam mais "frames" do seu áudio e soam mais "claras".
+    .noise-suppression = Supressão de ruído
+    .noise-suppression-description = Ajuda a minimizar o ruído de fundo e a concentrar-se na sua voz.
+    .echo-cancellation = Cancelamento de eco
+    .echo-cancellation-description = Ajuda a minimizar o feedback dos altifalantes para o microfone.
     .call-timer = Temporizador de chamadas
     .call-timer-description = Quando activado, é apresentado um temporizador quando está numa chamada, mostrando a duração da mesma.
     .interface-sounds = Sons da interface
@@ -254,7 +279,9 @@ settings-about = Sobre as definições
     .open-codebase-description = Abre a base de código no seu browser predefinido.
     .no-update-available = O seu software está actualizado!
     .update-check-error = Falha ao obter a actualização. Verifique a sua ligação à Internet.
-    
+    .update-check-error-timeout = Falha ao obter a atualização! O tempo limite do pedido foi ultrapassado.
+    .update-check-error-request = Falha ao obter a atualização! Não foi possível enviar o pedido de atualização. Verifique a sua ligação à Internet.
+
 media-player = Leitor de multimédia 
     .enable-camera = Activar a câmara 
     .fullscreen = Ecrã completo
@@ -268,6 +295,7 @@ remote-controls = Controlos remotos
     .listen = Ativar Áudio
     .silence = Desativar Áudio
     .end = Terminar
+    .incoming-call = A receber chamada
 
 unlock = Desbloquear
     .description = Introduza o seu pin ou palavra-passe para desbloquear a sua conta.
@@ -297,3 +325,8 @@ quickprofile = Perfil rápido
     .unblock = Desbloquear utilizador
     .chat-placeholder = Mensagem
     .self-edit = Editar perfil
+
+toast_actions = Acções de notificações
+    .DisplayChat = Abrir Chat
+    .FriendListPending = Lista de amigos
+    .Dummy = Ação fictícia

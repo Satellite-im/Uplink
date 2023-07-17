@@ -181,15 +181,19 @@ jobs:
         working-directory: ./appium-tests
         run: npm run mac.ci
 
-      - name: Publish Test Results for MacOS
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      - name: Upload Test Report - MacOS CI
         if: always()
+        uses: actions/upload-artifact@v3
         with:
-          junit_files: "./appium-tests/test-report/*.xml"
-          ignore_runs: true
-          job_summary: false
-          compare_to_earlier_commit: false
-          check_name: "UI Automated Test Results on MacOS"
+          name: test-report-macos-ci
+          path: ./appium-tests/test-report/*.xml
+
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-mac-ci
+          path: ./appium-tests/allure-results/*.json
 
       - name: Upload Screenshots for MacOS 📷
         uses: actions/upload-artifact@v3
@@ -273,6 +277,13 @@ jobs:
           name: test-report-windows-chats
           path: ./appium-tests/test-report/*.xml
 
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-windows-chats
+          path: ./appium-tests/allure-results/*.json
+
       - name: Upload Screenshots for Windows - Chats 📷
         uses: actions/upload-artifact@v3
         if: failure()
@@ -355,6 +366,13 @@ jobs:
           name: test-report-windows-ci
           path: ./appium-tests/test-report/*.xml
 
+      - name: Upload Allure Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-allure-windows-ci
+          path: ./appium-tests/allure-results/*.json
+
       - name: Upload Screenshots for Windows 📷
         uses: actions/upload-artifact@v3
         if: failure()
@@ -378,17 +396,24 @@ jobs:
             Failed Automated Test
           type: add
 
-  publish-windows-results:
+  publish-results:
     if: always()
-    needs: [test-windows-chats, test-windows]
+    needs:
+      [build-mac, build-windows, test-mac, test-windows-chats, test-windows]
     runs-on: ubuntu-latest
     permissions:
       checks: write
       pull-requests: write
-      contents: read
+      contents: write
       issues: read
 
     steps:
+      - name: Download Test Report for MacOS CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-report-macos-ci
+          path: artifacts
+
       - name: Download Test Report for Windows Chats
         uses: actions/download-artifact@v3
         with:
@@ -401,14 +426,67 @@ jobs:
           name: test-report-windows-ci
           path: artifacts
 
-      - name: Publish Test Results for Windows Tests
+      - name: Download Allure Results for MacOS CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-mac-ci
+          path: allure
+
+      - name: Download Allure Results for Windows CI
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-windows-ci
+          path: allure
+
+      - name: Download Allure Results for Windows Chats
+        uses: actions/download-artifact@v3
+        with:
+          name: test-allure-windows-chats
+          path: allure
+
+      - name: Publish Test Results Summary
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        if: success()
         with:
           junit_files: "artifacts/**/*.xml"
           ignore_runs: true
           job_summary: false
           compare_to_earlier_commit: false
-          check_name: "UI Automated Test Results on Windows Tests"
+          check_name: "UI Automated Test Results Summary for MacOS/Windows"
+
+      - name: Get Allure history
+        uses: actions/checkout@v3
+        if: success()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Allure Report action from marketplace
+        uses: simple-elf/allure-report-action@master
+        if: success()
+        id: allure-report
+        with:
+          gh_pages: gh-pages
+          allure_results: allure
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Publish test report to Github Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Comment PR with the Test Results
+        if: success()
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            UI Automated Tests execution is complete! You can find the test results report [here](https://satellite-im.github.io/Uplink/${{ github.run_number }})
 
   remove-artifacts:
     needs:
@@ -418,7 +496,7 @@ jobs:
         test-mac,
         test-windows-chats,
         test-windows,
-        publish-windows-results,
+        publish-results,
       ]
     runs-on: ubuntu-latest
 
@@ -434,22 +512,15 @@ jobs:
             Failed Automated Test
           type: remove
 
-      - name: Delete app Windows
+      - name: Delete artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
-          name: Uplink-Windows
-
-      - name: Delete app MacOS
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: app-macos
-
-      - name: Delete Test Reports from Windows CI
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: test-report-windows-ci
-
-      - name: Delete Test Reports from Windows Chats
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: test-report-windows-chats
+          name: |
+            Uplink-windows-latest
+            Uplink-macos-latest
+            test-report-macos-ci
+            test-report-windows-ci
+            test-report-windows-chats
+            test-allure-mac-ci
+            test-allure-windows-ci
+            test-allure-windows-chats
