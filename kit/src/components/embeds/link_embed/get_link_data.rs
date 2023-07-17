@@ -3,7 +3,7 @@ use std::error::Error;
 use reqwest::Url;
 use scraper::{Html, Selector};
 
-pub async fn get_image_data(document: Html, meta_selector: Selector) -> Option<String> {
+pub fn get_image_data(document: Html, meta_selector: Selector) -> Option<String> {
     let mut image = None;
 
     for element in document.select(&meta_selector) {
@@ -13,6 +13,9 @@ pub async fn get_image_data(document: Html, meta_selector: Selector) -> Option<S
         if let (Some(prop_attr), Some(content_attr)) = (prop_attr_opt, content_attr_opt) {
             if prop_attr == "og:image" {
                 image = Some(content_attr.to_string());
+                if !image.clone().unwrap_or_default().is_empty() {
+                    break;
+                }
             }
         }
     }
@@ -20,7 +23,7 @@ pub async fn get_image_data(document: Html, meta_selector: Selector) -> Option<S
     image
 }
 
-pub async fn get_title_data(document: Html, meta_selector: Selector) -> String {
+pub fn get_title_data(document: Html, meta_selector: Selector) -> String {
     let title_selector = match Selector::parse("title") {
         Ok(data) => data,
         Err(_) => return String::new(),
@@ -35,6 +38,9 @@ pub async fn get_title_data(document: Html, meta_selector: Selector) -> String {
         if let (Some(prop_attr), Some(content_attr)) = (prop_attr_opt, content_attr_opt) {
             if prop_attr == "og:title" {
                 title = content_attr.to_string();
+                if !title.is_empty() {
+                    break;
+                }
             }
         }
     }
@@ -48,7 +54,7 @@ pub async fn get_title_data(document: Html, meta_selector: Selector) -> String {
     title
 }
 
-pub async fn get_description_data(document: Html, meta_selector: Selector) -> String {
+pub fn get_description_data(document: Html, meta_selector: Selector) -> String {
     let mut description = String::new();
 
     for element in document.select(&meta_selector) {
@@ -59,6 +65,9 @@ pub async fn get_description_data(document: Html, meta_selector: Selector) -> St
         if let (Some(prop_attr), Some(content_attr)) = (prop_attr_opt, content_attr_opt) {
             if prop_attr == "og:description" {
                 description = content_attr.to_string();
+                if !description.is_empty() {
+                    break;
+                }
             }
         }
 
@@ -66,6 +75,9 @@ pub async fn get_description_data(document: Html, meta_selector: Selector) -> St
             if let (Some(name_attr), Some(content_attr)) = (name_attr_opt, content_attr_opt) {
                 if name_attr == "description" {
                     description = content_attr.to_string();
+                    if !description.is_empty() {
+                        break;
+                    }
                 }
             }
         }

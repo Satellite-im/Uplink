@@ -32,22 +32,13 @@ pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
         }
     };
 
-    let icon = match fetch_icon(url, document.clone()).await {
-        Ok(data) => {
-            if data.is_none() {
-                get_image_data(document.clone(), meta_selector.clone())
-                    .await
-                    .unwrap_or_default()
-            } else {
-                data.unwrap_or_default()
-            }
-        }
-        Err(_) => get_image_data(document.clone(), meta_selector.clone())
-            .await
-            .unwrap_or_default(),
+    let icon = if let Ok(Some(icon)) = fetch_icon(url, document.clone()).await {
+        icon
+    } else {
+        get_image_data(document.clone(), meta_selector.clone()).unwrap_or_default()
     };
-    let title = get_title_data(document.clone(), meta_selector.clone()).await;
-    let description = get_description_data(document.clone(), meta_selector.clone()).await;
+    let title = get_title_data(document.clone(), meta_selector.clone());
+    let description = get_description_data(document.clone(), meta_selector.clone());
 
     Ok(SiteMeta {
         title,
