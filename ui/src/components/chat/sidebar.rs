@@ -293,7 +293,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         aria_label: "favorites-label".into(),
                     },
                     div {
-                        class: "vertically-scrollable",
+                        class: "horizontally-scrollable",
                         favorites.iter().cloned().map(|chat| {
                             let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
                             let favorites_chat = chat.clone();

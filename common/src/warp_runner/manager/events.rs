@@ -154,8 +154,8 @@ pub async fn handle_warp_command(
             // not accepted at this stage of the program. do nothing and drop the rsp channel
         }
         WarpCmd::MultiPass(cmd) => {
-            // if a command to block a user comes in, need to update the UI because warp doesn't generate an event for a user being blocked.
-            // todo: ask for that event
+            // if a command to block a user comes in, need to update the UI
+            // todo: handle block events
             if let MultiPassCmd::Block { did, .. } = &cmd {
                 if let Ok(ident) = did_to_identity(did, &warp.multipass).await {
                     if warp_event_tx
