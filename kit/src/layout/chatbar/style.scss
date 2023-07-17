@@ -22,12 +22,14 @@
 	display: inline-flex;
 	flex-direction: column;
 	gap: var(--gap-less);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
 	padding: var(--gap);
 	border-radius: var(--border-radius);
 	border: 1px solid var(--border-subtle-color);
+	background-color: var(--primary);
 	
+	label {
+		color: var(--text-color-dark);
+	}
 	.content {
 		display: inline-flex;
 		padding: 0;

@@ -91,6 +91,7 @@ body {
   gap: var(--gap);
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   height: fit-content;
   transition: background var(--animation-time);
 }
