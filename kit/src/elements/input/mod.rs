@@ -148,6 +148,8 @@ pub struct Props<'a> {
     reset: Option<UseState<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
+    #[props(default = false)]
+    validate_on_return_with_val_empty: bool,
 }
 
 fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -419,12 +421,24 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
+                            if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
+                                let is_valid = if should_validate {
+                                    let validation_result = validate(&cx, "").unwrap_or_default();
+                                    valid.set(validation_result.is_empty());
+                                    error.set(validation_result);
+                                    *valid.current()
+                                } else {
+                                    true
+                                };
+                                emit(&cx, "".to_owned(), is_valid);
+                            } else {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
                             } else if options.clear_validation_on_submit {
                                 valid.set(false);
                             }
+                        }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {

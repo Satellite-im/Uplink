@@ -1,11 +1,13 @@
+use crate::components::embeds::youtube::YouTubePlayer;
 use dioxus::prelude::*;
 use dioxus::prelude::{rsx, Props};
 use dioxus_core::{Element, Scope};
 use dioxus_hooks::use_future;
-use select::document::Document;
-use select::predicate::Name;
+use scraper::{Html, Selector};
 
-use crate::components::embeds::youtube::YouTubePlayer;
+use self::get_link_data::*;
+
+mod get_link_data;
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct SiteMeta {
@@ -17,56 +19,31 @@ pub struct SiteMeta {
 
 pub async fn get_meta(url: &str) -> Result<SiteMeta, reqwest::Error> {
     let content = reqwest::get(url).await?.text().await?;
+    let document = Html::parse_document(&content);
+    let meta_selector = match Selector::parse("meta") {
+        Ok(data) => data,
+        Err(_) => {
+            return Ok(SiteMeta {
+                title: String::new(),
+                description: String::new(),
+                icon: String::new(),
+                url: String::from(url),
+            });
+        }
+    };
 
-    let doc = Document::from(content.as_str());
-    let title = doc
-        .find(Name("title"))
-        .next()
-        .map(|node| node.text())
-        .unwrap_or_default();
-
-    let desc = doc
-        .find(Name("meta"))
-        .filter_map(|n| {
-            let attr = n.attr("name");
-            let is_desc = match attr {
-                Some(v) => {
-                    if v.eq("description") {
-                        n.attr("content")
-                    } else {
-                        None
-                    }
-                }
-                None => None,
-            };
-            is_desc
-        })
-        .next()
-        .unwrap_or_default();
-
-    let icon = doc
-        .find(Name("link"))
-        .filter_map(|n| {
-            let attr = n.attr("rel");
-            let is_desc = match attr {
-                Some(v) => {
-                    if v.eq("icon") {
-                        n.attr("href")
-                    } else {
-                        None
-                    }
-                }
-                None => None,
-            };
-            is_desc
-        })
-        .next()
-        .unwrap_or_default();
+    let icon = if let Ok(Some(icon)) = fetch_icon(url, document.clone()).await {
+        icon
+    } else {
+        get_image_data(document.clone(), meta_selector.clone()).unwrap_or_default()
+    };
+    let title = get_title_data(document.clone(), meta_selector.clone());
+    let description = get_description_data(document.clone(), meta_selector.clone());
 
     Ok(SiteMeta {
         title,
-        description: String::from(desc),
-        icon: String::from(icon),
+        description,
+        icon,
         url: String::from(url),
     })
 }
@@ -88,7 +65,6 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
         Some(Err(_)) => SiteMeta::default(),
         None => SiteMeta::default(),
     };
-
     let title = if meta.title.chars().count() > 100 {
         meta.title[0..97].to_string() + "..."
     } else {
@@ -120,27 +96,36 @@ pub fn EmbedLinks(cx: Scope<LinkEmbedProps>) -> Element {
                         div {
                             class: "embed-icon",
                             aria_label: "embed-icon",
-                            img {
-                                src: "{meta.icon}"
-                            },
-                            a {
-                                class: "link-title",
-                                aria_label: "link-title",
-                                href: "{cx.props.link}",
-                                "{title}"
+                            if !meta.icon.is_empty() {
+                                rsx!(  img {
+                                    src: "{meta.icon}",
+                                    alt: "Website Icon",
+                                },)
+                            }
+                            if !title.is_empty() {
+                                rsx!(a {
+                                    class: "link-title",
+                                    aria_label: "link-title",
+                                    href: "{cx.props.link}",
+                                    "{title}"
+                                })
                             }
                         },
-                        div {
-                            class: "embed-details",
-                            aria_label: "embed-details",
-                            youtube_video.is_some().then(|| rsx!(
-                                YouTubePlayer {
-                                    video_url: youtube_video.unwrap(),
+                        if desc.is_empty() && youtube_video.is_none() {
+                           rsx!(div {})
+                        } else {
+                            rsx!( div {
+                                class: "embed-details",
+                                aria_label: "embed-details",
+                                youtube_video.is_some().then(|| rsx!(
+                                    YouTubePlayer {
+                                        video_url: youtube_video.unwrap(),
+                                    }
+                                ))
+                                p {
+                                    "{desc}"
                                 }
-                            ))
-                            p {
-                                "{desc}"
-                            }
+                            })
                         }
                     }
                 }
