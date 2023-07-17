@@ -45,6 +45,7 @@ cargo run --bin ui --profile=rapid
 | cmake | brew install cmake |
 | Protoc | brew install protobuf |
 | ffmpeg | brew install ffmpeg |
+| audio opus | brew install opus |
 
 For this to work, we need to install `ffmpeg` -> `brew install ffmpeg` for macOS
 And for Windows, I followed the steps on this site here
