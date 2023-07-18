@@ -57,8 +57,10 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
                 Some(first_path) => Path::new(first_path).exists(),
                 None => false,
             };
+            println!("Pasting: is_valid_paths: {:?}", is_valid_paths);
             if is_valid_paths {
                 let files_path = decoded_pathbufs(paths_vec);
+                println!("Pasting: files_path: {:?}", files_path);
                 if !files_path.is_empty() {
                     return Ok(files_path);
                 }
@@ -102,21 +104,18 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
         let clipboard_text = clipboard.get_text().unwrap_or_default();
         #[cfg(target_os = "linux")]
         {
-            if Path::new(&clipboard_text).exists() {
+            let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+            let is_valid_paths = match paths_vec.first() {
+                Some(first_path) => Path::new(first_path).exists(),
+                None => false,
+            };
+            println!("Checking: is_valid_paths: {:?}", is_valid_paths);
+            println!("Checking: paths_vec: {:?}", paths_vec);
+
+            if is_valid_paths {
                 return Ok(ClipboardDataType::File);
             }
         }
-        // #[cfg(target_os = "linux")]
-        // {
-        //     let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-        //     let is_valid_paths = match paths_vec.first() {
-        //         Some(first_path) => Path::new(first_path).exists(),
-        //         None => false,
-        //     };
-        //     if is_valid_paths {
-        //         return Ok(ClipboardDataType::File);
-        //     }
-        // }
 
         if clipboard_text.is_empty() {
             // It means image pixes in clipboard
