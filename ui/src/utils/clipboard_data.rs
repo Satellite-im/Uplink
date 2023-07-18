@@ -16,6 +16,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use tempfile::TempDir;
 
+#[derive(Debug)]
 pub enum ClipboardDataType {
     File,
     String,
