@@ -622,7 +622,7 @@ fn app(cx: Scope) -> Element {
 
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
+                    minimal_view: size.width < 1200,
                     ..metadata
                 };
                 if metadata != new_metadata {
