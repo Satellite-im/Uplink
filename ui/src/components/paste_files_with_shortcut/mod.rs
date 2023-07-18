@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
-use dioxus_desktop::{use_global_shortcut, use_window};
+use dioxus_desktop::use_global_shortcut;
 use dioxus_hooks::{to_owned, use_ref};
 use wry::application::keyboard::ModifiersState;
 
