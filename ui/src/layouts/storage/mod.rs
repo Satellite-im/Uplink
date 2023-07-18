@@ -329,6 +329,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         storage_controller.read().directories_list.iter().map(|dir| {
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
+                            let folder_name3 = dir.name();
                             let key = dir.id();
                             let dir2 = dir.clone();
                             rsx!(
@@ -362,6 +363,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         aria_label: dir.name(),
                                         with_rename:storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onrename: move |(val, key_code)| {
+                                            if val == folder_name3 {
+                                                storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                storage_controller.write().finish_renaming_item(false);
+                                                return;
+                                            };
                                             if storage_controller.read().directories_list.iter().any(|dir| dir.name() == val) {
                                                 state
                                                 .write()
@@ -392,6 +398,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         storage_controller.read().files_list.iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
+                            let file_name3 = file.name();
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -467,6 +474,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
+                                                if new_name == file_name3 {
+                                                    storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                    storage_controller.write().finish_renaming_item(false);
+                                                    return;
+                                                };
                                                 if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()
