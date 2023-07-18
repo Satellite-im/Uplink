@@ -249,6 +249,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 })
                 .await
                 .expect("Should succeed");
+                println!("clipboard_data_type: {:?}", clipboard_data_type);
+                println!("enable_paste_shortcut: {:?}", enable_paste_shortcut.read());
                 match clipboard_data_type {
                     ClipboardDataType::File => {
                         if !*enable_paste_shortcut.read() {
