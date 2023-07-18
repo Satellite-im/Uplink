@@ -102,18 +102,21 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
         let clipboard_text = clipboard.get_text().unwrap_or_default();
         #[cfg(target_os = "linux")]
         {
-            let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
-            let is_valid_paths = match paths_vec.first() {
-                Some(first_path) => Path::new(first_path).exists(),
-                None => false,
-            };
-            if is_valid_paths {
-                let files_path = decoded_pathbufs(paths_vec);
-                if !files_path.is_empty() {
-                    return Ok(ClipboardDataType::File);
-                }
+            if Path::new(&clipboard_text).exists() {
+                return Ok(ClipboardDataType::File);
             }
         }
+        // #[cfg(target_os = "linux")]
+        // {
+        //     let paths_vec: Vec<PathBuf> = clipboard_text.lines().map(PathBuf::from).collect();
+        //     let is_valid_paths = match paths_vec.first() {
+        //         Some(first_path) => Path::new(first_path).exists(),
+        //         None => false,
+        //     };
+        //     if is_valid_paths {
+        //         return Ok(ClipboardDataType::File);
+        //     }
+        // }
 
         if clipboard_text.is_empty() {
             // It means image pixes in clipboard
