@@ -109,10 +109,8 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
                 Some(first_path) => Path::new(first_path).exists(),
                 None => false,
             };
-            println!("Checking: is_valid_paths: {:?}", is_valid_paths);
-            println!("Checking: paths_vec: {:?}", paths_vec);
-
             if is_valid_paths {
+                println!("Changing to FILE");
                 return Ok(ClipboardDataType::File);
             }
         }
