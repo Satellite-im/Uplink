@@ -51,6 +51,11 @@ function updateHeight(element) {
     element.style.height = element.scrollHeight + "px";
 }
 
+function appResizeListener(e) {
+    if (textareas[0].value == "") {
+        textareas[0].style.height = "22px";
+    }
+}
 function keyPressListener(e) {
     if (e.key == "Enter") {
         e.preventDefault();
@@ -64,3 +69,6 @@ function keyPressListener(e) {
         }
     }
 }
+
+// Listen for the resize event
+window.addEventListener("resize", appResizeListener);
