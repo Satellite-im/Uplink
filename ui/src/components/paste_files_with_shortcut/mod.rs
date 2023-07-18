@@ -37,10 +37,10 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     let files_local_path_to_upload = use_ref(cx, Vec::new);
 
     let key = KeyCode::V;
-    let modifiers = if cfg!(target_os = "windows") {
-        ModifiersState::CONTROL
-    } else {
+    let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
+    } else {
+        ModifiersState::CONTROL
     };
 
     if !files_local_path_to_upload.read().is_empty() {
