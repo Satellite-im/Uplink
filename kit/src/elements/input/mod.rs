@@ -87,6 +87,7 @@ pub struct Options {
     pub with_label: Option<String>,
     pub ellipsis_on_label: Option<LabelWithEllipsis>,
     pub react_to_esc_key: bool,
+    pub clear_validation_on_submit: bool,
 }
 
 impl Default for Options {
@@ -101,6 +102,7 @@ impl Default for Options {
             with_label: None,
             ellipsis_on_label: None,
             react_to_esc_key: false,
+            clear_validation_on_submit: false,
         }
     }
 }
@@ -140,11 +142,14 @@ pub struct Props<'a> {
     #[props(optional)]
     value: Option<String>,
     options: Option<Options>,
+    select_on_focus: Option<bool>,
     onchange: Option<EventHandler<'a, (String, bool)>>,
     onreturn: Option<EventHandler<'a, (String, bool, Code)>>,
     reset: Option<UseState<bool>>,
     #[props(default = false)]
     disable_onblur: bool,
+    #[props(default = false)]
+    validate_on_return_with_val_empty: bool,
 }
 
 fn emit(cx: &Scope<Props>, s: String, is_valid: bool) {
@@ -308,7 +313,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         true => "progress",
         false => "",
     };
-
     if let Some(value) = &cx.props.value {
         val.set(value.clone());
     }
@@ -380,7 +384,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 )),
                 input {
                     id: "{input_id}",
-                    class: "{loading_class}",
+                    class: format_args!("{} {}", loading_class, if cx.props.select_on_focus.unwrap_or_default() {"select"} else {""}),
                     aria_label: "{aria_label}",
                     spellcheck: "{false}",
                     disabled: "{disabled}",
@@ -393,6 +397,8 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             emit_return(&cx, val.read().to_string(), *valid.current(), Code::Enter);
                             if options.clear_on_submit {
                                 reset_fn();
+                            } else if options.clear_validation_on_submit {
+                                valid.set(false);
                             }
                         }
                     },
@@ -415,10 +421,24 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     // after a valid submission, don't keep the input box green. 
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
+                            if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
+                                let is_valid = if should_validate {
+                                    let validation_result = validate(&cx, "").unwrap_or_default();
+                                    valid.set(validation_result.is_empty());
+                                    error.set(validation_result);
+                                    *valid.current()
+                                } else {
+                                    true
+                                };
+                                emit(&cx, "".to_owned(), is_valid);
+                            } else {
                             emit_return(&cx, val.read().to_string(), *valid.current(), evt.code());
                             if options.clear_on_submit {
                                 reset_fn();
+                            } else if options.clear_validation_on_submit {
+                                valid.set(false);
                             }
+                        }
                         } else if options.react_to_esc_key && evt.code() == Code::Escape {
                             emit_return(&cx, "".to_owned(), min_length == 0, evt.code());
                             if options.clear_on_submit {

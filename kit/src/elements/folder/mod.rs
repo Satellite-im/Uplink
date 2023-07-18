@@ -74,9 +74,12 @@ pub fn Folder<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         rsx! (
                             Input {
                                 disabled: disabled,
-                                placeholder: placeholder,
+                                placeholder: String::new(),
+                                default_text: placeholder,
+                                select_on_focus: true,
                                 focus: true,
                                 size: Size::Small,
+                                validate_on_return_with_val_empty: true,
                                 options: Options {
                                     react_to_esc_key: true,
                                     with_validation: Some(Validation {

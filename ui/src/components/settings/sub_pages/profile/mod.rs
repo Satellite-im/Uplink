@@ -1,7 +1,7 @@
 use arboard::Clipboard;
 use common::get_images_dir;
 use common::language::get_local_text;
-use common::state::{Action, State, ToastNotification};
+use common::state::{Action, Identity, State, ToastNotification};
 use common::warp_runner::{MultiPassCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -17,7 +17,6 @@ use kit::elements::{
 };
 use mime::*;
 use rfd::FileDialog;
-use warp::multipass;
 use warp::{error::Error, logging::tracing::log};
 
 #[derive(Clone)]
@@ -37,7 +36,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let user_status = state.read().status_message().unwrap_or_default();
     let username = state.read().username();
-    let should_update: &UseState<Option<multipass::identity::Identity>> = use_state(cx, || None);
+    let should_update: &UseState<Option<Identity>> = use_state(cx, || None);
     let update_failed: &UseState<Option<String>> = use_state(cx, || None);
     // TODO: This needs to persist across restarts but a config option seems overkill. Should we have another kind of file to cache flags?
     let identity = state.read().get_own_identity();
@@ -51,7 +50,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
 
     if let Some(ident) = should_update.get() {
         log::trace!("Updating ProfileSettings");
-        state.write().set_own_identity(ident.clone().into());
+        state.write().set_own_identity(ident.clone());
         state
             .write()
             .mutate(common::state::Action::AddToastNotification(
@@ -431,6 +430,7 @@ fn get_input_options(validation_options: Validation) -> Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(validation_options),
         clear_on_submit: false,
+        clear_validation_on_submit: true,
         // Use the default options for the remaining fields
         ..Options::default()
     }
