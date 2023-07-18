@@ -238,7 +238,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
     let enable_paste_shortcut = use_ref(cx, || true);
-    println!("focused: {:?}", state.read().ui.metadata.focused);
 
     use_future(cx, (), |_| {
         to_owned![enable_paste_shortcut];
