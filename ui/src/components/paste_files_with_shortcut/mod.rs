@@ -52,9 +52,7 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     use_global_shortcut(cx, key, modifiers, {
         to_owned![files_local_path_to_upload];
         move || {
-            println!("1 - Arriving on use_global_shortcut");
             let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
-            println!("files_local_path: {:?}", files_local_path);
             if !files_local_path.is_empty() {
                 files_local_path_to_upload.with_mut(|i| *i = files_local_path);
             }
