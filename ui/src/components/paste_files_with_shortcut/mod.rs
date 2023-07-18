@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
-use dioxus_desktop::use_global_shortcut;
+use dioxus_desktop::{use_global_shortcut, use_window};
 use dioxus_hooks::{to_owned, use_ref};
 use wry::application::keyboard::ModifiersState;
 
@@ -35,12 +35,12 @@ pub struct ShortCutProps<'a> {
 #[allow(non_snake_case)]
 pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     let files_local_path_to_upload = use_ref(cx, Vec::new);
-
+    let desktop = use_window(cx);
     let key = KeyCode::V;
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
     } else {
-        ModifiersState::SHIFT
+        ModifiersState::CONTROL
     };
 
     if !files_local_path_to_upload.read().is_empty() {
@@ -49,6 +49,18 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
             .call(files_local_path_to_upload.read().clone());
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
+
+    let _ = desktop.create_shortcut(key, modifiers, {
+        to_owned![files_local_path_to_upload];
+        move || {
+            println!("1 - Arriving on use_global_shortcut");
+            let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
+            println!("files_local_path: {:?}", files_local_path);
+            if !files_local_path.is_empty() {
+                files_local_path_to_upload.with_mut(|i| *i = files_local_path);
+            }
+        }
+    });
 
     use_global_shortcut(cx, key, modifiers, {
         to_owned![files_local_path_to_upload];
