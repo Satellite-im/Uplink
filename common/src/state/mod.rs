@@ -68,7 +68,6 @@ pub struct State {
     #[serde(skip)]
     id: DID,
     pub route: route::Route,
-
     chats: chats::Chats,
     friends: friends::Friends,
     #[serde(skip)]
