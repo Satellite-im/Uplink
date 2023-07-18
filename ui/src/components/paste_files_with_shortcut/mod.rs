@@ -40,7 +40,7 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     let modifiers = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
     } else {
-        ModifiersState::CONTROL
+        ModifiersState::SHIFT
     };
 
     if !files_local_path_to_upload.read().is_empty() {
