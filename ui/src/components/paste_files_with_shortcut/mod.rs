@@ -37,10 +37,10 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
     let files_local_path_to_upload = use_ref(cx, Vec::new);
 
     let key = KeyCode::V;
-    let modifiers = if cfg!(target_os = "macos") {
-        ModifiersState::SUPER
-    } else {
+    let modifiers = if cfg!(target_os = "windows") {
         ModifiersState::CONTROL
+    } else {
+        ModifiersState::SUPER
     };
 
     if !files_local_path_to_upload.read().is_empty() {
@@ -49,11 +49,12 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
             .call(files_local_path_to_upload.read().clone());
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
+    println!("0 - Arriving on use_global_shortcut");
 
     use_global_shortcut(cx, key, modifiers, {
         to_owned![files_local_path_to_upload];
         move || {
-            println!("Arriving on use_global_shortcut");
+            println!("1 - Arriving on use_global_shortcut");
             let files_local_path = get_files_path_from_clipboard().unwrap_or_default();
             println!("files_local_path: {:?}", files_local_path);
             if !files_local_path.is_empty() {
