@@ -49,7 +49,6 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
             .call(files_local_path_to_upload.read().clone());
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
-    println!("0 - Arriving on use_global_shortcut");
 
     use_global_shortcut(cx, key, modifiers, {
         to_owned![files_local_path_to_upload];

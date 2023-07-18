@@ -58,10 +58,8 @@ pub fn get_files_path_from_clipboard() -> Result<Vec<PathBuf>, Box<dyn std::erro
                 Some(first_path) => Path::new(first_path).exists(),
                 None => false,
             };
-            println!("Pasting: is_valid_paths: {:?}", is_valid_paths);
             if is_valid_paths {
                 let files_path = decoded_pathbufs(paths_vec);
-                println!("Pasting: files_path: {:?}", files_path);
                 if !files_path.is_empty() {
                     return Ok(files_path);
                 }
@@ -111,7 +109,6 @@ pub fn check_if_there_is_file_or_string_in_clipboard(
                 None => false,
             };
             if is_valid_paths {
-                println!("Changing to FILE");
                 return Ok(ClipboardDataType::File);
             }
         }
