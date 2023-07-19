@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::message::markdown;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -419,7 +420,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     };
 
                     let subtext_val = match unwrapped_message.value().iter().map(|x| x.trim()).find(|x| !x.is_empty()) {
-                        Some(v) => v.into(),
+                        Some(v) => markdown(v),
                         _ => match &unwrapped_message.attachments()[..] {
                             [] => get_local_text("sidebar.chat-new"),
                             [ file ] => file.name(),
