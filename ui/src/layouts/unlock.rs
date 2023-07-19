@@ -197,7 +197,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         focus: true,
                         is_password: true,
                         icon: Icon::Key,
-                        disable_onblur: !account_exists.current().unwrap_or(true),
+                        disable_onblur: true,
                         aria_label: "pin-input".into(),
                         disabled: loading,
                         placeholder: get_local_text("unlock.enter-pin"),
