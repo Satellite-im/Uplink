@@ -377,7 +377,6 @@ pub fn markdown(text: &str) -> String {
     let mut in_code_block = false;
     for line in text_lines {
         let parser = pulldown_cmark::Parser::new_ext(line, options);
-
         for event in parser {
             match event {
                 pulldown_cmark::Event::Start(Tag::Paragraph) => {
@@ -409,8 +408,9 @@ pub fn markdown(text: &str) -> String {
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
                     let line_trim = line.trim();
                     if in_code_block && line_trim == "```" {
-                        html_output.push_str("</code></pre>");
                         in_code_block = false;
+                        html_output.push_str("</code></pre>");
+                        html_output.push_str("</code></pre>");
                     }
                 }
                 _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
