@@ -18,8 +18,6 @@ use warp::{crypto::DID, logging::tracing::log};
 pub struct Props {
     #[props(!optional)]
     active_chat: Option<Chat>,
-    #[props(!optional)]
-    group_creator: bool,
 }
 
 #[allow(non_snake_case)]
@@ -46,7 +44,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
     );
     let _friends_in_group = State::get_friends_by_first_letter(hash_map);
     let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
-    let creator_id = creator_id_vector[0].clone();
+    let creator_id = creator_id_vector.get(0).cloned()?;
 
     cx.render(rsx!(
         div {
