@@ -4,6 +4,7 @@ pub mod chats;
 pub mod configuration;
 pub mod friends;
 pub mod identity;
+pub mod local_state;
 pub mod notifications;
 pub mod pending_message;
 pub mod route;
