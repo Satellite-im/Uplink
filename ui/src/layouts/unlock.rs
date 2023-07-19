@@ -62,6 +62,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
     let cmd_in_progress = use_state(cx, || false);
     let first_render = use_ref(cx, || true);
     let state = use_ref(cx, State::load);
+    let reset_input = use_state(cx, || false);
 
     // On windows, is necessary use state on topbar controls, without using use_shared_state
     // So state is loaded thete to use window_maximized and offer better UX
@@ -201,6 +202,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         aria_label: "pin-input".into(),
                         disabled: loading,
                         placeholder: get_local_text("unlock.enter-pin"),
+                        reset: reset_input.clone(),
                         options: Options {
                             with_validation: Some(pin_validation),
                             with_clear_btn: true,
@@ -217,7 +219,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         onchange: move |(val, validation_passed): (String, bool)| {
                             *pin.write_silent() = val.clone();
                             // Reset the error when the person changes the pin
-                            if !shown_error.get().is_empty() {
+                            if val.is_empty() || !shown_error.get().is_empty() {
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
@@ -269,8 +271,10 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                         onpress: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());
+                                reset_input.set(true);
                             } else if let Some(e) = error.get() {
                                 shown_error.set(e.translation());
+                                reset_input.set(true);
                             } else {
                                 page.set(AuthPages::CreateAccount);
                             }
