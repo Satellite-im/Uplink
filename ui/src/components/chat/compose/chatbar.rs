@@ -41,7 +41,9 @@ use crate::{
     components::paste_files_with_shortcut,
     utils::{
         build_user_from_identity,
-        clipboard_data::{check_if_there_is_file_or_string_in_clipboard, ClipboardDataType},
+        clipboard::clipboard_data::{
+            check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
+        },
     },
 };
 

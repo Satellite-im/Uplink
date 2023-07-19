@@ -6,7 +6,7 @@ use dioxus_desktop::use_global_shortcut;
 use dioxus_hooks::{to_owned, use_ref};
 use wry::application::keyboard::ModifiersState;
 
-use crate::utils::clipboard_data::get_files_path_from_clipboard;
+use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 
 #[derive(Props)]
 pub struct ShortCutProps<'a> {
