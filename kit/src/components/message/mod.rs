@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{borrow::Cow, collections::HashSet};
 
 use common::state::pending_message::progress_file;
 use common::warp_runner::thumbnail_to_base64;
@@ -6,6 +6,7 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
+use pulldown_cmark::{Options, Tag};
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -366,9 +367,41 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
 pub fn markdown(text: &str) -> String {
     let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
-    let parser = pulldown_cmark::Parser::new(&txt);
-    // Write to a new String buffer.
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    let parser = pulldown_cmark::Parser::new_ext(&txt, options);
+
     let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, parser);
-    html_output.replace("<p>", "").replace("</p>", "")
+    let mut in_paragraph = false;
+
+    for event in parser {
+        match event {
+            pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                in_paragraph = true;
+                html_output.push_str("<p>");
+            }
+            pulldown_cmark::Event::End(Tag::Paragraph) => {
+                in_paragraph = false;
+                html_output.push_str("</p>");
+            }
+            pulldown_cmark::Event::Text(t) => {
+                if in_paragraph {
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Text(
+                            t.replace("\n\n", "<br/>").into(),
+                        )),
+                    );
+                } else {
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Text(t)),
+                    );
+                }
+            }
+            _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
+        }
+    }
+
+    html_output
 }
