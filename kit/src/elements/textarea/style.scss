@@ -28,3 +28,10 @@ textarea::-webkit-scrollbar:horizontal {
 textarea::-webkit-scrollbar-thumb:horizontal {
 	display: none;
 }
+
+.input-char-counter {
+	position: absolute;
+	font-size: 10px;
+	right: 90px;
+	bottom: 2px;
+}
