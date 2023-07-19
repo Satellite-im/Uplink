@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashSet};
+use std::collections::HashSet;
 
 use common::state::pending_message::progress_file;
 use common::warp_runner::thumbnail_to_base64;
@@ -6,7 +6,7 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
-use pulldown_cmark::{Options, Tag};
+use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -367,40 +367,56 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 
 pub fn markdown(text: &str) -> String {
     let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
-    let parser = pulldown_cmark::Parser::new_ext(&txt, options);
 
+    let text_lines: Vec<&str> = txt.split('\n').collect();
     let mut html_output = String::new();
     let mut in_paragraph = false;
+    let mut in_code_block = false;
+    for line in text_lines {
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
 
-    for event in parser {
-        match event {
-            pulldown_cmark::Event::Start(Tag::Paragraph) => {
-                in_paragraph = true;
-                html_output.push_str("<p>");
-            }
-            pulldown_cmark::Event::End(Tag::Paragraph) => {
-                in_paragraph = false;
-                html_output.push_str("</p>");
-            }
-            pulldown_cmark::Event::Text(t) => {
-                if in_paragraph {
+        for event in parser {
+            match event {
+                pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                    in_paragraph = true;
+                    html_output.push_str("<p>");
+                }
+                pulldown_cmark::Event::End(Tag::Paragraph) => {
+                    in_paragraph = false;
+                }
+                pulldown_cmark::Event::Text(t) => {
+                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                        t.replace("\n\n", "<br/>").into()
+                    } else {
+                        t
+                    };
                     pulldown_cmark::html::push_html(
                         &mut html_output,
-                        std::iter::once(pulldown_cmark::Event::Text(
-                            t.replace("\n\n", "<br/>").into(),
-                        )),
-                    );
-                } else {
-                    pulldown_cmark::html::push_html(
-                        &mut html_output,
-                        std::iter::once(pulldown_cmark::Event::Text(t)),
+                        std::iter::once(pulldown_cmark::Event::Text(txt)),
                     );
                 }
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
+                    in_code_block = true;
+                    match code_block_kind {
+                        CodeBlockKind::Fenced(language) => html_output
+                            .push_str(&format!("<pre><code class=\"language-{}\">", language)),
+                        _ => html_output.push_str("<pre><code class=\"language-rust\">"),
+                    }
+                }
+                pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    let line_trim = line.trim();
+                    if in_code_block && line_trim == "```" {
+                        html_output.push_str("</code></pre>");
+                        in_code_block = false;
+                    }
+                }
+                _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
             }
-            _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
         }
+        html_output.push('\n');
     }
 
     html_output
