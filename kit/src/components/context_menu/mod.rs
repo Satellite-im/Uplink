@@ -1,4 +1,7 @@
-use common::{icons, state::Identity};
+use common::{
+    icons,
+    state::{Identity, State},
+};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
@@ -72,8 +75,13 @@ pub struct IdentityProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
-    let image = cx.props.identity.profile_picture();
-    let banner = cx.props.identity.profile_banner();
+    let state = use_shared_state::<State>(cx)?;
+    let sender = state
+        .read()
+        .get_identity(&cx.props.identity.did_key())
+        .unwrap_or_default();
+    let image = sender.profile_picture();
+    let banner = sender.profile_banner();
     cx.render(rsx!(
         div {
             class: "identity-header",
@@ -87,8 +95,8 @@ pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     Indicator {
-                        status: cx.props.identity.identity_status().into(),
-                        platform: cx.props.identity.platform().into(),
+                        status: sender.identity_status().into(),
+                        platform: sender.platform().into(),
                     }
                 }
             }
