@@ -385,16 +385,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             controls: cx.render(
                 rsx!(
-                    Button { 
-                        icon: icons::outline::Shape::ChevronDoubleRight, 
-                        disabled: is_loading || disabled, 
-                        appearance: if * can_send.get() {  Appearance::Primary } else { Appearance::Secondary }, 
-                        aria_label: "send-message-button".into(), 
-                        onpress: move |_| submit_fn(), 
-                        tooltip: cx.render(rsx!(Tooltip { 
-                            arrow_position: ArrowPosition::Bottom, 
+                    Button {
+                        icon: icons::outline::Shape::ChevronDoubleRight,
+                        disabled: is_loading || disabled,
+                        appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
+                        aria_label: "send-message-button".into(),
+                        onpress: move |_| submit_fn(),
+                        tooltip: cx.render(rsx!(Tooltip {
+                            arrow_position: ArrowPosition::Bottom,
                             text :get_local_text("uplink.send"),
-                        })), 
+                        })),
                     }
                 ),
             ),
