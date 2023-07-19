@@ -1,7 +1,8 @@
 #[cfg(target_os = "macos")]
 use super::macos_clipboard::MacOSClipboard;
 #[cfg(target_os = "linux")]
-use super::verify_valid_paths::decoded_pathbufs;
+use crate::utils::verify_valid_paths::decoded_pathbufs;
+
 use arboard::Clipboard as Arboard;
 #[cfg(target_os = "windows")]
 use clipboard_win::{formats, get_clipboard, set_clipboard};
