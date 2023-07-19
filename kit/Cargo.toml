@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 regex = "1.8.4"
+scraper = "0.17.1"
 chrono.workspace = true
 dioxus.workspace = true
 dioxus-core = { workspace = true }
