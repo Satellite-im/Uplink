@@ -231,7 +231,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);
-                                ch.send((val, account_exists.get().clone()));
+                                ch.send((val, *account_exists.get()));
                                 validation_failure.set(None);
                             } else {
                                 validation_failure.set(Some(UnlockError::ValidationError));
