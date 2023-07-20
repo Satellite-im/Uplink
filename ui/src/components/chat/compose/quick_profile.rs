@@ -10,7 +10,7 @@ use kit::{
 
 use common::{icons::outline::Shape as Icon, warp_runner::MultiPassCmd};
 use common::{
-    state::{Action, Chat, Identity, State},
+    state::{Action, Chat, State},
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -26,7 +26,7 @@ use crate::UPLINK_ROUTES;
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,
-    identity: &'a UseState<Identity>,
+    did_key: DID,
     update_script: &'a UseState<String>,
     children: Element<'a>,
 }
@@ -49,7 +49,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
 
     let identity = state
         .read()
-        .get_identity(&cx.props.identity.did_key())
+        .get_identity(&cx.props.did_key)
         .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
@@ -237,7 +237,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
-                identity: identity.clone()
+                sender_did: identity.did_key()
             },
             hr{},
             div {

@@ -1,13 +1,11 @@
-use common::{
-    icons,
-    state::{Identity, State},
-};
+use common::{icons, state::State};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
 use dioxus_desktop::{use_eval, use_window};
+use warp::crypto::DID;
 
 use crate::components::indicator::Indicator;
 
@@ -70,7 +68,7 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 
 #[derive(PartialEq, Props)]
 pub struct IdentityProps {
-    identity: Identity,
+    sender_did: DID,
 }
 
 #[allow(non_snake_case)]
@@ -78,7 +76,7 @@ pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let sender = state
         .read()
-        .get_identity(&cx.props.identity.did_key())
+        .get_identity(&cx.props.sender_did)
         .unwrap_or_default();
     let image = sender.profile_picture();
     let banner = sender.profile_banner();
