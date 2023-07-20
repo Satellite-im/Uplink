@@ -80,6 +80,11 @@ walkdir = { workspace = true }
 cocoa = "0.24.1"
 objc = "0.2.7"
 core-foundation = "0.9.3"
+objc-foundation = "0.1.1"
+objc_id = "0.1.1"
+
+[target.'cfg(windows)'.dependencies]
+clipboard-win = "4.5.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"

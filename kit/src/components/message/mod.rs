@@ -160,13 +160,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
     let mut formatted_text = if cx.props.parse_markdown {
-        // TODO: This fix breaks other things. Need to find a better way to do this.
-        // let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
-        let parser = pulldown_cmark::Parser::new(&text);
-        // Write to a new String buffer.
-        let mut html_output = String::new();
-        pulldown_cmark::html::push_html(&mut html_output, parser);
-        html_output.replace("<p>", "").replace("</p>", "")
+        markdown(&text)
     } else {
         text
     };
@@ -368,4 +362,13 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             })))
         }
     ))
+}
+
+pub fn markdown(text: &str) -> String {
+    let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+    let parser = pulldown_cmark::Parser::new(&txt);
+    // Write to a new String buffer.
+    let mut html_output = String::new();
+    pulldown_cmark::html::push_html(&mut html_output, parser);
+    html_output.replace("<p>", "").replace("</p>", "")
 }
