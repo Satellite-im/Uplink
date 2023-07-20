@@ -45,8 +45,9 @@ fn default_emojis() -> EmojiList {
     HashMap::from([
         ("👍".to_string(), 1),
         ("👎".to_string(), 1),
-        ("👌".to_string(), 1),
+        ("❤️".to_string(), 1),
         ("🖖".to_string(), 1),
+        ("😂".to_string(), 1),
     ])
 }
 

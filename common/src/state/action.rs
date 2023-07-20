@@ -191,6 +191,8 @@ pub enum ConfigAction {
     SetOverlayEnabled(bool),
     #[display(fmt = "SetDevModeEnabled {_0}")]
     SetDevModeEnabled(bool),
+    #[display(fmt = "SetExperimentalFeaturesEnabled {_0}")]
+    SetExperimentalFeaturesEnabled(bool),
     #[display(fmt = "SetInterfaceSoundsEnabled {_0}")]
     SetInterfaceSoundsEnabled(bool),
     #[display(fmt = "SetMediaSoundsEnabled {_0}")]

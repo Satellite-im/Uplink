@@ -61,6 +61,16 @@ pub fn DeveloperSettings(cx: Scope) -> Element {
             id: "settings-developer",
             aria_label: "settings-developer",
             SettingSection {
+                section_label: get_local_text("settings-developer.experimental-features"),
+                section_description: get_local_text("settings-developer.experimental-features-description"),
+                Switch {
+                    active: state.read().configuration.developer.experimental_features,
+                    onflipped: move |value| {
+                        state.write().mutate(Action::Config(ConfigAction::SetExperimentalFeaturesEnabled(value)));
+                    },
+                }
+            },
+            SettingSection {
                 section_label: get_local_text("settings-developer.developer-mode"),
                 section_description: get_local_text("settings-developer.developer-mode-description"),
                 Switch {

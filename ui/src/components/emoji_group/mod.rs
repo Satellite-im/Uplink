@@ -1,4 +1,5 @@
-use common::{icons::outline::Shape as Icon, state::State};
+// use common::{icons::outline::Shape as Icon, state::State};
+use common::state::State;
 use dioxus::prelude::*;
 use kit::elements::{button::Button, Appearance};
 
@@ -25,10 +26,10 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     },
                 }
             }
-            Button {
-                icon: Icon::Plus,
-                appearance: Appearance::Secondary,
-            }
+            // Button {
+            //     icon: Icon::Plus,
+            //     appearance: Appearance::Secondary,
+            // }
         }
     ))
 }

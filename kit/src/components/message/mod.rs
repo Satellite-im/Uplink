@@ -236,7 +236,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             })
-            pending_attachment_list.map(|node|{
+            pending_attachment_list.map(|node| {
                 rsx!(node)
             })
         },
@@ -365,8 +365,9 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 }
 
 pub fn markdown(text: &str) -> String {
-    let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
-    let parser = pulldown_cmark::Parser::new(&txt);
+    // TODO: This does not work with code or pre elements.
+    //let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+    let parser = pulldown_cmark::Parser::new(&text);
     // Write to a new String buffer.
     let mut html_output = String::new();
     pulldown_cmark::html::push_html(&mut html_output, parser);
