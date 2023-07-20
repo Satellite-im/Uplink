@@ -47,7 +47,10 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let state = use_shared_state::<State>(cx)?;
     let id = cx.props.id;
 
-    let identity = cx.props.identity.get();
+    let identity = state
+        .read()
+        .get_identity(&cx.props.identity.did_key())
+        .unwrap_or_default();
     let remove_identity = identity.clone();
     let block_identity = identity.clone();
 
@@ -234,7 +237,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         id: format!("{id}"),
         items: cx.render(rsx!(
             IdentityHeader {
-                identity: identity
+                identity: identity.clone()
             },
             hr{},
             div {
@@ -243,7 +246,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                 p {
                     class: "text",
                     aria_label: "profile-name-value",
-                    "{cx.props.identity.username()}"
+                    format!("{}", identity.username())
                 }
             }
             identity.status_message().and_then(|s|{

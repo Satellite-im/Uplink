@@ -69,12 +69,12 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 }
 
 #[derive(PartialEq, Props)]
-pub struct IdentityProps<'a> {
-    identity: &'a Identity,
+pub struct IdentityProps {
+    identity: Identity,
 }
 
 #[allow(non_snake_case)]
-pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
+pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let sender = state
         .read()
