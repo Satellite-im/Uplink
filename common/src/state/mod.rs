@@ -207,6 +207,7 @@ impl State {
                 let _ = self.ui.file_previews.remove(&id);
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
+            Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts

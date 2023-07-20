@@ -20,6 +20,8 @@ pub struct ItemProps<'a> {
     danger: Option<bool>,
     should_render: Option<bool>,
     aria_label: Option<String>,
+    #[props(optional)]
+    children: Option<Element<'a>>,
 }
 
 /// Tells the parent the menu was interacted with.
@@ -32,6 +34,7 @@ pub fn emit(cx: &Scope<ItemProps>, e: Event<MouseData>) {
 #[allow(non_snake_case)]
 pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
     let should_render = cx.props.should_render.unwrap_or(true);
+
     if !should_render {
         return None;
     }
@@ -45,24 +48,32 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
     let disabled: bool = cx.props.disabled.unwrap_or(false);
 
     let aria_label = cx.props.aria_label.clone().unwrap_or_default();
-    cx.render(rsx! {
-        button {
-            class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
-            aria_label: "{aria_label}",
-            onclick: move |e| {
-                if !disabled {
-                    emit(&cx, e);
-                }
-            },
-            (cx.props.icon.is_some()).then(|| {
-                let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
-                rsx! {
-                    icons::Icon { icon: icon }
-                }
-            }),
-            div {"{cx.props.text}"}
-        }
-    })
+
+    if let Some(children) = &cx.props.children {
+        cx.render(rsx!(div {
+            class: "context-item simple-context-item",
+            children
+        }))
+    } else {
+        cx.render(rsx!(
+            button {
+                class: format_args!("{class} {}", if disabled {"context-item-disabled"} else {""}),
+                aria_label: "{aria_label}",
+                onclick: move |e| {
+                    if !disabled {
+                        emit(&cx, e);
+                    }
+                },
+                (cx.props.icon.is_some()).then(|| {
+                    let icon = cx.props.icon.unwrap_or(icons::outline::Shape::Cog6Tooth);
+                    rsx! {
+                        icons::Icon { icon: icon }
+                    }
+                }),
+                div {"{cx.props.text}"}
+            }
+        ))
+    }
 }
 
 #[derive(PartialEq, Props)]
