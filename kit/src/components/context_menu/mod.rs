@@ -1,10 +1,11 @@
-use common::{icons, state::Identity};
+use common::{icons, state::State};
 use dioxus::{
     core::Event,
     events::{MouseData, MouseEvent},
     prelude::*,
 };
 use dioxus_desktop::{use_eval, use_window};
+use warp::crypto::DID;
 
 use crate::components::indicator::Indicator;
 
@@ -66,14 +67,19 @@ pub fn ContextItem<'a>(cx: Scope<'a, ItemProps<'a>>) -> Element<'a> {
 }
 
 #[derive(PartialEq, Props)]
-pub struct IdentityProps<'a> {
-    identity: &'a Identity,
+pub struct IdentityProps {
+    sender_did: DID,
 }
 
 #[allow(non_snake_case)]
-pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
-    let image = cx.props.identity.profile_picture();
-    let banner = cx.props.identity.profile_banner();
+pub fn IdentityHeader(cx: Scope<IdentityProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let sender = state
+        .read()
+        .get_identity(&cx.props.sender_did)
+        .unwrap_or_default();
+    let image = sender.profile_picture();
+    let banner = sender.profile_banner();
     cx.render(rsx!(
         div {
             class: "identity-header",
@@ -87,8 +93,8 @@ pub fn IdentityHeader<'a>(cx: Scope<'a, IdentityProps>) -> Element<'a> {
                     aria_label: "profile-image",
                     style: "background-image: url('{image}');",
                     Indicator {
-                        status: cx.props.identity.identity_status().into(),
-                        platform: cx.props.identity.platform().into(),
+                        status: sender.identity_status().into(),
+                        platform: sender.platform().into(),
                     }
                 }
             }
