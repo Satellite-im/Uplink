@@ -382,7 +382,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         super::quick_profile::QuickProfileContext{
             id: quick_profile_uuid,
             update_script: update_script,
-            identity: identity_profile
+            did_key: identity_profile.did_key()
         }
     ))
 }

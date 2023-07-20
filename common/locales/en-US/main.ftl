@@ -80,6 +80,7 @@ messages = Messages
     .participant = Participant
     .participants = Participants
     .fetching = Fetching more messages...
+    .group-creator-label = Group Creator
     
 favorites = Favorites
     .favorites = Favorites
