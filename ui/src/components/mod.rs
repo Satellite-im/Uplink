@@ -4,6 +4,7 @@ pub mod debug_logger;
 pub mod files;
 pub mod friends;
 pub mod media;
+pub mod paste_files_with_shortcut;
 pub mod settings;
 pub mod toast;
 pub mod topbar;
