@@ -444,3 +444,20 @@
 .bold {
   font-weight: bold;
 }
+
+.group-creator-group {
+  display: flex;
+  align-items:center;
+}
+.group-creator-container > svg {
+  vertical-align: middle;
+}
+.group-creator-text {
+  margin-left: .5rem;
+  font-size: 10px;
+  cursor: default;
+}
+
+.hide-button-text {
+  width: 38px;
+}
