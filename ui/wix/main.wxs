@@ -147,26 +147,14 @@
          </Directory>
          <!-- end of ImagesFolder-->
          <Directory Id='ThemesFolder' Name='themes'>
-              <Component Id="cmpDefault.scss" Guid="7722DA8B-61C5-48D1-B66D-D67C8A9A5DE1">
-                  <File Id="Default.scss" Name="default.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\default.scss" />
-              </Component>
-              <Component Id="cmpDraculish.scss" Guid="76EF2654-7269-41F8-9AEA-A27609BBF932">
-                  <File Id="Draculish.scss" Name="draculish.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\draculish.scss" />
-              </Component>
-              <Component Id="cmpGreen.scss" Guid="01480FA2-F2A8-4B25-BA09-024875E7E181">
-                  <File Id="Green.scss" Name="green.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\green.scss" />
+              <!--<Component Id="cmpDefault.scss" Guid="7722DA8B-61C5-48D1-B66D-D67C8A9A5DE1">
+                  <File Id="Default.scss" Name="default.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\example.scss" />
+              </Component>-->
+              <Component Id="cmpExample.scss" Guid="76EF2654-7269-41F8-9AEA-A27609BBF932">
+                  <File Id="Example.scss" Name="draculish.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\example.scss" />
               </Component>
               <Component Id="cmpLight.scss" Guid="4891355C-18F2-4ECD-9A99-6BAA43B983E8">
                   <File Id="Light.scss" Name="light.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\light.scss" />
-              </Component>
-              <Component Id="cmpNord.scss" Guid="C8A3F86A-1DD8-45C1-B495-419144304CE2">
-                  <File Id="Nord.scss" Name="nord.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\nord.scss" />
-              </Component>
-              <Component Id="cmpPink.scss" Guid="469F80E7-774E-445A-AF87-7CE4E3E23E50">
-                  <File Id="Pink.scss" Name="pink.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\pink.scss" />
-              </Component>
-              <Component Id="cmpPolar.scss" Guid="A6D2B57C-8AA2-45E1-9BE4-F393D3EEE72B">
-                  <File Id="Polar.scss" Name="polar.scss" DiskId="1" KeyPath="yes" Source="$(var.CargoTargetDir)\..\ui\extra\themes\polar.scss" />
               </Component>
          </Directory>
          <!-- endof ThemesFolder -->
@@ -201,13 +189,8 @@
          <ComponentRef Id="cmpLocked.webp" />
          <ComponentRef Id="cmpParty.webp" />
          <ComponentRef Id="cmpWorking.webp" />
-         <ComponentRef Id="cmpDefault.scss" />
-         <ComponentRef Id="cmpDraculish.scss" />
-         <ComponentRef Id="cmpGreen.scss" />
          <ComponentRef Id="cmpLight.scss" />
-         <ComponentRef Id="cmpNord.scss" />
-         <ComponentRef Id="cmpPink.scss" />
-         <ComponentRef Id="cmpPolar.scss" />
+         <ComponentRef Id="cmpExample.scss" />
          <ComponentRef Id="cmpLibEmojiSelector.dll" />
          <Feature Id="Environment" Title="PATH Environment Variable" Description="Add the install location of the [ProductName] executable to the PATH system environment variable. This allows the [ProductName] executable to be called from any location." Level="1" Absent="allow">
             <ComponentRef Id="Path" />
