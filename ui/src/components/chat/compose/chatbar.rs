@@ -37,7 +37,15 @@ use warp::{
 
 const MAX_CHARS_LIMIT: usize = 1024;
 
-use crate::utils::build_user_from_identity;
+use crate::{
+    components::paste_files_with_shortcut,
+    utils::{
+        build_user_from_identity,
+        clipboard::clipboard_data::{
+            check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
+        },
+    },
+};
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
 
@@ -231,6 +239,35 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     // drives the sending of TypingIndicator
     let local_typing_ch1 = local_typing_ch.clone();
+    let enable_paste_shortcut = use_ref(cx, || true);
+
+    use_future(cx, (), |_| {
+        to_owned![enable_paste_shortcut];
+        async move {
+            loop {
+                let clipboard_data_type = tokio::task::spawn_blocking(|| {
+                    check_if_there_is_file_or_string_in_clipboard()
+                        .unwrap_or(ClipboardDataType::String)
+                })
+                .await
+                .expect("Should succeed");
+                match clipboard_data_type {
+                    ClipboardDataType::File => {
+                        if !*enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = true);
+                        }
+                    }
+                    _ => {
+                        if *enable_paste_shortcut.read() {
+                            enable_paste_shortcut.with_mut(|i| *i = false);
+                        }
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(250)).await;
+            }
+        }
+    });
+
     use_future(cx, &active_chat_id, |current_chat| async move {
         loop {
             tokio::time::sleep(Duration::from_secs(STATIC_ARGS.typing_indicator_refresh)).await;
@@ -343,103 +380,94 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     local_typing_ch.send(TypingIndicator::Typing(*id));
                 }
             },
-            value: state
-                .read()
-                .get_active_chat()
-                .as_ref()
-                .and_then(|d| d.draft.clone())
-                .unwrap_or_default(),
+            value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            extensions: cx.render(rsx!(
-                // Load extensions
-                for node in ext_renders {
-                    rsx!(node)
-                }
-            )),
-            controls: cx.render(rsx!(Button {
-                icon: icons::outline::Shape::ChevronDoubleRight,
-                disabled: is_loading || disabled,
-                appearance: if *can_send.get() {
-                    Appearance::Primary
-                } else {
-                    Appearance::Secondary
-                },
-                aria_label: "send-message-button".into(),
-                onpress: move |_| submit_fn(),
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("uplink.send"),
-                })),
-            })),
-            with_replying_to: data
-                .as_ref()
-                .filter(|_| !disabled)
-                .map(|data| {
-                    let active_chat = &data.active_chat;
+            extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
+            controls: cx.render(
+                rsx!(
+                    Button {
+                        icon: icons::outline::Shape::ChevronDoubleRight,
+                        disabled: is_loading || disabled,
+                        appearance: if * can_send.get() { Appearance::Primary } else { Appearance::Secondary },
+                        aria_label: "send-message-button".into(),
+                        onpress: move |_| submit_fn(),
+                        tooltip: cx.render(rsx!(Tooltip {
+                            arrow_position: ArrowPosition::Bottom,
+                            text :get_local_text("uplink.send"),
+                        })),
+                    }
+                ),
+            ),
+            with_replying_to: data.as_ref().filter(|_| !disabled).map(|data| {
+                let active_chat = &data.active_chat;
+                cx.render(
+                    rsx!(
+                        active_chat.replying_to.as_ref().map(|msg| {
+                            let our_did = state.read().did_key();
+                            let msg_owner = if data.my_id.did_key() == msg.sender() {
+                                Some(&data.my_id)
+                            } else {
+                                data.other_participants.iter().find(|x| x.did_key() == msg.sender())
+                            };
 
-                    cx.render(rsx!(active_chat.replying_to.as_ref().map(|msg| {
-                        let our_did = state.read().did_key();
-                        let msg_owner = if data.my_id.did_key() == msg.sender() {
-                            Some(&data.my_id)
-                        } else {
-                            data.other_participants
-                                .iter()
-                                .find(|x| x.did_key() == msg.sender())
-                        };
-                        let (platform, status, profile_picture) =
-                            get_platform_and_status(msg_owner);
+                            let (platform, status, profile_picture) = get_platform_and_status(msg_owner);
 
-                        rsx!(
-                            Reply {
-                                label: get_local_text("messages.replying"),
-                                remote: our_did != msg.sender(),
-                                onclose: move |_| {
-                                    state.write().mutate(Action::CancelReply(active_chat.id))
-                                },
-                                attachments: msg.attachments(),
-                                message: msg.value().join("\n"),
-                                UserImage {
-                                    image: profile_picture,
-                                    platform: platform,
-                                    status: status,
-                                },
+                            rsx!(
+                                Reply {
+                                    label: get_local_text("messages.replying"),
+                                    remote: our_did != msg.sender(),
+                                    onclose: move |_| {
+                                        state.write().mutate(Action::CancelReply(active_chat.id))
+                                    },
+                                    attachments: msg.attachments(),
+                                    message: msg.value().join("\n"),
+                                    UserImage {
+                                        image: profile_picture,
+                                        platform: platform,
+                                        status: status,
+                                    },
+                                }
+                            )
+                        })
+                    ),
+                )
+            }).unwrap_or(None),
+            with_file_upload: cx.render(
+                rsx!(
+                    Button {
+                        icon: icons::outline::Shape::Plus,
+                        disabled: is_loading || disabled,
+                        aria_label: "upload-button".into(),
+                        appearance: Appearance::Primary,
+                        onpress: move |_| {
+                            if disabled {
+                                return;
                             }
-                        )
-                    })))
-                })
-                .unwrap_or(None),
-            with_file_upload: cx.render(rsx!(Button {
-                icon: icons::outline::Shape::Plus,
-                disabled: is_loading || disabled,
-                aria_label: "upload-button".into(),
-                appearance: Appearance::Primary,
-                onpress: move |_| {
-                    if disabled {
-                        return;
+                            if let Some(new_files) = FileDialog::new()
+                                .set_directory(dirs::home_dir().unwrap_or_default())
+                                .pick_files()
+                            {
+                                let mut new_files_to_upload: Vec<_> = cx.props.upload_files
+                                    .current()
+                                    .iter()
+                                    .filter(|file_name| !new_files.contains(file_name))
+                                    .cloned()
+                                    .collect();
+                                new_files_to_upload.extend(new_files);
+                                cx.props.upload_files.set(new_files_to_upload);
+                                update_send();
+                            }
+                        },
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: get_local_text("files.upload"),
+                            }
+                        )),
                     }
-                    if let Some(new_files) = FileDialog::new()
-                        .set_directory(dirs::home_dir().unwrap_or_default())
-                        .pick_files()
-                    {
-                        let mut new_files_to_upload: Vec<_> = cx
-                            .props
-                            .upload_files
-                            .current()
-                            .iter()
-                            .filter(|file_name| !new_files.contains(file_name))
-                            .cloned()
-                            .collect();
-                        new_files_to_upload.extend(new_files);
-                        cx.props.upload_files.set(new_files_to_upload);
-                        update_send();
-                    }
-                },
-                tooltip: cx.render(rsx!(Tooltip {
-                    arrow_position: ArrowPosition::Bottom,
-                    text: get_local_text("files.upload"),
-                }))
-            }))
-        },
+                ),
+            )
+        }
         error.0.then(|| rsx!(
             p {
                 class: "chatbar-error-input-message",
@@ -476,11 +504,32 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     }
                 ))
             })
-        })
-        Attachments {files: cx.props.upload_files.clone(), on_remove: move |_| {
-            update_send();
-        }},
-        chatbar,
+        }),
+        if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
+            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                on_paste: move |files_local_path: Vec<PathBuf>| {
+                    if !files_local_path.is_empty() {
+                        let mut new_files_to_upload: Vec<_> = cx
+                        .props
+                        .upload_files
+                        .current()
+                        .iter()
+                        .filter(|file_name| !files_local_path.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(files_local_path);
+                    cx.props.upload_files.set(new_files_to_upload);
+                    }
+                },
+            })
+        }
+        Attachments {
+            files: cx.props.upload_files.clone(),
+            on_remove: move |_| {
+                update_send();
+            }
+        }
+        chatbar
     ))
 }
 

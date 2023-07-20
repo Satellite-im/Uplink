@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use std::path::Path;
+use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
@@ -12,7 +13,8 @@ use common::upload_file_channel::{
 };
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
-use dioxus_desktop::{use_window, DesktopContext};
+use dioxus_desktop::use_window;
+use dioxus_desktop::DesktopContext;
 use dioxus_router::*;
 use kit::{
     components::{
@@ -38,6 +40,7 @@ pub mod functions;
 
 use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::upload_progress_bar::UploadProgressBar;
+use crate::components::paste_files_with_shortcut;
 use crate::layouts::storage::file_modal::get_file_modal;
 
 use self::controller::{StorageController, UploadFileController};
@@ -84,9 +87,24 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
+    let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+
     allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
+
+    use_future(cx, (), |_| {
+        to_owned![files_been_uploaded, files_in_queue_to_upload];
+        async move {
+            // Remove load progress bar if anythings goes wrong
+            loop {
+                if files_in_queue_to_upload.read().is_empty() && *files_been_uploaded.read() {
+                    *files_been_uploaded.write() = false;
+                }
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        }
+    });
 
     functions::run_verifications_and_update_storage(
         state,
@@ -119,6 +137,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             p {id: "overlay-text0", class: "overlay-text"},
             p {id: "overlay-text", class: "overlay-text"}
         },
+        if state.read().ui.metadata.focused {
+            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                on_paste: move |files_local_path| {
+                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, window);
+                    upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
+                },
+            })
+        }
         if let Some(file) = storage_controller.read().show_file_modal.as_ref() {
             let file2 = file.clone();
             rsx!(
@@ -162,6 +188,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         rsx! (
                             Button {
                                 icon: Icon::FolderPlus,
+                                disabled: *upload_file_controller.files_been_uploaded.read(),
                                 appearance: Appearance::Secondary,
                                 aria_label: "add-folder".into(),
                                 tooltip: cx.render(rsx!(
@@ -171,7 +198,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     }
                                 )),
                                 onpress: move |_| {
-                                    storage_controller.write().finish_renaming_item(true);
+                                    if !*upload_file_controller.files_been_uploaded.read() {
+                                        storage_controller.write().finish_renaming_item(true);
+                                    }
                                 },
                             },
                             Button {
@@ -329,6 +358,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         storage_controller.read().directories_list.iter().map(|dir| {
                             let folder_name = dir.name();
                             let folder_name2 = dir.name();
+                            let folder_name3 = dir.name();
                             let key = dir.id();
                             let dir2 = dir.clone();
                             rsx!(
@@ -362,6 +392,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         aria_label: dir.name(),
                                         with_rename:storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onrename: move |(val, key_code)| {
+                                            if val == folder_name3 {
+                                                storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                storage_controller.write().finish_renaming_item(false);
+                                                return;
+                                            };
                                             if storage_controller.read().directories_list.iter().any(|dir| dir.name() == val) {
                                                 state
                                                 .write()
@@ -392,6 +427,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                         storage_controller.read().files_list.iter().map(|file| {
                             let file_name = file.name();
                             let file_name2 = file.name();
+                            let file_name3 = file.name();
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -467,6 +503,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             },
                                             onrename: move |(val, key_code)| {
                                                 let new_name: String = val;
+                                                if new_name == file_name3 {
+                                                    storage_controller.with(|i| i.is_renaming_map.is_none());
+                                                    storage_controller.write().finish_renaming_item(false);
+                                                    return;
+                                                };
                                                 if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
                                                     state
                                                     .write()

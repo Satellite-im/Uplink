@@ -45,6 +45,8 @@ pub struct Props<'a> {
     value: String,
     #[props(default = false)]
     is_disabled: bool,
+    #[props(default = false)]
+    show_char_counter: bool,
 }
 
 #[allow(non_snake_case)]
@@ -64,6 +66,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onreturn,
         value,
         is_disabled,
+        show_char_counter,
     } = &cx.props;
 
     let id = if cx.props.id.is_empty() {
@@ -71,6 +74,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     } else {
         cx.props.id.clone()
     };
+    let id_char_counter = id.clone();
 
     let height_script = include_str!("./update_input_height.js");
     let focus_script = if cx.props.ignore_focus {
@@ -88,7 +92,20 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let current_val = value.to_string();
     let disabled = *loading || *is_disabled;
 
+    let update_char_counter_script = include_str!("./update_char_counter.js")
+        .replace("$UUID", &id)
+        .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+    let clear_counter_script =
+        r#"document.getElementById('$UUID-char-counter').innerText = "0/$MAX_LENGTH";"#
+            .replace("$UUID", &id)
+            .replace("$MAX_LENGTH", &format!("{}", max_length - 1));
+
+    if *show_char_counter {
+        eval(update_char_counter_script);
+    }
+
     let cv2 = current_val.clone();
+    let cv3 = current_val.clone();
 
     let text_value = Rc::new(RefCell::new(value.to_string()));
     let text_value_onchange = Rc::clone(&text_value);
@@ -126,12 +143,23 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         let shift_key_as_modifier = evt.data.modifiers().contains(Modifiers::SHIFT);
 
                         if enter_pressed && !shift_key_as_modifier {
+                            if *show_char_counter {
+                                eval(clear_counter_script.to_string());
+                            }
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
                         } else if enter_pressed && shift_key_as_modifier {
                             text_value_onkeyup.borrow_mut().push('\n');
                             onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
                     },
+                }
+                if *show_char_counter {
+                    rsx!( p {
+                        key: "{id_char_counter}-char-counter",
+                        id: "{id_char_counter}-char-counter",
+                        class: "input-char-counter",
+                        format!("{}/{}", cv3.len(), max_length - 1),
+                    })
                 }
             },
         }

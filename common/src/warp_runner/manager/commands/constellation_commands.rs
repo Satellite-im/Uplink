@@ -373,7 +373,11 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             .map(|file| file.to_string_lossy().to_string())
         {
             Some(file) => file,
-            None => continue,
+            None => {
+                log::error!("Not possible to get filename");
+                let _ = tx_upload_file.send(UploadFileAction::Error);
+                continue;
+            }
         };
 
         let local_path = Path::new(&file_path).to_string_lossy().to_string();
@@ -382,6 +386,7 @@ async fn upload_files(warp_storage: &mut warp_storage, files_path: Vec<PathBuf>)
             Ok(metadata) => metadata.len() as usize,
             Err(e) => {
                 log::error!("Not possible to get file size, error: {}", e);
+                let _ = tx_upload_file.send(UploadFileAction::Error);
                 continue;
             }
         };
