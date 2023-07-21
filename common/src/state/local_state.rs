@@ -1,12 +1,11 @@
-#![allow(non_snake_case)]
-
 use dioxus::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LocalSubscription<T> {
     inner: Rc<RefCell<T>>,
     subscribed: Rc<RefCell<HashSet<ScopeId>>>,
@@ -15,6 +14,28 @@ pub struct LocalSubscription<T> {
 impl<T> PartialEq for LocalSubscription<T> {
     fn eq(&self, other: &Self) -> bool {
         true //TODO
+    }
+}
+
+impl<T: Serialize> Serialize for LocalSubscription<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.inner.borrow().serialize(serializer)
+    }
+}
+
+impl<'de, T: Deserialize<'de> + 'static> Deserialize<'de> for LocalSubscription<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let deserialize: Result<T, _> = Deserialize::deserialize(deserializer);
+        match deserialize {
+            Ok(inner) => Result::Ok(LocalSubscription::create(inner)),
+            Err(e) => Result::Err(e),
+        }
     }
 }
 
