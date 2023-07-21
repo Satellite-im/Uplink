@@ -1,11 +1,12 @@
 use common::language::get_local_text;
-use common::state::{self, identity_search_result, Action, State};
+use common::state::{self, identity_search_result, Action, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::indicator::Indicator;
 use kit::components::message::markdown;
 use kit::{
     components::{
@@ -56,10 +57,17 @@ pub struct SearchProps<'a> {
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
     if cx.props.identities.get().is_empty() {
         return None;
     }
     let mut identities = cx.props.identities.get().clone();
+    // let mut users: Vec<Identity> = Vec::new();
+    // identities.iter().cloned().enumerate().map(|(k, entry)| {
+    //     let user_in_search = state.read().get_identity(&entry.).unwrap_or_default();
+    //     users.append(user_in_search);
+    // });
+
     identities.sort_by_key(|entry| entry.display_name.clone());
     cx.render(rsx!(
         div {
@@ -71,18 +79,28 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
             identities.iter().cloned().enumerate().map(|(k, entry)| {
+                let image = String::new();
                 rsx!(
-                    a {
-                        class: "search-friends-dropdown",
-                        href: "#{entry.display_name}",
-                        prevent_default: "onclick",
-                        rel: "noopener noreferrer",
-                        onclick: move |evt| {
-                            evt.stop_propagation();
-                            cx.props.onclick.call(entry.id.clone());
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "identity-header-sidebar",
+                        div {
+                            id: "profile-image",
+                            aria_label: "profile-image",
+                            style: "background-image: url('{image}');",
+                        }
+                        a {
+                            class: "search-friends-dropdown",
+                            href: "#{entry.display_name}",
+                            prevent_default: "onclick",
+                            rel: "noopener noreferrer",
+                            onclick: move |evt| {
+                                evt.stop_propagation();
+                                cx.props.onclick.call(entry.id.clone());
+                            },
+                            "{entry.display_name}"
                         },
-                        "{entry.display_name}"
-                    },
+                    }
                     if (cx.props.identities.get().len() - 1) != k {
                         rsx!(div { class:"border", })
                     }

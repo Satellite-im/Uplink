@@ -204,6 +204,35 @@
 }
 
 .sidebar {
+  .identity-header-sidebar {
+    display: flex;
+    // TODO(Lucas): Look it later, should be height: x%;
+    height: 50px;
+    background-size: cover;
+    background-color: var(--background);
+    margin-top: 4px;
+    #profile-image {
+      margin: var(--gap-less);
+      //TODO(Lucas): Look to it, should be width: var(--height-input);
+      width: 45px;
+      height: var(--height-input);
+      border-radius: 50%;
+      background-size: cover;
+      background-color: var(--secondary);
+      border: 1px solid var(--background);
+      .indicator {
+        position: relative;
+        color: var(--background);
+        top: calc(100% - 1rem);
+        left: calc(100% - 1rem);
+      }
+    }
+  }
+  .identity-header-sidebar:hover {
+    background-color: var(--background-light);
+  }
+
+
   .searchbar-dropdown {
     position: absolute;
     display: inline-flex;
@@ -218,12 +247,9 @@
       z-index: 110;
       color: var(--text-color);
       text-decoration: none;
-      padding: 8px 12px;
+      padding: 12px 12px;
       word-wrap: break-word;
       width: 100%;
-    }
-    a:hover {
-      background-color: var(--background-light);
     }
 
     .border {
