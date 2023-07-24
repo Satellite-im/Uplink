@@ -132,14 +132,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     // also must reset num_to_take when the active_chat changes
     let active_chat = use_ref(cx, || None);
     let currently_active = Some(data.active_chat.id);
-    let _eval = use_eval(cx);
+    let eval = use_eval(cx);
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
         num_to_take.set(DEFAULT_NUM_TO_TAKE);
     }
 
     use_effect(cx, &data.active_chat.id, |id| {
-        to_owned![_eval, prev_chat_id];
+        to_owned![eval, prev_chat_id];
         async move {
             // yes, this check seems like some nonsense. but it eliminates a jitter and if
             // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
@@ -147,9 +147,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
                 let script = include_str!("../scroll_to_bottom.js");
-                _eval(script.to_string());
+                eval(script.to_string());
             }
-            _eval(SETUP_CONTEXT_PARENT.to_string());
+            eval(SETUP_CONTEXT_PARENT.to_string());
         }
     });
 
@@ -759,7 +759,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     // todo: why?
     #[cfg(not(target_os = "macos"))]
-    let eval = use_eval(cx);
+    let _eval = use_eval(cx);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
