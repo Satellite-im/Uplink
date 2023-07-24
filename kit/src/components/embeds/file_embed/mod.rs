@@ -154,6 +154,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             open: *fullscreen_preview.clone(),
                             onclose: move |_| fullscreen_preview.set(false),
                             img {
+                                aria_label: "image-preview-modal",
                                 src: "{large_thumbnail}",
                                 onclick: move |e| e.stop_propagation(),
                             }
@@ -161,7 +162,9 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     )),
                     div {
                         class: "image-container",
+                        aria_label: "message-image-container",
                         img {
+                            aria_label: "message-image",
                             onclick: move |_| fullscreen_preview.set(true),
                             class: format_args!(
                                 "image {} expandable-image",
