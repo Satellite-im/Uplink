@@ -417,7 +417,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        minimal_view: size.width < 600, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
 
