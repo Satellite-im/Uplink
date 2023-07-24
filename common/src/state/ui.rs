@@ -12,6 +12,8 @@ use wry::webview::WebView;
 
 use super::{call, notifications::Notifications};
 
+pub type EmojiList = HashMap<String, u64>;
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
     pub focused: bool,
@@ -33,6 +35,20 @@ impl Default for Layout {
     fn default() -> Self {
         Self::Welcome
     }
+}
+
+fn bool_true() -> bool {
+    true
+}
+
+fn default_emojis() -> EmojiList {
+    HashMap::from([
+        ("👍".to_string(), 1),
+        ("👎".to_string(), 1),
+        ("❤️".to_string(), 1),
+        ("🖖".to_string(), 1),
+        ("😂".to_string(), 1),
+    ])
 }
 
 #[derive(Default, Deserialize, Serialize)]
@@ -59,6 +75,8 @@ pub struct UI {
     pub window_width: u32,
     pub window_height: u32,
     pub metadata: WindowMeta,
+    #[serde(default = "default_emojis")]
+    pub emoji_list: EmojiList,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -109,10 +127,6 @@ impl Extensions {
     }
 }
 
-fn bool_true() -> bool {
-    true
-}
-
 impl Drop for UI {
     fn drop(&mut self) {
         self.clear_overlays();
@@ -120,20 +134,18 @@ impl Drop for UI {
 }
 
 impl UI {
-    fn take_call_popout_id(&mut self) -> Option<WindowId> {
-        self.popout_media_player = false;
-        self.call_info.take_popout_window_id()
+    pub fn track_emoji_usage(&mut self, emoji: String) {
+        let count = self.emoji_list.entry(emoji).or_insert(0);
+        *count += 1;
     }
 
-    fn take_debug_logger_id(&mut self) -> Option<WindowId> {
-        match self.current_debug_logger.take() {
-            Some(mut debug_logger) => {
-                let id = debug_logger.take_window_id();
-                self.current_debug_logger = None;
-                id
-            }
-            None => None,
-        }
+    pub fn get_emoji_sorted_by_usage(&self) -> EmojiList {
+        // let emojis = self.emoji_list.clone();
+
+        // // emojis.sort_by(|a, b| b.1.cmp(&a.1));
+
+        // emojis
+        self.emoji_list.clone()
     }
 
     pub fn get_meta(&self) -> WindowMeta {
@@ -149,21 +161,26 @@ impl UI {
             desktop_context.close_window(id);
         };
     }
+
     pub fn set_call_popout(&mut self, id: WindowId) {
         self.call_info.set_popout_window_id(id);
         self.popout_media_player = true;
     }
+
     pub fn set_debug_logger(&mut self, id: WindowId) {
         self.current_debug_logger = Some(DebugLogger::new(Some(id)));
     }
+
     pub fn clear_debug_logger(&mut self, desktop_context: &DesktopContext) {
         if let Some(id) = self.take_debug_logger_id() {
             desktop_context.close_window(id);
         };
     }
+
     pub fn settings_welcome(&mut self) {
         self.active_welcome = true;
     }
+
     pub fn add_file_preview(&mut self, key: Uuid, window_id: WindowId) {
         self.file_previews.insert(key, window_id);
     }
@@ -173,6 +190,7 @@ impl UI {
         self.clear_call_popout(desktop_context);
         self.clear_overlays();
     }
+
     pub fn clear_overlays(&mut self) {
         for overlay in &self.overlays {
             if let Some(window) = Weak::upgrade(overlay) {
@@ -183,6 +201,7 @@ impl UI {
         }
         self.overlays.clear();
     }
+
     pub fn remove_overlay(&mut self, id: WindowId) {
         let to_keep: Vec<Weak<WebView>> = self
             .overlays
@@ -203,6 +222,22 @@ impl UI {
             .cloned()
             .collect();
         self.overlays = to_keep;
+    }
+
+    fn take_call_popout_id(&mut self) -> Option<WindowId> {
+        self.popout_media_player = false;
+        self.call_info.take_popout_window_id()
+    }
+
+    fn take_debug_logger_id(&mut self) -> Option<WindowId> {
+        match self.current_debug_logger.take() {
+            Some(mut debug_logger) => {
+                let id = debug_logger.take_window_id();
+                self.current_debug_logger = None;
+                id
+            }
+            None => None,
+        }
     }
 
     pub fn toggle_muted(&mut self) {
