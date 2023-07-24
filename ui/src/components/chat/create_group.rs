@@ -303,7 +303,7 @@ pub fn get_input_options() -> Options {
         // The input should have a minimum length of 0
         min_length: Some(0),
         // The input should only contain alphanumeric characters
-        alpha_numeric_only: true,
+        alpha_numeric_only: false,
         // The input can contain any whitespace
         no_whitespace: false,
         // The input component validation is shared - if you need to allow just colons in, set this to true
