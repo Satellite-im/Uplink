@@ -24,7 +24,6 @@ use common::{
     icons::outline::Shape as Icon,
     state::call,
     warp_runner::{BlinkCmd, WarpCmd},
-    STATIC_ARGS,
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -461,12 +460,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         Button {
             icon: Icon::PhoneArrowUpRight,
-            disabled: STATIC_ARGS.production_mode || *call_pending.current() || call_in_progress,
+            disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
             aria_label: "Call".into(),
             appearance: Appearance::Secondary,
             tooltip: cx.render(rsx!(Tooltip {
                 arrow_position: ArrowPosition::Top,
-                text: if STATIC_ARGS.production_mode { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
+                text: if !state.read().configuration.developer.experimental_features { get_local_text("uplink.coming-soon") } else { get_local_text("uplink.call") }
             })),
             onpress: move |_| {
                 if let Some(chat) = active_chat.as_ref() {

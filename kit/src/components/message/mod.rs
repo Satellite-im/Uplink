@@ -240,7 +240,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             })
-            pending_attachment_list.map(|node|{
+            pending_attachment_list.map(|node| {
                 rsx!(node)
             })
         },
@@ -369,7 +369,7 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 }
 
 pub fn markdown(text: &str) -> String {
-    let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+    let txt = text.trim(); // need to do this else leading whitespaces are ignored
 
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
