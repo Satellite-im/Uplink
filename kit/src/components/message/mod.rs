@@ -369,7 +369,7 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 }
 
 pub fn markdown(text: &str) -> String {
-    let txt = text.trim(); // need to do this else leading whitespaces are ignored
+    let txt = text.trim();
 
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
