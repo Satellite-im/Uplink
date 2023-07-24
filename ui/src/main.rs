@@ -255,7 +255,7 @@ pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> Window
         .with_title(title)
         .with_resizable(true)
         // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
-        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
+        .with_min_inner_size(LogicalSize::new(950.0, 350.0));
 
     if with_predefined_size {
         window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
@@ -417,7 +417,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        minimal_view: size.width < 600, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        minimal_view: size.width < 950, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
 
@@ -614,15 +614,9 @@ fn app(cx: Scope) -> Element {
                 }
                 let size = webview.inner_size();
 
-                //log::trace!(
-                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                //    size,
-                //    size.width < 1200
-                //);
-
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
+                    minimal_view: size.width < 950,
                     ..metadata
                 };
                 if metadata != new_metadata {

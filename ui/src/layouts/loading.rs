@@ -23,7 +23,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
             } else {
                 desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
             }
-            desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
+            desktop.set_min_inner_size(Some(LogicalSize::new(950.0, 500.0)));
         }
     });
 
