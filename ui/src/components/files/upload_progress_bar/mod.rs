@@ -146,16 +146,19 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
         return cx.render(rsx!(
             div {
                 class: "upload-progress-bar-container",
+                aria_label: "upload-progress-bar-container",
                 div {
                     class: "progress-percentage-description-container",
                     p {
                         id: "upload-progress-description",
                         class: "upload-progress-description",
+                        aria_label: "upload-progress-description",
                         get_local_text("files.uploading-file"),
                     },
                     p {
                         id: "upload-progress-percentage",
                         class: "upload-progress-percentage",
+                        aria_label: "upload-progress-percentage",
                         "0%",
                     },
                     p {
@@ -172,6 +175,7 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             div {
                                 id: "progress-percentage",
                                 class: "progress-percentage",
+                                aria_label: "progress-percentage",
                             },
                         }
                         div {
@@ -179,9 +183,11 @@ pub fn UploadProgressBar<'a>(cx: Scope<'a, Props>) -> Element<'a> {
                             p {
                                 id: "upload-progress-filename",
                                 class: "filename-and-file-queue-text",
+                                aria_label: "filename-and-file-queue-text",
                             },
                             p {
                                 id: "upload-progress-files-queue",
+                                aria_label: "upload-progress-files-queue",
                                 class: "file-queue-text",
                             },
                         }
