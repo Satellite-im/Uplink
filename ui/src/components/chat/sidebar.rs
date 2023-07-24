@@ -52,6 +52,7 @@ pub struct Props {
 #[derive(Props)]
 pub struct SearchProps<'a> {
     // username, did
+    search_typed_chars: UseRef<String>,
     search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
@@ -217,6 +218,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         .filter(|ext| ext.details().location == extensions::Location::Sidebar)
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
+    let search_typed_chars = use_ref(cx, String::new);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -254,8 +256,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 // todo: sort this somehow
                                 friends.extend(chats);
                                 search_results.set(friends);
+                                *search_typed_chars.write_silent() = v;
                                 on_search_dropdown_hover.with_mut(|i| *i = false);
-
                             }
                         },
                     }
@@ -289,6 +291,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 )),
             )),
             search_friends{
+                search_typed_chars: search_typed_chars.clone(),
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
                 onclick: move |entry| {
