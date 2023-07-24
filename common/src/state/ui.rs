@@ -185,11 +185,12 @@ impl UI {
     }
 
     pub fn get_emoji_sorted_by_usage(&self) -> EmojiList {
-        let emojis = self.emoji_list.clone();
+        // let emojis = self.emoji_list.clone();
 
-        // emojis.sort_by(|a, b| b.1.cmp(&a.1));
+        // // emojis.sort_by(|a, b| b.1.cmp(&a.1));
 
-        emojis
+        // emojis
+        self.emoji_list.clone()
     }
 
     pub fn get_meta(&self) -> WindowMeta {
