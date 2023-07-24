@@ -428,6 +428,7 @@ pub fn markdown(text: &str) -> String {
                     if in_code_block && line_trim == "```" {
                         in_code_block = false;
                         add_text_language = true;
+                        // HACK: To close block code is necessary to push tags 2 times
                         html_output.push_str("</code></pre>");
                         html_output.push_str("</code></pre>");
                     }
