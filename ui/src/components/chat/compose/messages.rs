@@ -132,7 +132,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     // also must reset num_to_take when the active_chat changes
     let active_chat = use_ref(cx, || None);
     let currently_active = Some(data.active_chat.id);
-    let eval = use_eval(cx);
+    let _eval = use_eval(cx);
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
         num_to_take.set(DEFAULT_NUM_TO_TAKE);
