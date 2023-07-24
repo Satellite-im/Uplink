@@ -506,7 +506,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-                                    if state.read().ui.is_minimal_view() {
+                                    if !state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
