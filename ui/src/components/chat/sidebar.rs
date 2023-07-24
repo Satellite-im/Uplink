@@ -3,6 +3,7 @@ use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -506,7 +507,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-                                    if !state.read().ui.is_minimal_view() {
+                                    let desktop = use_window(cx);
+                                    let size = desktop.webview.inner_size();
+
+                                    if size.width < 1201 {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
