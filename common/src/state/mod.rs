@@ -68,7 +68,7 @@ pub struct State {
     #[serde(skip)]
     id: DID,
     pub route: route::Route,
-    pub chats: chats::Chats,
+    chats: chats::Chats,
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
@@ -494,9 +494,6 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
-                    if chat.unreads > 0 {
-                        chat.unreads -= 1;
-                    }
                 }
 
                 if should_decrement_notifications {
@@ -863,19 +860,6 @@ impl State {
     fn clear_unreads(&mut self, chat_id: Uuid) {
         if let Some(chat) = self.chats.all.get_mut(&chat_id) {
             chat.unreads = 0;
-        }
-    }
-    /// get unreads  within a given chat on `State` struct.
-    ///
-    /// # Arguments
-    ///
-    /// * `chat_id` - The chat to get.
-    ///
-    pub fn get_unread_count(&mut self, chat_id: Uuid) -> u32 {
-        if let Some(chat) = self.chats.all.get_mut(&chat_id) {
-            chat.unreads
-        } else {
-            0
         }
     }
     /// Adds the given chat to the user's favorites.
