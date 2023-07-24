@@ -139,7 +139,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     }
 
     use_effect(cx, &data.active_chat.id, |id| {
-        to_owned![eval, prev_chat_id];
+        to_owned![_eval, prev_chat_id];
         async move {
             // yes, this check seems like some nonsense. but it eliminates a jitter and if
             // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
@@ -147,9 +147,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
                 let script = include_str!("../scroll_to_bottom.js");
-                eval(script.to_string());
+                _eval(script.to_string());
             }
-            eval(SETUP_CONTEXT_PARENT.to_string());
+            _eval(SETUP_CONTEXT_PARENT.to_string());
         }
     });
 
