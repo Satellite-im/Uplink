@@ -1,0 +1,12 @@
+.emoji-group {
+    display: inline-flex;
+    gap: var(--gap);
+    justify-content: space-between;
+    padding: var(--padding-less);
+    
+    .btn-wrap {
+        .btn {
+            width: var(--height-input);
+        }
+    }
+}
