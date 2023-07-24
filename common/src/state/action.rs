@@ -49,6 +49,8 @@ pub enum Action<'a> {
     SetFont(Option<Font>),
     #[display(fmt = "SetFontScale")]
     SetFontScale(f32),
+    #[display(fmt = "TrackEmojiUsage")]
+    TrackEmojiUsage(String),
     // RemoveToastNotification,
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]
@@ -189,6 +191,8 @@ pub enum ConfigAction {
     SetOverlayEnabled(bool),
     #[display(fmt = "SetDevModeEnabled {_0}")]
     SetDevModeEnabled(bool),
+    #[display(fmt = "SetExperimentalFeaturesEnabled {_0}")]
+    SetExperimentalFeaturesEnabled(bool),
     #[display(fmt = "SetInterfaceSoundsEnabled {_0}")]
     SetInterfaceSoundsEnabled(bool),
     #[display(fmt = "SetMediaSoundsEnabled {_0}")]
