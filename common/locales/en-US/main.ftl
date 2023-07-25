@@ -81,6 +81,7 @@ messages = Messages
     .participants = Participants
     .fetching = Fetching more messages...
     .group-creator-label = Group Creator
+    .maximum-eight-files-per-message = Maximum of 8 files can be sent in a single message.
     
 favorites = Favorites
     .favorites = Favorites

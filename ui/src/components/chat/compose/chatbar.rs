@@ -6,7 +6,7 @@ use std::{
 use common::{
     icons,
     language::get_local_text,
-    state::{Action, Identity, State},
+    state::{Action, Identity, State, ToastNotification},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -84,6 +84,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         }
     };
     update_send();
+
+    let mut files_attached = cx.props.upload_files.get().clone();
+
+    if cx.props.upload_files.get().len() > 8 {
+        files_attached.truncate(8);
+        cx.props.upload_files.set(files_attached);
+        state
+            .write()
+            .mutate(common::state::Action::AddToastNotification(
+                ToastNotification::init(
+                    "".into(),
+                    get_local_text("messages.maximum-eight-files-per-message"),
+                    None,
+                    4,
+                ),
+            ));
+    }
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
