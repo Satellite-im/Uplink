@@ -10,4 +10,4 @@ jobs:
       - name: initial labeling
         uses: andymckay/labeler@master
         with:
-          add-labels: "New ticket"
+          add-labels: "new ticket :boom:"

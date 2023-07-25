@@ -208,6 +208,7 @@ impl State {
                 let _ = self.ui.file_previews.remove(&id);
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
+            Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -798,7 +799,7 @@ impl State {
     ///
     /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat_id: Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
+        if let Some(c) = self.chats.all.get_mut(&chat_id) {
             c.replying_to = None;
         }
     }
@@ -846,7 +847,7 @@ impl State {
 
     /// Clears the given chats draft message
     fn clear_chat_draft(&mut self, chat_id: &Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.draft = None;
         }
     }
@@ -1033,13 +1034,13 @@ impl State {
 
     /// Sets the draft on a given chat to some contents.
     fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.draft = Some(value);
         }
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
-        if let Some(mut c) = self.chats.all.get_mut(chat) {
+        if let Some(c) = self.chats.all.get_mut(chat) {
             c.replying_to = Some(message.inner.clone());
         }
     }

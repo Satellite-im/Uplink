@@ -160,12 +160,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     // if markdown support is enabled, we will create it, otherwise we will just pass text.
     let mut formatted_text = if cx.props.parse_markdown {
-        let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
-        let parser = pulldown_cmark::Parser::new(&txt);
-        // Write to a new String buffer.
-        let mut html_output = String::new();
-        pulldown_cmark::html::push_html(&mut html_output, parser);
-        html_output.replace("<p>", "").replace("</p>", "")
+        markdown(&text)
     } else {
         text
     };
@@ -194,10 +189,13 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             },
             aria_label: {
                 format_args!(
-                    "message-{}",
+                    "message-{}-{}",
                     if is_remote {
                         "remote"
-                    } else { "local" }
+                    } else { "local" },
+                    if cx.props.order.is_some() {
+                        order.to_string()
+                    } else { "".into() }
                 )
             },
             white_space: "pre-wrap",
@@ -241,7 +239,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 )
             })
-            pending_attachment_list.map(|node|{
+            pending_attachment_list.map(|node| {
                 rsx!(node)
             })
         },
@@ -367,4 +365,14 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             })))
         }
     ))
+}
+
+pub fn markdown(text: &str) -> String {
+    // TODO: This does not work with code or pre elements.
+    //let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
+    let parser = pulldown_cmark::Parser::new(text);
+    // Write to a new String buffer.
+    let mut html_output = String::new();
+    pulldown_cmark::html::push_html(&mut html_output, parser);
+    html_output.replace("<p>", "").replace("</p>", "")
 }

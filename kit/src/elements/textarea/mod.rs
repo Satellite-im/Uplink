@@ -158,6 +158,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         key: "{id_char_counter}-char-counter",
                         id: "{id_char_counter}-char-counter",
                         class: "input-char-counter",
+                        aria_label: "input-char-counter",
                         format!("{}/{}", cv3.len(), max_length - 1),
                     })
                 }

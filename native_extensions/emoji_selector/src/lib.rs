@@ -109,6 +109,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
         }
     }))
 }
+
 #[inline_props]
 fn render_selector<'a>(
     cx: Scope,
