@@ -19,7 +19,10 @@ use warp::{
     raygun::{ConversationType, Message},
 };
 
-use crate::state::{storage::Storage, Chat, Chats, Friends, Identity, State, ToastNotification};
+use crate::state::{
+    local_state::LocalSubscription, storage::Storage, Chat, Chats, Friends, Identity, State,
+    ToastNotification,
+};
 
 use crate::warp_runner::ui_adapter;
 
@@ -106,11 +109,11 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         default_message.set_reactions(vec![]);
         default_message.set_value(vec![lipsum(word_count)]);
 
-        messages.push_back(ui_adapter::Message {
+        messages.push_back(LocalSubscription::create(ui_adapter::Message {
             inner: default_message,
             in_reply_to: None,
             key: Uuid::new_v4().to_string(),
-        });
+        }));
     }
 
     Chat {
@@ -150,7 +153,7 @@ fn generate_random_chat(me: Identity, identities: &[Identity]) -> Chat {
     for _ in 0..num_messages {
         // Generate a random message and add it to the chat
         let message = generate_fake_message(chat.id, identities);
-        chat.messages.push_back(message);
+        chat.messages.push_back(LocalSubscription::create(message));
     }
 
     chat

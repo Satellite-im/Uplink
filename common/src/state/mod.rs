@@ -20,6 +20,7 @@ use crate::notifications::NotificationAction;
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
 pub use chats::{Chat, Chats};
+use dioxus::prelude::ScopeState;
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
@@ -56,6 +57,7 @@ use warp::{
     raygun::{self},
 };
 
+use self::local_state::LocalSubscription;
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -287,12 +289,12 @@ impl State {
         self.settings = settings::Settings::default();
     }
 
-    pub fn process_warp_event(&mut self, event: WarpEvent) {
+    pub fn process_warp_event(&mut self, cx: &ScopeState, event: WarpEvent) {
         log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
-            WarpEvent::Message(evt) => self.process_message_event(evt),
+            WarpEvent::Message(evt) => self.process_message_event(cx, evt),
             WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
@@ -369,7 +371,7 @@ impl State {
                             .map(|ident| (ident.did_key(), ident.clone())),
                     );
                 }
-                self.chats.all.insert(chat.inner.id, chat.inner);
+                self.chats.all.insert(chat.inner.id, chat.inner.into());
             }
             RayGunEvent::ConversationDeleted(id) => {
                 self.chats.in_sidebar.retain(|x| *x != id);
@@ -381,7 +383,7 @@ impl State {
         }
     }
 
-    fn process_message_event(&mut self, event: MessageEvent) {
+    fn process_message_event(&mut self, cx: &ScopeState, event: MessageEvent) {
         match event {
             MessageEvent::Received {
                 conversation_id,
@@ -441,7 +443,7 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 let message_clone = message.clone();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push_back(message);
+                    chat.messages.push_back(LocalSubscription::create(message));
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
                 self.decrement_outgoing_messages(
@@ -465,9 +467,9 @@ impl State {
                     if let Some(msg) = chat
                         .messages
                         .iter_mut()
-                        .find(|msg| msg.inner.id() == message.inner.id())
+                        .find(|msg| msg.read().inner.id() == message.inner.id())
                     {
-                        *msg = message;
+                        msg.use_write_only(cx) = message;
                     }
                 }
             }
@@ -486,14 +488,15 @@ impl State {
                     if let Some(msg) = chat
                         .messages
                         .iter()
-                        .find(|msg| msg.inner.id() == message_id)
+                        .find(|msg| msg.read().inner.id() == message_id)
                     {
-                        if chat.is_msg_unread(msg.inner.date()) {
+                        if chat.is_msg_unread(msg.read().inner.date()) {
                             chat.unreads = chat.unreads.saturating_sub(1);
                             should_decrement_notifications = true;
                         }
                     }
-                    chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    chat.messages
+                        .retain(|msg| msg.read().inner.id() != message_id);
                 }
 
                 if should_decrement_notifications {
@@ -504,10 +507,10 @@ impl State {
                 }
             }
             MessageEvent::MessageReactionAdded { message } => {
-                self.update_message(message);
+                self.update_message(cx, message);
             }
             MessageEvent::MessageReactionRemoved { message } => {
-                self.update_message(message);
+                self.update_message(cx, message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -769,7 +772,7 @@ impl State {
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
-            chat.messages.push_back(message);
+            chat.messages.push_back(LocalSubscription::create(message));
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)
@@ -905,7 +908,8 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             for message in messages.drain(..) {
-                chat.messages.push_front(message.clone());
+                chat.messages
+                    .push_front(LocalSubscription::create(message.clone()));
             }
         }
     }
@@ -919,7 +923,7 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
+    pub fn update_message(&mut self, cx: &ScopeState, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -929,7 +933,8 @@ impl State {
         };
         let message_id = message.id();
         for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
+            let msg = msg.use_state(cx);
+            if msg.read().id() != message_id {
                 continue;
             }
             let mut reactions: Vec<Reaction> = Vec::new();
@@ -940,7 +945,7 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            msg.inner = message;
+            *msg = message;
             return;
         }
 

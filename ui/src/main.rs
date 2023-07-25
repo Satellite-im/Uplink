@@ -671,7 +671,7 @@ fn app(cx: Scope) -> Element {
                         }
                     }
                 } else {
-                    state.write().process_warp_event(evt);
+                    state.write().process_warp_event(cx, evt);
                 }
             }
         }

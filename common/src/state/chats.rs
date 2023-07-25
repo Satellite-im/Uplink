@@ -15,7 +15,14 @@ use warp::{
 
 use crate::{warp_runner::ui_adapter, STATIC_ARGS};
 
-use super::pending_message::{progress_file, PendingMessage};
+use super::{
+    local_state::LocalSubscription,
+    pending_message::{progress_file, PendingMessage},
+};
+
+pub type Chat = ChatBase<LocalSubscription<ui_adapter::Message>>;
+
+pub type SendableChat = ChatBase<ui_adapter::Message>;
 
 // let (p = window_bottom) be an index into Chat.messages
 // show messages from (p - window_size) to (p + window_extra)
@@ -31,7 +38,7 @@ use super::pending_message::{progress_file, PendingMessage};
 
 // warning: Chat implements Serialize
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-pub struct Chat {
+pub struct ChatBase<T> {
     // Warp generated UUID of the chat
     // TODO: This should be wired up to warp conversation id's
     pub id: Uuid,
@@ -51,7 +58,7 @@ pub struct Chat {
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.
     #[serde(default)]
-    pub messages: VecDeque<ui_adapter::Message>,
+    pub messages: VecDeque<T>,
     // Unread count for this chat, should be cleared when we view the chat.
     pub unreads: u32,
     // If a value exists, we will render the message we're replying to above the chatbar
@@ -123,8 +130,31 @@ impl Chat {
         // if you have 2 unread messages, skip 1 and take the next one.
         let to_skip = self.unreads.saturating_sub(1);
         match self.messages.iter().rev().nth(to_skip as usize) {
-            Some(msg) => msg.inner.date() <= message_time,
+            Some(msg) => msg.read().inner.date() <= message_time,
             _ => false,
+        }
+    }
+}
+
+impl Into<Chat> for SendableChat {
+    fn into(self) -> Chat {
+        Chat {
+            id: self.id,
+            participants: self.participants,
+            conversation_type: self.conversation_type,
+            conversation_name: self.conversation_name,
+            creator: self.creator,
+            messages: self
+                .messages
+                .iter()
+                .map(|m| LocalSubscription::create(m))
+                .collect(),
+            unreads: self.unreads,
+            replying_to: self.replying_to,
+            typing_indicator: self.typing_indicator,
+            draft: self.draft,
+            has_more_messages: self.has_more_messages,
+            pending_outgoing_messages: self.pending_outgoing_messages,
         }
     }
 }

@@ -5,15 +5,15 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct LocalSubscription<T> {
     inner: Rc<RefCell<T>>,
     subscribed: Rc<RefCell<HashSet<ScopeId>>>,
 }
 
-impl<T> PartialEq for LocalSubscription<T> {
+impl<T: PartialEq + 'static> PartialEq for LocalSubscription<T> {
     fn eq(&self, other: &Self) -> bool {
-        true //TODO
+        self.inner.any_cmp(&other.inner)
     }
 }
 
@@ -68,8 +68,8 @@ impl<T: 'static> LocalSubscription<T> {
     }
 
     pub fn use_write_only<'a>(&self, cx: &'a ScopeState) -> &'a LocalWrite<T> {
+        let update_any = cx.schedule_update_any();
         cx.use_hook(|| {
-            let update_any = cx.schedule_update_any();
             let sub = self.subscribed.clone();
             LocalWrite {
                 inner: self.inner.clone(),

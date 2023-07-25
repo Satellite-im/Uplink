@@ -11,7 +11,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats};
+use crate::state::{self, chats, local_state::LocalSubscription};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -37,7 +37,7 @@ pub struct Message {
 }
 
 pub struct ChatAdapter {
-    pub inner: chats::Chat,
+    pub inner: chats::SendableChat,
     pub identities: HashSet<state::identity::Identity>,
 }
 
@@ -180,7 +180,7 @@ pub async fn fetch_messages_from_chat(
 pub async fn conversation_to_chat(
     conv: &Conversation,
     messaging: &super::Messaging,
-) -> Result<chats::Chat, Error> {
+) -> Result<chats::SendableChat, Error> {
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
     let unreads = messaging.get_message_count(conv.id()).await?;
     let to_take = std::cmp::min(unreads, 20);
@@ -198,7 +198,7 @@ pub async fn conversation_to_chat(
     .await;
 
     let has_more_messages = unreads > to_take;
-    Ok(chats::Chat {
+    Ok(chats::SendableChat {
         id: conv.id(),
         conversation_type: conv.conversation_type(),
         conversation_name: conv.name(),

@@ -396,7 +396,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
 
                     let last_message = chat.messages.iter().last();
                     let unwrapped_message = match last_message {
-                        Some(m) => m.inner.clone(),
+                        Some(m) => m.use_state(cx).clone(),
                         // conversation with no messages yet
                         None => raygun::Message::default(),
                     };

@@ -361,7 +361,7 @@ pub struct WarpInit {
     // todo: don't init all conversations at once. instead, store list of all conv ids
     // and initialized conversations separately
     //all_conv_ids: HashSet<Uuid>,
-    pub chats: HashMap<Uuid, chats::Chat>,
+    pub chats: HashMap<Uuid, chats::SendableChat>,
 }
 
 // init friends, chats, and identities all at once
