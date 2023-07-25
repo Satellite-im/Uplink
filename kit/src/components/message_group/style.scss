@@ -25,6 +25,9 @@
                 left: 0;
                 right: unset;
             }
+            .message-reactions-container {
+                justify-content: flex-start;
+            }
         }
         .sender {
             position: absolute;
