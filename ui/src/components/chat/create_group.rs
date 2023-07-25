@@ -314,7 +314,7 @@ pub fn get_input_options() -> Options {
             SpecialCharsAction::Allow,
             " .,!?_&+~(){}[]+-/*".chars().collect(),
         )),
-        custom_validation: Some(Box::new(|val| {
+        special_chars: Some(Box::new(|val| {
             if val.chars().filter(|c| !c.is_alphanumeric()).next().is_some() {
                 Some("warning-messages.specific-chars".to_string())
             } else {
