@@ -311,16 +311,19 @@ pub fn get_input_options() -> Options {
         // The input should allow any special characters
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
         special_chars: Some((
-            SpecialCharsAction::Allow,
+            SpecialCharsAction::Custom(Box::new(|val| {
+                // Custom validation to check for special characters and alphanumeric characters
+                if val.chars().all(char::is_alphanumeric) {
+                    // All characters are alphanumeric, return None (no warning)
+                    None
+                } else {
+                    // Contains special characters, return the warning message
+                    Some("warning-messages.specific-chars".to_string())
+                }
+            })),
             " .,!?_&+~(){}[]+-/*".chars().collect(),
         )),
-        special_chars: Some(Box::new(|val| {
-            if val.chars().filter(|c| !c.is_alphanumeric()).next().is_some() {
-                Some("warning-messages.specific-chars".to_string())
-            } else {
-                None
-            }
-        })),
+        ..Default::default()
     };
 
     // Set up options for the input field
