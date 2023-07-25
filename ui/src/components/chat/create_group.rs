@@ -314,7 +314,6 @@ pub fn get_input_options() -> Options {
             SpecialCharsAction::Allow,
             " .,!?_&+~(){}[]+-/*".chars().collect(),
         )),
-        ..Default::default()
     };
 
     // Set up options for the input field
