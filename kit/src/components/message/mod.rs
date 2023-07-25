@@ -381,8 +381,9 @@ pub fn markdown(text: &str) -> String {
     let mut add_text_language = true;
 
     for line in &mut text_lines {
-        let parser = pulldown_cmark::Parser::new_ext(line, options);
-        if line.trim() == "```" && add_text_language {
+        let parser = pulldown_cmark::Parser::new_ext(&line, options);
+        let line_trim = line.trim();
+        if line_trim == "```" && add_text_language {
             *line = "```text";
             add_text_language = false;
         }
@@ -424,7 +425,6 @@ pub fn markdown(text: &str) -> String {
                     }
                 }
                 pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
-                    let line_trim = line.trim();
                     if in_code_block && line_trim == "```" {
                         in_code_block = false;
                         add_text_language = true;
