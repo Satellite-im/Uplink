@@ -303,14 +303,17 @@ pub fn get_input_options() -> Options {
         // The input should have a minimum length of 0
         min_length: Some(0),
         // The input should only contain alphanumeric characters
-        alpha_numeric_only: false,
+        alpha_numeric_only: true,
         // The input can contain any whitespace
         no_whitespace: false,
         // The input component validation is shared - if you need to allow just colons in, set this to true
         ignore_colons: false,
         // The input should allow any special characters
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars: Some((SpecialCharsAction::Allow, vec![' '])),
+        special_chars: Some((
+            SpecialCharsAction::Allow,
+            " .,!?_&+~(){}[]+-/*".chars().collect(),
+        )),
     };
 
     // Set up options for the input field
