@@ -57,6 +57,7 @@ warning-messages = Warning Messages
     .only-alpha-chars = Only alphanumeric characters are accepted.
     .spaces-not-allowed = Spaces are not allowed.
     .error = Error
+    .specific-chars = Allowed characters -  .,!?_&+~(){}[]+-/*
 
 messages = Messages
     .edit = Edit
