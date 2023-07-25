@@ -759,7 +759,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     // todo: why?
     #[cfg(not(target_os = "macos"))]
-    let eval = use_eval(cx);
+    let _eval = use_eval(cx);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
