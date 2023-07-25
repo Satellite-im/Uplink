@@ -51,7 +51,20 @@ fn default_emojis() -> EmojiList {
     ])
 }
 
-#[derive(Default, Deserialize, Serialize)]
+/// Used to determine where the Emoji should be routed.
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+pub enum EmojiDestination {
+    Chatbar,
+    Message(Uuid),
+}
+
+impl Default for EmojiDestination {
+    fn default() -> Self {
+        Self::Chatbar
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct UI {
     pub notifications: Notifications,
     // stores information related to the current call
@@ -77,6 +90,7 @@ pub struct UI {
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emoji_list: EmojiList,
+    pub emoji_destination: EmojiDestination,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -92,6 +106,37 @@ pub struct UI {
     pub cached_username: Option<String>,
     #[serde(skip)]
     pub ignore_focus: bool,
+}
+
+impl Default for UI {
+    fn default() -> Self {
+        Self {
+            notifications: Default::default(),
+            call_info: Default::default(),
+            current_debug_logger: Default::default(),
+            popout_media_player: Default::default(),
+            toast_notifications: Default::default(),
+            accent_color: Default::default(),
+            theme: Default::default(),
+            font: Default::default(),
+            enable_overlay: Default::default(),
+            active_welcome: Default::default(),
+            sidebar_hidden: Default::default(),
+            window_maximized: Default::default(),
+            window_width: Default::default(),
+            window_height: Default::default(),
+            metadata: Default::default(),
+            emoji_list: default_emojis(),
+            emoji_destination: Default::default(),
+            current_layout: Default::default(),
+            overlays: Default::default(),
+            extensions: Default::default(),
+            file_previews: Default::default(),
+            show_settings_welcome: true,
+            cached_username: Default::default(),
+            ignore_focus: Default::default(),
+        }
+    }
 }
 
 #[derive(Default, Deserialize, Serialize)]
