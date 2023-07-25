@@ -314,6 +314,14 @@ pub fn get_input_options() -> Options {
             SpecialCharsAction::Allow,
             " .,!?_&+~(){}[]+-/*".chars().collect(),
         )),
+        // Custom validation function to check for non-alphanumeric characters
+        custom_validation: Some(Box::new(|val| {
+            if val.chars().filter(|c| !c.is_alphanumeric()).next().is_some() {
+                Some("warning-messages.specific-chars".to_string())
+            } else {
+                None
+            }
+        })),
     };
 
     // Set up options for the input field
