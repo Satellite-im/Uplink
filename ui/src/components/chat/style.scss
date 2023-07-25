@@ -81,6 +81,7 @@
     flex-direction: column;
     gap: 0;
     max-height: 20vh;
+    overflow: scroll;
 
     .friend-group {
       display: inline-flex;
