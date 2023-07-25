@@ -102,7 +102,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
-                                    &name[..(name_prefix.len())] == name_prefix
+                                    name[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
                                 }
                             } ).map(|_friend| {
                                 let friendid = _friend.did_key();
