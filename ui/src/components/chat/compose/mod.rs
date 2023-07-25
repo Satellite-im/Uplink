@@ -158,8 +158,7 @@ pub fn Compose(cx: Scope) -> Element {
                         to_owned![drag_event, window, overlay_script, state];
                         async move {
                            let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat()
-                                .and_then(|f| Some(f.files_attached_to_send))
+                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                 .unwrap_or_default()
                                 .iter()
                                 .filter(|file_name| !new_files.contains(file_name))

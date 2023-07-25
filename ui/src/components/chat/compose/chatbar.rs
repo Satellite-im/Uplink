@@ -84,8 +84,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         let valid = state.read().active_chat_has_draft()
             || !state
                 .read()
-                .get_active_chat()
-                .and_then(|f| Some(f.files_attached_to_send))
+                .get_active_chat().map(|f| f.files_attached_to_send)
                 .unwrap_or_default()
                 .is_empty();
         if !can_send.get().eq(&valid) {
@@ -96,8 +95,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let mut files_attached = state
         .read()
-        .get_active_chat()
-        .and_then(|f| Some(f.files_attached_to_send))
+        .get_active_chat().map(|f| f.files_attached_to_send)
         .unwrap_or_default();
 
     if files_attached.len() > 8 {
@@ -142,8 +140,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
                 let attachments = state
                     .read()
-                    .get_active_chat()
-                    .and_then(|f| Some(f.files_attached_to_send))
+                    .get_active_chat().map(|f| f.files_attached_to_send)
                     .unwrap_or_default();
                 let msg_clone = msg.clone();
                 let cmd = match reply {
@@ -164,8 +161,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 };
                 let attachments = state
                     .read()
-                    .get_active_chat()
-                    .and_then(|f| Some(f.files_attached_to_send))
+                    .get_active_chat().map(|f| f.files_attached_to_send)
                     .unwrap_or_default();
                 state
                     .write_silent()
@@ -323,8 +319,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
             || !state
                 .read()
-                .get_active_chat()
-                .and_then(|f| Some(f.files_attached_to_send))
+                .get_active_chat().map(|f| f.files_attached_to_send)
                 .unwrap_or_default()
                 .is_empty()
     };
@@ -335,8 +330,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         let files_to_upload = state
             .read()
             .get_active_chat()
-            .as_ref()
-            .and_then(|d| Some(d.files_attached_to_send.clone()))
+            .as_ref().map(|d| d.files_attached_to_send.clone())
             .unwrap_or_default();
 
         let msg = state
@@ -501,8 +495,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 .set_directory(dirs::home_dir().unwrap_or_default())
                                 .pick_files()
                             {
-                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat()
-                                    .and_then(|f| Some(f.files_attached_to_send))
+                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                     .unwrap_or_default()
                                     .iter()
                                     .filter(|file_name| !new_files.contains(file_name))
@@ -564,8 +557,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path: Vec<PathBuf>| {
                     if !files_local_path.is_empty() {
-                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat()
-                            .and_then(|f| Some(f.files_attached_to_send))
+                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                             .unwrap_or_default()
                             .iter()
                             .filter(|file_name| !files_local_path.contains(file_name))
@@ -600,8 +592,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
     // todo: pick an icon based on the file extension
     let attachments = cx.render(rsx!(state
         .read()
-        .get_active_chat()
-        .and_then(|f| Some(f.files_attached_to_send))
+        .get_active_chat().map(|f| f.files_attached_to_send)
         .unwrap_or_default()
         .iter()
         .map(|x| x.to_string_lossy().to_string())
@@ -613,8 +604,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                 on_press: move |_| {
                     let mut attachments = state
                         .read()
-                        .get_active_chat()
-                        .and_then(|f| Some(f.files_attached_to_send))
+                        .get_active_chat().map(|f| f.files_attached_to_send)
                         .unwrap_or_default();
                     attachments.retain(|x| {
                         let s = x.to_string_lossy().to_string();
