@@ -311,7 +311,7 @@ pub fn get_input_options() -> Options {
         // The input should allow any special characters
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
         special_chars: Some((
-        SpecialCharsAction::Allow,
+            SpecialCharsAction::Allow,
             " .,!?_&+~(){}[]+-/*".chars().collect(),
         )),
         ..Default::default()
