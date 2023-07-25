@@ -33,6 +33,12 @@
 			background-color: var(--danger-light);
 		}
 	}
+	.simple-context-item {
+		&:hover {
+			background: unset;
+			color: unset;
+		}
+	}
 	hr {
 		border: none;
 		border-bottom: 1px solid var(--background);
