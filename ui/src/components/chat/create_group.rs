@@ -312,7 +312,6 @@ pub fn get_input_options() -> Options {
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
         special_chars: Some((
             SpecialCharsAction::Custom(Box::new(|val| {
-                // Custom validation to check for special characters and alphanumeric characters
                 if val.chars().all(char::is_alphanumeric) {
                     // All characters are alphanumeric, return None (no warning)
                     None
