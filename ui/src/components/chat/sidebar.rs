@@ -510,7 +510,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     let desktop = use_window(cx);
                                     let size = desktop.webview.inner_size();
 
-                                    if size.width < 1201 {
+                                    if size.width <= 1200 {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
