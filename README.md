@@ -43,7 +43,6 @@ cargo run --bin ui --profile=rapid
 | Homebrew | /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" |
 | Rust | curl --proto  '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh |
 | cmake | brew install cmake |
-| Protoc | brew install protobuf |
 | ffmpeg | brew install ffmpeg |
 | audio opus | brew install opus |
 
@@ -54,7 +53,6 @@ And for Windows, I followed the steps on this site here
 | Dep  | Install Command                                                  |
 |------|------------------------------------------------------------------|
 | Rust | [Installation Guide](https://www.rust-lang.org/tools/install) |
-| Protoc | [Download](https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-win64.zip) |
 | ffmpeg | [Installation Guide](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) |
 
 
@@ -67,7 +65,6 @@ And for Windows, I followed the steps on this site here
 | alsa-sys | `sudo apt install librust-alsa-sys-dev` |
 | libgtk-dev | `sudo apt-get install libgtk-3-dev` |
 | libsoup-dev | `sudo apt install libsoup-3.0-dev` |
-| protobuf| `sudo apt-get install protobuf-compiler` |
 | Tauri Deps | `sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev` |
 | ffmpeg| `sudo apt-get install ffmpeg` |
 | libopus-dev| `sudo apt-get install libopus-dev` |
