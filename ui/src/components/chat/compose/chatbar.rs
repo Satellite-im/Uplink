@@ -6,7 +6,7 @@ use std::{
 use common::{
     icons,
     language::get_local_text,
-    state::{Action, Identity, State, ToastNotification},
+    state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
@@ -106,16 +106,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         state
             .write()
             .mutate(Action::SetChatAttachments(chat_id, files_attached));
-        state
-            .write()
-            .mutate(common::state::Action::AddToastNotification(
-                ToastNotification::init(
-                    "".into(),
-                    get_local_text("messages.maximum-eight-files-per-message"),
-                    None,
-                    4,
-                ),
-            ));
     }
 
     // used to render the typing indicator
@@ -626,10 +616,36 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                 },
             })
         })));
+
+    let attachments_vec = state
+        .read()
+        .get_active_chat()
+        .map(|f| f.files_attached_to_send)
+        .unwrap_or_default();
+
+    if attachments_vec.is_empty() {
+        return None;
+    }
+
     cx.render(rsx!(div {
         id: "compose-attachments",
         aria_label: "compose-attachments",
-        attachments
+            div {
+                id: "attachments-error",
+                flex_direction: "column",
+                if attachments_vec.len() >= MAX_FILES_PER_MESSAGE {
+                    rsx!(p {
+                        class: "error",
+                        aria_label: "input-error",
+                        margin_left: "var(--gap)",
+                        margin_top: "var(--gap)",
+                        margin_bottom: "var(--gap)",
+                        color: "var(--warning-light)",
+                        format!("You reached {} files per message limit", MAX_FILES_PER_MESSAGE)
+                    })
+                }
+            attachments
+            }
     }))
 }
 

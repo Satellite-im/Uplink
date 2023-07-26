@@ -13,8 +13,12 @@
 .file-embed {
   display: inline-flex;
   gap: var(--gap);
-  width: fit-content;
+  width: 95%;
+  margin-left: var(--gap);
   color: var(--text-color);
+  padding-top: var(--gap);
+  padding-bottom: 4px;
+  padding-right: var(--gap);
   align-content: center;
   align-self: flex-end;
 
@@ -61,6 +65,9 @@
       width: var(--height-input);
     }
   }
+}
+.file-embed:hover {
+  background-color: var(--background-light);
 }
 
 .icon {

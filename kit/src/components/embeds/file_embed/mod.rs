@@ -206,6 +206,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                     div {
                         class: "file-info",
+                        width: "100%",
                         aria_label: "file-info",
                         p {
                             class: "name",
