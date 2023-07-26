@@ -57,7 +57,7 @@ pub struct ChatBase<T> {
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.
-    #[serde(default)]
+    //#[serde(default)]
     pub messages: VecDeque<T>,
     // Unread count for this chat, should be cleared when we view the chat.
     pub unreads: u32,
@@ -144,11 +144,13 @@ impl Into<Chat> for SendableChat {
             conversation_type: self.conversation_type,
             conversation_name: self.conversation_name,
             creator: self.creator,
-            messages: self
-                .messages
-                .iter()
-                .map(|m| LocalSubscription::create(m))
-                .collect(),
+            messages: {
+                let mut vec = VecDeque::new();
+                for msg in self.messages.iter() {
+                    vec.push_front(LocalSubscription::create(msg.clone()));
+                }
+                vec
+            },
             unreads: self.unreads,
             replying_to: self.replying_to,
             typing_indicator: self.typing_indicator,

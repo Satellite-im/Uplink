@@ -505,7 +505,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } = cx.props;
 
     let messages = &group.messages;
-    let last_message = messages.last().unwrap().message;
+    let last_message = messages.last().unwrap().message.use_state(cx);
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let blocked = group.remote && state.read().is_blocked(&sender.did_key());
     let show_blocked = use_state(cx, || false);
@@ -585,7 +585,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                     cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
                 }
             })),
-            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
+            timestamp: format_timestamp_timeago(last_message.read().inner.date(), active_language),
             sender: sender_name.clone(),
             remote: group.remote,
             children: cx.render(rsx!(render_messages {
@@ -619,17 +619,17 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
         let should_fetch_more = grouped_message.should_fetch_more;
-        let message = &grouped_message.message;
-        let sender_is_self = message.inner.sender() == state.read().did_key();
+        let message = grouped_message.message.use_state(cx);
+        let sender_is_self = message.read().inner.sender() == state.read().did_key();
 
         // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
         let is_editing = edit_msg
             .get()
-            .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+            .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
             .unwrap_or(false);
-        let context_key = format!("message-{}-{}", &message.key, is_editing);
-        let _message_key = format!("{}-{:?}", &message.key, is_editing);
-        let _msg_uuid = message.inner.id();
+        let context_key = format!("message-{}-{}", &message.read().key, is_editing);
+        let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
+        let _msg_uuid = message.read().inner.id();
 
         if cx.props.pending {
             return rsx!(render_message {
@@ -682,9 +682,10 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     aria_label: "messages-reply".into(),
                     text: get_local_text("messages.reply"),
                     onpress: move |_| {
-                        state
-                            .write()
-                            .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
+                        state.write().mutate(Action::StartReplying(
+                            &cx.props.active_chat_id,
+                            &message.read(),
+                        ));
                     }
                 },
                 ContextItem {
@@ -726,8 +727,8 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     should_render: sender_is_self,
                     onpress: move |_| {
                         ch.send(MessagesCommand::DeleteMessage {
-                            conv_id: message.inner.conversation_id(),
-                            msg_id: message.inner.id(),
+                            conv_id: message.read().inner.conversation_id(),
+                            msg_id: message.read().inner.id(),
                         });
                     }
                 },
@@ -773,13 +774,14 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         pending: _,
     } = cx.props;
     let grouped_message = message;
-    let message = grouped_message.message;
+    let message = grouped_message.message.use_state(cx);
     let is_editing = edit_msg
         .current()
-        .map(|id| !cx.props.is_remote && (id == message.inner.id()))
+        .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
         .unwrap_or(false);
 
     let reactions_list: Vec<ReactionAdapter> = message
+        .read()
         .inner
         .reactions()
         .iter()
@@ -831,7 +833,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                 onclick: move |_|  {
                                     reacting_to.set(None);
                                     state.write().ui.ignore_focus = false;
-                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+                                    ch.send(MessagesCommand::React((state.read().did_key(), message.read().inner.clone(), reaction.to_string())));
                                 },
                                 "{reaction}"
                             }
@@ -843,7 +845,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }),
         div {
             class: "msg-wrapper",
-            message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
+            message.read().in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(
             MessageReply {
                     key: "reply-{message_key}",
                     with_text: other_msg.to_string(),
@@ -859,15 +861,15 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 key: "{message_key}",
                 editing: is_editing,
                 remote: cx.props.is_remote,
-                with_text: message.inner.value().join("\n"),
+                with_text: message.read().inner.value().join("\n"),
                 reactions: reactions_list,
                 order: if grouped_message.is_first { Order::First } else if grouped_message.is_last { Order::Last } else { Order::Middle },
-                attachments: message
+                attachments: message.read()
                 .inner
                 .attachments(),
-                attachments_pending_download: pending_downloads.read().get(&message.inner.conversation_id()).cloned(),
+                attachments_pending_download: pending_downloads.read().get(&message.read().inner.conversation_id()).cloned(),
                 on_click_reaction: move |emoji: String| {
-                    ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
+                    ch.send(MessagesCommand::React((user_did.clone(), message.read().inner.clone(), emoji)));
                 },
                 pending: cx.props.pending,
                 attachments_pending_uploads: pending_uploads,
@@ -886,7 +888,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         .unwrap_or_default();
                     if let Some(file_path_to_download) = FileDialog::new()
                     .set_directory(dirs::download_dir().unwrap_or_default()).set_file_name(&file_stem).add_filter("", &[&file_extension]).save_file() {
-                        let conv_id = message.inner.conversation_id();
+                        let conv_id = message.read().inner.conversation_id();
                         if !pending_downloads.read().contains_key(&conv_id) {
                             pending_downloads.write().insert(conv_id, HashSet::new());
                         }
@@ -894,7 +896,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
                         ch.send(MessagesCommand::DownloadAttachment {
                             conv_id,
-                            msg_id: message.inner.id(),
+                            msg_id: message.read().inner.id(),
                             file,
                             file_path_to_download
                         })
@@ -904,10 +906,10 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     edit_msg.set(None);
                     state.write().ui.ignore_focus = false;
                     let msg = update.split('\n').map(|x| x.to_string()).collect::<Vec<String>>();
-                    if  message.inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
+                    if  message.read().inner.value() == msg || !msg.iter().any(|x| !x.trim().is_empty()) {
                         return;
                     }
-                    ch.send(MessagesCommand::EditMessage { conv_id: message.inner.conversation_id(), msg_id: message.inner.id(), msg})
+                    ch.send(MessagesCommand::EditMessage { conv_id: message.read().inner.conversation_id(), msg_id: message.read().inner.id(), msg})
                 }
             },
             script {

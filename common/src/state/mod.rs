@@ -20,7 +20,7 @@ use crate::notifications::NotificationAction;
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
 pub use chats::{Chat, Chats};
-use dioxus::prelude::ScopeState;
+use dioxus::prelude::ScopeId;
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
@@ -289,12 +289,16 @@ impl State {
         self.settings = settings::Settings::default();
     }
 
-    pub fn process_warp_event(&mut self, cx: &ScopeState, event: WarpEvent) {
+    pub fn process_warp_event(
+        &mut self,
+        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
+        event: WarpEvent,
+    ) {
         log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
             WarpEvent::RayGun(evt) => self.process_raygun_event(evt),
-            WarpEvent::Message(evt) => self.process_message_event(cx, evt),
+            WarpEvent::Message(evt) => self.process_message_event(update, evt),
             WarpEvent::Blink(evt) => self.process_blink_event(evt),
         };
 
@@ -383,7 +387,11 @@ impl State {
         }
     }
 
-    fn process_message_event(&mut self, cx: &ScopeState, event: MessageEvent) {
+    fn process_message_event(
+        &mut self,
+        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
+        event: MessageEvent,
+    ) {
         match event {
             MessageEvent::Received {
                 conversation_id,
@@ -469,7 +477,7 @@ impl State {
                         .iter_mut()
                         .find(|msg| msg.read().inner.id() == message.inner.id())
                     {
-                        msg.use_write_only(cx) = message;
+                        msg.replace_and_update(update, message);
                     }
                 }
             }
@@ -507,10 +515,10 @@ impl State {
                 }
             }
             MessageEvent::MessageReactionAdded { message } => {
-                self.update_message(cx, message);
+                self.update_message(update, message);
             }
             MessageEvent::MessageReactionRemoved { message } => {
-                self.update_message(cx, message);
+                self.update_message(update, message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -923,7 +931,11 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, cx: &ScopeState, mut message: warp::raygun::Message) {
+    pub fn update_message(
+        &mut self,
+        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
+        mut message: warp::raygun::Message,
+    ) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -933,8 +945,8 @@ impl State {
         };
         let message_id = message.id();
         for msg in &mut conv.messages {
-            let msg = msg.use_state(cx);
-            if msg.read().id() != message_id {
+            let mut msg = msg.write_with_update(update.clone());
+            if msg.inner.id() != message_id {
                 continue;
             }
             let mut reactions: Vec<Reaction> = Vec::new();
@@ -945,7 +957,7 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            *msg = message;
+            msg.inner = message;
             return;
         }
 
@@ -1508,7 +1520,7 @@ impl<'a> MessageGroup<'a> {
 // Define a struct to represent a message that has been placed into a group.
 #[derive(Clone)]
 pub struct GroupedMessage<'a> {
-    pub message: &'a ui_adapter::Message,
+    pub message: LocalSubscription<ui_adapter::Message>,
     pub attachment_progress: Option<&'a HashMap<String, Progression>>,
     pub is_pending: bool,
     pub is_first: bool,
@@ -1527,7 +1539,7 @@ pub fn group_messages<'a>(
     my_did: DID,
     num: usize,
     when_to_fetch_more: usize,
-    input: &'a VecDeque<ui_adapter::Message>,
+    input: &'a VecDeque<LocalSubscription<ui_adapter::Message>>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
     let to_skip = input.len().saturating_sub(num);
@@ -1543,9 +1555,9 @@ pub fn group_messages<'a>(
 
     for msg in iter {
         if let Some(group) = messages.iter_mut().last() {
-            if group.sender == msg.inner.sender() {
+            if group.sender == msg.read().inner.sender() {
                 let g = GroupedMessage {
-                    message: msg,
+                    message: msg.clone(),
                     attachment_progress: None,
                     is_pending: false,
                     is_first: false,
@@ -1563,9 +1575,9 @@ pub fn group_messages<'a>(
         }
 
         // new group
-        let mut grp = MessageGroup::new(msg.inner.sender(), &my_did);
+        let mut grp = MessageGroup::new(msg.read().inner.sender(), &my_did);
         let g = GroupedMessage {
-            message: msg,
+            message: msg.clone(),
             attachment_progress: None,
             is_pending: false,
             is_first: true,
@@ -1591,7 +1603,7 @@ pub fn pending_group_messages<'a>(
     for (i, msg) in pending.iter().enumerate() {
         if i == size - 1 {
             let g = GroupedMessage {
-                message: &msg.message,
+                message: LocalSubscription::create(msg.message.clone()),
                 attachment_progress: Some(&msg.attachments_progress),
                 is_pending: true,
                 is_first: false,
@@ -1602,7 +1614,7 @@ pub fn pending_group_messages<'a>(
             continue;
         }
         let g = GroupedMessage {
-            message: &msg.message,
+            message: LocalSubscription::create(msg.message.clone()),
             attachment_progress: Some(&msg.attachments_progress),
             is_pending: true,
             is_first: true,

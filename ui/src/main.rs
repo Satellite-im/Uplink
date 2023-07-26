@@ -671,7 +671,7 @@ fn app(cx: Scope) -> Element {
                         }
                     }
                 } else {
-                    state.write().process_warp_event(cx, evt);
+                    state.write().process_warp_event(schedule.clone(), evt);
                 }
             }
         }
@@ -821,10 +821,11 @@ fn app(cx: Scope) -> Element {
 
                 break res;
             };
-
-            state
-                .write()
-                .init_warp(res.friends, res.chats, res.converted_identities);
+            state.write().init_warp(
+                res.friends,
+                res.chats.into_iter().map(|(k, v)| (k, v.into())).collect(),
+                res.converted_identities,
+            );
         }
     });
 

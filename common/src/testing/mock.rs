@@ -95,7 +95,7 @@ pub fn generate_mock() -> State {
 
 fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
     let default_id = Identity::default();
-    let mut messages = VecDeque::<ui_adapter::Message>::new();
+    let mut messages = VecDeque::<LocalSubscription<ui_adapter::Message>>::new();
 
     let mut rng = rand::thread_rng();
 

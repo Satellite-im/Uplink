@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::rc::Rc;
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub struct LocalSubscription<T> {
     inner: Rc<RefCell<T>>,
     subscribed: Rc<RefCell<HashSet<ScopeId>>>,
@@ -16,6 +16,8 @@ impl<T: PartialEq + 'static> PartialEq for LocalSubscription<T> {
         self.inner.any_cmp(&other.inner)
     }
 }
+
+impl<T: Eq + 'static> Eq for LocalSubscription<T> {}
 
 impl<T: Serialize> Serialize for LocalSubscription<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -90,6 +92,27 @@ impl<T: 'static> LocalSubscription<T> {
         self.inner.borrow_mut()
     }
 
+    pub fn write_with_update(
+        &self,
+        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
+    ) -> RefMut<T> {
+        for id in self.subscribed.borrow().iter() {
+            update(*id);
+        }
+        self.inner.borrow_mut()
+    }
+
+    pub fn replace_and_update(
+        &self,
+        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
+        val: T,
+    ) {
+        for id in self.subscribed.borrow().iter() {
+            update(*id);
+        }
+        self.inner.replace(val);
+    }
+
     // This should only be used outside of components. This will not subscribe to any state.
     pub fn read(&self) -> Ref<T> {
         self.inner.borrow()
@@ -128,6 +151,11 @@ pub struct LocalWrite<T> {
 impl<T> LocalWrite<T> {
     pub fn with_mut(&self, f: impl Fn(&mut T)) {
         f(&mut *self.inner.borrow_mut());
+        (self.update.borrow())();
+    }
+
+    pub fn replace(&self, val: T) {
+        self.inner.replace(val);
         (self.update.borrow())();
     }
 }
