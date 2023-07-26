@@ -209,7 +209,9 @@ pub async fn handle_raygun_cmd(
             current_len,
             rsp,
         } => {
-            let r = fetch_messages_from_chat(conv_id, messaging, to_fetch + current_len).await;
+            let r =
+                fetch_messages_from_chat(conv_id, messaging, current_len, to_fetch + current_len)
+                    .await;
             let _ = rsp.send(r);
         }
         RayGunCmd::SendMessage {
