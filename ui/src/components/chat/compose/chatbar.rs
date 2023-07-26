@@ -36,6 +36,7 @@ use warp::{
 };
 
 const MAX_CHARS_LIMIT: usize = 1024;
+const MAX_FILES_PER_MESSAGE: usize = 8;
 
 use crate::{
     components::paste_files_with_shortcut,
@@ -100,8 +101,8 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default();
 
-    if files_attached.len() > 8 {
-        files_attached.truncate(8);
+    if files_attached.len() > MAX_FILES_PER_MESSAGE {
+        files_attached.truncate(MAX_FILES_PER_MESSAGE);
         state
             .write()
             .mutate(Action::SetChatAttachments(chat_id, files_attached));

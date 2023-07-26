@@ -66,6 +66,22 @@ pub const SELECT_CHAT_BAR: &str = r#"
     chatBar.focus()
 "#;
 
+pub const OVERLAY_SCRIPT: &str = r#"
+    var chatLayout = document.getElementById('compose')
+
+    var IS_DRAGGING = $IS_DRAGGING
+
+    var overlayElement = document.getElementById('overlay-element')
+
+    if (IS_DRAGGING) {
+    chatLayout.classList.add('hover-effect')
+    overlayElement.style.display = 'block'
+    } else {
+    chatLayout.classList.remove('hover-effect')
+    overlayElement.style.display = 'none'
+    }
+"#;
+
 pub struct ComposeData {
     active_chat: Chat,
     my_id: Identity,
@@ -105,7 +121,6 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let overlay_script = include_str!("../overlay.js");
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -114,14 +129,13 @@ pub fn Compose(cx: Scope) -> Element {
 
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
-        to_owned![state, overlay_script, window, drag_event];
+        to_owned![state, window, drag_event];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
-                    let new_files =
-                        drag_and_drop_function(&window, &drag_event, overlay_script).await;
+                    let new_files = drag_and_drop_function(&window, &drag_event).await;
                     let mut new_files_to_upload: Vec<_> = state
                         .read()
                         .get_active_chat()
@@ -155,9 +169,9 @@ pub fn Compose(cx: Scope) -> Element {
             ondragover: move |_| {
                 if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
-                        to_owned![drag_event, window, overlay_script, state];
+                        to_owned![drag_event, window, state];
                         async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
+                           let new_files = drag_and_drop_function(&window, &drag_event).await;
                             let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
                                 .unwrap_or_default()
                                 .iter()
@@ -574,7 +588,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
-    overlay_script: String,
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
     let mut new_files_to_upload = Vec::new();
@@ -583,7 +596,7 @@ async fn drag_and_drop_function(
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
                 if verify_if_are_valid_paths(&paths) {
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
                     if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
@@ -610,7 +623,7 @@ async fn drag_and_drop_function(
                 if verify_if_are_valid_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
@@ -620,7 +633,7 @@ async fn drag_and_drop_function(
             }
             _ => {
                 *drag_event.write_silent() = None;
-                let script = overlay_script.replace("$IS_DRAGGING", "false");
+                let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                 window.eval(&script);
                 break;
             }
