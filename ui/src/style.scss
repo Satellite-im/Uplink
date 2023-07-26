@@ -94,6 +94,7 @@ body {
   overflow-y: hidden;
   height: fit-content;
   transition: background var(--animation-time);
+  padding-bottom: var(--gap);
 }
 
 .progress {

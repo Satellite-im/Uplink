@@ -103,7 +103,7 @@ pub fn User<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         p {
                             class: "subtext",
                             aria_label: "User Status",
-                            "{cx.props.subtext}"
+                            dangerous_inner_html: "{cx.props.subtext}"
                         }
                     }
                 }
