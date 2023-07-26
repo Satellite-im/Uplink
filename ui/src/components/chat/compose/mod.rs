@@ -197,15 +197,15 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                onclick: move |_| {
-                    // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
-                    if show_group_users.is_none() && is_group {
-                        show_group_users.set(Some(chat_id));
-                        show_edit_group.set(None);
-                    } else {
-                        show_group_users.set(None);
-                    }
-                },
+                // onclick: move |_| {
+                //     // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
+                //     if show_group_users.is_none() && is_group {
+                //         show_group_users.set(Some(chat_id));
+                //         show_edit_group.set(None);
+                //     } else {
+                //         show_group_users.set(None);
+                //     }
+                // },
                 controls: cx.render(rsx!(get_controls{
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
@@ -244,12 +244,12 @@ pub fn Compose(cx: Scope) -> Element {
                     active_chat: state.read().get_active_chat()
                 }
         )),
-        (show_edit_group
-                .map_or(true, |group_chat_id| group_chat_id != chat_id)
-            &&
-        show_group_users
-                .map_or(true, |group_chat_id| group_chat_id != chat_id)
-            ).then(|| rsx!(
+        // (show_edit_group
+        //         .map_or(true, |group_chat_id| group_chat_id != chat_id)
+        //     &&
+        // show_group_users
+        //         .map_or(true, |group_chat_id| group_chat_id != chat_id)
+        //     ).then(|| rsx!(
             match data.as_ref() {
                 None => rsx!(
                     div {
@@ -266,7 +266,7 @@ pub fn Compose(cx: Scope) -> Element {
                 show_group_users: show_group_users.clone(),
                 ignore_focus: should_ignore_focus,
             }
-        )),
+        // )),
     }
     ))
 }
