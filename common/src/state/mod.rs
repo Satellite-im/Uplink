@@ -898,16 +898,13 @@ impl State {
             .cloned()
     }
     // assumes the messages are sorted by most recent to oldest
-    pub fn prepend_chat_messages(
+    pub fn update_chat_messages(
         &mut self,
         conversation_id: Uuid,
         messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            let mut m = Into::<VecDeque<ui_adapter::Message>>::into(messages);
-            let mut n = std::mem::take(&mut chat.messages);
-            m.append(&mut n);
-            chat.messages = m;
+            chat.messages = messages.into();
         }
     }
 

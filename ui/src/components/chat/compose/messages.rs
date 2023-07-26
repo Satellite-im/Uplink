@@ -116,7 +116,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             state.write().finished_loading_chat(id);
         } else {
             num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));
-            state.write().prepend_chat_messages(id, m);
+            state.write().update_chat_messages(id, m);
         }
     }
 

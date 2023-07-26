@@ -154,16 +154,17 @@ pub async fn dids_to_identity(
 pub async fn fetch_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    current_len: usize,
     to_take: usize,
 ) -> Result<Vec<Message>, Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
     let to_take = std::cmp::min(total_messages, to_take);
     let to_skip = total_messages.saturating_sub(to_take + 1);
-    let end = total_messages.saturating_sub(current_len);
 
     let messages = messaging
-        .get_messages(conv_id, MessageOptions::default().set_range(to_skip..end))
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
