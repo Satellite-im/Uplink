@@ -154,15 +154,17 @@ pub async fn dids_to_identity(
 pub async fn fetch_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    to_skip: usize,
     to_take: usize,
 ) -> Result<Vec<Message>, Error> {
-    let total = to_take + to_skip;
-    let max_messages = messaging.get_message_count(conv_id).await?;
-    let to_skip = std::cmp::min(to_skip, max_messages);
-    let total = std::cmp::min(total, max_messages);
+    let total_messages = messaging.get_message_count(conv_id).await?;
+    let to_take = std::cmp::min(total_messages, to_take);
+    let to_skip = total_messages.saturating_sub(to_take + 1);
+
     let messages = messaging
-        .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -182,10 +184,15 @@ pub async fn conversation_to_chat(
     messaging: &super::Messaging,
 ) -> Result<chats::Chat, Error> {
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
-    let unreads = messaging.get_message_count(conv.id()).await?;
-    let to_take = std::cmp::min(unreads, 20);
+    let total_messages = messaging.get_message_count(conv.id()).await?;
+    let to_take = std::cmp::min(total_messages, 20);
+    let to_skip = total_messages.saturating_sub(to_take + 1);
+
     let messages = messaging
-        .get_messages(conv.id(), MessageOptions::default().set_range(0..to_take))
+        .get_messages(
+            conv.id(),
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -197,7 +204,7 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
-    let has_more_messages = unreads > to_take;
+    let has_more_messages = total_messages > to_take;
     Ok(chats::Chat {
         id: conv.id(),
         conversation_type: conv.conversation_type(),
@@ -205,7 +212,7 @@ pub async fn conversation_to_chat(
         participants: HashSet::from_iter(conv.recipients()),
         creator: conv.creator(),
         messages,
-        unreads: unreads as u32,
+        unreads: total_messages as u32,
         replying_to: None,
         typing_indicator: HashMap::new(),
         draft: None,

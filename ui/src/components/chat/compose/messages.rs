@@ -82,7 +82,7 @@ enum MessagesCommand {
     },
     FetchMore {
         conv_id: Uuid,
-        new_len: usize,
+        to_fetch: usize,
         current_len: usize,
     },
 }
@@ -116,7 +116,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             state.write().finished_loading_chat(id);
         } else {
             num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));
-            state.write().prepend_messages_to_chat(id, m);
+            state.write().update_chat_messages(id, m);
         }
     }
 
@@ -263,14 +263,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                     }
                     MessagesCommand::FetchMore {
                         conv_id,
-                        new_len,
+                        to_fetch,
                         current_len,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
                                 conv_id,
-                                new_len,
+                                to_fetch,
                                 current_len,
                                 rsp: tx,
                             }))
@@ -654,14 +654,15 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         .num_to_take
                         .get()
                         .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
+
                     // lazily render
-                    if new_num_to_take < cx.props.num_messages_in_conversation {
+                    if new_num_to_take <= cx.props.num_messages_in_conversation {
                         cx.props.num_to_take.set(new_num_to_take);
                     } else if cx.props.has_more {
                         // lazily add more messages to conversation, then render
                         ch.send(MessagesCommand::FetchMore {
                             conv_id: cx.props.active_chat_id,
-                            new_len: new_num_to_take,
+                            to_fetch: DEFAULT_NUM_TO_TAKE * 2,
                             current_len: cx.props.num_messages_in_conversation,
                         })
                     }
