@@ -103,3 +103,26 @@
 .file-info {
   word-break: break-all;
 }
+
+.icon-file-embed {
+  svg {
+    transition: stroke var(--animation-time);
+    fill: transparent;
+    stroke: var(--warning-light);
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.file-embed-type {
+	text-transform: none;
+	text-align: center;
+	position: absolute;
+  right: 590px;
+  bottom: 260px;
+	padding:2px;
+	background-color: var(--warning-light);
+	border-radius: 4px;
+	color: var(--text-color-dark);
+	font-size: var(--text-size-less);
+}

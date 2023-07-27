@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::elements::button::Button;
 use crate::elements::Appearance;
 use crate::layout::modal::Modal;
@@ -8,12 +10,18 @@ use dioxus::prelude::*;
 
 use humansize::format_size;
 use humansize::DECIMAL;
+use mime::IMAGE_JPEG;
+use mime::IMAGE_PNG;
+use mime::IMAGE_SVG;
 use warp::constellation::Progression;
 
 #[derive(Props)]
 pub struct Props<'a> {
     // The filename of the file
     filename: String,
+
+    // The filename of the file
+    filepath: Option<PathBuf>,
 
     // The size of the file in bytes
     filesize: Option<usize>,
@@ -204,9 +212,47 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     div {
                         class: "icon",
                         aria_label: "file-icon",
-                        IconElement {
-                            icon: cx.props.attachment_icon.unwrap_or(Icon::QuestionMarkCircle)
-                        },
+                        if let Some(filepath) = cx.props.filepath.clone() {
+                            let file = std::fs::read(&filepath).unwrap(); 
+                            let parts_of_filename: Vec<&str> = filename.split('.').collect();
+                            let mime = match parts_of_filename.last() {
+                                Some(m) => match *m {
+                                    "png" => IMAGE_PNG.to_string(),
+                                    "jpg" => IMAGE_JPEG.to_string(),
+                                    "jpeg" => IMAGE_JPEG.to_string(),
+                                    "svg" => IMAGE_SVG.to_string(),
+                                    &_ => "".to_string(),
+                                },
+                                None => "".to_string(),
+                            };
+                            if mime.is_empty() {
+                                rsx!(IconElement {
+                                    icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                                })
+                            } else {
+                                let image = match &file.len() {
+                                    0 => "".to_string(),
+                                    _ => {
+                                        let prefix = format!("data:{mime};base64,");
+                                        let base64_image = base64::encode(&file);
+                                        let img = prefix + base64_image.as_str();
+                                        img
+                                    }
+                                };
+                                rsx!(img {
+                                    aria_label: "image-preview-modal",
+                                    max_width: "50px",
+                                    src: format_args!("{}", image),
+                                    onclick: move |e| {
+                                        println!("filepath: {}", filepath.to_string_lossy().to_string());
+                                        e.stop_propagation()},
+                                })
+                            }
+                        } else {
+                            rsx!(IconElement {
+                            icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
+                        })
+                        }
                     }
                     div {
                         class: "file-info",

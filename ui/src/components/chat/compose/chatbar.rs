@@ -593,10 +593,11 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .map(|f| f.files_attached_to_send)
         .unwrap_or_default()
         .iter()
-        .map(|x| x.to_string_lossy().to_string())
-        .map(|file_name| {
+        .map(|file_path| {
+            let filename = file_path.to_string_lossy().to_string().clone();
             rsx!(FileEmbed {
-                filename: file_name.clone(),
+                filename: file_path.to_string_lossy().to_string().clone(),
+                filepath: file_path.clone(),
                 remote: false,
                 button_icon: icons::outline::Shape::Trash,
                 on_press: move |_| {
@@ -607,7 +608,7 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         .unwrap_or_default();
                     attachments.retain(|x| {
                         let s = x.to_string_lossy().to_string();
-                        s != file_name
+                        s != filename
                     });
                     state
                         .write()
