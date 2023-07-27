@@ -185,25 +185,26 @@ fn render_selector<'a>(
                                             aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
-                                                if let Some(destination) = state.read().ui.emoji_destination.clone() {
-                                                    match destination {
-                                                        EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
-                                                            let c =  match state.read().get_active_chat() {
-                                                                Some(c) => c,
-                                                                None => return
-                                                            };
-                                                            let draft: String = c.draft.unwrap_or_default();
-                                                            let new_draft = format!("{draft}{emoji}");
-                                                            state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                            if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
-                                                                cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
-                                                            };
-                                                        },
-                                                        EmojiDestination::Message(conversation_uuid, message_uuid) => {
-                                                            let emoji_str = emoji.clone().to_string();
-                                                            state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji_str));
-                                                        },
-                                                    }
+                                                let Some(destination) = state.read().ui.emoji_destination.clone() else {
+                                                    return;
+                                                };
+                                                match destination {
+                                                    EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
+                                                        let c =  match state.read().get_active_chat() {
+                                                            Some(c) => c,
+                                                            None => return
+                                                        };
+                                                        let draft: String = c.draft.unwrap_or_default();
+                                                        let new_draft = format!("{draft}{emoji}");
+                                                        state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                        if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
+                                                            cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+                                                        };
+                                                    },
+                                                    EmojiDestination::Message(conversation_uuid, message_uuid) => {
+                                                        let emoji_str = emoji.to_string();
+                                                        state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji_str));
+                                                    },
                                                 }
                                                 // Hide the selector when clicking an emoji
                                                 hide.set(false);
