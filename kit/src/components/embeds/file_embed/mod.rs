@@ -213,7 +213,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         class: "icon",
                         aria_label: "file-icon",
                         if let Some(filepath) = cx.props.filepath.clone() {
-                            let file = std::fs::read(&filepath).unwrap(); 
+                            let file = std::fs::read(&filepath).unwrap();
                             let parts_of_filename: Vec<&str> = filename.split('.').collect();
                             let mime = match parts_of_filename.last() {
                                 Some(m) => match *m {
@@ -239,13 +239,12 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         img
                                     }
                                 };
-                                rsx!(img {
+                                rsx!( img {
+                                    max_width: "120px",
+                                    max_height: "60px",
                                     aria_label: "image-preview-modal",
-                                    max_width: "50px",
-                                    src: format_args!("{}", image),
-                                    onclick: move |e| {
-                                        println!("filepath: {}", filepath.to_string_lossy().to_string());
-                                        e.stop_propagation()},
+                                    src: "{image}",
+                                    onclick: move |e| e.stop_propagation(),
                                 })
                             }
                         } else {
