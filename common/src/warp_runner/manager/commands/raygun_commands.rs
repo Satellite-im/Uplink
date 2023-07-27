@@ -75,7 +75,7 @@ pub enum RayGunCmd {
         to_fetch: usize,
         // the current size of the conversation
         current_len: usize,
-        rsp: oneshot::Sender<Result<Vec<ui_adapter::Message>, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
     },
     #[display(fmt = "SendMessage")]
     SendMessage {

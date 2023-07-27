@@ -155,7 +155,7 @@ pub async fn fetch_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
     to_take: usize,
-) -> Result<Vec<Message>, Error> {
+) -> Result<(Vec<Message>, bool), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
     let to_take = std::cmp::min(total_messages, to_take);
     let to_skip = total_messages.saturating_sub(to_take + 1);
@@ -168,7 +168,7 @@ pub async fn fetch_messages_from_chat(
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let messages = FuturesOrdered::from_iter(
+    let messages: Vec<_> = FuturesOrdered::from_iter(
         messages
             .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),
@@ -176,7 +176,14 @@ pub async fn fetch_messages_from_chat(
     .collect()
     .await;
 
-    Ok(messages)
+    let has_more = to_skip > 0;
+    // log::debug!(
+    //     "fetched messages. total: {}, num taken: {}, has_more: {}",
+    //     total_messages,
+    //     to_take,
+    //     has_more
+    // );
+    Ok((messages, has_more))
 }
 
 pub async fn conversation_to_chat(
