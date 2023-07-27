@@ -596,9 +596,9 @@ impl State {
             BlinkEventKind::SelfSpeaking => {
                 // todo
             }
-            BlinkEventKind::AudioDegredation { peer_id } => {
+            BlinkEventKind::AudioDegradation { peer_id } => {
                 // todo
-                log::info!("audio degredation for peer {}", peer_id);
+                log::info!("audio degradation for peer {}", peer_id);
             }
         }
     }
