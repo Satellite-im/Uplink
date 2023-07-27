@@ -15,6 +15,7 @@ pub mod utils;
 
 use crate::language::change_language;
 use crate::notifications::NotificationAction;
+use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -30,7 +31,7 @@ use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
-use crate::STATIC_ARGS;
+use crate::{STATIC_ARGS, WARP_CMD_CH};
 
 use crate::{
     testing::mock::generate_mock,
@@ -121,6 +122,11 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
+    }
+
+    // gonna try adding this here to let shared libraries send warp commands.
+    pub fn get_warp_ch(&self) -> WarpCmdTx {
+        WARP_CMD_CH.tx.clone()
     }
 
     pub fn mutate(&mut self, action: Action) {
