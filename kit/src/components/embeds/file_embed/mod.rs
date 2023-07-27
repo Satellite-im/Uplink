@@ -77,7 +77,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 Some(size) => {
                     file_size_pending
                         .push_str(&format_args!("{}", format_size(*size, DECIMAL)).to_string());
-                    current * 100 / size
+                    if *current > 0 && *size > 0 {
+                        current * 100 / size
+                    } else {
+                        0
+                    }
                 }
                 None => 0,
             },
