@@ -106,11 +106,10 @@
 
 #edit-group {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-subtle-color);
+  border-bottom: 2px solid var(--secondary);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
-  height: 100%;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
@@ -164,12 +163,11 @@
 
 #group-users {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-subtle-color);
+  border-bottom: 2px solid var(--secondary);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
   padding-top: 16px;
-  height: 100%;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);

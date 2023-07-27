@@ -18,6 +18,7 @@ use warp::{crypto::DID, logging::tracing::log};
 pub struct Props {
     #[props(!optional)]
     active_chat: Option<Chat>,
+    is_owner: bool,
 }
 
 #[allow(non_snake_case)]

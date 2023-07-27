@@ -107,6 +107,7 @@ pub struct ComposeProps {
     show_edit_group: UseState<Option<Uuid>>,
     show_group_users: UseState<Option<Uuid>>,
     ignore_focus: bool,
+    is_owner: bool,
 }
 
 #[allow(non_snake_case)]
@@ -163,6 +164,20 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(ConversationType::Direct)
         == ConversationType::Group;
 
+    let active_chat = data.as_ref().map(|x| &x.active_chat);
+    let creator = if let Some(chat) = active_chat.as_ref() {
+        chat.creator.clone()
+    } else {
+        None
+    };
+
+    let user_did: DID = state.read().did_key();
+    let is_owner = if let Some(creator_did) = creator {
+        creator_did == user_did
+    } else {
+        false
+    };
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -197,26 +212,19 @@ pub fn Compose(cx: Scope) -> Element {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
                 },
-                // onclick: move |_| {
-                //     // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
-                //     if show_group_users.is_none() && is_group {
-                //         show_group_users.set(Some(chat_id));
-                //         show_edit_group.set(None);
-                //     } else {
-                //         show_group_users.set(None);
-                //     }
-                // },
                 controls: cx.render(rsx!(get_controls{
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
+                    is_owner: is_owner,
                 })),
                 get_topbar_children {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
+                    is_owner: is_owner,
                 }
             },
             // may need this later when video calling is possible. 
@@ -241,32 +249,27 @@ pub fn Compose(cx: Scope) -> Element {
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 GroupUsers {
-                    active_chat: state.read().get_active_chat()
+                    active_chat: state.read().get_active_chat(),
+                    is_owner: true
                 }
         )),
-        // (show_edit_group
-        //         .map_or(true, |group_chat_id| group_chat_id != chat_id)
-        //     &&
-        // show_group_users
-        //         .map_or(true, |group_chat_id| group_chat_id != chat_id)
-        //     ).then(|| rsx!(
-            match data.as_ref() {
-                None => rsx!(
-                    div {
-                        id: "messages",
-                        MessageGroupSkeletal {},
-                        MessageGroupSkeletal { alt: true }
-                    }
-                ),
-                Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
-            },
-            chatbar::get_chatbar {
-                data: data.clone(),
-                show_edit_group: show_edit_group.clone(),
-                show_group_users: show_group_users.clone(),
-                ignore_focus: should_ignore_focus,
-            }
-        // )),
+        match data.as_ref() {
+            None => rsx!(
+                div {
+                    id: "messages",
+                    MessageGroupSkeletal {},
+                    MessageGroupSkeletal { alt: true }
+                }
+            ),
+            Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
+        },
+        chatbar::get_chatbar {
+            data: data.clone(),
+            show_edit_group: show_edit_group.clone(),
+            show_group_users: show_group_users.clone(),
+            ignore_focus: should_ignore_focus,
+            is_owner: is_owner,
+        }
     }
     ))
 }
@@ -349,6 +352,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         .get()
         .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
         .unwrap_or(false);
+    let show_group_list = cx
+        .props
+        .show_group_users
+        .get()
+        .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+        .unwrap_or(false);
     let user_did: DID = state.read().did_key();
     let is_creator = if let Some(creator_did) = creator {
         creator_did == user_did
@@ -408,7 +417,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     });
 
     cx.render(rsx!(
-        if conversation_type == ConversationType::Group {
+        if cx.props.is_owner == true && conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
                 disabled: !is_creator,
@@ -439,6 +448,37 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
                 }
             })
+        }
+        if conversation_type == ConversationType::Group {
+            rsx!(
+                Button {
+                    icon: Icon::ListBullet,
+                    aria_label: "edit-group".into(),
+                    appearance: if show_group_list {
+                        Appearance::Primary
+                    } else {
+                        Appearance::Secondary
+                    },
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Top,
+                        text: if is_creator {
+                            get_local_text("friends.edit-group")
+                        } else {
+                            get_local_text("friends.not-creator")
+                        }
+                    })),
+                    onpress: move |_| {
+                            if show_group_list {
+                                cx.props.show_group_users.set(None);
+                            } else if let Some(chat) = active_chat.as_ref() {
+                                cx.props.show_group_users.set(Some(chat.id));
+                                cx.props.show_edit_group.set(None);
+
+                            }
+
+                    }
+                }
+            )
         }
         Button {
             icon: if favorite {
