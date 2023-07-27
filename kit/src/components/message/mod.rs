@@ -381,7 +381,7 @@ pub fn markdown(text: &str) -> String {
     let mut add_text_language = true;
 
     for line in &mut text_lines {
-        let parser = pulldown_cmark::Parser::new_ext(&line, options);
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
         let line_trim = line.trim();
         if line_trim == "```" && add_text_language {
             *line = "```text";
