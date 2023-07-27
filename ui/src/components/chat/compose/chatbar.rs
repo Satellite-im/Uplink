@@ -5,7 +5,7 @@ use std::{
 
 use common::{
     icons,
-    language::get_local_text,
+    language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
@@ -641,7 +641,9 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
                         margin_top: "var(--gap)",
                         margin_bottom: "var(--gap)",
                         color: "var(--warning-light)",
-                        format!("You reached {} files per message limit", MAX_FILES_PER_MESSAGE)
+                        get_local_text_args_builder("messages.maximum-amount-files-per-message", |m| {
+                            m.insert("amount", MAX_FILES_PER_MESSAGE.into());
+                        })
                     })
                 }
             attachments
