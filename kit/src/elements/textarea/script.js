@@ -1,30 +1,3 @@
-/*(() => {
-    // Handle moving and hiding/showing tooltip
-    const input_group = document.getElementById("input-group-$UUID");
-    // parent: input, parent of parent: input-group
-    // tooltip is child of input-group
-    const tooltip = document.getElementById("tooltip-$UUID");
-
-    if (input_group != null && tooltip != null) {
-        input_group.addEventListener("mouseover", function (e) {
-            tooltip.classList.remove("hidden");
-            tooltip.classList.add("visible");
-            tooltip.style.position = "fixed";
-            tooltip.style.left = e.clientX + "px";
-            tooltip.style.top = (e.clientY - 50) + "px";
-        })
-        input_group.addEventListener("mousemove", function (e) {
-            tooltip.style.position = "fixed";
-            tooltip.style.left = e.clientX + "px";
-            tooltip.style.top = (e.clientY - 50) + "px";
-        })
-        input_group.addEventListener("mouseout", function (e) {
-            tooltip.classList.remove("visible");
-            tooltip.classList.add("hidden");
-        })
-    }
-})()*/
-
 var MULTI_LINE = $MULTI_LINE;
 
 var textareas = document.getElementsByClassName("input_textarea")
@@ -39,6 +12,13 @@ for (let i = 0; i < textareas.length; i++) {
     }
 }
 
+textareas[0].addEventListener("keypress", (event) => {
+    if (event.keyCode === 13 && !event.shiftKey) {
+      textareas[0].style.height = "22px";
+      textareas[0].value = "";
+    }
+  });
+
 function inputListener(e) {
     updateHeight(this);
 }
@@ -50,17 +30,8 @@ function updateHeight(element) {
     }
     element.style.height = element.scrollHeight + "px";
 }
-
-function appResizeListener(e) {
-    if (textareas[0].value == "") {
-        textareas[0].style.height = "22px";
-    }
-}
 function keyPressListener(e) {
     if (e.key == "Enter" && MULTI_LINE && !e.shiftKey) {
         e.preventDefault();
-    }
+    } 
 }
-
-// Listen for the resize event
-window.addEventListener("resize", appResizeListener);
