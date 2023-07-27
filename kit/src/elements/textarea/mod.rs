@@ -75,8 +75,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.id.clone()
     };
     let id_char_counter = id.clone();
-
-    let height_script = include_str!("./update_input_height.js");
     let focus_script = if cx.props.ignore_focus {
         String::new()
     } else {
