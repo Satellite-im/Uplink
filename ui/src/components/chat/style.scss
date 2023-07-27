@@ -81,6 +81,7 @@
     flex-direction: column;
     gap: 0;
     max-height: 20vh;
+    overflow: scroll;
 
     .friend-group {
       display: inline-flex;
@@ -322,6 +323,7 @@
   -webkit-line-clamp: 1; /* number of lines to show */
   line-clamp: 1;
   -webkit-box-orient: vertical;
+  word-wrap: anywhere;
 }
 
 #compose .topbar .children .status {
@@ -443,4 +445,21 @@
 
 .bold {
   font-weight: bold;
+}
+
+.group-creator-group {
+  display: flex;
+  align-items:center;
+}
+.group-creator-container > svg {
+  vertical-align: middle;
+}
+.group-creator-text {
+  margin-left: .5rem;
+  font-size: 10px;
+  cursor: default;
+}
+
+.hide-button-text {
+  width: 38px;
 }

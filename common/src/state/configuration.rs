@@ -93,6 +93,8 @@ pub struct Extensions {
 pub struct Developer {
     #[serde(default)]
     pub developer_mode: bool,
+    #[serde(default)]
+    pub experimental_features: bool,
 }
 
 fn bool_true() -> bool {
@@ -155,6 +157,9 @@ impl Configuration {
             ConfigAction::SetOverlayEnabled(overlay) => self.general.enable_overlay = overlay,
             ConfigAction::SetDyslexicEnabled(flag) => self.general.dyslexia_support = flag,
             ConfigAction::SetDevModeEnabled(flag) => self.developer.developer_mode = flag,
+            ConfigAction::SetExperimentalFeaturesEnabled(flag) => {
+                self.developer.experimental_features = flag
+            }
             ConfigAction::SetInterfaceSoundsEnabled(flag) => {
                 self.audiovideo.interface_sounds = flag
             }

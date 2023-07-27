@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use common::{
     icons::outline::Shape as Icon,
+    icons::Icon as IconElement,
     language::get_local_text,
     state::{Chat, Identity, State},
 };
@@ -11,7 +12,7 @@ use kit::{
     components::user_image::UserImage,
     elements::input::{Input, Options},
 };
-use warp::logging::tracing::log;
+use warp::{crypto::DID, logging::tracing::log};
 
 #[derive(Props, Eq, PartialEq)]
 pub struct Props {
@@ -42,6 +43,8 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
             .map(|ident| (ident.did_key(), ident.clone())),
     );
     let _friends_in_group = State::get_friends_by_first_letter(hash_map);
+    let creator_id_vector = Vec::from_iter(active_chat.creator.iter().cloned());
+    let creator_id = creator_id_vector.get(0).cloned()?;
 
     cx.render(rsx!(
         div {
@@ -68,6 +71,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                 render_friends {
                     friends: _friends_in_group,
                     name_prefix: friend_prefix.clone(),
+                    creator: creator_id,
                 },
         }
     ))
@@ -77,6 +81,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
 pub struct FriendsProps {
     friends: BTreeMap<char, Vec<Identity>>,
     name_prefix: UseState<String>,
+    creator: DID,
 }
 
 fn render_friends(cx: Scope<FriendsProps>) -> Element {
@@ -97,12 +102,15 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
                                 if name.len() < name_prefix.len() {
                                     false
                                 } else {
-                                    &name[..(name_prefix.len())] == name_prefix
+                                    name[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
                                 }
                             } ).map(|_friend| {
+                                let friendid = _friend.did_key();
+                                let creator = cx.props.creator.clone();
                                 rsx!(
                                 render_friend {
                                     friend: _friend.clone(),
+                                    is_creator: friendid == creator,
                                 }
                             )})
                         }
@@ -116,6 +124,7 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
 #[derive(PartialEq, Props)]
 pub struct FriendProps {
     friend: Identity,
+    is_creator: bool,
 }
 fn render_friend(cx: Scope<FriendProps>) -> Element {
     cx.render(rsx!(
@@ -134,6 +143,21 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     cx.props.friend.username(),
                 },
             },
+            if cx.props.is_creator {
+                rsx!(
+                    div {
+                        class: "group-creator-container",
+                        IconElement {
+                            icon: Icon::Satellite
+                        }
+                        span {
+                            class: "group-creator-text",
+                            get_local_text("messages.group-creator-label")
+                        }
+                    }
+                )
+
+            }
         }
     ))
 }

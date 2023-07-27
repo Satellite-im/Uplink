@@ -46,7 +46,9 @@ use warp::{
     raygun::{self, ReactionState},
 };
 
-use crate::utils::format_timestamp::format_timestamp_timeago;
+use crate::{
+    components::emoji_group::EmojiGroup, utils::format_timestamp::format_timestamp_timeago,
+};
 
 const SETUP_CONTEXT_PARENT: &str = r#"
     const right_clickable = document.getElementsByClassName("has-context-handler")
@@ -380,7 +382,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         super::quick_profile::QuickProfileContext{
             id: quick_profile_uuid,
             update_script: update_script,
-            identity: identity_profile
+            did_key: identity_profile.did_key()
         }
     ))
 }
@@ -635,9 +637,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             return rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                msg_uuid: _msg_uuid,
                 message_key: _message_key,
-                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             });
@@ -670,13 +670,20 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                msg_uuid: _msg_uuid,
                 message_key: _message_key,
-                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             })),
             items: cx.render(rsx!(
+                ContextItem {
+                    text: "Emoji Group".into(),
+                    EmojiGroup {
+                        onselect: move |emoji: String| {
+                            log::trace!("reacting with emoji: {}", emoji);
+                            ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), emoji)));
+                        }
+                    }
+                }
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
                     aria_label: "messages-reply".into(),
@@ -741,8 +748,6 @@ struct MessageProps<'a> {
     message: &'a GroupedMessage<'a>,
     is_remote: bool,
     message_key: String,
-    msg_uuid: Uuid,
-    reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
     pending: bool,
 }
@@ -754,21 +759,14 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     // todo: why?
     #[cfg(not(target_os = "macos"))]
-    let eval = use_eval(cx);
+    let _eval = use_eval(cx);
 
-    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-    let focus_script = r#"
-            var message_reactions_container = document.getElementById('add-message-reaction');
-            message_reactions_container.focus();
-        "#;
 
     let MessageProps {
         message,
-        is_remote,
-        msg_uuid,
+        is_remote: _,
         message_key,
-        reacting_to,
         edit_msg,
         pending: _,
     } = cx.props;
@@ -798,8 +796,6 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         })
         .collect();
 
-    let remote_class = if *is_remote { "" } else { "remote" };
-    let reactions_class = format!("message-reactions-container {remote_class}");
     let user_did_2 = user_did.clone();
     let pending_uploads = grouped_message
         .attachment_progress
@@ -807,40 +803,40 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .unwrap_or(vec![]);
 
     cx.render(rsx!(
-        (*reacting_to.current() == Some(*msg_uuid)).then(|| {
-            rsx!(
-                div {
-                    id: "add-message-reaction",
-                    aria_label: "add-message-reaction",
-                    class: "{reactions_class} pointer",
-                    tabindex: "0",
-                    onmouseleave: |_| {
-                        #[cfg(not(target_os = "macos"))] 
-                        {
-                            eval(focus_script.to_string());
-                        }
-                    },
-                    onblur: move |_| {
-                        state.write().ui.ignore_focus = false;
-                        reacting_to.set(None);
-                    },
-                    reactions.iter().cloned().map(|reaction| {
-                        rsx!(
-                            div {
-                                aria_label: "{reaction}",
-                                onclick: move |_|  {
-                                    reacting_to.set(None);
-                                    state.write().ui.ignore_focus = false;
-                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
-                                },
-                                "{reaction}"
-                            }
-                        )
-                    })
-                },
-                script { focus_script },
-            )
-        }),
+        // (*reacting_to.current() == Some(*msg_uuid)).then(|| {
+        //     rsx!(
+        //         div {
+        //             id: "add-message-reaction",
+        //             aria_label: "add-message-reaction",
+        //             class: "{reactions_class} pointer",
+        //             tabindex: "0",
+        //             onmouseleave: |_| {
+        //                 #[cfg(not(target_os = "macos"))] 
+        //                 {
+        //                     eval(focus_script.to_string());
+        //                 }
+        //             },
+        //             onblur: move |_| {
+        //                 state.write().ui.ignore_focus = false;
+        //                 reacting_to.set(None);
+        //             },
+        //             reactions.iter().cloned().map(|reaction| {
+        //                 rsx!(
+        //                     div {
+        //                         aria_label: "{reaction}",
+        //                         onclick: move |_|  {
+        //                             reacting_to.set(None);
+        //                             state.write().ui.ignore_focus = false;
+        //                             ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+        //                         },
+        //                         "{reaction}"
+        //                     }
+        //                 )
+        //             })
+        //         },
+        //         script { focus_script },
+        //     )
+        // }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(

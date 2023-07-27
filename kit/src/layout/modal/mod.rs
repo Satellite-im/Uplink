@@ -16,6 +16,7 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(cx.props.open.then(|| rsx!(
         div {
             class: "modal",
+            aria_label: "modal",
             onclick: move |_| cx.props.onclose.call(()),
             Button {
                 icon: Icon::XMark,

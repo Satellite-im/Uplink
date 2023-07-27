@@ -80,6 +80,7 @@ messages = Messages
     .participant = Participant
     .participants = Participants
     .fetching = Fetching more messages...
+    .group-creator-label = Group Creator
     
 favorites = Favorites
     .favorites = Favorites
@@ -250,6 +251,8 @@ settings-notifications = Notifications
 settings-developer = Developer Settings 
     .developer-mode = Developer Mode
     .developer-mode-description = Enabling developer mode adds logging and displays helpful debug information on the UI.
+    .experimental-features = Experimental Features
+    .experimental-features-description = Enables features which may be incomplete or non-functional.
     .test-notification = Test Notification
     .test-notification-description = Sends a test notification.
     .test-popup = Test

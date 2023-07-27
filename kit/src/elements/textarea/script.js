@@ -57,16 +57,8 @@ function appResizeListener(e) {
     }
 }
 function keyPressListener(e) {
-    if (e.key == "Enter") {
+    if (e.key == "Enter" && MULTI_LINE && !e.shiftKey) {
         e.preventDefault();
-        //Doing this in js instead of rust to properly update the textarea height
-        //Maybe someone else has an idea of updating the height via dioxus
-        if (MULTI_LINE && e.shiftKey) {
-            this.value += "\n";
-            //Scheduling an input event to properly update scroll height and textarea height
-            var inputEvent = new Event("input");
-            this.dispatchEvent(inputEvent);
-        }
     }
 }
 
