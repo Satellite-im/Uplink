@@ -630,7 +630,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .map(|id| !cx.props.is_remote && (id == message.inner.id()))
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
-        let _message_key = format!("{}-{:?}", &message.key, is_editing);
+        let message_key = format!("{}-{:?}", &message.key, is_editing);
         let msg_uuid = message.inner.id();
         let conversatio_id = message.inner.conversation_id();
 
@@ -638,7 +638,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             return rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                message_key: _message_key,
+                message_key: message_key,
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             });
@@ -671,7 +671,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                message_key: _message_key,
+                message_key: message_key,
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             })),
