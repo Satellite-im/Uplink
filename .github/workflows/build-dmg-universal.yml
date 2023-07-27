@@ -22,11 +22,10 @@ jobs:
           toolchain: 1.70.0
           override: true
           components: rustfmt, clippy
-      - name: Install Protobuf
+      - name: Install Dependencies
         continue-on-error: true
         run: |
           brew update
-          brew install protobuf 
           brew install cmake rustup-init gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav gst-rtsp-server gst-editing-services
       - name: Add Targets
         env:
@@ -81,10 +80,12 @@ jobs:
         with:
           name: Uplink Universal Mac App
           path: |
+            target/release/macos/Uplink.dmg
             Uplink-Mac-Universal.zip
             Uplink-Mac-Universal.zip.sha256.txt
       - name: Copy file to release
         uses: softprops/action-gh-release@v1
         with:
           files: |
+            target/release/macos/Uplink.dmg
             Uplink-Mac-Universal.zip
