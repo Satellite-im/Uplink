@@ -6,6 +6,7 @@ use common::warp_runner::thumbnail_to_base64;
 use derive_more::Display;
 use dioxus::prelude::*;
 use linkify::{LinkFinder, LinkKind};
+use pulldown_cmark::{CodeBlockKind, Options, Tag};
 use warp::{
     constellation::{file::File, Progression},
     logging::tracing::log,
@@ -368,11 +369,76 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
 }
 
 pub fn markdown(text: &str) -> String {
-    // TODO: This does not work with code or pre elements.
-    //let txt = text.trim().replace(' ', "&nbsp;"); // need to do this else leading whitespaces are ignored
-    let parser = pulldown_cmark::Parser::new(text);
-    // Write to a new String buffer.
+    let txt = text.trim();
+
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+
+    let mut text_lines: Vec<&str> = txt.split('\n').collect();
     let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, parser);
-    html_output.replace("<p>", "").replace("</p>", "")
+    let mut in_paragraph = false;
+    let mut in_code_block = false;
+    let mut add_text_language = true;
+
+    for line in &mut text_lines {
+        let parser = pulldown_cmark::Parser::new_ext(line, options);
+        let line_trim = line.trim();
+        if line_trim == "```" && add_text_language {
+            *line = "```text";
+            add_text_language = false;
+        }
+        for event in parser {
+            match event {
+                pulldown_cmark::Event::Start(Tag::Paragraph) => {
+                    in_paragraph = true;
+                    html_output.push_str("<p>");
+                }
+                pulldown_cmark::Event::End(Tag::Paragraph) => {
+                    in_paragraph = false;
+                }
+                pulldown_cmark::Event::Text(t) => {
+                    let txt: pulldown_cmark::CowStr<'_> = if in_paragraph {
+                        t.replace("\n\n", "<br/>").into()
+                    } else {
+                        t
+                    };
+                    pulldown_cmark::html::push_html(
+                        &mut html_output,
+                        std::iter::once(pulldown_cmark::Event::Text(txt)),
+                    );
+                }
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::CodeBlock(code_block_kind)) => {
+                    add_text_language = false;
+                    in_code_block = true;
+                    match code_block_kind {
+                        CodeBlockKind::Fenced(language) => {
+                            let language = if language.is_empty() {
+                                "text"
+                            } else {
+                                &language
+                            };
+
+                            html_output
+                                .push_str(&format!("<pre><code class=\"language-{}\">", language))
+                        }
+                        _ => html_output.push_str("<pre><code class=\"language-text\">"),
+                    }
+                }
+                pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(_)) => {
+                    if in_code_block && line_trim == "```" {
+                        in_code_block = false;
+                        add_text_language = true;
+                        // HACK: To close block code is necessary to push tags 2 times
+                        html_output.push_str("</code></pre>");
+                        html_output.push_str("</code></pre>");
+                    }
+                }
+                _ => pulldown_cmark::html::push_html(&mut html_output, std::iter::once(event)),
+            }
+        }
+
+        html_output.push('\n');
+    }
+
+    html_output
 }
