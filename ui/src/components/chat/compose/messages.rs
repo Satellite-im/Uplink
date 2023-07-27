@@ -631,7 +631,8 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .unwrap_or(false);
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let _message_key = format!("{}-{:?}", &message.key, is_editing);
-        let _msg_uuid = message.inner.id();
+        let msg_uuid = message.inner.id();
+        let conversatio_id = message.inner.conversation_id();
 
         if cx.props.pending {
             return rsx!(render_message {
@@ -700,7 +701,13 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     text: get_local_text("messages.react"),
                     onpress: move |_| {
                         state.write().ui.ignore_focus = true;
-                        reacting_to.set(Some(_msg_uuid));
+                        state.write().mutate(Action::SetEmojiDestination(
+                            // Tells the default emojipicker where to place the next emoji
+                            Some(
+                                common::state::ui::EmojiDestination::Message(conversatio_id, msg_uuid)
+                            )
+                        ));
+                        reacting_to.set(Some(msg_uuid));
                     }
                 },
                 ContextItem {
@@ -708,9 +715,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                        && edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
                     onpress: move |_| {
-                        edit_msg.set(Some(_msg_uuid));
+                        edit_msg.set(Some(msg_uuid));
                         state.write().ui.ignore_focus = true;
                     }
                 },
@@ -719,7 +726,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                        && edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         edit_msg.set(None);
                         state.write().ui.ignore_focus = false;

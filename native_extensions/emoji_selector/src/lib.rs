@@ -1,6 +1,6 @@
 use common::{
     icons::outline::Shape as Icon,
-    state::{scope_ids::ScopeIds, Action, State},
+    state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
 };
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
@@ -34,7 +34,7 @@ fn group_to_str(group: emojis::Group) -> String {
 
 #[inline_props]
 fn build_nav(cx: Scope) -> Element<'a> {
-    let routes_ = vec![
+    let routes = vec![
         Route {
             to: "Smileys & Emotion",
             name: group_to_str(Group::SmileysAndEmotion),
@@ -101,8 +101,8 @@ fn build_nav(cx: Scope) -> Element<'a> {
     let eval = use_eval(cx);
 
     cx.render(rsx!(Nav {
-        routes: routes_.clone(),
-        active: routes_[0].clone(),
+        routes: routes.clone(),
+        active: routes[0].clone(),
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
             eval(scroll_script);
@@ -148,6 +148,10 @@ fn render_selector<'a>(
                 aria_label: "emoji-selector",
                 tabindex: "0",
                 onblur: |_| {
+                    // When leaving default to the chatbar
+                    state.write().mutate(Action::SetEmojiDestination(
+                        Some(common::state::ui::EmojiDestination::Chatbar),
+                    ));
                     #[cfg(target_os = "macos")] 
                     {
                         if !*mouse_over_emoji_button.read() {
@@ -181,17 +185,26 @@ fn render_selector<'a>(
                                             aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
-                                                // If we're on an active chat, append the emoji to the end of the chat message.
-                                                let c =  match state.read().get_active_chat() {
-                                                    Some(c) => c,
-                                                    None => return
-                                                };
-                                                let draft: String = c.draft.unwrap_or_default();
-                                                let new_draft = format!("{draft}{emoji}");
-                                                state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
-                                                if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
-                                                    cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
-                                                };
+                                                if let Some(destination) = state.read().ui.emoji_destination.clone() {
+                                                    match destination {
+                                                        EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
+                                                            let c =  match state.read().get_active_chat() {
+                                                                Some(c) => c,
+                                                                None => return
+                                                            };
+                                                            let draft: String = c.draft.unwrap_or_default();
+                                                            let new_draft = format!("{draft}{emoji}");
+                                                            state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
+                                                            if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
+                                                                cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
+                                                            };
+                                                        },
+                                                        EmojiDestination::Message(conversation_uuid, message_uuid) => {
+                                                            let emoji_str = emoji.clone().to_string();
+                                                            state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji_str));
+                                                        },
+                                                    }
+                                                }
                                                 // Hide the selector when clicking an emoji
                                                 hide.set(false);
                                             },

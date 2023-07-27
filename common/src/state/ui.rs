@@ -55,7 +55,8 @@ fn default_emojis() -> EmojiList {
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub enum EmojiDestination {
     Chatbar,
-    Message(Uuid),
+    // Conversation Uuid, Message Uuid
+    Message(Uuid, Uuid),
 }
 
 impl Default for EmojiDestination {
@@ -90,7 +91,7 @@ pub struct UI {
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emoji_list: EmojiList,
-    pub emoji_destination: EmojiDestination,
+    pub emoji_destination: Option<EmojiDestination>,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -192,7 +193,6 @@ impl UI {
         // emojis
         self.emoji_list.clone()
     }
-
     pub fn get_meta(&self) -> WindowMeta {
         self.metadata.clone()
     }

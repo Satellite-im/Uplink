@@ -15,7 +15,7 @@ use super::{
     identity::Identity,
     notifications::NotificationKind,
     route::To,
-    ui::{Font, Theme, ToastNotification, WindowMeta},
+    ui::{EmojiDestination, Font, Theme, ToastNotification, WindowMeta},
 };
 
 /// used exclusively by State::mutate
@@ -144,7 +144,6 @@ pub enum Action<'a> {
     /// Adds or removes a chat from the favorites page
     #[display(fmt = "ToggleFavorite")]
     ToggleFavorite(&'a Uuid),
-
     // Messaging
     /// React to a given message by ID
     /// conversation id, message id, reaction
@@ -153,6 +152,9 @@ pub enum Action<'a> {
     /// conversation id, message id, reaction
     #[display(fmt = "RemoveReaction")]
     RemoveReaction(Uuid, Uuid, String),
+    /// Sets the destination for emoji's
+    #[display(fmt = "SetEmojiDestination")]
+    SetEmojiDestination(Option<EmojiDestination>),
     /// chat id, message id
     #[display(fmt = "StartReplying")]
     StartReplying(&'a Uuid, &'a ui_adapter::Message),
