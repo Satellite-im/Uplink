@@ -81,7 +81,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         include_str!("./focus.js").replace("$UUID", &id)
     };
 
-    eval(height_script.to_string());
     eval(focus_script.clone());
 
     let script = include_str!("./script.js")
