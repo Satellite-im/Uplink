@@ -417,7 +417,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     });
 
     cx.render(rsx!(
-        if cx.props.is_owner == true && conversation_type == ConversationType::Group {
+        if cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
                 disabled: !is_creator,
@@ -449,7 +449,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             })
         }
-        if conversation_type == ConversationType::Group {
+        if !cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(
                 Button {
                     icon: Icon::ListBullet,

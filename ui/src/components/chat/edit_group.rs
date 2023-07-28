@@ -47,7 +47,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
-    let edit_group_action = use_state(cx, || EditGroupAction::Add);
+    let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
     let conv_name = state
         .read()
@@ -138,290 +138,217 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let add_friends_with_sidebar = rsx!(div {
-        id: "edit-group-add-friends-button-with_sidebar",
-        key: "edit-group-add-friends-button-with_sidebar",
-        Button {
-            icon: Icon::UserPlus,
-            text: get_local_text("uplink.add"),
-            aria_label: "edit-group-add-friends-button-with_sidebar".into(),
-            appearance: if *edit_group_action.get() == EditGroupAction::Add {
-                Appearance::Primary
-            } else {
-                Appearance::Secondary
-            },
-            onpress: move |_| {
-                edit_group_action.set(EditGroupAction::Add);
-            }
-        }
+    let add_friends = rsx!(a {
+        class: "float-right-link",
+        onclick: move |_| {
+            edit_group_action.set(EditGroupAction::Add);
+        },
+        "Add Members →"
     });
 
-    let add_friends_without_sidebar = rsx!(div {
-        id: "edit-group-add-friends-button-without-sidebar",
-        width: "38px",
-        key: "edit-group-add-friends-button-without-sidebar",
-        Button {
-            icon: Icon::UserPlus,
-            text: "".into(),
-            aria_label: "edit-group-add-friends-button-without-sidebar".into(),
-            appearance: if *edit_group_action.get() == EditGroupAction::Add {
-                Appearance::Primary
-            } else {
-                Appearance::Secondary
-            },
-            onpress: move |_| {
-                edit_group_action.set(EditGroupAction::Add);
-            }
-        }
+    let remove_friends = rsx!(a {
+        class: "float-right-link",
+        onclick: move |_| {
+            edit_group_action.set(EditGroupAction::Remove);
+        },
+        "Current Members →"
+
+        // key: "edit-group",
+        // Button {
+        //     text: if state.read().ui.sidebar_hidden {
+        //         "".into()
+        //     } else {
+        //         get_local_text("uplink.current-member")
+        //     },
+        //     icon: Icon::ArrowRight,
+        //     aria_label: "edit-group-remove-friends-without-sidebar".into(),
+        //     appearance: if *edit_group_action.get() == EditGroupAction::Remove {
+        //         Appearance::Primary
+        //     } else {
+        //         Appearance::Secondary
+        //     },
+        //     onpress: move |_| {
+        //         edit_group_action.set(EditGroupAction::Remove);
+        //     }
+        // }
     });
 
-    let remove_friends_with_sidebar = rsx!(div {
-        id: "edit-group-remove_friends_with_sidebar",
-        key: "edit-group-remove_friends_with_sidebar",
-        Button {
-            icon: Icon::UserPlus,
-            text: get_local_text("uplink.remove"),
-            aria_label: "edit-group-remove_friends_with_sidebar".into(),
-            appearance: if *edit_group_action.get() == EditGroupAction::Remove {
-                Appearance::Primary
-            } else {
-                Appearance::Secondary
-            },
-            onpress: move |_| {
-                edit_group_action.set(EditGroupAction::Remove);
-            }
-        }
-    });
-
-    let remove_friends_without_sidebar = rsx!(div {
-        id: "edit-group-remove-friends-without-sidebar",
-        width: "38px",
-        key: "edit-group-remove-friends-without-sidebar",
-        Button {
-            icon: Icon::UserPlus,
-            text: "".into(),
-            aria_label: "edit-group-remove-friends-without-sidebar".into(),
-            appearance: if *edit_group_action.get() == EditGroupAction::Remove {
-                Appearance::Primary
-            } else {
-                Appearance::Secondary
-            },
-            onpress: move |_| {
-                edit_group_action.set(EditGroupAction::Remove);
-            }
-        }
-    });
+    let friends = if *edit_group_action.get() == EditGroupAction::Add {
+        _friends_not_in_group
+    } else {
+        _friends_in_group
+    };
 
     cx.render(rsx!(
         div {
             id: "edit-group",
             aria_label: "edit-group",
-            div {
-                id: "edit-group-name", 
-                class: "edit-group-name", 
-                Label {
-                    text: get_local_text("messages.group-name"),
-                    aria_label: "group-name-label".into(),
-                },
-                Input {
-                        placeholder:  get_local_text("messages.group-name"),
-                        default_text: conv_name.clone(),
-                        aria_label: "groupname-input".into(),
-                        options: Options {
-                            with_clear_btn: true,
-                            ..get_input_options()
-                        },
-                        onreturn: move |(v, is_valid, _): (String, bool, _)| {
-                            if !is_valid {
-                                return;
-                            }
-                            if v != conv_name {
-                                ch.send(ChanCmd::UpdateGroupName(v));
-                            }
-                        },
-                    },
-            },
+            // div {
+            //     id: "edit-group-name", 
+            //     class: "edit-group-name", 
+            //     Label {
+            //         text: get_local_text("messages.group-name"),
+            //         aria_label: "group-name-label".into(),
+            //     },
+            //     Input {
+            //             placeholder:  get_local_text("messages.group-name"),
+            //             default_text: conv_name.clone(),
+            //             aria_label: "groupname-input".into(),
+            //             options: Options {
+            //                 with_clear_btn: true,
+            //                 ..get_input_options()
+            //             },
+            //             onreturn: move |(v, is_valid, _): (String, bool, _)| {
+            //                 if !is_valid {
+            //                     return;
+            //                 }
+            //                 if v != conv_name {
+            //                     ch.send(ChanCmd::UpdateGroupName(v));
+            //                 }
+            //             },
+            //         },
+            // },
         Topbar {
                 with_back_button: false,
-                controls: cx.render(rsx!(
-                    if state.read().ui.sidebar_hidden {
-                        rsx! {
-                         add_friends_without_sidebar,
-                         remove_friends_without_sidebar,
-                        }
-                     } else {
-                         rsx! {
-                             add_friends_with_sidebar,
-                             remove_friends_with_sidebar,
-                         }
-                     },
-                )),
-            },
-            div {
-                class: "search-input",
-                Input {
-                    // todo: filter friends on input
-                    placeholder: get_local_text("uplink.search-placeholder"),
-                    disabled: false,
-                    aria_label: "friend-search-input".into(),
-                    icon: Icon::MagnifyingGlass,
-                    options: Options {
-                        with_clear_btn: true,
-                        react_to_esc_key: true,
-                        clear_on_submit: false,
-                        ..Options::default()
-                    },
-                    onchange: move |(v, _): (String, _)| {
-                        friend_prefix.set(v);
-                    },
-                }
-            },
-            render_friends {
-                friends: if *edit_group_action.get() == EditGroupAction::Add {_friends_not_in_group} else {_friends_in_group},
-                name_prefix: friend_prefix.clone(),
-                selected_friends: selected_friends.clone()
-            },
-            if *edit_group_action.current() == EditGroupAction::Add {
-                rsx!(
-                    div {
-                        key: "add-button",
-                        Button {
-                            aria_label: "add-button".into(),
-                            text: get_local_text("uplink.add"),
-                            appearance: Appearance::Primary,
-                            onpress: move |e| {
-                                log::info!("add participants button");
-                                ch.send(ChanCmd::AddParticipants);
-                                cx.props.onedit.call(e);
-                            }
-                        }
+                div {
+                    class: "search-input",
+                    Input {
+                        // todo: filter friends on input
+                        placeholder: get_local_text("uplink.search-placeholder"),
+                        disabled: false,
+                        aria_label: "friend-search-input".into(),
+                        icon: Icon::MagnifyingGlass,
+                        options: Options {
+                            with_clear_btn: true,
+                            react_to_esc_key: true,
+                            clear_on_submit: false,
+                            ..Options::default()
+                        },
+                        onchange: move |(v, _): (String, _)| {
+                            friend_prefix.set(v);
+                        },
                     }
-                )
-            } else {
-                rsx!(
-                    div {
-                        key: "remove-button",
-                        Button {
-                            aria_label: "remove-button".into(),
-                            text: get_local_text("uplink.remove"),
-                            appearance: Appearance::Primary,
-                            onpress: move |e| {
-                                log::info!("remove participants button");
-                                ch.send(ChanCmd::RemoveParticipants);
-                                cx.props.onedit.call(e);
+                    // controls: cx.render(rsx!(
+                        if *edit_group_action.get() == EditGroupAction::Remove {
+                            rsx! {
+                                add_friends,
                             }
-                        }
-                    }
-                )
-            }
-        }
-    ))
-}
-
-#[derive(PartialEq, Props)]
-pub struct FriendsProps {
-    friends: BTreeMap<char, Vec<Identity>>,
-    name_prefix: UseState<String>,
-    selected_friends: UseState<HashSet<DID>>,
-}
-
-fn render_friends(cx: Scope<FriendsProps>) -> Element {
-    let name_prefix = cx.props.name_prefix.get();
-    cx.render(rsx!(
-        div {
-            class: "friend-list vertically-scrollable",
-            aria_label: "friends-list",
-            cx.props.friends.iter().map(
-                |(letter, sorted_friends)| {
-                    let group_letter = letter.to_string();
-                    rsx!(
-                        div {
-                            key: "friend-group-{group_letter}",
-                            class: "friend-group",
-                            aria_label: "friend-group",
-                            sorted_friends.iter().filter(|friend| {
-                                let name = friend.username().to_lowercase();
-                                if name.len() < name_prefix.len() {
-                                    false
-                                } else {
-                                    name[..(name_prefix.len())] == name_prefix.to_lowercase()
-                                }
-                            } ).map(|_friend| {
-                                rsx!(
-                                render_friend {
-                                    friend: _friend.clone(),
-                                    selected_friends: cx.props.selected_friends.clone()
-                                }
-                            )})
-                        }
-                    )
-                }
-            ),
-        }
-    ))
-}
-
-#[derive(PartialEq, Props)]
-pub struct FriendProps {
-    friend: Identity,
-    selected_friends: UseState<HashSet<DID>>,
-}
-fn render_friend(cx: Scope<FriendProps>) -> Element {
-    let is_checked = use_state(cx, || false);
-    if !*is_checked.current()
-        && cx
-            .props
-            .selected_friends
-            .current()
-            .contains(&cx.props.friend.did_key())
-    {
-        is_checked.set(true);
-    }
-
-    let update_fn = || {
-        let friend_did = cx.props.friend.did_key();
-        let new_value = !*is_checked.get();
-        is_checked.set(new_value);
-        let mut friends = cx.props.selected_friends.get().clone();
-        if new_value {
-            friends.insert(friend_did);
-        } else {
-            friends.remove(&friend_did);
-        }
-        cx.props.selected_friends.set(friends);
-    };
-
-    cx.render(rsx!(
-        div {
-            class: "friend-container",
-            aria_label: "Friend Container",
-            UserImage {
-                platform: cx.props.friend.platform().into(),
-                status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture()
-                on_press: move |_| {
-                    update_fn();
+                         } else {
+                             rsx! {
+                                remove_friends,
+                             }
+                         },
+                    // )),
                 },
+
             },
-            div {
-                class: "flex-1",
-                p {
-                    onclick: move |_| {
-                        update_fn();
-                    },
-                    aria_label: "friend-username",
-                    cx.props.friend.username(),
-                },
-            },
-            Checkbox{
-                disabled: false,
-                width: "1em".into(),
-                height: "1em".into(),
-                is_checked: *is_checked.get(),
-                on_click: move |_| {
-                    update_fn();
+            rsx!(
+                div {
+                    class: "friend-list vertically-scrollable",
+                    aria_label: "friends-list",
+                    friends.iter().map(
+                        |(letter, sorted_friends)| {
+                            let group_letter = letter.to_string();
+                            rsx!(
+                                div {
+                                    key: "friend-group-{group_letter}",
+                                    class: "friend-group",
+                                    aria_label: "friend-group",
+                                    sorted_friends.iter().filter(|friend| {
+                                        let name = friend.username().to_lowercase();
+                                        if name.len() < friend_prefix.len() {
+                                            false
+                                        } else {
+                                            name[..(friend_prefix.len())] == friend_prefix.to_lowercase()
+                                        }
+                                    } ).map(|_friend| {
+
+                                        let friend = _friend.clone();
+                                        rsx!(
+                                            div {
+                                                class: "friend-container",
+                                                aria_label: "Friend Container",
+                                                UserImage {
+                                                    platform: _friend.platform().into(),
+                                                    status: _friend.identity_status().into(),
+                                                    image: _friend.profile_picture()
+                                                },
+                                                div {
+                                                    class: "flex-1",
+                                                    p {
+                                                        aria_label: "friend-username",
+                                                        _friend.username(),
+                                                    },
+                                                },
+                                                Button {
+                                                    aria_label: get_local_text("uplink.remove").into(),
+                                                    icon: if *edit_group_action.current() == EditGroupAction::Add {
+                                                        Icon::UserPlus
+                                                    } else {
+                                                        Icon::UserMinus
+                                                    },
+                                                    text: if *edit_group_action.current() == EditGroupAction::Add {
+                                                        get_local_text("uplink.add")
+                                                    } else {
+                                                        get_local_text("uplink.remove")
+                                                    },
+                                                    onpress: move |_| {
+                                                        let friend_did = friend.did_key();
+                                                        let mut friends = selected_friends.get().clone();
+                                                        friends.clear();
+                                                        selected_friends.set(friends.clone());
+                                                        friends.insert(friend_did);
+                                                        selected_friends.set(friends);
+                                                        if *edit_group_action.current() == EditGroupAction::Add {
+                                                            ch.send(ChanCmd::AddParticipants);
+                                                        } else {
+                                                            ch.send(ChanCmd::RemoveParticipants);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        )
+
+                                    })
+                                }
+                            )
+                        }
+                    ),
                 }
-            }
+            )
+            // if *edit_group_action.current() == EditGroupAction::Add {
+            //     rsx!(
+            //         div {
+            //             // key: "add-button",
+            //             // Button {
+            //             //     aria_label: "add-button".into(),
+            //             //     text: get_local_text("uplink.add"),
+            //             //     appearance: Appearance::Primary,
+            //             //     onpress: move |e| {
+            //             //         log::info!("add participants button");
+            //             //         ch.send(ChanCmd::AddParticipants);
+            //             //         cx.props.onedit.call(e);
+            //             //     }
+            //             // }
+            //         }
+            //     )
+            // } else {
+            //     rsx!(
+            //         div {
+            //             key: "remove-button",
+            //             Button {
+            //                 aria_label: "remove-button".into(),
+            //                 text: get_local_text("uplink.remove"),
+            //                 appearance: Appearance::Primary,
+            //                 onpress: move |e| {
+            //                     log::info!("remove participants button");
+            //                     ch.send(ChanCmd::RemoveParticipants);
+            //                     cx.props.onedit.call(e);
+            //                 }
+            //             }
+            //         }
+            //     )
+            // }
         }
     ))
 }

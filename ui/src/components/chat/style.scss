@@ -98,10 +98,10 @@
     }
   }
 
-  .btn,
-  .btn-wrap {
-    width: 100% !important;
-  }
+  // .btn,
+  // .btn-wrap {
+  //   width: 100% !important;
+  // }
 }
 
 #edit-group {
@@ -138,10 +138,10 @@
     }
   }
 
-  .btn,
-  .btn-wrap {
-    width: 100% !important;
-  }
+  // .btn,
+  // .btn-wrap {
+  //   width: 100% !important;
+  // }
 }
 
 .edit-group-name {
@@ -471,4 +471,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 182px;
+}
+
+.float-right-link {
+  float: right;
+  cursor: pointer;
+  color: var(--text-color);
+  user-select: none;
+}
+
+// override the kit topbar children just used in the edit_group.rs component
+.topbar {
+  .children {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: var(--gap);
+    padding-bottom: var(--gap);
+  }
 }
