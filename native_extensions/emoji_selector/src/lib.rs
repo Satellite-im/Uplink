@@ -11,7 +11,11 @@ use kit::{
     elements::{button::Button, label::Label},
 };
 use once_cell::sync::Lazy;
-
+use uuid::Uuid;
+use warp::{logging::tracing::log, raygun::ReactionState};
+use common::{
+    warp_runner::{RayGunCmd, WarpCmd},
+};
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 export_extension!(EXTENSION);
@@ -110,6 +114,10 @@ fn build_nav(cx: Scope) -> Element<'a> {
     }))
 }
 
+enum Command {
+    React(Uuid, Uuid, String),
+}
+
 #[inline_props]
 fn render_selector<'a>(
     cx: Scope,
@@ -124,10 +132,39 @@ fn render_selector<'a>(
     #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
+    let warp_cmd_tx = state.read().get_warp_ch();
+
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Command>| {
+        async move {
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    Command::React(conversation_id, message_id, emoji) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::React {
+                            conversation_id,
+                            message_id,
+                            reaction_state: ReactionState::Add,
+                            emoji,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if res.is_err() {
+                            // failed to add/remove reaction
+                        }
+                    }
+                }
+            }
+        }
+    });
 
     cx.render(rsx! (
             div {
