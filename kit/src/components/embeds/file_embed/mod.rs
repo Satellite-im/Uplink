@@ -266,7 +266,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         p {
                             class: "name",
                             aria_label: "file-name",
-                            color: "var(--text-color-dark)",
+                            color: "var(--text-color)",
                             "{filename}"
                         },
                         p {
