@@ -16,6 +16,8 @@ use warp::{logging::tracing::log, raygun::ReactionState};
 use common::{
     warp_runner::{RayGunCmd, WarpCmd},
 };
+use futures::StreamExt;
+
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
 export_extension!(EXTENSION);
