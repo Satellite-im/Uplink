@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 
 use crate::elements::{
     button::Button,
@@ -6,6 +7,7 @@ use crate::elements::{
     Appearance,
 };
 use common::icons::outline::Shape as Icon;
+use common::state::{Action, State};
 pub type To = &'static str;
 
 #[derive(Clone, PartialEq)]
@@ -103,6 +105,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(cx, || get_active(&cx));
     let bubble = cx.props.bubble.unwrap_or_default();
+    let state = use_shared_state::<State>(cx)?;
 
     cx.render(rsx!(
         div {
@@ -132,7 +135,16 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: route.icon,
                         onpress: move |_| {
                             active.set(route.to_owned());
-                            emit(&cx, &route.to)
+                            emit(&cx, &route.to);
+                            let desktop = use_window(cx);
+                            let size = desktop.webview.inner_size();
+                            //if route is friends or files then close, else leave sidebar open
+                            if size.width <= 1200 && !(route.to != "/friends" && route.to != "/files"){
+                                state.write().mutate(Action::SidebarHidden(true));
+                            }
+                            if size.width <= 1200 && route.to == "/chat"{
+                                state.write().mutate(Action::SidebarHidden(true));
+                            }
                         },
                         text: {
                             if bubble { name } else { "".into() }

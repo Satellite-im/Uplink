@@ -3,8 +3,9 @@ use std::str::FromStr;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use common::sounds;
-use common::state::State;
+use common::state::{Action, State};
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use dioxus_router::*;
 use kit::{
     components::nav::Nav,
@@ -190,6 +191,11 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 onnavigate: move |route| {
                     if state.read().configuration.audiovideo.interface_sounds {
                        sounds::Play(sounds::Sounds::Interaction);
+                    }
+                    let desktop = use_window(cx);
+                    let size = desktop.webview.inner_size();
+                    if size.width <= 1200 {
+                        state.write().mutate(Action::SidebarHidden(true));
                     }
                     emit(&cx, Page::from_str(route).unwrap());
                 }
