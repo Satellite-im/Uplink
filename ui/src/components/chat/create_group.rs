@@ -276,6 +276,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                 class: "flex-1",
                 p {
                     aria_label: "friend-name",
+                    word_break: "break-all",
                     onclick: move |_| {
                         update_fn();
                     },
