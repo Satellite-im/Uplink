@@ -680,7 +680,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     EmojiGroup {
                         onselect: move |emoji: String| {
                             log::trace!("reacting with emoji: {}", emoji);
-                            ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), emoji)));
+                            ch.send(MessagesCommand::React((state.read().did_key(), message.read().inner.clone(), emoji)));
                         }
                     }
                 }

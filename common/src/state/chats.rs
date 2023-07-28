@@ -22,6 +22,7 @@ use super::{
 
 pub type Chat = ChatBase<LocalSubscription<ui_adapter::Message>>;
 
+// A version that can be send across threads. Used for warp events
 pub type SendableChat = ChatBase<ui_adapter::Message>;
 
 // let (p = window_bottom) be an index into Chat.messages
@@ -57,7 +58,7 @@ pub struct ChatBase<T> {
     // Messages should only contain messages we want to render. Do not include the entire message history.
     // don't store the actual message in state
     // warn: Chat has a custom serialize method which skips this field when not using mock data.
-    //#[serde(default)]
+    #[serde(default = "default_deque")]
     pub messages: VecDeque<T>,
     // Unread count for this chat, should be cleared when we view the chat.
     pub unreads: u32,
@@ -203,6 +204,11 @@ impl Chats {
 
 fn default_conversation_type() -> ConversationType {
     ConversationType::Direct
+}
+
+// For some reason with generics this is needed
+fn default_deque<T>() -> VecDeque<T> {
+    VecDeque::new()
 }
 
 impl Serialize for Chats {

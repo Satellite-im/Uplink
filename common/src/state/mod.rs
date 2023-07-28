@@ -20,7 +20,6 @@ use crate::notifications::NotificationAction;
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
 pub use chats::{Chat, Chats};
-use dioxus::prelude::ScopeId;
 use dioxus_desktop::tao::window::WindowId;
 pub use friends::Friends;
 pub use identity::Identity;
@@ -57,7 +56,7 @@ use warp::{
     raygun::{self},
 };
 
-use self::local_state::LocalSubscription;
+use self::local_state::{LocalSubscription, ScopeUpdate};
 use self::pending_message::PendingMessage;
 use self::storage::Storage;
 use self::ui::{Font, Layout};
@@ -290,11 +289,7 @@ impl State {
         self.settings = settings::Settings::default();
     }
 
-    pub fn process_warp_event(
-        &mut self,
-        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
-        event: WarpEvent,
-    ) {
+    pub fn process_warp_event(&mut self, update: ScopeUpdate, event: WarpEvent) {
         log::debug!("process_warp_event: {event}");
         match event {
             WarpEvent::MultiPass(evt) => self.process_multipass_event(evt),
@@ -388,11 +383,7 @@ impl State {
         }
     }
 
-    fn process_message_event(
-        &mut self,
-        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
-        event: MessageEvent,
-    ) {
+    fn process_message_event(&mut self, update: ScopeUpdate, event: MessageEvent) {
         match event {
             MessageEvent::Received {
                 conversation_id,
@@ -917,8 +908,7 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             for message in messages.drain(..) {
-                chat.messages
-                    .push_front(LocalSubscription::create(message.clone()));
+                chat.messages.push_front(LocalSubscription::create(message));
             }
         }
     }
@@ -932,11 +922,7 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(
-        &mut self,
-        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
-        mut message: warp::raygun::Message,
-    ) {
+    pub fn update_message(&mut self, update: ScopeUpdate, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {

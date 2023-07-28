@@ -5,6 +5,8 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::rc::Rc;
 
+pub type ScopeUpdate = std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>;
+
 #[derive(Clone, Debug)]
 pub struct LocalSubscription<T> {
     inner: Rc<RefCell<T>>,
@@ -54,7 +56,8 @@ impl<T: 'static> LocalSubscription<T> {
         cx.use_hook(|| {
             let id = cx.scope_id();
             self.subscribed.borrow_mut().insert(id);
-            let sub = self.subscribed.clone();
+            let sub = Rc::clone(&self.subscribed);
+            let sub_2 = Rc::clone(&sub);
             let update_any = cx.schedule_update_any();
             UseLocal {
                 inner: self.inner.clone(),
@@ -64,6 +67,9 @@ impl<T: 'static> LocalSubscription<T> {
                             update_any(*id);
                         }
                     }
+                })),
+                drop_func: Rc::new(RefCell::new(move || {
+                    sub_2.borrow_mut().remove(&id);
                 })),
             }
         })
@@ -92,21 +98,14 @@ impl<T: 'static> LocalSubscription<T> {
         self.inner.borrow_mut()
     }
 
-    pub fn write_with_update(
-        &self,
-        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
-    ) -> RefMut<T> {
+    pub fn write_with_update(&self, update: ScopeUpdate) -> RefMut<T> {
         for id in self.subscribed.borrow().iter() {
             update(*id);
         }
         self.inner.borrow_mut()
     }
 
-    pub fn replace_and_update(
-        &self,
-        update: std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>,
-        val: T,
-    ) {
+    pub fn replace_and_update(&self, update: ScopeUpdate, val: T) {
         for id in self.subscribed.borrow().iter() {
             update(*id);
         }
@@ -123,6 +122,7 @@ impl<T: 'static> LocalSubscription<T> {
 pub struct UseLocal<T> {
     inner: Rc<RefCell<T>>,
     update: Rc<RefCell<dyn Fn()>>,
+    drop_func: Rc<RefCell<dyn Fn()>>,
 }
 
 impl<T> UseLocal<T> {
@@ -139,6 +139,12 @@ impl<T> UseLocal<T> {
 impl<T: Display> Display for UseLocal<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.borrow().fmt(f)
+    }
+}
+
+impl<T> Drop for UseLocal<T> {
+    fn drop(&mut self) {
+        (self.drop_func.borrow())();
     }
 }
 
