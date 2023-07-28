@@ -109,7 +109,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 
     let text_value = Rc::new(RefCell::new(value.to_string()));
     let text_value_onchange = Rc::clone(&text_value);
-    let text_value_onkeyup = Rc::clone(&text_value);
     let text_value_onreturn = Rc::clone(&text_value);
 
     cx.render(rsx! (
@@ -147,9 +146,6 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 eval(clear_counter_script.to_string());
                             }
                             onreturn.call((text_value_onreturn.borrow().clone(), true, evt.code()));
-                        } else if enter_pressed && shift_key_as_modifier {
-                            text_value_onkeyup.borrow_mut().push('\n');
-                            onchange.call((text_value_onkeyup.borrow().clone(), true));
                         }
                     },
                 }
@@ -158,6 +154,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         key: "{id_char_counter}-char-counter",
                         id: "{id_char_counter}-char-counter",
                         class: "input-char-counter",
+                        aria_label: "input-char-counter",
                         format!("{}/{}", cv3.len(), max_length - 1),
                     })
                 }

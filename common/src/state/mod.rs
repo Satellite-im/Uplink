@@ -207,6 +207,7 @@ impl State {
                 let _ = self.ui.file_previews.remove(&id);
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
+            Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -595,9 +596,9 @@ impl State {
             BlinkEventKind::SelfSpeaking => {
                 // todo
             }
-            BlinkEventKind::AudioDegredation { peer_id } => {
+            BlinkEventKind::AudioDegradation { peer_id } => {
                 // todo
-                log::info!("audio degredation for peer {}", peer_id);
+                log::info!("audio degradation for peer {}", peer_id);
             }
         }
     }
@@ -797,7 +798,7 @@ impl State {
     ///
     /// * `chat` - The chat to stop replying to.
     fn cancel_reply(&mut self, chat_id: Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(&chat_id) {
+        if let Some(c) = self.chats.all.get_mut(&chat_id) {
             c.replying_to = None;
         }
     }
@@ -845,7 +846,7 @@ impl State {
 
     /// Clears the given chats draft message
     fn clear_chat_draft(&mut self, chat_id: &Uuid) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.draft = None;
         }
     }
@@ -897,15 +898,13 @@ impl State {
             .cloned()
     }
     // assumes the messages are sorted by most recent to oldest
-    pub fn prepend_messages_to_chat(
+    pub fn update_chat_messages(
         &mut self,
         conversation_id: Uuid,
-        mut messages: Vec<ui_adapter::Message>,
+        messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            for message in messages.drain(..) {
-                chat.messages.push_front(message.clone());
-            }
+            chat.messages = messages.into();
         }
     }
 
@@ -1032,13 +1031,13 @@ impl State {
 
     /// Sets the draft on a given chat to some contents.
     fn set_chat_draft(&mut self, chat_id: &Uuid, value: String) {
-        if let Some(mut c) = self.chats.all.get_mut(chat_id) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
             c.draft = Some(value);
         }
     }
     /// Begins replying to a message in the specified chat in the `State` struct.
     fn start_replying(&mut self, chat: &Uuid, message: &ui_adapter::Message) {
-        if let Some(mut c) = self.chats.all.get_mut(chat) {
+        if let Some(c) = self.chats.all.get_mut(chat) {
             c.replying_to = Some(message.inner.clone());
         }
     }
@@ -1519,23 +1518,21 @@ impl<'a> GroupedMessage<'a> {
 
 pub fn group_messages<'a>(
     my_did: DID,
-    num: usize,
     when_to_fetch_more: usize,
+    // true if the chat has more messages to fetch
+    has_more: bool,
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let to_skip = input.len().saturating_sub(num);
-    // the most recent message appears last in the list.
-    let iter = input.iter().skip(to_skip);
     let mut need_to_fetch_more = when_to_fetch_more;
 
     let mut need_more = || {
         let r = need_to_fetch_more > 0;
         need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
-        r
+        r && has_more
     };
 
-    for msg in iter {
+    for msg in input.iter() {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {

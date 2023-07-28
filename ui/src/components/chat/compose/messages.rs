@@ -46,7 +46,9 @@ use warp::{
     raygun::{self, ReactionState},
 };
 
-use crate::utils::format_timestamp::format_timestamp_timeago;
+use crate::{
+    components::emoji_group::EmojiGroup, utils::format_timestamp::format_timestamp_timeago,
+};
 
 const SETUP_CONTEXT_PARENT: &str = r#"
     const right_clickable = document.getElementsByClassName("has-context-handler")
@@ -80,7 +82,7 @@ enum MessagesCommand {
     },
     FetchMore {
         conv_id: Uuid,
-        new_len: usize,
+        to_fetch: usize,
         current_len: usize,
     },
 }
@@ -95,26 +97,24 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
+    log::debug!("has more: {}", data.active_chat.has_more_messages);
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
-    let num_to_take = use_state(cx, || DEFAULT_NUM_TO_TAKE);
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>)>> =
+    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
         use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    if let Some((id, m)) = newely_fetched_messages.write_silent().take() {
-        if m.is_empty() {
+    if let Some((id, m, has_more)) = newely_fetched_messages.write_silent().take() {
+        state.write().update_chat_messages(id, m);
+        if !has_more {
             log::debug!("finished loading chat: {id}");
             state.write().finished_loading_chat(id);
-        } else {
-            num_to_take.with_mut(|x| *x = x.saturating_add(m.len()));
-            state.write().prepend_messages_to_chat(id, m);
         }
     }
 
@@ -133,7 +133,6 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let eval = use_eval(cx);
     if *active_chat.read() != currently_active {
         *active_chat.write_silent() = currently_active;
-        num_to_take.set(DEFAULT_NUM_TO_TAKE);
     }
 
     use_effect(cx, &data.active_chat.id, |id| {
@@ -261,14 +260,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                     }
                     MessagesCommand::FetchMore {
                         conv_id,
-                        new_len,
+                        to_fetch,
                         current_len,
                     } => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) =
                             warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchMessages {
                                 conv_id,
-                                new_len,
+                                to_fetch,
                                 current_len,
                                 rsp: tx,
                             }))
@@ -278,8 +277,8 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
 
                         match rx.await.expect("command canceled") {
-                            Ok(m) => {
-                                newely_fetched_messages.set(Some((conv_id, m)));
+                            Ok((m, has_more)) => {
+                                newely_fetched_messages.set(Some((conv_id, m, has_more)));
                             }
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
@@ -325,11 +324,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 rsx!(
                     msg_container_end,
                     render_message_groups{
-                        groups: group_messages(data.my_id.did_key(), *num_to_take.get(), DEFAULT_NUM_TO_TAKE, &data.active_chat.messages),
+                        groups: group_messages(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),
-                        num_to_take: num_to_take.clone(),
-                        has_more: data.active_chat.has_more_messages,
                         on_context_menu_action: move |(e, id): (Event<MouseData>, Identity)| {
                             let own = state.read().get_own_identity().did_key().eq(&id.did_key());
                             if !identity_profile.get().eq(&id) {
@@ -390,8 +387,6 @@ struct AllMessageGroupsProps<'a> {
     groups: Vec<MessageGroup<'a>>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
-    num_to_take: UseState<usize>,
-    has_more: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -404,8 +399,6 @@ fn render_message_groups<'a>(cx: Scope<'a, AllMessageGroupsProps<'a>>) -> Elemen
             group: _group,
             active_chat_id: cx.props.active_chat_id,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
-            num_to_take: cx.props.num_to_take.clone(),
-            has_more: cx.props.has_more,
             on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
         },)
     })))
@@ -443,13 +436,11 @@ struct PendingWrapperProps<'a> {
 
 //We need to do it this way due to reference ownership
 fn pending_wrapper<'a>(cx: Scope<'a, PendingWrapperProps>) -> Element<'a> {
-    let num_to_take = use_state(cx, || cx.props.msg.len());
     cx.render(rsx!(render_pending_messages {
         pending_outgoing_message: pending_group_messages(
             &cx.props.msg,
             cx.props.data.my_id.did_key(),
         ),
-        num_to_take: num_to_take.clone(),
         active: cx.props.data.active_chat.id,
         on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e)
     }))
@@ -460,7 +451,6 @@ struct PendingMessagesProps<'a> {
     #[props(!optional)]
     pending_outgoing_message: Option<MessageGroup<'a>>,
     active: Uuid,
-    num_to_take: UseState<usize>,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
 }
 
@@ -471,8 +461,6 @@ fn render_pending_messages<'a>(cx: Scope<'a, PendingMessagesProps>) -> Element<'
                 group: group,
                 active_chat_id: cx.props.active,
                 num_messages_in_conversation: group.messages.len(),
-                num_to_take: cx.props.num_to_take.clone(),
-                has_more: false,
                 on_context_menu_action: move |e| cx.props.on_context_menu_action.call(e),
                 pending: true
             },)
@@ -485,8 +473,6 @@ struct MessageGroupProps<'a> {
     group: &'a MessageGroup<'a>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
-    num_to_take: UseState<usize>,
-    has_more: bool,
     on_context_menu_action: EventHandler<'a, (Event<MouseData>, Identity)>,
     pending: Option<bool>,
 }
@@ -498,8 +484,6 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
         group,
         active_chat_id: _,
         num_messages_in_conversation: _,
-        num_to_take: _,
-        has_more: _,
         on_context_menu_action: _,
         pending: _,
     } = cx.props;
@@ -592,9 +576,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                 messages: &group.messages,
                 active_chat_id: cx.props.active_chat_id,
                 is_remote: group.remote,
-                has_more: cx.props.has_more,
                 num_messages_in_conversation: cx.props.num_messages_in_conversation,
-                num_to_take: cx.props.num_to_take.clone(),
                 pending: cx.props.pending.unwrap_or_default()
             }))
         },
@@ -606,9 +588,7 @@ struct MessagesProps<'a> {
     messages: &'a Vec<GroupedMessage<'a>>,
     active_chat_id: Uuid,
     num_messages_in_conversation: usize,
-    num_to_take: UseState<usize>,
     is_remote: bool,
-    has_more: bool,
     pending: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
@@ -635,9 +615,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             return rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                msg_uuid: _msg_uuid,
                 message_key: _message_key,
-                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             });
@@ -649,34 +627,30 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             id: context_key,
             on_mouseenter: move |_| {
                 if should_fetch_more {
-                    let new_num_to_take = cx
-                        .props
-                        .num_to_take
-                        .get()
-                        .saturating_add(DEFAULT_NUM_TO_TAKE * 2);
-                    // lazily render
-                    if new_num_to_take < cx.props.num_messages_in_conversation {
-                        cx.props.num_to_take.set(new_num_to_take);
-                    } else if cx.props.has_more {
-                        // lazily add more messages to conversation, then render
-                        ch.send(MessagesCommand::FetchMore {
-                            conv_id: cx.props.active_chat_id,
-                            new_len: new_num_to_take,
-                            current_len: cx.props.num_messages_in_conversation,
-                        })
-                    }
+                    ch.send(MessagesCommand::FetchMore {
+                        conv_id: cx.props.active_chat_id,
+                        to_fetch: DEFAULT_NUM_TO_TAKE * 2,
+                        current_len: cx.props.num_messages_in_conversation,
+                    });
                 }
             },
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                msg_uuid: _msg_uuid,
                 message_key: _message_key,
-                reacting_to: reacting_to.clone(),
                 edit_msg: edit_msg.clone(),
                 pending: cx.props.pending
             })),
             items: cx.render(rsx!(
+                ContextItem {
+                    text: "Emoji Group".into(),
+                    EmojiGroup {
+                        onselect: move |emoji: String| {
+                            log::trace!("reacting with emoji: {}", emoji);
+                            ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), emoji)));
+                        }
+                    }
+                }
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
                     aria_label: "messages-reply".into(),
@@ -741,8 +715,6 @@ struct MessageProps<'a> {
     message: &'a GroupedMessage<'a>,
     is_remote: bool,
     message_key: String,
-    msg_uuid: Uuid,
-    reacting_to: UseState<Option<Uuid>>,
     edit_msg: UseState<Option<Uuid>>,
     pending: bool,
 }
@@ -754,21 +726,14 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     // todo: why?
     #[cfg(not(target_os = "macos"))]
-    let eval = use_eval(cx);
+    let _eval = use_eval(cx);
 
-    let reactions = ["❤️", "😂", "😍", "💯", "👍", "😮", "😢", "😡", "🤔", "😎"];
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
-    let focus_script = r#"
-            var message_reactions_container = document.getElementById('add-message-reaction');
-            message_reactions_container.focus();
-        "#;
 
     let MessageProps {
         message,
-        is_remote,
-        msg_uuid,
+        is_remote: _,
         message_key,
-        reacting_to,
         edit_msg,
         pending: _,
     } = cx.props;
@@ -798,8 +763,6 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         })
         .collect();
 
-    let remote_class = if *is_remote { "" } else { "remote" };
-    let reactions_class = format!("message-reactions-container {remote_class}");
     let user_did_2 = user_did.clone();
     let pending_uploads = grouped_message
         .attachment_progress
@@ -807,40 +770,40 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         .unwrap_or(vec![]);
 
     cx.render(rsx!(
-        (*reacting_to.current() == Some(*msg_uuid)).then(|| {
-            rsx!(
-                div {
-                    id: "add-message-reaction",
-                    aria_label: "add-message-reaction",
-                    class: "{reactions_class} pointer",
-                    tabindex: "0",
-                    onmouseleave: |_| {
-                        #[cfg(not(target_os = "macos"))] 
-                        {
-                            eval(focus_script.to_string());
-                        }
-                    },
-                    onblur: move |_| {
-                        state.write().ui.ignore_focus = false;
-                        reacting_to.set(None);
-                    },
-                    reactions.iter().cloned().map(|reaction| {
-                        rsx!(
-                            div {
-                                aria_label: "{reaction}",
-                                onclick: move |_|  {
-                                    reacting_to.set(None);
-                                    state.write().ui.ignore_focus = false;
-                                    ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
-                                },
-                                "{reaction}"
-                            }
-                        )
-                    })
-                },
-                script { focus_script },
-            )
-        }),
+        // (*reacting_to.current() == Some(*msg_uuid)).then(|| {
+        //     rsx!(
+        //         div {
+        //             id: "add-message-reaction",
+        //             aria_label: "add-message-reaction",
+        //             class: "{reactions_class} pointer",
+        //             tabindex: "0",
+        //             onmouseleave: |_| {
+        //                 #[cfg(not(target_os = "macos"))] 
+        //                 {
+        //                     eval(focus_script.to_string());
+        //                 }
+        //             },
+        //             onblur: move |_| {
+        //                 state.write().ui.ignore_focus = false;
+        //                 reacting_to.set(None);
+        //             },
+        //             reactions.iter().cloned().map(|reaction| {
+        //                 rsx!(
+        //                     div {
+        //                         aria_label: "{reaction}",
+        //                         onclick: move |_|  {
+        //                             reacting_to.set(None);
+        //                             state.write().ui.ignore_focus = false;
+        //                             ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), reaction.to_string())));
+        //                         },
+        //                         "{reaction}"
+        //                     }
+        //                 )
+        //             })
+        //         },
+        //         script { focus_script },
+        //     )
+        // }),
         div {
             class: "msg-wrapper",
             message.in_reply_to.as_ref().map(|(other_msg, other_msg_attachments, sender_did)| rsx!(

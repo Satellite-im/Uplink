@@ -42,9 +42,6 @@ jobs:
         uses: FedericoCarboni/setup-ffmpeg@v2
         id: setup-ffmpeg
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-
       - name: Build Uplink
         run: cargo build --release -F production_mode
       

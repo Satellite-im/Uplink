@@ -310,7 +310,10 @@ pub fn get_input_options() -> Options {
         ignore_colons: false,
         // The input should allow any special characters
         // if you need special chars, just pass a vec! with each char necessary, mainly if alpha_numeric_only is true
-        special_chars: Some((SpecialCharsAction::Allow, vec![' '])),
+        special_chars: Some((
+            SpecialCharsAction::Allow,
+            " .,!?_&+~(){}[]+-/*".chars().collect(),
+        )),
     };
 
     // Set up options for the input field

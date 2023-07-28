@@ -1,6 +1,6 @@
 {
 	"recommendations": [
-		"bungcip.better-toml",
+		"tamasfe.even-better-toml",
 		"dustypomerleau.rust-syntax",
 		"ms-vscode.makefile-tools",
 		"vadimcn.vscode-lldb",

@@ -73,6 +73,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
+            aria_label: "searchbar-dropwdown",
             onmouseenter: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = true;
             },

@@ -121,7 +121,7 @@ pub static STATIC_ARGS: Lazy<StaticArgs> = Lazy::new(|| {
     let warp_path = uplink_path.join("warp");
     StaticArgs {
         dot_uplink: uplink_container.clone(),
-        uplink_path: uplink_path.clone(),
+        uplink_path: uplink_path.clone(), // TODO: Should this be "User path" instead?
         themes_path: uplink_container.join("themes"),
         fonts_path: uplink_container.join("fonts"),
         cache_path: uplink_path.join("state.json"),
