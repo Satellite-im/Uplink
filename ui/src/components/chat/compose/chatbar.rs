@@ -594,9 +594,9 @@ fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
         .unwrap_or_default()
         .iter()
         .map(|file_path| {
-            let filename = file_path.to_string_lossy().to_string().clone();
+            let filename = file_path.to_string_lossy().to_string();
             rsx!(FileEmbed {
-                filename: file_path.to_string_lossy().to_string().clone(),
+                filename: file_path.to_string_lossy().to_string(),
                 filepath: file_path.clone(),
                 remote: false,
                 button_icon: icons::outline::Shape::Trash,

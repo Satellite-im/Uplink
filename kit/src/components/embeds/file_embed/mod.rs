@@ -21,7 +21,7 @@ pub struct Props<'a> {
     // The filename of the file
     filename: String,
 
-    // The filename of the file
+    // The local filepath of the file
     filepath: Option<PathBuf>,
 
     // The size of the file in bytes
@@ -302,7 +302,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
 }
 
 fn get_file_thumbnail_if_is_image(filepath: PathBuf, filename: String) -> String {
-    let file = match std::fs::read(&filepath) {
+    let file = match std::fs::read(filepath) {
         Ok(file) => file,
         Err(_) => {
             return String::new();
