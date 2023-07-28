@@ -620,31 +620,68 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
-        let should_fetch_more = grouped_message.should_fetch_more;
-        let message = grouped_message.message.use_state(cx);
-        let sender_is_self = message.read().inner.sender() == state.read().did_key();
+        cx.render(rsx!(render_message_context {
+            message: grouped_message,
+            active_chat_id: cx.props.active_chat_id,
+            num_messages_in_conversation: cx.props.num_messages_in_conversation,
+            num_to_take: cx.props.num_to_take.clone(),
+            is_remote: cx.props.is_remote,
+            has_more: cx.props.has_more,
+            pending: cx.props.pending,
+            edit_msg: edit_msg.clone(),
+            reacting_to: reacting_to.clone(),
+        }))
+    }))) // end outer cx.render
+}
 
-        // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
-        let is_editing = edit_msg
-            .get()
-            .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
-            .unwrap_or(false);
-        let context_key = format!("message-{}-{}", &message.read().key, is_editing);
-        let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
-        let _msg_uuid = message.read().inner.id();
+#[derive(Props)]
+struct MessageContextProps<'a> {
+    message: &'a GroupedMessage<'a>,
+    active_chat_id: Uuid,
+    num_messages_in_conversation: usize,
+    num_to_take: UseState<usize>,
+    is_remote: bool,
+    has_more: bool,
+    pending: bool,
+    edit_msg: UseState<Option<Uuid>>,
+    reacting_to: UseState<Option<Uuid>>,
+}
 
-        if cx.props.pending {
-            return rsx!(render_message {
-                message: grouped_message,
-                is_remote: cx.props.is_remote,
-                message_key: _message_key,
-                edit_msg: edit_msg.clone(),
-                pending: cx.props.pending
-            });
-        }
+fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
 
-        // todo: add onblur event
-        rsx!(ContextMenu {
+    let grouped_message = cx.props.message;
+    let should_fetch_more = grouped_message.should_fetch_more;
+    let message = grouped_message.message.use_state(cx);
+    let sender_is_self = message.read().inner.sender() == state.read().did_key();
+    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+
+    // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
+    let is_editing = cx
+        .props
+        .edit_msg
+        .get()
+        .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
+        .unwrap_or(false);
+    let context_key = format!("message-{}-{}", &message.read().key, is_editing);
+    log::debug!("id {:?}", cx.scope_id());
+    log::debug!("key: {}", context_key);
+    log::debug!("key 2: {}", grouped_message.message.read().key);
+    let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
+    let _msg_uuid = message.read().inner.id();
+
+    if cx.props.pending {
+        return cx.render(rsx!(render_message {
+            message: grouped_message,
+            is_remote: cx.props.is_remote,
+            message_key: _message_key,
+            edit_msg: cx.props.edit_msg.clone(),
+            pending: cx.props.pending
+        }));
+    }
+
+    // todo: add onblur event
+    cx.render(rsx!(ContextMenu {
             key: "{context_key}",
             id: context_key,
             on_mouseenter: move |_| {
@@ -671,7 +708,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
                 message_key: _message_key,
-                edit_msg: edit_msg.clone(),
+                edit_msg: cx.props.edit_msg.clone(),
                 pending: cx.props.pending
             })),
             items: cx.render(rsx!(
@@ -701,7 +738,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     text: get_local_text("messages.react"),
                     onpress: move |_| {
                         state.write().ui.ignore_focus = true;
-                        reacting_to.set(Some(_msg_uuid));
+                        cx.props.reacting_to.set(Some(_msg_uuid));
                     }
                 },
                 ContextItem {
@@ -709,9 +746,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                        && cx.props.edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
                     onpress: move |_| {
-                        edit_msg.set(Some(_msg_uuid));
+                        cx.props.edit_msg.set(Some(_msg_uuid));
                         state.write().ui.ignore_focus = true;
                     }
                 },
@@ -720,9 +757,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
-                        && edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                        && cx.props.edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
                     onpress: move |_| {
-                        edit_msg.set(None);
+                        cx.props.edit_msg.set(None);
                         state.write().ui.ignore_focus = false;
                     }
                 },
@@ -740,8 +777,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     }
                 },
             )) // end of context menu items
-        }) // end context menu
-    }))) // end outer cx.render
+        })) // end context menu
 }
 
 #[derive(Props)]
