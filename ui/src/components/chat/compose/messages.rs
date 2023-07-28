@@ -666,7 +666,12 @@ fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element
     let context_key = format!("message-{}-{}", &message.read().key, is_editing);
     log::debug!("id {:?}", cx.scope_id());
     log::debug!("key: {}", context_key);
-    log::debug!("key 2: {}", grouped_message.message.read().key);
+    log::debug!("key up-to-date: {}", grouped_message.message.read().key);
+    log::debug!("value: {:?}", message.read().inner.value());
+    log::debug!(
+        "value up-to-date: {:?}",
+        grouped_message.message.read().inner.value()
+    );
     let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
     let _msg_uuid = message.read().inner.id();
 
