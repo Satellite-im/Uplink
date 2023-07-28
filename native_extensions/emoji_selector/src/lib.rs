@@ -241,8 +241,7 @@ fn render_selector<'a>(
                                                         };
                                                     },
                                                     EmojiDestination::Message(conversation_uuid, message_uuid) => {
-                                                        let emoji_str = emoji.to_string();
-                                                        state.write_silent().mutate(Action::AddReaction(conversation_uuid, message_uuid, emoji_str));
+                                                        ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
                                                     },
                                                 }
                                                 // Hide the selector when clicking an emoji
