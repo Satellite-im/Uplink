@@ -443,7 +443,7 @@ impl State {
                 // todo: don't load all the messages by default. if the user scrolled up, for example, this incoming message may not need to be fetched yet.
                 let message_clone = message.clone();
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    chat.messages.push_back(LocalSubscription::create(message));
+                    chat.messages.push_back(message.into());
                 }
                 self.send_chat_to_top_of_sidebar(conversation_id);
                 self.decrement_outgoing_messages(
@@ -772,7 +772,7 @@ impl State {
     fn add_msg_to_chat(&mut self, conversation_id: Uuid, message: ui_adapter::Message) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
             chat.typing_indicator.remove(&message.inner.sender());
-            chat.messages.push_back(LocalSubscription::create(message));
+            chat.messages.push_back(message.into());
 
             if self.ui.current_layout != ui::Layout::Compose
                 || self.chats.active != Some(conversation_id)

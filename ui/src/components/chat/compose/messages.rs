@@ -489,7 +489,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     } = cx.props;
 
     let messages = &group.messages;
-    let last_message = messages.last().unwrap().message.use_state(cx);
+    let last_message = messages.last().unwrap().message.read();
     let sender = state.read().get_identity(&group.sender).unwrap_or_default();
     let blocked = group.remote && state.read().is_blocked(&sender.did_key());
     let show_blocked = use_state(cx, || false);
@@ -569,7 +569,7 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
                     cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
                 }
             })),
-            timestamp: format_timestamp_timeago(last_message.read().inner.date(), active_language),
+            timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
             sender: sender_name.clone(),
             remote: group.remote,
             children: cx.render(rsx!(render_messages {
@@ -592,13 +592,11 @@ struct MessagesProps<'a> {
     pending: bool,
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
-
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
-        cx.render(rsx!(render_message_context {
+        cx.render(rsx!(render_single_message {
             message: grouped_message,
             active_chat_id: cx.props.active_chat_id,
             num_messages_in_conversation: cx.props.num_messages_in_conversation,
@@ -606,8 +604,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             pending: cx.props.pending,
             edit_msg: edit_msg.clone(),
             reacting_to: reacting_to.clone(),
+            state: state,
         }))
-    }))) // end outer cx.render
+    })))
 }
 
 #[derive(Props)]
@@ -619,11 +618,11 @@ struct MessageContextProps<'a> {
     pending: bool,
     edit_msg: UseState<Option<Uuid>>,
     reacting_to: UseState<Option<Uuid>>,
+    state: &'a UseSharedState<State>,
 }
 
-fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-
+fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<'a> {
+    let state = &cx.props.state;
     let grouped_message = cx.props.message;
     let should_fetch_more = grouped_message.should_fetch_more;
     let message = grouped_message.message.use_state(cx);
@@ -638,14 +637,6 @@ fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element
         .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
         .unwrap_or(false);
     let context_key = format!("message-{}-{}", &message.read().key, is_editing);
-    log::debug!("id {:?}", cx.scope_id());
-    log::debug!("key: {}", context_key);
-    log::debug!("key up-to-date: {}", grouped_message.message.read().key);
-    log::debug!("value: {:?}", message.read().inner.value());
-    log::debug!(
-        "value up-to-date: {:?}",
-        grouped_message.message.read().inner.value()
-    );
     let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
     let _msg_uuid = message.read().inner.id();
 
@@ -655,7 +646,8 @@ fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element
             is_remote: cx.props.is_remote,
             message_key: _message_key,
             edit_msg: cx.props.edit_msg.clone(),
-            pending: cx.props.pending
+            pending: cx.props.pending,
+            state: state
         }));
     }
 
@@ -677,7 +669,8 @@ fn render_message_context<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element
                 is_remote: cx.props.is_remote,
                 message_key: _message_key,
                 edit_msg: cx.props.edit_msg.clone(),
-                pending: cx.props.pending
+                pending: cx.props.pending,
+                state: state
             })),
             items: cx.render(rsx!(
                 ContextItem {
@@ -755,10 +748,11 @@ struct MessageProps<'a> {
     message_key: String,
     edit_msg: UseState<Option<Uuid>>,
     pending: bool,
+    state: &'a UseSharedState<State>,
 }
 fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     //log::trace!("render message {}", &cx.props.message.message.key);
-    let state = use_shared_state::<State>(cx)?;
+    let state = cx.props.state;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
     let user_did = state.read().did_key();
 
@@ -774,6 +768,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         message_key,
         edit_msg,
         pending: _,
+        state: _,
     } = cx.props;
     let grouped_message = message;
     let message = grouped_message.message.use_state(cx);

@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 pub type ScopeUpdate = std::sync::Arc<dyn Fn(ScopeId) + Send + Sync>;
 
+/// A local subscription tracker
 #[derive(Clone, Debug)]
 pub struct LocalSubscription<T> {
     inner: Rc<RefCell<T>>,
@@ -43,6 +44,12 @@ impl<'de, T: Deserialize<'de> + 'static> Deserialize<'de> for LocalSubscription<
     }
 }
 
+impl<T: 'static> From<T> for LocalSubscription<T> {
+    fn from(value: T) -> Self {
+        LocalSubscription::create(value)
+    }
+}
+
 impl<T: 'static> LocalSubscription<T> {
     pub fn create(inner: T) -> Self {
         let inner = Rc::new(RefCell::new(inner));
@@ -52,6 +59,7 @@ impl<T: 'static> LocalSubscription<T> {
         }
     }
 
+    /// Give access to the value of the LocalSubscription while subscribing the component to this instance
     pub fn use_state<'a>(&self, cx: &'a ScopeState) -> &'a UseLocal<T> {
         cx.use_hook(|| {
             let id = cx.scope_id();
@@ -60,7 +68,7 @@ impl<T: 'static> LocalSubscription<T> {
             let sub_2 = Rc::clone(&sub);
             let update_any = cx.schedule_update_any();
             UseLocal {
-                inner: self.inner.clone(),
+                inner: Rc::clone(&self.inner),
                 update: Rc::new(RefCell::new({
                     move || {
                         for id in sub.borrow().iter() {
@@ -75,12 +83,13 @@ impl<T: 'static> LocalSubscription<T> {
         })
     }
 
+    /// Give write access to the value of the LocalSubscription. Does NOT subscribe the component
     pub fn use_write_only<'a>(&self, cx: &'a ScopeState) -> &'a LocalWrite<T> {
         let update_any = cx.schedule_update_any();
         cx.use_hook(|| {
-            let sub = self.subscribed.clone();
+            let sub = Rc::clone(&self.subscribed);
             LocalWrite {
-                inner: self.inner.clone(),
+                inner: Rc::clone(&self.inner),
                 update: Rc::new(RefCell::new({
                     move || {
                         for id in sub.borrow().iter() {
@@ -92,12 +101,12 @@ impl<T: 'static> LocalSubscription<T> {
         })
     }
 
-    // This should only be used outside of components. This will not subscribe to any state.
-    pub fn write(&self) -> RefMut<T> {
-        //(self.update)();
+    /// Write to the state without triggering an update.
+    pub fn write_silent(&self) -> RefMut<T> {
         self.inner.borrow_mut()
     }
 
+    /// This should only be used outside of components. Updates all subscribed components
     pub fn write_with_update(&self, update: ScopeUpdate) -> RefMut<T> {
         for id in self.subscribed.borrow().iter() {
             update(*id);
@@ -143,6 +152,7 @@ impl<T: Display> Display for UseLocal<T> {
 }
 
 impl<T> Drop for UseLocal<T> {
+    /// Unsubscribe this component from the LocalState
     fn drop(&mut self) {
         (self.drop_func.borrow())();
     }
