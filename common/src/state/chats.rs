@@ -137,27 +137,27 @@ impl Chat {
     }
 }
 
-impl Into<Chat> for SendableChat {
-    fn into(self) -> Chat {
+impl From<SendableChat> for Chat {
+    fn from(value: SendableChat) -> Chat {
         Chat {
-            id: self.id,
-            participants: self.participants,
-            conversation_type: self.conversation_type,
-            conversation_name: self.conversation_name,
-            creator: self.creator,
+            id: value.id,
+            participants: value.participants,
+            conversation_type: value.conversation_type,
+            conversation_name: value.conversation_name,
+            creator: value.creator,
             messages: {
                 let mut vec = VecDeque::new();
-                for msg in self.messages.iter() {
+                for msg in value.messages.iter() {
                     vec.push_front(LocalSubscription::create(msg.clone()));
                 }
                 vec
             },
-            unreads: self.unreads,
-            replying_to: self.replying_to,
-            typing_indicator: self.typing_indicator,
-            draft: self.draft,
-            has_more_messages: self.has_more_messages,
-            pending_outgoing_messages: self.pending_outgoing_messages,
+            unreads: value.unreads,
+            replying_to: value.replying_to,
+            typing_indicator: value.typing_indicator,
+            draft: value.draft,
+            has_more_messages: value.has_more_messages,
+            pending_outgoing_messages: value.pending_outgoing_messages,
         }
     }
 }
