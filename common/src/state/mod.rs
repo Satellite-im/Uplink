@@ -599,9 +599,9 @@ impl State {
             BlinkEventKind::SelfSpeaking => {
                 // todo
             }
-            BlinkEventKind::AudioDegredation { peer_id } => {
+            BlinkEventKind::AudioDegradation { peer_id } => {
                 // todo
-                log::info!("audio degredation for peer {}", peer_id);
+                log::info!("audio degradation for peer {}", peer_id);
             }
         }
     }
@@ -901,15 +901,17 @@ impl State {
             .cloned()
     }
     // assumes the messages are sorted by most recent to oldest
-    pub fn prepend_messages_to_chat(
+    pub fn update_chat_messages(
         &mut self,
         conversation_id: Uuid,
-        mut messages: Vec<ui_adapter::Message>,
+        messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            for message in messages.drain(..) {
-                chat.messages.push_front(LocalSubscription::create(message));
-            }
+            chat.messages = messages
+                .iter()
+                .map(|msg| LocalSubscription::create(msg.clone()))
+                .collect::<Vec<LocalSubscription<ui_adapter::Message>>>()
+                .into();
         }
     }
 
@@ -1524,23 +1526,21 @@ impl<'a> GroupedMessage<'a> {
 
 pub fn group_messages<'a>(
     my_did: DID,
-    num: usize,
     when_to_fetch_more: usize,
+    // true if the chat has more messages to fetch
+    has_more: bool,
     input: &'a VecDeque<LocalSubscription<ui_adapter::Message>>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let to_skip = input.len().saturating_sub(num);
-    // the most recent message appears last in the list.
-    let iter = input.iter().skip(to_skip);
     let mut need_to_fetch_more = when_to_fetch_more;
 
     let mut need_more = || {
         let r = need_to_fetch_more > 0;
         need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
-        r
+        r && has_more
     };
 
-    for msg in iter {
+    for msg in input.iter() {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.read().inner.sender() {
                 let g = GroupedMessage {

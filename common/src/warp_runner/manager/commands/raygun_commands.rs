@@ -68,14 +68,14 @@ pub enum RayGunCmd {
         conv_id: Uuid,
         rsp: oneshot::Sender<Result<Uuid, warp::error::Error>>,
     },
-    #[display(fmt = "FetchMessages {{ req_len: {new_len}, current_len: {current_len} }} ")]
+    #[display(fmt = "FetchMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
     FetchMessages {
         conv_id: Uuid,
         // the total number of messages that should be in the conversation
-        new_len: usize,
+        to_fetch: usize,
         // the current size of the conversation
         current_len: usize,
-        rsp: oneshot::Sender<Result<Vec<ui_adapter::Message>, warp::error::Error>>,
+        rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
     },
     #[display(fmt = "SendMessage")]
     SendMessage {
@@ -205,13 +205,11 @@ pub async fn handle_raygun_cmd(
         }
         RayGunCmd::FetchMessages {
             conv_id,
-            new_len,
+            to_fetch,
             current_len,
             rsp,
         } => {
-            let to_skip = current_len;
-            let to_add = new_len - current_len;
-            let r = fetch_messages_from_chat(conv_id, messaging, to_skip, to_add).await;
+            let r = fetch_messages_from_chat(conv_id, messaging, to_fetch + current_len).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::SendMessage {
