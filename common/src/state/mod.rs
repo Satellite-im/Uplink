@@ -857,7 +857,7 @@ impl State {
 
     fn clear_chat_attachments(&mut self, chat_id: &Uuid) {
         if let Some(c) = self.chats.all.get_mut(chat_id) {
-            c.files_attached_to_send = Vec::new();
+            c.files_attached_to_send.clear();
         }
     }
 
