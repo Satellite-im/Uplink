@@ -594,7 +594,8 @@ struct MessagesProps<'a> {
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
-    let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
+    // see comment in ContextMenu about this variable.
+    // let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
@@ -661,15 +662,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                             .mutate(Action::StartReplying(&cx.props.active_chat_id, message));
                     }
                 },
-                ContextItem {
-                    icon: Icon::FaceSmile,
-                    aria_label: "messages-react".into(),
-                    text: get_local_text("messages.react"),
-                    onpress: move |_| {
-                        state.write().ui.ignore_focus = true;
-                        reacting_to.set(Some(_msg_uuid));
-                    }
-                },
+                // this will probably get added back in with the emoji picker. will leave this here for now
+                //ContextItem {
+                //    icon: Icon::FaceSmile,
+                //    aria_label: "messages-react".into(),
+                //    text: get_local_text("messages.react"),
+                //    onpress: move |_| {
+                //        state.write().ui.ignore_focus = true;
+                //        reacting_to.set(Some(_msg_uuid));
+                //    }
+                //},
                 ContextItem {
                     icon: Icon::Pencil,
                     aria_label: "messages-edit".into(),
