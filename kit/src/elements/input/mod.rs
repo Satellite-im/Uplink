@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
@@ -207,7 +209,18 @@ fn validate_alphanumeric(
     }
 
     if !val.chars().all(char::is_alphanumeric) {
-        return Some(get_local_text("warning-messages.only-alpha-chars"));
+        let invalid_chars = val.chars().filter(|x| !char::is_alphanumeric(*x));
+        let mut s: HashSet<char> = HashSet::new();
+        let mut t = String::new();
+        for x in invalid_chars {
+            if s.insert(x) {
+                t.push(x);
+            }
+        }
+        return Some(format!(
+            "{}: {t}",
+            get_local_text("warning-messages.disallowed-characters")
+        ));
     }
 
     None
