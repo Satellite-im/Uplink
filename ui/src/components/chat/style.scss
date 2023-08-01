@@ -145,12 +145,12 @@
 }
 
 .edit-group-name {
-  margin-top: 8px;
   display: flex;
   gap: var(--gap);
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
+  margin-right: 8px;
 }
 
 .create-group-name {

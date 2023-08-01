@@ -14,16 +14,20 @@ use kit::{
     },
     elements::{
         button::Button,
+        input::{Input, Options},
+        label::Label,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
     layout::topbar::Topbar,
 };
 
+use crate::components::chat::create_group::get_input_options;
+
 use common::{
     icons::outline::Shape as Icon,
     state::call,
-    warp_runner::{BlinkCmd, WarpCmd},
+    warp_runner::{BlinkCmd, RayGunCmd, WarpCmd},
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -108,6 +112,7 @@ pub struct ComposeProps {
     show_group_users: UseState<Option<Uuid>>,
     ignore_focus: bool,
     is_owner: bool,
+    is_edit_group: bool,
 }
 
 #[allow(non_snake_case)]
@@ -178,6 +183,8 @@ pub fn Compose(cx: Scope) -> Element {
         false
     };
 
+    let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
+
     cx.render(rsx!(
         div {
             id: "compose",
@@ -218,6 +225,7 @@ pub fn Compose(cx: Scope) -> Element {
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
+                    is_edit_group: is_edit_group,
                 })),
                 get_topbar_children {
                     data: data.clone(),
@@ -225,6 +233,7 @@ pub fn Compose(cx: Scope) -> Element {
                     show_group_users: show_group_users.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
+                    is_edit_group: is_edit_group,
                 }
             },
             // may need this later when video calling is possible. 
@@ -269,6 +278,7 @@ pub fn Compose(cx: Scope) -> Element {
             show_group_users: show_group_users.clone(),
             ignore_focus: should_ignore_focus,
             is_owner: is_owner,
+            is_edit_group: is_edit_group,
         }
     }
     ))
@@ -331,6 +341,10 @@ enum ControlsCmd {
         participants: Vec<DID>,
         conversation_id: Uuid,
     },
+}
+
+enum EditGroupCmd {
+    UpdateGroupName(String),
 }
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
@@ -545,7 +559,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-
+    let state = use_shared_state::<State>(cx)?;
     let data = match data {
         Some(d) => d,
         None => {
@@ -587,6 +601,36 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         get_local_text("uplink.members"),
         all_participants.len()
     );
+
+    let conv_id = state.read().get_active_chat().unwrap().id;
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| {
+        to_owned![conv_id];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    EditGroupCmd::UpdateGroupName(new_conversation_name) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(e) =
+                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
+                                conv_id,
+                                new_conversation_name,
+                                rsp: tx,
+                            }))
+                        {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to update group conversation name: {}", e);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
     cx.render(rsx!(
         if direct_message {rsx! (
             UserImage {
@@ -604,22 +648,46 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         div {
             class: "user-info",
             aria_label: "user-info",
-            p {
-                class: "username",
-                "{conversation_title}"
-            },
-            p {
-                class: "status",
-                if direct_message {
-                    rsx! (span {
-                        "{subtext}"
-                    })
-                } else {
-                    rsx! (
-                        span {"{members_count}"}
-                    )
+            if cx.props.is_edit_group {rsx! (
+                div {
+                    id: "edit-group-name",
+                    class: "edit-group-name",
+                    Input {
+                            placeholder:  get_local_text("messages.group-name"),
+                            default_text: conversation_title.clone(),
+                            aria_label: "groupname-input".into(),
+                            options: Options {
+                                with_clear_btn: true,
+                                ..get_input_options()
+                            },
+                            onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                                if !is_valid {
+                                    return;
+                                }
+                                if v != conversation_title.clone() {
+                                    ch.send(EditGroupCmd::UpdateGroupName(v));
+                                }
+                            },
+                        },
+                })
+            } else {rsx!(
+                p {
+                    class: "username",
+                    "{conversation_title}"
+                },
+                p {
+                    class: "status",
+                    if direct_message {
+                        rsx! (span {
+                            "{subtext}"
+                        })
+                    } else {
+                        rsx! (
+                            span {"{members_count}"}
+                        )
+                    }
                 }
-            }
+            )}
         }
     ))
 }

@@ -143,7 +143,10 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Add);
         },
-        "Add Members →"
+        format!(
+            "{} →",
+            get_local_text("uplink.add-member")
+        ),
     });
 
     let remove_friends = rsx!(a {
@@ -151,7 +154,10 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Remove);
         },
-        "Current Members →"
+        format!(
+            "{} →",
+            get_local_text("uplink.current-member")
+        ),
 
         // key: "edit-group",
         // Button {
