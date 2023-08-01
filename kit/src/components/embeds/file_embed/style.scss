@@ -13,8 +13,12 @@
 .file-embed {
   display: inline-flex;
   gap: var(--gap);
-  width: fit-content;
+  width: 95%;
+  margin-left: var(--gap);
   color: var(--text-color);
+  padding-top: var(--gap);
+  padding-bottom: 4px;
+  padding-right: var(--gap);
   align-content: center;
   align-self: flex-end;
 
@@ -55,12 +59,16 @@
   }
   .icon {
     svg {
-      stroke: var(--text-color);
-      fill: transparent;
-      height: var(--height-input);
-      width: var(--height-input);
+      transition: stroke var(--animation-time);
+			fill: transparent;
+			stroke: var(--warning-light);
+      width: 60px;
+      height: 60px;
     }
   }
+}
+.file-embed:hover {
+  background-color: var(--background-light);
 }
 
 .icon {
@@ -91,4 +99,21 @@
     border-radius: var(--border-radius-more);
     transition: 1s;
   }
+}
+
+.file-info {
+  word-break: break-all;
+}
+
+.file-embed-type {
+	text-transform: none;
+	text-align: center;
+  position: relative;
+  right: -35px;
+  bottom: 25px;
+	padding:2px;
+	background-color: var(--warning-light);
+	border-radius: 4px;
+	color: var(--text-color-dark);
+	font-size: var(--text-size-less);
 }
