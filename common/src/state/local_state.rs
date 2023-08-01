@@ -60,14 +60,14 @@ impl<T: 'static> LocalSubscription<T> {
     }
 
     /// Give access to the value of the LocalSubscription while subscribing the component to this instance
-    pub fn use_state<'a>(&self, cx: &'a ScopeState) -> &'a UseLocal<T> {
-        cx.use_hook(|| {
+    pub fn use_state<'a>(&self, cx: &'a ScopeState) -> Option<&'a UseLocal<T>> {
+        let state = cx.use_hook(|| {
             let id = cx.scope_id();
             self.subscribed.borrow_mut().insert(id);
             let sub = Rc::clone(&self.subscribed);
             let sub_2 = Rc::clone(&sub);
             let update_any = cx.schedule_update_any();
-            UseLocal {
+            let local = UseLocal {
                 inner: Rc::clone(&self.inner),
                 update: Rc::new(RefCell::new({
                     move || {
@@ -76,11 +76,15 @@ impl<T: 'static> LocalSubscription<T> {
                         }
                     }
                 })),
+            };
+            Some(UseLocalWrapper {
+                inner: local,
                 drop_func: Rc::new(RefCell::new(move || {
                     sub_2.borrow_mut().remove(&id);
                 })),
-            }
-        })
+            })
+        });
+        state.as_ref().map(|s| &s.inner)
     }
 
     /// Give write access to the value of the LocalSubscription. Does NOT subscribe the component
@@ -127,11 +131,23 @@ impl<T: 'static> LocalSubscription<T> {
     }
 }
 
+/// Wrapper over UseLocal that handles unsubscribing when components are unmounted
+pub struct UseLocalWrapper<T> {
+    inner: UseLocal<T>,
+    drop_func: Rc<RefCell<dyn Fn()>>,
+}
+
+impl<T> Drop for UseLocalWrapper<T> {
+    /// Unsubscribe this component from the LocalState
+    fn drop(&mut self) {
+        (self.drop_func.borrow())();
+    }
+}
+
 /// A read/write version of the local state. This allows mutating the state and reading state.
 pub struct UseLocal<T> {
     inner: Rc<RefCell<T>>,
     update: Rc<RefCell<dyn Fn()>>,
-    drop_func: Rc<RefCell<dyn Fn()>>,
 }
 
 impl<T> UseLocal<T> {
@@ -148,13 +164,6 @@ impl<T> UseLocal<T> {
 impl<T: Display> Display for UseLocal<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.borrow().fmt(f)
-    }
-}
-
-impl<T> Drop for UseLocal<T> {
-    /// Unsubscribe this component from the LocalState
-    fn drop(&mut self) {
-        (self.drop_func.borrow())();
     }
 }
 

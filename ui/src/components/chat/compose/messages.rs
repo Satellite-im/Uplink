@@ -625,7 +625,7 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
     let state = &cx.props.state;
     let grouped_message = cx.props.message;
     let should_fetch_more = grouped_message.should_fetch_more;
-    let message = grouped_message.message.use_state(cx);
+    let message = grouped_message.message.use_state(cx)?;
     let sender_is_self = message.read().inner.sender() == state.read().did_key();
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
 
@@ -771,7 +771,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         state: _,
     } = cx.props;
     let grouped_message = message;
-    let message = grouped_message.message.use_state(cx);
+    let message = grouped_message.message.use_state(cx)?;
     let is_editing = edit_msg
         .current()
         .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
