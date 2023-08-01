@@ -66,6 +66,22 @@ pub const SELECT_CHAT_BAR: &str = r#"
     chatBar.focus()
 "#;
 
+pub const OVERLAY_SCRIPT: &str = r#"
+    var chatLayout = document.getElementById('compose')
+
+    var IS_DRAGGING = $IS_DRAGGING
+
+    var overlayElement = document.getElementById('overlay-element')
+
+    if (IS_DRAGGING) {
+    chatLayout.classList.add('hover-effect')
+    overlayElement.style.display = 'block'
+    } else {
+    chatLayout.classList.remove('hover-effect')
+    overlayElement.style.display = 'none'
+    }
+"#;
+
 pub struct ComposeData {
     active_chat: Chat,
     my_id: Identity,
@@ -88,7 +104,6 @@ impl PartialEq for ComposeData {
 pub struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
-    upload_files: UseState<Vec<PathBuf>>,
     show_edit_group: UseState<Option<Uuid>>,
     show_group_users: UseState<Option<Uuid>>,
     ignore_focus: bool,
@@ -106,9 +121,6 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let overlay_script = include_str!("../overlay.js");
-
-    let files_to_upload = use_state(cx, Vec::new);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -117,22 +129,26 @@ pub fn Compose(cx: Scope) -> Element {
 
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
-        to_owned![files_to_upload, overlay_script, window, drag_event];
+        to_owned![state, window, drag_event];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
-                    let new_files =
-                        drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
-                    let mut new_files_to_upload: Vec<_> = files_to_upload
-                        .current()
+                    let new_files = drag_and_drop_function(&window, &drag_event).await;
+                    let mut new_files_to_upload: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .and_then(|f| Some(f.files_attached_to_send))
+                        .unwrap_or_default()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
-                    files_to_upload.set(new_files_to_upload);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                 }
             }
         }
@@ -153,17 +169,17 @@ pub fn Compose(cx: Scope) -> Element {
             ondragover: move |_| {
                 if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
-                        to_owned![files_to_upload, drag_event, window, overlay_script];
+                        to_owned![drag_event, window, state];
                         async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
-                            let mut new_files_to_upload: Vec<_> = files_to_upload
-                                .current()
+                           let new_files = drag_and_drop_function(&window, &drag_event).await;
+                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                .unwrap_or_default()
                                 .iter()
                                 .filter(|file_name| !new_files.contains(file_name))
                                 .cloned()
                                 .collect();
                             new_files_to_upload.extend(new_files);
-                            files_to_upload.set(new_files_to_upload);
+                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                         }
                     });
                 }
@@ -194,14 +210,12 @@ pub fn Compose(cx: Scope) -> Element {
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
-                    upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
                 })),
                 get_topbar_children {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
-                    upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
                 }
             },
@@ -250,7 +264,6 @@ pub fn Compose(cx: Scope) -> Element {
                 data: data.clone(),
                 show_edit_group: show_edit_group.clone(),
                 show_group_users: show_group_users.clone(),
-                upload_files: files_to_upload.clone(),
                 ignore_focus: should_ignore_focus,
             }
         )),
@@ -575,7 +588,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
-    overlay_script: String,
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
     let mut new_files_to_upload = Vec::new();
@@ -584,7 +596,7 @@ async fn drag_and_drop_function(
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
                 if verify_if_are_valid_paths(&paths) {
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
                     if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
@@ -611,7 +623,7 @@ async fn drag_and_drop_function(
                 if verify_if_are_valid_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
@@ -621,7 +633,7 @@ async fn drag_and_drop_function(
             }
             _ => {
                 *drag_event.write_silent() = None;
-                let script = overlay_script.replace("$IS_DRAGGING", "false");
+                let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                 window.eval(&script);
                 break;
             }
