@@ -468,3 +468,9 @@
 .hide-button-text {
   width: 38px;
 }
+
+.friend-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 182px;
+}
