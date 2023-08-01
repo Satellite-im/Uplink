@@ -24,7 +24,7 @@ uplink = Uplink
 warning-messages = Warnungen
     .please-enter-at-least = Mindestens
     .maximum-of = Maximum an
-    .only-alpha-chars = Nur alphanumerische Zeichen sind erlaubt.
+    .disallowed-characters = todo
     .spaces-not-allowed = Leerzeichen sind nicht erlaubt.
 
 messages = Nachrichten
