@@ -53,7 +53,7 @@ updates = Actualizações
 warning-messages = Mensagens de aviso
     .please-enter-at-least = Por favor, introduza pelo menos
     .maximum-of = Máximo de
-    .only-alpha-chars = Só são aceites caracteres alfanuméricos.
+    .disallowed-characters = todo
     .spaces-not-allowed = Não são permitidos espaços.
     .error = Erro
 
