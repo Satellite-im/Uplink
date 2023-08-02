@@ -54,7 +54,7 @@ updates = Updates
 warning-messages = Warning Messages
     .please-enter-at-least = Please enter at least
     .maximum-of = Maximum of
-    .only-alpha-chars = Only alphanumeric characters are accepted.
+    .disallowed-characters = Disallowed character(s)
     .spaces-not-allowed = Spaces are not allowed.
     .error = Error
 
@@ -84,6 +84,7 @@ messages = Messages
     .user-typing = { $user } is typing
     .users-typing = { $users } are typing
     .users-multiple-typing = Multiple users are typing
+    .maximum-amount-files-per-message = You reached { $amount } files per message limit
     
 favorites = Favorites
     .favorites = Favorites

@@ -5,7 +5,7 @@ use std::{
 
 use common::{
     icons,
-    language::get_local_text,
+    language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
@@ -30,6 +30,7 @@ use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun};
 
 const MAX_CHARS_LIMIT: usize = 1024;
+const MAX_FILES_PER_MESSAGE: usize = 8;
 
 use crate::{
     components::paste_files_with_shortcut,
@@ -68,16 +69,38 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let data = &cx.props.data;
     let is_loading = data.is_none();
     let active_chat_id = data.as_ref().map(|d| d.active_chat.id);
+    let chat_id = data
+        .as_ref()
+        .map(|data| data.active_chat.id)
+        .unwrap_or(Uuid::nil());
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
-    let files_to_upload = &cx.props.upload_files;
     let update_send = move || {
-        let valid = state.read().active_chat_has_draft() || !files_to_upload.is_empty();
+        let valid = state.read().active_chat_has_draft()
+            || !state
+                .read()
+                .get_active_chat()
+                .map(|f| f.files_attached_to_send)
+                .unwrap_or_default()
+                .is_empty();
         if !can_send.get().eq(&valid) {
             can_send.set(valid);
         }
     };
     update_send();
+
+    let mut files_attached = state
+        .read()
+        .get_active_chat()
+        .map(|f| f.files_attached_to_send)
+        .unwrap_or_default();
+
+    if files_attached.len() > MAX_FILES_PER_MESSAGE {
+        files_attached.truncate(MAX_FILES_PER_MESSAGE);
+        state
+            .write()
+            .mutate(Action::SetChatAttachments(chat_id, files_attached));
+    }
 
     // used to render the typing indicator
     // for now it doesn't quite work for group messages
@@ -97,12 +120,16 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     users_typing.push(state.read().get_own_identity());
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
-        to_owned![files_to_upload, state];
+        to_owned![state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some((msg, conv_id, ui_msg_id, reply)) = rx.next().await {
                 let (tx, rx) = oneshot::channel::<Result<(), warp::error::Error>>();
-                let attachments = files_to_upload.current().to_vec();
+                let attachments = state
+                    .read()
+                    .get_active_chat()
+                    .map(|f| f.files_attached_to_send)
+                    .unwrap_or_default();
                 let msg_clone = msg.clone();
                 let cmd = match reply {
                     Some(reply_to) => RayGunCmd::Reply {
@@ -120,8 +147,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         rsp: tx,
                     },
                 };
-                let attachments = files_to_upload.current().to_vec();
-                files_to_upload.set(vec![]);
+                let attachments = state
+                    .read()
+                    .get_active_chat()
+                    .map(|f| f.files_attached_to_send)
+                    .unwrap_or_default();
+                state
+                    .write_silent()
+                    .mutate(Action::ClearChatAttachments(conv_id));
                 let attachment_files: Vec<String> = attachments
                     .iter()
                     .map(|p| {
@@ -273,11 +306,23 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
     let msg_valid = |msg: &[String]| {
         (!msg.is_empty() && msg.iter().any(|line| !line.trim().is_empty()))
-            || !cx.props.upload_files.current().is_empty()
+            || !state
+                .read()
+                .get_active_chat()
+                .map(|f| f.files_attached_to_send)
+                .unwrap_or_default()
+                .is_empty()
     };
 
     let submit_fn = move || {
         local_typing_ch.send(TypingIndicator::NotTyping);
+
+        let files_to_upload = state
+            .read()
+            .get_active_chat()
+            .as_ref()
+            .map(|d| d.files_attached_to_send.clone())
+            .unwrap_or_default();
 
         let msg = state
             .read()
@@ -312,7 +357,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             }
             let ui_id = state
                 .write()
-                .increment_outgoing_messages(msg.clone(), files_to_upload);
+                .increment_outgoing_messages(msg.clone(), &files_to_upload);
             msg_ch.send((msg, id, ui_id, replying_to));
         }
     };
@@ -444,14 +489,14 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 .set_directory(dirs::home_dir().unwrap_or_default())
                                 .pick_files()
                             {
-                                let mut new_files_to_upload: Vec<_> = cx.props.upload_files
-                                    .current()
+                                let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                    .unwrap_or_default()
                                     .iter()
                                     .filter(|file_name| !new_files.contains(file_name))
                                     .cloned()
                                     .collect();
                                 new_files_to_upload.extend(new_files);
-                                cx.props.upload_files.set(new_files_to_upload);
+                                state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                                 update_send();
                             }
                         },
@@ -485,22 +530,20 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path: Vec<PathBuf>| {
                     if !files_local_path.is_empty() {
-                        let mut new_files_to_upload: Vec<_> = cx
-                        .props
-                        .upload_files
-                        .current()
-                        .iter()
-                        .filter(|file_name| !files_local_path.contains(file_name))
-                        .cloned()
-                        .collect();
+                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                            .unwrap_or_default()
+                            .iter()
+                            .filter(|file_name| !files_local_path.contains(file_name))
+                            .cloned()
+                            .collect();
                     new_files_to_upload.extend(files_local_path);
-                    cx.props.upload_files.set(new_files_to_upload);
+                    state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                     }
                 },
             })
         }
         Attachments {
-            files: cx.props.upload_files.clone(),
+            chat_id: chat_id,
             on_remove: move |_| {
                 update_send();
             }
@@ -511,42 +554,77 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
 
 #[derive(Props)]
 pub struct AttachmentProps<'a> {
-    files: UseState<Vec<PathBuf>>,
+    chat_id: Uuid,
     on_remove: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
 fn Attachments<'a>(cx: Scope<'a, AttachmentProps>) -> Element<'a> {
+    let state = use_shared_state::<State>(cx)?;
+
     // todo: pick an icon based on the file extension
-    let attachments = cx.render(rsx!(cx
-        .props
-        .files
-        .current()
+    let attachments = cx.render(rsx!(state
+        .read()
+        .get_active_chat()
+        .map(|f| f.files_attached_to_send)
+        .unwrap_or_default()
         .iter()
-        .map(|x| x.to_string_lossy().to_string())
-        .map(|file_name| {
+        .map(|file_path| {
+            let filename = file_path.to_string_lossy().to_string();
             rsx!(FileEmbed {
-                filename: file_name.clone(),
+                filename: file_path.to_string_lossy().to_string(),
+                filepath: file_path.clone(),
                 remote: false,
                 button_icon: icons::outline::Shape::Trash,
                 on_press: move |_| {
-                    let mut b = false;
-                    cx.props.files.with_mut(|files| {
-                        files.retain(|x| {
-                            let s = x.to_string_lossy().to_string();
-                            s != file_name
-                        });
-                        b = !files.is_empty();
+                    let mut attachments = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default();
+                    attachments.retain(|x| {
+                        let s = x.to_string_lossy().to_string();
+                        s != filename
                     });
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(cx.props.chat_id, attachments));
                     cx.props.on_remove.call(());
                 },
             })
         })));
 
+    let attachments_vec = state
+        .read()
+        .get_active_chat()
+        .map(|f| f.files_attached_to_send)
+        .unwrap_or_default();
+
+    if attachments_vec.is_empty() {
+        return None;
+    }
+
     cx.render(rsx!(div {
         id: "compose-attachments",
         aria_label: "compose-attachments",
-        attachments
+            div {
+                id: "attachments-error",
+                flex_direction: "column",
+                if attachments_vec.len() >= MAX_FILES_PER_MESSAGE {
+                    rsx!(p {
+                        class: "error",
+                        aria_label: "input-error",
+                        margin_left: "var(--gap)",
+                        margin_top: "var(--gap)",
+                        margin_bottom: "var(--gap)",
+                        color: "var(--warning-light)",
+                        get_local_text_args_builder("messages.maximum-amount-files-per-message", |m| {
+                            m.insert("amount", MAX_FILES_PER_MESSAGE.into());
+                        })
+                    })
+                }
+            attachments
+            }
     }))
 }
 

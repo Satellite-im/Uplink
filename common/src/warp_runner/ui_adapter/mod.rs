@@ -225,6 +225,7 @@ pub async fn conversation_to_chat(
         draft: None,
         has_more_messages,
         pending_outgoing_messages: vec![],
+        files_attached_to_send: vec![],
     })
 }
 
