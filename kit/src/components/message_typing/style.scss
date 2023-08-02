@@ -6,11 +6,11 @@
 }
 .message-typing {
 	//min-height: var(--height-input);
-	padding-right: 40px;
 	display: inline-flex;
 	align-items: center;
 	//padding: var(--padding-less) var(--padding);
 	padding: 0 var(--padding-less);
+	padding-right: 40px;
 	width: fit-content;
 	align-self: flex-start;
 	//background: var(--secondary);
