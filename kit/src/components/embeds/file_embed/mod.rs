@@ -63,7 +63,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(OsStr::to_str)
         .map(|s| format!(".{s}"))
         .unwrap_or_default();
-    let is_file_extension_empty = file_extension.is_empty();
+    let file_extension_is_empty = file_extension.is_empty();
     let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
     let btn_icon = if !download_pending {
@@ -228,7 +228,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         IconElement {
                                             icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                         }
-                                        if !is_file_extension_empty {
+                                        if !file_extension_is_empty {
                                             rsx!( label {
                                                 class: "file-embed-type",
                                                 "{file_extension}"
@@ -252,7 +252,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                     IconElement {
                                         icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                     }
-                                    if !is_file_extension_empty {
+                                    if !file_extension_is_empty {
                                         rsx!( label {
                                             class: "file-embed-type",
                                             "{file_extension}"
