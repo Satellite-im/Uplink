@@ -1,3 +1,4 @@
+use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{
     icons::outline::Shape as Icon,
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
@@ -6,6 +7,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
+use futures::StreamExt;
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
@@ -13,10 +15,6 @@ use kit::{
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::ReactionState};
-use common::{
-    warp_runner::{RayGunCmd, WarpCmd},
-};
-use futures::StreamExt;
 
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
@@ -224,9 +222,7 @@ fn render_selector<'a>(
                                             aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
-                                                let Some(destination) = state.read().ui.emoji_destination.clone() else {
-                                                    return;
-                                                };
+                                                let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
                                                 match destination {
                                                     EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
                                                         let c =  match state.read().get_active_chat() {
