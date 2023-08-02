@@ -65,6 +65,7 @@
 }
 
 .user-image-group {
+    z-index: 0;
     display: inline-flex;
 	flex-direction: column;
 	gap: var(--gap);
