@@ -8,10 +8,10 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-dioxus.workspace = true
-dioxus-desktop.workspace = true
-extensions = { path = "../../extensions" }
-common = { path = "../../common" }
-kit = { path = "../../kit" }
+dioxus = { workspace = true }
+dioxus-desktop = { workspace = true }
+extensions = { workspace = true }
+common = { workspace = true }
+kit = { workspace = true }
 emojis = "0.5.2"
-once_cell = "1.17.1"
+once_cell = { workspace = true }
