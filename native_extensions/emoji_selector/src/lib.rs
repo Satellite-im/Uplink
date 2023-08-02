@@ -241,7 +241,7 @@ fn render_selector<'a>(
                                                     },
                                                     EmojiDestination::Message(conversation_uuid, message_uuid) => {
                                                         ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
-                                                        state.write().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
+                                                        state.write_silent().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
                                                     },
                                                 }
                                                 // Hide the selector when clicking an emoji
@@ -259,6 +259,35 @@ fn render_selector<'a>(
             },
             script { focus_script },
         ))
+}
+
+// this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
+#[inline_props]
+fn render_1(cx: Scope, _unused: bool) -> Element {
+    //println!("render emoji");
+    let state = use_shared_state::<State>(cx)?;
+    let mouse_over_emoji_button = use_ref(cx, || false);
+    let visible = state.read().ui.emoji_picker_visible;
+
+    cx.render(rsx! (
+        // If enabled, render the selector popup.
+        visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
+        div {
+            onmouseenter: |_| {
+                *mouse_over_emoji_button.write_silent() = true;
+            },
+            onmouseleave: |_| {
+                *mouse_over_emoji_button.write_silent() = false;
+            },
+            // Render standard (required) button to toggle.
+            Button {
+                icon: Icon::FaceSmile,
+                onpress: move |_| {
+                    state.write().mutate(Action::SetEmojiPickerVisible(!visible));
+                }
+            }
+        }
+    ))
 }
 
 impl Extension for EmojiSelector {
@@ -281,31 +310,12 @@ impl Extension for EmojiSelector {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        //println!("render emoji");
         let styles = self.stylesheet();
-        let state = use_shared_state::<State>(cx)?;
-        let mouse_over_emoji_button = use_ref(cx, || false);
-        let visible = state.read().ui.emoji_picker_visible;
-
-        cx.render(rsx! (
+        cx.render(rsx!(
             style { "{styles}" },
-            // If enabled, render the selector popup.
-            visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
-            div {
-                onmouseenter: |_| {
-                    *mouse_over_emoji_button.write_silent() = true;
-                },
-                onmouseleave: |_| {
-                    *mouse_over_emoji_button.write_silent() = false;
-                },
-                // Render standard (required) button to toggle.
-                Button {
-                    icon: Icon::FaceSmile,
-                    onpress: move |_| {
-                        state.write().mutate(Action::SetEmojiPickerVisible(!visible));
-                    }
-                }
-            }
+            rsx!(
+               render_1{_unused: true}
+            )
         ))
     }
 }
