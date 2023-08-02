@@ -1,9 +1,10 @@
+#[allow(unused_imports)]
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
-    state::{Identity, State},
+    state::State,
     warp_runner::{RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -13,16 +14,11 @@ use kit::{
     components::user_image::UserImage,
     elements::{
         button::Button,
-        checkbox::Checkbox,
         input::{Input, Options},
-        label::Label,
-        Appearance,
     },
     layout::topbar::Topbar,
 };
 use warp::{crypto::DID, logging::tracing::log};
-
-use crate::components::chat::create_group::get_input_options;
 
 #[derive(PartialEq, Clone)]
 enum EditGroupAction {
@@ -33,28 +29,21 @@ enum EditGroupAction {
 enum ChanCmd {
     AddParticipants,
     RemoveParticipants,
-    UpdateGroupName(String),
 }
 
-#[derive(Props)]
-pub struct Props<'a> {
-    onedit: EventHandler<'a, MouseEvent>,
-}
+// #[derive(Props)]
+// pub struct Props<'a> {
+//     onedit: EventHandler<'a, MouseEvent>,
+// }
 
 #[allow(non_snake_case)]
-pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn EditGroup(cx: Scope) -> Element {
     log::trace!("rendering edit_group");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
-    let conv_name = state
-        .read()
-        .get_active_chat()
-        .unwrap()
-        .conversation_name
-        .unwrap_or_default();
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
     let friends_list = HashMap::from_iter(
         state
@@ -116,23 +105,6 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             log::error!("failed to remove recipients from a group: {}", e);
                         }
                     }
-                    ChanCmd::UpdateGroupName(new_conversation_name) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
-                                conv_id,
-                                new_conversation_name,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to update group conversation name: {}", e);
-                        }
-                    }
                 }
             }
         }
@@ -158,25 +130,6 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             "{} →",
             get_local_text("uplink.current-member")
         ),
-
-        // key: "edit-group",
-        // Button {
-        //     text: if state.read().ui.sidebar_hidden {
-        //         "".into()
-        //     } else {
-        //         get_local_text("uplink.current-member")
-        //     },
-        //     icon: Icon::ArrowRight,
-        //     aria_label: "edit-group-remove-friends-without-sidebar".into(),
-        //     appearance: if *edit_group_action.get() == EditGroupAction::Remove {
-        //         Appearance::Primary
-        //     } else {
-        //         Appearance::Secondary
-        //     },
-        //     onpress: move |_| {
-        //         edit_group_action.set(EditGroupAction::Remove);
-        //     }
-        // }
     });
 
     let friends = if *edit_group_action.get() == EditGroupAction::Add {
@@ -189,31 +142,6 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             id: "edit-group",
             aria_label: "edit-group",
-            // div {
-            //     id: "edit-group-name", 
-            //     class: "edit-group-name", 
-            //     Label {
-            //         text: get_local_text("messages.group-name"),
-            //         aria_label: "group-name-label".into(),
-            //     },
-            //     Input {
-            //             placeholder:  get_local_text("messages.group-name"),
-            //             default_text: conv_name.clone(),
-            //             aria_label: "groupname-input".into(),
-            //             options: Options {
-            //                 with_clear_btn: true,
-            //                 ..get_input_options()
-            //             },
-            //             onreturn: move |(v, is_valid, _): (String, bool, _)| {
-            //                 if !is_valid {
-            //                     return;
-            //                 }
-            //                 if v != conv_name {
-            //                     ch.send(ChanCmd::UpdateGroupName(v));
-            //                 }
-            //             },
-            //         },
-            // },
         Topbar {
                 with_back_button: false,
                 div {
@@ -234,17 +162,15 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             friend_prefix.set(v);
                         },
                     }
-                    // controls: cx.render(rsx!(
-                        if *edit_group_action.get() == EditGroupAction::Remove {
+                    if *edit_group_action.get() == EditGroupAction::Remove {
+                        rsx! {
+                            add_friends,
+                        }
+                        } else {
                             rsx! {
-                                add_friends,
+                            remove_friends,
                             }
-                         } else {
-                             rsx! {
-                                remove_friends,
-                             }
-                         },
-                    // )),
+                        },
                 },
 
             },
@@ -287,7 +213,7 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                                     },
                                                 },
                                                 Button {
-                                                    aria_label: get_local_text("uplink.remove").into(),
+                                                    aria_label: get_local_text("uplink.remove"),
                                                     icon: if *edit_group_action.current() == EditGroupAction::Add {
                                                         Icon::UserPlus
                                                     } else {
@@ -322,39 +248,6 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ),
                 }
             )
-            // if *edit_group_action.current() == EditGroupAction::Add {
-            //     rsx!(
-            //         div {
-            //             // key: "add-button",
-            //             // Button {
-            //             //     aria_label: "add-button".into(),
-            //             //     text: get_local_text("uplink.add"),
-            //             //     appearance: Appearance::Primary,
-            //             //     onpress: move |e| {
-            //             //         log::info!("add participants button");
-            //             //         ch.send(ChanCmd::AddParticipants);
-            //             //         cx.props.onedit.call(e);
-            //             //     }
-            //             // }
-            //         }
-            //     )
-            // } else {
-            //     rsx!(
-            //         div {
-            //             key: "remove-button",
-            //             Button {
-            //                 aria_label: "remove-button".into(),
-            //                 text: get_local_text("uplink.remove"),
-            //                 appearance: Appearance::Primary,
-            //                 onpress: move |e| {
-            //                     log::info!("remove participants button");
-            //                     ch.send(ChanCmd::RemoveParticipants);
-            //                     cx.props.onedit.call(e);
-            //                 }
-            //             }
-            //         }
-            //     )
-            // }
         }
     ))
 }

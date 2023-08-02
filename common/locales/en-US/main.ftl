@@ -103,6 +103,7 @@ friends = Friends
     .remove = Unfriend
     .edit-group = Edit Group
     .not-creator = You're not the group creator
+    .view-group = View Group
     .cannot-add-self = Can't add yourself, silly!
     .incoming_requests = Incoming Requests
     .outgoing_requests = Outgoing Requests

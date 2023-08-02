@@ -15,7 +15,6 @@ use kit::{
     elements::{
         button::Button,
         input::{Input, Options},
-        label::Label,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
@@ -163,11 +162,6 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-    let is_group = data
-        .as_ref()
-        .map(|data| data.active_chat.conversation_type)
-        .unwrap_or(ConversationType::Direct)
-        == ConversationType::Group;
 
     let active_chat = data.as_ref().map(|x| &x.active_chat);
     let creator = if let Some(chat) = active_chat.as_ref() {
@@ -249,11 +243,7 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
-            EditGroup {
-                onedit: move |_| {
-                    show_edit_group.set(None);
-                }
-            }
+            EditGroup {}
         )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
@@ -355,10 +345,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         .as_ref()
         .map(|d: &Rc<ComposeData>| d.is_favorite)
         .unwrap_or_default();
-    let (conversation_type, creator) = if let Some(chat) = active_chat.as_ref() {
-        (chat.conversation_type, chat.creator.clone())
+    let conversation_type = if let Some(chat) = active_chat.as_ref() {
+        chat.conversation_type
     } else {
-        (ConversationType::Direct, None)
+        ConversationType::Direct
     };
     let edit_group_activated = cx
         .props
@@ -372,12 +362,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         .get()
         .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
         .unwrap_or(false);
-    let user_did: DID = state.read().did_key();
-    let is_creator = if let Some(creator_did) = creator {
-        creator_did == user_did
-    } else {
-        false
-    };
 
     let call_pending = use_state(cx, || false);
     let active_call = state.read().ui.call_info.active_call();
@@ -434,7 +418,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         if cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
-                disabled: !is_creator,
                 aria_label: "edit-group".into(),
                 appearance: if edit_group_activated {
                     Appearance::Primary
@@ -443,23 +426,15 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 },
                 tooltip: cx.render(rsx!(Tooltip {
                     arrow_position: ArrowPosition::Top,
-                    text: if is_creator {
-                        get_local_text("friends.edit-group")
-                    } else {
-                        get_local_text("friends.not-creator")
-                    }
+                    text: get_local_text("friends.edit-group")
                 })),
                 onpress: move |_| {
-                    if is_creator {
-                        if edit_group_activated {
-                            cx.props.show_edit_group.set(None);
-                        } else if let Some(chat) = active_chat.as_ref() {
-                            cx.props.show_edit_group.set(Some(chat.id));
-                            cx.props.show_group_users.set(None);
-
-                        }
+                    if edit_group_activated {
+                        cx.props.show_edit_group.set(None);
+                    } else if let Some(chat) = active_chat.as_ref() {
+                        cx.props.show_edit_group.set(Some(chat.id));
+                        cx.props.show_group_users.set(None);
                     }
-
                 }
             })
         }
@@ -475,11 +450,7 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                     },
                     tooltip: cx.render(rsx!(Tooltip {
                         arrow_position: ArrowPosition::Top,
-                        text: if is_creator {
-                            get_local_text("friends.edit-group")
-                        } else {
-                            get_local_text("friends.not-creator")
-                        }
+                        text: get_local_text("friends.view-group")
                     })),
                     onpress: move |_| {
                             if show_group_list {
