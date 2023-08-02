@@ -1317,8 +1317,12 @@ impl State {
         self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
     }
-    pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
-        self.identities
+    pub fn search_identities(
+        &self,
+        name_prefix: &str,
+    ) -> (Vec<identity_search_result::Entry>, Vec<Identity>) {
+        let entries = self
+            .identities
             .values()
             .filter(|id| {
                 let un = id.username();
@@ -1329,10 +1333,29 @@ impl State {
                 }
             })
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
-            .collect()
+            .collect();
+
+        let identities = self
+            .identities
+            .values()
+            .filter(|id| {
+                let un = id.username();
+                if un.len() < name_prefix.len() {
+                    false
+                } else {
+                    un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
+                }
+            })
+            .map(|id| id.clone())
+            .collect();
+
+        (entries, identities)
     }
     // lets the user search for a group chat by chat name or, if a chat is not named, by the names of its participants
-    pub fn search_group_chats(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+    pub fn search_group_chats(
+        &self,
+        name_prefix: &str,
+    ) -> (Vec<identity_search_result::Entry>, Vec<Chat>) {
         let get_display_name = |chat: &Chat| -> String {
             let names: Vec<_> = chat
                 .participants
@@ -1352,7 +1375,8 @@ impl State {
             }
         };
 
-        self.chats
+        let chats_entries = self
+            .chats
             .all
             .iter()
             .filter(|(_, v)| v.conversation_type == ConversationType::Group)
@@ -1380,7 +1404,32 @@ impl State {
                     identity_search_result::Entry::from_chat(name, *k)
                 }
             })
-            .collect()
+            .collect();
+
+        let chats: Vec<Chat> = self
+            .chats
+            .all
+            .iter()
+            .filter(|(_, v)| v.conversation_type == ConversationType::Group)
+            .filter(|(_k, v)| {
+                let names: Vec<_> = v
+                    .participants
+                    .iter()
+                    .filter_map(|id| self.identities.get(id))
+                    .map(|x| x.username())
+                    .collect();
+
+                let user_name_match = names.iter().any(|n| compare_str(n));
+                let group_name_match = match v.conversation_name.as_ref() {
+                    Some(n) => compare_str(n),
+                    None => false,
+                };
+
+                user_name_match || group_name_match
+            })
+            .map(|(_, v)| v.clone())
+            .collect();
+        (chats_entries, chats)
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {

@@ -1,5 +1,5 @@
 use common::language::get_local_text;
-use common::state::{self, identity_search_result, Action, Identity, State};
+use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -55,21 +55,25 @@ pub struct SearchProps<'a> {
     search_typed_chars: UseRef<String>,
     search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
+    friends_identities: UseState<Vec<Identity>>,
+    chats: UseState<Vec<Chat>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
+
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     if cx.props.identities.get().is_empty() {
         return None;
     }
     let mut identities = cx.props.identities.get().clone();
-    // let mut users: Vec<Identity> = Vec::new();
-    // identities.iter().cloned().enumerate().map(|(k, entry)| {
-    //     let user_in_search = state.read().get_identity(&entry.).unwrap_or_default();
-    //     users.append(user_in_search);
-    // });
+    let mut friends_identities = cx.props.friends_identities.get().clone();
+    let mut chats = cx.props.chats.get().clone();
+
+    let mut users: Vec<Identity> = Vec::new();
 
     identities.sort_by_key(|entry| entry.display_name.clone());
+    friends_identities.sort_by_key(|identity| identity.username().clone());
+
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
@@ -80,8 +84,15 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             onmouseleave: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
-            identities.iter().cloned().enumerate().map(|(k, entry)| {
-                let image = String::new();
+            if !friends_identities.is_empty() {
+                rsx!(Label {
+                    text: "Users".into()
+                })
+            }
+            friends_identities.iter().cloned().enumerate().map(|(k, identity)| {
+                let image = identity.profile_picture();
+                let username = identity.username();
+                let did = identity.did_key().clone();
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
@@ -93,17 +104,73 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         }
                         a {
                             class: "search-friends-dropdown",
-                            href: "#{entry.display_name}",
+                            href: "#{username}",
                             prevent_default: "onclick",
                             rel: "noopener noreferrer",
                             onclick: move |evt| {
                                 evt.stop_propagation();
-                                cx.props.onclick.call(entry.id.clone());
+                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
                             },
-                            "{entry.display_name}"
+                            "{username}"
                         },
                     }
-                    if (cx.props.identities.get().len() - 1) != k {
+                    if (cx.props.friends_identities.get().len() - 1) != k {
+                        rsx!(div { class:"border", })
+                    }
+                )
+            })
+            if !chats.is_empty() {
+                rsx!(
+                    Label {
+                        text: "Groups".into()
+                    }
+                )
+            }
+            chats.iter().cloned().enumerate().map(|(k, chat)| {               
+                let id = chat.id.clone();
+                let participants = state.read().chat_participants(&chat);
+                let other_participants_names = State::join_usernames(&participants);
+                let conversation_title = match chat.conversation_name.as_ref() {
+                    Some(n) => n.clone(),
+                    None => other_participants_names,
+                };
+                rsx!(
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "identity-header-sidebar",
+                        onclick: move |evt|  {
+                            evt.stop_propagation();
+                            cx.props.onclick.call(identity_search_result::Identifier::Uuid(id.clone()));
+                        },
+                        rsx! (
+                            div {
+                                class: "user-image-group",
+                                div {
+                                    aria_label: "user-image-group-wrap",
+                                    class: "user-image-group-wrap group",
+                                    onclick: move |e| {},
+                                    rsx!(
+                                        UserImageGroup {
+                                            loading: false,
+                                            participants: build_participants(&participants),
+                                        }
+                                    
+                                    )
+                                },
+                            }
+                            div {
+                                class: "info",
+                                aria_label: "User Info",
+                                p {
+                                    class: "username",
+                                    aria_label: "Username",
+                                    "{conversation_title}"
+                                },
+
+                            }
+                        )
+                    }
+                    if (cx.props.chats.get().len() - 1) != k {
                         rsx!(div { class:"border", })
                     }
                 )
@@ -117,6 +184,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
+    let search_results_friends_identities = use_state(cx, Vec::<Identity>::new);
+    let search_results_chats = use_state(cx, Vec::<Chat>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
@@ -252,11 +321,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
                             } else {
-                                let mut friends = state.read().search_identities(&v);
-                                let chats = state.read().search_group_chats(&v);
+                                let (mut friends_entries, friends_identities) = state.read().search_identities(&v);
+                                let (chats_entries, chats) = state.read().search_group_chats(&v);
+                                friends_entries.extend(chats_entries);
                                 // todo: sort this somehow
-                                friends.extend(chats);
-                                search_results.set(friends);
+                                search_results.set(friends_entries);
+                                search_results_friends_identities.set(friends_identities);
+                                search_results_chats.set(chats);
                                 *search_typed_chars.write_silent() = v;
                                 on_search_dropdown_hover.with_mut(|i| *i = false);
                             }
@@ -294,6 +365,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             search_friends{
                 search_typed_chars: search_typed_chars.clone(),
                 identities: search_results.clone(),
+                friends_identities: search_results_friends_identities.clone(),
+                chats: search_results_chats.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
                 onclick: move |entry| {
                 select_entry(entry);
