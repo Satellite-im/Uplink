@@ -125,7 +125,6 @@ fn render_selector<'a>(
     mouse_over_emoji_button: UseRef<bool>,
     nav: Element<'a>,
 ) -> Element<'a> {
-    //println!("render emoji selector");
     let state = use_shared_state::<State>(cx)?;
     #[cfg(not(target_os = "macos"))]
     let mouse_over_emoji_selector = use_ref(cx, || false);
@@ -281,7 +280,6 @@ impl Extension for EmojiSelector {
     }
 
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
-        //println!("render emoji");
         let styles = self.stylesheet();
         let state = use_shared_state::<State>(cx)?;
         let mouse_over_emoji_button = use_ref(cx, || false);
@@ -301,6 +299,7 @@ impl Extension for EmojiSelector {
                 // Render standard (required) button to toggle.
                 Button {
                     icon: Icon::FaceSmile,
+                    disabled: false,
                     onpress: move |_| {
                         state.write().mutate(Action::SetEmojiPickerVisible(!visible));
                     }
