@@ -54,7 +54,7 @@ updates = Updates
 warning-messages = Warning Messages
     .please-enter-at-least = Por favor, ingrese al menos
     .maximum-of = Máximo de
-    .only-alpha-chars = Solo se aceptan caracteres alfanuméricos.
+    .disallowed-characters = Caracteres no permitidos
     .spaces-not-allowed = Los espacios no están permitidos.
     .error = Error
 
@@ -80,6 +80,8 @@ messages = Messages
     .participant = Participante
     .participants = Participantes
     .fetching = Obteniendo más mensajes...
+    .group-creator-label = Creador del Grupo
+    .maximum-amount-files-per-message = Haz alcanzado el límite de { $amount } archivos por mensaje
 
 favorites = Favorites
     .favorites = Favoritos
@@ -250,6 +252,8 @@ settings-notifications = Notificaciones
 settings-developer = Developer Settings 
     .developer-mode = Modo de desarrollador
     .developer-mode-description = Al habilitar el modo de desarrollador, se agrega registro y se muestra información útil de depuración en la interfaz de usuario.
+    .experimental-features = Funcionalidades Experimentales
+    .experimental-features-description = Activa características de Uplink que podrían estar incompletas o no funcionales.
     .test-notification = Notificacíon de Prueba
     .test-notification-description = Envía una notificación de prueba.
     .test-popup = Prueba
