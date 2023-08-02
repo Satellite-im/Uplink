@@ -1,5 +1,6 @@
 use common::language::get_local_text;
-use common::state::{self, identity_search_result, Action, State};
+use common::state::identity_search_result::Entry;
+use common::state::{self, identity_search_result, ui, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -108,6 +109,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
+        if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+            router.replace_route(UPLINK_ROUTES.chat, None, None);
+        }
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
@@ -275,12 +279,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             search_friends{
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |entry| {
-                select_entry(entry);
-                search_results.set(Vec::new());
-                reset_searchbar.set(true);
-                on_search_dropdown_hover.with_mut(|i| *i = false);
-            }},
+                onclick: move |identifier: identity_search_result::Identifier| {
+                    select_entry(identifier);
+                    search_results.set(Vec::new());
+                    reset_searchbar.set(true);
+                    on_search_dropdown_hover.with_mut(|i| *i = false);
+                }
+            },
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
