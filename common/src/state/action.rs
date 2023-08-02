@@ -51,6 +51,8 @@ pub enum Action<'a> {
     SetFontScale(f32),
     #[display(fmt = "TrackEmojiUsage")]
     TrackEmojiUsage(String),
+    #[display(fmt = "SetEmojiPickerVisible")]
+    SetEmojiPickerVisible(bool),
     // RemoveToastNotification,
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]

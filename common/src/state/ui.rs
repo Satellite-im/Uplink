@@ -92,6 +92,7 @@ pub struct UI {
     #[serde(default = "default_emojis")]
     pub emoji_list: EmojiList,
     pub emoji_destination: Option<EmojiDestination>,
+    pub emoji_picker_visible: bool,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -129,6 +130,7 @@ impl Default for UI {
             metadata: Default::default(),
             emoji_list: default_emojis(),
             emoji_destination: Default::default(),
+            emoji_picker_visible: false,
             current_layout: Default::default(),
             overlays: Default::default(),
             extensions: Default::default(),

@@ -224,6 +224,7 @@ impl State {
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
             Action::SetEmojiDestination(destination) => self.ui.emoji_destination = destination,
+            Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts

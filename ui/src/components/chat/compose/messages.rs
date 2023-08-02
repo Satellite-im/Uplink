@@ -708,6 +708,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                             )
                         ));
                         reacting_to.set(Some(msg_uuid));
+                        state.write().mutate(Action::SetEmojiPickerVisible(true));
                     }
                 },
                 ContextItem {

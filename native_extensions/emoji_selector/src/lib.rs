@@ -122,7 +122,6 @@ enum Command {
 #[inline_props]
 fn render_selector<'a>(
     cx: Scope,
-    hide: UseState<bool>,
     mouse_over_emoji_button: UseRef<bool>,
     nav: Element<'a>,
 ) -> Element<'a> {
@@ -193,13 +192,13 @@ fn render_selector<'a>(
                     #[cfg(target_os = "macos")] 
                     {
                         if !*mouse_over_emoji_button.read() {
-                            hide.set(false);
+                            state.write().mutate(Action::SetEmojiPickerVisible(false));
                         }
                     }
                     #[cfg(not(target_os = "macos"))] 
                     {
                         if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
-                            hide.set(false);
+                            state.write().mutate(Action::SetEmojiPickerVisible(false));
                         }
                     }
                 },
@@ -246,7 +245,7 @@ fn render_selector<'a>(
                                                     },
                                                 }
                                                 // Hide the selector when clicking an emoji
-                                                hide.set(false);
+                                                state.write().mutate(Action::SetEmojiPickerVisible(false));
                                             },
                                             emoji.as_str()
                                         }
@@ -284,13 +283,14 @@ impl Extension for EmojiSelector {
     fn render<'a>(&self, cx: &'a ScopeState) -> Element<'a> {
         //println!("render emoji");
         let styles = self.stylesheet();
-        let display_selector = use_state(cx, || false);
+        let state = use_shared_state::<State>(cx)?;
         let mouse_over_emoji_button = use_ref(cx, || false);
+        let visible = state.read().ui.emoji_picker_visible;
 
         cx.render(rsx! (
             style { "{styles}" },
             // If enabled, render the selector popup.
-            display_selector.then(|| rsx!(render_selector{hide: display_selector.clone(), mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
+            visible.then(|| rsx!(render_selector{mouse_over_emoji_button: mouse_over_emoji_button.clone(), nav: cx.render(rsx!(build_nav{}))})),
             div {
                 onmouseenter: |_| {
                     *mouse_over_emoji_button.write_silent() = true;
@@ -302,7 +302,7 @@ impl Extension for EmojiSelector {
                 Button {
                     icon: Icon::FaceSmile,
                     onpress: move |_| {
-                        display_selector.set(!display_selector.clone());
+                        state.write().mutate(Action::SetEmojiPickerVisible(!visible));
                     }
                 }
             }
