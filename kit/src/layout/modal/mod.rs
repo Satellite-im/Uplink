@@ -15,7 +15,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(cx.props.open.then(|| rsx!(
-        // HACK: Necessay to avoid unwanted context menu
+        // HACK: Necessary to avoid unwanted context menu
         // from message when modal is open
         ContextMenu {
             key: "modal-test",
