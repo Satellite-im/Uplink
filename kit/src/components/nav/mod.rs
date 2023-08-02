@@ -134,17 +134,19 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: aria_label.to_lowercase() + "-button",
                         icon: route.icon,
                         onpress: move |_| {
+                            if active.name != route.name {
                             active.set(route.to_owned());
                             emit(&cx, &route.to);
+                            };
                             let desktop = use_window(cx);
                             let size = desktop.webview.inner_size();
                             //if route is friends or files then close, else leave sidebar open
                             if size.width <= 1200 && !(route.to != "/friends" && route.to != "/files"){
                                 state.write().mutate(Action::SidebarHidden(true));
                             }
-                            if size.width <= 1200 && route.to == "/chat"{
-                                state.write().mutate(Action::SidebarHidden(true));
-                            }
+                            // if size.width <= 1200 && route.to == "/chat"{
+                            //     state.write().mutate(Action::SidebarHidden(true));
+                            // }
                         },
                         text: {
                             if bubble { name } else { "".into() }
