@@ -594,7 +594,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
     // see comment in ContextMenu about this variable.
-    // let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
