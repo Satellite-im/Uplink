@@ -1,6 +1,5 @@
 use common::language::get_local_text;
-use common::state::identity_search_result::Entry;
-use common::state::{self, identity_search_result, ui, Action, State};
+use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
@@ -168,7 +167,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         }
     });
 
-    let select_entry = move |id: identity_search_result::Identifier| match id {
+    let select_identifier = move |id: identity_search_result::Identifier| match id {
         identity_search_result::Identifier::Did(did) => {
             if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
                 chat_with.set(Some(c.id));
@@ -228,7 +227,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         onreturn: move |(v, _, _): (String, _, _)| {
                             if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_entry(entry.id.clone());
+                                    select_identifier(entry.id.clone());
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -280,7 +279,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
                 onclick: move |identifier: identity_search_result::Identifier| {
-                    select_entry(identifier);
+                    select_identifier(identifier);
                     search_results.set(Vec::new());
                     reset_searchbar.set(true);
                     on_search_dropdown_hover.with_mut(|i| *i = false);
