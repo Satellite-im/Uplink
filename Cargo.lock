@@ -772,21 +772,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bit-set"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0700ddab506f33b20a03b13996eccd309a48e5ff77d0d95926aa0210fb4e95f1"
-dependencies = [
- "bit-vec",
-]
-
-[[package]]
-name = "bit-vec"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
-
-[[package]]
 name = "bit_field"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1456,7 +1441,6 @@ dependencies = [
  "image",
  "lipsum",
  "mac-notification-sys",
- "mime",
  "names",
  "notify",
  "notify-rust",
@@ -2661,7 +2645,6 @@ dependencies = [
 name = "extensions"
 version = "0.1.6"
 dependencies = [
- "derive_more",
  "dioxus",
  "libloading",
  "rustc_version 0.4.0",
@@ -4408,7 +4391,6 @@ dependencies = [
  "reqwest",
  "rsass",
  "scraper 0.17.1",
- "select",
  "timeago",
  "uuid",
  "warp",
@@ -5467,18 +5449,6 @@ dependencies = [
  "string_cache",
  "string_cache_codegen",
  "tendril",
-]
-
-[[package]]
-name = "markup5ever_rcdom"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9521dd6750f8e80ee6c53d65e2e4656d7de37064f3a7a5d2d11d05df93839c2"
-dependencies = [
- "html5ever 0.26.0",
- "markup5ever 0.11.0",
- "tendril",
- "xml5ever",
 ]
 
 [[package]]
@@ -7690,17 +7660,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "select"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f9da09dc3f4dfdb6374cbffff7a2cffcec316874d4429899eefdc97b3b94dcd"
-dependencies = [
- "bit-set",
- "html5ever 0.26.0",
- "markup5ever_rcdom",
-]
-
-[[package]]
 name = "selectors"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9199,7 +9158,6 @@ dependencies = [
  "warp-fs-ipfs",
  "warp-mp-ipfs",
  "warp-rg-ipfs",
- "window-vibrancy",
  "winres",
  "wry",
  "zip",
@@ -9995,18 +9953,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
-name = "window-vibrancy"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f762d9cc392fb85e6b1b5eed1ef13d73fed5149a5cbb017a7137497d14ef612"
-dependencies = [
- "cocoa",
- "objc",
- "raw-window-handle",
- "windows-sys 0.42.0",
-]
-
-[[package]]
 name = "windows"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10583,17 +10529,6 @@ name = "xml-rs"
 version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a56c84a8ccd4258aed21c92f70c0f6dea75356b6892ae27c24139da456f9336"
-
-[[package]]
-name = "xml5ever"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4034e1d05af98b51ad7214527730626f019682d797ba38b51689212118d8e650"
-dependencies = [
- "log",
- "mac",
- "markup5ever 0.11.0",
-]
 
 [[package]]
 name = "xmltree"
