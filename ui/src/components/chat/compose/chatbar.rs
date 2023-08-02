@@ -116,8 +116,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 .collect()
         })
         .unwrap_or_default();
-    let mut users_typing = state.read().get_identities(&users_typing);
-    users_typing.push(state.read().get_own_identity());
+    let users_typing = state.read().get_identities(&users_typing);
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
         to_owned![state];
