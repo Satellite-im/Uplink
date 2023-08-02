@@ -242,6 +242,7 @@ fn render_selector<'a>(
                                                     },
                                                     EmojiDestination::Message(conversation_uuid, message_uuid) => {
                                                         ch.send(Command::React(conversation_uuid, message_uuid, emoji.to_string()));
+                                                        state.write().mutate(Action::SetEmojiDestination(Some(EmojiDestination::Chatbar)));
                                                     },
                                                 }
                                                 // Hide the selector when clicking an emoji
