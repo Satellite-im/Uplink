@@ -1,15 +1,12 @@
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
-use crate::components::context_menu::ContextItem;
-use crate::components::context_menu::ContextMenu;
 use crate::elements::button::Button;
 use crate::elements::Appearance;
 use crate::layout::modal::Modal;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 
-use common::language::get_local_text;
 use dioxus::prelude::*;
 
 use humansize::format_size;
