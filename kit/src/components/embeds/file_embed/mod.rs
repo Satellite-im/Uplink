@@ -174,33 +174,18 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         Modal {
                             open: *fullscreen_preview.clone(),
                             onclose: move |_| fullscreen_preview.set(false),
-                            div {
-                                ContextMenu {
-                                    id: "file-embed-preview-context-menu".into(),
-                                    items: cx.render(rsx!(
-                                        ContextItem {
-                                            icon: Icon::ArrowDownCircle,
-                                            aria_label: "file-embed-download-context-item".into(),
-                                            text: get_local_text("files.download"),
-                                            onpress: move |_| {
-                                                cx.props.on_press.call(());
-                                            }
-                                        },
-                                    )),
-                                img {
-                                        id: "image-preview-modal-file-embed",
-                                        aria_label: "image-preview-modal-file-embed",
-                                        src: "{large_thumbnail}",
-                                        position: "absolute",
-                                        top: "50%",
-                                        left: "50%",
-                                        transform: "translate(-50%, -50%)",
-                                        max_height: "80%",
-                                        max_width: "80%",
-                                        onclick: move |e| e.stop_propagation(),
-                                    },
-                                },
-                            }
+                            img {
+                                id: "image-preview-modal-file-embed",
+                                aria_label: "image-preview-modal-file-embed",
+                                src: "{large_thumbnail}",
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                max_height: "80%",
+                                max_width: "80%",
+                                onclick: move |e| e.stop_propagation(),
+                            },
                         }
                     )),
                     div {
