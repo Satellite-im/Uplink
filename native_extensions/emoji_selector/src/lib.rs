@@ -1,3 +1,4 @@
+use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{
     icons::outline::Shape as Icon,
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
@@ -6,6 +7,7 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
+use futures::StreamExt;
 use kit::{
     components::nav::{Nav, Route},
     elements::{button::Button, label::Label},
@@ -13,10 +15,6 @@ use kit::{
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::ReactionState};
-use common::{
-    warp_runner::{RayGunCmd, WarpCmd},
-};
-use futures::StreamExt;
 
 // These two lines are all you need to use your Extension implementation as a shared library
 static EXTENSION: Lazy<EmojiSelector> = Lazy::new(|| EmojiSelector {});
@@ -116,6 +114,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
     }))
 }
 
+#[derive(Debug)]
 enum Command {
     React(Uuid, Uuid, String),
 }
@@ -134,15 +133,15 @@ fn render_selector<'a>(
     #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
-    let warp_cmd_tx = state.read().get_warp_ch();
-
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Command>| {
+        to_owned![state];
         async move {
+            let warp_cmd_tx = state.read().get_warp_ch();
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     Command::React(conversation_id, message_id, emoji) => {
@@ -159,8 +158,8 @@ fn render_selector<'a>(
                         }
 
                         let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            // failed to add/remove reaction
+                        if let Err(e) = res {
+                            log::error!("failed to add/remove reaction: {e}");
                         }
                     }
                 }
@@ -224,14 +223,15 @@ fn render_selector<'a>(
                                             aria_label: "emoji",
                                             class: "emoji",
                                             onclick: move |_| {
-                                                let Some(destination) = state.read().ui.emoji_destination.clone() else {
-                                                    return;
-                                                };
+                                                let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
                                                 match destination {
                                                     EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
                                                         let c =  match state.read().get_active_chat() {
                                                             Some(c) => c,
-                                                            None => return
+                                                            None => {
+                                                                println!("can't send emoji to chatbar - no active chat");
+                                                                return;
+                                                            }
                                                         };
                                                         let draft: String = c.draft.unwrap_or_default();
                                                         let new_draft = format!("{draft}{emoji}");

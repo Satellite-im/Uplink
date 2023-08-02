@@ -31,7 +31,7 @@ use warp::constellation::Progression;
 use warp::multipass::identity::Platform;
 use warp::raygun::{ConversationType, Reaction};
 
-use crate::{STATIC_ARGS, WARP_CMD_CH};
+use crate::STATIC_ARGS;
 
 use crate::{
     testing::mock::generate_mock,
@@ -81,6 +81,8 @@ pub struct State {
     identities: HashMap<DID, identity::Identity>,
     #[serde(skip)]
     pub initialized: bool,
+    #[serde(skip)]
+    warp_cmd_tx: Option<WarpCmdTx>,
 }
 
 impl fmt::Debug for State {
@@ -109,6 +111,7 @@ impl Clone for State {
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
             initialized: self.initialized,
+            warp_cmd_tx: None,
         }
     }
 }
@@ -126,7 +129,13 @@ impl State {
 
     // gonna try adding this here to let shared libraries send warp commands.
     pub fn get_warp_ch(&self) -> WarpCmdTx {
-        WARP_CMD_CH.tx.clone()
+        self.warp_cmd_tx
+            .clone()
+            .expect("dev needs to call set_warp_ch before get_warp_ch could ever be used")
+    }
+
+    pub fn set_warp_ch(&mut self, ch: WarpCmdTx) {
+        self.warp_cmd_tx.replace(ch);
     }
 
     pub fn mutate(&mut self, action: Action) {
