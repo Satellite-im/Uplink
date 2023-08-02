@@ -114,6 +114,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
     }))
 }
 
+#[derive(Debug)]
 enum Command {
     React(Uuid, Uuid, String),
 }
@@ -132,15 +133,15 @@ fn render_selector<'a>(
     #[cfg(not(target_os = "macos"))]
     let eval = use_eval(cx);
 
-    let warp_cmd_tx = state.read().get_warp_ch();
-
     let focus_script = r#"
             var emoji_selector = document.getElementById('emoji_selector');
             emoji_selector.focus();
         "#;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<Command>| {
+        to_owned![state];
         async move {
+            let warp_cmd_tx = state.read().get_warp_ch();
             while let Some(cmd) = rx.next().await {
                 match cmd {
                     Command::React(conversation_id, message_id, emoji) => {
@@ -157,8 +158,8 @@ fn render_selector<'a>(
                         }
 
                         let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            // failed to add/remove reaction
+                        if let Err(e) = res {
+                            log::error!("failed to add/remove reaction: {e}");
                         }
                     }
                 }
@@ -227,7 +228,10 @@ fn render_selector<'a>(
                                                     EmojiDestination::Chatbar => { // If we're on an active chat, append the emoji to the end of the chat message.
                                                         let c =  match state.read().get_active_chat() {
                                                             Some(c) => c,
-                                                            None => return
+                                                            None => {
+                                                                println!("can't send emoji to chatbar - no active chat");
+                                                                return;
+                                                            }
                                                         };
                                                         let draft: String = c.draft.unwrap_or_default();
                                                         let new_draft = format!("{draft}{emoji}");
