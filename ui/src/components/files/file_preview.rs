@@ -38,16 +38,6 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 max_height: "80%",
                 max_width: "80%",
             },
-            img {
-                id: "file_preview_img",
-                src: format_args!("{}", image_from_clipboard.read()),
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                max_height: "80%",
-                max_width: "80%",
-            },
         },
     }))
 }
