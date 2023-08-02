@@ -81,6 +81,9 @@ messages = Messages
     .participants = Participants
     .fetching = Fetching more messages...
     .group-creator-label = Group Creator
+    .user-typing = { $user } is typing
+    .users-typing = { $users } are typing
+    .users-multiple-typing = Multiple users are typing
     
 favorites = Favorites
     .favorites = Favorites
