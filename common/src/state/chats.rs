@@ -70,6 +70,8 @@ pub struct Chat {
     pub pending_outgoing_messages: Vec<PendingMessage>,
     #[serde(skip)]
     pub files_attached_to_send: Vec<PathBuf>,
+    #[serde(skip)]
+    pub scroll_value: Option<i64>,
 }
 
 impl Chat {

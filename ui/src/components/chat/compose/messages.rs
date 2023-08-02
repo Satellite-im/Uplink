@@ -62,6 +62,27 @@ const SETUP_CONTEXT_PARENT: &str = r#"
     }
 "#;
 
+const SCROLL_TO: &str = r#"
+    const chat = document.getElementById("messages")
+    chat.scrollTo(0, $VALUE)
+"#;
+
+const SCROLL_UNREAD: &str = r#"
+    const chat = document.getElementById("messages")
+    const child = chat.children[chat.childElementCount - $UNREADS]
+    chat.scrollTop = chat.scrollHeight
+    child.scrollIntoView({ behavior: 'smooth', block: 'end' })
+"#;
+
+const SCROLL_BOTTOM: &str = r#"
+    const chat = document.getElementById("messages")
+    const lastChild = chat.lastElementChild
+    chat.scrollTop = chat.scrollHeight
+    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
+"#;
+
+const READ_SCROLL: &str = "return document.getElementById(\"messages\").scrollTop";
+
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     React((DID, raygun::Message, String)),
@@ -102,7 +123,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
-    let prev_chat_id = use_ref(cx, || data.active_chat.id);
+    let prev_chat_id = use_ref(cx, || None);
     let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
         use_ref(cx, || None);
 
@@ -135,16 +156,24 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
+    let scroll = data.active_chat.scroll_value;
+    let unreads = data.active_chat.unreads;
     use_effect(cx, &data.active_chat.id, |id| {
         to_owned![eval, prev_chat_id];
         async move {
             // yes, this check seems like some nonsense. but it eliminates a jitter and if
             // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
             // switch to settings or whatnot, then come back to the chats view and not lose your place.
-            if *prev_chat_id.read() != id {
-                *prev_chat_id.write_silent() = id;
-                let script = include_str!("../scroll_to_bottom.js");
-                eval(script.to_string());
+            if prev_chat_id.read().map(|prev: Uuid| !prev.eq(&id)).unwrap_or(true) {
+                *prev_chat_id.write_silent() = Some(id);
+                let script = if let Some(val) = scroll {
+                    SCROLL_TO.replace("$VALUE", &val.to_string())
+                } else if unreads > 0 {
+                    SCROLL_UNREAD.replace("$UNREADS", &unreads.to_string())
+                } else {
+                    SCROLL_BOTTOM.to_string()
+                };
+                eval(script);
             }
             eval(SETUP_CONTEXT_PARENT.to_string());
         }
@@ -320,6 +349,17 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     cx.render(rsx!(
         div {
             id: "messages",
+            onscroll: |_| {
+                let scroll = use_eval(cx)(READ_SCROLL.to_string());
+                to_owned![state, active_chat];
+                async move {
+                    if let Ok(val) = scroll.await{
+                        if let Some(uuid) = active_chat.read().as_ref() {
+                            state.write_silent().update_chat_scroll(uuid.clone(), val.as_i64().unwrap_or_default());
+                        }     
+                    }
+                }
+            },
             span {
                 rsx!(
                     msg_container_end,
