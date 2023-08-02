@@ -1,6 +1,6 @@
 [package]
 name = "extension_example"
-version.workspace = true
+version = { workspace = true }
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,7 +8,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-dioxus.workspace = true
+dioxus = { workspace = true }
 common = { path = "../common" }
 extensions = { path = "../extensions" }
 kit = { path = "../kit" }
