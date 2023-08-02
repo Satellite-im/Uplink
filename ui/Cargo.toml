@@ -59,7 +59,7 @@ clap = { workspace = true, features = ["derive"] }
 walkdir = { workspace = true }
 zip = { workspace = true }
 filetime = "0.2.20"
-reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
+reqwest = { workspace = true }
 log = { version = "0.4.17", features = ["std"]}
 
 [features]

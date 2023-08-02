@@ -81,7 +81,7 @@ zip = "0.6.4"
 
 image = "0.24"
 linkify = "0.9.0"
-reqwest = "0.11.16"
+reqwest = { version = "0.11", default-features=false, features = ["json", "rustls-tls", "stream"] }
 select = "0.6.0"
 
 common = { path = "common" }
