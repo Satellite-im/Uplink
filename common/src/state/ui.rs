@@ -14,7 +14,7 @@ use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct EmojiCounter {
     list: EmojiList,
 }
@@ -33,6 +33,25 @@ impl EmojiCounter {
     pub fn increment_emoji(&mut self, emoji: String) {
         let count = self.list.entry(emoji).or_insert(0);
         *count += 1;
+    }
+
+    pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
+        let mut emojis: Vec<_> = self.list.iter().collect();
+
+        // sort the list by the emoji with the most usage
+        emojis.sort_by(|a, b| b.1.cmp(a.1));
+
+        match count {
+            Some(n) => emojis
+                .into_iter()
+                .take(n)
+                .map(|(emoji, usage)| (emoji.clone(), *usage))
+                .collect(),
+            None => emojis
+                .into_iter()
+                .map(|(emoji, usage)| (emoji.clone(), *usage))
+                .collect(),
+        }
     }
 }
 

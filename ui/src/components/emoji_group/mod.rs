@@ -3,11 +3,7 @@ use common::state::ui::EmojiDestination;
 use common::state::State;
 use common::{icons::outline::Shape as Icon, state::Action};
 use dioxus::prelude::*;
-use kit::elements::{
-    button::Button,
-    tooltip::{ArrowPosition, Tooltip},
-    Appearance,
-};
+use kit::elements::{button::Button, Appearance};
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -18,23 +14,20 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let emoji_list = state.read().ui.get_emoji_sorted_by_usage(4);
+    let emoji_list = state.read().ui.emoji_list.clone();
+    let sorted_list = emoji_list.get_sorted_vec(Some(4));
 
     cx.render(rsx!(
         div {
             class: "emoji-group",
-            for emoji in emoji_list {
+            for emoji in sorted_list {
                 Button {
                     key: "{emoji.0}",
                     text: emoji.0.clone(),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
                         cx.props.onselect.call(emoji.0.clone());
-                    },
-                    tooltip: cx.render(rsx!(Tooltip {
-                        arrow_position: ArrowPosition::Bottom,
-                        text: format!("Used {} times.", emoji.1.to_string())
-                    }))
+                    }
                 }
             }
             Button {
