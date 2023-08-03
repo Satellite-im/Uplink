@@ -9,7 +9,6 @@ edition = "2021"
 
 dioxus = { workspace = true }
 libloading = { workspace = true }
-derive_more = { workspace = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"
