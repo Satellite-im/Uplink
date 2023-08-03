@@ -198,6 +198,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         (vec![], vec![], None)
     };
 
+    let scale = use_window(cx).scale_factor();
+
     let show_create_group = use_state(cx, || false);
 
     let extensions = &state.read().ui.extensions;
@@ -514,7 +516,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
 
-                                    if size.width <= 1200 {
+                                    if f64::from(size.width) <= 600.0 * scale {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {

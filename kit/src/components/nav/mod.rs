@@ -107,6 +107,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let bubble = cx.props.bubble.unwrap_or_default();
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
+    let scale = use_window(cx).scale_factor();
     let size = desktop.webview.inner_size();
 
     cx.render(rsx!(
@@ -137,7 +138,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         icon: route.icon,
                         onpress: move |_| {
                             //if route is friends or files then close, else leave sidebar open
-                            if size.width <= 1200 && !(route.to != "/friends" && route.to != "/files"){
+                            if f64::from(size.width) <= 600.0 * scale && !(route.to != "/friends" && route.to != "/files"){
                                 state.write().mutate(Action::SidebarHidden(true));
                             }
                             active.set(route.to_owned());

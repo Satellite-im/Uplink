@@ -70,6 +70,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let desktop = use_window(cx);
     let size = desktop.webview.inner_size();
+    let scale = use_window(cx).scale_factor();
 
     let profile = UIRoute {
         to: "profile",
@@ -194,7 +195,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if state.read().configuration.audiovideo.interface_sounds {
                        sounds::Play(sounds::Sounds::Interaction);
                     }
-                    if size.width <= 1200{
+                    if f64::from(size.width) <= 600.0 * scale {
                         state.write().mutate(Action::SidebarHidden(true));
                     }
                     emit(&cx, Page::from_str(route).unwrap());
