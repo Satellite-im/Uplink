@@ -13,19 +13,12 @@ pub struct Props {
 pub fn MessageTyping(cx: Scope<Props>) -> Element {
     let typing_users = if cx.props.typing_users.len() > 3 {
         get_local_text("messages.users-multiple-typing")
-    } else if cx.props.typing_users.len() == 1 {
-        let mut user = cx.props.typing_users.first().unwrap().to_string();
-        let user = if user.len() > MAX_LEN {
-            let mut user: String = user.drain(..(MAX_LEN - 3)).collect();
-            user.push_str("...");
-            user
-        } else {
-            user
-        };
-        get_local_text_args_builder("messages.user-typing", |m| {
-            m.insert("user", user.into());
-        })
     } else {
+        let translation = if cx.props.typing_users.len() == 1 {
+            "messages.user-typing"
+        } else {
+            "messages.users-typing"
+        };
         let mut users = cx.props.typing_users.join(", ");
         let users = if users.len() > MAX_LEN {
             let mut users: String = users.drain(..(MAX_LEN - 3)).collect();
@@ -34,7 +27,7 @@ pub fn MessageTyping(cx: Scope<Props>) -> Element {
         } else {
             users
         };
-        get_local_text_args_builder("messages.users-typing", |m| {
+        get_local_text_args_builder(translation, |m| {
             m.insert("users", users.into());
         })
     };
