@@ -82,6 +82,7 @@ messages = Messages
     .fetching = Fetching more messages...
     .group-creator-label = Group Creator
     .maximum-amount-files-per-message = You reached { $amount } files per message limit
+    .scroll-bottom = Scroll to bottom
     
 favorites = Favorites
     .favorites = Favorites

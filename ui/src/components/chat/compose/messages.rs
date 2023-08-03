@@ -24,7 +24,7 @@ use common::{
     language::get_local_text_args_builder,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
-        MessageGroup,
+        MessageGroup, scope_ids::ScopeIds,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -351,11 +351,15 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             id: "messages",
             onscroll: |_| {
                 let scroll = use_eval(cx)(READ_SCROLL.to_string());
-                to_owned![state, active_chat];
+                let update = cx.schedule_update_any();
+                to_owned![update, state, active_chat];
                 async move {
                     if let Ok(val) = scroll.await{
                         if let Some(uuid) = active_chat.read().as_ref() {
                             state.write_silent().update_chat_scroll(uuid.clone(), val.as_i64().unwrap_or_default());
+                            if let Some(id) = state.read().scope_ids.chatbar{
+                                update(ScopeIds::scope_id_from_usize(id));
+                            };
                         }     
                     }
                 }

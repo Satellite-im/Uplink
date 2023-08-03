@@ -37,6 +37,7 @@ use warp::{
 
 const MAX_CHARS_LIMIT: usize = 1024;
 const MAX_FILES_PER_MESSAGE: usize = 8;
+const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 use crate::{
     components::paste_files_with_shortcut,
@@ -81,6 +82,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .unwrap_or(Uuid::nil());
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
+    let with_scroll_btn = state.read().get_active_chat().map(|c|c.scroll_value.unwrap_or_default()).unwrap_or_default() < SCROLL_BTN_THRESHOLD;
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -427,6 +429,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
+            with_scroll_btn: with_scroll_btn, 
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             controls: cx.render(
                 rsx!(
