@@ -249,7 +249,6 @@ pub fn Compose(cx: Scope) -> Element {
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 GroupUsers {
                     active_chat: state.read().get_active_chat(),
-                    is_owner: true
                 }
         )),
         match data.as_ref() {
@@ -530,7 +529,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-    let state = use_shared_state::<State>(cx)?;
     let data = match data {
         Some(d) => d,
         None => {
@@ -573,7 +571,8 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         all_participants.len()
     );
 
-    let conv_id = state.read().get_active_chat().unwrap().id;
+    let conv_id = data.active_chat.id.clone();
+
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| {
         to_owned![conv_id];
         async move {

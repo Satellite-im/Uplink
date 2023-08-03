@@ -31,11 +31,6 @@ enum ChanCmd {
     RemoveParticipants,
 }
 
-// #[derive(Props)]
-// pub struct Props<'a> {
-//     onedit: EventHandler<'a, MouseEvent>,
-// }
-
 #[allow(non_snake_case)]
 pub fn EditGroup(cx: Scope) -> Element {
     log::trace!("rendering edit_group");
@@ -117,7 +112,7 @@ pub fn EditGroup(cx: Scope) -> Element {
         },
         format!(
             "{} →",
-            get_local_text("uplink.add-member")
+            get_local_text("uplink.add-members")
         ),
     });
 
@@ -128,7 +123,7 @@ pub fn EditGroup(cx: Scope) -> Element {
         },
         format!(
             "{} →",
-            get_local_text("uplink.current-member")
+            get_local_text("uplink.current-members")
         ),
     });
 
@@ -225,12 +220,9 @@ pub fn EditGroup(cx: Scope) -> Element {
                                                         get_local_text("uplink.remove")
                                                     },
                                                     onpress: move |_| {
-                                                        let friend_did = friend.did_key();
                                                         let mut friends = selected_friends.get().clone();
                                                         friends.clear();
-                                                        selected_friends.set(friends.clone());
-                                                        friends.insert(friend_did);
-                                                        selected_friends.set(friends);
+                                                        selected_friends.set(vec![friend.did_key()].into_iter().collect());
                                                         if *edit_group_action.current() == EditGroupAction::Add {
                                                             ch.send(ChanCmd::AddParticipants);
                                                         } else {
