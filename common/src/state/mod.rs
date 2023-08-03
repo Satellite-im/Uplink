@@ -1365,7 +1365,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                &v[..(name_prefix.len())] == name_prefix
+                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
             }
         };
 
