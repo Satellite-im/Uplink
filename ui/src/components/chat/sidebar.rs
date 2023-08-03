@@ -99,6 +99,8 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
+    let desktop = use_window(cx);
+    let size = desktop.webview.inner_size();
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
@@ -507,8 +509,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-                                    let desktop = use_window(cx);
-                                    let size = desktop.webview.inner_size();
 
                                     if size.width <= 1200 {
                                         state.write().mutate(Action::SidebarHidden(true));
