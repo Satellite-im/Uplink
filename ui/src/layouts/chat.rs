@@ -22,7 +22,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     let show_welcome = state.read().chats().active.is_none();
 
     if *first_render.get() && is_minimal_view {
-        state.write().mutate(Action::SidebarHidden(true));
+        // state.write().mutate(Action::SidebarHidden(true));
         first_render.set(false);
     }
 
@@ -36,7 +36,7 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
                 route_info: cx.props.route_info.clone()
             },
             show_welcome.then(|| rsx!(Welcome {})),
-            (!show_welcome && (sidebar_hidden)).then(|| rsx!(Compose {}))
+            (!show_welcome).then(|| rsx!(Compose {}))
         }
     ))
 }
