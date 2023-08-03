@@ -57,6 +57,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
 
     let error: &UseState<Option<UnlockError>> = use_state(cx, || None);
     let shown_error = use_state(cx, String::new);
+    let desktop = use_window(cx);
 
     let account_exists: &UseState<Option<bool>> = use_state(cx, || None);
     let cmd_in_progress = use_state(cx, || false);
@@ -223,7 +224,6 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 shown_error.set(String::new());
                             }
                             if validation_passed {
-                                let desktop = use_window(cx);
                                 let outer_size = desktop.outer_size();
                                 let is_maximized = desktop.is_maximized();
                                 state.write_silent().ui.window_height = outer_size.height;
