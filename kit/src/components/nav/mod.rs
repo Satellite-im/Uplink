@@ -140,10 +140,6 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if size.width <= 1200 && !(route.to != "/friends" && route.to != "/files"){
                                 state.write().mutate(Action::SidebarHidden(true));
                             }
-                            if size.width <= 1400 && route.name == "Chats"{
-                                println!("{}", route.clone().name);
-                                state.write().mutate(Action::SidebarHidden(false));
-                            }
                             active.set(route.to_owned());
                             emit(&cx, &route.to);
                         },
