@@ -268,6 +268,11 @@
   display: inline-flex;
   overflow-y: auto;
   flex-direction: row;
+  margin-left: var(--gap);
+  padding-top: var(--gap);
+  z-index: 2;
+  box-shadow: 0px 0px 4px var(--text-color-muted);
+  width: 95%;
 }
 
 #compose #messages {
@@ -488,4 +493,10 @@
 
 .hide-button-text {
   width: 38px;
+}
+
+.friend-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 182px;
 }

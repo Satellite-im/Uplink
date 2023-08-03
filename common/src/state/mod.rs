@@ -233,6 +233,10 @@ impl State {
             }
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
+            Action::SetChatAttachments(chat_id, value) => {
+                self.set_chat_attachments(&chat_id, value)
+            }
+            Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
@@ -851,6 +855,12 @@ impl State {
         }
     }
 
+    fn clear_chat_attachments(&mut self, chat_id: &Uuid) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send.clear();
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -1026,6 +1036,12 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.remove_pending_msg(msg, attachments, uuid);
+        }
+    }
+
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send = value;
         }
     }
 
@@ -1332,6 +1348,7 @@ impl State {
                     un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
+            .filter(|id| id.did_key() != self.did_key())
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
             .collect();
 
@@ -1371,7 +1388,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                &v[..(name_prefix.len())] == name_prefix
+                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
             }
         };
 
