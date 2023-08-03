@@ -13,7 +13,6 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let thumbnail = thumbnail_to_base64(cx.props.file);
-    let image_from_clipboard = use_ref(cx, String::new);
 
     cx.render(rsx!(div {
         ContextMenu {
@@ -31,16 +30,6 @@ pub fn FilePreview<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             img {
                 id: "file_preview_img",
                 src: "{thumbnail}",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                max_height: "80%",
-                max_width: "80%",
-            },
-            img {
-                id: "file_preview_img",
-                src: format_args!("{}", image_from_clipboard.read()),
                 position: "absolute",
                 top: "50%",
                 left: "50%",

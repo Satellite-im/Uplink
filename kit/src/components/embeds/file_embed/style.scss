@@ -16,16 +16,13 @@
   width: 95%;
   margin-left: var(--gap);
   color: var(--text-color);
-  padding-top: var(--gap);
-  padding-bottom: 4px;
-  padding-right: var(--gap);
+  padding: var(--padding-less);
   align-content: center;
   align-self: flex-end;
 
   .image-container {
     display: flex;
     position: relative;
-    padding-top: var(--padding-less);
     width: fit-content;
     height: fit-content;
     .btn-wrap{

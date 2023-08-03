@@ -63,6 +63,7 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         .and_then(OsStr::to_str)
         .map(|s| format!(".{s}"))
         .unwrap_or_default();
+    let file_extension_is_empty = file_extension.is_empty();
     let filename = &cx.props.filename;
     let download_pending = cx.props.download_pending.unwrap_or(false);
     let btn_icon = if !download_pending {
@@ -172,10 +173,17 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             open: *fullscreen_preview.clone(),
                             onclose: move |_| fullscreen_preview.set(false),
                             img {
-                                aria_label: "image-preview-modal",
+                                id: "image-preview-modal-file-embed",
+                                aria_label: "image-preview-modal-file-embed",
                                 src: "{large_thumbnail}",
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                max_height: "80%",
+                                max_width: "80%",
                                 onclick: move |e| e.stop_propagation(),
-                            }
+                            },
                         }
                     )),
                     div {
@@ -223,10 +231,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             if thubmnail.is_empty() {
                                 rsx!(
                                     div {
+                                        height: "60px",
                                         IconElement {
                                             icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                         }
-                                        if !file_extension.is_empty() {
+                                        if !file_extension_is_empty {
                                             rsx!( label {
                                                 class: "file-embed-type",
                                                 "{file_extension}"
@@ -246,10 +255,11 @@ pub fn FileEmbed<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         } else {
                             rsx!(
                                 div {
+                                    height: "60px",
                                     IconElement {
                                         icon: cx.props.attachment_icon.unwrap_or(Icon::Document)
                                     }
-                                    if !file_extension.is_empty() {
+                                    if !file_extension_is_empty {
                                         rsx!( label {
                                             class: "file-embed-type",
                                             "{file_extension}"
