@@ -16,7 +16,6 @@ use kit::{
     components::{
         embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
-        message_typing::MessageTyping,
         user_image::UserImage,
     },
     elements::{
@@ -28,12 +27,7 @@ use kit::{
 };
 use rfd::FileDialog;
 use uuid::Uuid;
-use warp::{
-    crypto::DID,
-    logging::tracing::log,
-    multipass::identity::{self, IdentityStatus},
-    raygun,
-};
+use warp::{crypto::DID, logging::tracing::log, raygun};
 
 const MAX_CHARS_LIMIT: usize = 1024;
 const MAX_FILES_PER_MESSAGE: usize = 8;
@@ -122,7 +116,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 .collect()
         })
         .unwrap_or_default();
-    let is_typing = !users_typing.is_empty();
     let users_typing = state.read().get_identities(&users_typing);
 
     let msg_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChatInput>| {
@@ -409,12 +402,15 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         }
     };
 
+    let typing_users: Vec<String> = users_typing.iter().map(|id| (*id).username()).collect();
+
     let chatbar = cx.render(rsx!(
         Chatbar {
             key: "{id}",
             id: id.to_string(),
             loading: is_loading,
             placeholder: get_local_text("messages.say-something-placeholder"),
+            typing_users: typing_users,
             is_disabled: disabled,
             ignore_focus: cx.props.ignore_focus,
             onchange: move |v: String| {
@@ -528,28 +524,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         ))
     ));
 
-    // todo: possibly show more if multiple users are typing
-    let (platform, status, profile_picture) = match users_typing.first() {
-        Some(u) => (u.platform(), u.identity_status(), u.profile_picture()),
-        None => (
-            identity::Platform::Unknown,
-            IdentityStatus::Online,
-            String::new(),
-        ),
-    };
-
     cx.render(rsx!(
-        is_typing.then(|| {
-            rsx!(MessageTyping {
-                user_image: cx.render(rsx!(
-                    UserImage {
-                        image: profile_picture,
-                        platform: platform.into(),
-                        status: status.into()
-                    }
-                ))
-            })
-        }),
         if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path: Vec<PathBuf>| {
