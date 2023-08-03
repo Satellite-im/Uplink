@@ -68,6 +68,8 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let desktop = use_window(cx);
+    let size = desktop.webview.inner_size();
 
     let profile = UIRoute {
         to: "profile",
@@ -192,14 +194,10 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     if state.read().configuration.audiovideo.interface_sounds {
                        sounds::Play(sounds::Sounds::Interaction);
                     }
-                    if route != routes[0].clone().name {
-                    let desktop = use_window(cx);
-                    let size = desktop.webview.inner_size();
                     if size.width <= 1200{
                         state.write().mutate(Action::SidebarHidden(true));
                     }
                     emit(&cx, Page::from_str(route).unwrap());
-                    }
                 }
             }
         }
