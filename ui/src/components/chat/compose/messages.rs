@@ -118,7 +118,6 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
-    log::debug!("has more: {}", data.active_chat.has_more_messages);
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;

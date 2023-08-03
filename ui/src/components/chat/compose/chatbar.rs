@@ -379,7 +379,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .values()
         .filter(|ext| ext.enabled())
         .filter(|ext| ext.details().location == extensions::Location::Chatbar)
-        .map(|ext| rsx!(ext.render(cx.scope)))
+        .map(|ext| ext.render(cx.scope))
         .collect::<Vec<_>>();
 
     let disabled = !state.read().can_use_active_chat();
