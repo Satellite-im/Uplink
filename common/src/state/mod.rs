@@ -254,7 +254,9 @@ impl State {
                 self.set_chat_attachments(&chat_id, value)
             }
             Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
-            Action::AddReaction(_, _, _) => todo!(),
+            Action::AddReaction(_, _, emoji) => {
+                self.ui.emoji_list.increment_emoji(emoji);
+            }
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.did_key();

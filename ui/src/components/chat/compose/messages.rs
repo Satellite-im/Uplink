@@ -23,8 +23,8 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
     state::{
-        group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
-        MessageGroup,
+        group_messages, pending_group_messages, pending_message::PendingMessage,
+        ui::EmojiDestination, GroupedMessage, MessageGroup,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -649,7 +649,8 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         onselect: move |emoji: String| {
                             log::trace!("reacting with emoji: {}", emoji);
                             ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), emoji)));
-                        }
+                        },
+                        apply_to: EmojiDestination::Message(conversatio_id, msg_uuid),
                     }
                 }
                 ContextItem {

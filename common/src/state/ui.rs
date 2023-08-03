@@ -14,6 +14,28 @@ use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
 
+#[derive(Deserialize, Serialize)]
+pub struct EmojiCounter {
+    list: EmojiList,
+}
+
+impl EmojiCounter {
+    pub fn new() -> Self {
+        Self {
+            list: EmojiList::new(),
+        }
+    }
+
+    pub fn new_with(list: EmojiList) -> Self {
+        Self { list }
+    }
+
+    pub fn increment_emoji(&mut self, emoji: String) {
+        let count = self.list.entry(emoji).or_insert(0);
+        *count += 1;
+    }
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
     pub focused: bool,
@@ -41,14 +63,14 @@ fn bool_true() -> bool {
     true
 }
 
-fn default_emojis() -> EmojiList {
-    HashMap::from([
+fn default_emojis() -> EmojiCounter {
+    EmojiCounter::new_with(HashMap::from([
         ("👍".to_string(), 1),
         ("👎".to_string(), 1),
         ("❤️".to_string(), 1),
         ("🖖".to_string(), 1),
         ("😂".to_string(), 1),
-    ])
+    ]))
 }
 
 /// Used to determine where the Emoji should be routed.
@@ -90,7 +112,7 @@ pub struct UI {
     pub window_height: u32,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
-    pub emoji_list: EmojiList,
+    pub emoji_list: EmojiCounter,
     pub emoji_destination: Option<EmojiDestination>,
     pub emoji_picker_visible: bool,
     #[serde(skip)]
@@ -183,18 +205,24 @@ impl Drop for UI {
 
 impl UI {
     pub fn track_emoji_usage(&mut self, emoji: String) {
-        let count = self.emoji_list.entry(emoji).or_insert(0);
+        let count = self.emoji_list.list.entry(emoji).or_insert(0);
         *count += 1;
     }
 
-    pub fn get_emoji_sorted_by_usage(&self) -> EmojiList {
-        // let emojis = self.emoji_list.clone();
+    pub fn get_emoji_sorted_by_usage(&self, count: u64) -> EmojiList {
+        let mut emojis: Vec<_> = self.emoji_list.list.iter().collect();
 
-        // // emojis.sort_by(|a, b| b.1.cmp(&a.1));
+        // sort the list by the emoji with the most usage
+        emojis.sort_by(|a, b| b.1.cmp(a.1));
 
-        // emojis
-        self.emoji_list.clone()
+        let mut sorted_emojis: EmojiList = HashMap::new();
+        for &(emoji, usage) in emojis.iter().take(count as usize) {
+            sorted_emojis.insert(emoji.clone(), *usage);
+        }
+
+        sorted_emojis
     }
+
     pub fn get_meta(&self) -> WindowMeta {
         self.metadata.clone()
     }
