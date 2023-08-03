@@ -6,7 +6,6 @@ use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
-use kit::components::indicator::Indicator;
 use kit::components::message::markdown;
 use kit::{
     components::{
@@ -85,44 +84,54 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
             if !friends_identities.is_empty() {
-                rsx!(Label {
-                    text: "Users".into()
+                rsx!(
+                    div {
+                        id: "users-searchdropdown-label",
+                        padding_left: "12px",
+                        padding_top: "12px",
+                        font_weight: "bold",
+                        Label {
+                            text: "Users".into()
+                    }
                 })
             }
-            friends_identities.iter().cloned().enumerate().map(|(k, identity)| {
-                let image = identity.profile_picture();
+            friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
                 let did = identity.did_key().clone();
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
                         aria_label: "identity-header-sidebar",
-                        div {
-                            id: "profile-image",
-                            aria_label: "profile-image",
-                            style: "background-image: url('{image}');",
-                        }
+                        prevent_default: "onclick",
+                        onclick: move |evt| {
+                            evt.stop_propagation();
+                            cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                        },
+                        UserImage {
+                            platform: identity.platform().into(),
+                            status: identity.identity_status().into(),
+                            image: identity.profile_picture()
+                        },
                         a {
                             class: "search-friends-dropdown",
                             href: "#{username}",
                             prevent_default: "onclick",
                             rel: "noopener noreferrer",
-                            onclick: move |evt| {
-                                evt.stop_propagation();
-                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
-                            },
                             "{username}"
                         },
-                    }
-                    if (cx.props.friends_identities.get().len() - 1) != k {
-                        rsx!(div { class:"border", })
                     }
                 )
             })
             if !chats.is_empty() {
                 rsx!(
-                    Label {
-                        text: "Groups".into()
+                    div {
+                        id: "groups-searchdropdown-label",
+                        padding_left: "12px",
+                        padding_top: "12px",
+                        font_weight: "bold",
+                        Label {
+                            text: "Groups".into()
+                        }
                     }
                 )
             }
@@ -138,6 +147,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     div {
                         class: "identity-header-sidebar",
                         aria_label: "identity-header-sidebar",
+                        prevent_default: "onclick",
                         onclick: move |evt|  {
                             evt.stop_propagation();
                             cx.props.onclick.call(identity_search_result::Identifier::Uuid(id.clone()));
@@ -148,7 +158,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                 div {
                                     aria_label: "user-image-group-wrap",
                                     class: "user-image-group-wrap group",
-                                    onclick: move |e| {},
                                     rsx!(
                                         UserImageGroup {
                                             loading: false,
@@ -158,20 +167,14 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     )
                                 },
                             }
-                            div {
-                                class: "info",
-                                aria_label: "User Info",
-                                p {
-                                    class: "username",
-                                    aria_label: "Username",
-                                    "{conversation_title}"
-                                },
-
-                            }
+                            a {
+                                class: "search-friends-dropdown",
+                                href: "#{conversation_title}",
+                                prevent_default: "onclick",
+                                rel: "noopener noreferrer",
+                                "{conversation_title}"
+                            },
                         )
-                    }
-                    if (cx.props.chats.get().len() - 1) != k {
-                        rsx!(div { class:"border", })
                     }
                 )
             })

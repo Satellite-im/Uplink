@@ -210,8 +210,9 @@
     // TODO(Lucas): Look it later, should be height: x%;
     height: 50px;
     background-size: cover;
-    background-color: var(--background);
-    margin-top: 4px;
+    background-color: var(--text-color-dark);
+    padding-top: 4px;
+    padding-left: 8px;
     #profile-image {
       margin: var(--gap-less);
       //TODO(Lucas): Look to it, should be width: var(--height-input);
@@ -239,10 +240,12 @@
     display: inline-flex;
     flex-direction: column;
     box-shadow: 0px 0px 8px var(--text-color-muted);
-    width: 270px;
+    top: 75px;
+    max-width: 60%;
+    padding-bottom: 12px;
     z-index: 100;
     cursor: pointer;
-    background-color: var(--background);
+    background-color: var(--text-color-dark);
     
     a {
       z-index: 110;
