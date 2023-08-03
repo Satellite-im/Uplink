@@ -42,11 +42,11 @@ arboard = "3.2"
 humansize = "2.1.3"
 uuid = { version = "1", features = ["serde", "v4"] }
 libloading = "0.7.4"
-warp = { git = "https://github.com/Satellite-im/Warp", rev = "eeca10be9dc9df16f87e8551b4893ee9da651a8d" }
-warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "eeca10be9dc9df16f87e8551b4893ee9da651a8d" }
-warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "eeca10be9dc9df16f87e8551b4893ee9da651a8d" }
-warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "eeca10be9dc9df16f87e8551b4893ee9da651a8d" }
-warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "eeca10be9dc9df16f87e8551b4893ee9da651a8d" }
+warp = { git = "https://github.com/Satellite-im/Warp", rev = "47b34bcd7b59fdcdf9b32bb1a42c0c3925efcb1b" }
+warp-mp-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "47b34bcd7b59fdcdf9b32bb1a42c0c3925efcb1b" }
+warp-rg-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "47b34bcd7b59fdcdf9b32bb1a42c0c3925efcb1b" }
+warp-fs-ipfs = { git = "https://github.com/Satellite-im/Warp", rev = "47b34bcd7b59fdcdf9b32bb1a42c0c3925efcb1b" }
+warp-blink-wrtc = { git = "https://github.com/Satellite-im/Warp", rev = "47b34bcd7b59fdcdf9b32bb1a42c0c3925efcb1b" }
 rfd = "0.11.3"
 mime = "0.3.16"
 serde = "1.0"
