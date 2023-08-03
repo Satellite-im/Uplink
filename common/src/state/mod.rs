@@ -1363,6 +1363,7 @@ impl State {
                     un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
+            .filter(|f| f.did_key() != self.did_key())
             .map(|id| id.clone())
             .collect();
 
