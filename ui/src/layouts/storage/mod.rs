@@ -16,6 +16,7 @@ use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_desktop::DesktopContext;
+use dioxus_router::prelude::use_navigator;
 use dioxus_router::*;
 use kit::{
     components::{

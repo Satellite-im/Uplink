@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
-use dioxus_router::use_router;
+use dioxus_router::prelude::use_router;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -59,7 +59,7 @@ pub fn Friends(cx: Scope) -> Element {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace_route(UPLINK_ROUTES.chat, None, None);
+        router.replace(UPLINK_ROUTES.chat);
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {

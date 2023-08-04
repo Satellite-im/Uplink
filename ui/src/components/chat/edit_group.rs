@@ -217,8 +217,8 @@ pub fn EditGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             id: "edit-group",
             aria_label: "edit-group",
             div {
-                id: "edit-group-name", 
-                class: "edit-group-name", 
+                id: "edit-group-name",
+                class: "edit-group-name",
                 Label {
                     text: get_local_text("messages.group-name"),
                     aria_label: "group-name-label".into(),
@@ -398,7 +398,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             UserImage {
                 platform: cx.props.friend.platform().into(),
                 status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture()
+                image: cx.props.friend.profile_picture(),
                 on_press: move |_| {
                     update_fn();
                 },
@@ -413,7 +413,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
                     cx.props.friend.username(),
                 },
             },
-            Checkbox{
+            Checkbox {
                 disabled: false,
                 width: "1em".into(),
                 height: "1em".into(),

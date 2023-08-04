@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_router::use_router;
+use dioxus_router::prelude::use_navigator;
 
 use crate::{
     components::{

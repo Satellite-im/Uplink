@@ -148,27 +148,30 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(ConversationType::Direct)
         == ConversationType::Group;
 
+    let upload_files = move |_| {
+        if drag_event.with(|i| i.clone()).is_none() {
+            cx.spawn({
+                to_owned![files_to_upload, drag_event, window, overlay_script, eval];
+                async move {
+                    let new_files =
+                        drag_and_drop_function(&window, &drag_event, overlay_script).await;
+                    let mut new_files_to_upload: Vec<_> = files_to_upload
+                        .current()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    files_to_upload.set(new_files_to_upload);
+                }
+            });
+        }
+    };
+
     cx.render(rsx!(
         div {
             id: "compose",
-            ondragover: move |_| {
-                if drag_event.with(|i| i.clone()).is_none() {
-                    cx.spawn({
-                        to_owned![files_to_upload, drag_event, window, overlay_script, eval];
-                        async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
-                            let mut new_files_to_upload: Vec<_> = files_to_upload
-                                .current()
-                                .iter()
-                                .filter(|file_name| !new_files.contains(file_name))
-                                .cloned()
-                                .collect();
-                            new_files_to_upload.extend(new_files);
-                            files_to_upload.set(new_files_to_upload);
-                        }
-                    });
-                }
-            },
+            ondragover: upload_files,
             div {
                 id: "overlay-element",
                 class: "overlay-element",
@@ -574,7 +577,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
 // Like ui::src:layout::storage::drag_and_drop_function
 async fn drag_and_drop_function(
-    eval: UseEval,
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
     overlay_script: String,
@@ -606,7 +608,7 @@ async fn drag_and_drop_function(
                             ),
                         ));
                     }
-                    window.eval(&script);
+                    window.webview.evaluate_script(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
@@ -617,14 +619,14 @@ async fn drag_and_drop_function(
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
-                    window.eval(&script);
+                    window.webview.evaluate_script(&script);
                     break;
                 }
             }
             _ => {
                 *drag_event.write_silent() = None;
                 let script = overlay_script.replace("$IS_DRAGGING", "false");
-                window.eval(&script);
+                window.webview.evaluate_script(&script);
                 break;
             }
         };

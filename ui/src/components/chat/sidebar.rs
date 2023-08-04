@@ -3,6 +3,7 @@ use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
+use dioxus_router::prelude::use_router;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -256,7 +257,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         if state.read().ui.is_minimal_view() {
                             state.write().mutate(Action::SidebarHidden(true));
                         }
-                        router.replace_route(r, None, None);
+                        router.replace(r);
                     }
                 },
             )),
@@ -322,7 +323,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
                                                 if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    router.replace_route(UPLINK_ROUTES.chat, None, None);
+                                                    router.replace(UPLINK_ROUTES.chat);
                                                 }
                                             }
                                         },
@@ -345,7 +346,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
                                             if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                router.replace_route(UPLINK_ROUTES.chat, None, None);
+                                                router.replace(UPLINK_ROUTES.chat);
                                             }
                                         }
                                     }
@@ -510,7 +511,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
+                                        router.replace(UPLINK_ROUTES.chat);
                                     }
                                 }
                             }

@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -21,16 +20,11 @@ pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
 
     // Run the script after the component is mounted
     let eval = use_eval(cx);
-    use_effect(cx, (), |_| {
-        to_owned![eval];
-        async move {
-            eval(SCRIPT.to_string());
-        }
-    });
 
     cx.render(
         rsx! (
         div {
+            onmounted: move |_| { eval(SCRIPT); },
             id: "video-poped-out",
             class: "popout-player",
             div {
