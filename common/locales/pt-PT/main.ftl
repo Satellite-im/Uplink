@@ -248,7 +248,9 @@ settings-notifications = Notificações
 
 settings-developer = Definições do programador 
     .developer-mode = Modo de programador
-    .developer-mode-description = A activação do modo de programador adiciona o registo e apresenta informações de depuração úteis na IU.
+    .developer-mode-description = A activação do modo de programador adiciona o registo e apresenta informações de depuração úteis na UI.
+    .experimental-features = Funcionalidades Experimentais
+    .experimental-features-description = Ativa funcionalidades que podem estar incompletas ou não funcionais.
     .test-notification = Notificação de teste
     .test-notification-description = Envia uma notificação de teste.
     .test-popup = Teste
