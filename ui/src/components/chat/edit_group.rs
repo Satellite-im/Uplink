@@ -37,7 +37,7 @@ pub fn EditGroup(cx: Scope) -> Element {
     log::trace!("rendering edit_group");
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
-    let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
+
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
@@ -142,56 +142,17 @@ pub fn EditGroup(cx: Scope) -> Element {
                                         }
                                     } ).map(|_friend| {
 
-                                        // let friend = _friend.clone();
                                         rsx!(
                                             friend_row {
-                                                add_or_remove: "add".into(),
+                                                add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
+                                                    "add".into()
+                                                } else {
+                                                    "remove".into()
+                                                },
                                                 friend: _friend.clone(),
                                                 conv_id: conv_id,
                                             }
                                         )
-                                        // rsx!(
-                                        //     div {
-                                        //         class: "friend-container",
-                                        //         aria_label: "Friend Container",
-                                        //         UserImage {
-                                        //             platform: _friend.platform().into(),
-                                        //             status: _friend.identity_status().into(),
-                                        //             image: _friend.profile_picture()
-                                        //         },
-                                        //         div {
-                                        //             class: "flex-1",
-                                        //             p {
-                                        //                 aria_label: "friend-username",
-                                        //                 _friend.username(),
-                                        //             },
-                                        //         },
-                                        //         Button {
-                                        //             aria_label: get_local_text("uplink.remove"),
-                                        //             icon: if *edit_group_action.current() == EditGroupAction::Add {
-                                        //                 Icon::UserPlus
-                                        //             } else {
-                                        //                 Icon::UserMinus
-                                        //             },
-                                        //             text: if *edit_group_action.current() == EditGroupAction::Add {
-                                        //                 get_local_text("uplink.add")
-                                        //             } else {
-                                        //                 get_local_text("uplink.remove")
-                                        //             },
-                                        //             onpress: move |_| {
-                                        //                 let mut friends = selected_friends.get().clone();
-                                        //                 friends.clear();
-                                        //                 selected_friends.set(vec![friend.did_key()].into_iter().collect());
-                                        //                 if *edit_group_action.current() == EditGroupAction::Add {
-                                        //                     ch.send(ChanCmd::AddParticipants);
-                                        //                 } else {
-                                        //                     ch.send(ChanCmd::RemoveParticipants);
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     }
-                                        // )
-
                                     })
                                 }
                             )
@@ -203,15 +164,16 @@ pub fn EditGroup(cx: Scope) -> Element {
     ))
 }
 
-// #[derive(PartialEq, Props)]
+#[derive(Props, Eq, PartialEq)]
 pub struct FriendRowProps {
     add_or_remove: String,
     friend: Identity,
     conv_id: Uuid,
 }
+
+/* Friend Row with add/remove button functionality */
 fn friend_row(cx: Scope<FriendRowProps>) -> Element {
-    let _friend = cx.props.friend;
-    let edit_group_action = use_state(cx, || EditGroupAction::Remove);
+    let _friend = cx.props.friend.clone();
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let conv_id = cx.props.conv_id;
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
@@ -262,38 +224,8 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
             }
         }
     });
-    cx.render(rsx!(
-        // div {
-        //     class: "friend-container",
-        //     aria_label: "Friend Container",
-        //     UserImage {
-        //         platform: cx.props.friend.platform().into(),
-        //         status: cx.props.friend.identity_status().into(),
-        //         image: cx.props.friend.profile_picture()
-        //     },
-        //     div {
-        //         class: "flex-1",
-        //         p {
-        //             aria_label: "friend-username",
-        //             cx.props.friend.username(),
-        //         },
-        //     },
-        //     if cx.props.is_creator {
-        //         rsx!(
-        //             div {
-        //                 class: "group-creator-container",
-        //                 IconElement {
-        //                     icon: Icon::Satellite
-        //                 }
-        //                 span {
-        //                     class: "group-creator-text",
-        //                     get_local_text("messages.group-creator-label")
-        //                 }
-        //             }
-        //         )
 
-        //     }
-        // }
+    cx.render(rsx!(
         div {
             class: "friend-container",
             aria_label: "Friend Container",
@@ -310,13 +242,17 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                 },
             },
             Button {
-                aria_label: get_local_text("uplink.remove"),
-                icon: if *edit_group_action.current() == EditGroupAction::Add {
+                aria_label: if cx.props.add_or_remove == "add" {
+                    get_local_text("uplink.add")
+                } else {
+                    get_local_text("uplink.remove")
+                },
+                icon: if cx.props.add_or_remove == "add" {
                     Icon::UserPlus
                 } else {
                     Icon::UserMinus
                 },
-                text: if *edit_group_action.current() == EditGroupAction::Add {
+                text: if cx.props.add_or_remove == "add" {
                     get_local_text("uplink.add")
                 } else {
                     get_local_text("uplink.remove")
@@ -325,7 +261,7 @@ fn friend_row(cx: Scope<FriendRowProps>) -> Element {
                     let mut friends = selected_friends.get().clone();
                     friends.clear();
                     selected_friends.set(vec![_friend.did_key()].into_iter().collect());
-                    if *edit_group_action.current() == EditGroupAction::Add {
+                    if cx.props.add_or_remove == "add" {
                         ch.send(ChanCmd::AddParticipants);
                     } else {
                         ch.send(ChanCmd::RemoveParticipants);

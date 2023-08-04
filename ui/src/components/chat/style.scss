@@ -117,6 +117,7 @@
     flex: 1;
     min-height: 0;
     overflow-y: scroll;
+    max-height: 150px;
 
     .friend-group {
       display: inline-flex;
