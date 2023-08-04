@@ -650,7 +650,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                             log::trace!("reacting with emoji: {}", emoji);
                             ch.send(MessagesCommand::React((state.read().did_key(), message.inner.clone(), emoji)));
                         },
-                        apply_to: EmojiDestination::Message(conversatio_id, msg_uuid),
+                        apply_to: EmojiDestination::Message(conversation_id, msg_uuid),
                     }
                 }
                 ContextItem {
