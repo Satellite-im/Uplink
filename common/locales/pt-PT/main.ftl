@@ -79,6 +79,9 @@ messages = Mensagens
     .participant = Participante
     .participants = Participantes
     .fetching = A obter mais mensagens...
+    .user-typing = { $user } está a escrever
+    .users-typing = { $users } estão a escrever
+    .users-multiple-typing = Vários membros estão a escrever
 
 favorites = Favoritos
     .favorites = Favoritos
