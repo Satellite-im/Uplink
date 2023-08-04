@@ -255,7 +255,7 @@ impl State {
             }
             Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
             Action::AddReaction(_, _, emoji) => {
-                self.ui.emoji_list.increment_emoji(emoji);
+                self.ui.emojis.increment_emoji(emoji);
             }
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {

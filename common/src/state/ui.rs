@@ -55,6 +55,12 @@ impl EmojiCounter {
     }
 }
 
+impl Default for EmojiCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
     pub focused: bool,
@@ -131,7 +137,7 @@ pub struct UI {
     pub window_height: u32,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
-    pub emoji_list: EmojiCounter,
+    pub emojis: EmojiCounter,
     pub emoji_destination: Option<EmojiDestination>,
     pub emoji_picker_visible: bool,
     #[serde(skip)]
@@ -169,7 +175,7 @@ impl Default for UI {
             window_width: Default::default(),
             window_height: Default::default(),
             metadata: Default::default(),
-            emoji_list: default_emojis(),
+            emojis: default_emojis(),
             emoji_destination: Default::default(),
             emoji_picker_visible: false,
             current_layout: Default::default(),
@@ -224,12 +230,12 @@ impl Drop for UI {
 
 impl UI {
     pub fn track_emoji_usage(&mut self, emoji: String) {
-        let count = self.emoji_list.list.entry(emoji).or_insert(0);
+        let count = self.emojis.list.entry(emoji).or_insert(0);
         *count += 1;
     }
 
     pub fn get_emoji_sorted_by_usage(&self, count: u64) -> EmojiList {
-        let mut emojis: Vec<_> = self.emoji_list.list.iter().collect();
+        let mut emojis: Vec<_> = self.emojis.list.iter().collect();
 
         // sort the list by the emoji with the most usage
         emojis.sort_by(|a, b| b.1.cmp(a.1));
