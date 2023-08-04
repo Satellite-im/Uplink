@@ -42,9 +42,9 @@
     // --primary-light: #fefff7;
 
     --primary: #95a5a6;
-    --primary-light: color-mix(in srgb, var(--secondary) 50%, #e8e1e1);
-    --primary-light-less: color-mix(in srgb, var(--secondary) 50%, #bab3b3);
-    --primary-dark: color-mix(in srgb, var(--secondary) 95%, black);
+    --primary-light: color-mix(in srgb, var(--primary) 50%, #e8e1e1);
+    --primary-light-less: color-mix(in srgb, var(--primary) 50%, #bab3b3);
+    --primary-dark: color-mix(in srgb, var(--primary) 95%, black);
 
     --secondary: #e4edf6;
     --secondary-light: color-mix(in srgb, var(--secondary) 50%, #cccccc);
