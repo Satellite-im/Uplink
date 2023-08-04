@@ -355,7 +355,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 async move {
                     if let Ok(val) = scroll.await{
                         if let Some(uuid) = active_chat.read().as_ref() {
-                            state.write_silent().update_chat_scroll(uuid.clone(), val.as_i64().unwrap_or_default());
+                            state.write_silent().update_chat_scroll(*uuid, val.as_i64().unwrap_or_default());
                             if let Some(id) = state.read().scope_ids.chatbar{
                                 update(ScopeIds::scope_id_from_usize(id));
                             };
