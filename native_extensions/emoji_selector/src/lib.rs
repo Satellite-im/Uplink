@@ -227,7 +227,7 @@ fn render_selector<'a>(
                                                         let c =  match state.read().get_active_chat() {
                                                             Some(c) => c,
                                                             None => {
-                                                                println!("can't send emoji to chatbar - no active chat");
+                                                                log::warn!("can't send emoji to chatbar - no active chat");
                                                                 return;
                                                             }
                                                         };
