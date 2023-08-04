@@ -623,6 +623,11 @@ impl State {
                 // todo
                 log::info!("audio degradation for peer {}", peer_id);
             }
+            BlinkEventKind::AudioOutputDeviceNoLongerAvailable
+            | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
+                // todo: notify user
+                log::info!("audio I/O device no longer available");
+            }
         }
     }
 }
