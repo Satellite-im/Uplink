@@ -474,9 +474,6 @@
 // override the kit topbar children just used in the edit_group.rs component
 .topbar {
   .children {
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: var(--gap);
-    padding-bottom: var(--gap);
+    padding: var(--gap) 0 var(--gap) var(--gap);
   }
 }
