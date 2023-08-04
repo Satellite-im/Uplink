@@ -610,7 +610,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
         let context_key = format!("message-{}-{}", &message.key, is_editing);
         let message_key = format!("{}-{:?}", &message.key, is_editing);
         let msg_uuid = message.inner.id();
-        let conversatio_id = message.inner.conversation_id();
+        let conversation_id = message.inner.conversation_id();
 
         if cx.props.pending {
             return rsx!(render_message {
