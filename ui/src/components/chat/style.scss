@@ -208,11 +208,11 @@
   .identity-header-sidebar {
     display: flex;
     // TODO(Lucas): Look it later, should be height: x%;
-    height: 50px;
+    min-height: 50px;
     background-size: cover;
     background-color: var(--secondary-dark);
     padding-top: 4px;
-    padding-left: 8px;
+    padding-left: 16px;
     margin-bottom: 4px;
     #profile-image {
       margin: var(--gap-less);
@@ -240,7 +240,8 @@
     position: absolute;
     display: inline-flex;
     flex-direction: column;
-    box-shadow: 0px 0px 8px var(--text-color-muted);
+    border-radius: var(--border-radius);
+    border: 1.2px solid var(--text-color-dark);
     top: 75px;
     max-width: 60%;
     min-width: 288px;
@@ -263,10 +264,11 @@
     }
 
     .border {
-      width: 80%; 
+      width: 95%;
       height: 1px;
-      background: var(--background-light);
+      background: var(--secondary);
       margin: 0 auto;
+      margin-top: 8px;
     }
   }
 }

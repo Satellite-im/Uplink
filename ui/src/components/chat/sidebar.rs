@@ -52,6 +52,7 @@ pub struct Props {
 pub struct SearchProps<'a> {
     // username, did
     search_typed_chars: UseRef<String>,
+    search_friends_is_focused: UseRef<bool>,
     search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
     friends_identities: UseState<Vec<Identity>>,
@@ -61,14 +62,12 @@ pub struct SearchProps<'a> {
 
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    if cx.props.identities.get().is_empty() {
+    if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
     let mut identities = cx.props.identities.get().clone();
     let mut friends_identities = cx.props.friends_identities.get().clone();
-    let mut chats = cx.props.chats.get().clone();
-
-    let mut users: Vec<Identity> = Vec::new();
+    let chats = cx.props.chats.get().clone();
 
     identities.sort_by_key(|entry| entry.display_name.clone());
     friends_identities.sort_by_key(|identity| identity.username().clone());
@@ -77,6 +76,10 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
         div {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
+            onblur: |_| {
+                println!("Passing here - 1");
+                *cx.props.search_friends_is_focused.write() = false;
+            },
             onmouseenter: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = true;
             },
@@ -87,13 +90,14 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         id: "users-searchdropdown-label",
-                        padding_left: "12px",
-                        padding_top: "12px",
+                        padding_left: "8px",
+                        padding_top: "4px",
                         font_weight: "bold",
-                        Label {
-                            text: "Users".into()
-                    }
-                })
+                        color: "white",
+                        p {
+                            "Users"
+                        }
+                    })
             }
             friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
@@ -104,6 +108,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         aria_label: "identity-header-sidebar",
                         prevent_default: "onclick",
                         onclick: move |evt| {
+                            println!("Passing here - 2");
                             evt.stop_propagation();
                             cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
                         },
@@ -122,20 +127,24 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     }
                 )
             })
+            if !chats.is_empty() && !friends_identities.is_empty() {
+                rsx!(div { class:"border", })
+            }
             if !chats.is_empty() {
                 rsx!(
                     div {
                         id: "groups-searchdropdown-label",
-                        padding_left: "12px",
-                        padding_top: "12px",
+                        padding_left: "8px",
+                        padding_top: "4px",
                         font_weight: "bold",
-                        Label {
-                            text: "Groups".into()
+                        color: "white",
+                        p {
+                            "Groups"
                         }
                     }
                 )
             }
-            chats.iter().cloned().enumerate().map(|(k, chat)| {               
+            chats.iter().cloned().map(|chat| {               
                 let id = chat.id.clone();
                 let participants = state.read().chat_participants(&chat);
                 let other_participants_names = State::join_usernames(&participants);
@@ -194,6 +203,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let router = use_router(cx);
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
+    let search_friends_is_focused = use_ref(cx, || false);
+
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -335,6 +346,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 search_results_friends_identities.set(friends_identities);
                                 search_results_chats.set(chats);
                                 *search_typed_chars.write_silent() = v;
+                                *search_friends_is_focused.write_silent() = true;
                                 on_search_dropdown_hover.with_mut(|i| *i = false);
                             }
                         },
@@ -370,6 +382,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             )),
             search_friends{
                 search_typed_chars: search_typed_chars.clone(),
+                search_friends_is_focused: search_friends_is_focused.clone(),
                 identities: search_results.clone(),
                 friends_identities: search_results_friends_identities.clone(),
                 chats: search_results_chats.clone(),
