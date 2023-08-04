@@ -62,10 +62,7 @@ pub fn EditGroup(cx: Scope) -> Element {
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Add);
         },
-        format!(
-            "{} →",
-            get_local_text("uplink.add-members")
-        ),
+        get_local_text("uplink.add-members")
     });
 
     let remove_friends = rsx!(a {
@@ -73,10 +70,7 @@ pub fn EditGroup(cx: Scope) -> Element {
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Remove);
         },
-        format!(
-            "{} →",
-            get_local_text("uplink.current-members")
-        ),
+        get_local_text("uplink.current-members")
     });
 
     let friends = if *edit_group_action.get() == EditGroupAction::Add {
