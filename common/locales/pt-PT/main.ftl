@@ -81,6 +81,7 @@ messages = Mensagens
     .participant = Participante
     .participants = Participantes
     .fetching = A obter mais mensagens...
+    .maximum-amount-files-per-message = Atingiste o limite de { $amount } ficheiros por mensagem.
 
 favorites = Favoritos
     .favorites = Favoritos
