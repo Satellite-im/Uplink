@@ -361,9 +361,10 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
-                link: l.to_string()
-                remote: cx.props.remote
-            })))
+                    link: l.to_string(),
+                    remote: cx.props.remote
+                })
+            ))
         }
     ))
 }

@@ -8,6 +8,8 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus_core::Scoped;
+#[cfg(not(target_os = "macos"))]
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
@@ -15,8 +17,6 @@ use dioxus_hooks::{
 use futures::{channel::oneshot, StreamExt};
 use std::{ffi::OsStr, path::PathBuf, time::Duration};
 use tokio::time::sleep;
-#[cfg(not(target_os = "macos"))]
-use wry::webview::FileDropEvent;
 
 use crate::components::files::upload_progress_bar;
 

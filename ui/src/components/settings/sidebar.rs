@@ -5,7 +5,10 @@ use common::language::get_local_text;
 use common::sounds;
 use common::state::State;
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::{
+    prelude::{Router, RouterContext},
+    *,
+};
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -179,7 +182,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if state.read().configuration.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::Interaction);
                         }
-                        use_router(cx).replace_route(route, None, None);
+                        replace_route(&cx, route);
                     }
                 },
             )),
@@ -196,4 +199,10 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             }
         }
     ))
+}
+
+fn replace_route(cx: &ScopeState, route: &str) {
+    cx.consume_context::<RouterContext>()
+        .unwrap()
+        .replace(route);
 }

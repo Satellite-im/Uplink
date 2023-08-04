@@ -1223,6 +1223,22 @@ fn get_call_dialog(cx: Scope) -> Element {
         })),
     }))
 }
+use dioxus_router::prelude::*;
+
+#[derive(PartialEq, Routable, Clone)]
+pub enum Route {
+    #[route("/loading")]
+    Loading,
+
+    #[route("/chat")]
+    Chat,
+
+    #[route("/friends")]
+    Friends,
+
+    #[route("/settings")]
+    Settings,
+}
 
 fn get_router(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;

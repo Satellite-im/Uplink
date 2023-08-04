@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
 use kit::elements::{button::Button, Appearance};
-use wry::webview::FileDropEvent;
 
 use crate::utils::{
     get_drag_event,

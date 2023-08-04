@@ -215,7 +215,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                                 padding_right_for_ellipsis: 105,
                             }),
                             ..Default::default()
-                        }
+                        },
                         onchange: move |(val, validation_passed): (String, bool)| {
                             *pin.write_silent() = val.clone();
                             // Reset the error when the person changes the pin
@@ -236,7 +236,7 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             } else {
                                 validation_failure.set(Some(UnlockError::ValidationError));
                             }
-                        }
+                        },
                         onreturn: move |_| {
                             if let Some(validation_error) = validation_failure.get() {
                                 shown_error.set(validation_error.translation());

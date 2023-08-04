@@ -2,11 +2,11 @@ use std::{collections::HashMap, rc::Weak};
 
 use derive_more::Display;
 
+use dioxus_desktop::wry::webview::WebView;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
-use wry::webview::WebView;
 
 use crate::warp_runner::ui_adapter;
 

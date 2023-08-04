@@ -2,7 +2,6 @@ use crate::elements::button::Button;
 use crate::elements::Appearance;
 use common::state::{Action, State};
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 
 use common::icons::outline::Shape as Icon;
 
@@ -30,7 +29,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     use_effect(cx, (), |_| {
         to_owned![eval];
         async move {
-            eval(SCRIPT.to_string());
+            eval(&SCRIPT);
         }
     });
 

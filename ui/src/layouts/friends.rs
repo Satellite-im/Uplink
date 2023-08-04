@@ -1,6 +1,6 @@
 use common::language::get_local_text;
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::{prelude::use_navigator, *};
 use kit::{
     components::nav::Nav,
     elements::{button::Button, Appearance},
@@ -78,6 +78,7 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = cx.props.route;
+    let navigator = use_navigator(cx).clone();
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {
@@ -99,9 +100,7 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
                     active: cx.props.route_info.active.clone(),
-                    onnavigate: move |r| {
-                        use_router(cx).replace_route(r, None, None);
-                    }
+                    onnavigate: move |r| { navigator.replace(r); }
                 }
             }
         )

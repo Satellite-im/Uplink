@@ -3,7 +3,6 @@ use common::{
     state::{scope_ids::ScopeIds, Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use kit::{
@@ -105,7 +104,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
         active: routes_[0].clone(),
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
-            eval(scroll_script);
+            eval(&scroll_script);
         }
     }))
 }
@@ -132,13 +131,13 @@ fn render_selector<'a>(
     cx.render(rsx! (
             div {
                 onmouseenter: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = true;
                     }
                 },
                 onmouseleave: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = false;
                         eval(focus_script.to_string());
@@ -148,13 +147,13 @@ fn render_selector<'a>(
                 aria_label: "emoji-selector",
                 tabindex: "0",
                 onblur: |_| {
-                    #[cfg(target_os = "macos")] 
+                    #[cfg(target_os = "macos")]
                     {
                         if !*mouse_over_emoji_button.read() {
                             hide.set(false);
                         }
                     }
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
                             hide.set(false);

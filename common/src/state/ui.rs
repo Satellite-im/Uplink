@@ -1,4 +1,5 @@
 use crate::icons::outline::Shape as Icon;
+use dioxus_desktop::wry::webview::WebView;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,6 @@ use std::{
 };
 use uuid::Uuid;
 use warp::logging::tracing::log;
-use wry::webview::WebView;
 
 use super::{call, notifications::Notifications};
 

@@ -41,7 +41,7 @@ use warp::{
     raygun::ConversationType,
 };
 
-use wry::webview::FileDropEvent;
+use dioxus_desktop::wry::webview::FileDropEvent;
 
 use crate::{
     components::chat::{edit_group::EditGroup, group_users::GroupUsers},
@@ -106,6 +106,7 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
+    let eval = use_eval(cx);
     let overlay_script = include_str!("../overlay.js");
 
     let files_to_upload = use_state(cx, Vec::new);
@@ -153,7 +154,7 @@ pub fn Compose(cx: Scope) -> Element {
             ondragover: move |_| {
                 if drag_event.with(|i| i.clone()).is_none() {
                     cx.spawn({
-                        to_owned![files_to_upload, drag_event, window, overlay_script];
+                        to_owned![files_to_upload, drag_event, window, overlay_script, eval];
                         async move {
                            let new_files = drag_and_drop_function(&window, &drag_event, overlay_script).await;
                             let mut new_files_to_upload: Vec<_> = files_to_upload
@@ -205,10 +206,10 @@ pub fn Compose(cx: Scope) -> Element {
                     ignore_focus: should_ignore_focus,
                 }
             },
-            // may need this later when video calling is possible. 
+            // may need this later when video calling is possible.
             // data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
             //     MediaPlayer {
-            //         settings_text: get_local_text("settings.settings"), 
+            //         settings_text: get_local_text("settings.settings"),
             //         enable_camera_text: get_local_text("media-player.enable-camera"),
             //         fullscreen_text: get_local_text("media-player.fullscreen"),
             //         popout_player_text: get_local_text("media-player.popout-player"),
@@ -573,6 +574,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
 // Like ui::src:layout::storage::drag_and_drop_function
 async fn drag_and_drop_function(
+    eval: UseEval,
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
     overlay_script: String,

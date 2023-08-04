@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use dioxus::prelude::{KeyCode, Props};
 use dioxus_core::prelude::*;
 use dioxus_desktop::use_global_shortcut;
+use dioxus_desktop::wry::application::keyboard::ModifiersState;
 use dioxus_hooks::{to_owned, use_ref};
-use wry::application::keyboard::ModifiersState;
 
 use crate::utils::clipboard::clipboard_data::get_files_path_from_clipboard;
 

@@ -244,7 +244,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         },
                     }
                 }
-            ))
+            )),
             with_nav: cx.render(rsx!(
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
@@ -415,7 +415,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name? 
+                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                     let participants_name = match chat.conversation_name {
                         Some(name) => name,
                         None => State::join_usernames(&other_participants)
@@ -470,10 +470,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
-                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")} 
-                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")} 
+                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")}
+                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")}
                                             else {get_local_text("uplink.delete-conversation")},
-                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()} 
+                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()}
                                             else if is_group_conv && !is_creator {"chats-leave-group".into()}
                                             else {"chats-delete-conversation".into()},
                                             onpress: move |_| {

@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use std::path::Path;
+use std::rc::Rc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
@@ -155,7 +156,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     on_download: move |_| {
                         let file_name = file2.clone().name();
                         download_file(&file_name, ch);
-                    }
+                    },
                     file: file.clone()
                 }
             )
@@ -212,7 +213,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: get_local_text("files.upload"),
                                     }
-                                ))
+                                )),
                                 onpress: move |_| {
                                     storage_controller.with_mut(|i|  i.is_renaming_map = None);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
@@ -415,7 +416,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             if key_code == Code::Enter {
                                                 ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                             }
-                                        }
+                                        },
                                         onpress: move |_| {
                                             storage_controller.with_mut(|i| i.is_renaming_map = None);
                                             ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
@@ -604,7 +605,11 @@ fn allow_block_folder_nav(
     allow_folder_navigation(window, files_in_queue_to_upload.read().is_empty());
 }
 
-fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
+fn allow_folder_navigation(
+    window: &DesktopContext,
+    allow_navigation: bool,
+    eval: Rc<dyn Fn(&str)>,
+) {
     let new_script = if allow_navigation {
         ALLOW_FOLDER_NAVIGATION
             .replace("$POINTER_EVENT", "")
@@ -614,5 +619,5 @@ fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
             .replace("$POINTER_EVENT", "none")
             .replace("$OPACITY", "0.5")
     };
-    window.eval(&new_script);
+    eval(&new_script);
 }
