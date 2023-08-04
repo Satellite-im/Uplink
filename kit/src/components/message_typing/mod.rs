@@ -14,10 +14,10 @@ pub fn MessageTyping(cx: Scope<Props>) -> Element {
     let typing_users = if cx.props.typing_users.len() > 3 {
         get_local_text("messages.users-multiple-typing")
     } else {
-        let translation = if cx.props.typing_users.len() == 1 {
-            "messages.user-typing"
+        let (translation, key) = if cx.props.typing_users.len() == 1 {
+            ("messages.user-typing", "user")
         } else {
-            "messages.users-typing"
+            ("messages.users-typing", "users")
         };
         let mut users = cx.props.typing_users.join(", ");
         let users = if users.len() > MAX_LEN {
@@ -28,7 +28,7 @@ pub fn MessageTyping(cx: Scope<Props>) -> Element {
             users
         };
         get_local_text_args_builder(translation, |m| {
-            m.insert("users", users.into());
+            m.insert(key, users.into());
         })
     };
 
