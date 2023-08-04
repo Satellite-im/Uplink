@@ -264,7 +264,6 @@ fn render_selector<'a>(
 // this avoid a BorrowMut error. needs an argument to make the curly braces syntax work
 #[inline_props]
 fn render_1(cx: Scope, _unused: bool) -> Element {
-    //println!("render emoji");
     let state = use_shared_state::<State>(cx)?;
     let mouse_over_emoji_button = use_ref(cx, || false);
     let visible = state.read().ui.emoji_picker_visible;
