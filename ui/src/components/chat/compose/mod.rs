@@ -571,7 +571,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         all_participants.len()
     );
 
-    let conv_id = data.active_chat.id.clone();
+    let conv_id = data.active_chat.id;
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| {
         to_owned![conv_id];
