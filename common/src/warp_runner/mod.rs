@@ -361,7 +361,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         Ok(base64_default_image)
     }));
 
-    let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone(), None)
+    let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone())
         .await
         .map(|mp| Box::new(mp) as Account)?;
 
@@ -377,14 +377,10 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
     let rg_config = RgIpfsConfig::production(path);
 
-    let messaging = warp_rg_ipfs::IpfsMessaging::new(
-        Some(rg_config),
-        account.clone(),
-        Some(storage.clone()),
-        None,
-    )
-    .await
-    .map(|rg| Box::new(rg) as Messaging)?;
+    let messaging =
+        warp_rg_ipfs::IpfsMessaging::new(Some(rg_config), account.clone(), Some(storage.clone()))
+            .await
+            .map(|rg| Box::new(rg) as Messaging)?;
 
     let blink = warp_blink_wrtc::BlinkImpl::new(account.clone()).await?;
 
