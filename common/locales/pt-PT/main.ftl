@@ -82,6 +82,7 @@ messages = Mensagens
     .user-typing = { $user } está a escrever
     .users-typing = { $users } estão a escrever
     .users-multiple-typing = Vários membros estão a escrever
+    .maximum-amount-files-per-message = Atingiste o limite de { $amount } ficheiros por mensagem.
 
 favorites = Favoritos
     .favorites = Favoritos
