@@ -18,6 +18,7 @@ use dioxus_desktop::tao::event::WindowEvent;
 use dioxus_desktop::tao::menu::AboutMetadata;
 use dioxus_desktop::Config;
 use dioxus_desktop::{tao, use_window};
+use dioxus_router::prelude::{use_navigator, Routable, Router};
 use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -33,6 +34,7 @@ use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use overlay::{make_config, OverlayDom};
+use tokio::sync::broadcast::error::RecvError;
 use utils::build_user_from_identity;
 use uuid::Uuid;
 
@@ -1223,149 +1225,58 @@ fn get_call_dialog(cx: Scope) -> Element {
         })),
     }))
 }
-use dioxus_router::prelude::*;
 
-#[derive(PartialEq, Routable, Clone)]
-pub enum Route {
-    #[route("/loading")]
-    Loading,
-
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum UplinkRoute {
+    #[route("/")]
+    LoadingLayout {},
     #[route("/chat")]
-    Chat,
-
-    #[route("/friends")]
-    Friends,
-
+    ChatLayout { route_info: RouteInfo },
     #[route("/settings")]
-    Settings,
+    SettingsLayout { route_info: RouteInfo },
+    #[route("/friends")]
+    FriendsLayout { route_info: RouteInfo },
+    #[route("/files")]
+    FilesLayout { route_info: RouteInfo },
 }
-
 fn get_router(cx: Scope) -> Element {
+    // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
-    let pending_friends = state.read().friends().incoming_requests.len();
-
-    let chat_route = UIRoute {
-        to: UPLINK_ROUTES.chat,
-        name: get_local_text("uplink.chats"),
-        icon: Icon::ChatBubbleBottomCenterText,
-        ..UIRoute::default()
-    };
-    let settings_route = UIRoute {
-        to: UPLINK_ROUTES.settings,
-        name: get_local_text("settings.settings"),
-        icon: Icon::Cog6Tooth,
-        ..UIRoute::default()
-    };
-    let friends_route = UIRoute {
-        to: UPLINK_ROUTES.friends,
-        name: get_local_text("friends.friends"),
-        icon: Icon::Users,
-        with_badge: if pending_friends > 0 {
-            Some(pending_friends.to_string())
-        } else {
-            None
-        },
-        loading: None,
-    };
-    let files_route = UIRoute {
-        to: UPLINK_ROUTES.files,
-        name: get_local_text("files.files"),
-        icon: Icon::Folder,
-        ..UIRoute::default()
-    };
-    let routes = vec![
-        chat_route.clone(),
-        files_route.clone(),
-        friends_route.clone(),
-        settings_route.clone(),
-    ];
-
-    let initial_friend_page = use_ref(cx, || FriendRoute::All);
-
-    cx.render(rsx!(
-        Router {
-            Route {
-                to: UPLINK_ROUTES.loading,
-                LoadingLayout{}
-            },
-            Route {
-                to: UPLINK_ROUTES.chat,
-                ChatLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: chat_route.clone(),
-                    }
-                }
-            },
-            Route {
-                to: UPLINK_ROUTES.settings,
-                SettingsLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: settings_route.clone(),
-                    }
-                }
-            },
-            Route {
-                to: UPLINK_ROUTES.friends,
-                FriendsLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: friends_route.clone(),
-                    },
-                    initial_page: initial_friend_page.clone()
-                }
-            },
-            Route {
-                to: UPLINK_ROUTES.files,
-                FilesLayout {
-                    route_info: RouteInfo {
-                        routes: routes.clone(),
-                        active: files_route,
-                    }
-                }
-            },
-            notification_action_handler {
-                friend_state: initial_friend_page
-            }
-        }
-    ))
-}
-
-// handle notification actions
-// we need this here as an element to e.g. change routings
-
-#[derive(Props)]
-struct NotificationProps<'a> {
-    friend_state: &'a UseRef<FriendRoute>,
-}
-
-fn notification_action_handler<'a>(cx: Scope<'a, NotificationProps<'a>>) -> Element<'a> {
-    let state = use_shared_state::<State>(cx)?;
-    let route = use_router(cx);
-    let friend_state = cx.props.friend_state;
-
+    let navigator = use_navigator(cx);
     use_future(cx, (), |_| {
-        to_owned![state, route, friend_state];
+        to_owned![state, navigator];
         async move {
-            let listener_channel = NOTIFICATION_LISTENER.rx.clone();
+            let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
             log::trace!("starting notification action listener");
-            let mut ch = listener_channel.lock().await;
-            while let Some(cmd) = ch.recv().await {
+            loop {
+                let cmd = match ch.recv().await {
+                    Ok(cmd) => cmd,
+                    Err(RecvError::Closed) => {
+                        log::debug!("RecvError::Closed while reading from NOTIFICATION_LISTENER");
+                        return;
+                    }
+                    _ => {
+                        tokio::time::sleep(Duration::from_millis(100));
+                        continue;
+                    }
+                };
                 log::debug!("handling notification action {:#?}", cmd);
                 match cmd {
                     NotificationAction::DisplayChat(uuid) => {
                         state.write_silent().mutate(Action::ChatWith(&uuid, true));
-                        route.replace_route(UPLINK_ROUTES.chat, None, None);
+                        navigator.replace(UPLINK_ROUTES.chat);
                     }
                     NotificationAction::FriendListPending => {
-                        *friend_state.write_silent() = FriendRoute::Pending;
-                        route.replace_route(UPLINK_ROUTES.friends, None, None);
+                        navigator.replace(UPLINK_ROUTES.friends);
                     }
-                    NotificationAction::Dummy => {}
+                    _ => {}
                 }
             }
         }
     });
-    cx.render(rsx!(()))
+
+    render! {
+     Router::<UplinkRoute>{}
+    }
 }

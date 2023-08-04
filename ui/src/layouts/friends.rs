@@ -1,4 +1,9 @@
-use common::language::get_local_text;
+use std::time::Duration;
+
+use common::{
+    language::get_local_text,
+    notifications::{NotificationAction, NOTIFICATION_LISTENER},
+};
 use dioxus::prelude::*;
 use dioxus_router::{prelude::use_navigator, *};
 use kit::{
@@ -6,14 +11,18 @@ use kit::{
     elements::{button::Button, Appearance},
     layout::topbar::Topbar,
 };
+use tokio::sync::broadcast::error::RecvError;
 use warp::logging::tracing::log;
 
-use crate::components::{
-    chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    friends::{
-        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+use crate::{
+    components::{
+        chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+        friends::{
+            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+        },
     },
+    UPLINK_ROUTES,
 };
 use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
@@ -21,7 +30,6 @@ use common::state::{ui, Action, State};
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
-    initial_page: UseRef<FriendRoute>,
 }
 
 #[derive(PartialEq, Clone)]
@@ -34,8 +42,8 @@ pub enum FriendRoute {
 #[allow(non_snake_case)]
 pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let route = use_state(cx, || cx.props.initial_page.read().clone());
-    *cx.props.initial_page.write_silent() = FriendRoute::All;
+    let route = use_state(cx, || FriendRoute::All);
+    let navigator = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
@@ -46,6 +54,37 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
         }));
     }
     log::trace!("rendering FriendsLayout");
+
+    // this is a hack to deal with a change in how Dioxus routing works. The `route` hook used to be shared
+    // between elements.
+    use_future(cx, (), |_| {
+        to_owned![state, navigator, route];
+        async move {
+            let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
+            log::trace!("starting notification action listener");
+            loop {
+                let cmd = match ch.recv().await {
+                    Ok(cmd) => cmd,
+                    Err(RecvError::Closed) => {
+                        log::debug!("RecvError::Closed while reading from NOTIFICATION_LISTENER");
+                        return;
+                    }
+                    _ => {
+                        tokio::time::sleep(Duration::from_millis(100));
+                        continue;
+                    }
+                };
+                log::debug!("handling notification action {:#?}", cmd);
+                match cmd {
+                    NotificationAction::FriendListPending => {
+                        route.set(FriendRoute::Pending);
+                    }
+                    NotificationAction::Dummy => {}
+                    _ => {}
+                }
+            }
+        }
+    });
 
     cx.render(rsx!(
         div {
@@ -99,8 +138,10 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
                 render_route(cx, route.get().clone()),
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
-                    onnavigate: move |r| { navigator.replace(r); }
+                    active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.friends).cloned().unwrap_or_default(),
+                    onnavigate: move |r| {
+                        navigator.replace(r);
+                    }
                 }
             }
         )

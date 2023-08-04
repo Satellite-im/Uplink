@@ -16,7 +16,7 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-use crate::components::chat::RouteInfo;
+use crate::{components::chat::RouteInfo, UPLINK_ROUTES};
 
 pub enum Page {
     About,
@@ -70,6 +70,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let router = use_navigator(cx);
 
     let profile = UIRoute {
         to: "profile",
@@ -177,7 +178,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             with_nav: cx.render(rsx!(
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
+                    active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
                     onnavigate: move |route| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::Interaction);

@@ -248,7 +248,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             with_nav: cx.render(rsx!(
                 Nav {
                     routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
+                    active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.chat).cloned().unwrap_or_default(),
                     onnavigate: move |r| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);

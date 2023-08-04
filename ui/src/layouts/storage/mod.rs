@@ -43,6 +43,7 @@ use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::storage::file_modal::get_file_modal;
+use crate::UPLINK_ROUTES;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -89,6 +90,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let router = use_navigator(cx);
 
     allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
 
@@ -538,9 +540,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.active.clone(),
+                        active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.files).cloned().unwrap_or_default(),
                         onnavigate: move |r| {
-                            use_router(cx).replace_route(r, None, None);
+                            router.replace(r);
                         }
                     }
                 ))

@@ -1,24 +1,27 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 
-use crate::components::{
-    chat::RouteInfo,
-    settings::{
-        sidebar::{Page, Sidebar},
-        sub_pages::{
-            about::AboutPage,
-            accessibility::AccessibilitySettings,
-            audio::AudioSettings,
-            developer::DeveloperSettings,
-            extensions::ExtensionSettings,
-            general::GeneralSettings,
-            licenses::Licenses,
-            notifications::NotificationSettings,
-            // files::FilesSettings,
-            // privacy::PrivacySettings,
-            profile::ProfileSettings,
+use crate::{
+    components::{
+        chat::RouteInfo,
+        settings::{
+            sidebar::{Page, Sidebar},
+            sub_pages::{
+                about::AboutPage,
+                accessibility::AccessibilitySettings,
+                audio::AudioSettings,
+                developer::DeveloperSettings,
+                extensions::ExtensionSettings,
+                general::GeneralSettings,
+                licenses::Licenses,
+                notifications::NotificationSettings,
+                // files::FilesSettings,
+                // privacy::PrivacySettings,
+                profile::ProfileSettings,
+            },
         },
     },
+    UPLINK_ROUTES,
 };
 
 use common::state::{ui, Action, State};
@@ -34,6 +37,7 @@ pub struct Props {
 pub fn SettingsLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
+    let router = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
@@ -92,9 +96,9 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
                     Nav {
                         routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.active.clone(),
+                        active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
                         onnavigate: move |r| {
-                            use_router(cx).replace_route(r, None, None);
+                            router.replace(r);
                         }
                     }
                 ))
