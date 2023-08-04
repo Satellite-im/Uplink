@@ -672,7 +672,7 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         state.write().mutate(Action::SetEmojiDestination(
                             // Tells the default emojipicker where to place the next emoji
                             Some(
-                                common::state::ui::EmojiDestination::Message(conversatio_id, msg_uuid)
+                                common::state::ui::EmojiDestination::Message(conversation_id, msg_uuid)
                             )
                         ));
                         reacting_to.set(Some(msg_uuid));
