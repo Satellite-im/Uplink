@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use warp::constellation::file::File;
 
 use crate::{
@@ -10,13 +9,6 @@ use crate::{
 use common::{icons, language::get_local_text, warp_runner::thumbnail_to_base64};
 
 pub type To = &'static str;
-
-const SCROLL_BOTTOM: &str = r#"
-    const chat = document.getElementById("messages")
-    const lastChild = chat.lastElementChild
-    chat.scrollTop = chat.scrollHeight
-    lastChild.scrollIntoView({ behavior: 'smooth', block: 'end' })
-"#;
 
 #[derive(Clone, PartialEq)]
 pub struct Route {
@@ -47,7 +39,6 @@ pub struct Props<'a> {
     #[props(default = false)]
     is_disabled: bool,
     ignore_focus: bool,
-    with_scroll_btn: bool,
 }
 
 #[derive(Props)]
@@ -136,15 +127,6 @@ pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "chatbar disable-select",
-            cx.props.with_scroll_btn.then(|| {
-                rsx!(div {
-                    class: "btn scroll-bottom-btn",
-                    onclick: |_| {
-                        use_eval(cx)(SCROLL_BOTTOM.to_string());
-                    },
-                    get_local_text("messages.scroll-bottom"),
-                })
-            }),
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
             div{

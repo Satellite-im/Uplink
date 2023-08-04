@@ -51,6 +51,12 @@
   }
 }
 
+.chatbar-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 .chatbar-error-input-message {
   margin-bottom: 1%;
   margin-top: -2%;
@@ -483,7 +489,7 @@
   padding: 2px; 
   height: fit-content; 
   position: absolute; 
-  top: calc(-0.5 * var(--height-input)); 
+  bottom: 100%; 
   left: 0;
   right: 0; 
   margin-left: auto;

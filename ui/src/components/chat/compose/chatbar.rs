@@ -11,6 +11,7 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
+use dioxus_desktop::use_eval;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -34,7 +35,7 @@ const MAX_FILES_PER_MESSAGE: usize = 8;
 const SCROLL_BTN_THRESHOLD: i64 = -1000;
 
 use crate::{
-    components::paste_files_with_shortcut,
+    components::{chat::compose::messages::SCROLL_BOTTOM, paste_files_with_shortcut},
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
@@ -76,7 +77,12 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .unwrap_or(Uuid::nil());
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
 
-    let with_scroll_btn = state.read().get_active_chat().map(|c|c.scroll_value.unwrap_or_default()).unwrap_or_default() < SCROLL_BTN_THRESHOLD;
+    let with_scroll_btn = state
+        .read()
+        .get_active_chat()
+        .map(|c| c.scroll_value.unwrap_or_default())
+        .unwrap_or_default()
+        < SCROLL_BTN_THRESHOLD;
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
             || !state
@@ -425,7 +431,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
             },
             value: state.read().get_active_chat().as_ref().and_then(|d| d.draft.clone()).unwrap_or_default(),
             onreturn: move |_| submit_fn(),
-            with_scroll_btn: with_scroll_btn, 
             extensions: cx.render(rsx!(for node in ext_renders { rsx!(node) })),
             controls: cx.render(
                 rsx!(
@@ -528,29 +533,41 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     ));
 
     cx.render(rsx!(
-        if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
-            rsx!(paste_files_with_shortcut::PasteFilesShortcut {
-                on_paste: move |files_local_path: Vec<PathBuf>| {
-                    if !files_local_path.is_empty() {
-                        let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                            .unwrap_or_default()
-                            .iter()
-                            .filter(|file_name| !files_local_path.contains(file_name))
-                            .cloned()
-                            .collect();
-                    new_files_to_upload.extend(files_local_path);
-                    state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                    }
-                },
+        div {
+            class: "chatbar-container",
+            with_scroll_btn.then(|| {
+                rsx!(div {
+                    class: "btn scroll-bottom-btn",
+                    onclick: |_| {
+                        use_eval(cx)(SCROLL_BOTTOM.to_string());
+                    },
+                    get_local_text("messages.scroll-bottom"),
+                })
             })
-        }
-        Attachments {
-            chat_id: chat_id,
-            on_remove: move |_| {
-                update_send();
+            if state.read().ui.metadata.focused && *enable_paste_shortcut.read() {
+                rsx!(paste_files_with_shortcut::PasteFilesShortcut {
+                    on_paste: move |files_local_path: Vec<PathBuf>| {
+                        if !files_local_path.is_empty() {
+                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                                .unwrap_or_default()
+                                .iter()
+                                .filter(|file_name| !files_local_path.contains(file_name))
+                                .cloned()
+                                .collect();
+                        new_files_to_upload.extend(files_local_path);
+                        state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                        }
+                    },
+                })
             }
+            Attachments {
+                chat_id: chat_id,
+                on_remove: move |_| {
+                    update_send();
+                }
+            }
+            chatbar
         }
-        chatbar
     ))
 }
 

@@ -62,19 +62,19 @@ const SETUP_CONTEXT_PARENT: &str = r#"
     }
 "#;
 
-const SCROLL_TO: &str = r#"
+pub const SCROLL_TO: &str = r#"
     const chat = document.getElementById("messages")
     chat.scrollTo(0, $VALUE)
 "#;
 
-const SCROLL_UNREAD: &str = r#"
+pub const SCROLL_UNREAD: &str = r#"
     const chat = document.getElementById("messages")
     const child = chat.children[chat.childElementCount - $UNREADS]
     chat.scrollTop = chat.scrollHeight
     child.scrollIntoView({ behavior: 'smooth', block: 'end' })
 "#;
 
-const SCROLL_BOTTOM: &str = r#"
+pub const SCROLL_BOTTOM: &str = r#"
     const chat = document.getElementById("messages")
     const lastChild = chat.lastElementChild
     chat.scrollTop = chat.scrollHeight
@@ -345,15 +345,16 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         )
     };
 
+    let eval = use_eval(cx);
+
     cx.render(rsx!(
         div {
             id: "messages",
-            onscroll: |_| {
-                let scroll = use_eval(cx)(READ_SCROLL.to_string());
+            onscroll: move |_| {
                 let update = cx.schedule_update_any();
-                to_owned![update, state, active_chat];
+                to_owned![eval, update, state, active_chat];
                 async move {
-                    if let Ok(val) = scroll.await{
+                    if let Ok(val) = eval(READ_SCROLL.to_string()).await{
                         if let Some(uuid) = active_chat.read().as_ref() {
                             state.write_silent().update_chat_scroll(*uuid, val.as_i64().unwrap_or_default());
                             if let Some(id) = state.read().scope_ids.chatbar{
