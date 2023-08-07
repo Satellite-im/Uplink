@@ -23,8 +23,8 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
     state::{
-        group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
-        MessageGroup, scope_ids::ScopeIds,
+        group_messages, pending_group_messages, pending_message::PendingMessage,
+        scope_ids::ScopeIds, GroupedMessage, MessageGroup,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -163,7 +163,11 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             // yes, this check seems like some nonsense. but it eliminates a jitter and if
             // switching out of the chats view ever gets fixed, it would let you scroll up in the active chat,
             // switch to settings or whatnot, then come back to the chats view and not lose your place.
-            if prev_chat_id.read().map(|prev: Uuid| !prev.eq(&id)).unwrap_or(true) {
+            if prev_chat_id
+                .read()
+                .map(|prev: Uuid| !prev.eq(&id))
+                .unwrap_or(true)
+            {
                 *prev_chat_id.write_silent() = Some(id);
                 let script = if let Some(val) = scroll {
                     SCROLL_TO.replace("$VALUE", &val.to_string())
@@ -360,7 +364,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             if let Some(id) = state.read().scope_ids.chatbar{
                                 update(ScopeIds::scope_id_from_usize(id));
                             };
-                        }     
+                        }
                     }
                 }
             },
