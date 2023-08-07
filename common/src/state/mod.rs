@@ -69,7 +69,7 @@ pub struct State {
     #[serde(skip)]
     id: DID,
     pub route: route::Route,
-    pub chats: chats::Chats,
+    chats: chats::Chats,
     friends: friends::Friends,
     #[serde(skip)]
     pub storage: storage::Storage,
@@ -517,9 +517,6 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
-                    if chat.unreads > 0 {
-                        chat.unreads -= 1;
-                    }
                 }
 
                 if should_decrement_notifications {
