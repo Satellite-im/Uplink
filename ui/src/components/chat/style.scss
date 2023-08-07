@@ -88,7 +88,6 @@
     gap: 0;
     max-height: 20vh;
     overflow: scroll;
-
     .friend-group {
       display: inline-flex;
       flex-direction: column;
@@ -103,20 +102,14 @@
       }
     }
   }
-
-  .btn,
-  .btn-wrap {
-    width: 100% !important;
-  }
 }
 
 #edit-group {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-subtle-color);
+  border-bottom: 2px solid var(--secondary);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
-  height: 100%;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
@@ -129,10 +122,12 @@
     flex: 1;
     min-height: 0;
     overflow-y: scroll;
+    max-height: 150px;
 
     .friend-group {
       display: inline-flex;
       flex-direction: column;
+      margin: 0 var(--gap);
       .friend-container {
         display: inline-flex;
         flex-direction: row;
@@ -144,20 +139,15 @@
       }
     }
   }
-
-  .btn,
-  .btn-wrap {
-    width: 100% !important;
-  }
 }
 
 .edit-group-name {
-  margin-top: 8px;
   display: flex;
   gap: var(--gap);
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
+  margin-right: 8px;
 }
 
 .create-group-name {
@@ -170,12 +160,11 @@
 
 #group-users {
   color: var(--text-color);
-  border-bottom: 1px solid var(--border-subtle-color);
+  border-bottom: 2px solid var(--secondary);
   padding-bottom: var(--padding);
   padding-left: 16px;
   padding-right: 16px;
   padding-top: 16px;
-  height: 100%;
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
@@ -497,5 +486,19 @@
 
   &:hover {
     background-color: var(--secondary);
+  }
+}
+
+.float-right-link {
+  float: right;
+  cursor: pointer;
+  color: var(--text-color);
+  user-select: none;
+}
+
+// override the kit topbar children just used in the edit_group.rs component
+.topbar {
+  .children {
+    padding: var(--gap) 0 var(--gap) var(--gap);
   }
 }
