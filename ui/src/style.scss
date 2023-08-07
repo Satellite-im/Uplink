@@ -5,7 +5,8 @@ body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
   overflow: hidden;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-app-window);
+  border: 0.5px solid var(--secondary);
 }
 #main,
 #app-wrap {
