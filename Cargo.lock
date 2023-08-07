@@ -2479,8 +2479,11 @@ dependencies = [
  "dioxus-desktop",
  "emojis",
  "extensions",
+ "futures",
  "kit",
  "once_cell",
+ "uuid",
+ "warp",
 ]
 
 [[package]]
