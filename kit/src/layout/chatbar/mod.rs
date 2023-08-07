@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use warp::constellation::file::File;
 
 use crate::{
-    components::embeds::file_embed::FileEmbed,
+    components::{embeds::file_embed::FileEmbed, message_typing::MessageTyping},
     elements::{button::Button, label::Label, textarea, Appearance},
 };
 
@@ -27,6 +27,7 @@ pub struct ReplyInfo<'a> {
 pub struct Props<'a> {
     id: String,
     placeholder: String,
+    typing_users: Vec<String>,
     with_replying_to: Option<Element<'a>>,
     with_file_upload: Option<Element<'a>>,
     extensions: Option<Element<'a>>,
@@ -121,27 +122,37 @@ pub fn Reply<'a>(cx: Scope<'a, ReplyProps<'a>>) -> Element<'a> {
 #[allow(non_snake_case)]
 pub fn Chatbar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let controlled_input_id = &cx.props.id;
+    let is_typing = !cx.props.typing_users.is_empty();
+
     cx.render(rsx!(
         div {
             class: "chatbar disable-select",
             cx.props.with_replying_to.as_ref(),
             cx.props.with_file_upload.as_ref(),
-            textarea::Input {
-                key: "{controlled_input_id}",
-                id: controlled_input_id.clone(),
-                loading: cx.props.loading.unwrap_or_default(),
-                placeholder: cx.props.placeholder.clone(),
-                ignore_focus: cx.props.ignore_focus,
-                show_char_counter: true,
-                value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
-                onchange: move |(v, _)| cx.props.onchange.call(v),
-                onreturn: move |(v, is_valid, _)| {
-                    if is_valid {
-                        cx.props.onreturn.call(v);
-                    }
+            div{
+                class: "chatbar-group",
+                textarea::Input {
+                    key: "{controlled_input_id}",
+                    id: controlled_input_id.clone(),
+                    loading: cx.props.loading.unwrap_or_default(),
+                    placeholder: cx.props.placeholder.clone(),
+                    ignore_focus: cx.props.ignore_focus,
+                    show_char_counter: true,
+                    value: if cx.props.is_disabled { get_local_text("messages.not-friends")} else { cx.props.value.clone().unwrap_or_default()},
+                    onchange: move |(v, _)| cx.props.onchange.call(v),
+                    onreturn: move |(v, is_valid, _)| {
+                        if is_valid {
+                            cx.props.onreturn.call(v);
+                        }
+                    },
+                    is_disabled: cx.props.is_disabled,
                 },
-                is_disabled: cx.props.is_disabled,
-            },
+                is_typing.then(|| {
+                    rsx!(MessageTyping {
+                        typing_users: cx.props.typing_users.clone()
+                    })
+                })
+            }
             cx.props.extensions.as_ref(),
             div {
                 class: "controls",

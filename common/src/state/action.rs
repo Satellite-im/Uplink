@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Weak};
+use std::{collections::HashMap, path::PathBuf, rc::Weak};
 
 use derive_more::Display;
 
@@ -159,6 +159,12 @@ pub enum Action<'a> {
     /// Sets a draft message for the chatbar for a given chat.
     #[display(fmt = "SetChatDraft")]
     SetChatDraft(Uuid, String),
+    /// Sets a files attached to send
+    #[display(fmt = "SetChatAttachments")]
+    SetChatAttachments(Uuid, Vec<PathBuf>),
+    /// Clear attachments on chat
+    #[display(fmt = "ClearChatAttachments")]
+    ClearChatAttachments(Uuid),
     /// Clears a drafted message from a given chat.
     #[display(fmt = "ClearChatDraft")]
     ClearChatDraft(Uuid),

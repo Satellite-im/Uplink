@@ -99,6 +99,8 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
+    let desktop = use_window(cx);
+    let size = desktop.webview.inner_size();
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
@@ -109,6 +111,9 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
+        if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+            router.replace_route(UPLINK_ROUTES.chat, None, None);
+        }
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
@@ -165,7 +170,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         }
     });
 
-    let select_entry = move |id: identity_search_result::Identifier| match id {
+    let select_identifier = move |id: identity_search_result::Identifier| match id {
         identity_search_result::Identifier::Did(did) => {
             if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
                 chat_with.set(Some(c.id));
@@ -225,7 +230,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         onreturn: move |(v, _, _): (String, _, _)| {
                             if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_entry(entry.id.clone());
+                                    select_identifier(entry.id.clone());
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -276,12 +281,13 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             search_friends{
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |entry| {
-                select_entry(entry);
-                search_results.set(Vec::new());
-                reset_searchbar.set(true);
-                on_search_dropdown_hover.with_mut(|i| *i = false);
-            }},
+                onclick: move |identifier: identity_search_result::Identifier| {
+                    select_identifier(identifier);
+                    search_results.set(Vec::new());
+                    reset_searchbar.set(true);
+                    on_search_dropdown_hover.with_mut(|i| *i = false);
+                }
+            },
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
@@ -507,8 +513,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-                                    let desktop = use_window(cx);
-                                    let size = desktop.webview.inner_size();
 
                                     if size.width <= 1200 {
                                         state.write().mutate(Action::SidebarHidden(true));

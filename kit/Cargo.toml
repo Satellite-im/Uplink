@@ -23,7 +23,8 @@ derive_more = { workspace = true }
 pulldown-cmark = "0.9.2"
 linkify = { workspace = true }
 reqwest = { workspace = true }
-select = { workspace = true }
+base64 = { workspace = true }
+mime = { workspace = true }
 
 [dependencies.uuid]
 workspace = true

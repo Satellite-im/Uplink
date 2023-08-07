@@ -233,6 +233,10 @@ impl State {
             }
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
+            Action::SetChatAttachments(chat_id, value) => {
+                self.set_chat_attachments(&chat_id, value)
+            }
+            Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
             Action::AddReaction(_, _, _) => todo!(),
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
@@ -600,6 +604,11 @@ impl State {
                 // todo
                 log::info!("audio degradation for peer {}", peer_id);
             }
+            BlinkEventKind::AudioOutputDeviceNoLongerAvailable
+            | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
+                // todo: notify user
+                log::info!("audio I/O device no longer available");
+            }
         }
     }
 }
@@ -851,6 +860,12 @@ impl State {
         }
     }
 
+    fn clear_chat_attachments(&mut self, chat_id: &Uuid) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send.clear();
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -898,15 +913,13 @@ impl State {
             .cloned()
     }
     // assumes the messages are sorted by most recent to oldest
-    pub fn prepend_messages_to_chat(
+    pub fn update_chat_messages(
         &mut self,
         conversation_id: Uuid,
-        mut messages: Vec<ui_adapter::Message>,
+        messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            for message in messages.drain(..) {
-                chat.messages.push_front(message.clone());
-            }
+            chat.messages = messages.into();
         }
     }
 
@@ -1028,6 +1041,12 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.remove_pending_msg(msg, attachments, uuid);
+        }
+    }
+
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send = value;
         }
     }
 
@@ -1330,6 +1349,7 @@ impl State {
                     un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
+            .filter(|id| id.did_key() != self.did_key())
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
             .collect()
     }
@@ -1350,7 +1370,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                &v[..(name_prefix.len())] == name_prefix
+                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
             }
         };
 
@@ -1520,23 +1540,21 @@ impl<'a> GroupedMessage<'a> {
 
 pub fn group_messages<'a>(
     my_did: DID,
-    num: usize,
     when_to_fetch_more: usize,
+    // true if the chat has more messages to fetch
+    has_more: bool,
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let to_skip = input.len().saturating_sub(num);
-    // the most recent message appears last in the list.
-    let iter = input.iter().skip(to_skip);
     let mut need_to_fetch_more = when_to_fetch_more;
 
     let mut need_more = || {
         let r = need_to_fetch_more > 0;
         need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
-        r
+        r && has_more
     };
 
-    for msg in iter {
+    for msg in input.iter() {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {
