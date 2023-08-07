@@ -232,6 +232,7 @@ pre code {
   --text-color-dark: #343a40;
   --text-color-bright: #ffffff;
   --text-color-link: #ff860d;
+  --text-selection: #e0e0e0;
   --placeholder: #fff;
   --primary: #fcfbf4;
   --primary-dark: color-mix(in srgb, var(--primary) 50%, black);
@@ -254,10 +255,10 @@ pre code {
 }
 
 ::selection {
-  background: var(--text-color-bright); /* WebKit/Blink Browsers */
+  background: var(--text-selection); /* WebKit/Blink Browsers */
 }
 ::-moz-selection {
-  background: var(--text-color-bright); /* Gecko Browsers */
+  background: var(--text-selection); /* Gecko Browsers */
 }
 
 .skeletal {
