@@ -89,6 +89,11 @@ jobs:
         run: cargo build --release -F production_mode
         continue-on-error: true
 
+      - name: Copy Extensions 🗳️
+        run: |
+          mkdir ./ui/extra/extensions
+          cp -r ./target/release/emoji_selector.dll ./ui/extra/extensions/
+
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
         with:
