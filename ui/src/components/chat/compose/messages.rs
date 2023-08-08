@@ -23,8 +23,8 @@ use common::{
     icons::Icon as IconElement,
     language::get_local_text_args_builder,
     state::{
-        group_messages, pending_group_messages, pending_message::PendingMessage, GroupedMessage,
-        MessageGroup,
+        group_messages, pending_group_messages, pending_message::PendingMessage,
+        ui::EmojiDestination, GroupedMessage, MessageGroup,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -97,7 +97,6 @@ const DEFAULT_NUM_TO_TAKE: usize = 20;
 #[inline_props]
 pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     log::trace!("get_messages");
-    log::debug!("has more: {}", data.active_chat.has_more_messages);
     use_shared_state_provider(cx, || -> DownloadTracker { HashMap::new() });
     let state = use_shared_state::<State>(cx)?;
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
@@ -593,6 +592,7 @@ struct MessagesProps<'a> {
 }
 fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
     let edit_msg: &UseState<Option<Uuid>> = use_state(cx, || None);
+    // see comment in ContextMenu about this variable.
     let reacting_to: &UseState<Option<Uuid>> = use_state(cx, || None);
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(cx.props.messages.iter().map(|grouped_message| {
@@ -627,7 +627,8 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
     let should_fetch_more = grouped_message.should_fetch_more;
     let message = grouped_message.message.use_state(cx)?;
     let sender_is_self = message.read().inner.sender() == state.read().did_key();
-    let ch = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let ch: &Coroutine<MessagesCommand> = use_coroutine_handle::<MessagesCommand>(cx)?;
+    let conversation_id = message.read().inner.conversation_id();
 
     // WARNING: these keys are required to prevent a bug with the context menu, which manifests when deleting messages.
     let is_editing = cx
@@ -637,14 +638,14 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
         .map(|id| !cx.props.is_remote && (id == message.read().inner.id()))
         .unwrap_or(false);
     let context_key = format!("message-{}-{}", &message.read().key, is_editing);
-    let _message_key = format!("{}-{:?}", &message.read().key, is_editing);
-    let _msg_uuid = message.read().inner.id();
+    let message_key = format!("{}-{:?}", &message.read().key, is_editing);
+    let msg_uuid = message.read().inner.id();
 
     if cx.props.pending {
         return cx.render(rsx!(render_message {
             message: grouped_message,
             is_remote: cx.props.is_remote,
-            message_key: _message_key,
+            message_key: message_key,
             edit_msg: cx.props.edit_msg.clone(),
             pending: cx.props.pending,
             state: state
@@ -667,7 +668,7 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
             children: cx.render(rsx!(render_message {
                 message: grouped_message,
                 is_remote: cx.props.is_remote,
-                message_key: _message_key,
+                message_key: message_key,
                 edit_msg: cx.props.edit_msg.clone(),
                 pending: cx.props.pending,
                 state: state
@@ -679,7 +680,8 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
                         onselect: move |emoji: String| {
                             log::trace!("reacting with emoji: {}", emoji);
                             ch.send(MessagesCommand::React((state.read().did_key(), message.read().inner.clone(), emoji)));
-                        }
+                        },
+                        apply_to: EmojiDestination::Message(conversation_id, msg_uuid),
                     }
                 }
                 ContextItem {
@@ -699,7 +701,14 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
                     text: get_local_text("messages.react"),
                     onpress: move |_| {
                         state.write().ui.ignore_focus = true;
-                        cx.props.reacting_to.set(Some(_msg_uuid));
+                        state.write().mutate(Action::SetEmojiDestination(
+                            // Tells the default emojipicker where to place the next emoji
+                            Some(
+                                common::state::ui::EmojiDestination::Message(conversation_id, msg_uuid)
+                            )
+                        ));
+                        cx.props.reacting_to.set(Some(msg_uuid));
+                        state.write().mutate(Action::SetEmojiPickerVisible(true));
                     }
                 },
                 ContextItem {
@@ -707,9 +716,9 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
                     aria_label: "messages-edit".into(),
                     text: get_local_text("messages.edit"),
                     should_render: !cx.props.is_remote
-                        && cx.props.edit_msg.get().map(|id| id != _msg_uuid).unwrap_or(true),
+                        && cx.props.edit_msg.get().map(|id| id != msg_uuid).unwrap_or(true),
                     onpress: move |_| {
-                        cx.props.edit_msg.set(Some(_msg_uuid));
+                        cx.props.edit_msg.set(Some(msg_uuid));
                         state.write().ui.ignore_focus = true;
                     }
                 },
@@ -718,7 +727,7 @@ fn render_single_message<'a>(cx: Scope<'a, MessageContextProps<'a>>) -> Element<
                     aria_label: "messages-cancel-edit".into(),
                     text: get_local_text("messages.cancel-edit"),
                     should_render: !cx.props.is_remote
-                        && cx.props.edit_msg.get().map(|id| id == _msg_uuid).unwrap_or(false),
+                        && cx.props.edit_msg.get().map(|id| id == msg_uuid).unwrap_or(false),
                     onpress: move |_| {
                         cx.props.edit_msg.set(None);
                         state.write().ui.ignore_focus = false;

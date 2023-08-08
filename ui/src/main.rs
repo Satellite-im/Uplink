@@ -420,6 +420,7 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
+    state.set_warp_ch(WARP_CMD_CH.tx.clone());
 
     use_shared_state_provider(cx, || state);
     use_shared_state_provider(cx, DownloadState::default);

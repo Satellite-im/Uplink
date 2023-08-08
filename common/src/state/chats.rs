@@ -76,6 +76,8 @@ pub struct ChatBase<T> {
     pub has_more_messages: bool,
     #[serde(skip)]
     pub pending_outgoing_messages: Vec<PendingMessage>,
+    #[serde(skip)]
+    pub files_attached_to_send: Vec<PathBuf>,
 }
 
 impl Chat {
@@ -158,6 +160,7 @@ impl From<SendableChat> for Chat {
             draft: value.draft,
             has_more_messages: value.has_more_messages,
             pending_outgoing_messages: value.pending_outgoing_messages,
+            files_attached_to_send: value.files_attached_to_send,
         }
     }
 }

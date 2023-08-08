@@ -16,6 +16,7 @@ pub mod utils;
 
 use crate::language::change_language;
 use crate::notifications::NotificationAction;
+use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -82,6 +83,8 @@ pub struct State {
     identities: HashMap<DID, identity::Identity>,
     #[serde(skip)]
     pub initialized: bool,
+    #[serde(skip)]
+    warp_cmd_tx: Option<WarpCmdTx>,
 }
 
 impl fmt::Debug for State {
@@ -110,6 +113,7 @@ impl Clone for State {
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
             initialized: self.initialized,
+            warp_cmd_tx: None,
         }
     }
 }
@@ -123,6 +127,17 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
+    }
+
+    // gonna try adding this here to let shared libraries send warp commands.
+    pub fn get_warp_ch(&self) -> WarpCmdTx {
+        self.warp_cmd_tx
+            .clone()
+            .expect("dev needs to call set_warp_ch before get_warp_ch could ever be used")
+    }
+
+    pub fn set_warp_ch(&mut self, ch: WarpCmdTx) {
+        self.warp_cmd_tx.replace(ch);
     }
 
     pub fn mutate(&mut self, action: Action) {
@@ -210,6 +225,8 @@ impl State {
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
+            Action::SetEmojiDestination(destination) => self.ui.emoji_destination = destination,
+            Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -235,7 +252,13 @@ impl State {
             }
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
-            Action::AddReaction(_, _, _) => todo!(),
+            Action::SetChatAttachments(chat_id, value) => {
+                self.set_chat_attachments(&chat_id, value)
+            }
+            Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
+            Action::AddReaction(_, _, emoji) => {
+                self.ui.emojis.increment_emoji(emoji);
+            }
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.did_key();
@@ -603,6 +626,11 @@ impl State {
                 // todo
                 log::info!("audio degradation for peer {}", peer_id);
             }
+            BlinkEventKind::AudioOutputDeviceNoLongerAvailable
+            | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
+                // todo: notify user
+                log::info!("audio I/O device no longer available");
+            }
         }
     }
 }
@@ -854,6 +882,12 @@ impl State {
         }
     }
 
+    fn clear_chat_attachments(&mut self, chat_id: &Uuid) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send.clear();
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -1034,6 +1068,12 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.remove_pending_msg(msg, attachments, uuid);
+        }
+    }
+
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send = value;
         }
     }
 
@@ -1336,6 +1376,7 @@ impl State {
                     un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
+            .filter(|id| id.did_key() != self.did_key())
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
             .collect()
     }
@@ -1356,7 +1397,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                &v[..(name_prefix.len())] == name_prefix
+                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
             }
         };
 

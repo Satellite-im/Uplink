@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Weak};
+use std::{collections::HashMap, path::PathBuf, rc::Weak};
 
 use derive_more::Display;
 
@@ -15,7 +15,7 @@ use super::{
     identity::Identity,
     notifications::NotificationKind,
     route::To,
-    ui::{Font, Theme, ToastNotification, WindowMeta},
+    ui::{EmojiDestination, Font, Theme, ToastNotification, WindowMeta},
 };
 
 /// used exclusively by State::mutate
@@ -51,6 +51,8 @@ pub enum Action<'a> {
     SetFontScale(f32),
     #[display(fmt = "TrackEmojiUsage")]
     TrackEmojiUsage(String),
+    #[display(fmt = "SetEmojiPickerVisible")]
+    SetEmojiPickerVisible(bool),
     // RemoveToastNotification,
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]
@@ -144,7 +146,6 @@ pub enum Action<'a> {
     /// Adds or removes a chat from the favorites page
     #[display(fmt = "ToggleFavorite")]
     ToggleFavorite(&'a Uuid),
-
     // Messaging
     /// React to a given message by ID
     /// conversation id, message id, reaction
@@ -153,12 +154,21 @@ pub enum Action<'a> {
     /// conversation id, message id, reaction
     #[display(fmt = "RemoveReaction")]
     RemoveReaction(Uuid, Uuid, String),
+    /// Sets the destination for emoji's
+    #[display(fmt = "SetEmojiDestination")]
+    SetEmojiDestination(Option<EmojiDestination>),
     /// chat id, message id
     #[display(fmt = "StartReplying")]
     StartReplying(&'a Uuid, &'a ui_adapter::Message),
     /// Sets a draft message for the chatbar for a given chat.
     #[display(fmt = "SetChatDraft")]
     SetChatDraft(Uuid, String),
+    /// Sets a files attached to send
+    #[display(fmt = "SetChatAttachments")]
+    SetChatAttachments(Uuid, Vec<PathBuf>),
+    /// Clear attachments on chat
+    #[display(fmt = "ClearChatAttachments")]
+    ClearChatAttachments(Uuid),
     /// Clears a drafted message from a given chat.
     #[display(fmt = "ClearChatDraft")]
     ClearChatDraft(Uuid),
