@@ -38,6 +38,7 @@ pub fn EditGroup(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let friend_prefix = use_state(cx, String::new);
 
+    // show the ADD or REMOVE components, default to Remove
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
@@ -54,8 +55,30 @@ pub fn EditGroup(cx: Scope) -> Element {
     friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(did_key));
     friends_not_in_group_list.retain(|did_key, _| !friends_did_already_in_group.contains(did_key));
 
-    let _friends_not_in_group = State::get_friends_by_first_letter(friends_not_in_group_list);
-    let _friends_in_group = State::get_friends_by_first_letter(friends_group_list);
+    let friends = if *edit_group_action.get() == EditGroupAction::Add {
+        State::get_friends_by_first_letter(friends_not_in_group_list);
+    } else {
+        State::get_friends_by_first_letter(friends_group_list);
+    };
+
+    let filteredfriends: () = if *edit_group_action.get() == EditGroupAction::Add {
+        friends_not_in_group_list.retain(|friend| {
+            return friend
+                .username()
+                .to_ascii_lowercase()
+                .contains(&friend_prefix.to_ascii_lowercase());
+        });
+    } else {
+        friends_group_list.retain(|friend| {
+            return friend
+                .username()
+                .to_ascii_lowercase()
+                .contains(&friend_prefix.to_ascii_lowercase());
+        });
+    };
+
+    // let _friends_not_in_group = State::get_friends_by_first_letter(friends_not_in_group_list);
+    // let _friends_in_group = State::get_friends_by_first_letter(friends_group_list);
 
     let add_friends = rsx!(a {
         class: "float-right-link",
@@ -72,12 +95,6 @@ pub fn EditGroup(cx: Scope) -> Element {
         },
         get_local_text("uplink.current-members")
     });
-
-    let friends = if *edit_group_action.get() == EditGroupAction::Add {
-        _friends_not_in_group
-    } else {
-        _friends_in_group
-    };
 
     cx.render(rsx!(
         div {
