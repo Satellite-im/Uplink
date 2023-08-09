@@ -168,7 +168,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                         rsx!(
                             div {
                                 class: "friend-group",
-                                get_local_text("uplink.search-no-results")
+                                get_local_text("uplink.nothing-here")
                             }
                         )
                     }
