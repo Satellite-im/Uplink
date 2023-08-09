@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use common::{
     icons::outline::Shape as Icon,
@@ -89,17 +89,17 @@ fn render_friends(cx: Scope<FriendsProps>) -> Element {
     let mut group_participants = cx.props.group_participants.clone();
     // reduce group participants vector to just the name_prefix matched
     group_participants.retain(|friend| {
-        return friend
+        friend
             .username()
             .to_ascii_lowercase()
-            .contains(&name_prefix.to_ascii_lowercase());
+            .contains(&name_prefix.to_ascii_lowercase())
     });
 
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
-            if group_participants.len() > 0 {
+            if !group_participants.is_empty() {
                 rsx!(
                     div {
                         key: "friend-group",

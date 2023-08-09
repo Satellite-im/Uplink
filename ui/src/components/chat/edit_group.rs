@@ -59,17 +59,17 @@ pub fn EditGroup(cx: Scope) -> Element {
     friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(did_key));
     friends_not_in_group_list.retain(|did_key, _| !friends_did_already_in_group.contains(did_key));
 
-    friends_not_in_group_list.retain(|did, friend| {
-        return friend
+    friends_not_in_group_list.retain(|_, friend| {
+        friend
             .username()
             .to_ascii_lowercase()
-            .contains(&friend_prefix.to_ascii_lowercase());
+            .contains(&friend_prefix.to_ascii_lowercase())
     });
-    friends_group_list.retain(|did, friend| {
-        return friend
+    friends_group_list.retain(|_, friend| {
+        friend
             .username()
             .to_ascii_lowercase()
-            .contains(&friend_prefix.to_ascii_lowercase());
+            .contains(&friend_prefix.to_ascii_lowercase())
     });
 
     // convert back to vec
@@ -137,7 +137,7 @@ pub fn EditGroup(cx: Scope) -> Element {
                 div {
                     class: "friend-list vertically-scrollable",
                     aria_label: "friends-list",
-                    if friends.len() > 0 {
+                    if !friends.is_empty() {
                         rsx!(
                             div {
                                 class: "friend-list vertically-scrollable",
