@@ -10,7 +10,9 @@ use warp::{
     crypto::DID,
     error::Error,
     logging::tracing::log,
-    raygun::{self, AttachmentKind, ConversationType, Location, ReactionState},
+    raygun::{
+        self, AttachmentKind, ConversationType, Location, MessageOptions, PinState, ReactionState,
+    },
 };
 
 use crate::{
@@ -77,6 +79,15 @@ pub enum RayGunCmd {
         current_len: usize,
         rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
     },
+    #[display(fmt = "FetchPinnedMessages {{ req: {to_fetch}, current_len: {current_len} }} ")]
+    FetchPinnedMessages {
+        conv_id: Uuid,
+        // the total number of messages that should be in the conversation
+        to_fetch: usize,
+        // the current size of the conversation
+        current_len: usize,
+        rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
+    },
     #[display(fmt = "SendMessage")]
     SendMessage {
         conv_id: Uuid,
@@ -126,6 +137,13 @@ pub enum RayGunCmd {
         message_id: Uuid,
         reaction_state: ReactionState,
         emoji: String,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
+    #[display(fmt = "Pin")]
+    Pin {
+        conversation_id: Uuid,
+        message_id: Uuid,
+        pinstate: PinState,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
     #[display(fmt = "SendEvent")]
@@ -209,7 +227,28 @@ pub async fn handle_raygun_cmd(
             current_len,
             rsp,
         } => {
-            let r = fetch_messages_from_chat(conv_id, messaging, to_fetch + current_len).await;
+            let r = fetch_messages_from_chat(
+                conv_id,
+                messaging,
+                MessageOptions::default(),
+                to_fetch + current_len,
+            )
+            .await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::FetchPinnedMessages {
+            conv_id,
+            to_fetch,
+            current_len,
+            rsp,
+        } => {
+            let r = fetch_messages_from_chat(
+                conv_id,
+                messaging,
+                MessageOptions::default().set_pinned(),
+                to_fetch + current_len,
+            )
+            .await;
             let _ = rsp.send(r);
         }
         RayGunCmd::SendMessage {
@@ -338,6 +377,15 @@ pub async fn handle_raygun_cmd(
             let r = messaging
                 .react(conversation_id, message_id, reaction_state, emoji)
                 .await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::Pin {
+            conversation_id,
+            message_id,
+            pinstate,
+            rsp,
+        } => {
+            let r = messaging.pin(conversation_id, message_id, pinstate).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::SendEvent {

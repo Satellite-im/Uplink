@@ -43,7 +43,7 @@ use warp::{
     crypto::DID,
     logging::tracing::log,
     multipass::identity::IdentityStatus,
-    raygun::{self, ReactionState},
+    raygun::{self, PinState, ReactionState},
 };
 
 use crate::{
@@ -85,6 +85,7 @@ enum MessagesCommand {
         to_fetch: usize,
         current_len: usize,
     },
+    Pin(raygun::Message),
 }
 
 type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
@@ -282,6 +283,28 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
                             }
+                        }
+                    }
+                    MessagesCommand::Pin(msg) => {
+                        let (tx, rx) = futures::channel::oneshot::channel();
+                        let pinstate = if msg.pinned() {
+                            PinState::Unpin
+                        } else {
+                            PinState::Pin
+                        };
+                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
+                            conversation_id: msg.conversation_id(),
+                            message_id: msg.id(),
+                            pinstate,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send warp command: {}", e);
+                            continue;
+                        }
+
+                        let res = rx.await.expect("command canceled");
+                        if let Err(e) = res {
+                            log::error!("failed to pin message: {}", e);
                         }
                     }
                 }
@@ -652,7 +675,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                         },
                         apply_to: EmojiDestination::Message(conversation_id, msg_uuid),
                     }
-                }
+                },
+                ContextItem {
+                    icon: Icon::Pin,
+                    aria_label: "messages-pin".into(),
+                    text: if message.inner.pinned() {get_local_text("messages.unpin")} else {get_local_text("messages.pin")},
+                    onpress: move |_| {
+                        log::trace!("pinning message: {}", message.inner.id());
+                        ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                    }
+                },
                 ContextItem {
                     icon: Icon::ArrowLongLeft,
                     aria_label: "messages-reply".into(),

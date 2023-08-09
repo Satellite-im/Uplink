@@ -21,7 +21,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::chat::create_group::get_input_options;
+use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -109,6 +109,7 @@ pub struct ComposeProps {
     data: Option<Rc<ComposeData>>,
     show_edit_group: UseState<Option<Uuid>>,
     show_group_users: UseState<Option<Uuid>>,
+    show_pinned: UseState<bool>,
     ignore_focus: bool,
     is_owner: bool,
     is_edit_group: bool,
@@ -160,6 +161,7 @@ pub fn Compose(cx: Scope) -> Element {
     });
     let show_edit_group: &UseState<Option<Uuid>> = use_state(cx, || None);
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
+    let show_pinned = use_state(cx, || false);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
 
@@ -217,6 +219,7 @@ pub fn Compose(cx: Scope) -> Element {
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
+                    show_pinned: show_pinned.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
                     is_edit_group: is_edit_group,
@@ -225,6 +228,7 @@ pub fn Compose(cx: Scope) -> Element {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
+                    show_pinned: show_pinned.clone(),
                     ignore_focus: should_ignore_focus,
                     is_owner: is_owner,
                     is_edit_group: is_edit_group,
@@ -251,6 +255,11 @@ pub fn Compose(cx: Scope) -> Element {
                     active_chat: state.read().get_active_chat(),
                 }
         )),
+        show_pinned.then(||
+            rsx!(PinnedMessages {
+                active_chat: state.read().get_active_chat()
+            })
+        ),
         match data.as_ref() {
             None => rsx!(
                 div {
@@ -265,6 +274,7 @@ pub fn Compose(cx: Scope) -> Element {
             data: data.clone(),
             show_edit_group: show_edit_group.clone(),
             show_group_users: show_group_users.clone(),
+            show_pinned: show_pinned.clone(),
             ignore_focus: should_ignore_focus,
             is_owner: is_owner,
             is_edit_group: is_edit_group,
@@ -493,6 +503,18 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 if let Some(chat) = active_chat.as_ref() {
                     state.write().mutate(Action::ToggleFavorite(&chat.id));
                 }
+            }
+        },
+        Button {
+            icon: Icon::Pin,
+            aria_label: "pin-label".into(),
+            appearance: Appearance::Secondary,
+            tooltip: cx.render(rsx!(Tooltip {
+                arrow_position: ArrowPosition::TopRight,
+                text: get_local_text("messages.pin-view"),
+            })),
+            onpress: move |_| {
+                cx.props.show_pinned.set(!cx.props.show_pinned.get());
             }
         },
         Button {

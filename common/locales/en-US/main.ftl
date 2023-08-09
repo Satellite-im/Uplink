@@ -87,7 +87,10 @@ messages = Messages
     .users-typing = { $users } are typing
     .users-multiple-typing = Multiple users are typing
     .maximum-amount-files-per-message = You reached { $amount } files per message limit
-    
+    .pin = Pin Message
+    .unpin = Unpin Message
+    .pin-view = Pinned Messages
+
 favorites = Favorites
     .favorites = Favorites
     .add = Add to Favorites
