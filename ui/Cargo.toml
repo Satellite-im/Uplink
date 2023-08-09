@@ -23,9 +23,7 @@ humansize = { workspace = true }
 uuid = { workspace = true }
 libloading = { workspace = true }
 warp = { workspace = true }
-warp-mp-ipfs = { workspace = true }
-warp-rg-ipfs = { workspace = true }
-warp-fs-ipfs = { workspace = true }
+warp-ipfs = { workspace = true }
 rfd = { workspace = true }
 mime = { workspace = true }
 serde = { workspace = true }
