@@ -18,9 +18,10 @@ use warp::{
     raygun::RayGun,
     tesseract::Tesseract,
 };
-use warp_fs_ipfs::config::FsIpfsConfig;
-use warp_mp_ipfs::config::{MpIpfsConfig, UpdateEvents};
-use warp_rg_ipfs::config::RgIpfsConfig;
+use warp_ipfs::{
+    config::{Config, UpdateEvents},
+    WarpIpfsBuilder,
+};
 
 use crate::{STATIC_ARGS, WARP_CMD_CH};
 
@@ -343,7 +344,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     log::debug!("warp initialization");
 
     let path = &STATIC_ARGS.warp_path;
-    let mut config = MpIpfsConfig::production(path, STATIC_ARGS.experimental);
+    let mut config = Config::production(path, STATIC_ARGS.experimental);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
@@ -360,35 +361,22 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
 
         Ok(base64_default_image)
     }));
-
-    let account = warp_mp_ipfs::ipfs_identity_persistent(config, tesseract.clone())
-        .await
-        .map(|mp| Box::new(mp) as Account)?;
-
-    let mut config = FsIpfsConfig::production(path);
     config.thumbnail_size = (500, 500);
-
     config.thumbnail_exact_format = false;
 
-    let storage = warp_fs_ipfs::IpfsFileSystem::new(account.clone(), Some(config))
-        .await
-        .map(|ct| Box::new(ct) as Storage)?;
+    let (multipass, raygun, constellation) = WarpIpfsBuilder::default()
+        .set_tesseract(tesseract.clone())
+        .set_config(config)
+        .finalize()
+        .await?;
 
-    // FYI: setting `rg_config.store_setting.disable_sender_event_emit` to `true` will prevent broadcasting `ConversationCreated` on the sender side
-    let rg_config = RgIpfsConfig::production(path);
-
-    let messaging =
-        warp_rg_ipfs::IpfsMessaging::new(Some(rg_config), account.clone(), Some(storage.clone()))
-            .await
-            .map(|rg| Box::new(rg) as Messaging)?;
-
-    let blink = warp_blink_wrtc::BlinkImpl::new(account.clone()).await?;
+    let blink = warp_blink_wrtc::BlinkImpl::new(multipass.clone()).await?;
 
     Ok(manager::Warp {
         tesseract,
-        multipass: account,
-        raygun: messaging,
-        constellation: storage,
+        multipass,
+        raygun,
+        constellation,
         blink,
     })
 }

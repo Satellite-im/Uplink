@@ -15,6 +15,7 @@ pub mod utils;
 
 use crate::language::change_language;
 use crate::notifications::NotificationAction;
+use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -80,6 +81,8 @@ pub struct State {
     identities: HashMap<DID, identity::Identity>,
     #[serde(skip)]
     pub initialized: bool,
+    #[serde(skip)]
+    warp_cmd_tx: Option<WarpCmdTx>,
 }
 
 impl fmt::Debug for State {
@@ -108,6 +111,7 @@ impl Clone for State {
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
             initialized: self.initialized,
+            warp_cmd_tx: None,
         }
     }
 }
@@ -121,6 +125,17 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
+    }
+
+    // gonna try adding this here to let shared libraries send warp commands.
+    pub fn get_warp_ch(&self) -> WarpCmdTx {
+        self.warp_cmd_tx
+            .clone()
+            .expect("dev needs to call set_warp_ch before get_warp_ch could ever be used")
+    }
+
+    pub fn set_warp_ch(&mut self, ch: WarpCmdTx) {
+        self.warp_cmd_tx.replace(ch);
     }
 
     pub fn mutate(&mut self, action: Action) {
@@ -208,6 +223,8 @@ impl State {
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
+            Action::SetEmojiDestination(destination) => self.ui.emoji_destination = destination,
+            Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -237,7 +254,9 @@ impl State {
                 self.set_chat_attachments(&chat_id, value)
             }
             Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
-            Action::AddReaction(_, _, _) => todo!(),
+            Action::AddReaction(_, _, emoji) => {
+                self.ui.emojis.increment_emoji(emoji);
+            }
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.did_key();
