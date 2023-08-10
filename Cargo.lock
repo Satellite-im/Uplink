@@ -1460,9 +1460,7 @@ dependencies = [
  "walkdir",
  "warp",
  "warp-blink-wrtc",
- "warp-fs-ipfs",
- "warp-mp-ipfs",
- "warp-rg-ipfs",
+ "warp-ipfs",
  "windows 0.24.0",
  "wry",
  "zip",
@@ -9051,9 +9049,7 @@ dependencies = [
  "uuid",
  "walkdir",
  "warp",
- "warp-fs-ipfs",
- "warp-mp-ipfs",
- "warp-rg-ipfs",
+ "warp-ipfs",
  "winres",
  "wry",
  "zip",
@@ -9172,7 +9168,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "aes-gcm 0.10.2",
  "anyhow",
@@ -9228,7 +9224,7 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -9259,7 +9255,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "paste",
  "quote",
@@ -9267,16 +9263,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "warp-fs-ipfs"
+name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
- "cbindgen",
+ "bayespam",
+ "bincode",
+ "bs58",
+ "bytes",
  "chrono",
  "derive_more",
+ "either",
  "futures",
  "image",
  "libipld",
@@ -9287,55 +9287,9 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "warp",
-]
-
-[[package]]
-name = "warp-mp-ipfs"
-version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
-dependencies = [
- "anyhow",
- "async-stream",
- "async-trait",
- "bs58",
- "chrono",
- "either",
- "futures",
- "libipld",
- "rust-ipfs",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
  "tracing",
  "uuid",
  "void",
- "warp",
-]
-
-[[package]]
-name = "warp-rg-ipfs"
-version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=86d706f90d2ef1c0736c3eb1745807798d72a058#86d706f90d2ef1c0736c3eb1745807798d72a058"
-dependencies = [
- "anyhow",
- "async-stream",
- "async-trait",
- "bayespam",
- "bincode",
- "bs58",
- "bytes",
- "chrono",
- "futures",
- "libipld",
- "rust-ipfs",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "uuid",
  "warp",
 ]
 
