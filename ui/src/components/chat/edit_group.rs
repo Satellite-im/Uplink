@@ -36,26 +36,50 @@ enum ChanCmd {
 pub fn EditGroup(cx: Scope) -> Element {
     log::trace!("rendering edit_group");
     let state = use_shared_state::<State>(cx)?;
+    // Search Input
     let friend_prefix = use_state(cx, String::new);
 
+    // show the ADD or REMOVE components, default to Remove
     let edit_group_action = use_state(cx, || EditGroupAction::Remove);
     let conv_id = state.read().get_active_chat().unwrap().id;
+
     let friends_did_already_in_group = state.read().get_active_chat().unwrap().participants;
-    let friends_list = HashMap::from_iter(
+
+    let friends_list: HashMap<DID, Identity> = HashMap::from_iter(
         state
             .read()
             .friend_identities()
             .iter()
             .map(|id| (id.did_key(), id.clone())),
     );
+
     let mut friends_group_list = friends_list.clone();
     let mut friends_not_in_group_list = friends_list;
 
     friends_group_list.retain(|did_key, _| friends_did_already_in_group.contains(did_key));
     friends_not_in_group_list.retain(|did_key, _| !friends_did_already_in_group.contains(did_key));
 
-    let _friends_not_in_group = State::get_friends_by_first_letter(friends_not_in_group_list);
-    let _friends_in_group = State::get_friends_by_first_letter(friends_group_list);
+    friends_not_in_group_list.retain(|_, friend| {
+        friend
+            .username()
+            .to_ascii_lowercase()
+            .contains(&friend_prefix.to_ascii_lowercase())
+    });
+    friends_group_list.retain(|_, friend| {
+        friend
+            .username()
+            .to_ascii_lowercase()
+            .contains(&friend_prefix.to_ascii_lowercase())
+    });
+
+    // convert back to vec
+    let mut friends: Vec<Identity> = if *edit_group_action.get() == EditGroupAction::Add {
+        friends_not_in_group_list.values().cloned().collect()
+    } else {
+        friends_group_list.values().cloned().collect()
+    };
+
+    friends.sort_by_key(|d| d.username());
 
     let add_friends = rsx!(a {
         class: "float-right-link",
@@ -74,12 +98,6 @@ pub fn EditGroup(cx: Scope) -> Element {
         },
         get_local_text("uplink.current-members")
     });
-
-    let friends = if *edit_group_action.get() == EditGroupAction::Add {
-        _friends_not_in_group
-    } else {
-        _friends_in_group
-    };
 
     cx.render(rsx!(
         div {
@@ -121,39 +139,41 @@ pub fn EditGroup(cx: Scope) -> Element {
                 div {
                     class: "friend-list vertically-scrollable",
                     aria_label: "friends-list",
-                    friends.iter().map(
-                        |(letter, sorted_friends)| {
-                            let group_letter = letter.to_string();
-                            rsx!(
+                    if !friends.is_empty() {
+                        rsx!(
+                            div {
+                                class: "friend-list vertically-scrollable",
+                                aria_label: "friends-list",
                                 div {
-                                    key: "friend-group-{group_letter}",
+                                    key: "friend-group",
                                     class: "friend-group",
                                     aria_label: "friend-group",
-                                    sorted_friends.iter().filter(|friend| {
-                                        let name = friend.username().to_lowercase();
-                                        if name.len() < friend_prefix.len() {
-                                            false
-                                        } else {
-                                            name[..(friend_prefix.len())] == friend_prefix.to_lowercase()
+                                    friends.iter().map(
+                                        |_friend| {
+                                            rsx!(
+                                                friend_row {
+                                                    add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
+                                                        "add".into()
+                                                    } else {
+                                                        "remove".into()
+                                                    },
+                                                    friend: _friend.clone(),
+                                                    conv_id: conv_id,
+                                                }
+                                            )
                                         }
-                                    } ).map(|_friend| {
-
-                                        rsx!(
-                                            friend_row {
-                                                add_or_remove: if *edit_group_action.current() == EditGroupAction::Add {
-                                                    "add".into()
-                                                } else {
-                                                    "remove".into()
-                                                },
-                                                friend: _friend.clone(),
-                                                conv_id: conv_id,
-                                            }
-                                        )
-                                    })
+                                    ),
                                 }
-                            )
-                        }
-                    ),
+                            }
+                        )
+                    } else {
+                        rsx!(
+                            div {
+                                class: "friend-group",
+                                get_local_text("uplink.nothing-here")
+                            }
+                        )
+                    }
                 }
             )
         }
