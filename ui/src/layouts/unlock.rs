@@ -226,8 +226,9 @@ pub fn UnlockLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -
                             if validation_passed {
                                 let outer_size = desktop.outer_size();
                                 let is_maximized = desktop.is_maximized();
-                                state.write_silent().ui.window_height = outer_size.height;
-                                state.write_silent().ui.window_width = outer_size.width;
+                                // TODO: What is the point of this on the input field?
+                                state.write_silent().ui.window_height = outer_size.height as f64;
+                                state.write_silent().ui.window_width = outer_size.width  as f64;
                                 state.write_silent().ui.window_maximized = is_maximized;
                                 let _ = state.write_silent().save();
                                 cmd_in_progress.set(true);

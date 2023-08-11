@@ -10,6 +10,8 @@ use uuid::Uuid;
 use warp::logging::tracing::log;
 use wry::webview::WebView;
 
+use crate::DEFAULT_DIMENSIONS;
+
 use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
@@ -66,7 +68,9 @@ pub struct WindowMeta {
     pub focused: bool,
     pub maximized: bool,
     pub minimized: bool,
-    pub minimal_view: bool, // We can use this to detect mobile or portrait mode
+    pub minimal_view: bool,
+    pub height: u32,
+    pub width: u32, // We can use this to detect mobile or portrait mode
 }
 
 #[derive(Clone, Deserialize, Serialize, Eq, PartialEq)]
@@ -132,9 +136,9 @@ pub struct UI {
     pub enable_overlay: bool,
     pub active_welcome: bool,
     pub sidebar_hidden: bool,
-    pub window_maximized: bool,
-    pub window_width: u32,
-    pub window_height: u32,
+    pub window_maximized: bool, // TODO: Duplicate value, should be removed in favor of metadata.maximized
+    pub window_width: f64,      // TODO: Move this to WindowMeta
+    pub window_height: f64,     // TODO: Move this to WindowMeta
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
     pub emojis: EmojiCounter,
@@ -172,8 +176,8 @@ impl Default for UI {
             active_welcome: Default::default(),
             sidebar_hidden: Default::default(),
             window_maximized: Default::default(),
-            window_width: Default::default(),
-            window_height: Default::default(),
+            window_width: DEFAULT_DIMENSIONS.0,
+            window_height: DEFAULT_DIMENSIONS.1,
             metadata: Default::default(),
             emojis: default_emojis(),
             emoji_destination: Default::default(),

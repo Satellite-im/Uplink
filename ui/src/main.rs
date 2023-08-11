@@ -10,7 +10,10 @@ use common::warp_runner::BlinkCmd;
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
 use common::warp_runner::WarpEvent;
-use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+use common::{
+    get_extras_dir, warp_runner, LogProfile, DEFAULT_DIMENSIONS, STATIC_ARGS, WARP_CMD_CH,
+    WARP_EVENT_CH,
+};
 use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::tao::dpi::LogicalSize;
@@ -176,7 +179,7 @@ fn main() {
 
     create_uplink_dirs();
 
-    let window = get_window_builder(true, true);
+    let window = get_window_builder(Some(DEFAULT_DIMENSIONS), true);
 
     let config = Config::new()
         .with_window(window)
@@ -214,7 +217,10 @@ pub fn create_uplink_dirs() {
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
 }
 
-pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> WindowBuilder {
+pub fn get_window_builder(
+    with_predefined_size: Option<(f64, f64)>,
+    with_menu: bool,
+) -> WindowBuilder {
     let mut main_menu = Menu::new();
     let mut app_menu = Menu::new();
     let mut edit_menu = Menu::new();
@@ -257,8 +263,8 @@ pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> Window
         // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
         .with_min_inner_size(LogicalSize::new(300.0, 350.0));
 
-    if with_predefined_size {
-        window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
+    if let Some((width, height)) = with_predefined_size {
+        window = window.with_inner_size(LogicalSize::new(width, height));
     }
 
     if with_menu {
@@ -417,6 +423,8 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
+        width: size.width,
+        height: size.height,
         minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
@@ -575,7 +583,7 @@ fn app(cx: Scope) -> Element {
     //     not loaded from Warp. however, warp_runner continues to operate normally.
     //
 
-    // There is currently an issue in Tauri/Wry where the window size is not reported properly.
+    // TODO: There is currently an issue in Tauri/Wry where the window size is not reported properly.
     // Thus we bind to the resize event itself and update the size from the webview.
     let webview = desktop.webview.clone();
     let first_resize = use_ref(cx, || true);
@@ -610,20 +618,25 @@ fn app(cx: Scope) -> Element {
                     && *first_resize.read()
                     && cfg!(not(target_os = "windows"))
                 {
-                    desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                    desktop.set_inner_size(LogicalSize::new(
+                        DEFAULT_DIMENSIONS.0,
+                        DEFAULT_DIMENSIONS.1,
+                    ));
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
 
-                //log::trace!(
-                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                //    size,
-                //    size.width < 1200
-                //);
+                log::trace!(
+                    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
+                    size,
+                    size.width < 1200
+                );
 
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
                     minimal_view: size.width < 600,
+                    height: size.height,
+                    width: size.width,
                     ..metadata
                 };
                 if metadata != new_metadata {

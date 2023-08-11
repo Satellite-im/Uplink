@@ -20,6 +20,8 @@ use warp_runner::{WarpCmdChannels, WarpEventChannels};
 
 use fluent_templates::static_loader;
 
+pub const DEFAULT_DIMENSIONS: (f64, f64) = (1200.0, 750.0);
+
 static_loader! {
     static LOCALES = {
         locales: "./locales",

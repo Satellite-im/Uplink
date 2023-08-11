@@ -1,4 +1,4 @@
-use common::{get_images_dir, state::State};
+use common::{get_images_dir, state::State, DEFAULT_DIMENSIONS};
 use dioxus::prelude::*;
 use dioxus_desktop::{use_window, LogicalSize};
 use dioxus_router::use_router;
@@ -13,6 +13,11 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     let router = use_router(cx);
     let desktop = use_window(cx);
 
+    let window_size = (
+        state.read().ui.metadata.width,
+        state.read().ui.metadata.height,
+    );
+
     let desktop_resized = use_future(cx, (), |_| {
         to_owned![desktop, state];
         async move {
@@ -21,7 +26,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
                 desktop.set_outer_position(LogicalPosition::new(0, 0));
                 desktop.set_maximized(true);
             } else {
-                desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
+                desktop.set_inner_size(LogicalSize::new(window_size.0, window_size.1));
             }
             desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
         }
