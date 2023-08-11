@@ -218,7 +218,7 @@ fn render_selector<'a>(
                                 group.emojis().map(|emoji| {
                                     rsx!(
                                         div {
-                                            aria_label: "emoji",
+                                            aria_label: emoji.as_str(),
                                             class: "emoji",
                                             onclick: move |_| {
                                                 let destination = state.read().ui.emoji_destination.clone().unwrap_or(EmojiDestination::Chatbar);
