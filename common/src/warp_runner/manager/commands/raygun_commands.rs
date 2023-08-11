@@ -139,7 +139,7 @@ pub enum RayGunCmd {
         emoji: String,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "Pin")]
+    #[display(fmt = "Pin {{ pin: {pinstate:?} }} ")]
     Pin {
         conversation_id: Uuid,
         message_id: Uuid,

@@ -945,6 +945,16 @@ impl State {
         }
     }
 
+    pub fn update_pinned_chat_messages(
+        &mut self,
+        conversation_id: Uuid,
+        messages: Vec<ui_adapter::Message>,
+    ) {
+        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+            chat.pinned_messages = messages.into();
+        }
+    }
+
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
@@ -967,6 +977,7 @@ impl State {
             if msg.inner.id() != message_id {
                 continue;
             }
+            let pinned_change = msg.inner.pinned() != message.pinned();
             let mut reactions: Vec<Reaction> = Vec::new();
             for mut reaction in message.reactions() {
                 let users_not_duplicated: HashSet<DID> =
@@ -976,6 +987,20 @@ impl State {
             }
             message.set_reactions(reactions);
             msg.inner = message;
+            if pinned_change {
+                if !msg.inner.pinned() {
+                    conv.pinned_messages
+                        .retain(|msg| msg.inner.id() != message_id);
+                } else {
+                    let pinned: Vec<_> = conv
+                        .messages
+                        .iter()
+                        .cloned()
+                        .filter(|m| m.inner.pinned())
+                        .collect();
+                    conv.pinned_messages = pinned.into();
+                }
+            }
             return;
         }
 

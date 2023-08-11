@@ -209,6 +209,12 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
+    let pinned: VecDeque<_> = messages
+        .iter()
+        .cloned()
+        .filter(|m| m.inner.pinned())
+        .collect();
+
     let has_more_messages = total_messages > to_take;
     Ok(chats::Chat {
         id: conv.id(),
@@ -224,6 +230,7 @@ pub async fn conversation_to_chat(
         has_more_messages,
         pending_outgoing_messages: vec![],
         files_attached_to_send: vec![],
+        pinned_messages: pinned,
     })
 }
 

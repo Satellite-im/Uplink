@@ -630,8 +630,9 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
             .get()
             .map(|id| !cx.props.is_remote && (id == message.inner.id()))
             .unwrap_or(false);
-        let context_key = format!("message-{}-{}", &message.key, is_editing);
         let message_key = format!("{}-{:?}", &message.key, is_editing);
+        let message_id = format!("{}-{:?}", &message.inner.id(), is_editing);
+        let context_key = format!("message-{}", &message_id);
         let msg_uuid = message.inner.id();
         let conversation_id = message.inner.conversation_id();
 

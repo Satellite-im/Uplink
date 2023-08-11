@@ -42,6 +42,7 @@ uplink = Uplink
     .check-for-updates = Check for updates
     .download-update = Download Update
     .members = Members
+    .date-time-format = %d/%m/%Y %I:%M %p
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.
@@ -90,6 +91,9 @@ messages = Messages
     .pin = Pin Message
     .unpin = Unpin Message
     .pin-view = Pinned Messages
+    .pin-button-goto = Go to
+    .pin-button-unpin = Unpin
+    .pinned-none = There are no pinned messages in this chat
 
 favorites = Favorites
     .favorites = Favorites

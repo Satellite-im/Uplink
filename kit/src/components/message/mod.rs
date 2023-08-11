@@ -310,14 +310,14 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 }
 
 #[derive(Props, PartialEq)]
-struct ChatMessageProps {
+pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
 }
 
 #[allow(non_snake_case)]
-fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
