@@ -642,10 +642,12 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                 })
             } else {rsx!(
                 p {
+                    aria_label: "user-info-username",
                     class: "username",
                     "{conversation_title}"
                 },
                 p {
+                    aria_label: "user-info-status",
                     class: "status",
                     if direct_message {
                         rsx! (span {
