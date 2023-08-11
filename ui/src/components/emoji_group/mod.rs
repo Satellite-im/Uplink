@@ -22,6 +22,7 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             class: "emoji-group",
             for emoji in sorted_list {
                 Button {
+                    aria_label: "frequent-emoji".into(),
                     key: "{emoji.0}",
                     text: emoji.0.clone(),
                     appearance: Appearance::Secondary,
@@ -31,6 +32,7 @@ pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             }
             Button {
+                aria_label: "open-emoji-picker".into(),
                 key: "open-picker",
                 icon: Icon::Plus,
                 appearance: Appearance::Secondary,
