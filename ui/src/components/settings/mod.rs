@@ -81,6 +81,7 @@ pub fn ExtensionSetting<'a>(cx: Scope<'a, ExtensionProps<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "extension-setting",
+            aria_label: "extension-setting-element",
             div {
                 class: "heading",
                 IconElement {
@@ -89,10 +90,12 @@ pub fn ExtensionSetting<'a>(cx: Scope<'a, ExtensionProps<'a>>) -> Element<'a> {
                 div {
                     class: "text",
                     p {
+                        aria_label: "extension-setting-title",
                         class: "title",
                         "{cx.props.title}"
                     },
                     Label {
+                        aria_label: "extension-setting-author".into(),
                         text: cx.props.author.clone(),
                     }
                 },
@@ -103,6 +106,7 @@ pub fn ExtensionSetting<'a>(cx: Scope<'a, ExtensionProps<'a>>) -> Element<'a> {
             },
             p {
                 class: "description",
+                aria_label: "extension-setting-description",
                 "{cx.props.description}"
             }
         }
