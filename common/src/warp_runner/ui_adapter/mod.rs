@@ -211,8 +211,8 @@ pub async fn conversation_to_chat(
 
     let pinned: VecDeque<_> = messages
         .iter()
-        .cloned()
         .filter(|m| m.inner.pinned())
+        .cloned()
         .collect();
 
     let has_more_messages = total_messages > to_take;
