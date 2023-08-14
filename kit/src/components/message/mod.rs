@@ -12,6 +12,8 @@ use warp::{
     logging::tracing::log,
 };
 
+use common::icons::outline::Shape as Icon;
+
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
@@ -85,6 +87,8 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     attachments_pending_uploads: Option<Vec<Progression>>,
+
+    pinned: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -170,6 +174,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let formatted_text_clone = formatted_text.clone();
 
     cx.render(rsx! (
+        cx.props.pinned.then(|| {
+            rsx!(div {
+                class: "pin-indicator",
+                common::icons::Icon {
+                    ..common::icons::IconProps {
+                        class: None,
+                        size: 14,
+                        fill:"currentColor",
+                        icon: Icon::Pin,
+                        disabled: false,
+                        disabled_fill: "#9CA3AF"
+                    },
+                },
+            })
+        }),
         div {
             class: {
                 format_args!(

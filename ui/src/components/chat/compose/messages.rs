@@ -875,6 +875,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     ch.send(MessagesCommand::React((user_did.clone(), message.inner.clone(), emoji)));
                 },
                 pending: cx.props.pending,
+                pinned: message.inner.pinned(),
                 attachments_pending_uploads: pending_uploads,
                 parse_markdown: true,
                 on_download: move |file: warp::constellation::file::File| {
