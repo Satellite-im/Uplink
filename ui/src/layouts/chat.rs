@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::components::chat::{
     compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
 };
-use common::state::{ui, Action, State};
+use common::state::{ui, State};
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -18,7 +18,6 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
     state.write_silent().ui.current_layout = ui::Layout::Welcome;
 
     let is_minimal_view = state.read().ui.is_minimal_view();
-    let sidebar_hidden = state.read().ui.sidebar_hidden;
     let show_welcome = state.read().chats().active.is_none();
 
     if *first_render.get() && is_minimal_view {
