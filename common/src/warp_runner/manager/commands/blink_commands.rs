@@ -19,6 +19,11 @@ pub enum BlinkCmd {
         call_id: Uuid,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
+    #[display(fmt = "Reject")]
+    RejectCall {
+        call_id: Uuid,
+        rsp: oneshot::Sender<Result<(), warp::error::Error>>,
+    },
     #[display(fmt = "LeaveCall")]
     LeaveCall {
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
@@ -49,6 +54,9 @@ pub async fn handle_blink_cmd(cmd: BlinkCmd, blink: &mut Calling) {
         }
         BlinkCmd::AnswerCall { call_id, rsp } => {
             let _ = rsp.send(blink.answer_call(call_id).await);
+        }
+        BlinkCmd::RejectCall { call_id, rsp } => {
+            let _ = rsp.send(blink.reject_call(call_id).await);
         }
         BlinkCmd::LeaveCall { rsp } => {
             let _ = rsp.send(blink.leave_call().await);

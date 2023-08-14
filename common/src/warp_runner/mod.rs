@@ -371,7 +371,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
         .await?;
 
     let blink = warp_blink_wrtc::BlinkImpl::new(multipass.clone()).await?;
-
+    println!("initializing blink!,");
     Ok(manager::Warp {
         tesseract,
         multipass,
