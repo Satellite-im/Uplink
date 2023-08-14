@@ -176,6 +176,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
             filename: file.name(),
             filesize: file.size(),
             thumbnail: thumbnail_to_base64(file),
+            with_download_button: false,
             big: false,
             remote: true,
             download_pending: false,
