@@ -14,6 +14,53 @@ use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
 
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EmojiCounter {
+    list: EmojiList,
+}
+
+impl EmojiCounter {
+    pub fn new() -> Self {
+        Self {
+            list: EmojiList::new(),
+        }
+    }
+
+    pub fn new_with(list: EmojiList) -> Self {
+        Self { list }
+    }
+
+    pub fn increment_emoji(&mut self, emoji: String) {
+        let count = self.list.entry(emoji).or_insert(0);
+        *count += 1;
+    }
+
+    pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
+        let mut emojis: Vec<_> = self.list.iter().collect();
+
+        // sort the list by the emoji with the most usage
+        emojis.sort_by(|a, b| b.1.cmp(a.1));
+
+        match count {
+            Some(n) => emojis
+                .into_iter()
+                .take(n)
+                .map(|(emoji, usage)| (emoji.clone(), *usage))
+                .collect(),
+            None => emojis
+                .into_iter()
+                .map(|(emoji, usage)| (emoji.clone(), *usage))
+                .collect(),
+        }
+    }
+}
+
+impl Default for EmojiCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
     pub focused: bool,
@@ -41,21 +88,22 @@ fn bool_true() -> bool {
     true
 }
 
-fn default_emojis() -> EmojiList {
-    HashMap::from([
+fn default_emojis() -> EmojiCounter {
+    EmojiCounter::new_with(HashMap::from([
         ("👍".to_string(), 1),
         ("👎".to_string(), 1),
         ("❤️".to_string(), 1),
         ("🖖".to_string(), 1),
         ("😂".to_string(), 1),
-    ])
+    ]))
 }
 
 /// Used to determine where the Emoji should be routed.
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub enum EmojiDestination {
     Chatbar,
-    Message(Uuid),
+    // Conversation Uuid, Message Uuid
+    Message(Uuid, Uuid),
 }
 
 impl Default for EmojiDestination {
@@ -89,8 +137,9 @@ pub struct UI {
     pub window_height: u32,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
-    pub emoji_list: EmojiList,
-    pub emoji_destination: EmojiDestination,
+    pub emojis: EmojiCounter,
+    pub emoji_destination: Option<EmojiDestination>,
+    pub emoji_picker_visible: bool,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
@@ -126,8 +175,9 @@ impl Default for UI {
             window_width: Default::default(),
             window_height: Default::default(),
             metadata: Default::default(),
-            emoji_list: default_emojis(),
+            emojis: default_emojis(),
             emoji_destination: Default::default(),
+            emoji_picker_visible: false,
             current_layout: Default::default(),
             overlays: Default::default(),
             extensions: Default::default(),
@@ -180,17 +230,22 @@ impl Drop for UI {
 
 impl UI {
     pub fn track_emoji_usage(&mut self, emoji: String) {
-        let count = self.emoji_list.entry(emoji).or_insert(0);
+        let count = self.emojis.list.entry(emoji).or_insert(0);
         *count += 1;
     }
 
-    pub fn get_emoji_sorted_by_usage(&self) -> EmojiList {
-        // let emojis = self.emoji_list.clone();
+    pub fn get_emoji_sorted_by_usage(&self, count: u64) -> EmojiList {
+        let mut emojis: Vec<_> = self.emojis.list.iter().collect();
 
-        // // emojis.sort_by(|a, b| b.1.cmp(&a.1));
+        // sort the list by the emoji with the most usage
+        emojis.sort_by(|a, b| b.1.cmp(a.1));
 
-        // emojis
-        self.emoji_list.clone()
+        let mut sorted_emojis: EmojiList = HashMap::new();
+        for &(emoji, usage) in emojis.iter().take(count as usize) {
+            sorted_emojis.insert(emoji.clone(), *usage);
+        }
+
+        sorted_emojis
     }
 
     pub fn get_meta(&self) -> WindowMeta {

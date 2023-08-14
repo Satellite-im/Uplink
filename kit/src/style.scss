@@ -220,6 +220,7 @@ pre code {
   --border-radius: 4px;
   --border-radius-less: 2px;
   --border-radius-more: 20px;
+  --border-radius-app-window: 10px;
 
   --border-color: #141414;
   --border-subtle-color: #212529;
@@ -231,6 +232,7 @@ pre code {
   --text-color-dark: #343a40;
   --text-color-bright: #ffffff;
   --text-color-link: #ff860d;
+  --text-selection: #e0e0e0;
   --placeholder: #fff;
   --primary: #fcfbf4;
   --primary-dark: color-mix(in srgb, var(--primary) 50%, black);
@@ -241,7 +243,7 @@ pre code {
   --secondary-dark: #212529;
   --background: #000000;
   --background-light: var(--secondary-light);
-  --background-dark: #000000;
+  --background-dark: #474747;
   --success: #1dd1a1;
   --success-light: #00c29c;
   --info: #1B9CFC;
@@ -253,10 +255,10 @@ pre code {
 }
 
 ::selection {
-  background: var(--text-color-bright); /* WebKit/Blink Browsers */
+  background: var(--text-selection); /* WebKit/Blink Browsers */
 }
 ::-moz-selection {
-  background: var(--text-color-bright); /* Gecko Browsers */
+  background: var(--text-selection); /* Gecko Browsers */
 }
 
 .skeletal {

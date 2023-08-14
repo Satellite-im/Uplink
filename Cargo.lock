@@ -622,9 +622,8 @@ dependencies = [
 
 [[package]]
 name = "audiopus_sys"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62314a1546a2064e033665d658e88c620a62904be945f8147e6b16c3db9f8651"
+version = "0.2.0"
+source = "git+https://github.com/sdwoodbury/audiopus_sys?rev=6c1821cd38ff535ee7448bcdb61b7691ee211e5f#6c1821cd38ff535ee7448bcdb61b7691ee211e5f"
 dependencies = [
  "cmake",
  "log",
@@ -1461,9 +1460,7 @@ dependencies = [
  "walkdir",
  "warp",
  "warp-blink-wrtc",
- "warp-fs-ipfs",
- "warp-mp-ipfs",
- "warp-rg-ipfs",
+ "warp-ipfs",
  "windows 0.24.0",
  "wry",
  "zip",
@@ -2480,8 +2477,11 @@ dependencies = [
  "dioxus-desktop",
  "emojis",
  "extensions",
+ "futures",
  "kit",
  "once_cell",
+ "uuid",
+ "warp",
 ]
 
 [[package]]
@@ -5547,6 +5547,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "mp4"
+version = "0.13.0"
+source = "git+https://github.com/sdwoodbury/mp4-rust?rev=9887024513f59e5fcda9f44442b2a3a2cdfe9706#9887024513f59e5fcda9f44442b2a3a2cdfe9706"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "num-rational",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "multiaddr"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5919,8 +5932,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
 dependencies = [
  "autocfg",
+ "num-bigint",
  "num-integer",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -6140,8 +6155,7 @@ dependencies = [
 [[package]]
 name = "opus"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6526409b274a7e98e55ff59d96aafd38e6cd34d46b7dbbc32ce126dffcd75e8e"
+source = "git+https://github.com/sdwoodbury/opus-rs?rev=3f07443dac1907dbcc847181a0d40d561592072b#3f07443dac1907dbcc847181a0d40d561592072b"
 dependencies = [
  "audiopus_sys",
  "libc",
@@ -9035,9 +9049,7 @@ dependencies = [
  "uuid",
  "walkdir",
  "warp",
- "warp-fs-ipfs",
- "warp-mp-ipfs",
- "warp-rg-ipfs",
+ "warp-ipfs",
  "winres",
  "wry",
  "zip",
@@ -9156,7 +9168,7 @@ dependencies = [
 [[package]]
 name = "warp"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "aes-gcm 0.10.2",
  "anyhow",
@@ -9212,12 +9224,13 @@ dependencies = [
 [[package]]
 name = "warp-blink-wrtc"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
  "bs58",
+ "byteorder",
  "bytes",
  "cbindgen",
  "cpal 0.15.2",
@@ -9225,6 +9238,7 @@ dependencies = [
  "futures",
  "libipld",
  "log",
+ "mp4",
  "once_cell",
  "opus",
  "rand 0.8.5",
@@ -9241,7 +9255,7 @@ dependencies = [
 [[package]]
 name = "warp-derive"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "paste",
  "quote",
@@ -9249,16 +9263,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "warp-fs-ipfs"
+name = "warp-ipfs"
 version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
+source = "git+https://github.com/Satellite-im/Warp?rev=be14ae734462c4898320bf5364c577aa2854724a#be14ae734462c4898320bf5364c577aa2854724a"
 dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
- "cbindgen",
+ "bayespam",
+ "bincode",
+ "bs58",
+ "bytes",
  "chrono",
  "derive_more",
+ "either",
  "futures",
  "image",
  "libipld",
@@ -9269,55 +9287,9 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "warp",
-]
-
-[[package]]
-name = "warp-mp-ipfs"
-version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
-dependencies = [
- "anyhow",
- "async-stream",
- "async-trait",
- "bs58",
- "chrono",
- "either",
- "futures",
- "libipld",
- "rust-ipfs",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
  "tracing",
  "uuid",
  "void",
- "warp",
-]
-
-[[package]]
-name = "warp-rg-ipfs"
-version = "0.1.0"
-source = "git+https://github.com/Satellite-im/Warp?rev=c8df96ca5ea72fd79c4ef94da6722ea5c8714126#c8df96ca5ea72fd79c4ef94da6722ea5c8714126"
-dependencies = [
- "anyhow",
- "async-stream",
- "async-trait",
- "bayespam",
- "bincode",
- "bs58",
- "bytes",
- "chrono",
- "futures",
- "libipld",
- "rust-ipfs",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "uuid",
  "warp",
 ]
 
