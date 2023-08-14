@@ -485,12 +485,20 @@ impl State {
             } => {
                 self.update_identity_status_hack(&message.inner.sender());
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
+                    let cloned = message.clone();
                     if let Some(msg) = chat
                         .messages
                         .iter_mut()
                         .find(|msg| msg.inner.id() == message.inner.id())
                     {
                         *msg = message;
+                    }
+                    let pin = chat
+                        .pinned_messages
+                        .iter_mut()
+                        .find(|m| m.inner.id() == cloned.inner.id());
+                    if let Some(msg) = pin {
+                        *msg = cloned;
                     }
                 }
             }
@@ -517,6 +525,8 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    chat.pinned_messages
+                        .retain(|msg| msg.inner.id() != message_id);
                 }
 
                 if should_decrement_notifications {
@@ -986,7 +996,7 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            msg.inner = message;
+            msg.inner = message.clone();
             if pinned_change {
                 if !msg.inner.pinned() {
                     conv.pinned_messages
@@ -999,6 +1009,14 @@ impl State {
                         .filter(|m| m.inner.pinned())
                         .collect();
                     conv.pinned_messages = pinned.into();
+                }
+            } else {
+                let pin = conv
+                    .pinned_messages
+                    .iter_mut()
+                    .find(|m| m.inner.id() == message_id);
+                if let Some(msg) = pin {
+                    msg.inner = message;
                 }
             }
             return;
