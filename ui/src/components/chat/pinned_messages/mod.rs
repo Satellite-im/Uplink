@@ -26,7 +26,7 @@ pub const SCROLL_MESSAGE: &str = r#"
 
 enum ChannelCommand {
     FetchPinnedMessages(Uuid, usize, usize),
-    RemovePinnedMessage(warp::raygun::Message),
+    RemovePinnedMessage(Uuid, Uuid),
 }
 
 #[derive(Props, Eq, PartialEq)]
@@ -81,11 +81,11 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                             }
                         }
                     }
-                    ChannelCommand::RemovePinnedMessage(msg) => {
+                    ChannelCommand::RemovePinnedMessage(conversation_id, message_id) => {
                         let (tx, rx) = futures::channel::oneshot::channel();
                         if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
-                            conversation_id: msg.conversation_id(),
-                            message_id: msg.id(),
+                            conversation_id,
+                            message_id,
                             pinstate: PinState::Unpin,
                             rsp: tx,
                         })) {
@@ -140,8 +140,9 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                     rsx!(PinnedMessage {
                         message: message.clone()
                         sender: sender,
-                        onremove: move |(_,msg)| {
-                            ch.send(ChannelCommand::RemovePinnedMessage(msg))
+                        onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
+                            let conv = &msg.conversation_id();
+                            ch.send(ChannelCommand::RemovePinnedMessage(*conv, msg.id()))
                         },
                         time: time
                     })
@@ -181,7 +182,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
             on_press: move |_| {},
         })
     });
-    let has_attachments = attachments.len() > 0;
+    let has_attachments = !attachments.is_empty();
 
     cx.render(rsx!(
         div {
