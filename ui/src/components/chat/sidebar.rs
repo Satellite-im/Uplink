@@ -343,7 +343,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        participants: build_participants(&other_participants),
+                                        participants: build_participants(&participants),
                                         with_username: participants_name,
                                         typing: users_typing,
                                         onpress: move |_| {
