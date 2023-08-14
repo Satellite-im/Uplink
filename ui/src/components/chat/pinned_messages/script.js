@@ -1,4 +1,4 @@
-const pin_click = function (e) {
+var pin_click = function (e) {
     e.stopPropagation()
     var pinned = document.getElementById("pinned-messages-container")
     if (pinned != null) {
@@ -12,7 +12,7 @@ const pin_click = function (e) {
     }
 }
 
-const outside_click = function (e) {
+var outside_click = function (e) {
     var pinned = document.getElementById("pinned-messages-container")
     if (pinned != null) {
         var rect = pinned.getBoundingClientRect()

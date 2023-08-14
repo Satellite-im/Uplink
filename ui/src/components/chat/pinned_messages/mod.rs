@@ -105,13 +105,18 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
 
     let script = include_str!("./script.js");
 
+    let eval = use_eval(cx);
+    use_effect(cx, (), |_| {
+        to_owned![eval];
+        async move {
+            eval(script.to_string());
+        }
+    });
+
     cx.render(rsx!(div {
         id: "pinned-messages-container",
         class: "hidden",
         aria_label: "pinned-messages-label",
-        script {
-            script
-        },
         div {
             class: "pinned-header",
             get_local_text("messages.pin-view")
