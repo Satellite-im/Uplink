@@ -91,3 +91,15 @@
 .pinned-sender-time {
     font-size: var(--text-size-less);
 }
+
+.background-highlight {
+    animation-name: highlight;
+    animation-duration: 2s;
+}
+
+@keyframes highlight {
+    0% {background-color: transparent;}
+    30% {background-color: var(--background-dark);}
+    70% {background-color: var(--background-dark);}
+    100% {background-color: transparent;}
+}

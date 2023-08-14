@@ -16,14 +16,6 @@ use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_ima
 use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
-pub const SCROLL_MESSAGE: &str = r#"
-    var message = document.getElementById("message-$UUID-false")
-    console.log("TEST m ", message, "====id:   message-$UUID-false")
-    message.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    var pinned = document.getElementById("pinned-messages-container")
-    pinned.classList.add("hidden")
-"#;
-
 enum ChannelCommand {
     FetchPinnedMessages(Uuid, usize, usize),
     RemovePinnedMessage(Uuid, Uuid),
@@ -214,7 +206,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                     button {
                                         class: "pinned-buttons",
                                         onclick: move |_| {
-                                            eval(SCROLL_MESSAGE.replace("$UUID", &id.to_string()));
+                                            eval(include_str!("./scroll_to.js").replace("$UUID", &id.to_string()));
                                         },
                                         get_local_text("messages.pin-button-goto")
                                     },
