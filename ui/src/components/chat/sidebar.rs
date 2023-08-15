@@ -70,7 +70,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let mut friends_identities = cx.props.friends_identities.get().clone();
     let chats = cx.props.chats.get().clone();
 
-    friends_identities.sort_by_key(|identity| identity.username().clone());
+    friends_identities.sort_by_key(|identity| identity.username());
 
     cx.render(rsx!(
         div {
@@ -100,7 +100,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             }
             friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
-                let did = identity.did_key().clone();
+                let did = identity.did_key();
                 let search_typed_chars = cx.props.search_typed_chars.read().clone();
                 let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
                 let end = start + search_typed_chars.len();
@@ -152,7 +152,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 )
             }
             chats.iter().cloned().map(|chat| {               
-                let id = chat.id.clone();
+                let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let participants2 = participants.clone();
 
@@ -173,7 +173,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         onclick: move |evt|  {
                             evt.stop_propagation();
                             *cx.props.search_friends_is_focused.write_silent() = false;
-                            cx.props.onclick.call(identity_search_result::Identifier::Uuid(id.clone()));
+                            cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
                         },
                         rsx! (
                             div {
@@ -203,7 +203,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                         span { &conversation_title[end..] },
                                     )
                                 } else {
-                                    rsx!(span { conversation_title.to_string()})
+                                    rsx!(span { conversation_title})
                                 }
                             }
                         )
@@ -216,7 +216,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     .map(|identity| {
                         let typed_chars = search_typed_chars.clone();
                         let username = identity.username();
-                        let did = identity.did_key().clone();
+                        let did = identity.did_key();
                         let start = username.to_lowercase().find(&typed_chars.to_lowercase()).unwrap_or(0);
                         let end = start + typed_chars.len();
 
