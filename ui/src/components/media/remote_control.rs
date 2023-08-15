@@ -11,6 +11,7 @@ use kit::elements::{
     Appearance,
 };
 
+use crate::utils::format_timestamp::format_timestamp_timeago;
 use common::state::{Action, State};
 use common::{
     icons::outline::Shape as Icon,
@@ -18,8 +19,6 @@ use common::{
     WARP_CMD_CH,
 };
 use uuid::Uuid;
-
-use crate::utils::format_timestamp::format_timestamp_timeago;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -43,8 +42,13 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
     let active_call = state.read().ui.call_info.active_call();
     let active_call_id = active_call.as_ref().map(|x| x.call.id);
     let active_call_answer_time = active_call.as_ref().map(|x| x.answer_time);
+    let active_call_participants_joined = active_call
+        .as_ref()
+        .map(|x| x.call.participants_joined.len());
+
     let scope_id = cx.scope_id();
     let update_fn = cx.schedule_update_any();
+
     use_future(
         cx,
         (&scope_id, &active_call_id, &active_call_answer_time),
@@ -138,7 +142,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                                 log::error!("warp_runner failed to unmute self: {e}");
                             }
                         }
-                    }
+                    } // TODO: Method to end call before a connection is made
                 }
             }
         }
@@ -193,14 +197,36 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                     // todo: send command
                 }
             },
-            Button {
-                icon: Icon::PhoneXMark,
-                appearance: Appearance::Danger,
-                text: cx.props.end_text.clone(),
-                onpress: move |_| {
-                    ch.send(CallDialogCmd::Hangup(call.id));
-                },
+
+            // TODO: This needs a a signal sent when you terminate a call before the other user joins
+            //   Once the signal is added, this part will either need to be updated to show a different button with different method
+            //   (how it is configured below), or changed to fire both events on click (no more if/else, a single button with two things happening on press)
+            if active_call_participants_joined.is_some() && active_call_participants_joined.unwrap() > 0 {
+                // This button is shown where there are more than 1 person in the call
+                rsx!(
+                    Button {
+                        icon: Icon::PhoneXMark,
+                        appearance: Appearance::Danger,
+                        text: cx.props.end_text.clone(),
+                        onpress: move |_| {
+                            ch.send(CallDialogCmd::Hangup(call.id));
+                        },
+                    }
+                )
+            } else {
+                rsx!(
+                    // This button is shown where there are no people in the call/it is calling
+                    Button {
+                        icon: Icon::PhoneXMark,
+                        appearance: Appearance::Success,
+                        text: "Cancel".into(),
+                        onpress: move |_| {
+                            ch.send(CallDialogCmd::Hangup(call.id));
+                        },
+                    }
+                )
             }
+
         }
     }))
 }
