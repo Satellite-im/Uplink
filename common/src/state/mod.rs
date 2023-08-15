@@ -536,7 +536,7 @@ impl State {
                     ));
                 }
             }
-            MessageEvent::MessagePinnedUpdate { message } => {
+            MessageEvent::PinnedUpdate { message } => {
                 self.update_message(message);
             }
             MessageEvent::MessageReactionAdded { message } => {

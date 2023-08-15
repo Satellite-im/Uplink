@@ -35,8 +35,8 @@ pub enum MessageEvent {
         conversation_id: Uuid,
         message_id: Uuid,
     },
-    #[display(fmt = "MessagePinnedUpdate")]
-    MessagePinnedUpdate { message: warp::raygun::Message },
+    #[display(fmt = "PinnedUpdate")]
+    PinnedUpdate { message: warp::raygun::Message },
     #[display(fmt = "MessageReactionAdded")]
     MessageReactionAdded { message: warp::raygun::Message },
     #[display(fmt = "MessageReactionRemoved")]
@@ -152,13 +152,13 @@ pub async fn convert_message_event(
         MessageEventKind::MessagePinned {
             conversation_id,
             message_id,
-        } => MessageEvent::MessagePinnedUpdate {
+        } => MessageEvent::PinnedUpdate {
             message: messaging.get_message(conversation_id, message_id).await?,
         },
         MessageEventKind::MessageUnpinned {
             conversation_id,
             message_id,
-        } => MessageEvent::MessagePinnedUpdate {
+        } => MessageEvent::PinnedUpdate {
             message: messaging.get_message(conversation_id, message_id).await?,
         },
         _ => {
