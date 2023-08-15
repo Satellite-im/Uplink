@@ -63,7 +63,6 @@ pub struct SearchProps<'a> {
 
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let own_user_did = state.read().did_key();
     if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
@@ -79,7 +78,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
             onblur: |_| {
-                println!("Passing here - 1");
                 *cx.props.search_friends_is_focused.write() = false;
             },
             onmouseenter: |_| {
@@ -104,6 +102,10 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
                 let did = identity.did_key().clone();
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
+                let end = start + search_typed_chars.len();
+
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
@@ -119,13 +121,17 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             status: identity.identity_status().into(),
                             image: identity.profile_picture()
                         },
-                        a {
-                            class: "search-friends-dropdown",
-                            href: "#{username}",
-                            prevent_default: "onclick",
-                            rel: "noopener noreferrer",
-                            "{username}"
-                        },
+                        div {
+                            class: "search-friends-dropdown-name",
+                            rsx!(
+                                span { &username[0..start] },
+                                span {
+                                    class: "highlight-search-typed-chars", 
+                                    &username[start..end]
+                                }, 
+                                span { &username[end..] },
+                            )
+                        }
                     }
                 )
             })
@@ -157,6 +163,8 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     None => other_participants_names,
                 };
                 let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let text_to_find = search_typed_chars.to_lowercase();
+                let search_typed_chars2 = search_typed_chars.clone();
 
                 rsx!(
                     div {
@@ -183,23 +191,36 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     )
                                 },
                             }
-                            a {
-                                class: "search-friends-dropdown",
-                                href: "#{conversation_title}",
-                                prevent_default: "onclick",
-                                rel: "noopener noreferrer",
-                                "{conversation_title}"
-                            },
+                        div {
+                                class: "search-friends-dropdown-name",
+                                if let Some(start) = conversation_title.to_lowercase().find(&text_to_find) {
+                                    let end = start + search_typed_chars2.len();
+                                    rsx!(
+                                        span { &conversation_title[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars", 
+                                            &conversation_title[start..end]
+                                        }, 
+                                        span { &conversation_title[end..] },
+                                    )
+                                } else {
+                                    rsx!(span { conversation_title.to_string()})
+                                }
+                            }
                         )
                     }
                     participants2.iter().cloned()
-                    .filter(|identity| identity.username().to_lowercase().contains(&search_typed_chars.to_lowercase())
+                    .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
                     && 
                     identity.did_key() != state.read().did_key()
                 )
                     .map(|identity| {
+                        let typed_chars = search_typed_chars.clone();
                         let username = identity.username();
                         let did = identity.did_key().clone();
+                        let start = username.to_lowercase().find(&typed_chars.to_lowercase()).unwrap_or(0);
+                        let end = start + typed_chars.len();
+
                         rsx!(
                             div {
                                 class: "identity-header-sidebar-participants-in-group",
@@ -215,13 +236,17 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     status: identity.identity_status().into(),
                                     image: identity.profile_picture()
                                 },
-                                a {
-                                    class: "search-friends-dropdown",
-                                    href: "#{username}",
-                                    prevent_default: "onclick",
-                                    rel: "noopener noreferrer",
-                                    "{username}"
-                                },
+                                div {
+                                    class: "search-friends-dropdown-name",
+                                    rsx!(
+                                        span { &username[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars", 
+                                            &username[start..end]
+                                        }, 
+                                        span { &username[end..] },
+                                    )
+                                }
                             }
                         )
                     })
