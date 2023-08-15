@@ -541,10 +541,10 @@ impl State {
                 self.unpin_message(message);
             }
             MessageEvent::MessageReactionAdded { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::MessageReactionRemoved { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -1020,7 +1020,9 @@ impl State {
         }
     }
 
-    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
+    // this is used for adding/removing reactions.
+    // if pinned messages ever need to display a reaction, additional code may be needed here.
+    pub fn update_reactions(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
