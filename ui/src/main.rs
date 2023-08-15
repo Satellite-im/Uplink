@@ -1310,6 +1310,11 @@ fn get_router(cx: Scope) -> Element {
                     }
                 }
             },
+            onchange: move |_| {
+                if state.read().ui.is_minimal_view() {
+                    state.write().mutate(Action::SidebarHidden(true));
+                }
+            },
             notification_action_handler {
                 friend_state: initial_friend_page
             }
