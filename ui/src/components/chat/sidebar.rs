@@ -2,6 +2,7 @@ use common::language::get_local_text;
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
+use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use dioxus_router::*;
@@ -51,7 +52,6 @@ pub struct Props {
 
 #[derive(Props)]
 pub struct SearchProps<'a> {
-    // username, did
     search_typed_chars: UseRef<String>,
     search_friends_is_focused: UseRef<bool>,
     search_dropdown_hover: UseRef<bool>,
@@ -109,8 +109,8 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         aria_label: "identity-header-sidebar",
                         prevent_default: "onclick",
                         onclick: move |evt| {
-                            println!("Passing here - 2");
                             evt.stop_propagation();
+                            *cx.props.search_friends_is_focused.write_silent() = false;
                             cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
                         },
                         UserImage {
@@ -160,6 +160,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         prevent_default: "onclick",
                         onclick: move |evt|  {
                             evt.stop_propagation();
+                            *cx.props.search_friends_is_focused.write_silent() = false;
                             cx.props.onclick.call(identity_search_result::Identifier::Uuid(id.clone()));
                         },
                         rsx! (
@@ -329,10 +330,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             clear_on_submit: true,
                             ..Options::default()
                         },
-                        onreturn: move |(v, _, _): (String, _, _)| {
-                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
+                        onreturn: move |(v, _, key): (String, _, Code)| {
+                            if key == Code::Escape {
+                                *search_friends_is_focused.write() = false;
+                            }
+                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i))  {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_identifier(entry.id.clone());
+                                    if !*search_friends_is_focused.read() {
+                                        select_identifier(entry.id.clone());
+                                    }
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -340,6 +346,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         onchange: move |(v, _): (String, _)| {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
+                                *search_friends_is_focused.write_silent() = false;
                             } else {
                                 let (mut friends_entries, friends_identities) = state.read().search_identities(&v);
                                 let (chats_entries, chats) = state.read().search_group_chats(&v);
@@ -383,20 +390,22 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
             )),
-            search_friends{
-                search_typed_chars: search_typed_chars.clone(),
-                search_friends_is_focused: search_friends_is_focused.clone(),
-                identities: search_results.clone(),
-                friends_identities: search_results_friends_identities.clone(),
-                chats: search_results_chats.clone(),
-                search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |identifier: identity_search_result::Identifier| {
-                    select_identifier(identifier);
-                    search_results.set(Vec::new());
-                    reset_searchbar.set(true);
-                    on_search_dropdown_hover.with_mut(|i| *i = false);
-                }
-            },
+            if *search_friends_is_focused.read() {
+                rsx!(search_friends{
+                    search_typed_chars: search_typed_chars.clone(),
+                    search_friends_is_focused: search_friends_is_focused.clone(),
+                    identities: search_results.clone(),
+                    friends_identities: search_results_friends_identities.clone(),
+                    chats: search_results_chats.clone(),
+                    search_dropdown_hover: on_search_dropdown_hover.clone(),
+                    onclick: move |identifier: identity_search_result::Identifier| {
+                        select_identifier(identifier);
+                        search_results.set(Vec::new());
+                        reset_searchbar.set(true);
+                        on_search_dropdown_hover.with_mut(|i| *i = false);
+                    }
+                })
+            }
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
