@@ -95,7 +95,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         font_weight: "bold",
                         color: "white",
                         p {
-                            "Users"
+                            get_local_text("uplink.users")
                         }
                     })
             }
@@ -147,7 +147,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         font_weight: "bold",
                         color: "white",
                         p {
-                            "Groups"
+                            get_local_text("uplink.groups")
                         }
                     }
                 )
