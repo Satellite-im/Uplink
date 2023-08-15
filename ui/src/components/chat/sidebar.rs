@@ -66,11 +66,10 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
-    let mut identities = cx.props.identities.get().clone();
+    
     let mut friends_identities = cx.props.friends_identities.get().clone();
     let chats = cx.props.chats.get().clone();
 
-    identities.sort_by_key(|entry| entry.display_name.clone());
     friends_identities.sort_by_key(|identity| identity.username().clone());
 
     cx.render(rsx!(
