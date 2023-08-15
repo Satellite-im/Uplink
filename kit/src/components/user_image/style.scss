@@ -8,6 +8,10 @@
 	background-color: var(--secondary);
 }
 
+.user-image-group-wrap * {
+	cursor: default;
+}
+
 .user-image {
 	width: fit-content;
 	height: var(--height-input);
