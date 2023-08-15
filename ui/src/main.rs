@@ -613,7 +613,7 @@ fn app(cx: Scope) -> Element {
                     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                     *first_resize.write_silent() = false;
                 }
-                let size = webview.inner_size();
+                let size = webview.window().inner_size();
 
                 //log::trace!(
                 //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
