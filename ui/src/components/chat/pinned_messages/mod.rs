@@ -146,6 +146,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
 
 #[derive(Props)]
 pub struct PinnedMessageProp<'a> {
+    // todo: should be a warp::raygun::Message
     message: Message,
     #[props(!optional)]
     sender: Option<Identity>,
