@@ -497,9 +497,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         },
         div {
             position: "relative",
-            rsx!(PinnedMessages {
-                active_chat: state.read().get_active_chat()
-            }),
+            match state.read().get_active_chat() {
+                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
+                None => cx.render(rsx!(())),
+            },
             div {
                 id: "pin-button",
                 Button {

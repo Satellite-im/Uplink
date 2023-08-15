@@ -485,20 +485,19 @@ impl State {
             } => {
                 self.update_identity_status_hack(&message.inner.sender());
                 if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-                    let cloned = message.clone();
                     if let Some(msg) = chat
                         .messages
                         .iter_mut()
                         .find(|msg| msg.inner.id() == message.inner.id())
                     {
-                        *msg = message;
+                        *msg = message.clone();
                     }
-                    let pin = chat
+                    if let Some(msg) = chat
                         .pinned_messages
                         .iter_mut()
-                        .find(|m| m.inner.id() == cloned.inner.id());
-                    if let Some(msg) = pin {
-                        *msg = cloned;
+                        .find(|m| m.id() == message.inner.id())
+                    {
+                        *msg = message.inner;
                     }
                 }
             }
@@ -525,8 +524,7 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
-                    chat.pinned_messages
-                        .retain(|msg| msg.inner.id() != message_id);
+                    chat.pinned_messages.retain(|msg| msg.id() != message_id);
                 }
 
                 if should_decrement_notifications {
@@ -536,8 +534,11 @@ impl State {
                     ));
                 }
             }
-            MessageEvent::PinnedUpdate { message } => {
-                self.update_message(message);
+            MessageEvent::MessagePinned { message } => {
+                self.pin_message(message);
+            }
+            MessageEvent::MessageUnpinned { message } => {
+                self.unpin_message(message);
             }
             MessageEvent::MessageReactionAdded { message } => {
                 self.update_message(message);
@@ -750,6 +751,7 @@ impl State {
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
                 conv.creator = chat.creator;
+                conv.pinned_messages = chat.pinned_messages;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -961,7 +963,8 @@ impl State {
         messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            chat.pinned_messages = messages.into();
+            // todo: possibly remove this
+            //chat.pinned_messages = messages.into();
         }
     }
 
@@ -974,6 +977,49 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
+    fn pin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.push(message);
+        conv.pinned_messages.sort_by(|l, r| l.date().cmp(&r.date()));
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(true);
+        }
+    }
+
+    fn unpin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.retain(|x| x.id() != message_id);
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(false);
+        }
+    }
+
     pub fn update_message(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
@@ -983,11 +1029,11 @@ impl State {
             }
         };
         let message_id = message.id();
-        for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
-                continue;
-            }
-            let pinned_change = msg.inner.pinned() != message.pinned();
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
             let mut reactions: Vec<Reaction> = Vec::new();
             for mut reaction in message.reactions() {
                 let users_not_duplicated: HashSet<DID> =
@@ -997,27 +1043,9 @@ impl State {
             }
             message.set_reactions(reactions);
             msg.inner = message.clone();
-            if pinned_change {
-                let pinned: Vec<_> = conv
-                    .messages
-                    .iter()
-                    .cloned()
-                    .filter(|m| m.inner.pinned())
-                    .collect();
-                conv.pinned_messages = pinned.into();
-            } else {
-                let pin = conv
-                    .pinned_messages
-                    .iter_mut()
-                    .find(|m| m.inner.id() == message_id);
-                if let Some(msg) = pin {
-                    msg.inner = message;
-                }
-            }
-            return;
+        } else {
+            log::warn!("attempted to update a message which wasn't found");
         }
-
-        log::warn!("attempted to update a message which wasn't found");
     }
 
     /// Remove a chat from the sidebar on `State` struct.

@@ -209,11 +209,16 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
-    let pinned: VecDeque<_> = messages
-        .iter()
-        .filter(|m| m.inner.pinned())
-        .cloned()
-        .collect();
+    // todo: perhaps add pagination, but do this separately from the pagination for the chats page
+    let pinned_messages = messaging
+        .get_messages(
+            conv.id(),
+            MessageOptions::default()
+                .set_range(0..total_messages)
+                .set_pinned(),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
 
     let has_more_messages = total_messages > to_take;
     Ok(chats::Chat {
@@ -230,7 +235,7 @@ pub async fn conversation_to_chat(
         has_more_messages,
         pending_outgoing_messages: vec![],
         files_attached_to_send: vec![],
-        pinned_messages: pinned,
+        pinned_messages,
     })
 }
 

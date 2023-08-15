@@ -71,7 +71,7 @@ pub struct Chat {
     #[serde(skip)]
     pub files_attached_to_send: Vec<PathBuf>,
     #[serde(skip)]
-    pub pinned_messages: VecDeque<ui_adapter::Message>,
+    pub pinned_messages: Vec<raygun::Message>,
 }
 
 impl Chat {

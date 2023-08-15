@@ -23,26 +23,21 @@ enum ChannelCommand {
 
 #[derive(Props, Eq, PartialEq)]
 pub struct Props {
-    #[props(!optional)]
-    active_chat: Option<Chat>,
+    active_chat: Chat,
 }
 
 #[allow(non_snake_case)]
 pub fn PinnedMessages(cx: Scope<Props>) -> Element {
     log::trace!("rendering pinned_messages");
+    let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
     let _loading = use_state(cx, || true);
     let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
         use_ref(cx, || None);
 
     if let Some((id, m, _)) = newely_fetched_messages.write_silent().take() {
-        state.write().update_pinned_chat_messages(id, m);
+        //state.write().update_pinned_chat_messages(id, m);
     }
-
-    let chat = match &cx.props.active_chat {
-        Some(c) => c,
-        None => return cx.render(rsx!(())),
-    };
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
         to_owned![newely_fetched_messages];
@@ -132,10 +127,10 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                 })
             } else {
                 rsx!(chat.pinned_messages.iter().map(|message|{
-                    let sender = state.read().get_identity(&message.inner.sender());
-                    let time = message.inner.date().format(&get_local_text("uplink.date-time-format")).to_string();
+                    let sender = state.read().get_identity(&message.sender());
+                    let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     rsx!(PinnedMessage {
-                        message: message.clone()
+                        message: Message { inner: message.clone(), in_reply_to: None, key: String::default() }, 
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
