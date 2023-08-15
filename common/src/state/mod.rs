@@ -998,18 +998,13 @@ impl State {
             message.set_reactions(reactions);
             msg.inner = message.clone();
             if pinned_change {
-                if !msg.inner.pinned() {
-                    conv.pinned_messages
-                        .retain(|msg| msg.inner.id() != message_id);
-                } else {
-                    let pinned: Vec<_> = conv
-                        .messages
-                        .iter()
-                        .cloned()
-                        .filter(|m| m.inner.pinned())
-                        .collect();
-                    conv.pinned_messages = pinned.into();
-                }
+                let pinned: Vec<_> = conv
+                    .messages
+                    .iter()
+                    .cloned()
+                    .filter(|m| m.inner.pinned())
+                    .collect();
+                conv.pinned_messages = pinned.into();
             } else {
                 let pin = conv
                     .pinned_messages
