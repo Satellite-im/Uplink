@@ -224,7 +224,37 @@
     background-color: var(--background-light);
   }
 
+  .identity-header-sidebar-participants-in-group {
+    display: flex;
+    // TODO(Lucas): Look it later, should be height: x%;
+    min-height: 50px;
+    background-size: cover;
+    background-color: var(--secondary-dark);
+    padding-top: 4px;
+    padding-left: 64px;
+    margin-bottom: 4px;
+    #profile-image {
+      margin: var(--gap-less);
+      //TODO(Lucas): Look to it, should be width: var(--height-input);
+      width: 45px;
+      height: var(--height-input);
+      border-radius: 50%;
+      background-size: cover;
+      background-color: var(--secondary);
+      border: 1px solid var(--background);
+      .indicator {
+        position: relative;
+        color: var(--background);
+        top: calc(100% - 1rem);
+        left: calc(100% - 1rem);
+      }
+    }
+  }
+  .identity-header-sidebar-participants-in-group:hover {
+    background-color: var(--background-light);
+  }
 
+  
   .searchbar-dropdown {
     position: absolute;
     display: inline-flex;

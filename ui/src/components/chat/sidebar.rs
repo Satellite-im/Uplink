@@ -63,6 +63,7 @@ pub struct SearchProps<'a> {
 
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let own_user_did = state.read().did_key();
     if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
@@ -148,11 +149,15 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             chats.iter().cloned().map(|chat| {               
                 let id = chat.id.clone();
                 let participants = state.read().chat_participants(&chat);
+                let participants2 = participants.clone();
+
                 let other_participants_names = State::join_usernames(&participants);
                 let conversation_title = match chat.conversation_name.as_ref() {
                     Some(n) => n.clone(),
                     None => other_participants_names,
                 };
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
@@ -187,6 +192,39 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             },
                         )
                     }
+                    participants2.iter().cloned()
+                    .filter(|identity| identity.username().to_lowercase().contains(&search_typed_chars.to_lowercase())
+                    && 
+                    identity.did_key() != state.read().did_key()
+                )
+                    .map(|identity| {
+                        let username = identity.username();
+                        let did = identity.did_key().clone();
+                        rsx!(
+                            div {
+                                class: "identity-header-sidebar-participants-in-group",
+                                aria_label: "identity-header-sidebar-participants-in-group",
+                                prevent_default: "onclick",
+                                onclick: move |evt| {
+                                    evt.stop_propagation();
+                                    *cx.props.search_friends_is_focused.write_silent() = false;
+                                    cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                },
+                                UserImage {
+                                    platform: identity.platform().into(),
+                                    status: identity.identity_status().into(),
+                                    image: identity.profile_picture()
+                                },
+                                a {
+                                    class: "search-friends-dropdown",
+                                    href: "#{username}",
+                                    prevent_default: "onclick",
+                                    rel: "noopener noreferrer",
+                                    "{username}"
+                                },
+                            }
+                        )
+                    })
                 )
             })
         }
