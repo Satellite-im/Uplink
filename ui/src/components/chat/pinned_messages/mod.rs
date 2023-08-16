@@ -1,11 +1,7 @@
 use common::{
     language::get_local_text,
     state::{Chat, Identity, State},
-    warp_runner::{
-        thumbnail_to_base64,
-        ui_adapter::{self, Message},
-        RayGunCmd, WarpCmd,
-    },
+    warp_runner::{thumbnail_to_base64, ui_adapter::Message, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
@@ -17,7 +13,6 @@ use uuid::Uuid;
 use warp::{logging::tracing::log, raygun::PinState};
 
 enum ChannelCommand {
-    FetchPinnedMessages(Uuid, usize, usize),
     RemovePinnedMessage(Uuid, Uuid),
 }
 
@@ -31,75 +26,33 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
     log::trace!("rendering pinned_messages");
     let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
-    let _loading = use_state(cx, || true);
-    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
-        use_ref(cx, || None);
 
-    if let Some((id, m, _)) = newely_fetched_messages.write_silent().take() {
-        //state.write().update_pinned_chat_messages(id, m);
-    }
-
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
-        to_owned![newely_fetched_messages];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    ChannelCommand::FetchPinnedMessages(conv_id, to_fetch, current_len) => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::FetchPinnedMessages {
-                                conv_id,
-                                to_fetch,
-                                current_len,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        match rx.await.expect("command canceled") {
-                            Ok((m, has_more)) => {
-                                newely_fetched_messages.set(Some((conv_id, m, has_more)));
-                            }
-                            Err(e) => {
-                                log::error!("failed to fetch more message: {}", e);
-                            }
-                        }
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(cmd) = rx.next().await {
+            match cmd {
+                ChannelCommand::RemovePinnedMessage(conversation_id, message_id) => {
+                    let (tx, rx) = futures::channel::oneshot::channel();
+                    if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
+                        conversation_id,
+                        message_id,
+                        pinstate: PinState::Unpin,
+                        rsp: tx,
+                    })) {
+                        log::error!("failed to send warp command: {}", e);
+                        continue;
                     }
-                    ChannelCommand::RemovePinnedMessage(conversation_id, message_id) => {
-                        let (tx, rx) = futures::channel::oneshot::channel();
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::Pin {
-                            conversation_id,
-                            message_id,
-                            pinstate: PinState::Unpin,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
 
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to pin message: {}", e);
-                        }
+                    let res = rx.await.expect("command canceled");
+                    if let Err(e) = res {
+                        log::error!("failed to pin message: {}", e);
                     }
                 }
             }
         }
     });
 
-    let current_len = chat.pinned_messages.len();
-    use_effect(cx, &chat.id, |id| {
-        to_owned![ch];
-        async move {
-            ch.send(ChannelCommand::FetchPinnedMessages(id, 50, current_len));
-        }
-    });
-
     let script = include_str!("./script.js");
-
     let eval = use_eval(cx);
     use_effect(cx, (), |_| {
         to_owned![eval];
@@ -130,7 +83,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     rsx!(PinnedMessage {
-                        message: Message { inner: message.clone(), in_reply_to: None, key: String::default() }, 
+                        message: Message { inner: message.clone(), in_reply_to: None, key: String::default()},
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
