@@ -115,9 +115,9 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
 
     let pinned_messages: Vec<_> = messages
         .iter()
-        .cloned()
         .filter(|m| m.inner.pinned())
-        .map(|m| m.inner.clone())
+        .cloned()
+        .map(|m| m.inner)
         .rev()
         .collect();
 
