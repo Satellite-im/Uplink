@@ -95,6 +95,7 @@ messages = Messages
     .pin-button-goto = Go to
     .pin-button-unpin = Unpin
     .pinned-none = There are no pinned messages in this chat
+    .pinned-max = You reached the maximum amount of pinned messages for this chat
 
 favorites = Favorites
     .favorites = Favorites

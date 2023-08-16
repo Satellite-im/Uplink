@@ -24,7 +24,7 @@ use common::{
     language::get_local_text_args_builder,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
-        ui::EmojiDestination, GroupedMessage, MessageGroup,
+        ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -683,7 +683,16 @@ fn render_messages<'a>(cx: Scope<'a, MessagesProps<'a>>) -> Element<'a> {
                     text: if message.inner.pinned() {get_local_text("messages.unpin")} else {get_local_text("messages.pin")},
                     onpress: move |_| {
                         log::trace!("pinning message: {}", message.inner.id());
-                        ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                        if state.read().reached_max_pinned(&message.inner.conversation_id()) {
+                            state.write().mutate(Action::AddToastNotification(ToastNotification::init(
+                                "".into(),
+                                get_local_text("messages.pinned-max"),
+                                None,
+                                3,
+                            )));
+                        } else {
+                            ch.send(MessagesCommand::Pin(message.inner.clone()));                        //state.write().mutate(action)
+                        }
                     }
                 },
                 ContextItem {

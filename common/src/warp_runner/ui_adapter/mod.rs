@@ -11,7 +11,7 @@ pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats};
+use crate::state::{self, chats, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -195,7 +195,7 @@ pub async fn fetch_pinned_messages_from_chat(
             conv_id,
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(100)
+                .set_limit(MAX_PINNED_MESSAGES as i64)
                 .set_pinned(),
         )
         .await
@@ -242,7 +242,7 @@ pub async fn conversation_to_chat(
             conv.id(),
             MessageOptions::default()
                 .set_reverse()
-                .set_limit(100)
+                .set_limit(MAX_PINNED_MESSAGES as i64)
                 .set_pinned(),
         )
         .await

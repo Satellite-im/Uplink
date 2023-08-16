@@ -61,6 +61,8 @@ use self::storage::Storage;
 use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
+pub const MAX_PINNED_MESSAGES: usize = 100;
+
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
 // the HashSet would be used to determine when to evict an identity. (they are not participating in any conversations and are not a friend)
@@ -975,6 +977,17 @@ impl State {
     /// * `chat` - The chat to check.
     pub fn is_favorite(&self, chat: &Chat) -> bool {
         self.chats.favorites.contains(&chat.id)
+    }
+
+    pub fn reached_max_pinned(&self, chat: &Uuid) -> bool {
+        let conv = match self.chats.all.get(chat) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return true;
+            }
+        };
+        conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
