@@ -118,6 +118,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         .cloned()
         .filter(|m| m.inner.pinned())
         .map(|m| m.inner.clone())
+        .rev()
         .collect();
 
     Chat {

@@ -154,7 +154,6 @@ pub async fn dids_to_identity(
 pub async fn fetch_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    options: MessageOptions,
     to_take: usize,
 ) -> Result<(Vec<Message>, bool), Error> {
     let total_messages = messaging.get_message_count(conv_id).await?;
@@ -162,7 +161,10 @@ pub async fn fetch_messages_from_chat(
     let to_skip = total_messages.saturating_sub(to_take + 1);
 
     let messages = messaging
-        .get_messages(conv_id, options.set_range(to_skip..total_messages))
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -182,6 +184,31 @@ pub async fn fetch_messages_from_chat(
     //     has_more
     // );
     Ok((messages, has_more))
+}
+
+pub async fn fetch_pinned_messages_from_chat(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+) -> Result<Vec<Message>, Error> {
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default()
+                .set_reverse()
+                .set_limit(100)
+                .set_pinned(),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+    Ok(messages)
 }
 
 pub async fn conversation_to_chat(
@@ -214,7 +241,8 @@ pub async fn conversation_to_chat(
         .get_messages(
             conv.id(),
             MessageOptions::default()
-                .set_range(0..total_messages)
+                .set_reverse()
+                .set_limit(100)
                 .set_pinned(),
         )
         .await
