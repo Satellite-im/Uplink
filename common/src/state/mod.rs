@@ -1001,7 +1001,7 @@ impl State {
         };
 
         conv.pinned_messages.push(message);
-        conv.pinned_messages.sort_by(|l, r| l.date().cmp(&r.date()));
+        conv.pinned_messages.sort_by(|l, r| r.date().cmp(&l.date()));
 
         if let Some(msg) = conv
             .messages
