@@ -201,7 +201,7 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
             // TODO: This needs a a signal sent when you terminate a call before the other user joins
             //   Once the signal is added, this part will either need to be updated to show a different button with different method
             //   (how it is configured below), or changed to fire both events on click (no more if/else, a single button with two things happening on press)
-            if active_call_participants_joined.is_some() && active_call_participants_joined.unwrap() > 0 {
+            if active_call_participants_joined.is_some() && active_call_participants_joined.unwrap_or_default() > 0 {
                 // This button is shown where there are more than 1 person in the call
                 rsx!(
                     Button {
