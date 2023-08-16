@@ -412,7 +412,12 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     }
 
     let size = desktop.webview.inner_size();
+    #[cfg(target_os = "macos")]
     let mut minimal_width = 600;
+
+    #[cfg(not(target_os = "macos"))]
+    let minimal_width = 600;
+
     #[cfg(target_os = "macos")]
     {
         minimal_width = (minimal_width as f64 * desktop.webview.window().scale_factor()) as u32;
@@ -619,7 +624,12 @@ fn app(cx: Scope) -> Element {
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
+
+                #[cfg(target_os = "macos")]
                 let mut minimal_width = 600;
+
+                #[cfg(not(target_os = "macos"))]
+                let minimal_width = 600;
                 // On Mac window sizes are kinda funky.
                 // They are scaled with the window scale factor so they dont correspond to app pixels
                 #[cfg(target_os = "macos")]
