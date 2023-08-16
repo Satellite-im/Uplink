@@ -66,7 +66,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
-    
+
     let mut friends_identities = cx.props.friends_identities.get().clone();
     let chats = cx.props.chats.get().clone();
 
@@ -127,7 +127,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                 span {
                                     class: "highlight-search-typed-chars", 
                                     &username[start..end]
-                                }, 
+                                },
                                 span { &username[end..] },
                             )
                         }
@@ -151,7 +151,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     }
                 )
             }
-            chats.iter().cloned().map(|chat| {               
+            chats.iter().cloned().map(|chat| {
                 let id = chat.id;
                 let participants = state.read().chat_participants(&chat);
                 let participants2 = participants.clone();
@@ -186,7 +186,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                             loading: false,
                                             participants: build_participants(&participants),
                                         }
-                                    
                                     )
                                 },
                             }
@@ -199,7 +198,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                         span {
                                             class: "highlight-search-typed-chars", 
                                             &conversation_title[start..end]
-                                        }, 
+                                        },
                                         span { &conversation_title[end..] },
                                     )
                                 } else {
@@ -210,7 +209,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     }
                     participants2.iter().cloned()
                     .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
-                    && 
+                    &&
                     identity.did_key() != state.read().did_key()
                 )
                     .map(|identity| {
@@ -242,7 +241,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                         span {
                                             class: "highlight-search-typed-chars", 
                                             &username[start..end]
-                                        }, 
+                                        },
                                         span { &username[end..] },
                                     )
                                 }
@@ -270,7 +269,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
     let search_friends_is_focused = use_ref(cx, || false);
-
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
