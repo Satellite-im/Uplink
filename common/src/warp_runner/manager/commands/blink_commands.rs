@@ -19,7 +19,7 @@ pub enum BlinkCmd {
         call_id: Uuid,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
     },
-    #[display(fmt = "Reject")]
+    #[display(fmt = "RejectCall")]
     RejectCall {
         call_id: Uuid,
         rsp: oneshot::Sender<Result<(), warp::error::Error>>,
