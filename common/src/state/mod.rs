@@ -990,7 +990,8 @@ impl State {
         };
 
         conv.pinned_messages.push(message);
-        conv.pinned_messages.sort_by(|l, r| r.date().cmp(&l.date()));
+        conv.pinned_messages
+            .sort_by_key(|r| std::cmp::Reverse(r.date()));
 
         if let Some(msg) = conv
             .messages
