@@ -959,17 +959,6 @@ impl State {
         }
     }
 
-    pub fn update_pinned_chat_messages(
-        &mut self,
-        conversation_id: Uuid,
-        messages: Vec<ui_adapter::Message>,
-    ) {
-        if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            // todo: possibly remove this
-            //chat.pinned_messages = messages.into();
-        }
-    }
-
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
