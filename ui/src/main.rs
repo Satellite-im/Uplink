@@ -412,12 +412,17 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     }
 
     let size = desktop.webview.inner_size();
+    let mut minimal_width = 600;
+    #[cfg(target_os = "macos")]
+    {
+        minimal_width = (minimal_width as f64 * desktop.webview.window().scale_factor()) as u32;
+    }
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        minimal_view: size.width < minimal_width, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
     state.set_warp_ch(WARP_CMD_CH.tx.clone());
@@ -613,8 +618,14 @@ fn app(cx: Scope) -> Element {
                     desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
                     *first_resize.write_silent() = false;
                 }
-                let size = webview.window().inner_size();
-
+                let size = webview.inner_size();
+                let mut minimal_width = 600;
+                // On Mac window sizes are kinda funky.
+                // They are scaled with the window scale factor so they dont correspond to app pixels
+                #[cfg(target_os = "macos")]
+                {
+                    minimal_width = (minimal_width as f64 * webview.window().scale_factor()) as u32;
+                }
                 //log::trace!(
                 //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
                 //    size,
@@ -622,8 +633,9 @@ fn app(cx: Scope) -> Element {
                 //);
 
                 let metadata = state.read().ui.metadata.clone();
+                log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
+                    minimal_view: size.width < minimal_width,
                     ..metadata
                 };
                 if metadata != new_metadata {
