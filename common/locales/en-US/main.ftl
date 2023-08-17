@@ -7,6 +7,7 @@ uplink = Uplink
     .call = Call
     .users = Users
     .groups = Groups
+    .members = Members
     .reset-account = Reset Account (Irreversible!)
     .coming-soon = Coming soon
     .crash-report = Uplink crashed. Optionally save crash report to selected folder

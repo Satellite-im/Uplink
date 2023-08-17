@@ -91,7 +91,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         padding_left: "8px",
                         padding_top: "4px",
                         font_weight: "bold",
-                        color: "white",
+                        color: "var(--text-color)",
                         p {
                             get_local_text("uplink.users")
                         }
@@ -143,7 +143,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         padding_left: "8px",
                         padding_top: "4px",
                         font_weight: "bold",
-                        color: "white",
+                        color: "var(--text-color)",
                         p {
                             get_local_text("uplink.groups")
                         }
@@ -206,6 +206,24 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             }
                         )
                     }
+                    if !participants2.is_empty() &&
+                    participants2.iter().any(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
+                    &&
+                    identity.did_key() != state.read().did_key()
+                ) {
+                        rsx!(
+                            div {
+                                id: "members-searchdropdown-label",
+                                padding_left: "48px",
+                                padding_top: "4px",
+                                p {
+                                    color: "var(--text-color)",
+                                    font_size: "12px",
+                                    get_local_text("uplink.members")
+                                }
+                            }
+                        )
+                    },
                     participants2.iter().cloned()
                     .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
                     &&
