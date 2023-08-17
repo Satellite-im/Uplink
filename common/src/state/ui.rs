@@ -3,6 +3,7 @@ use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{hash_map, HashMap, HashSet},
     rc::Weak,
 };
@@ -39,7 +40,13 @@ impl EmojiCounter {
         let mut emojis: Vec<_> = self.list.iter().collect();
 
         // sort the list by the emoji with the most usage
-        emojis.sort_by(|a, b| b.1.cmp(a.1));
+        emojis.sort_by(|a, b| {
+            let count = b.1.cmp(a.1);
+            if count == Ordering::Equal {
+                return b.0.cmp(a.0);
+            }
+            count
+        });
 
         match count {
             Some(n) => emojis
