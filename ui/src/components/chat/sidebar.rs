@@ -88,10 +88,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         id: "users-searchdropdown-label",
-                        padding_left: "8px",
-                        padding_top: "4px",
-                        font_weight: "bold",
-                        color: "var(--text-color)",
+                        class: "users-groups-label",
                         p {
                             get_local_text("uplink.users")
                         }
@@ -140,10 +137,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         id: "groups-searchdropdown-label",
-                        padding_left: "8px",
-                        padding_top: "4px",
-                        font_weight: "bold",
-                        color: "var(--text-color)",
+                        class: "users-groups-label",
                         p {
                             get_local_text("uplink.groups")
                         }

@@ -288,15 +288,11 @@
         width: 100%;
     }
     
-    a {
-      z-index: 110;
-      color: var(--text-color);
-      text-decoration: none;
-      padding-left: 12px;
+    .users-groups-label {
+      padding-left: 8px;
       padding-top: 4px;
-      padding-right: 8px;
-      word-wrap: break-word;
-      width: 100%;
+      font-weight: bold;
+      color: var(--text-color);
     }
 
     .border {
