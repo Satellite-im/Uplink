@@ -4,7 +4,6 @@ use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -258,8 +257,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
-    let desktop = use_window(cx);
-    let size = desktop.webview.inner_size();
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let search_results_friends_identities = use_state(cx, Vec::<Identity>::new);
     let search_results_chats = use_state(cx, Vec::<Chat>::new);
@@ -692,7 +689,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
 
-                                    if size.width <= 1200 {
+                                    if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
                                     if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
