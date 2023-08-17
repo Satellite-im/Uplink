@@ -197,11 +197,11 @@
   .identity-header-sidebar {
     display: flex;
     // TODO(Lucas): Look it later, should be height: x%;
-    min-height: 50px;
     background-size: cover;
     background-color: var(--secondary-dark);
     padding-top: 4px;
     padding-left: 16px;
+    padding-bottom: 4px;
     margin-bottom: 4px;
     #profile-image {
       margin: var(--gap-less);
