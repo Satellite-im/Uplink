@@ -333,7 +333,7 @@ enum ControlsCmd {
 }
 
 enum EditGroupCmd {
-    UpdateGroupName(String),
+    UpdateGroupName((Uuid, String)),
 }
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
@@ -592,28 +592,25 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
     let conv_id = data.active_chat.id;
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| {
-        to_owned![conv_id];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    EditGroupCmd::UpdateGroupName(new_conversation_name) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
-                                conv_id,
-                                new_conversation_name,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to update group conversation name: {}", e);
-                        }
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(cmd) = rx.next().await {
+            match cmd {
+                EditGroupCmd::UpdateGroupName((conv_id, new_conversation_name)) => {
+                    let (tx, rx) = oneshot::channel();
+                    if let Err(e) =
+                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
+                            conv_id,
+                            new_conversation_name,
+                            rsp: tx,
+                        }))
+                    {
+                        log::error!("failed to send warp command: {}", e);
+                        continue;
+                    }
+                    let res = rx.await.expect("command canceled");
+                    if let Err(e) = res {
+                        log::error!("failed to update group conversation name: {}", e);
                     }
                 }
             }
@@ -654,7 +651,7 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                                     return;
                                 }
                                 if v != conversation_title.clone() {
-                                    ch.send(EditGroupCmd::UpdateGroupName(v));
+                                    ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
                                 }
                             },
                         },
