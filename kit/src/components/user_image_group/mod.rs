@@ -89,7 +89,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         )
                     },
-                    if !is_using_tooltip {  
+                    if !is_using_tooltip {
                         rsx! (
                             // If we prefer a tooltip, we can use this instead of the Label
                             cx.props.with_username.as_ref().map(|username| rsx!(

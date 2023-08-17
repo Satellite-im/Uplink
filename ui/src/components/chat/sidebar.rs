@@ -311,7 +311,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             }
                         }
                     }
-                    
                     show_create_group.then(|| rsx!(
                         CreateGroup {
                             oncreate: move |_| {
