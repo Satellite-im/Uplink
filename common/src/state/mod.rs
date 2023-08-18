@@ -972,7 +972,7 @@ impl State {
         if let Some(chat) = self.chats.all.get_mut(conversation_id) {
             return chat.scroll_to.take();
         }
-        return None;
+        None
     }
 
     /// Check if given chat is favorite on `State` struct.
@@ -1005,8 +1005,7 @@ impl State {
         };
         conv.messages
             .iter()
-            .find(|m| m.inner.id() == message.id())
-            .is_some()
+            .any(|m| m.inner.id() == message.id())
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
