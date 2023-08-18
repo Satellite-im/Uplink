@@ -148,7 +148,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                         icon: Icon::NoSymbol,
                                     },
                                 }
-                                
                             )
                         }
                     }
@@ -301,7 +300,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                                 icon: Icon::NoSymbol,
                                             },
                                         }
-                                        
                                     )
                                 }
                             }
