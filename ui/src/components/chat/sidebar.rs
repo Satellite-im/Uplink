@@ -1,3 +1,4 @@
+use common::icons::Icon as IconElement;
 use common::language::get_local_text;
 use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
@@ -70,6 +71,12 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let chats = cx.props.chats.get().clone();
 
     friends_identities.sort_by_key(|identity| identity.username());
+    let blocked_friends: Vec<DID> = state
+        .read()
+        .blocked_fr_identities()
+        .iter()
+        .map(|f| f.did_key())
+        .collect();
 
     cx.render(rsx!(
         div {
@@ -97,19 +104,29 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
             friends_identities.iter().cloned().map(|identity| {
                 let username = identity.username();
                 let did = identity.did_key();
+                let did2 = did.clone();
                 let search_typed_chars = cx.props.search_typed_chars.read().clone();
                 let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
                 let end = start + search_typed_chars.len();
+                let blocked_friends: Vec<DID> = state
+                    .read()
+                    .blocked_fr_identities()
+                    .iter()
+                    .map(|f| f.did_key())
+                    .collect();
 
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
                         aria_label: "identity-header-sidebar",
+                        opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
                         prevent_default: "onclick",
                         onclick: move |evt| {
-                            evt.stop_propagation();
-                            *cx.props.search_friends_is_focused.write_silent() = false;
-                            cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                            if !blocked_friends.contains(&did2) {
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                            }
                         },
                         UserImage {
                             platform: identity.platform().into(),
@@ -125,6 +142,19 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                     &username[start..end]
                                 },
                                 span { &username[end..] },
+                            )
+                        }
+                        if blocked_friends.contains(&did2) {
+                            rsx!(
+                                div {
+                                    padding_right: "32px",
+                                    IconElement {
+                                        size: 40,
+                                        fill: "var(--text-color-muted)",
+                                        icon: Icon::NoSymbol,
+                                    },
+                                }
+                                
                             )
                         }
                     }
@@ -164,9 +194,9 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         aria_label: "identity-header-sidebar",
                         prevent_default: "onclick",
                         onclick: move |evt|  {
-                            evt.stop_propagation();
-                            *cx.props.search_friends_is_focused.write_silent() = false;
-                            cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
                         },
                         rsx! (
                             div {
@@ -227,18 +257,29 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         let typed_chars = search_typed_chars.clone();
                         let username = identity.username();
                         let did = identity.did_key();
+                        let did2 = did.clone();
                         let start = username.to_lowercase().find(&typed_chars.to_lowercase()).unwrap_or(0);
                         let end = start + typed_chars.len();
+                        let blocked_friends: Vec<DID> = state
+                        .read()
+                        .blocked_fr_identities()
+                        .iter()
+                        .map(|f| f.did_key())
+                        .collect();
+
 
                         rsx!(
                             div {
                                 class: "identity-header-sidebar-participants-in-group",
+                                opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
                                 aria_label: "identity-header-sidebar-participants-in-group",
                                 prevent_default: "onclick",
                                 onclick: move |evt| {
-                                    evt.stop_propagation();
-                                    *cx.props.search_friends_is_focused.write_silent() = false;
-                                    cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                    if !blocked_friends.contains(&did2) {
+                                        evt.stop_propagation();
+                                        *cx.props.search_friends_is_focused.write_silent() = false;
+                                        cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                    }
                                 },
                                 UserImage {
                                     platform: identity.platform().into(),
@@ -254,6 +295,19 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                             &username[start..end]
                                         },
                                         span { &username[end..] },
+                                    )
+                                }
+                                if blocked_friends.contains(&did2) {
+                                    rsx!(
+                                        div {
+                                            padding_right: "32px",
+                                            IconElement {
+                                                size: 40,
+                                                fill: "var(--text-color-muted)",
+                                                icon: Icon::NoSymbol,
+                                            },
+                                        }
+                                        
                                     )
                                 }
                             }
