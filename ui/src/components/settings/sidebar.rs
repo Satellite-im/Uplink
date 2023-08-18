@@ -168,18 +168,18 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             )),
-            with_nav: cx.render(rsx!(
-                Nav {
-                    routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
-                    onnavigate: move |route| {
-                        if state.read().configuration.audiovideo.interface_sounds {
-                            sounds::Play(sounds::Sounds::Interaction);
-                        }
-                        router.replace(route);
-                    }
-                },
-            )),
+            // with_nav: cx.render(rsx!(
+            //     Nav {
+            //         routes: cx.props.route_info.routes.clone(),
+            //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
+            //         onnavigate: move |route| {
+            //             if state.read().configuration.audiovideo.interface_sounds {
+            //                 sounds::Play(sounds::Sounds::Interaction);
+            //             }
+            //             router.replace(route);
+            //         }
+            //     },
+            // )),
             Nav {
                 routes: routes.clone(),
                 active: active_route,

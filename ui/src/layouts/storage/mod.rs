@@ -78,6 +78,7 @@ pub enum ChanCmd {
 pub fn FilesLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
+
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
@@ -427,117 +428,118 @@ pub fn FilesLayout(cx: Scope) -> Element {
                             let file3 = file.clone();
                             let key = file.id();
                             let file_id = file.id();
-                            rsx!(ContextMenu {
-                                        key: "{key}-menu",
-                                        id: file.id().to_string(),
-                                        items: cx.render(rsx!(
-                                            ContextItem {
-                                                icon: Icon::Pencil,
-                                                aria_label: "files-rename".into(),
-                                                text: get_local_text("files.rename"),
-                                                onpress: move |_| {
-                                                    storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::ArrowDownCircle,
-                                                aria_label: "files-download".into(),
-                                                text: get_local_text("files.download"),
-                                                onpress: move |_| {
-                                                    download_file(&file_name2, ch);
-                                                },
-                                            },
-                                            hr {},
-                                            ContextItem {
-                                                icon: Icon::Trash,
-                                                danger: true,
-                                                aria_label: "files-delete".into(),
-                                                text: get_local_text("uplink.delete"),
-                                                onpress: move |_| {
-                                                    let item = Item::from(file2.clone());
-                                                    ch.send(ChanCmd::DeleteItems(item));
-                                                }
-                                            },
-                                        )),
-                                        File {
-                                            key: "{key}-file",
-                                            thumbnail: thumbnail_to_base64(file),
-                                            text: file.name(),
-                                            aria_label: file.name(),
-                                            with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
+                            rsx! {
+                                ContextMenu {
+                                    key: "{key}-menu",
+                                    id: file.id().to_string(),
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::Pencil,
+                                            aria_label: "files-rename".into(),
+                                            text: get_local_text("files.rename"),
                                             onpress: move |_| {
-                                                let key = file_id;
-                                                if state.read().ui.file_previews.contains_key(&key) {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.file-already-opened"),
-                                                            None,
-                                                            2,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
-                                                if file3.thumbnail().is_empty() {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.no-thumbnail-preview"),
-                                                            None,
-                                                            3,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
-                                                let file4 = file3.clone();
-                                                storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                                storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::ArrowDownCircle,
+                                            aria_label: "files-download".into(),
+                                            text: get_local_text("files.download"),
+                                            onpress: move |_| {
+                                                download_file(&file_name2, ch);
                                             },
-                                            onrename: move |(val, key_code)| {
-                                                let new_name: String = val;
-                                                if new_name == file_name3 {
-                                                    storage_controller.with(|i| i.is_renaming_map.is_none());
-                                                    storage_controller.write().finish_renaming_item(false);
-                                                    return;
-                                                };
-                                                if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.file-already-with-name"),
-                                                            None,
-                                                            3,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
+                                        },
+                                        hr {},
+                                        ContextItem {
+                                            icon: Icon::Trash,
+                                            danger: true,
+                                            aria_label: "files-delete".into(),
+                                            text: get_local_text("uplink.delete"),
+                                            onpress: move |_| {
+                                                let item = Item::from(file2.clone());
+                                                ch.send(ChanCmd::DeleteItems(item));
+                                            }
+                                        },
+                                    )),
+                                    File {
+                                        key: "{key}-file",
+                                        thumbnail: thumbnail_to_base64(file),
+                                        text: file.name(),
+                                        aria_label: file.name(),
+                                        with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
+                                        onpress: move |_| {
+                                            let key = file_id;
+                                            if state.read().ui.file_previews.contains_key(&key) {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.file-already-opened"),
+                                                        None,
+                                                        2,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            if file3.thumbnail().is_empty() {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.no-thumbnail-preview"),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            let file4 = file3.clone();
+                                            storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                        },
+                                        onrename: move |(val, key_code)| {
+                                            let new_name: String = val;
+                                            if new_name == file_name3 {
                                                 storage_controller.with(|i| i.is_renaming_map.is_none());
                                                 storage_controller.write().finish_renaming_item(false);
-                                                if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
-                                                }
+                                                return;
+                                            };
+                                            if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.file-already-with-name"),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            storage_controller.with(|i| i.is_renaming_map.is_none());
+                                            storage_controller.write().finish_renaming_item(false);
+                                            if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                             }
                                         }
                                     }
-                              )
+                                }
+                            }
                         }),
                     },
                 }
 
-                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                    Nav {
-                        routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.files).cloned().unwrap_or_default(),
-                        onnavigate: move |r| {
-                            router.replace(r);
-                        }
-                    }
-                ))
+                // (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                //     Nav {
+                //         routes: cx.props.route_info.routes.clone(),
+                //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.files).cloned().unwrap_or_default(),
+                //         onnavigate: move |r| {
+                //             router.replace(r);
+                //         }
+                //     }
+                // ))
             }
         }
     ))
