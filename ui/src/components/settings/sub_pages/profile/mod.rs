@@ -342,7 +342,7 @@ pub fn ProfileSettings(cx: Scope) -> Element {
                         options: Options {
                             with_clear_btn: true,
                             ..get_input_options(status_validation_options)
-                        }
+                        },
                         onreturn: move |(v, is_valid, _): (String, bool, _)| {
                             if !is_valid {
                                 return;

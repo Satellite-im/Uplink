@@ -5,10 +5,6 @@ use common::language::get_local_text;
 use common::sounds;
 use common::state::State;
 use dioxus::prelude::*;
-use dioxus_router::{
-    prelude::{Router, RouterContext},
-    *,
-};
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
@@ -70,7 +66,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let router = use_navigator(cx);
+    let router = dioxus_router::hooks::use_navigator(cx);
 
     let profile = UIRoute {
         to: "profile",
@@ -183,7 +179,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         if state.read().configuration.audiovideo.interface_sounds {
                             sounds::Play(sounds::Sounds::Interaction);
                         }
-                        replace_route(&cx, route);
+                        router.replace(route);
                     }
                 },
             )),
@@ -200,10 +196,4 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             }
         }
     ))
-}
-
-fn replace_route(cx: &ScopeState, route: &str) {
-    cx.consume_context::<RouterContext>()
-        .unwrap()
-        .replace(route);
 }

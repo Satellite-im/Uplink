@@ -49,7 +49,7 @@ pub fn PasteFilesShortcut<'a>(cx: Scope<'a, ShortCutProps>) -> Element<'a> {
         *files_local_path_to_upload.write_silent() = Vec::new();
     }
 
-    use_global_shortcut(cx, key, modifiers, {
+    use_global_shortcut(cx, (key, modifiers), {
         to_owned![files_local_path_to_upload];
         move || {
             let files_local_path = get_files_path_from_clipboard().unwrap_or_default();

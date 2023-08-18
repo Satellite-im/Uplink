@@ -322,9 +322,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                     state.write().mutate(Action::SidebarHidden(true));
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    router.replace(UPLINK_ROUTES.chat);
-                                                }
+                                                todo!();
+                                                // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+                                                //     router.replace(UPLINK_ROUTES.chat);
+                                                // }
                                             }
                                         },
                                         ContextItem {
@@ -345,9 +346,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 state.write().mutate(Action::SidebarHidden(true));
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                router.replace(UPLINK_ROUTES.chat);
-                                            }
+                                            todo!();
+                                            // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+                                            //     router.replace(UPLINK_ROUTES.chat);
+                                            // }
                                         }
                                     }
                                 }
@@ -510,9 +512,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
-                                    if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        router.replace(UPLINK_ROUTES.chat);
-                                    }
+                                    todo!();
+                                    // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
+                                    //     router.replace(UPLINK_ROUTES.chat);
+                                    // }
                                 }
                             }
                         }

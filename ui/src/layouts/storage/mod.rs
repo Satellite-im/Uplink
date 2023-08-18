@@ -92,8 +92,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let router = use_navigator(cx);
+    let eval: &UseEvalFn = use_eval(cx);
 
-    allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
+    use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
 
@@ -144,7 +145,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         if state.read().ui.metadata.focused {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
-                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, window);
+                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                 },
             })
@@ -223,7 +224,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         Some(path) => path,
                                         None => return
                                     };
-                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window);
+                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
                                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                 },
                             }
@@ -280,7 +281,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     files_been_uploaded: upload_file_controller.files_been_uploaded,
                     disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
                     on_update: move |files_to_upload: Vec<PathBuf>|  {
-                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, window);
+                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
                     },
                     on_cancel: move |_| {
                         let _ = tx_cancel_file_upload.send(true);
@@ -552,6 +553,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
+struct EvalContext(UseEvalFn);
+type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
+
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
         .extension()
@@ -581,38 +585,32 @@ fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
 fn add_files_in_queue_to_upload(
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
-    window: &DesktopContext,
+    eval: &UseEvalFn,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
-    allow_folder_navigation(window, false);
+    allow_folder_navigation(eval, false);
     files_in_queue_to_upload
         .write_silent()
         .extend(files_path.clone());
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }
 
-fn allow_block_folder_nav(
-    cx: &Scoped<'_, Props>,
-    window: &DesktopContext,
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
-) {
+fn use_allow_block_folder_nav(cx: &ScopeState, files_in_queue_to_upload: &UseRef<Vec<PathBuf>>) {
+    let eval: &UseEvalFn = use_eval(cx);
+
     // Block directories navigation if there is a file been uploaded
     // use_future here to verify before render elements on first render
     use_future(cx, (), |_| {
-        to_owned![window, files_in_queue_to_upload];
+        to_owned![eval, files_in_queue_to_upload];
         async move {
-            allow_folder_navigation(&window, files_in_queue_to_upload.read().is_empty());
+            allow_folder_navigation(&eval, files_in_queue_to_upload.read().is_empty());
         }
     });
     // This is to run on all re-renders
-    allow_folder_navigation(window, files_in_queue_to_upload.read().is_empty());
+    allow_folder_navigation(eval, files_in_queue_to_upload.read().is_empty());
 }
 
-fn allow_folder_navigation(
-    window: &DesktopContext,
-    allow_navigation: bool,
-    eval: Rc<dyn Fn(&str)>,
-) {
+fn allow_folder_navigation(eval: &UseEvalFn, allow_navigation: bool) {
     let new_script = if allow_navigation {
         ALLOW_FOLDER_NAVIGATION
             .replace("$POINTER_EVENT", "")
@@ -622,5 +620,6 @@ fn allow_folder_navigation(
             .replace("$POINTER_EVENT", "none")
             .replace("$OPACITY", "0.5")
     };
+
     eval(&new_script);
 }
