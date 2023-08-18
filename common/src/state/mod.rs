@@ -283,6 +283,7 @@ impl State {
                     log::error!("failed to answer call: {e}");
                 }
             },
+            Action::RejectCall(id) => self.ui.call_info.reject_call(id),
             Action::OfferCall(call) => {
                 let _ = self.ui.call_info.pending_call(
                     call.id,
