@@ -1209,7 +1209,6 @@ fn get_call_dialog(cx: Scope) -> Element {
 
                         match rx.await {
                             Ok(_) => {
-                                state.write().mutate(Action::RejectCall(id));
                                 state.write().ui.call_info.reject_call(id);
                             }
                             Err(e) => {

@@ -198,7 +198,6 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
                 appearance: Appearance::Danger,
                 text: cx.props.end_text.clone(),
                 onpress: move |_| {
-                    // TODO: This needs a a signal sent when you terminate a call before the other user joins
                     ch.send(CallDialogCmd::Hangup(call.id));
                 },
             }
