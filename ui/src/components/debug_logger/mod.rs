@@ -22,16 +22,12 @@ pub fn DebugLogger(cx: Scope) -> Element {
         }
     });
 
-    // Run the script after the component is mounted
     let eval = use_eval(cx);
-    use_effect(cx, (), |_| {
-        eval(SCRIPT);
-        async {}
-    });
 
     cx.render(rsx!(
         style { STYLE }
         div {
+            onmounted: move |_| { _ = eval(SCRIPT) },
             id: "debug_logger",
             aria_label: "debug-logger",
             class: "debug-logger resize-vert-top",

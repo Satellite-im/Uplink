@@ -3,7 +3,7 @@ use common::state::{Action, State};
 
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
-use dioxus_router::{prelude::use_router, *};
+use dioxus_router::prelude::use_navigator;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -42,7 +42,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
 
     let _silenced_str = silenced.to_string();
 
-    let router = use_router(cx);
+    let router = use_navigator(cx);
 
     cx.render(rsx!(div {
         id: "media-player",

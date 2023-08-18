@@ -1257,7 +1257,7 @@ fn get_router(cx: Scope) -> Element {
                         return;
                     }
                     _ => {
-                        tokio::time::sleep(Duration::from_millis(100));
+                        tokio::time::sleep(Duration::from_millis(100)).await;
                         continue;
                     }
                 };

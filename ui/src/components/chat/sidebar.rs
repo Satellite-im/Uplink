@@ -3,8 +3,7 @@ use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_router;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::message::markdown;
@@ -56,6 +55,7 @@ pub struct SearchProps<'a> {
     identities: UseState<Vec<identity_search_result::Entry>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
+
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     if cx.props.identities.get().is_empty() {
         return None;
@@ -102,7 +102,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
-    let router = use_router(cx);
+    let router = use_navigator(cx);
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
 
@@ -111,58 +111,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         state.write().mutate(Action::ChatWith(&chat, true));
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![chat_with, show_delete_conversation];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    MessagesCommand::CreateConversation { recipient } => {
-                        // if not, create the chat
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                recipient,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-
-                        match rsp {
-                            Ok(c) => chat_with.set(Some(c)),
-                            Err(e) => {
-                                log::error!("failed to create conversation: {}", e);
-                                continue;
-                            }
-                        };
-                    }
-                    MessagesCommand::DeleteConversation { conv_id } => {
-                        *show_delete_conversation.write_silent() = false;
-                        let (tx, rx) = futures::channel::oneshot::channel();
-
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
-                                conv_id,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            log::error!("failed to delete conversation");
-                        }
-                        *show_delete_conversation.write_silent() = true;
-                    }
-                };
-            }
-        }
+    let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
+        conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
     let select_entry = move |id: identity_search_result::Identifier| match id {
@@ -273,15 +223,16 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     }
                 )),
             )),
-            search_friends{
+            search_friends {
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
                 onclick: move |entry| {
-                select_entry(entry);
-                search_results.set(Vec::new());
-                reset_searchbar.set(true);
-                on_search_dropdown_hover.with_mut(|i| *i = false);
-            }},
+                    select_entry(entry);
+                    search_results.set(Vec::new());
+                    reset_searchbar.set(true);
+                    on_search_dropdown_hover.with_mut(|i| *i = false);
+                }
+            },
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
@@ -322,10 +273,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                     state.write().mutate(Action::SidebarHidden(true));
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                todo!();
-                                                // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                //     router.replace(UPLINK_ROUTES.chat);
-                                                // }
+                                                router.replace(UPLINK_ROUTES.chat);
                                             }
                                         },
                                         ContextItem {
@@ -346,10 +294,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 state.write().mutate(Action::SidebarHidden(true));
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            todo!();
-                                            // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                            //     router.replace(UPLINK_ROUTES.chat);
-                                            // }
+                                            router.replace(UPLINK_ROUTES.chat);
                                         }
                                     }
                                 }
@@ -512,10 +457,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
-                                    todo!();
-                                    // if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                    //     router.replace(UPLINK_ROUTES.chat);
-                                    // }
+                                    router.replace(UPLINK_ROUTES.chat);
                                 }
                             }
                         }
@@ -565,4 +507,55 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             },
         }
     ))
+}
+
+async fn conversation_coroutine(
+    mut rx: UnboundedReceiver<MessagesCommand>,
+    chat_with: UseState<Option<Uuid>>,
+    show_delete_conversation: UseRef<bool>,
+) {
+    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+    while let Some(cmd) = rx.next().await {
+        match cmd {
+            MessagesCommand::CreateConversation { recipient } => {
+                // if not, create the chat
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                    recipient,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                match rsp {
+                    Ok(c) => chat_with.set(Some(c)),
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+            }
+            MessagesCommand::DeleteConversation { conv_id } => {
+                *show_delete_conversation.write_silent() = false;
+                let (tx, rx) = futures::channel::oneshot::channel();
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
+                    conv_id,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let res = rx.await.expect("command canceled");
+                if res.is_err() {
+                    log::error!("failed to delete conversation");
+                }
+                *show_delete_conversation.write_silent() = true;
+            }
+        };
+    }
 }

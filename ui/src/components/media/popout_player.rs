@@ -24,7 +24,7 @@ pub fn PopoutPlayer(cx: Scope, _drop_handler: WindowDropHandler) -> Element {
     cx.render(
         rsx! (
         div {
-            onmounted: move |_| { eval(SCRIPT); },
+            onmounted: move |_| { _ = eval(SCRIPT); },
             id: "video-poped-out",
             class: "popout-player",
             div {

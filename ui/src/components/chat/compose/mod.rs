@@ -106,7 +106,6 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let eval = use_eval(cx);
     let overlay_script = include_str!("../overlay.js");
 
     let files_to_upload = use_state(cx, Vec::new);
@@ -151,7 +150,7 @@ pub fn Compose(cx: Scope) -> Element {
     let upload_files = move |_| {
         if drag_event.with(|i| i.clone()).is_none() {
             cx.spawn({
-                to_owned![files_to_upload, drag_event, window, overlay_script, eval];
+                to_owned![files_to_upload, drag_event, window, overlay_script];
                 async move {
                     let new_files =
                         drag_and_drop_function(&window, &drag_event, overlay_script).await;
@@ -608,7 +607,7 @@ async fn drag_and_drop_function(
                             ),
                         ));
                     }
-                    window.webview.evaluate_script(&script);
+                    _ = window.webview.evaluate_script(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
@@ -619,14 +618,14 @@ async fn drag_and_drop_function(
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
-                    window.webview.evaluate_script(&script);
+                    _ = window.webview.evaluate_script(&script);
                     break;
                 }
             }
             _ => {
                 *drag_event.write_silent() = None;
                 let script = overlay_script.replace("$IS_DRAGGING", "false");
-                window.webview.evaluate_script(&script);
+                _ = window.webview.evaluate_script(&script);
                 break;
             }
         };

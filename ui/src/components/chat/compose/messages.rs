@@ -146,9 +146,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
                 let script = include_str!("../scroll_to_bottom.js");
-                eval(script);
+                _ = eval(script);
             }
-            eval(SETUP_CONTEXT_PARENT);
+            _ = eval(SETUP_CONTEXT_PARENT);
         }
     });
 

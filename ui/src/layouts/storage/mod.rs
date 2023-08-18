@@ -15,9 +15,7 @@ use common::upload_file_channel::{
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
-use dioxus_desktop::DesktopContext;
 use dioxus_router::prelude::use_navigator;
-use dioxus_router::*;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -553,7 +551,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     ))
 }
 
-struct EvalContext(UseEvalFn);
 type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
@@ -621,5 +618,5 @@ fn allow_folder_navigation(eval: &UseEvalFn, allow_navigation: bool) {
             .replace("$OPACITY", "0.5")
     };
 
-    eval(&new_script);
+    _ = eval(&new_script);
 }

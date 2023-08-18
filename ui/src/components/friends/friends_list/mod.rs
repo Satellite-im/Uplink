@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_router;
+use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -49,7 +49,7 @@ pub fn Friends(cx: Scope) -> Element {
     let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
 
     let friends = State::get_friends_by_first_letter(friends_list);
-    let router = use_router(cx);
+    let router = use_navigator(cx);
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
 

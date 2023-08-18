@@ -1,6 +1,6 @@
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 
-use dioxus_router::prelude::use_router;
+use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
@@ -71,7 +71,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         async move {
             let script = update_script.get();
             if !script.is_empty() {
-                eval(script);
+                _ = eval(script);
             }
         }
     });
@@ -80,7 +80,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let is_friend = state.read().has_friend_with_did(did);
     let blocked = state.read().is_blocked(did);
 
-    let router = use_router(cx);
+    let router = use_navigator(cx);
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     if let Some(id) = *chat_with.get() {

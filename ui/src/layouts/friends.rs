@@ -5,7 +5,7 @@ use common::{
     notifications::{NotificationAction, NOTIFICATION_LISTENER},
 };
 use dioxus::prelude::*;
-use dioxus_router::{prelude::use_navigator, *};
+use dioxus_router::prelude::use_navigator;
 use kit::{
     components::nav::Nav,
     elements::{button::Button, Appearance},
@@ -27,11 +27,6 @@ use crate::{
 use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
-
 #[derive(PartialEq, Clone)]
 pub enum FriendRoute {
     All,
@@ -39,11 +34,11 @@ pub enum FriendRoute {
     Blocked,
 }
 
+#[inline_props]
 #[allow(non_snake_case)]
-pub fn FriendsLayout(cx: Scope<Props>) -> Element {
+pub fn FriendsLayout(cx: Scope, route_info: RouteInfo) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
-    let navigator = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
@@ -58,7 +53,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
     // this is a hack to deal with a change in how Dioxus routing works. The `route` hook used to be shared
     // between elements.
     use_future(cx, (), |_| {
-        to_owned![state, navigator, route];
+        to_owned![route];
         async move {
             let mut ch = NOTIFICATION_LISTENER.tx.subscribe();
             log::trace!("starting notification action listener");
@@ -70,7 +65,7 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
                         return;
                     }
                     _ => {
-                        tokio::time::sleep(Duration::from_millis(100));
+                        tokio::time::sleep(Duration::from_millis(100)).await;
                         continue;
                     }
                 };
