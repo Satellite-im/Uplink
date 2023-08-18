@@ -135,6 +135,18 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
         *active_chat.write_silent() = currently_active;
     }
 
+    use_effect(cx, &data.active_chat.scroll_to, |_| {
+        to_owned![state, eval, currently_active];
+        async move {
+            if let Some(uuid) = state
+                .write_silent()
+                .check_message_scroll(&currently_active.unwrap())
+            {
+                eval(include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()));
+            }
+        }
+    });
+
     use_effect(cx, &data.active_chat.id, |id| {
         to_owned![eval, prev_chat_id];
         async move {

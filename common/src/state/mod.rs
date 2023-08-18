@@ -959,6 +959,21 @@ impl State {
         }
     }
 
+    /// Enqueues a message scroll action that gets executed when message component updates
+    pub fn enqueue_message_scroll(&mut self, conversation_id: &Uuid, message_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            chat.scroll_to = Some(message_id);
+        }
+    }
+
+    /// Obtains a potential message to scroll to resetting the value in the process
+    pub fn check_message_scroll(&mut self, conversation_id: &Uuid) -> Option<Uuid> {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            return chat.scroll_to.take();
+        }
+        return None;
+    }
+
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
@@ -977,6 +992,20 @@ impl State {
             }
         };
         conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
+    }
+
+    pub fn message_exist(&self, message: &warp::raygun::Message) -> bool {
+        let conv = match self.chats.all.get(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return false;
+            }
+        };
+        conv.messages
+            .iter()
+            .find(|m| m.inner.id() == message.id())
+            .is_some()
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {

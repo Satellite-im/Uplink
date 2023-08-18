@@ -1,7 +1,9 @@
+use chrono::{DateTime, Utc};
 use derive_more::Display;
 use futures::{channel::oneshot, StreamExt};
 use std::{
     collections::{HashMap, HashSet},
+    ops::Range,
     path::PathBuf,
 };
 use uuid::Uuid;
@@ -18,8 +20,9 @@ use crate::{
     warp_runner::{
         conv_stream,
         ui_adapter::{
-            self, conversation_to_chat, dids_to_identity, fetch_messages_from_chat,
-            fetch_pinned_messages_from_chat, get_uninitialized_identity, MessageEvent,
+            self, conversation_to_chat, dids_to_identity, fetch_messages_between,
+            fetch_messages_from_chat, fetch_pinned_messages_from_chat, get_uninitialized_identity,
+            MessageEvent,
         },
         Account, Messaging, WarpEvent,
     },
@@ -75,6 +78,13 @@ pub enum RayGunCmd {
         to_fetch: usize,
         // the current size of the conversation
         current_len: usize,
+        rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
+    },
+    #[display(fmt = "FetchMessagesBetween {{ range: {date_range:?} }} ")]
+    FetchMessagesBetween {
+        conv_id: Uuid,
+        // time range to fetch messages from
+        date_range: Range<DateTime<Utc>>,
         rsp: oneshot::Sender<Result<(Vec<ui_adapter::Message>, bool), warp::error::Error>>,
     },
     #[display(fmt = "FetchPinnedMessages")]
@@ -222,6 +232,14 @@ pub async fn handle_raygun_cmd(
             rsp,
         } => {
             let r = fetch_messages_from_chat(conv_id, messaging, to_fetch + current_len).await;
+            let _ = rsp.send(r);
+        }
+        RayGunCmd::FetchMessagesBetween {
+            conv_id,
+            date_range,
+            rsp,
+        } => {
+            let r = fetch_messages_between(conv_id, messaging, date_range).await;
             let _ = rsp.send(r);
         }
         RayGunCmd::FetchPinnedMessages { conv_id, rsp } => {

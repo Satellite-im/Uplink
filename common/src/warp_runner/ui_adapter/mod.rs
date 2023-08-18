@@ -6,6 +6,7 @@ mod message_event;
 mod multipass_event;
 mod raygun_event;
 
+use chrono::{DateTime, Utc};
 pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
@@ -14,7 +15,10 @@ use uuid::Uuid;
 use crate::state::{self, chats, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    ops::Range,
+};
 use warp::{
     constellation::file::File,
     crypto::DID,
@@ -186,6 +190,32 @@ pub async fn fetch_messages_from_chat(
     Ok((messages, has_more))
 }
 
+pub async fn fetch_messages_between(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+    date_range: Range<DateTime<Utc>>,
+) -> Result<(Vec<Message>, bool), Error> {
+    let total_messages = messaging.get_message_count(conv_id).await?;
+
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_date_range(date_range),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+    let has_more = messages.len() < total_messages;
+    Ok((messages, has_more))
+}
+
 pub async fn fetch_pinned_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
@@ -264,6 +294,7 @@ pub async fn conversation_to_chat(
         pending_outgoing_messages: vec![],
         files_attached_to_send: vec![],
         pinned_messages,
+        scroll_to: None,
     })
 }
 

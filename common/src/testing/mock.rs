@@ -139,6 +139,7 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         pending_outgoing_messages: vec![],
         files_attached_to_send: Vec::new(),
         pinned_messages,
+        scroll_to: None,
     }
 }
 
