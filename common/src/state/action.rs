@@ -57,6 +57,8 @@ pub enum Action<'a> {
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]
     AnswerCall(Uuid),
+    #[display(fmt = "RejectCall")]
+    RejectCall(Uuid),
     /// creates a Call struct and joins the call
     #[display(fmt = "OfferCall")]
     OfferCall(call::Call),

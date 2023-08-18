@@ -1198,7 +1198,23 @@ fn get_call_dialog(cx: Scope) -> Element {
                         }
                     }
                     CallDialogCmd::Reject(id) => {
-                        state.write().ui.call_info.reject_call(id);
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().ui.call_info.reject_call(id);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
                     }
                 }
             }
