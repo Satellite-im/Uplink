@@ -1003,9 +1003,7 @@ impl State {
                 return false;
             }
         };
-        conv.messages
-            .iter()
-            .any(|m| m.inner.id() == message.id())
+        conv.messages.iter().any(|m| m.inner.id() == message.id())
     }
 
     fn pin_message(&mut self, message: warp::raygun::Message) {
