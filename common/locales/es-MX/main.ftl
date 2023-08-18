@@ -22,6 +22,7 @@ uplink = Uplink
     .delete-conversation = Eliminar Chat
     .hide-chat = Ocultar Chat
     .search-placeholder = Buscar...
+    .nothing-here = Nada aquí...
     .end = Finalizar
     .pre-release = Pre-lanzamiento
     .username = Usuario
