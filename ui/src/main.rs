@@ -33,7 +33,6 @@ use kit::layout::modal::Modal;
 use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
-use overlay::{make_config, OverlayDom};
 use tokio::sync::broadcast::error::RecvError;
 use utils::build_user_from_identity;
 use uuid::Uuid;
@@ -47,8 +46,7 @@ use std::time::Instant;
 use warp::multipass;
 
 use std::sync::Arc;
-use tao::menu::{MenuBar as Menu, MenuItem};
-use tao::window::WindowBuilder;
+
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -56,6 +54,7 @@ use warp::logging::tracing::log::{self, LevelFilter};
 use dioxus_desktop::use_wry_event_handler;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
 
+use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
@@ -83,13 +82,18 @@ use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
 pub const APP_STYLE: &str = include_str!("./compiled_styles.css");
+mod auth_guard;
+mod bootstrap;
 mod components;
 mod extension_browser;
 mod layouts;
 mod logger;
 mod overlay;
 mod utils;
+mod window_builder;
 mod window_manager;
+
+pub use auth_guard::AuthPages;
 
 pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
 
@@ -121,15 +125,6 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     files: "/files",
     settings: "/settings",
 };
-
-// serve as a sort of router while the user logs in]
-#[allow(clippy::large_enum_variant)]
-#[derive(PartialEq, Eq)]
-pub enum AuthPages {
-    Unlock,
-    CreateAccount,
-    Success(multipass::identity::Identity),
-}
 
 fn main() {
     // Attempts to increase the file desc limit on unix-like systems
@@ -178,7 +173,7 @@ fn main() {
 
     create_uplink_dirs();
 
-    let window = get_window_builder(true, true);
+    let window = window_builder::get_window_builder(true, true);
 
     let config = Config::new()
         .with_window(window)
@@ -205,7 +200,39 @@ fn main() {
         config
     };
 
-    dioxus_desktop::launch_cfg(bootstrap, config)
+    dioxus_desktop::launch_cfg(entry, config)
+}
+
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum UplinkRoute {
+    #[route("/")]
+    LoadingLayout {},
+
+    #[route("/chat")]
+    ChatLayout { route_info: RouteInfo },
+
+    #[route("/settings")]
+    SettingsLayout { route_info: RouteInfo },
+
+    #[route("/friends")]
+    FriendsLayout { route_info: RouteInfo },
+
+    #[route("/files")]
+    FilesLayout { route_info: RouteInfo },
+}
+
+fn entry(cx: Scope) -> Element {
+    let auth = use_state(cx, || AuthPages::Unlock);
+
+    // Guard the app's auth state
+    let AuthPages::Success(identity) = auth.get() else {
+        return render! { AuthGuard { page: auth.clone() }};
+    };
+
+    bootstrap::use_boostrap(cx, identity);
+
+    render! { Router::<UplinkRoute> {} }
 }
 
 pub fn create_uplink_dirs() {
@@ -214,142 +241,6 @@ pub fn create_uplink_dirs() {
     std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
     std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
     std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
-}
-
-pub fn get_window_builder(with_predefined_size: bool, with_menu: bool) -> WindowBuilder {
-    let mut main_menu = Menu::new();
-    let mut app_menu = Menu::new();
-    let mut edit_menu = Menu::new();
-    let mut window_menu = Menu::new();
-
-    app_menu.add_native_item(MenuItem::About(
-        String::from("Uplink"),
-        AboutMetadata::default(),
-    ));
-    app_menu.add_native_item(MenuItem::Quit);
-    // add native shortcuts to `edit_menu` menu
-    // in macOS native item are required to get keyboard shortcut
-    // to works correctly
-    edit_menu.add_native_item(MenuItem::Undo);
-    edit_menu.add_native_item(MenuItem::Redo);
-    edit_menu.add_native_item(MenuItem::Separator);
-    edit_menu.add_native_item(MenuItem::Cut);
-    edit_menu.add_native_item(MenuItem::Copy);
-    edit_menu.add_native_item(MenuItem::Paste);
-    edit_menu.add_native_item(MenuItem::SelectAll);
-
-    window_menu.add_native_item(MenuItem::Minimize);
-    window_menu.add_native_item(MenuItem::Zoom);
-    window_menu.add_native_item(MenuItem::Separator);
-    window_menu.add_native_item(MenuItem::ShowAll);
-    window_menu.add_native_item(MenuItem::EnterFullScreen);
-    window_menu.add_native_item(MenuItem::Separator);
-    window_menu.add_native_item(MenuItem::CloseWindow);
-
-    main_menu.add_submenu("Uplink", true, app_menu);
-    main_menu.add_submenu("Edit", true, edit_menu);
-    main_menu.add_submenu("Window", true, window_menu);
-
-    let title = get_local_text("uplink");
-
-    #[allow(unused_mut)]
-    let mut window = WindowBuilder::new()
-        .with_title(title)
-        .with_resizable(true)
-        // We start the min inner size smaller because the prelude pages like unlock can be rendered much smaller.
-        .with_min_inner_size(LogicalSize::new(300.0, 350.0));
-
-    if with_predefined_size {
-        window = window.with_inner_size(LogicalSize::new(950.0, 600.0));
-    }
-
-    if with_menu {
-        #[cfg(target_os = "macos")]
-        {
-            window = window.with_menu(main_menu)
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        use dioxus_desktop::tao::platform::macos::WindowBuilderExtMacOS;
-
-        window = window
-            .with_has_shadow(true)
-            .with_transparent(true)
-            .with_fullsize_content_view(true)
-            .with_titlebar_transparent(true)
-            .with_title("")
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        window = window.with_decorations(false).with_transparent(true);
-    }
-    window
-}
-
-// start warp_runner and ensure the user is logged in
-fn bootstrap(cx: Scope) -> Element {
-    log::trace!("rendering bootstrap");
-
-    // warp_runner must be started from within a tokio reactor
-    // store in a use_ref to make it not get dropped
-    let warp_runner = use_ref(cx, warp_runner::WarpRunner::new);
-    warp_runner.write_silent().run();
-
-    // make the window smaller while the user authenticates
-    let desktop = use_window(cx);
-    desktop.set_inner_size(LogicalSize {
-        width: 500.0,
-        height: 350.0,
-    });
-
-    cx.render(rsx!(crate::auth_page_manager {}))
-}
-
-// Uplink's Router depends on State, which can't be loaded until the user logs in.
-// don't see a way to replace the router
-// so instead use a Prop to determine which page to render
-// after the user logs in, app_bootstrap loads Uplink as normal.
-fn auth_page_manager(cx: Scope) -> Element {
-    let page = use_state(cx, || AuthPages::Unlock);
-    let pin = use_ref(cx, String::new);
-    cx.render(rsx!(match &*page.current() {
-        AuthPages::Success(ident) => rsx!(app_bootstrap {
-            identity: ident.clone()
-        }),
-        _ => rsx!(auth_wrapper {
-            page: page.clone(),
-            pin: pin.clone()
-        }),
-    }))
-}
-
-#[allow(unused_assignments)]
-#[inline_props]
-fn auth_wrapper(cx: Scope, page: UseState<AuthPages>, pin: UseRef<String>) -> Element {
-    log::trace!("rendering auth wrapper");
-    let desktop = use_window(cx);
-    let theme = "";
-
-    cx.render(rsx! (
-        style { "{UIKIT_STYLES} {APP_STYLE} {theme}" },
-        div {
-            id: "app-wrap",
-            div {
-                class: "titlebar disable-select",
-                id: if cfg!(target_os = "macos") {""}  else {"lockscreen-controls"},
-                onmousedown: move |_| { desktop.drag(); },
-                Topbar_Controls {},
-            },
-            match *page.current() {
-                AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
-                AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
-                _ => panic!("invalid page")
-            }
-        }
-    ))
 }
 
 fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {
@@ -391,42 +282,6 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     }
 
     Ok(extensions)
-}
-
-// called at the end of the auth flow
-#[inline_props]
-pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Element {
-    log::trace!("rendering app_bootstrap");
-    let mut state = State::load();
-
-    if STATIC_ARGS.use_mock {
-        assert!(state.initialized);
-    } else {
-        state.set_own_identity(identity.clone().into());
-    }
-
-    let desktop = use_window(cx);
-    // TODO: This overlay needs to be fixed in windows
-    if cfg!(not(target_os = "windows")) && state.configuration.general.enable_overlay {
-        let overlay_test = VirtualDom::new(OverlayDom);
-        let window = desktop.new_window(overlay_test, make_config());
-        state.ui.overlays.push(window);
-    }
-
-    let size = desktop.webview.inner_size();
-    // Update the window metadata now that we've created a window
-    let window_meta = WindowMeta {
-        focused: desktop.is_focused(),
-        maximized: desktop.is_maximized(),
-        minimized: desktop.is_minimized(),
-        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
-    };
-    state.ui.metadata = window_meta;
-
-    use_shared_state_provider(cx, || state);
-    use_shared_state_provider(cx, DownloadState::default);
-
-    cx.render(rsx!(crate::app {}))
 }
 
 fn app(cx: Scope) -> Element {
@@ -507,11 +362,11 @@ fn app(cx: Scope) -> Element {
             style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
             div {
                 id: "app-wrap",
-                get_titlebar{},
-                get_toasts{},
-                get_call_dialog{},
-                get_router{},
-                get_logger{},
+                get_titlebar {},
+                get_toasts {},
+                get_call_dialog {},
+                get_router {},
+                get_logger {},
             },
             script { "{PRISM_SCRIPT}" },
             script { "{prism_autoloader_script}" },
@@ -1226,20 +1081,13 @@ fn get_call_dialog(cx: Scope) -> Element {
     }))
 }
 
-#[derive(Routable, Clone)]
-#[rustfmt::skip]
-enum UplinkRoute {
-    #[route("/")]
-    LoadingLayout {},
-    #[route("/chat")]
-    ChatLayout { route_info: RouteInfo },
-    #[route("/settings")]
-    SettingsLayout { route_info: RouteInfo },
-    #[route("/friends")]
-    FriendsLayout { route_info: RouteInfo },
-    #[route("/files")]
-    FilesLayout { route_info: RouteInfo },
+fn Login(cx: Scope) -> Element {
+    todo!()
 }
+fn Unlock(cx: Scope) -> Element {
+    todo!()
+}
+
 fn get_router(cx: Scope) -> Element {
     // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
