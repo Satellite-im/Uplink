@@ -71,12 +71,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
     let chats = cx.props.chats.get().clone();
 
     friends_identities.sort_by_key(|identity| identity.username());
-    let blocked_friends: Vec<DID> = state
-        .read()
-        .blocked_fr_identities()
-        .iter()
-        .map(|f| f.did_key())
-        .collect();
 
     cx.render(rsx!(
         div {
