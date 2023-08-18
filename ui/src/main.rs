@@ -69,10 +69,10 @@ use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
 };
 
+use crate::layouts::chat::ChatLayout;
 use crate::utils::build_participants;
 use crate::utils::get_drag_event::DRAG_EVENT;
 use crate::window_manager::WindowManagerCmdChannels;
-use crate::{components::chat::RouteInfo, layouts::chat::ChatLayout};
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
     warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
@@ -90,6 +90,7 @@ mod layouts;
 mod logger;
 mod overlay;
 mod utils;
+mod webview_config;
 mod window_builder;
 mod window_manager;
 
@@ -110,178 +111,61 @@ pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
     }
 });
 
-pub struct UplinkRoutes<'a> {
-    pub loading: &'a str,
-    pub chat: &'a str,
-    pub friends: &'a str,
-    pub files: &'a str,
-    pub settings: &'a str,
-}
-
-pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
-    loading: "/",
-    chat: "/chat",
-    friends: "/friends",
-    files: "/files",
-    settings: "/settings",
-};
-
 fn main() {
-    // Attempts to increase the file desc limit on unix-like systems
-    // Note: Will be changed out in the future
-    if fdlimit::raise_fd_limit().is_none() {}
-    // configure logging
-    let args = common::Args::parse();
-    let max_log_level = if let Some(profile) = args.profile {
-        match profile {
-            LogProfile::Debug => {
-                logger::set_write_to_stdout(true);
-                LevelFilter::Debug
-            }
-            LogProfile::Trace => {
-                logger::set_display_trace(true);
-                logger::set_write_to_stdout(true);
-                LevelFilter::Trace
-            }
-            LogProfile::Trace2 => {
-                logger::set_display_warp(true);
-                logger::set_display_trace(true);
-                logger::set_write_to_stdout(true);
-                LevelFilter::Trace
-            }
-            _ => LevelFilter::Debug,
-        }
-    } else {
-        LevelFilter::Debug
-    };
-    logger::init_with_level(max_log_level).expect("failed to init logger");
-    log::debug!("starting uplink");
-    panic::set_hook(Box::new(|panic_info| {
-        let intro = match panic_info.payload().downcast_ref::<&str>() {
-            Some(s) => format!("panic occurred: {s:?}"),
-            None => "panic occurred".into(),
-        };
-        let location = match panic_info.location() {
-            Some(loc) => format!(" at file {}, line {}", loc.file(), loc.line()),
-            None => "".into(),
-        };
+    // 1. fix random system quirks
+    bootstrap::platform_quirks();
 
-        let logs = logger::dump_logs();
-        let crash_report = format!("{intro}{location}\n{logs}\n");
-        println!("{crash_report}");
-    }));
+    // 2. configure logging via the cli
+    bootstrap::configure_logger(common::Args::parse().profile);
 
-    create_uplink_dirs();
+    // 3. Make sure that if the app panics we can catch it
+    bootstrap::set_app_panic_hook();
 
-    let window = window_builder::get_window_builder(true, true);
+    // 4. Make sure all system dirs are ready
+    bootstrap::create_uplink_dirs();
 
-    let config = Config::new()
-        .with_window(window)
-        .with_custom_index(
-            r#"
-<!doctype html>
-<html>
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<body style="background-color:rgba(0,0,0,0);"><div id="main"></div></body>
-</html>"#
-                .to_string(),
-        )
-        .with_file_drop_handler(|_w, drag_event| {
-            log::info!("Drag Event: {:?}", drag_event);
-            *DRAG_EVENT.write() = drag_event;
-            true
-        });
-
-    let config = if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
-        let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
-        std::fs::create_dir_all(&webview_data_dir).expect("error creating webview data directory");
-        config.with_data_directory(webview_data_dir)
-    } else {
-        config
-    };
-
-    dioxus_desktop::launch_cfg(entry, config)
+    // 5. Finally, launch the app
+    dioxus_desktop::launch_cfg(entry, webview_config::webview_config())
 }
 
 #[derive(Routable, Clone)]
 #[rustfmt::skip]
 enum UplinkRoute {
-    #[route("/")]
-    LoadingLayout {},
-
+    #[redirect("/" || UplinkRoute::ChatLayout {})]
     #[route("/chat")]
-    ChatLayout { route_info: RouteInfo },
+    ChatLayout {},
 
     #[route("/settings")]
-    SettingsLayout { route_info: RouteInfo },
+    SettingsLayout {},
 
     #[route("/friends")]
-    FriendsLayout { route_info: RouteInfo },
+    FriendsLayout {},
 
     #[route("/files")]
-    FilesLayout { route_info: RouteInfo },
+    FilesLayout {},
 }
 
 fn entry(cx: Scope) -> Element {
-    let auth = use_state(cx, || AuthPages::Unlock);
+    // 1. Make sure the warp engine is turned on before doing anything
+    bootstrap::use_warp_runner(cx);
 
-    // Guard the app's auth state
+    // 2. Guard the app with the auth
+    let auth = use_state(cx, || AuthPages::Unlock);
     let AuthPages::Success(identity) = auth.get() else {
         return render! { AuthGuard { page: auth.clone() }};
     };
 
+    // 3. Make sure global context is setup before rendering anything downstream
     bootstrap::use_boostrap(cx, identity);
 
-    render! { Router::<UplinkRoute> {} }
-}
-
-pub fn create_uplink_dirs() {
-    // Initializes the cache dir if needed
-    std::fs::create_dir_all(&STATIC_ARGS.uplink_path).expect("Error creating Uplink directory");
-    std::fs::create_dir_all(&STATIC_ARGS.warp_path).expect("Error creating Warp directory");
-    std::fs::create_dir_all(&STATIC_ARGS.themes_path).expect("error creating themes directory");
-    std::fs::create_dir_all(&STATIC_ARGS.fonts_path).expect("error fonts themes directory");
-}
-
-fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {
-    fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
-    let mut extensions = HashMap::new();
-
-    let mut add_to_extensions = |dir: fs::ReadDir| -> Result<(), Box<dyn std::error::Error>> {
-        for entry in dir {
-            let path = entry?.path();
-            log::debug!("Found extension: {:?}", path);
-
-            match UplinkExtension::new(path.clone()) {
-                Ok(ext) => {
-                    if ext.cargo_version() != extensions::CARGO_VERSION
-                        || ext.rustc_version() != extensions::RUSTC_VERSION
-                    {
-                        log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
-                        continue;
-                    }
-                    log::debug!("Loaded extension: {:?}", &path);
-                    extensions.insert(ext.details().meta.name.into(), ext);
-                }
-                Err(e) => {
-                    log::error!("Error loading extension: {:?}", e);
-                }
-            }
-        }
-
-        Ok(())
-    };
-
-    let user_extension_dir = fs::read_dir(&STATIC_ARGS.extensions_path)?;
-    add_to_extensions(user_extension_dir)?;
-
-    if STATIC_ARGS.production_mode {
-        let uplink_extenions_path = common::get_extensions_dir()?;
-        let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
-        add_to_extensions(uplink_extensions_dir)?;
+    // 4. Throw up a loading screen until our assets are ready
+    let loaded = use_state(cx, || false);
+    if !loaded.get() {
+        return render! { "loading..." };
     }
 
-    Ok(extensions)
+    // 5. Finally, render the app using the Router
+    render! { Router::<UplinkRoute> {} }
 }
 
 fn app(cx: Scope) -> Element {
@@ -1081,13 +965,6 @@ fn get_call_dialog(cx: Scope) -> Element {
     }))
 }
 
-fn Login(cx: Scope) -> Element {
-    todo!()
-}
-fn Unlock(cx: Scope) -> Element {
-    todo!()
-}
-
 fn get_router(cx: Scope) -> Element {
     // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
@@ -1113,10 +990,10 @@ fn get_router(cx: Scope) -> Element {
                 match cmd {
                     NotificationAction::DisplayChat(uuid) => {
                         state.write_silent().mutate(Action::ChatWith(&uuid, true));
-                        navigator.replace(UPLINK_ROUTES.chat);
+                        navigator.replace(UplinkRoute::ChatLayout {});
                     }
                     NotificationAction::FriendListPending => {
-                        navigator.replace(UPLINK_ROUTES.friends);
+                        navigator.replace(UplinkRoute::FriendsLayout {});
                     }
                     _ => {}
                 }
@@ -1127,4 +1004,45 @@ fn get_router(cx: Scope) -> Element {
     render! {
      Router::<UplinkRoute>{}
     }
+}
+
+fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {
+    fs::create_dir_all(&STATIC_ARGS.extensions_path)?;
+    let mut extensions = HashMap::new();
+
+    let mut add_to_extensions = |dir: fs::ReadDir| -> Result<(), Box<dyn std::error::Error>> {
+        for entry in dir {
+            let path = entry?.path();
+            log::debug!("Found extension: {:?}", path);
+
+            match UplinkExtension::new(path.clone()) {
+                Ok(ext) => {
+                    if ext.cargo_version() != extensions::CARGO_VERSION
+                        || ext.rustc_version() != extensions::RUSTC_VERSION
+                    {
+                        log::warn!("failed to load extension: {:?} due to rustc/cargo version mismatch. cargo version: {}, rustc version: {}", &path, ext.cargo_version(), ext.rustc_version());
+                        continue;
+                    }
+                    log::debug!("Loaded extension: {:?}", &path);
+                    extensions.insert(ext.details().meta.name.into(), ext);
+                }
+                Err(e) => {
+                    log::error!("Error loading extension: {:?}", e);
+                }
+            }
+        }
+
+        Ok(())
+    };
+
+    let user_extension_dir = fs::read_dir(&STATIC_ARGS.extensions_path)?;
+    add_to_extensions(user_extension_dir)?;
+
+    if STATIC_ARGS.production_mode {
+        let uplink_extenions_path = common::get_extensions_dir()?;
+        let uplink_extensions_dir = fs::read_dir(uplink_extenions_path)?;
+        add_to_extensions(uplink_extensions_dir)?;
+    }
+
+    Ok(extensions)
 }

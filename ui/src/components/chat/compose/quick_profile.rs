@@ -20,7 +20,9 @@ use common::language::get_local_text;
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::UPLINK_ROUTES;
+use crate::UplinkRoute;
+
+// use crate::UPLINK_ROUTES;
 
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
@@ -89,7 +91,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace(UPLINK_ROUTES.chat);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
@@ -275,7 +277,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     aria_label: "quick-profile-self-edit".into(),
                     text: get_local_text("quickprofile.self-edit"),
                     onpress: move |_| {
-                        router.replace(UPLINK_ROUTES.settings);
+                        router.replace(UplinkRoute::SettingsLayout {});
                     }
                 })
             } else {

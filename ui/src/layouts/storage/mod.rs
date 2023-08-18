@@ -38,11 +38,10 @@ pub mod controller;
 pub mod file_modal;
 pub mod functions;
 
-use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
 use crate::layouts::storage::file_modal::get_file_modal;
-use crate::UPLINK_ROUTES;
 
 use self::controller::{StorageController, UploadFileController};
 
@@ -75,13 +74,8 @@ pub enum ChanCmd {
     DeleteItems(Item),
 }
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
-
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope<Props>) -> Element {
+pub fn FilesLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
     let storage_controller = StorageController::new(cx, state);
@@ -175,9 +169,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
-            },
+            ChatSidebar { },
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",

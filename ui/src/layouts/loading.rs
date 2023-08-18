@@ -1,11 +1,11 @@
+use crate::utils::unzip_prism_langs;
+use crate::UplinkRoute;
 use common::{get_images_dir, state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::application::dpi::LogicalPosition;
 use dioxus_desktop::LogicalSize;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
-
-use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
 
 #[allow(non_snake_case)]
 pub fn LoadingLayout(cx: Scope) -> Element {
@@ -37,7 +37,7 @@ pub fn LoadingLayout(cx: Scope) -> Element {
     });
 
     if fut.value().is_some() && desktop_resized.value().is_some() && state.read().initialized {
-        router.replace(UPLINK_ROUTES.chat);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let img_path = get_images_dir().unwrap_or_default().join("uplink.gif");

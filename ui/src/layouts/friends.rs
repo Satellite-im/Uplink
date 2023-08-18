@@ -14,15 +14,12 @@ use kit::{
 use tokio::sync::broadcast::error::RecvError;
 use warp::logging::tracing::log;
 
-use crate::{
-    components::{
-        chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-        friends::{
-            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
-        },
+use crate::components::{
+    chat::sidebar::Sidebar as ChatSidebar,
+    friends::{
+        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
     },
-    UPLINK_ROUTES,
 };
 use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
@@ -34,19 +31,15 @@ pub enum FriendRoute {
     Blocked,
 }
 
-#[inline_props]
 #[allow(non_snake_case)]
-pub fn FriendsLayout(cx: Scope, route_info: RouteInfo) -> Element {
+pub fn FriendsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let route = use_state(cx, || FriendRoute::All);
 
     state.write_silent().ui.current_layout = ui::Layout::Friends;
 
     if state.read().ui.is_minimal_view() {
-        return cx.render(rsx!(MinimalFriendsLayout {
-            route: route,
-            route_info: cx.props.route_info.clone()
-        }));
+        return cx.render(rsx!(MinimalFriendsLayout { route: route }));
     }
     log::trace!("rendering FriendsLayout");
 
@@ -87,7 +80,6 @@ pub fn FriendsLayout(cx: Scope, route_info: RouteInfo) -> Element {
             aria_label: "friends-layout",
             class: "disable-select",
             ChatSidebar {
-                route_info: cx.props.route_info.clone()
             },
             div {
                 class: "friends-body",
@@ -104,7 +96,6 @@ pub fn FriendsLayout(cx: Scope, route_info: RouteInfo) -> Element {
 #[derive(PartialEq, Props)]
 pub struct MinimalProps<'a> {
     route: &'a UseState<FriendRoute>,
-    route_info: RouteInfo,
 }
 
 #[allow(non_snake_case)]
@@ -115,9 +106,7 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     let navigator = use_navigator(cx).clone();
 
     let view = if !state.read().ui.sidebar_hidden {
-        rsx!(ChatSidebar {
-            route_info: cx.props.route_info.clone()
-        },)
+        rsx!(ChatSidebar {})
     } else {
         rsx!(
             div {

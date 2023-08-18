@@ -1,4 +1,3 @@
-use crate::UPLINK_ROUTES;
 use common::state::{Action, State};
 
 use dioxus::prelude::*;
@@ -15,6 +14,8 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
+
+use crate::UplinkRoute;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -162,7 +163,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    router.replace(UPLINK_ROUTES.settings);
+                    router.replace(UplinkRoute::SettingsLayout {});
                 }
             },
         }

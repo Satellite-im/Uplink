@@ -35,17 +35,13 @@ use warp::{
 
 use crate::components::chat::create_group::CreateGroup;
 use crate::components::media::remote_control::RemoteControls;
-use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
+use crate::utils::build_participants;
+use crate::UplinkRoute;
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     CreateConversation { recipient: DID },
     DeleteConversation { conv_id: Uuid },
-}
-
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
 }
 
 #[derive(Props)]
@@ -96,7 +92,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope<Props>) -> Element {
+pub fn Sidebar(cx: Scope) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
@@ -273,7 +269,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                     state.write().mutate(Action::SidebarHidden(true));
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                router.replace(UPLINK_ROUTES.chat);
+                                                router.replace(UplinkRoute::ChatLayout {  });
                                             }
                                         },
                                         ContextItem {
@@ -294,7 +290,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                                 state.write().mutate(Action::SidebarHidden(true));
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            router.replace(UPLINK_ROUTES.chat);
+                                            router.replace(UplinkRoute::ChatLayout {  });
                                         }
                                     }
                                 }
@@ -457,7 +453,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
-                                    router.replace(UPLINK_ROUTES.chat);
+                                    router.replace(UplinkRoute::ChatLayout {  });
                                 }
                             }
                         }

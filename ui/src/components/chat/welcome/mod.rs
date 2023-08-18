@@ -4,14 +4,15 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use kit::layout::topbar::Topbar;
 
-use crate::UPLINK_ROUTES;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
 use kit::elements::{button::Button, Appearance};
 
+use crate::UplinkRoute;
+
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
-    let router = use_navigator(cx).clone();
+    let router = use_navigator(cx);
     let state = use_shared_state::<State>(cx)?;
     let cta_text = get_local_text("friends.cta-text");
     let image_path = use_image_path(cx);
@@ -45,7 +46,7 @@ pub fn Welcome(cx: Scope) -> Element {
                     text: get_local_text("friends.add"),
                     appearance: Appearance::Secondary,
                     onpress: move |_| {
-                        router.replace(UPLINK_ROUTES.friends);
+                        router.replace(UplinkRoute::FriendsLayout {  });
                     }
                 },
             }

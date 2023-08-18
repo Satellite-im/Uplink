@@ -1,40 +1,29 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 
-use crate::{
-    components::{
-        chat::RouteInfo,
-        settings::{
-            sidebar::{Page, Sidebar},
-            sub_pages::{
-                about::AboutPage,
-                accessibility::AccessibilitySettings,
-                audio::AudioSettings,
-                developer::DeveloperSettings,
-                extensions::ExtensionSettings,
-                general::GeneralSettings,
-                licenses::Licenses,
-                notifications::NotificationSettings,
-                // files::FilesSettings,
-                // privacy::PrivacySettings,
-                profile::ProfileSettings,
-            },
-        },
+use crate::components::settings::{
+    sidebar::{Page, Sidebar},
+    sub_pages::{
+        about::AboutPage,
+        accessibility::AccessibilitySettings,
+        audio::AudioSettings,
+        developer::DeveloperSettings,
+        extensions::ExtensionSettings,
+        general::GeneralSettings,
+        licenses::Licenses,
+        notifications::NotificationSettings,
+        // files::FilesSettings,
+        // privacy::PrivacySettings,
+        profile::ProfileSettings,
     },
-    UPLINK_ROUTES,
 };
 
 use common::state::{ui, Action, State};
 
 use kit::{components::nav::Nav, layout::topbar::Topbar};
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
-
 #[allow(non_snake_case)]
-pub fn SettingsLayout(cx: Scope<Props>) -> Element {
+pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
     let router = use_navigator(cx);
@@ -68,7 +57,6 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
             id: "settings-layout",
             aria_label: "settings-layout",
             Sidebar {
-                route_info: cx.props.route_info.clone(),
                 onpress: move |p| {
                     // If on mobile, we should hide the sidebar here.
                     if state.read().ui.is_minimal_view() {

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use crate::UPLINK_ROUTES;
+// use crate::UPLINK_ROUTES;
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
@@ -23,6 +23,8 @@ use kit::{
 };
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
+
+use crate::UplinkRoute;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -52,7 +54,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace(UPLINK_ROUTES.chat);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     // the leading underscore is to pass this to a prop named "friends"

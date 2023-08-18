@@ -12,8 +12,6 @@ use kit::{
     layout::sidebar::Sidebar as ReusableSidebar,
 };
 
-use crate::{components::chat::RouteInfo, UPLINK_ROUTES};
-
 pub enum Page {
     About,
     Audio,
@@ -51,7 +49,6 @@ impl FromStr for Page {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    route_info: RouteInfo,
     #[props(optional)]
     onpress: Option<EventHandler<'a, Page>>,
 }

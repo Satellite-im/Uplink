@@ -23,7 +23,7 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    UPLINK_ROUTES,
+    UplinkRoute,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -59,7 +59,7 @@ pub fn Friends(cx: Scope) -> Element {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace(UPLINK_ROUTES.chat);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {

@@ -29,7 +29,7 @@ use common::{
     WARP_CMD_CH,
 };
 
-use crate::{create_uplink_dirs, AuthPages};
+use crate::{bootstrap::create_uplink_dirs, AuthPages};
 
 enum UnlockError {
     ValidationError,
