@@ -20,6 +20,13 @@ pub enum ChannelCommand {
     ScrollToUnloaded(Uuid, Uuid, DateTime<Utc>),
 }
 
+type FetchedMessages = (
+    Uuid,
+    Uuid,
+    Vec<common::warp_runner::ui_adapter::Message>,
+    bool,
+);
+
 #[derive(Props, Eq, PartialEq)]
 pub struct Props {
     active_chat: Chat,
@@ -30,14 +37,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
     log::trace!("rendering pinned_messages");
     let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
-    let newely_fetched_messages: &UseRef<
-        Option<(
-            Uuid,
-            Uuid,
-            Vec<common::warp_runner::ui_adapter::Message>,
-            bool,
-        )>,
-    > = use_ref(cx, || None);
+    let newely_fetched_messages: &UseRef<Option<FetchedMessages>> = use_ref(cx, || None);
 
     if let Some((id, message_id, m, has_more)) = newely_fetched_messages.write_silent().take() {
         // We need to enqueue the scrolling since at this point the message components are not updated yet
