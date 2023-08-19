@@ -1,36 +1,34 @@
 #![cfg_attr(feature = "production_mode", windows_subsystem = "windows")]
+#![allow(non_snake_case)]
 // the above macro will make uplink be a "window" application instead of a  "console" application for Windows.
 
 use clap::Parser;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::warp_runner::BlinkCmd;
-
 use common::notifications::{NotificationAction, NOTIFICATION_LISTENER};
 use common::warp_runner::ui_adapter::MessageEvent;
+use common::warp_runner::BlinkCmd;
 use common::warp_runner::WarpEvent;
 use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, WARP_EVENT_CH};
+
 use components::calldialog::CallDialog;
 use dioxus::prelude::*;
-use dioxus_desktop::tao::dpi::LogicalSize;
-use dioxus_desktop::tao::event::WindowEvent;
-use dioxus_desktop::tao::menu::AboutMetadata;
-use dioxus_desktop::Config;
-use dioxus_desktop::{tao, use_window};
-use dioxus_router::prelude::{use_navigator, Routable, Router};
+use dioxus_desktop::{
+    tao::{self, dpi::LogicalSize, event::WindowEvent},
+    use_window,
+};
+use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};
 use extensions::UplinkExtension;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::context_menu::{ContextItem, ContextMenu};
-use kit::components::nav::Route as UIRoute;
 use kit::components::topbar_controls::Topbar_Controls;
 use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
 use kit::elements::Appearance;
 use kit::layout::modal::Modal;
-use layouts::friends::FriendRoute;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use tokio::sync::broadcast::error::RecvError;
@@ -43,27 +41,22 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
-use warp::multipass;
 
 use std::sync::Arc;
-
-use tokio::sync::{mpsc, Mutex};
-use tokio::time::{sleep, Duration};
-use warp::logging::tracing::log::{self, LevelFilter};
-
-use dioxus_desktop::use_wry_event_handler;
-use dioxus_desktop::wry::application::event::Event as WryEvent;
 
 use crate::auth_guard::AuthGuard;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
-use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
-use crate::layouts::loading::LoadingLayout;
+use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
-use crate::layouts::unlock::UnlockLayout;
+use dioxus_desktop::use_wry_event_handler;
+use dioxus_desktop::wry::application::event::Event as WryEvent;
+use tokio::sync::{mpsc, Mutex};
+use tokio::time::{sleep, Duration};
+use warp::logging::tracing::log::{self, LevelFilter};
 
 use crate::utils::auto_updater::{
     DownloadProgress, DownloadState, SoftwareDownloadCmd, SoftwareUpdateCmd,
@@ -71,13 +64,11 @@ use crate::utils::auto_updater::{
 
 use crate::layouts::chat::ChatLayout;
 use crate::utils::build_participants;
-use crate::utils::get_drag_event::DRAG_EVENT;
 use crate::window_manager::WindowManagerCmdChannels;
 use common::{
     state::{storage, ui::WindowMeta, Action, State},
     warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
 };
-use dioxus_router::*;
 use std::panic;
 
 use kit::STYLE as UIKIT_STYLES;
@@ -89,6 +80,7 @@ mod extension_browser;
 mod layouts;
 mod logger;
 mod overlay;
+mod prism_paths;
 mod utils;
 mod webview_config;
 mod window_builder;
@@ -97,10 +89,6 @@ mod window_manager;
 pub use auth_guard::AuthPages;
 
 pub static OPEN_DYSLEXIC: &str = include_str!("./open-dyslexic.css");
-
-pub const PRISM_SCRIPT: &str = include_str!("../extra/assets/scripts/prism.js");
-pub const PRISM_STYLE: &str = include_str!("../extra/assets/styles/prism.css");
-pub const PRISM_THEME: &str = include_str!("../extra/assets/styles/prism-one-dark.css");
 
 // used to close the popout player, among other things
 pub static WINDOW_CMD_CH: Lazy<WindowManagerCmdChannels> = Lazy::new(|| {
@@ -129,9 +117,12 @@ fn main() {
 }
 
 #[derive(Routable, Clone)]
-#[rustfmt::skip]
 enum UplinkRoute {
-    #[redirect("/" || UplinkRoute::ChatLayout {})]
+    // We want to wrap every router in a layout that renders the content via an outlet
+    #[layout(app_layout)]
+    //
+    //
+    #[redirect("/", || UplinkRoute::ChatLayout {})]
     #[route("/chat")]
     ChatLayout {},
 
@@ -156,40 +147,42 @@ fn entry(cx: Scope) -> Element {
     };
 
     // 3. Make sure global context is setup before rendering anything downstream
-    bootstrap::use_boostrap(cx, identity);
+    bootstrap::use_boostrap(cx, identity)?;
 
     // 4. Throw up a loading screen until our assets are ready
-    let loaded = use_state(cx, || false);
-    if !loaded.get() {
-        return render! { "loading..." };
+    if use_loaded_assets(cx).value().is_none() {
+        return render! { LoadingWash {} };
     }
 
-    // 5. Finally, render the app using the Router
-    render! { Router::<UplinkRoute> {} }
+    // 5. Finally, render the app
+    render! {
+        Router::<UplinkRoute>{}
+    }
 }
 
-fn app(cx: Scope) -> Element {
+// This needs to be in a layout since the notification listener needs a handle to the router
+// Eventually this restriction will be lifted once global contexts in dioxus are global accessible
+fn app_layout(cx: Scope) -> Element {
     log::trace!("rendering app");
-    let desktop = use_window(cx);
+
+    use_auto_updater(cx)?;
+    use_app_coroutines(cx)?;
+    use_router_notification_listener(cx)?;
+
+    render! {
+        AppStyle {}
+        div { id: "app-wrap",
+            Titlebar {},
+            Toasts {},
+            InnerCallDialog {},
+            Outlet::<UplinkRoute>{},
+            AppLogger {},
+        },
+    }
+}
+
+fn AppStyle(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let download_state = use_shared_state::<DownloadState>(cx)?;
-
-    let prism_path = if STATIC_ARGS.production_mode {
-        if cfg!(target_os = "windows") {
-            STATIC_ARGS.dot_uplink.join("prism_langs")
-        } else {
-            get_extras_dir().unwrap_or_default().join("prism_langs")
-        }
-    } else {
-        PathBuf::from("ui").join("extra").join("prism_langs")
-    };
-    let prism_autoloader_script = format!(
-        r"Prism.plugins.autoloader.languages_path = '{}';",
-        prism_path.to_string_lossy()
-    );
-
-    // don't fetch stuff from warp when using mock data
-    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
 
     let mut font_style = String::new();
     if let Some(font) = state.read().ui.font.clone() {
@@ -209,57 +202,47 @@ fn app(cx: Scope) -> Element {
     }
 
     // this gets rendered at the bottom. this way you don't have to scroll past all the use_futures to see what this function renders
-    let main_element = {
-        // render the Uplink app
-        let open_dyslexic = if state.read().configuration.general.dyslexia_support {
-            OPEN_DYSLEXIC
-        } else {
-            ""
-        };
 
-        let font_scale = format!(
-            "html {{ font-size: {}rem; }}",
-            state.read().settings.font_scale()
-        );
-
-        let theme = state
-            .read()
-            .ui
-            .theme
-            .as_ref()
-            .map(|theme| theme.styles.clone())
-            .unwrap_or_default();
-
-        let accent_color = state.read().ui.accent_color;
-        let accent_color = if let Some(color) = accent_color {
-            format!(
-                ":root {{
-                    --primary: rgb({},{},{});
-                }}",
-                color.0, color.1, color.2,
-            )
-        } else {
-            "".into()
-        };
-
-        rsx! (
-            style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
-            div {
-                id: "app-wrap",
-                get_titlebar {},
-                get_toasts {},
-                get_call_dialog {},
-                get_router {},
-                get_logger {},
-            },
-            script { "{PRISM_SCRIPT}" },
-            script { "{prism_autoloader_script}" },
-        )
+    // render the Uplink app
+    let open_dyslexic = if state.read().configuration.general.dyslexia_support {
+        OPEN_DYSLEXIC
+    } else {
+        ""
     };
 
-    // use_coroutine for software update
+    let font_scale = format!(
+        "html {{ font-size: {}rem; }}",
+        state.read().settings.font_scale()
+    );
 
-    // updates the UI
+    let theme = state
+        .read()
+        .ui
+        .theme
+        .as_ref()
+        .map(|theme| theme.styles.clone())
+        .unwrap_or_default();
+
+    let accent_color = state.read().ui.accent_color;
+    let accent_color = if let Some(color) = accent_color {
+        format!(
+            ":root {{
+                    --primary: rgb({},{},{});
+                }}",
+            color.0, color.1, color.2,
+        )
+    } else {
+        "".into()
+    };
+    use prism_paths::{PRISM_STYLE, PRISM_THEME};
+
+    render! {
+        style { "{UIKIT_STYLES} {APP_STYLE} {PRISM_STYLE} {PRISM_THEME} {theme} {accent_color} {font_style} {open_dyslexic} {font_scale}" },
+    }
+}
+
+fn use_auto_updater(cx: &ScopeState) -> Option<()> {
+    let download_state = use_shared_state::<DownloadState>(cx)?;
     let updater_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareUpdateCmd>| {
         to_owned![download_state];
         async move {
@@ -274,7 +257,6 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    // receives a download command
     let _download_ch = use_coroutine(cx, |mut rx: UnboundedReceiver<SoftwareDownloadCmd>| {
         to_owned![updater_ch];
         async move {
@@ -292,6 +274,16 @@ fn app(cx: Scope) -> Element {
             }
         }
     });
+
+    Some(())
+}
+
+fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
+    let desktop = use_window(cx);
+    let state = use_shared_state::<State>(cx)?;
+
+    // don't fetch stuff from warp when using mock data
+    let items_init = use_ref(cx, || STATIC_ARGS.use_mock);
 
     // `use_future`s
     // all of Uplinks periodic tasks are located here. it's a lot to read but
@@ -377,7 +369,7 @@ fn app(cx: Scope) -> Element {
 
     // update state in response to warp events
     use_future(cx, (), |_| {
-        to_owned![cx, state];
+        to_owned![state];
         let schedule: Arc<dyn Fn(ScopeId) + Send + Sync> = cx.schedule_update_any();
         async move {
             // don't process warp events until friends and chats have been loaded
@@ -650,7 +642,7 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    cx.render(main_element)
+    Some(())
 }
 
 fn get_update_icon(cx: Scope) -> Element {
@@ -835,7 +827,7 @@ pub fn get_download_modal<'a>(
     }))
 }
 
-fn get_logger(cx: Scope) -> Element {
+fn AppLogger(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
 
     if !state.read().initialized {
@@ -850,7 +842,7 @@ fn get_logger(cx: Scope) -> Element {
         .then(|| rsx!(DebugLogger {}))))
 }
 
-fn get_toasts(cx: Scope) -> Element {
+fn Toasts(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     cx.render(rsx!(state.read().ui.toast_notifications.iter().map(
         |(id, toast)| {
@@ -865,8 +857,7 @@ fn get_toasts(cx: Scope) -> Element {
     )))
 }
 
-#[allow(unused_assignments)]
-fn get_titlebar(cx: Scope) -> Element {
+fn Titlebar(cx: Scope) -> Element {
     let desktop = use_window(cx);
 
     cx.render(rsx!(
@@ -888,7 +879,7 @@ enum CallDialogCmd {
     Reject(Uuid),
 }
 
-fn get_call_dialog(cx: Scope) -> Element {
+fn InnerCallDialog(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![state];
@@ -965,7 +956,7 @@ fn get_call_dialog(cx: Scope) -> Element {
     }))
 }
 
-fn get_router(cx: Scope) -> Element {
+fn use_router_notification_listener(cx: &ScopeState) -> Option<()> {
     // this use_future replaces the notification_action_handler.
     let state = use_shared_state::<State>(cx)?;
     let navigator = use_navigator(cx);
@@ -1001,9 +992,7 @@ fn get_router(cx: Scope) -> Element {
         }
     });
 
-    render! {
-     Router::<UplinkRoute>{}
-    }
+    Some(())
 }
 
 fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::error::Error>> {

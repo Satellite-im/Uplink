@@ -18,8 +18,13 @@ pub fn use_warp_runner(cx: &ScopeState) {
     });
 }
 
-pub(crate) fn use_boostrap(cx: &ScopeState, identity: &multipass::identity::Identity) {
-    cx.use_hook(|| {
+pub(crate) fn use_boostrap<'a>(
+    cx: &'a ScopeState,
+    identity: &multipass::identity::Identity,
+) -> Option<&'a UseSharedState<State>> {
+    let desktop = use_window(cx);
+    use_shared_state_provider(cx, DownloadState::default);
+    use_shared_state_provider(cx, || {
         let mut state = State::load();
 
         if STATIC_ARGS.use_mock {
@@ -28,7 +33,6 @@ pub(crate) fn use_boostrap(cx: &ScopeState, identity: &multipass::identity::Iden
             state.set_own_identity(identity.clone().into());
         }
 
-        let desktop = use_window(cx);
         // TODO: This overlay needs to be fixed in windows
         if cfg!(not(target_os = "windows")) && state.configuration.general.enable_overlay {
             let overlay_test = VirtualDom::new(OverlayDom);
@@ -46,9 +50,10 @@ pub(crate) fn use_boostrap(cx: &ScopeState, identity: &multipass::identity::Iden
         };
         state.ui.metadata = window_meta;
 
-        use_shared_state_provider(cx, || state);
-        use_shared_state_provider(cx, DownloadState::default);
+        state
     });
+
+    use_shared_state::<State>(cx)
 }
 
 pub fn set_app_panic_hook() {
