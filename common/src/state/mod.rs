@@ -604,6 +604,9 @@ impl State {
                     log::error!("failed to process IncomingCall event: {e}");
                 }
             }
+            BlinkEventKind::CallCancelled { call_id } => {
+                self.ui.call_info.remove_pending_call(call_id);
+            }
             BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
                 if let Err(e) = self.ui.call_info.participant_joined(call_id, peer_id) {
                     log::error!("failed to process ParticipantJoined event : {e}");
