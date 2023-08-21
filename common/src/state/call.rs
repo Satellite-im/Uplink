@@ -88,6 +88,10 @@ impl CallInfo {
         Ok(())
     }
 
+    pub fn remove_pending_call(&mut self, id: Uuid) {
+        self.pending_calls.retain(|x| x.id != id);
+    }
+
     pub fn participant_joined(&mut self, call_id: Uuid, id: DID) -> anyhow::Result<()> {
         let active_call = match self.active_call.as_mut() {
             Some(c) => c,
