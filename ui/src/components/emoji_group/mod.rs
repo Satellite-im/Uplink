@@ -15,7 +15,7 @@ pub struct Props<'a> {
 pub fn EmojiGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let emojis = state.read().ui.emojis.clone();
-    let sorted_list = emojis.get_sorted_vec(Some(4));
+    let sorted_list = emojis.get_sorted_vec(Some(5));
 
     cx.render(rsx!(
         div {
