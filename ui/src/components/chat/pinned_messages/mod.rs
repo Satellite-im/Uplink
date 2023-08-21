@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use common::{
     language::get_local_text,
     state::{Chat, Identity, State},
-    warp_runner::{thumbnail_to_base64, ui_adapter::Message, RayGunCmd, WarpCmd},
+    warp_runner::{thumbnail_to_base64, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
@@ -20,13 +20,6 @@ pub enum ChannelCommand {
     ScrollToUnloaded(Uuid, Uuid, DateTime<Utc>),
 }
 
-type FetchedMessages = (
-    Uuid,
-    Uuid,
-    Vec<common::warp_runner::ui_adapter::Message>,
-    bool,
-);
-
 #[derive(Props, Eq, PartialEq)]
 pub struct Props {
     active_chat: Chat,
@@ -37,20 +30,9 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
     log::trace!("rendering pinned_messages");
     let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
-    let newely_fetched_messages: &UseRef<Option<FetchedMessages>> = use_ref(cx, || None);
-
-    if let Some((id, message_id, m, has_more)) = newely_fetched_messages.write_silent().take() {
-        // We need to enqueue the scrolling since at this point the message components are not updated yet
-        state.write_silent().enqueue_message_scroll(&id, message_id);
-        state.write().update_chat_messages(id, m);
-        if !has_more {
-            log::debug!("finished loading chat: {id}");
-            state.write().finished_loading_chat(id);
-        }
-    }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChannelCommand>| {
-        to_owned![newely_fetched_messages];
+        to_owned![state];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -90,12 +72,14 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
 
                         match rx.await.expect("command canceled") {
                             Ok((m, has_more)) => {
-                                newely_fetched_messages.set(Some((
-                                    conversation_id,
-                                    message_id,
-                                    m,
-                                    has_more,
-                                )));
+                                state
+                                    .write_silent()
+                                    .enqueue_message_scroll(&conversation_id, message_id);
+                                state.write().update_chat_messages(conversation_id, m);
+                                if !has_more {
+                                    log::debug!("finished loading chat: {conversation_id}");
+                                    state.write().finished_loading_chat(conversation_id);
+                                }
                             }
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
@@ -138,7 +122,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                     let sender = state.read().get_identity(&message.sender());
                     let time = message.date().format(&get_local_text("uplink.date-time-format")).to_string();
                     rsx!(PinnedMessage {
-                        message: Message { inner: message.clone(), in_reply_to: None, key: String::default()},
+                        message: message.clone(),
                         sender: sender,
                         onremove: move |(_,msg): (Event<MouseData>, warp::raygun::Message)| {
                             let conv = &msg.conversation_id();
@@ -156,8 +140,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
 
 #[derive(Props)]
 pub struct PinnedMessageProp<'a> {
-    // todo: should be a warp::raygun::Message
-    message: Message,
+    message: warp::raygun::Message,
     #[props(!optional)]
     sender: Option<Identity>,
     onremove: EventHandler<'a, (Event<MouseData>, warp::raygun::Message)>,
@@ -169,10 +152,10 @@ pub struct PinnedMessageProp<'a> {
 #[allow(non_snake_case)]
 pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
     let message = &cx.props.message;
-    let chat_id = message.inner.conversation_id();
-    let id = message.inner.id();
-    let date = message.inner.date();
-    let attachments = message.inner.attachments();
+    let chat_id = message.conversation_id();
+    let id = message.id();
+    let date = message.date();
+    let attachments = message.attachments();
 
     let eval = use_eval(cx);
 
@@ -232,7 +215,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                     button {
                                         class: "pinned-buttons",
                                         onclick: move |e| {
-                                            cx.props.onremove.call((e, cx.props.message.inner.clone()));
+                                            cx.props.onremove.call((e, cx.props.message.clone()));
                                         },
                                         get_local_text("messages.pin-button-unpin"),
                                     }
@@ -245,7 +228,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         }
                     }
                     ChatText {
-                        text: message.inner.value().join("\n"),
+                        text: message.value().join("\n"),
                         remote: true,
                         pending: false,
                     }

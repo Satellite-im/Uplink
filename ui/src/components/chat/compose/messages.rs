@@ -90,6 +90,12 @@ enum MessagesCommand {
 
 type DownloadTracker = HashMap<Uuid, HashSet<warp::constellation::file::File>>;
 
+struct NewelyFetchedMessages {
+    conversation_id: Uuid,
+    messages: Vec<ui_adapter::Message>,
+    has_more: bool,
+}
+
 /// Lazy loading scheme:
 /// load DEFAULT_NUM_TO_TAKE messages to start.
 /// tell group_messages to flag the first X messages.
@@ -103,18 +109,24 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     let pending_downloads = use_shared_state::<DownloadTracker>(cx)?;
 
     let prev_chat_id = use_ref(cx, || data.active_chat.id);
-    let newely_fetched_messages: &UseRef<Option<(Uuid, Vec<ui_adapter::Message>, bool)>> =
-        use_ref(cx, || None);
+    let newely_fetched_messages: &UseRef<Option<NewelyFetchedMessages>> = use_ref(cx, || None);
 
     let quick_profile_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let identity_profile = use_state(cx, Identity::default);
     let update_script = use_state(cx, String::new);
 
-    if let Some((id, m, has_more)) = newely_fetched_messages.write_silent().take() {
-        state.write().update_chat_messages(id, m);
+    if let Some(NewelyFetchedMessages {
+        conversation_id,
+        messages,
+        has_more,
+    }) = newely_fetched_messages.write_silent().take()
+    {
+        state
+            .write()
+            .update_chat_messages(conversation_id, messages);
         if !has_more {
-            log::debug!("finished loading chat: {id}");
-            state.write().finished_loading_chat(id);
+            log::debug!("finished loading chat: {conversation_id}");
+            state.write().finished_loading_chat(conversation_id);
         }
     }
 
@@ -138,10 +150,11 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     use_effect(cx, &data.active_chat.scroll_to, |_| {
         to_owned![state, eval, currently_active];
         async move {
-            if let Some(uuid) = state
-                .write_silent()
-                .check_message_scroll(&currently_active.unwrap())
-            {
+            let currently_active = match currently_active {
+                Some(r) => r,
+                None => return,
+            };
+            if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
                 eval(include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()));
             }
         }
@@ -289,8 +302,12 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
 
                         match rx.await.expect("command canceled") {
-                            Ok((m, has_more)) => {
-                                newely_fetched_messages.set(Some((conv_id, m, has_more)));
+                            Ok((messages, has_more)) => {
+                                newely_fetched_messages.set(Some(NewelyFetchedMessages {
+                                    conversation_id: conv_id,
+                                    messages,
+                                    has_more,
+                                }));
                             }
                             Err(e) => {
                                 log::error!("failed to fetch more message: {}", e);
