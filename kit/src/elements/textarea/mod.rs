@@ -148,19 +148,20 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 if *show_char_counter {
                     rsx!(
                         div {
+                            class: "input-char-counter",
                             p {
                                 key: "{id_char_counter}-char-counter",
                                 id: "{id_char_counter}-char-counter",
-                                class: "input-char-counter",
                                 aria_label: "input-char-counter",
+                                class: "char-counter-p-element",
                                 format!("{}", cv3.len()),
                             }, 
-                            // p {
-                            //     key: "{id_char_counter}-char-max-length",
-                            //     id: "{id_char_counter}-char-max-length",
-                            //     class: "input-char-counter",
-                            //     format!("/{}", max_length - 1),
-                            // }
+                            p {
+                                key: "{id_char_counter}-char-max-length",
+                                id: "{id_char_counter}-char-max-length",
+                                class: "char-counter-p-element",
+                                format!("/{}", max_length - 1),
+                            }
                         }
                         )
                 }
