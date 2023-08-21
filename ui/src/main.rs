@@ -807,9 +807,7 @@ fn app(cx: Scope) -> Element {
             // this is technically bad because it blocks the async runtime
             match get_extensions() {
                 Ok(ext) => {
-                    for (name, extension) in ext {
-                        state.write().ui.extensions.insert(name, extension);
-                    }
+                    state.write().mutate(Action::RegisterExtensions(ext));
                 }
                 Err(e) => {
                     log::error!("failed to get extensions: {e}");
