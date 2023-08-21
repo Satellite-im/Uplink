@@ -412,12 +412,22 @@ pub fn app_bootstrap(cx: Scope, identity: multipass::identity::Identity) -> Elem
     }
 
     let size = desktop.webview.inner_size();
+    #[cfg(target_os = "macos")]
+    let mut minimal_width = 600;
+
+    #[cfg(not(target_os = "macos"))]
+    let minimal_width = 600;
+
+    #[cfg(target_os = "macos")]
+    {
+        minimal_width = (minimal_width as f64 * desktop.webview.window().scale_factor()) as u32;
+    }
     // Update the window metadata now that we've created a window
     let window_meta = WindowMeta {
         focused: desktop.is_focused(),
         maximized: desktop.is_maximized(),
         minimized: desktop.is_minimized(),
-        minimal_view: size.width < 1200, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
+        minimal_view: size.width < minimal_width, // todo: why is it that on Linux, checking if desktop.inner_size().width < 600 is true?
     };
     state.ui.metadata = window_meta;
     state.set_warp_ch(WARP_CMD_CH.tx.clone());
@@ -615,6 +625,17 @@ fn app(cx: Scope) -> Element {
                 }
                 let size = webview.inner_size();
 
+                #[cfg(target_os = "macos")]
+                let mut minimal_width = 600;
+
+                #[cfg(not(target_os = "macos"))]
+                let minimal_width = 600;
+                // On Mac window sizes are kinda funky.
+                // They are scaled with the window scale factor so they dont correspond to app pixels
+                #[cfg(target_os = "macos")]
+                {
+                    minimal_width = (minimal_width as f64 * webview.window().scale_factor()) as u32;
+                }
                 //log::trace!(
                 //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
                 //    size,
@@ -622,8 +643,9 @@ fn app(cx: Scope) -> Element {
                 //);
 
                 let metadata = state.read().ui.metadata.clone();
+                log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
+                    minimal_view: size.width < minimal_width,
                     ..metadata
                 };
                 if metadata != new_metadata {
@@ -1176,7 +1198,23 @@ fn get_call_dialog(cx: Scope) -> Element {
                         }
                     }
                     CallDialogCmd::Reject(id) => {
-                        state.write().ui.call_info.reject_call(id);
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().ui.call_info.reject_call(id);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
                     }
                 }
             }
@@ -1308,6 +1346,11 @@ fn get_router(cx: Scope) -> Element {
                         routes: routes.clone(),
                         active: files_route,
                     }
+                }
+            },
+            onchange: move |_| {
+                if state.read().ui.is_minimal_view() {
+                    state.write().mutate(Action::SidebarHidden(true));
                 }
             },
             notification_action_handler {

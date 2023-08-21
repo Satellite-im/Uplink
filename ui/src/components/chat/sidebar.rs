@@ -3,7 +3,6 @@ use common::state::{self, identity_search_result, Action, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
@@ -99,8 +98,6 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
-    let desktop = use_window(cx);
-    let size = desktop.webview.inner_size();
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
@@ -345,7 +342,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         }
                                     )),
                                     UserImageGroup {
-                                        participants: build_participants(&other_participants),
+                                        participants: build_participants(&participants),
                                         with_username: participants_name,
                                         typing: users_typing,
                                         onpress: move |_| {
@@ -515,7 +512,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
-
                                     if f64::from(size.width) <= 600.0 * scale {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }

@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Checkout Repo 🔖
         uses: actions/checkout@v3
@@ -127,7 +127,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout working directory 🔖
@@ -558,9 +558,9 @@ jobs:
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
-            Uplink-windows-latest
+            Uplink-Windows
             uplink-windows-assets
-            Uplink-macos-latest
+            app-macos
             test-report-macos-ci
             test-report-windows-ci
             test-report-windows-chats
