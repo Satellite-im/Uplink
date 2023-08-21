@@ -150,7 +150,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
     });
 
     let _ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![newely_fetched_messages, pending_downloads];
+        to_owned![state, newely_fetched_messages, pending_downloads];
         async move {
             let warp_cmd_tx = WARP_CMD_CH.tx.clone();
             while let Some(cmd) = rx.next().await {
@@ -168,7 +168,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                             conversation_id: message.conversation_id(),
                             message_id: message.id(),
                             reaction_state,
-                            emoji,
+                            emoji: emoji.clone(),
                             rsp: tx,
                         })) {
                             log::error!("failed to send warp command: {}", e);
@@ -176,8 +176,15 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                         }
 
                         let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            // failed to add/remove reaction
+                        match res {
+                            Ok(_) => state.write().mutate(Action::AddReaction(
+                                message.conversation_id(),
+                                message.id(),
+                                emoji,
+                            )),
+                            Err(_) => {
+                                // failed to add/remove reaction
+                            }
                         }
                     }
                     MessagesCommand::DeleteMessage { conv_id, msg_id } => {
