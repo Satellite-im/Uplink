@@ -182,8 +182,8 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                                 message.id(),
                                 emoji,
                             )),
-                            Err(_) => {
-                                // failed to add/remove reaction
+                            Err(e) => {
+                                log::error!("failed to add/remove reaction: {}", e);
                             }
                         }
                     }
