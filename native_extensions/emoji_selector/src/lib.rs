@@ -128,7 +128,7 @@ fn render_selector<'a>(
     let state = use_shared_state::<State>(cx)?;
     #[cfg(not(target_os = "macos"))]
     let mouse_over_emoji_selector = use_ref(cx, || false);
-    #[cfg(not(target_os = "macos"))]
+
     let eval = use_eval(cx);
 
     let focus_script = r#"
@@ -233,6 +233,19 @@ fn render_selector<'a>(
                                                         };
                                                         let draft: String = c.draft.unwrap_or_default();
                                                         let new_draft = format!("{draft}{emoji}");
+                                                        let new_draft2 = new_draft.replace("\n", "");
+                                                        let line_break_count = new_draft.matches('\n').count();
+                                                        let update_char_counter_script = r#"
+                                                            var charCounter = document.getElementById('$UUID-char-counter');
+                                                            var draft_value = '$DRAFT_VALUE'
+                                                            var line_breaks_count = '$LINE_BREAK_COUNT'
+                                                            var intValue = parseInt(line_breaks_count);
+
+                                                            const charCount = Array.from(draft_value).length
+
+                                                            charCounter.innerText = charCount + intValue
+                                                        "#.replace("$UUID", &c.id.to_string()).replace("$DRAFT_VALUE", &new_draft2).replace("$LINE_BREAK_COUNT", &line_break_count.to_string());
+                                                        eval(update_char_counter_script.to_string());
                                                         state.write_silent().mutate(Action::SetChatDraft(c.id, new_draft));
                                                         if let Some(scope_id_usize) = state.read().scope_ids.chatbar {
                                                             cx.needs_update_any(ScopeIds::scope_id_from_usize(scope_id_usize));
