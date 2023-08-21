@@ -33,32 +33,24 @@ impl EmojiCounter {
 
     pub fn increment_emoji(&mut self, emoji: String) {
         let count = self.list.entry(emoji).or_insert(0);
-        *count += 1;
+        *count = count.saturating_add(1);
     }
 
     pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
         let mut emojis: Vec<_> = self.list.iter().collect();
 
         // sort the list by the emoji with the most usage
-        emojis.sort_by(|a, b| {
-            let count = b.1.cmp(a.1);
-            if count == Ordering::Equal {
-                return b.0.cmp(a.0);
-            }
-            count
+        emojis.sort_by(|a, b| match b.1.cmp(a.1) {
+            Ordering::Equal => b.0.cmp(a.0),
+            x @ _ => x,
         });
 
-        match count {
-            Some(n) => emojis
-                .into_iter()
-                .take(n)
-                .map(|(emoji, usage)| (emoji.clone(), *usage))
-                .collect(),
-            None => emojis
-                .into_iter()
-                .map(|(emoji, usage)| (emoji.clone(), *usage))
-                .collect(),
-        }
+        let to_take = count.unwrap_or(emojis.len());
+        emojis
+            .into_iter()
+            .take(to_take)
+            .map(|(emoji, usage)| (emoji.clone(), *usage))
+            .collect()
     }
 }
 
