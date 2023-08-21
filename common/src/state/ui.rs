@@ -220,6 +220,13 @@ impl Extensions {
     pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
         self.map.values()
     }
+
+    pub fn enabled_extension(&self, extension: &str) -> bool {
+        match self.map.get(extension) {
+            Some(ext) => ext.enabled(),
+            None => false,
+        }
+    }
 }
 
 impl Drop for UI {
