@@ -97,11 +97,11 @@ fn bool_true() -> bool {
 
 fn default_emojis() -> EmojiCounter {
     EmojiCounter::new_with(HashMap::from([
-        ("👍".to_string(), 1),
-        ("👎".to_string(), 1),
-        ("❤️".to_string(), 1),
-        ("🖖".to_string(), 1),
-        ("😂".to_string(), 1),
+        ("👍".to_string(), 0),
+        ("👎".to_string(), 0),
+        ("❤️".to_string(), 0),
+        ("🖖".to_string(), 0),
+        ("😂".to_string(), 0),
     ]))
 }
 
@@ -237,22 +237,7 @@ impl Drop for UI {
 
 impl UI {
     pub fn track_emoji_usage(&mut self, emoji: String) {
-        let count = self.emojis.list.entry(emoji).or_insert(0);
-        *count += 1;
-    }
-
-    pub fn get_emoji_sorted_by_usage(&self, count: u64) -> EmojiList {
-        let mut emojis: Vec<_> = self.emojis.list.iter().collect();
-
-        // sort the list by the emoji with the most usage
-        emojis.sort_by(|a, b| b.1.cmp(a.1));
-
-        let mut sorted_emojis: EmojiList = HashMap::new();
-        for &(emoji, usage) in emojis.iter().take(count as usize) {
-            sorted_emojis.insert(emoji.clone(), *usage);
-        }
-
-        sorted_emojis
+        self.emojis.increment_emoji(emoji);
     }
 
     pub fn get_meta(&self) -> WindowMeta {
