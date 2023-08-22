@@ -103,7 +103,7 @@ pub fn EditGroup(cx: Scope) -> Element {
         div {
             id: "edit-group",
             aria_label: "edit-group",
-        Topbar {
+            Topbar {
                 with_back_button: false,
                 div {
                     class: "search-input",

@@ -1,4 +1,11 @@
-use crate::{components::user_image::UserImage, elements::label::Label, User};
+use crate::{
+    components::user_image::UserImage,
+    elements::{
+        label::Label,
+        tooltip::{ArrowPosition, Tooltip},
+    },
+    User,
+};
 use dioxus::{events::MouseEvent, prelude::*};
 
 #[derive(Props)]
@@ -8,11 +15,13 @@ pub struct Props<'a> {
     onpress: Option<EventHandler<'a, MouseEvent>>,
     typing: Option<bool>,
     with_username: Option<String>,
+    use_tooltip: Option<bool>,
 }
 
 #[allow(non_snake_case)]
 pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let is_pressable = cx.props.onpress.is_some();
+    let is_using_tooltip = cx.props.use_tooltip.unwrap_or_default();
     // this is "participants.len() - 3" because:
     // UserImageGroup is supposed to render at most 3 participants. the rest are supposed to be added as a "+n" later
     // the values for count has 1 subtracted (self counts as 1)
@@ -20,6 +29,7 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let is_group = cx.props.participants.len() > 1;
 
     let loading = cx.props.loading.unwrap_or_default() || cx.props.participants.is_empty();
+    let tooltip_visible = use_state(cx, || false);
 
     cx.render(rsx! (
         if loading {
@@ -35,6 +45,12 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             rsx! (
                 div {
                     class: "user-image-group",
+                    onmouseenter: move |_| {
+                        tooltip_visible.set(true);
+                    },
+                    onmouseleave: move |_| {
+                        tooltip_visible.set(false);
+                    },
                     div {
                         aria_label: "user-image-group-wrap",
                         class: {
@@ -73,12 +89,26 @@ pub fn UserImageGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             }
                         )
                     },
-                    cx.props.with_username.as_ref().map(|username| rsx!(
-                        Label {
-                            aria_label: username.into(),
-                            text: username.to_string()
-                        }
-                    ))
+                    if !is_using_tooltip {
+                        rsx! (
+                            // If we prefer a tooltip, we can use this instead of the Label
+                            cx.props.with_username.as_ref().map(|username| rsx!(
+                                Label {
+                                    aria_label: username.into(),
+                                    text: username.to_string()
+                                }
+                            ))
+                        )
+                    } else if is_using_tooltip && *tooltip_visible.current() {
+                        rsx! (
+                            cx.props.with_username.as_ref().map(|username| rsx!(
+                                Tooltip {
+                                    arrow_position: ArrowPosition::Left,
+                                    text: username.to_string(),
+                                }
+                            ))
+                        )
+                    } else {  rsx!(span { class: "void" }) }
                 }
             )
         }
