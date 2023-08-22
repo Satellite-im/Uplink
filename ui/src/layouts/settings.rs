@@ -1,24 +1,27 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 
-use crate::components::{
-    chat::RouteInfo,
-    settings::{
-        sidebar::{Page, Sidebar},
-        sub_pages::{
-            about::AboutPage,
-            accessibility::AccessibilitySettings,
-            audio::AudioSettings,
-            developer::DeveloperSettings,
-            extensions::ExtensionSettings,
-            general::GeneralSettings,
-            licenses::Licenses,
-            notifications::NotificationSettings,
-            // files::FilesSettings,
-            // privacy::PrivacySettings,
-            profile::ProfileSettings,
+use crate::{
+    components::{
+        chat::RouteInfo,
+        settings::{
+            sidebar::{Page, Sidebar},
+            sub_pages::{
+                about::AboutPage,
+                accessibility::AccessibilitySettings,
+                audio::AudioSettings,
+                developer::DeveloperSettings,
+                extensions::ExtensionSettings,
+                general::GeneralSettings,
+                licenses::Licenses,
+                notifications::NotificationSettings,
+                // files::FilesSettings,
+                // privacy::PrivacySettings,
+                profile::ProfileSettings,
+            },
         },
     },
+    layouts::slimbar::SlimbarLayout,
 };
 
 use common::state::{ui, Action, State};
@@ -63,6 +66,9 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
+            SlimbarLayout {
+                route_info: cx.props.route_info.clone()
+            },
             Sidebar {
                 route_info: cx.props.route_info.clone(),
                 onpress: move |p| {
@@ -75,7 +81,7 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
             },
             div {
                 class: "full-width flex",
-                (state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden).then(|| rsx!(
+                (state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden).then(|| rsx!(
                     Topbar {
                         with_back_button: true,
                         onback: move |_| {

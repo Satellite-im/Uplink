@@ -38,6 +38,7 @@ pub struct Props<'a> {
     active: Option<Route>,
     #[props(optional)]
     bubble: Option<bool>,
+    pub tooltip_direction: Option<ArrowPosition>,
 }
 
 /// Tells the parent the nav was interacted with.
@@ -103,6 +104,7 @@ pub fn get_active(cx: &Scope<Props>) -> Route {
 pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let active = use_state(cx, || get_active(&cx));
     let bubble = cx.props.bubble.unwrap_or_default();
+    let tooltip_direction = cx.props.tooltip_direction.unwrap_or(ArrowPosition::Bottom);
 
     cx.render(rsx!(
         div {
@@ -120,7 +122,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     cx.render(rsx!(""))
                 } else {
                     cx.render(rsx!(Tooltip {
-                        arrow_position: ArrowPosition::Bottom,
+                        arrow_position: tooltip_direction,
                         text: route.name.clone(),
                     }))
                 };
