@@ -17,6 +17,9 @@
   font-size: var(--text-size-less);
   white-space: nowrap;
   pointer-events: none;
+  &.hidden {
+    display: none;
+  }
 }
 .tooltip-text {
   padding: var(--gap);
