@@ -374,7 +374,7 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             span {
                 rsx!(
                     msg_container_end,
-                    render_message_groups{
+                    render_message_groups {
                         groups: group_messages(data.my_id.did_key(), DEFAULT_NUM_TO_TAKE, data.active_chat.has_more_messages, &data.active_chat.messages),
                         active_chat_id: data.active_chat.id,
                         num_messages_in_conversation: data.active_chat.messages.len(),

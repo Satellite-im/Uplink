@@ -9,7 +9,8 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
+        indicator::Platform, invisible_closer::InvisibleCloser,
+        message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
@@ -208,7 +209,7 @@ pub fn Compose(cx: Scope) -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             Topbar {
-                with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                 onback: move |_| {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
@@ -243,6 +244,11 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
+            InvisibleCloser {
+                onclose: move |_| {
+                    show_edit_group.set(None);
+                }
+            }
             EditGroup {}
         )),
         show_group_users
