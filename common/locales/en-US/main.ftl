@@ -88,6 +88,7 @@ messages = Messages
     .users-typing = { $users } are typing
     .users-multiple-typing = Multiple users are typing
     .maximum-amount-files-per-message = You reached { $amount } files per message limit
+    .missing-emoji-picker = Emoji extension is disabled
     
 favorites = Favorites
     .favorites = Favorites
