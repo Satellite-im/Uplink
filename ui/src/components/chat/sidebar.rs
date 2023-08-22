@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::invisible_closer::InvisibleCloser;
 use kit::components::message::markdown;
 use kit::{
     components::{
@@ -185,14 +186,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, favorites, active_media_chat) = if state.read().initialized {
-        (
-            state.read().chats_sidebar(),
-            state.read().chats_favorites(),
-            state.read().get_active_chat(),
-        )
+    let (sidebar_chats, active_media_chat) = if state.read().initialized {
+        (state.read().chats_sidebar(), state.read().get_active_chat())
     } else {
-        (vec![], vec![], None)
+        (vec![], None)
     };
 
     let show_create_group = use_state(cx, || false);
@@ -289,76 +286,6 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             for node in ext_renders {
                 rsx!(node)
             },
-            // Only display favorites if we have some.
-            (!favorites.is_empty()).then(|| rsx!(
-                div {
-                    id: "favorites",
-                    aria_label: "Favorites",
-                    Label {
-                        text: get_local_text("favorites.favorites"),
-                        aria_label: "favorites-label".into(),
-                    },
-                    div {
-                        class: "horizontally-scrollable",
-                        favorites.iter().cloned().map(|chat| {
-                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
-                            let favorites_chat = chat.clone();
-                            let remove_favorite = chat.clone();
-                            let chat_id = chat.id;
-                            let participants = state.read().chat_participants(&chat);
-                            let other_participants: Vec<_> = state.read().remove_self(&participants);
-                            let participants_name = match chat.conversation_name {
-                                Some(name) => name,
-                                None => State::join_usernames(&other_participants)
-                            };
-                            rsx! (
-                                ContextMenu {
-                                    key: "{chat_id}-favorite",
-                                    id: chat_id.to_string(),
-                                    items: cx.render(rsx!(
-                                        ContextItem {
-                                            aria_label: "favorites-chat".into(),
-                                            icon: Icon::ChatBubbleBottomCenterText,
-                                            text: get_local_text("uplink.chat"),
-                                            onpress: move |_| {
-                                                if state.read().ui.is_minimal_view() {
-                                                    state.write().mutate(Action::SidebarHidden(true));
-                                                }
-                                                state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                                }
-                                            }
-                                        },
-                                        ContextItem {
-                                            aria_label: "favorites-remove".into(),
-                                            icon: Icon::HeartSlash,
-                                            text: get_local_text("favorites.remove"),
-                                            onpress: move |_| {
-                                                state.write().mutate(Action::ToggleFavorite(&remove_favorite.id));
-                                            }
-                                        }
-                                    )),
-                                    UserImageGroup {
-                                        participants: build_participants(&participants),
-                                        with_username: participants_name,
-                                        typing: users_typing,
-                                        onpress: move |_| {
-                                            if state.read().ui.is_minimal_view() {
-                                                state.write().mutate(Action::SidebarHidden(true));
-                                            }
-                                            state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                            }
-                                        }
-                                    }
-                                }
-                            )
-                        })
-                    }
-                }
-            )),
             div {
                 id: "chats",
                 aria_label: "Chats",
@@ -387,6 +314,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     show_create_group.then(|| rsx!(
                         CreateGroup {
                             oncreate: move |_| {
+                                show_create_group.set(false);
+                            }
+                        }
+                        InvisibleCloser {
+                            onclose: move |_| {
                                 show_create_group.set(false);
                             }
                         }
