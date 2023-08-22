@@ -168,25 +168,36 @@
 
 #remote-controls {
     border-top: 1px solid var(--border-subtle-color);
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     gap: var(--gap);
     padding: var(--gap);
     justify-content: space-between;
     background: var(--secondary-dark);
-    margin: 0 var(--gap) var(--gap) var(--gap);
-    border: 1px solid var(--success-light);
-    border-radius: var(--border-radius);
+    border: 2px solid var(--success-light);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
     .call-info {
         color: var(--success-light);
         display: inline-flex;
-        flex-direction: column;
         p {
             font-size: var(--text-size-less);
+        }
+        .call-name {
+            padding: var(--padding-less); 
+            align-self: center; 
+            color: var(--text-color);
+        }
+        .call-time {
+            margin-left: auto; 
+            justify-self: center; 
+            align-self: center;
         }
     }
     .controls {
         display: inline-flex;
         gap: var(--gap);
+        justify-content: center;
     }
 }
 

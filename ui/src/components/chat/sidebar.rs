@@ -261,8 +261,29 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 },
             )),
             with_call_controls: cx.render(rsx!(
-                active_media_chat.is_some().then(|| rsx!(
-                    RemoteControls {
+                active_media_chat.map(|chat| {
+                    let participants = state.read().chat_participants(&chat);
+                    let other_participants =  state.read().remove_self(&participants);
+                    let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
+                    let participants_name = match chat.conversation_name {
+                        Some(name) => name,
+                        None => State::join_usernames(&other_participants)
+                    };
+                    rsx!(RemoteControls {
+                        users: cx.render(rsx!(
+                            if chat.conversation_type == ConversationType::Direct {rsx! (
+                                UserImage {
+                                    platform: user.platform().into(),
+                                    status:  user.identity_status().into(),
+                                    image: user.profile_picture(),
+                                }
+                            )} else {rsx! (
+                                UserImageGroup {
+                                    participants: build_participants(&participants),
+                                }
+                            )}
+                        )),
+                        call_name: participants_name,
                         in_call_text: get_local_text("remote-controls.in-call"),
                         mute_text: get_local_text("remote-controls.mute"),
                         unmute_text: get_local_text("remote-controls.unmute"),
@@ -270,7 +291,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         silence_text: get_local_text("remote-controls.silence"),
                         end_text: get_local_text("remote-controls.end"),
                     }
-                )),
+                )}),
             )),
             search_friends{
                 identities: search_results.clone(),

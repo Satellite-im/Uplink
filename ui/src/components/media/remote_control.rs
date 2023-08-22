@@ -6,7 +6,6 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::elements::{
     button::Button,
-    label::Label,
     tooltip::{ArrowPosition, Tooltip},
     Appearance,
 };
@@ -20,8 +19,10 @@ use common::{
 };
 use uuid::Uuid;
 
-#[derive(Eq, PartialEq, Props)]
-pub struct Props {
+#[derive(Props)]
+pub struct Props<'a> {
+    users: Element<'a>,
+    call_name: String,
     in_call_text: String,
     mute_text: String,
     unmute_text: String,
@@ -37,7 +38,7 @@ enum CallDialogCmd {
 }
 
 #[allow(non_snake_case)]
-pub fn RemoteControls(cx: Scope<Props>) -> Element {
+pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let active_call = state.read().ui.call_info.active_call();
     let active_call_id = active_call.as_ref().map(|x| x.call.id);
@@ -157,10 +158,16 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
         id: "remote-controls",
         div {
             class: "call-info",
-            Label {
+            /*Label {
                 text: cx.props.in_call_text.clone(),
-            },
+            },*/
+            cx.props.users.as_ref()
             p {
+                class: "call-name",
+                "{cx.props.call_name}"
+            }
+            p {
+                class: "call-time",
                 format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
             }
         },
@@ -196,9 +203,15 @@ pub fn RemoteControls(cx: Scope<Props>) -> Element {
             Button {
                 icon: Icon::PhoneXMark,
                 appearance: Appearance::Danger,
-                text: cx.props.end_text.clone(),
                 onpress: move |_| {
                     ch.send(CallDialogCmd::Hangup(call.id));
+                },
+            },
+            Button {
+                icon: Icon::Cog6Tooth,
+                appearance: Appearance::Secondary,
+                onpress: move |_| {
+                    //TODO
                 },
             }
 
