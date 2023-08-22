@@ -42,7 +42,7 @@ impl EmojiCounter {
         // sort the list by the emoji with the most usage
         emojis.sort_by(|a, b| match b.1.cmp(a.1) {
             Ordering::Equal => b.0.cmp(a.0),
-            x @ _ => x,
+            x => x,
         });
 
         let to_take = count.unwrap_or(emojis.len());
