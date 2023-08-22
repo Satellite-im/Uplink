@@ -1,4 +1,6 @@
 #pre-release {
+    padding: 0 var(--gap-less) !important;
+
     cursor: default;
     p {
       color: var(--warning-light);
