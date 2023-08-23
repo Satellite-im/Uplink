@@ -23,12 +23,10 @@ use uuid::Uuid;
 pub struct Props<'a> {
     users: Element<'a>,
     call_name: String,
-    in_call_text: String,
     mute_text: String,
     unmute_text: String,
     listen_text: String,
     silence_text: String,
-    end_text: String,
 }
 
 enum CallDialogCmd {

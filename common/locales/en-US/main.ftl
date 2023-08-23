@@ -308,7 +308,7 @@ remote-controls = Remote Controls
     .listen = Listen
     .silence = Silence 
     .end = End
-    .incoming-call = Incoming Transmission
+    .incoming-call = Incoming Transmission ...
 
 unlock = Unlock
     .description = Enter your pin or password to unlock your account.

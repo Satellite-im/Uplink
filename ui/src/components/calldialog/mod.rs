@@ -1,13 +1,12 @@
 use common::icons::outline::Shape as Icon;
-use common::icons::Icon as IconElement;
 use dioxus::prelude::*;
-use kit::elements::label::Label;
 
 #[derive(Props)]
 pub struct Props<'a> {
     caller: Element<'a>,
-    callee: Element<'a>,
+    icon: Icon,
     description: String,
+    usernames: String,
     #[props(optional)]
     with_accept_btn: Option<Element<'a>>,
     #[props(optional)]
@@ -30,25 +29,34 @@ pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         div {
             class: "call-dialog",
             div {
-                class: "calling",
-                &cx.props.callee,
-                span {
-                    class: "connecting",
-                    IconElement {
-                        icon: Icon::ArrowsRightLeft
-                    }
-                },
-                &cx.props.caller,
-            },
-            div {
                 class: "call-information",
-                Label {
-                    text: "Calling...".into(),
-                },
+                rsx!(
+                    common::icons::Icon {
+                        ..common::icons::IconProps {
+                            class: None,
+                            size: 20,
+                            fill:"currentColor",
+                            icon: cx.props.icon,
+                            disabled: false,
+                            disabled_fill: "#9CA3AF"
+                        },
+                    },
+                )
                 p {
                     "{cx.props.description}",
                 }
             },
+            div {
+                class: "calling",
+                div {
+                    class: "user-group-scale",
+                    &cx.props.caller,
+                }
+            },
+            div {
+                class: "users",
+                "{cx.props.usernames}",
+            }
             div {
                 class: "controls",
                 with_accept_btn,
