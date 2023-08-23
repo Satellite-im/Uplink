@@ -8,7 +8,6 @@ use dioxus::prelude::*;
 
 #[allow(non_snake_case)]
 pub fn ChatLayout(cx: Scope) -> Element {
-    println!("rendering chat");
     let state = use_shared_state::<State>(cx)?;
     let first_render = use_state(cx, || true);
 
