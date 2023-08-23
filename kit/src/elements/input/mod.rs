@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use common::language::get_local_text;
 use dioxus::prelude::*;
 use dioxus_html::input_data::keyboard_types::Code;
@@ -206,7 +208,18 @@ fn validate_alphanumeric(
     }
 
     if !val.chars().all(char::is_alphanumeric) {
-        return Some(get_local_text("warning-messages.only-alpha-chars"));
+        let invalid_chars = val.chars().filter(|x| !char::is_alphanumeric(*x));
+        let mut s: HashSet<char> = HashSet::new();
+        let mut t = String::new();
+        for x in invalid_chars {
+            if s.insert(x) {
+                t.push(x);
+            }
+        }
+        return Some(format!(
+            "{}: {t}",
+            get_local_text("warning-messages.disallowed-characters")
+        ));
     }
 
     None
@@ -350,7 +363,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             to_owned![eval];
             async move {
                 if focus {
-                    eval(&focus_script);
+                    let _ = eval(&focus_script);
                 }
             }
         },
@@ -457,7 +470,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 error.set(validation_result);
                             }
                             // re-focus the input after clearing it
-                            eval(&focus_script);
+                            let _ = eval(&focus_script);
                             emit(&cx, String::new(), *valid.get());
                         },
                         IconElement {

@@ -18,20 +18,10 @@ pub struct Props<'a> {
     children: Option<Element<'a>>,
 }
 
-const SCRIPT: &str = include_str!("./script.js");
-
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
     let hidden = cx.props.hidden.unwrap_or(false);
-    // Run the script after the component is mounted
-    let eval = use_eval(cx);
-    use_effect(cx, (), |_| {
-        to_owned![eval];
-        async move {
-            eval(&SCRIPT);
-        }
-    });
 
     let hamburger = cx.render(rsx!(Button {
         aria_label: "hamburger-button".into(),

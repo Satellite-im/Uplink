@@ -21,6 +21,15 @@
   }
 }
 
+.slimbar {
+  #favorites {
+    display: inline-flex;
+    flex-direction: column;
+    align-content: flex-start;
+    gap: var(--gap);
+  }
+}
+
 .help-button {
   position: fixed;
   right: var(--gap);

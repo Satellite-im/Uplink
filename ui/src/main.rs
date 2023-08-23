@@ -15,7 +15,7 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::{
-    tao::{self, dpi::LogicalSize, event::WindowEvent},
+    tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
 };
 use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};
@@ -52,8 +52,9 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
-use dioxus_desktop::use_wry_event_handler;
+use crate::prism_paths::PrismScripts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
+use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -113,10 +114,11 @@ fn main() {
     bootstrap::create_uplink_dirs();
 
     // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(entry, webview_config::webview_config())
+    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
 }
 
-#[derive(Routable, Clone)]
+#[allow(clippy::enum_variant_names)]
+#[derive(Routable, Clone, Eq, PartialEq)]
 enum UplinkRoute {
     // We want to wrap every router in a layout that renders the content via an outlet
     #[layout(app_layout)]
@@ -136,7 +138,7 @@ enum UplinkRoute {
     FilesLayout {},
 }
 
-fn entry(cx: Scope) -> Element {
+fn app(cx: Scope) -> Element {
     // 1. Make sure the warp engine is turned on before doing anything
     bootstrap::use_warp_runner(cx);
 
@@ -177,6 +179,7 @@ fn app_layout(cx: Scope) -> Element {
             InnerCallDialog {},
             Outlet::<UplinkRoute>{},
             AppLogger {},
+            PrismScripts {},
         },
     }
 }
@@ -346,17 +349,12 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
-
-                //log::trace!(
-                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                //    size,
-                //    size.width < 1200
-                //);
-
                 let metadata = state.read().ui.metadata.clone();
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
-                    ..metadata
+                    focused: desktop.is_focused(),
+                    maximized: desktop.is_maximized(),
+                    minimized: desktop.is_minimized(),
+                    minimal_view: size.width < get_window_minimal_width(&desktop),
                 };
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
@@ -907,7 +905,23 @@ fn InnerCallDialog(cx: Scope) -> Element {
                         }
                     }
                     CallDialogCmd::Reject(id) => {
-                        state.write().ui.call_info.reject_call(id);
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().ui.call_info.reject_call(id);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
                     }
                 }
             }
@@ -984,6 +998,8 @@ fn use_router_notification_listener(cx: &ScopeState) -> Option<()> {
                         navigator.replace(UplinkRoute::ChatLayout {});
                     }
                     NotificationAction::FriendListPending => {
+                        // the FriendsLayout subscribes to these events and sets the layout accordingly.
+                        // in this case, the layout would be FriendRoute::Pending
                         navigator.replace(UplinkRoute::FriendsLayout {});
                     }
                     _ => {}
@@ -1034,4 +1050,83 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     }
 
     Ok(extensions)
+}
+
+fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
+    if cfg!(target_os = "macos") {
+        // On Mac window sizes are kinda funky.
+        // They are scaled with the window scale factor so they dont correspond to app pixels
+        (600_f64 * desktop.webview.window().scale_factor()) as u32
+    } else {
+        600
+    }
+}
+
+#[inline_props]
+fn AppNav<'a>(
+    cx: Scope,
+    active: UplinkRoute,
+    onnavigate: Option<EventHandler<'a, ()>>,
+) -> Element<'a> {
+    use kit::components::nav::Route as UIRoute;
+
+    let state = use_shared_state::<State>(cx)?;
+    let navigator = use_navigator(cx);
+    let pending_friends = state.read().friends().incoming_requests.len();
+
+    let chat_route = UIRoute {
+        to: "/chat",
+        name: get_local_text("uplink.chats"),
+        icon: Icon::ChatBubbleBottomCenterText,
+        ..UIRoute::default()
+    };
+    let settings_route = UIRoute {
+        to: "/settings",
+        name: get_local_text("settings.settings"),
+        icon: Icon::Cog6Tooth,
+        ..UIRoute::default()
+    };
+    let friends_route = UIRoute {
+        to: "/friends",
+        name: get_local_text("friends.friends"),
+        icon: Icon::Users,
+        with_badge: if pending_friends > 0 {
+            Some(pending_friends.to_string())
+        } else {
+            None
+        },
+        loading: None,
+    };
+    let files_route = UIRoute {
+        to: "/files",
+        name: get_local_text("files.files"),
+        icon: Icon::Folder,
+        ..UIRoute::default()
+    };
+    let _routes = vec![chat_route, files_route, friends_route, settings_route];
+
+    render!(kit::components::nav::Nav {
+        routes: _routes,
+        active: match active {
+            UplinkRoute::ChatLayout {} => "/chat",
+            UplinkRoute::SettingsLayout {} => "/settings",
+            UplinkRoute::FriendsLayout {} => "/friends",
+            UplinkRoute::FilesLayout {} => "/files",
+        },
+        onnavigate: move |r| {
+            if let Some(f) = onnavigate {
+                f.call(());
+            }
+
+            let new_layout = match r {
+                "/chat" => UplinkRoute::ChatLayout {},
+                "/settings" => UplinkRoute::SettingsLayout {},
+                "/friends" => UplinkRoute::FriendsLayout {},
+                "/files" => UplinkRoute::FilesLayout {},
+                _ => UplinkRoute::ChatLayout {},
+            };
+
+            navigator.replace(new_layout);
+        },
+    })
 }

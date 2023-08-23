@@ -39,13 +39,10 @@ futures = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 
-mime = { workspace = true }
 tempfile = { workspace = true }
 
 warp = { workspace = true }
-warp-mp-ipfs = { workspace = true }
-warp-rg-ipfs = { workspace = true }
-warp-fs-ipfs = { workspace = true }
+warp-ipfs = { workspace = true }
 warp-blink-wrtc = { workspace = true }
 
 

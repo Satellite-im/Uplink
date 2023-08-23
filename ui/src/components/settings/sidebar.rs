@@ -63,7 +63,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let router = dioxus_router::hooks::use_navigator(cx);
+    let _router = dioxus_router::hooks::use_navigator(cx);
 
     let profile = UIRoute {
         to: "profile",
@@ -168,21 +168,19 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     }
                 }
             )),
-            // with_nav: cx.render(rsx!(
-            //     Nav {
-            //         routes: cx.props.route_info.routes.clone(),
-            //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
-            //         onnavigate: move |route| {
-            //             if state.read().configuration.audiovideo.interface_sounds {
-            //                 sounds::Play(sounds::Sounds::Interaction);
-            //             }
-            //             router.replace(route);
-            //         }
-            //     },
-            // )),
+            with_nav: cx.render(rsx!(
+                crate::AppNav {
+                    active: crate::UplinkRoute::SettingsLayout{},
+                    onnavigate: move |_| {
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            common::sounds::Play(common::sounds::Sounds::Interaction);
+                        }
+                    }
+                }
+            )),
             Nav {
                 routes: routes.clone(),
-                active: active_route,
+                active: active_route.to,
                 bubble: true,
                 onnavigate: move |route| {
                     if state.read().configuration.audiovideo.interface_sounds {

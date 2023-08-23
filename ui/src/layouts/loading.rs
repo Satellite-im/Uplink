@@ -1,11 +1,11 @@
-use crate::utils::unzip_prism_langs;
-use crate::UplinkRoute;
-use common::{get_images_dir, state::State};
+
+
+use common::{state::State};
 use dioxus::prelude::*;
 use dioxus_desktop::wry::application::dpi::LogicalPosition;
 use dioxus_desktop::LogicalSize;
-use dioxus_router::prelude::use_navigator;
-use futures::channel::oneshot;
+
+
 
 pub fn LoadingWash(cx: Scope) -> Element {
     let img_path = cx.use_hook(|| {

@@ -5,7 +5,7 @@ body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
   overflow: hidden;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-app-window);
 }
 #main,
 #app-wrap {
@@ -29,7 +29,7 @@ body {
   background-color: var(--background);
   border-bottom: 1px solid var(--border-subtle-color);
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   user-select: none;
   cursor: pointer;
@@ -78,7 +78,7 @@ body {
   background-color: var(--background);
   position: relative;
   overflow: hidden;
-  // border: 1px solid var(--border-subtle-color);
+  border: 1px solid var(--border-subtle-color);
 }
 
 .search-input,

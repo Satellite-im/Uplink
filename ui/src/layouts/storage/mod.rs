@@ -17,10 +17,7 @@ use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
 use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu},
-        nav::Nav,
-    },
+    components::context_menu::{ContextItem, ContextMenu},
     elements::{
         button::Button,
         file::File,
@@ -41,6 +38,7 @@ pub mod functions;
 use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
+use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 
 use self::controller::{StorageController, UploadFileController};
@@ -84,7 +82,7 @@ pub fn FilesLayout(cx: Scope) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let router = use_navigator(cx);
+    let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
     use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
@@ -170,12 +168,13 @@ pub fn FilesLayout(cx: Scope) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
+            SlimbarLayout { },
             ChatSidebar { },
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
                 Topbar {
-                    with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                    with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                     onback: move |_| {
                         let current = state.read().ui.sidebar_hidden;
                         state.write().mutate(Action::SidebarHidden(!current));
@@ -529,17 +528,12 @@ pub fn FilesLayout(cx: Scope) -> Element {
                             }
                         }),
                     },
-                }
-
-                // (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                //     Nav {
-                //         routes: cx.props.route_info.routes.clone(),
-                //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.files).cloned().unwrap_or_default(),
-                //         onnavigate: move |r| {
-                //             router.replace(r);
-                //         }
-                //     }
-                // ))
+                },
+                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                    crate::AppNav { 
+                        active: crate::UplinkRoute::FilesLayout{},
+                    }
+                ))
             }
         }
     ))

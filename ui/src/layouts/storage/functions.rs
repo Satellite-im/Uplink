@@ -22,7 +22,7 @@ use crate::components::files::upload_progress_bar;
 
 use super::{
     controller::{StorageController, UploadFileController},
-    ChanCmd, Props, MAX_LEN_TO_FORMAT_NAME,
+    ChanCmd, MAX_LEN_TO_FORMAT_NAME,
 };
 
 pub fn run_verifications_and_update_storage(

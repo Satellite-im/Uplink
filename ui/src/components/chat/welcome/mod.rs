@@ -18,39 +18,40 @@ pub fn Welcome(cx: Scope) -> Element {
     let image_path = use_image_path(cx);
 
     cx.render(rsx! {
-            div {
-                id: "welcome",
-                aria_label: "welcome-screen",
-                if state.read().ui.sidebar_hidden {
-                    rsx!(
-                        Topbar {
-                        with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+        div {
+            id: "welcome",
+            aria_label: "welcome-screen",
+            if state.read().ui.sidebar_hidden && state.read().ui.is_minimal_view() {
+                rsx!(
+                    Topbar {
+                        with_back_button: true,
                         onback: move |_| {
                             let current = state.read().ui.sidebar_hidden;
                             state.write().mutate(Action::SidebarHidden(!current));
                         },
-                    },)
-                }
-                img {
-                    class: "image",
-                    aria_label: "welcome-image",
-                    src:"{image_path}"
-                },
-                p {
-                    class: "muted",
-                    "{cta_text}"
-                },
-                Button {
-                    icon: Icon::Plus,
-                    aria_label: "add-friends-button".into(),
-                    text: get_local_text("friends.add"),
-                    appearance: Appearance::Secondary,
-                    onpress: move |_| {
-                        router.replace(UplinkRoute::FriendsLayout {  });
                     }
-                },
+                )
             }
-        })
+            img {
+                class: "image",
+                aria_label: "welcome-image",
+                src:"{image_path}"
+            },
+            p {
+                class: "muted",
+                "{cta_text}"
+            },
+            Button {
+                icon: Icon::Plus,
+                aria_label: "add-friends-button".into(),
+                text: get_local_text("friends.add"),
+                appearance: Appearance::Secondary,
+                onpress: move |_| {
+                    router.replace(UplinkRoute::FriendsLayout {  });
+                }
+            },
+        }
+    })
 }
 
 fn use_image_path(cx: &ScopeState) -> &str {

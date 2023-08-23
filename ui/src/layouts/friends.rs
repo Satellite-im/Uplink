@@ -5,21 +5,22 @@ use common::{
     notifications::{NotificationAction, NOTIFICATION_LISTENER},
 };
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
 use kit::{
-    components::nav::Nav,
     elements::{button::Button, Appearance},
     layout::topbar::Topbar,
 };
 use tokio::sync::broadcast::error::RecvError;
 use warp::logging::tracing::log;
 
-use crate::components::{
-    chat::sidebar::Sidebar as ChatSidebar,
-    friends::{
-        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+use crate::{
+    components::{
+        chat::sidebar::Sidebar as ChatSidebar,
+        friends::{
+            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+        },
     },
+    layouts::slimbar::SlimbarLayout,
 };
 use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
@@ -79,8 +80,8 @@ pub fn FriendsLayout(cx: Scope) -> Element {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
-            ChatSidebar {
-            },
+            SlimbarLayout { },
+            ChatSidebar { },
             div {
                 class: "friends-body",
                 aria_label: "friends-body",
@@ -103,7 +104,6 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = cx.props.route;
-    let navigator = use_navigator(cx).clone();
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {})
@@ -120,13 +120,9 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 render_route(cx, route.get().clone()),
-                // Nav {
-                //     routes: cx.props.route_info.routes.clone(),
-                //     active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.friends).cloned().unwrap_or_default(),
-                //     onnavigate: move |r| {
-                //         navigator.replace(r);
-                //     }
-                // }
+                crate::AppNav {
+                    active: crate::UplinkRoute::FriendsLayout{},
+                }
             }
         )
     };
@@ -151,7 +147,7 @@ fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Elem
     let pending_friends = state.read().friends().incoming_requests.len();
 
     cx.render(rsx!(Topbar {
-        with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+        with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
         onback: move |_| {
             let current = state.read().ui.sidebar_hidden;
             state.write().mutate(Action::SidebarHidden(!current));

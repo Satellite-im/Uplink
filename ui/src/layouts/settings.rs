@@ -1,32 +1,33 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
 
-use crate::components::settings::{
-    sidebar::{Page, Sidebar},
-    sub_pages::{
-        about::AboutPage,
-        accessibility::AccessibilitySettings,
-        audio::AudioSettings,
-        developer::DeveloperSettings,
-        extensions::ExtensionSettings,
-        general::GeneralSettings,
-        licenses::Licenses,
-        notifications::NotificationSettings,
-        // files::FilesSettings,
-        // privacy::PrivacySettings,
-        profile::ProfileSettings,
+use crate::{
+    components::settings::{
+        sidebar::{Page, Sidebar},
+        sub_pages::{
+            about::AboutPage,
+            accessibility::AccessibilitySettings,
+            audio::AudioSettings,
+            developer::DeveloperSettings,
+            extensions::ExtensionSettings,
+            general::GeneralSettings,
+            licenses::Licenses,
+            notifications::NotificationSettings,
+            // files::FilesSettings,
+            // privacy::PrivacySettings,
+            profile::ProfileSettings,
+        },
     },
+    layouts::slimbar::SlimbarLayout,
 };
 
 use common::state::{ui, Action, State};
 
-use kit::{components::nav::Nav, layout::topbar::Topbar};
+use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
-    let router = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
@@ -56,6 +57,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
+            SlimbarLayout { },
             Sidebar {
                 onpress: move |p| {
                     // If on mobile, we should hide the sidebar here.
@@ -67,7 +69,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
             },
             div {
                 class: "full-width flex",
-                (state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden).then(|| rsx!(
+                (state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden).then(|| rsx!(
                     Topbar {
                         with_back_button: true,
                         onback: move |_| {
@@ -81,15 +83,11 @@ pub fn SettingsLayout(cx: Scope) -> Element {
                     class: "full-width",
                     settings_page
                 },
-                // (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                //     Nav {
-                //         routes: cx.props.route_info.routes.clone(),
-                //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
-                //         onnavigate: move |r| {
-                //             router.replace(r);
-                //         }
-                //     }
-                // ))
+                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                    crate::AppNav { 
+                        active: crate::UplinkRoute::SettingsLayout{},
+                    }
+                 ))
             },
         }
     ))

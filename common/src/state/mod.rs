@@ -15,6 +15,7 @@ pub mod utils;
 
 use crate::language::change_language;
 use crate::notifications::NotificationAction;
+use crate::warp_runner::WarpCmdTx;
 // export specific structs which the UI expects. these structs used to be in src/state.rs, before state.rs was turned into the `state` folder
 use crate::{language::get_local_text, warp_runner::ui_adapter};
 pub use action::Action;
@@ -60,6 +61,8 @@ use self::storage::Storage;
 use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
+pub const MAX_PINNED_MESSAGES: usize = 100;
+
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
 // the HashSet would be used to determine when to evict an identity. (they are not participating in any conversations and are not a friend)
@@ -80,6 +83,8 @@ pub struct State {
     identities: HashMap<DID, identity::Identity>,
     #[serde(skip)]
     pub initialized: bool,
+    #[serde(skip)]
+    warp_cmd_tx: Option<WarpCmdTx>,
 }
 
 impl fmt::Debug for State {
@@ -108,6 +113,7 @@ impl Clone for State {
             configuration: self.configuration.clone(),
             identities: HashMap::new(),
             initialized: self.initialized,
+            warp_cmd_tx: None,
         }
     }
 }
@@ -121,6 +127,17 @@ impl State {
     #[deprecated]
     pub fn new() -> Self {
         State::default()
+    }
+
+    // gonna try adding this here to let shared libraries send warp commands.
+    pub fn get_warp_ch(&self) -> WarpCmdTx {
+        self.warp_cmd_tx
+            .clone()
+            .expect("dev needs to call set_warp_ch before get_warp_ch could ever be used")
+    }
+
+    pub fn set_warp_ch(&mut self, ch: WarpCmdTx) {
+        self.warp_cmd_tx.replace(ch);
     }
 
     pub fn mutate(&mut self, action: Action) {
@@ -208,6 +225,8 @@ impl State {
             }
             Action::ClearAllPopoutWindows(window) => self.ui.clear_all_popout_windows(&window),
             Action::TrackEmojiUsage(emoji) => self.ui.track_emoji_usage(emoji),
+            Action::SetEmojiDestination(destination) => self.ui.emoji_destination = destination,
+            Action::SetEmojiPickerVisible(visible) => self.ui.emoji_picker_visible = visible,
             // Themes
             Action::SetTheme(theme) => self.set_theme(theme),
             // Fonts
@@ -233,7 +252,13 @@ impl State {
             }
             Action::SetChatDraft(chat_id, value) => self.set_chat_draft(&chat_id, value),
             Action::ClearChatDraft(chat_id) => self.clear_chat_draft(&chat_id),
-            Action::AddReaction(_, _, _) => todo!(),
+            Action::SetChatAttachments(chat_id, value) => {
+                self.set_chat_attachments(&chat_id, value)
+            }
+            Action::ClearChatAttachments(chat_id) => self.clear_chat_attachments(&chat_id),
+            Action::AddReaction(_, _, emoji) => {
+                self.ui.emojis.increment_emoji(emoji);
+            }
             Action::RemoveReaction(_, _, _) => todo!(),
             Action::MockSend(id, msg) => {
                 let sender = self.did_key();
@@ -260,6 +285,7 @@ impl State {
                     log::error!("failed to answer call: {e}");
                 }
             },
+            Action::RejectCall(id) => self.ui.call_info.reject_call(id),
             Action::OfferCall(call) => {
                 let _ = self.ui.call_info.pending_call(
                     call.id,
@@ -467,7 +493,14 @@ impl State {
                         .iter_mut()
                         .find(|msg| msg.inner.id() == message.inner.id())
                     {
-                        *msg = message;
+                        *msg = message.clone();
+                    }
+                    if let Some(msg) = chat
+                        .pinned_messages
+                        .iter_mut()
+                        .find(|m| m.id() == message.inner.id())
+                    {
+                        *msg = message.inner;
                     }
                 }
             }
@@ -494,6 +527,7 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    chat.pinned_messages.retain(|msg| msg.id() != message_id);
                 }
 
                 if should_decrement_notifications {
@@ -503,11 +537,17 @@ impl State {
                     ));
                 }
             }
+            MessageEvent::MessagePinned { message } => {
+                self.pin_message(message);
+            }
+            MessageEvent::MessageUnpinned { message } => {
+                self.unpin_message(message);
+            }
             MessageEvent::MessageReactionAdded { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::MessageReactionRemoved { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -575,6 +615,9 @@ impl State {
                     log::error!("failed to process IncomingCall event: {e}");
                 }
             }
+            BlinkEventKind::CallCancelled { call_id } => {
+                self.ui.call_info.remove_pending_call(call_id);
+            }
             BlinkEventKind::ParticipantJoined { call_id, peer_id } => {
                 if let Err(e) = self.ui.call_info.participant_joined(call_id, peer_id) {
                     log::error!("failed to process ParticipantJoined event : {e}");
@@ -599,6 +642,11 @@ impl State {
             BlinkEventKind::AudioDegradation { peer_id } => {
                 // todo
                 log::info!("audio degradation for peer {}", peer_id);
+            }
+            BlinkEventKind::AudioOutputDeviceNoLongerAvailable
+            | BlinkEventKind::AudioInputDeviceNoLongerAvailable => {
+                // todo: notify user
+                log::info!("audio I/O device no longer available");
             }
         }
     }
@@ -709,6 +757,7 @@ impl State {
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
                 conv.creator = chat.creator;
+                conv.pinned_messages = chat.pinned_messages;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -851,6 +900,12 @@ impl State {
         }
     }
 
+    fn clear_chat_attachments(&mut self, chat_id: &Uuid) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send.clear();
+        }
+    }
+
     /// Clear unreads  within a given chat on `State` struct.
     ///
     /// # Arguments
@@ -898,16 +953,29 @@ impl State {
             .cloned()
     }
     // assumes the messages are sorted by most recent to oldest
-    pub fn prepend_messages_to_chat(
+    pub fn update_chat_messages(
         &mut self,
         conversation_id: Uuid,
-        mut messages: Vec<ui_adapter::Message>,
+        messages: Vec<ui_adapter::Message>,
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conversation_id) {
-            for message in messages.drain(..) {
-                chat.messages.push_front(message.clone());
-            }
+            chat.messages = messages.into();
         }
+    }
+
+    /// Enqueues a message scroll action that gets executed when message component updates
+    pub fn enqueue_message_scroll(&mut self, conversation_id: &Uuid, message_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            chat.scroll_to = Some(message_id);
+        }
+    }
+
+    /// Obtains a potential message to scroll to resetting the value in the process
+    pub fn check_message_scroll(&mut self, conversation_id: &Uuid) -> Option<Uuid> {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            return chat.scroll_to.take();
+        }
+        None
     }
 
     /// Check if given chat is favorite on `State` struct.
@@ -919,7 +987,75 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
+    pub fn reached_max_pinned(&self, chat: &Uuid) -> bool {
+        let conv = match self.chats.all.get(chat) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return true;
+            }
+        };
+        conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
+    }
+
+    pub fn message_exist(&self, message: &warp::raygun::Message) -> bool {
+        let conv = match self.chats.all.get(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return false;
+            }
+        };
+        conv.messages.iter().any(|m| m.inner.id() == message.id())
+    }
+
+    fn pin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.push(message);
+        conv.pinned_messages
+            .sort_by_key(|r| std::cmp::Reverse(r.date()));
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(true);
+        }
+    }
+
+    fn unpin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.retain(|x| x.id() != message_id);
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(false);
+        }
+    }
+
+    // this is used for adding/removing reactions.
+    // if pinned messages ever need to display a reaction, additional code may be needed here.
+    pub fn update_reactions(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -928,10 +1064,11 @@ impl State {
             }
         };
         let message_id = message.id();
-        for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
-                continue;
-            }
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
             let mut reactions: Vec<Reaction> = Vec::new();
             for mut reaction in message.reactions() {
                 let users_not_duplicated: HashSet<DID> =
@@ -940,11 +1077,10 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            msg.inner = message;
-            return;
+            msg.inner = message.clone();
+        } else {
+            log::warn!("attempted to update a message which wasn't found");
         }
-
-        log::warn!("attempted to update a message which wasn't found");
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -1028,6 +1164,12 @@ impl State {
     ) {
         if let Some(chat) = self.chats.all.get_mut(&conv_id) {
             chat.remove_pending_msg(msg, attachments, uuid);
+        }
+    }
+
+    fn set_chat_attachments(&mut self, chat_id: &Uuid, value: Vec<PathBuf>) {
+        if let Some(c) = self.chats.all.get_mut(chat_id) {
+            c.files_attached_to_send = value;
         }
     }
 
@@ -1330,6 +1472,7 @@ impl State {
                     un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
                 }
             })
+            .filter(|id| id.did_key() != self.did_key())
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
             .collect()
     }
@@ -1350,7 +1493,7 @@ impl State {
             if v.len() < name_prefix.len() {
                 false
             } else {
-                &v[..(name_prefix.len())] == name_prefix
+                v[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
             }
         };
 
@@ -1520,23 +1663,21 @@ impl<'a> GroupedMessage<'a> {
 
 pub fn group_messages<'a>(
     my_did: DID,
-    num: usize,
     when_to_fetch_more: usize,
+    // true if the chat has more messages to fetch
+    has_more: bool,
     input: &'a VecDeque<ui_adapter::Message>,
 ) -> Vec<MessageGroup<'a>> {
     let mut messages: Vec<MessageGroup<'a>> = vec![];
-    let to_skip = input.len().saturating_sub(num);
-    // the most recent message appears last in the list.
-    let iter = input.iter().skip(to_skip);
     let mut need_to_fetch_more = when_to_fetch_more;
 
     let mut need_more = || {
         let r = need_to_fetch_more > 0;
         need_to_fetch_more = need_to_fetch_more.saturating_sub(1);
-        r
+        r && has_more
     };
 
-    for msg in iter {
+    for msg in input.iter() {
         if let Some(group) = messages.iter_mut().last() {
             if group.sender == msg.inner.sender() {
                 let g = GroupedMessage {

@@ -9,6 +9,7 @@ pub mod user_image_group;
 
 pub mod slide_selector;
 
+pub mod invisible_closer;
 pub mod message;
 pub mod message_divider;
 pub mod message_group;

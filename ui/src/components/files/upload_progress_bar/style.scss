@@ -3,7 +3,7 @@
   height: 90px;
   width: 100%,;
   align-items: center;
-  background: var(--text-color-dark);
+  background: var(--background-dark);
 
   .upload-file-count {
     color: var(--text-color-muted);
@@ -16,7 +16,7 @@
     padding-bottom: 8px;
     width: 100%,;
     flex-direction: column;
-    background: var(--text-color-dark);
+    background: var(--background-dark);
 
     .progress-percentage-description-container {
         padding-top: 12px;

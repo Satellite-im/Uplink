@@ -3,12 +3,12 @@
 ---
 
 ## Background
-- The Uplink repository consists of two `Cargo` projects: `kit` (a library) and `ui` (the executable).  
+- The Uplink repository consists of two `Cargo` projects: `kit` (a library) and `uplink` (the executable).  
 - Uplink relies on [Warp](https://github.com/Satellite-im/Warp) and [Dioxus](https://github.com/DioxusLabs/dioxus). It is assumed the reader is familiar with the [Dioxus Documentation](https://dioxuslabs.com/guide/). 
 - At a high level, Warp is used to send messages (it does much more) while Uplink is just the UI. Sending and receiving messages is asynchronous, and Uplink has a separate module to handle this: `warp_runner`. All the data for the Uplink UI is contained in a `State` struct. Changing the `State` struct drives the UI. When `warp_runner` handles an event from `Warp`, `State` is modified and the entire UI is re-rendered.   
 
 ## Running the Application
-- `ui --help`
+- `uplink --help`
 - specify a custom folder for `.uplink` with `--path`. `Warp` data is stored in `.uplink/.warp`. The UI is saved in `.uplink/state.json`. It doesn't contain much data - just `Uuid`s of conversations which should go in the sidebar, and other UI specific things which can't be loaded by `Warp`. 
 - use different logger profile using subcommand. `debug` and `trace` are common choices. 
 
@@ -17,7 +17,7 @@
     + `elements`: correspond to HTML elements such as `input`, `button`, etc
     + `components`: are made up of elements, adding additional features
     + `layout`: are made up of components and elements. 
-- the `ui` project contains `components` and `layout` modules, which have the same meaning as in `kit`, with the following exception: modules in `ui` can modify `State`. 
+- the `uplink` project contains `components` and `layout` modules, which have the same meaning as in `kit`, with the following exception: modules in `uplink` can modify `State`. 
 - use `logger::trace` to track when elements render
 - get a hook for `State` via `use_shared_state`. no need to pass it in Props. 
 
@@ -25,7 +25,7 @@
 - in `main.rs` there is a call to `dioxus_desktop::launch_cfg`. It is passed a `bootstrap` element, which is rendered first. 
 - Uplink needs to start `warp_runner` from within a `Tokio` runtime. That runtime isn't available until `dioxus_desktop::launch_cfg` is called. We don't want to restart `warp_runner` when the UI updates, so the `bootstrap` Element is used to ensure this only happens once. 
 - next `auth_page_manager` is rendered. `Warp` requires a user account. Until an account is created, the user data can't be decrypted and loaded. `auth_page_manager` uses the `auth_wrapper` element to handle user authentication and account creation. when doe, `app_bootstrap` is rendered. 
-- The uplink UI is driven by the global `State` variable. It is initialized via `use_shared_state_provider`. We don't want this variable to be re-loaded every time the app updates, so `app_bootstrap` is used to initialize state. 
+- The Uplink UI is driven by the global `State` variable. It is initialized via `use_shared_state_provider`. We don't want this variable to be re-loaded every time the app updates, so `app_bootstrap` is used to initialize state. 
 - finally `app` is rendered. All the global channels are polled here, each with their own `use_future`. 
     + conversations are loaded from warp and added to `State`
     + friends are loaded from warp and added to `State`
@@ -35,7 +35,6 @@
 ## Global Variables
 - Uplink uses global variables to do some important things. They are all in `main.rs`. 
 - `STATIC_ARGS` is for constant variables which may be affected by command line options
-- `UPLINK_ROUTES` is for use with Dioxus Router. 
 - the rest of the variables are channels. 
 
 ## Global Channels
