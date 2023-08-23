@@ -57,7 +57,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
-            SlimbarLayout { },
+            SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
             Sidebar {
                 onpress: move |p| {
                     // If on mobile, we should hide the sidebar here.
@@ -84,7 +84,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
                     settings_page
                 },
                  (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                    crate::AppNav { 
+                    crate::AppNav {
                         active: crate::UplinkRoute::SettingsLayout{},
                     }
                  ))

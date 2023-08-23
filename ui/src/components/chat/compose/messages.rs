@@ -154,7 +154,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 None => return,
             };
             if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
-                let _ = eval(&include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()));
+                let _ = eval(
+                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
+                );
             }
         }
     });

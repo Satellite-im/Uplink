@@ -27,6 +27,7 @@ use kit::components::topbar_controls::Topbar_Controls;
 use kit::components::user_image::UserImage;
 use kit::components::user_image_group::UserImageGroup;
 use kit::elements::button::Button;
+use kit::elements::tooltip::ArrowPosition;
 use kit::elements::Appearance;
 use kit::layout::modal::Modal;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -119,7 +120,7 @@ fn main() {
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Routable, Clone, Eq, PartialEq)]
-enum UplinkRoute {
+pub enum UplinkRoute {
     // We want to wrap every router in a layout that renders the content via an outlet
     #[layout(app_layout)]
     //
@@ -350,6 +351,7 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 }
                 let size = webview.inner_size();
                 let metadata = state.read().ui.metadata.clone();
+                log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
@@ -1067,6 +1069,7 @@ fn AppNav<'a>(
     cx: Scope,
     active: UplinkRoute,
     onnavigate: Option<EventHandler<'a, ()>>,
+    tooltip_direction: Option<ArrowPosition>,
 ) -> Element<'a> {
     use kit::components::nav::Route as UIRoute;
 
@@ -1128,5 +1131,6 @@ fn AppNav<'a>(
 
             navigator.replace(new_layout);
         },
+        tooltip_direction: tooltip_direction.unwrap_or(ArrowPosition::Bottom),
     })
 }

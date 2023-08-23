@@ -23,8 +23,6 @@ pub(crate) fn webview_config() -> Config {
             true
         });
 
-    
-
     if cfg!(target_os = "windows") && STATIC_ARGS.production_mode {
         let webview_data_dir = STATIC_ARGS.dot_uplink.join("tmp");
         std::fs::create_dir_all(&webview_data_dir).expect("error creating webview data directory");

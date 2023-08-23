@@ -4,7 +4,7 @@ use dioxus::{
     events::{MouseData, MouseEvent},
     prelude::*,
 };
-use dioxus_desktop::{use_window};
+use dioxus_desktop::use_window;
 use warp::crypto::DID;
 
 use crate::components::indicator::Indicator;

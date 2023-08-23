@@ -190,7 +190,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                 }
             )),
             with_nav: cx.render(rsx!(
-                crate::AppNav { 
+                crate::AppNav {
                     active: UplinkRoute::ChatLayout{},
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
@@ -199,7 +199,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         if state.read().ui.is_minimal_view() {
                             state.write().mutate(Action::SidebarHidden(true));
                         }
-                    } 
+                    }
                 }
             )),
             with_call_controls: cx.render(rsx!(

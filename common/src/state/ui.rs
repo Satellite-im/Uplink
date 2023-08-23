@@ -296,19 +296,19 @@ impl UI {
 
     pub fn remove_overlay(&mut self, id: WindowId) {
         self.overlays.retain(|x| match Weak::upgrade(x) {
-                None => false,
-                Some(window) => {
-                    if window.id() == id {
-                        window
-                            .webview
-                            .evaluate_script("close()")
-                            .expect("failed to close webview");
-                        false
-                    } else {
-                        true
-                    }
+            None => false,
+            Some(window) => {
+                if window.id() == id {
+                    window
+                        .webview
+                        .evaluate_script("close()")
+                        .expect("failed to close webview");
+                    false
+                } else {
+                    true
                 }
-            });
+            }
+        });
     }
 
     fn take_call_popout_id(&mut self) -> Option<WindowId> {

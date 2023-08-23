@@ -1,11 +1,7 @@
-
-
-use common::{state::State};
+use common::state::State;
 use dioxus::prelude::*;
 use dioxus_desktop::wry::application::dpi::LogicalPosition;
 use dioxus_desktop::LogicalSize;
-
-
 
 pub fn LoadingWash(cx: Scope) -> Element {
     let img_path = cx.use_hook(|| {

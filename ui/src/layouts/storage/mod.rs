@@ -168,7 +168,7 @@ pub fn FilesLayout(cx: Scope) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            SlimbarLayout { },
+            SlimbarLayout { active: crate::UplinkRoute::FilesLayout{} },
             ChatSidebar { },
             div {
                 class: "files-body disable-select",
@@ -530,7 +530,7 @@ pub fn FilesLayout(cx: Scope) -> Element {
                     },
                 },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                    crate::AppNav { 
+                    crate::AppNav {
                         active: crate::UplinkRoute::FilesLayout{},
                     }
                 ))

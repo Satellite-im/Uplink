@@ -80,7 +80,7 @@ pub fn FriendsLayout(cx: Scope) -> Element {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
-            SlimbarLayout { },
+            SlimbarLayout { active: crate::UplinkRoute::FriendsLayout{} },
             ChatSidebar { },
             div {
                 class: "friends-body",

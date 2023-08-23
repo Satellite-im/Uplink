@@ -15,8 +15,13 @@ use kit::{
     layout::slimbar::Slimbar,
 };
 
+#[derive(PartialEq, Props)]
+pub struct Props {
+    pub active: UplinkRoute,
+}
+
 #[allow(non_snake_case)]
-pub fn SlimbarLayout(cx: Scope) -> Element {
+pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let router = use_navigator(cx);
 
@@ -97,22 +102,19 @@ pub fn SlimbarLayout(cx: Scope) -> Element {
             )),
             navbar_visible: state.read().ui.sidebar_hidden,
             with_nav: cx.render(rsx!(
-               ""
-                // todo: uncomment this
-                // Nav {
-                //     routes: cx.props.route_info.routes.clone(),
-                //     active: cx.props.route_info.active.clone(),
-                //     tooltip_direction: ArrowPosition::Left,
-                //     onnavigate: move |r| {
-                //         if state.read().configuration.audiovideo.interface_sounds {
-                //             common::sounds::Play(common::sounds::Sounds::Interaction);
-                //         }
-                //         if state.read().ui.is_minimal_view() {
-                //             state.write().mutate(Action::SidebarHidden(true));
-                //         }
-                //         router.replace_route(r, None, None);
-                //     }
-                // },
+                crate::AppNav {
+                    active: cx.props.active.clone(),
+                    // todo: add tooltip_direction to AppNav
+                    //tooltip_direction: ArrowPosition::Left,
+                    onnavigate: move |_| {
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            common::sounds::Play(common::sounds::Sounds::Interaction);
+                        }
+                        if state.read().ui.is_minimal_view() {
+                            state.write().mutate(Action::SidebarHidden(true));
+                        }
+                    },
+                },
             )),
         }
     ))
