@@ -8,12 +8,15 @@ use kit::{
 };
 use warp::logging::tracing::log;
 
-use crate::components::{
-    chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
-    friends::{
-        add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
-        incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+use crate::{
+    components::{
+        chat::{sidebar::Sidebar as ChatSidebar, RouteInfo},
+        friends::{
+            add::AddFriend, blocked::BlockedUsers, friends_list::Friends,
+            incoming_requests::PendingFriends, outgoing_requests::OutgoingRequests,
+        },
     },
+    layouts::slimbar::SlimbarLayout,
 };
 use common::icons::outline::Shape as Icon;
 use common::state::{ui, Action, State};
@@ -52,6 +55,9 @@ pub fn FriendsLayout(cx: Scope<Props>) -> Element {
             id: "friends-layout",
             aria_label: "friends-layout",
             class: "disable-select",
+            SlimbarLayout {
+                route_info: cx.props.route_info.clone()
+            },
             ChatSidebar {
                 route_info: cx.props.route_info.clone()
             },
@@ -127,7 +133,7 @@ fn get_topbar<'a, T>(cx: Scope<'a, T>, route: &'a UseState<FriendRoute>) -> Elem
     let pending_friends = state.read().friends().incoming_requests.len();
 
     cx.render(rsx!(Topbar {
-        with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+        with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
         onback: move |_| {
             let current = state.read().ui.sidebar_hidden;
             state.write().mutate(Action::SidebarHidden(!current));

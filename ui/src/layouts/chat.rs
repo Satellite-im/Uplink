@@ -1,9 +1,12 @@
-use dioxus::prelude::*;
-
-use crate::components::chat::{
-    compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
+use crate::{
+    components::chat::{
+        compose::Compose, sidebar::Sidebar as ChatSidebar, welcome::Welcome, RouteInfo,
+    },
+    layouts::slimbar::SlimbarLayout,
 };
+
 use common::state::{ui, Action, State};
+use dioxus::prelude::*;
 
 #[derive(PartialEq, Props)]
 pub struct Props {
@@ -30,6 +33,9 @@ pub fn ChatLayout(cx: Scope<Props>) -> Element {
         div {
             id: "chat-layout",
             aria_label: "chat-layout",
+            SlimbarLayout {
+                route_info: cx.props.route_info.clone()
+            },
             // todo: consider showing a welcome screen if the sidebar is to be shown but there are no conversations in the sidebar. this case arises when
             // creating a new account on a mobile device.
             ChatSidebar {

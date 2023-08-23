@@ -9,7 +9,8 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
+        indicator::Platform, invisible_closer::InvisibleCloser,
+        message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
@@ -21,7 +22,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::chat::create_group::get_input_options;
+use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -208,7 +209,7 @@ pub fn Compose(cx: Scope) -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             Topbar {
-                with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                 onback: move |_| {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
@@ -243,6 +244,11 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
+            InvisibleCloser {
+                onclose: move |_| {
+                    show_edit_group.set(None);
+                }
+            }
             EditGroup {}
         )),
         show_group_users
@@ -495,6 +501,25 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
+        div {
+            position: "relative",
+            match state.read().get_active_chat() {
+                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
+                None => cx.render(rsx!(())),
+            },
+            div {
+                id: "pin-button",
+                Button {
+                    icon: Icon::Pin,
+                    aria_label: "pin-label".into(),
+                    appearance: Appearance::Secondary,
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::TopRight,
+                        text: get_local_text("messages.pin-view"),
+                    })),
+                }
+            }
+        }
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,

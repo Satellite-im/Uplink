@@ -8,6 +8,7 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  padding-right: var(--gap);
   label {
     align-self: center;
   }
@@ -23,7 +24,6 @@
   .sidebar-chats-header {
     display: inline-flex;
     justify-content: space-between;
-    margin-right: 8px;
 
     .btn {
       height: var(--height-input-less);
@@ -69,18 +69,24 @@
 
 #create-group {
   color: var(--text-color);
-  border-top: 1px solid var(--border-subtle-color);
-  border-bottom: 1px solid var(--border-subtle-color);
-  padding-bottom: var(--padding);
   display: inline-flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: var(--gap-less);
+  position: absolute;
+  background-color: var(--background);
+  z-index: 2;
+  width: fit-content;
+  height: calc(var(--width-sidebar) * 1.3);
+  border-radius: var(--border-radius);
+  padding: var(--gap);
+  border: 1px solid var(--border-subtle-color);
+  right: calc(var(--width-sidebar) * -1);
 
   .friend-list {
     display: inline-flex;
     flex-direction: column;
     gap: 0;
-    max-height: 20vh;
+    min-height: 0;
     overflow: scroll;
     .friend-group {
       display: inline-flex;
@@ -107,7 +113,12 @@
   display: inline-flex;
   flex-direction: column;
   gap: var(--gap);
+  z-index: 2;
   overflow: hidden;
+  width: calc(var(--width-sidebar) * 1.5);
+  align-self: flex-end;
+  border: 1px solid var(--border-subtle-color);
+  border-radius: var(--border-radius);
 
   .friend-list {
     display: inline-flex;
@@ -142,10 +153,10 @@
   justify-content: center;
   align-items: stretch;
   margin-right: 8px;
+  z-index: 2;
 }
 
 .create-group-name {
-  margin-top: 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -194,6 +205,7 @@
 }
 
 .sidebar {
+  position: relative;
   .searchbar-dropdown {
     position: absolute;
     display: inline-flex;
@@ -290,6 +302,7 @@
     .msg-wrapper {
       display: flex;
       flex-direction: column;
+      position: relative;
     }
   }
 
@@ -329,14 +342,6 @@
   line-clamp: 1;
   -webkit-box-orient: vertical;
   word-wrap: anywhere;
-}
-
-#favorites {
-  display: inline-flex;
-  flex-direction: column;
-  align-content: flex-start;
-  gap: var(--gap);
-  padding: 0 var(--gap);
 }
 
 .user-info {

@@ -132,6 +132,10 @@ pre code {
   border-radius: none;
 }
 
+.void {
+  display: none;
+}
+
 
 .fs-10 {
   font-size: 0.1rem;
@@ -221,12 +225,9 @@ pre code {
   --border-radius-less: 2px;
   --border-radius-more: 20px;
   --border-radius-app-window: 10px;
-
-  --border-color: #141414;
-  --border-subtle-color: #212529;
-
   --border-color: #fff;
-  --border-subtle-color: #0f0f0f;
+  --border-subtle-color: #141414;
+  
   --text-color: #f8f9fa;
   --text-color-muted: #dee2e6;
   --text-color-dark: #343a40;
