@@ -46,7 +46,7 @@ pub(crate) fn use_boostrap<'a>(
             focused: desktop.is_focused(),
             maximized: desktop.is_maximized(),
             minimized: desktop.is_minimized(),
-            minimal_view: size.width < get_window_minimal_width(&desktop),
+            minimal_view: size.width < get_window_minimal_width(desktop),
         };
         state.ui.metadata = window_meta;
         state.set_warp_ch(WARP_CMD_CH.tx.clone());

@@ -117,6 +117,7 @@ fn main() {
     dioxus_desktop::launch_cfg(app, webview_config::webview_config())
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Routable, Clone, Eq, PartialEq)]
 enum UplinkRoute {
     // We want to wrap every router in a layout that renders the content via an outlet
@@ -1055,7 +1056,7 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     if cfg!(target_os = "macos") {
         // On Mac window sizes are kinda funky.
         // They are scaled with the window scale factor so they dont correspond to app pixels
-        (600 as f64 * desktop.webview.window().scale_factor()) as u32
+        (600_f64 * desktop.webview.window().scale_factor()) as u32
     } else {
         600
     }
@@ -1102,12 +1103,7 @@ fn AppNav<'a>(
         icon: Icon::Folder,
         ..UIRoute::default()
     };
-    let _routes = vec![
-        chat_route.clone(),
-        files_route.clone(),
-        friends_route.clone(),
-        settings_route.clone(),
-    ];
+    let _routes = vec![chat_route, files_route, friends_route, settings_route];
 
     render!(kit::components::nav::Nav {
         routes: _routes,
