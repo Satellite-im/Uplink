@@ -4,7 +4,7 @@ use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
-    collections::{hash_map, HashMap, HashSet},
+    collections::{hash_map, HashMap},
     rc::Weak,
 };
 use uuid::Uuid;
@@ -191,28 +191,32 @@ impl Default for UI {
 #[derive(Default, Deserialize, Serialize)]
 pub struct Extensions {
     #[serde(default)]
-    enabled: HashSet<String>,
+    enabled: HashMap<String, bool>,
     #[serde(skip)]
     map: HashMap<String, UplinkExtension>,
 }
 
 impl Extensions {
     pub fn enable(&mut self, name: String) {
-        self.enabled.insert(name.clone());
         if let Some(ext) = self.map.get_mut(&name) {
+            self.enabled.insert(name, true);
             ext.set_enabled(true)
         }
     }
 
     pub fn disable(&mut self, name: String) {
-        self.enabled.remove(&name);
         if let Some(ext) = self.map.get_mut(&name) {
+            self.enabled.insert(name, false);
             ext.set_enabled(false)
         }
     }
 
     pub fn insert(&mut self, name: String, mut extension: UplinkExtension) {
-        extension.set_enabled(self.enabled.contains(&name));
+        if let Some(enabled) = self.enabled.get(&name) {
+            extension.set_enabled(*enabled);
+        } else {
+            self.enabled.insert(name.clone(), extension.enabled());
+        }
         self.map.insert(name, extension);
     }
 
@@ -220,9 +224,13 @@ impl Extensions {
         self.map.values()
     }
 
+    pub fn ext(&self) -> hash_map::Keys<String, UplinkExtension> {
+        self.map.keys()
+    }
+
     pub fn enabled_extension(&self, extension: &str) -> bool {
-        match self.map.get(extension) {
-            Some(ext) => ext.enabled(),
+        match self.enabled.get(extension) {
+            Some(enabled) => *enabled,
             None => false,
         }
     }
