@@ -6,15 +6,19 @@ mod message_event;
 mod multipass_event;
 mod raygun_event;
 
+use chrono::{DateTime, Utc};
 pub use message_event::{convert_message_event, MessageEvent};
 pub use multipass_event::{convert_multipass_event, MultiPassEvent};
 pub use raygun_event::{convert_raygun_event, RayGunEvent};
 use uuid::Uuid;
 
-use crate::state::{self, chats};
+use crate::state::{self, chats, MAX_PINNED_MESSAGES};
 use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    ops::Range,
+};
 use warp::{
     constellation::file::File,
     crypto::DID,
@@ -154,19 +158,21 @@ pub async fn dids_to_identity(
 pub async fn fetch_messages_from_chat(
     conv_id: Uuid,
     messaging: &mut super::Messaging,
-    to_skip: usize,
     to_take: usize,
-) -> Result<Vec<Message>, Error> {
-    let total = to_take + to_skip;
-    let max_messages = messaging.get_message_count(conv_id).await?;
-    let to_skip = std::cmp::min(to_skip, max_messages);
-    let total = std::cmp::min(total, max_messages);
+) -> Result<(Vec<Message>, bool), Error> {
+    let total_messages = messaging.get_message_count(conv_id).await?;
+    let to_take = std::cmp::min(total_messages, to_take);
+    let to_skip = total_messages.saturating_sub(to_take + 1);
+
     let messages = messaging
-        .get_messages(conv_id, MessageOptions::default().set_range(to_skip..total))
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
-    let messages = FuturesOrdered::from_iter(
+    let messages: Vec<_> = FuturesOrdered::from_iter(
         messages
             .iter()
             .map(|message| convert_raygun_message(messaging, message).boxed()),
@@ -174,6 +180,64 @@ pub async fn fetch_messages_from_chat(
     .collect()
     .await;
 
+    let has_more = to_skip > 0;
+    // log::debug!(
+    //     "fetched messages. total: {}, num taken: {}, has_more: {}",
+    //     total_messages,
+    //     to_take,
+    //     has_more
+    // );
+    Ok((messages, has_more))
+}
+
+pub async fn fetch_messages_between(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+    date_range: Range<DateTime<Utc>>,
+) -> Result<(Vec<Message>, bool), Error> {
+    let total_messages = messaging.get_message_count(conv_id).await?;
+
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default().set_date_range(date_range),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
+    let has_more = messages.len() < total_messages;
+    Ok((messages, has_more))
+}
+
+pub async fn fetch_pinned_messages_from_chat(
+    conv_id: Uuid,
+    messaging: &mut super::Messaging,
+) -> Result<Vec<Message>, Error> {
+    let messages = messaging
+        .get_messages(
+            conv_id,
+            MessageOptions::default()
+                .set_reverse()
+                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_pinned(),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let messages: Vec<_> = FuturesOrdered::from_iter(
+        messages
+            .iter()
+            .map(|message| convert_raygun_message(messaging, message).boxed()),
+    )
+    .collect()
+    .await;
     Ok(messages)
 }
 
@@ -182,10 +246,15 @@ pub async fn conversation_to_chat(
     messaging: &super::Messaging,
 ) -> Result<chats::Chat, Error> {
     // todo: warp doesn't support paging yet. it also doesn't check the range bounds
-    let unreads = messaging.get_message_count(conv.id()).await?;
-    let to_take = std::cmp::min(unreads, 20);
+    let total_messages = messaging.get_message_count(conv.id()).await?;
+    let to_take = std::cmp::min(total_messages, 20);
+    let to_skip = total_messages.saturating_sub(to_take + 1);
+
     let messages = messaging
-        .get_messages(conv.id(), MessageOptions::default().set_range(0..to_take))
+        .get_messages(
+            conv.id(),
+            MessageOptions::default().set_range(to_skip..total_messages),
+        )
         .await
         .and_then(Vec::<_>::try_from)?;
 
@@ -197,7 +266,19 @@ pub async fn conversation_to_chat(
     .collect()
     .await;
 
-    let has_more_messages = unreads > to_take;
+    // todo: perhaps add pagination, but do this separately from the pagination for the chats page
+    let pinned_messages = messaging
+        .get_messages(
+            conv.id(),
+            MessageOptions::default()
+                .set_reverse()
+                .set_limit(MAX_PINNED_MESSAGES as i64)
+                .set_pinned(),
+        )
+        .await
+        .and_then(Vec::<_>::try_from)?;
+
+    let has_more_messages = total_messages > to_take;
     Ok(chats::Chat {
         id: conv.id(),
         conversation_type: conv.conversation_type(),
@@ -205,12 +286,15 @@ pub async fn conversation_to_chat(
         participants: HashSet::from_iter(conv.recipients()),
         creator: conv.creator(),
         messages,
-        unreads: unreads as u32,
+        unreads: total_messages as u32,
         replying_to: None,
         typing_indicator: HashMap::new(),
         draft: None,
         has_more_messages,
         pending_outgoing_messages: vec![],
+        files_attached_to_send: vec![],
+        pinned_messages,
+        scroll_to: None,
     })
 }
 

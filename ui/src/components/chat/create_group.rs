@@ -276,6 +276,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             div {
                 class: "flex-1",
                 p {
+                    class: "friend-name",
                     aria_label: "friend-name",
                     onclick: move |_| {
                         update_fn();
@@ -322,6 +323,7 @@ pub fn get_input_options() -> Options {
         // Enable validation for the input field with the specified options
         with_validation: Some(group_name_validation_options),
         clear_on_submit: false,
+        clear_validation_on_submit: true,
         // Use the default options for the remaining fields
         ..Options::default()
     }

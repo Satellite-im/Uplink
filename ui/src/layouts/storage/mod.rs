@@ -17,9 +17,7 @@ use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
 use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu},
-    },
+    components::context_menu::{ContextItem, ContextMenu},
     elements::{
         button::Button,
         file::File,
@@ -40,6 +38,7 @@ pub mod functions;
 use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
+use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 
 use self::controller::{StorageController, UploadFileController};
@@ -169,12 +168,13 @@ pub fn FilesLayout(cx: Scope) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
+            SlimbarLayout { },
             ChatSidebar { },
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
                 Topbar {
-                    with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                    with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                     onback: move |_| {
                         let current = state.read().ui.sidebar_hidden;
                         state.write().mutate(Action::SidebarHidden(!current));

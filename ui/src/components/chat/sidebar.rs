@@ -6,6 +6,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
+use kit::components::invisible_closer::InvisibleCloser;
 use kit::components::message::markdown;
 use kit::{
     components::{
@@ -104,13 +105,14 @@ pub fn Sidebar(cx: Scope) -> Element {
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
+        router.replace(UplinkRoute::ChatLayout {  });
     }
 
     let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
         conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
-    let select_entry = move |id: identity_search_result::Identifier| match id {
+    let select_identifier = move |id: identity_search_result::Identifier| match id {
         identity_search_result::Identifier::Did(did) => {
             if let Some(c) = state.read().get_chat_with_friend(did.clone()) {
                 chat_with.set(Some(c.id));
@@ -128,14 +130,10 @@ pub fn Sidebar(cx: Scope) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, favorites, active_media_chat) = if state.read().initialized {
-        (
-            state.read().chats_sidebar(),
-            state.read().chats_favorites(),
-            state.read().get_active_chat(),
-        )
+    let (sidebar_chats, active_media_chat) = if state.read().initialized {
+        (state.read().chats_sidebar(), state.read().get_active_chat())
     } else {
-        (vec![], vec![], None)
+        (vec![], None)
     };
 
     let show_create_group = use_state(cx, || false);
@@ -170,7 +168,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         onreturn: move |(v, _, _): (String, _, _)| {
                             if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_entry(entry.id.clone());
+                                    select_identifier(entry.id.clone());
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -191,6 +189,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                     }
                 }
             )),
+            // todo: uncomment this
             // with_nav: cx.render(rsx!(
             //     Nav {
             //         routes: cx.props.route_info.routes.clone(),
@@ -221,8 +220,8 @@ pub fn Sidebar(cx: Scope) -> Element {
             search_friends {
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |entry| {
-                    select_entry(entry);
+                onclick: move |identifier: identity_search_result::Identifier| {
+                    select_identifier(identifier);
                     search_results.set(Vec::new());
                     reset_searchbar.set(true);
                     on_search_dropdown_hover.with_mut(|i| *i = false);
@@ -232,72 +231,6 @@ pub fn Sidebar(cx: Scope) -> Element {
             for node in ext_renders {
                 rsx!(node)
             },
-            // Only display favorites if we have some.
-            (!favorites.is_empty()).then(|| rsx!(
-                div {
-                    id: "favorites",
-                    aria_label: "Favorites",
-                    Label {
-                        text: get_local_text("favorites.favorites"),
-                        aria_label: "favorites-label".into(),
-                    },
-                    div {
-                        class: "horizontally-scrollable",
-                        favorites.iter().cloned().map(|chat| {
-                            let users_typing = chat.typing_indicator.iter().any(|(k, _)| *k != state.read().did_key());
-                            let favorites_chat = chat.clone();
-                            let remove_favorite = chat.clone();
-                            let chat_id = chat.id;
-                            let participants = state.read().chat_participants(&chat);
-                            let other_participants: Vec<_> = state.read().remove_self(&participants);
-                            let participants_name = match chat.conversation_name {
-                                Some(name) => name,
-                                None => State::join_usernames(&other_participants)
-                            };
-                            rsx! (
-                                ContextMenu {
-                                    key: "{chat_id}-favorite",
-                                    id: chat_id.to_string(),
-                                    items: cx.render(rsx!(
-                                        ContextItem {
-                                            aria_label: "favorites-chat".into(),
-                                            icon: Icon::ChatBubbleBottomCenterText,
-                                            text: get_local_text("uplink.chat"),
-                                            onpress: move |_| {
-                                                if state.read().ui.is_minimal_view() {
-                                                    state.write().mutate(Action::SidebarHidden(true));
-                                                }
-                                                state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                router.replace(UplinkRoute::ChatLayout {  });
-                                            }
-                                        },
-                                        ContextItem {
-                                            aria_label: "favorites-remove".into(),
-                                            icon: Icon::HeartSlash,
-                                            text: get_local_text("favorites.remove"),
-                                            onpress: move |_| {
-                                                state.write().mutate(Action::ToggleFavorite(&remove_favorite.id));
-                                            }
-                                        }
-                                    )),
-                                    UserImageGroup {
-                                        participants: build_participants(&other_participants),
-                                        with_username: participants_name,
-                                        typing: users_typing,
-                                        onpress: move |_| {
-                                            if state.read().ui.is_minimal_view() {
-                                                state.write().mutate(Action::SidebarHidden(true));
-                                            }
-                                            state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            router.replace(UplinkRoute::ChatLayout {  });
-                                        }
-                                    }
-                                }
-                            )
-                        })
-                    }
-                }
-            )),
             div {
                 id: "chats",
                 aria_label: "Chats",
@@ -326,6 +259,11 @@ pub fn Sidebar(cx: Scope) -> Element {
                     show_create_group.then(|| rsx!(
                         CreateGroup {
                             oncreate: move |_| {
+                                show_create_group.set(false);
+                            }
+                        }
+                        InvisibleCloser {
+                            onclose: move |_| {
                                 show_create_group.set(false);
                             }
                         }
@@ -449,6 +387,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                                 with_badge: badge,
                                 onpress: move |_| {
                                     state.write().mutate(Action::ChatWith(&chat_with.id, false));
+
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }

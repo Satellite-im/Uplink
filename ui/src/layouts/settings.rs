@@ -1,26 +1,29 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 
-use crate::components::settings::{
-    sidebar::{Page, Sidebar},
-    sub_pages::{
-        about::AboutPage,
-        accessibility::AccessibilitySettings,
-        audio::AudioSettings,
-        developer::DeveloperSettings,
-        extensions::ExtensionSettings,
-        general::GeneralSettings,
-        licenses::Licenses,
-        notifications::NotificationSettings,
-        // files::FilesSettings,
-        // privacy::PrivacySettings,
-        profile::ProfileSettings,
+use crate::{
+    components::settings::{
+        sidebar::{Page, Sidebar},
+        sub_pages::{
+            about::AboutPage,
+            accessibility::AccessibilitySettings,
+            audio::AudioSettings,
+            developer::DeveloperSettings,
+            extensions::ExtensionSettings,
+            general::GeneralSettings,
+            licenses::Licenses,
+            notifications::NotificationSettings,
+            // files::FilesSettings,
+            // privacy::PrivacySettings,
+            profile::ProfileSettings,
+        },
     },
+    layouts::slimbar::SlimbarLayout,
 };
 
 use common::state::{ui, Action, State};
 
-use kit::{layout::topbar::Topbar};
+use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope) -> Element {
@@ -56,6 +59,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
+            SlimbarLayout { },
             Sidebar {
                 onpress: move |p| {
                     // If on mobile, we should hide the sidebar here.
@@ -67,7 +71,7 @@ pub fn SettingsLayout(cx: Scope) -> Element {
             },
             div {
                 class: "full-width flex",
-                (state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden).then(|| rsx!(
+                (state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden).then(|| rsx!(
                     Topbar {
                         with_back_button: true,
                         onback: move |_| {

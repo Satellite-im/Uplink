@@ -134,7 +134,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to_owned![eval];
         async move {
             let script = include_str!("./context.js").replace("UUID", &id);
-            eval(&script);
+            let _ = eval(&script);
         }
     });
 

@@ -9,21 +9,25 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
+        indicator::Platform, invisible_closer::InvisibleCloser,
+        message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
         button::Button,
+        input::{Input, Options},
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
     layout::topbar::Topbar,
 };
 
+use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
+
 use common::{
     icons::outline::Shape as Icon,
     state::call,
-    warp_runner::{BlinkCmd, WarpCmd},
+    warp_runner::{BlinkCmd, RayGunCmd, WarpCmd},
 };
 use common::{
     state::{ui, Action, Chat, Identity, State},
@@ -66,6 +70,22 @@ pub const SELECT_CHAT_BAR: &str = r#"
     chatBar.focus()
 "#;
 
+pub const OVERLAY_SCRIPT: &str = r#"
+    var chatLayout = document.getElementById('compose')
+
+    var IS_DRAGGING = $IS_DRAGGING
+
+    var overlayElement = document.getElementById('overlay-element')
+
+    if (IS_DRAGGING) {
+    chatLayout.classList.add('hover-effect')
+    overlayElement.style.display = 'block'
+    } else {
+    chatLayout.classList.remove('hover-effect')
+    overlayElement.style.display = 'none'
+    }
+"#;
+
 pub struct ComposeData {
     active_chat: Chat,
     my_id: Identity,
@@ -88,10 +108,11 @@ impl PartialEq for ComposeData {
 pub struct ComposeProps {
     #[props(!optional)]
     data: Option<Rc<ComposeData>>,
-    upload_files: UseState<Vec<PathBuf>>,
     show_edit_group: UseState<Option<Uuid>>,
     show_group_users: UseState<Option<Uuid>>,
     ignore_focus: bool,
+    is_owner: bool,
+    is_edit_group: bool,
 }
 
 #[allow(non_snake_case)]
@@ -106,9 +127,6 @@ pub fn Compose(cx: Scope) -> Element {
         .unwrap_or(Uuid::nil());
     let drag_event: &UseRef<Option<FileDropEvent>> = use_ref(cx, || None);
     let window = use_window(cx);
-    let overlay_script = include_str!("../overlay.js");
-
-    let files_to_upload = use_state(cx, Vec::new);
 
     state.write_silent().ui.current_layout = ui::Layout::Compose;
     if state.read().chats().active_chat_has_unreads() {
@@ -117,22 +135,26 @@ pub fn Compose(cx: Scope) -> Element {
 
     #[cfg(target_os = "windows")]
     use_future(cx, (), |_| {
-        to_owned![files_to_upload, overlay_script, window, drag_event];
+        to_owned![state, window, drag_event];
         async move {
             // ondragover function from div does not work on windows
             loop {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
                 if let FileDropEvent::Hovered { .. } = get_drag_event::get_drag_event() {
-                    let new_files =
-                        drag_and_drop_function(&window, &drag_event, overlay_script.clone()).await;
-                    let mut new_files_to_upload: Vec<_> = files_to_upload
-                        .current()
+                    let new_files = drag_and_drop_function(&window, &drag_event).await;
+                    let mut new_files_to_upload: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .and_then(|f| Some(f.files_attached_to_send))
+                        .unwrap_or_default()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
-                    files_to_upload.set(new_files_to_upload);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                 }
             }
         }
@@ -141,27 +163,37 @@ pub fn Compose(cx: Scope) -> Element {
     let show_group_users: &UseState<Option<Uuid>> = use_state(cx, || None);
 
     let should_ignore_focus = state.read().ui.ignore_focus;
-    let is_group = data
-        .as_ref()
-        .map(|data| data.active_chat.conversation_type)
-        .unwrap_or(ConversationType::Direct)
-        == ConversationType::Group;
+
+    let active_chat = data.as_ref().map(|x| &x.active_chat);
+    let creator = if let Some(chat) = active_chat.as_ref() {
+        chat.creator.clone()
+    } else {
+        None
+    };
+
+    let user_did: DID = state.read().did_key();
+    let is_owner = if let Some(creator_did) = creator {
+        creator_did == user_did
+    } else {
+        false
+    };
+
+    let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
     let upload_files = move |_| {
         if drag_event.with(|i| i.clone()).is_none() {
             cx.spawn({
-                to_owned![files_to_upload, drag_event, window, overlay_script];
+                to_owned![drag_event, window, state];
                 async move {
-                    let new_files =
-                        drag_and_drop_function(&window, &drag_event, overlay_script).await;
-                    let mut new_files_to_upload: Vec<_> = files_to_upload
-                        .current()
+                   let new_files = drag_and_drop_function(&window, &drag_event).await;
+                    let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
                         .iter()
                         .filter(|file_name| !new_files.contains(file_name))
                         .cloned()
                         .collect();
                     new_files_to_upload.extend(new_files);
-                    files_to_upload.set(new_files_to_upload);
+                    state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
                 }
             });
         }
@@ -179,33 +211,26 @@ pub fn Compose(cx: Scope) -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             Topbar {
-                with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                 onback: move |_| {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
-                },
-                onclick: move |_| {
-                    // If this is a group chat, we want to show the group overlay. TODO: If not group chat, show profile in future ticket
-                    if show_group_users.is_none() && is_group {
-                        show_group_users.set(Some(chat_id));
-                        show_edit_group.set(None);
-                    } else {
-                        show_group_users.set(None);
-                    }
                 },
                 controls: cx.render(rsx!(get_controls{
                     data: data2.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
-                    upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
+                    is_owner: is_owner,
+                    is_edit_group: is_edit_group,
                 })),
                 get_topbar_children {
                     data: data.clone(),
                     show_edit_group: show_edit_group.clone(),
                     show_group_users: show_group_users.clone(),
-                    upload_files: files_to_upload.clone(),
                     ignore_focus: should_ignore_focus,
+                    is_owner: is_owner,
+                    is_edit_group: is_edit_group,
                 }
             },
             // may need this later when video calling is possible.
@@ -221,42 +246,37 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
-            EditGroup {
-                onedit: move |_| {
+            InvisibleCloser {
+                onclose: move |_| {
                     show_edit_group.set(None);
                 }
             }
+            EditGroup {}
         )),
         show_group_users
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
                 GroupUsers {
-                    active_chat: state.read().get_active_chat()
+                    active_chat: state.read().get_active_chat(),
                 }
         )),
-        (show_edit_group
-                .map_or(true, |group_chat_id| group_chat_id != chat_id)
-            &&
-        show_group_users
-                .map_or(true, |group_chat_id| group_chat_id != chat_id)
-            ).then(|| rsx!(
-            match data.as_ref() {
-                None => rsx!(
-                    div {
-                        id: "messages",
-                        MessageGroupSkeletal {},
-                        MessageGroupSkeletal { alt: true }
-                    }
-                ),
-                Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
-            },
-            chatbar::get_chatbar {
-                data: data.clone(),
-                show_edit_group: show_edit_group.clone(),
-                show_group_users: show_group_users.clone(),
-                upload_files: files_to_upload.clone(),
-                ignore_focus: should_ignore_focus,
-            }
-        )),
+        match data.as_ref() {
+            None => rsx!(
+                div {
+                    id: "messages",
+                    MessageGroupSkeletal {},
+                    MessageGroupSkeletal { alt: true }
+                }
+            ),
+            Some(_data) =>  rsx!(messages::get_messages{data: _data.clone()}),
+        },
+        chatbar::get_chatbar {
+            data: data.clone(),
+            show_edit_group: show_edit_group.clone(),
+            show_group_users: show_group_users.clone(),
+            ignore_focus: should_ignore_focus,
+            is_owner: is_owner,
+            is_edit_group: is_edit_group,
+        }
     }
     ))
 }
@@ -320,6 +340,10 @@ enum ControlsCmd {
     },
 }
 
+enum EditGroupCmd {
+    UpdateGroupName((Uuid, String)),
+}
+
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let data = &cx.props.data;
@@ -328,10 +352,10 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         .as_ref()
         .map(|d: &Rc<ComposeData>| d.is_favorite)
         .unwrap_or_default();
-    let (conversation_type, creator) = if let Some(chat) = active_chat.as_ref() {
-        (chat.conversation_type, chat.creator.clone())
+    let conversation_type = if let Some(chat) = active_chat.as_ref() {
+        chat.conversation_type
     } else {
-        (ConversationType::Direct, None)
+        ConversationType::Direct
     };
     let edit_group_activated = cx
         .props
@@ -339,12 +363,12 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
         .get()
         .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
         .unwrap_or(false);
-    let user_did: DID = state.read().did_key();
-    let is_creator = if let Some(creator_did) = creator {
-        creator_did == user_did
-    } else {
-        false
-    };
+    let show_group_list = cx
+        .props
+        .show_group_users
+        .get()
+        .map(|group_chat_id| active_chat.map_or(false, |chat| group_chat_id == chat.id))
+        .unwrap_or(false);
 
     let call_pending = use_state(cx, || false);
     let active_call = state.read().ui.call_info.active_call();
@@ -398,10 +422,9 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
     });
 
     cx.render(rsx!(
-        if conversation_type == ConversationType::Group {
+        if cx.props.is_owner && conversation_type == ConversationType::Group {
             rsx!(Button {
                 icon: Icon::PencilSquare,
-                disabled: !is_creator,
                 aria_label: "edit-group".into(),
                 appearance: if edit_group_activated {
                     Appearance::Primary
@@ -410,25 +433,44 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 },
                 tooltip: cx.render(rsx!(Tooltip {
                     arrow_position: ArrowPosition::Top,
-                    text: if is_creator {
-                        get_local_text("friends.edit-group")
-                    } else {
-                        get_local_text("friends.not-creator")
-                    }
+                    text: get_local_text("friends.edit-group")
                 })),
                 onpress: move |_| {
-                    if is_creator {
-                        if edit_group_activated {
-                            cx.props.show_edit_group.set(None);
-                        } else if let Some(chat) = active_chat.as_ref() {
-                            cx.props.show_edit_group.set(Some(chat.id));
-                            cx.props.show_group_users.set(None);
-
-                        }
+                    if edit_group_activated {
+                        cx.props.show_edit_group.set(None);
+                    } else if let Some(chat) = active_chat.as_ref() {
+                        cx.props.show_edit_group.set(Some(chat.id));
+                        cx.props.show_group_users.set(None);
                     }
-
                 }
             })
+        }
+        if !cx.props.is_owner && conversation_type == ConversationType::Group {
+            rsx!(
+                Button {
+                    icon: Icon::ListBullet,
+                    aria_label: "edit-group".into(),
+                    appearance: if show_group_list {
+                        Appearance::Primary
+                    } else {
+                        Appearance::Secondary
+                    },
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::Top,
+                        text: get_local_text("friends.view-group")
+                    })),
+                    onpress: move |_| {
+                            if show_group_list {
+                                cx.props.show_group_users.set(None);
+                            } else if let Some(chat) = active_chat.as_ref() {
+                                cx.props.show_group_users.set(Some(chat.id));
+                                cx.props.show_edit_group.set(None);
+
+                            }
+
+                    }
+                }
+            )
         }
         Button {
             icon: if favorite {
@@ -461,6 +503,25 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
+        div {
+            position: "relative",
+            match state.read().get_active_chat() {
+                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
+                None => cx.render(rsx!(())),
+            },
+            div {
+                id: "pin-button",
+                Button {
+                    icon: Icon::Pin,
+                    aria_label: "pin-label".into(),
+                    appearance: Appearance::Secondary,
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::TopRight,
+                        text: get_local_text("messages.pin-view"),
+                    })),
+                }
+            }
+        }
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
@@ -495,7 +556,6 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
 
 fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
     let data = cx.props.data.clone();
-
     let data = match data {
         Some(d) => d,
         None => {
@@ -537,6 +597,34 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         get_local_text("uplink.members"),
         all_participants.len()
     );
+
+    let conv_id = data.active_chat.id;
+
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(cmd) = rx.next().await {
+            match cmd {
+                EditGroupCmd::UpdateGroupName((conv_id, new_conversation_name)) => {
+                    let (tx, rx) = oneshot::channel();
+                    if let Err(e) =
+                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
+                            conv_id,
+                            new_conversation_name,
+                            rsp: tx,
+                        }))
+                    {
+                        log::error!("failed to send warp command: {}", e);
+                        continue;
+                    }
+                    let res = rx.await.expect("command canceled");
+                    if let Err(e) = res {
+                        log::error!("failed to update group conversation name: {}", e);
+                    }
+                }
+            }
+        }
+    });
+
     cx.render(rsx!(
         if direct_message {rsx! (
             UserImage {
@@ -554,22 +642,48 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
         div {
             class: "user-info",
             aria_label: "user-info",
-            p {
-                class: "username",
-                "{conversation_title}"
-            },
-            p {
-                class: "status",
-                if direct_message {
-                    rsx! (span {
-                        "{subtext}"
-                    })
-                } else {
-                    rsx! (
-                        span {"{members_count}"}
-                    )
+            if cx.props.is_edit_group {rsx! (
+                div {
+                    id: "edit-group-name",
+                    class: "edit-group-name",
+                    Input {
+                            placeholder:  get_local_text("messages.group-name"),
+                            default_text: conversation_title.clone(),
+                            aria_label: "groupname-input".into(),
+                            options: Options {
+                                with_clear_btn: true,
+                                ..get_input_options()
+                            },
+                            onreturn: move |(v, is_valid, _): (String, bool, _)| {
+                                if !is_valid {
+                                    return;
+                                }
+                                if v != conversation_title.clone() {
+                                    ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
+                                }
+                            },
+                        },
+                })
+            } else {rsx!(
+                p {
+                    aria_label: "user-info-username",
+                    class: "username",
+                    "{conversation_title}"
+                },
+                p {
+                    aria_label: "user-info-status",
+                    class: "status",
+                    if direct_message {
+                        rsx! (span {
+                            "{subtext}"
+                        })
+                    } else {
+                        rsx! (
+                            span {"{members_count}"}
+                        )
+                    }
                 }
-            }
+            )}
         }
     ))
 }
@@ -578,7 +692,6 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 async fn drag_and_drop_function(
     window: &DesktopContext,
     drag_event: &UseRef<Option<FileDropEvent>>,
-    overlay_script: String,
 ) -> Vec<PathBuf> {
     *drag_event.write_silent() = Some(get_drag_event::get_drag_event());
     let mut new_files_to_upload = Vec::new();
@@ -587,7 +700,7 @@ async fn drag_and_drop_function(
         match file_drop_event {
             FileDropEvent::Hovered { paths, .. } => {
                 if verify_if_are_valid_paths(&paths) {
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "true");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "true");
                     if paths.len() > 1 {
                         script.push_str(&FEEDBACK_TEXT_SCRIPT.replace(
                             "$TEXT",
@@ -614,7 +727,7 @@ async fn drag_and_drop_function(
                 if verify_if_are_valid_paths(&paths) {
                     *drag_event.write_silent() = None;
                     new_files_to_upload = decoded_pathbufs(paths);
-                    let mut script = overlay_script.replace("$IS_DRAGGING", "false");
+                    let mut script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
@@ -624,7 +737,7 @@ async fn drag_and_drop_function(
             }
             _ => {
                 *drag_event.write_silent() = None;
-                let script = overlay_script.replace("$IS_DRAGGING", "false");
+                let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
                 _ = window.webview.evaluate_script(&script);
                 break;
             }

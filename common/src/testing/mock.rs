@@ -113,6 +113,14 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         });
     }
 
+    let pinned_messages: Vec<_> = messages
+        .iter()
+        .filter(|m| m.inner.pinned())
+        .cloned()
+        .map(|m| m.inner)
+        .rev()
+        .collect();
+
     Chat {
         id: conversation,
         participants: HashSet::from_iter(participants.iter().map(|x| x.did_key())),
@@ -129,6 +137,9 @@ fn generate_fake_chat(participants: Vec<Identity>, conversation: Uuid) -> Chat {
         draft: None,
         has_more_messages: false,
         pending_outgoing_messages: vec![],
+        files_attached_to_send: Vec::new(),
+        pinned_messages,
+        scroll_to: None,
     }
 }
 

@@ -52,8 +52,9 @@ use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::{use_loaded_assets, LoadingWash};
 use crate::layouts::settings::SettingsLayout;
 use crate::layouts::storage::FilesLayout;
-use dioxus_desktop::use_wry_event_handler;
+use crate::prism_paths::PrismScripts;
 use dioxus_desktop::wry::application::event::Event as WryEvent;
+use dioxus_desktop::{use_wry_event_handler, DesktopService};
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{sleep, Duration};
 use warp::logging::tracing::log::{self, LevelFilter};
@@ -113,7 +114,7 @@ fn main() {
     bootstrap::create_uplink_dirs();
 
     // 5. Finally, launch the app
-    dioxus_desktop::launch_cfg(entry, webview_config::webview_config())
+    dioxus_desktop::launch_cfg(app, webview_config::webview_config())
 }
 
 #[derive(Routable, Clone)]
@@ -136,7 +137,7 @@ enum UplinkRoute {
     FilesLayout {},
 }
 
-fn entry(cx: Scope) -> Element {
+fn app(cx: Scope) -> Element {
     // 1. Make sure the warp engine is turned on before doing anything
     bootstrap::use_warp_runner(cx);
 
@@ -177,6 +178,7 @@ fn app_layout(cx: Scope) -> Element {
             InnerCallDialog {},
             Outlet::<UplinkRoute>{},
             AppLogger {},
+            PrismScripts {},
         },
     }
 }
@@ -346,17 +348,13 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                     *first_resize.write_silent() = false;
                 }
                 let size = webview.inner_size();
-
-                //log::trace!(
-                //    "Resized - PhysicalSize: {:?}, Minimal: {:?}",
-                //    size,
-                //    size.width < 1200
-                //);
-
                 let metadata = state.read().ui.metadata.clone();
+                log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
-                    minimal_view: size.width < 600,
-                    ..metadata
+                    focused: desktop.is_focused(),
+                    maximized: desktop.is_maximized(),
+                    minimized: desktop.is_minimized(),
+                    minimal_view: size.width < get_window_minimal_width(&desktop),
                 };
                 if metadata != new_metadata {
                     state.write().ui.sidebar_hidden = new_metadata.minimal_view;
@@ -907,7 +905,23 @@ fn InnerCallDialog(cx: Scope) -> Element {
                         }
                     }
                     CallDialogCmd::Reject(id) => {
-                        state.write().ui.call_info.reject_call(id);
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().ui.call_info.reject_call(id);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
                     }
                 }
             }
@@ -984,6 +998,8 @@ fn use_router_notification_listener(cx: &ScopeState) -> Option<()> {
                         navigator.replace(UplinkRoute::ChatLayout {});
                     }
                     NotificationAction::FriendListPending => {
+                        // the FriendsLayout subscribes to these events and sets the layout accordingly.
+                        // in this case, the layout would be FriendRoute::Pending
                         navigator.replace(UplinkRoute::FriendsLayout {});
                     }
                     _ => {}
@@ -1034,4 +1050,14 @@ fn get_extensions() -> Result<HashMap<String, UplinkExtension>, Box<dyn std::err
     }
 
     Ok(extensions)
+}
+
+fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
+    if cfg!(target_os = "macos") {
+        // On Mac window sizes are kinda funky.
+        // They are scaled with the window scale factor so they dont correspond to app pixels
+        (600 as f64 * desktop.webview.window().scale_factor()) as u32
+    } else {
+        600
+    }
 }

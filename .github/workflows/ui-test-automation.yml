@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Checkout Repo 🔖
         uses: actions/checkout@v3
@@ -86,8 +86,17 @@ jobs:
           components: rustfmt, clippy
 
       - name: Build executable 🖥️
-        run: cargo build --release --package uplink -F production_mode
+        run: cargo build --release -F production_mode
         continue-on-error: true
+
+      - name: Copy Extensions 🗳️
+        run: |
+          mkdir ./ui/extra/extensions
+          cp -r ./target/release/emoji_selector.d ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll.exp ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.dll.lib ./ui/extra/extensions/
+          cp -r ./target/release/emoji_selector.pdb ./ui/extra/extensions/
 
       - name: Upload Executable ⬆️
         uses: actions/upload-artifact@v3
@@ -96,6 +105,16 @@ jobs:
           if-no-files-found: error
           path: |
             target/release/uplink.exe
+
+      - name: Upload Windows Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: |
+            ui/extra/images/
+            ui/extra/prism_langs/
+            ui/extra/themes/
+            ui/extra/extensions/
 
       - name: Add label if any of build or test jobs failed
         if: failure()
@@ -108,7 +127,7 @@ jobs:
 
   test-mac:
     needs: build-mac
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout working directory 🔖
@@ -232,10 +251,27 @@ jobs:
           name: Uplink-Windows
           path: ./appium-tests/apps
 
+      - name: Download the Windows app assets
+        uses: actions/download-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: ./appium-tests/apps
+
       - name: Copy app to have two instances 💿
         working-directory: ./appium-tests/apps
         run: |
           cp -r ./uplink.exe ./uplink2.exe
+
+      - name: Move Windows assets to correct locations 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          mkdir ./bin/extra
+          mkdir ./extra
+          mv ./uplink.exe ./bin/
+          mv ./uplink2.exe ./bin/
+          mv ./images/ ./bin/extra/
+          mv ./prism_langs/ ./bin/extra/
+          mv ./themes/ ./extra/
 
       - name: Setup Node.js 🔨
         uses: actions/setup-node@v3
@@ -330,6 +366,22 @@ jobs:
         with:
           name: Uplink-Windows
           path: ./appium-tests/apps
+
+      - name: Download the Windows app assets
+        uses: actions/download-artifact@v3
+        with:
+          name: uplink-windows-assets
+          path: ./appium-tests/apps
+
+      - name: Move Windows assets to correct locations 💿
+        working-directory: ./appium-tests/apps
+        run: |
+          mkdir ./bin/extra
+          mkdir ./extra
+          mv ./uplink.exe ./bin/
+          mv ./images/ ./bin/extra/
+          mv ./prism_langs/ ./bin/extra/
+          mv ./themes/ ./extra/
 
       - name: Install and Run Appium Server 💻
         run: |
@@ -506,8 +558,9 @@ jobs:
         uses: geekyeggo/delete-artifact@v2
         with:
           name: |
-            Uplink-windows-latest
-            Uplink-macos-latest
+            Uplink-Windows
+            uplink-windows-assets
+            app-macos
             test-report-macos-ci
             test-report-windows-ci
             test-report-windows-chats
