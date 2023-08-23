@@ -29,7 +29,7 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     use_effect(cx, (), |_| {
         to_owned![eval];
         async move {
-            eval(&SCRIPT);
+            eval(SCRIPT);
         }
     });
 

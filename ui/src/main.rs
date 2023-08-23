@@ -15,7 +15,7 @@ use common::{get_extras_dir, warp_runner, LogProfile, STATIC_ARGS, WARP_CMD_CH, 
 use components::calldialog::CallDialog;
 use dioxus::prelude::*;
 use dioxus_desktop::{
-    tao::{self, dpi::LogicalSize, event::WindowEvent},
+    tao::{dpi::LogicalSize, event::WindowEvent},
     use_window,
 };
 use dioxus_router::prelude::{use_navigator, Outlet, Routable, Router};

@@ -7,7 +7,6 @@ use common::{
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use kit::{
-    components::nav::Nav,
     elements::{button::Button, Appearance},
     layout::topbar::Topbar,
 };
@@ -103,7 +102,7 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = cx.props.route;
-    let navigator = use_navigator(cx).clone();
+    let _navigator = use_navigator(cx).clone();
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {})

@@ -11,7 +11,6 @@ use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
         indicator::{Platform, Status},
-        nav::Nav,
         user::User,
         user_image::UserImage,
         user_image_group::UserImageGroup,

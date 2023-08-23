@@ -20,13 +20,13 @@ use crate::components::settings::{
 
 use common::state::{ui, Action, State};
 
-use kit::{components::nav::Nav, layout::topbar::Topbar};
+use kit::{layout::topbar::Topbar};
 
 #[allow(non_snake_case)]
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
-    let router = use_navigator(cx);
+    let _router = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 

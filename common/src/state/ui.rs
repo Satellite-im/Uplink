@@ -249,10 +249,7 @@ impl UI {
     }
 
     pub fn remove_overlay(&mut self, id: WindowId) {
-        self.overlays = self
-            .overlays
-            .iter()
-            .filter(|x| match Weak::upgrade(x) {
+        self.overlays.retain(|x| match Weak::upgrade(x) {
                 None => false,
                 Some(window) => {
                     if window.id() == id {
@@ -265,9 +262,7 @@ impl UI {
                         true
                     }
                 }
-            })
-            .cloned()
-            .collect();
+            });
     }
 
     fn take_call_popout_id(&mut self) -> Option<WindowId> {

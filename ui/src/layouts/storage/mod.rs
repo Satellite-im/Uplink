@@ -19,7 +19,6 @@ use dioxus_router::prelude::use_navigator;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        nav::Nav,
     },
     elements::{
         button::Button,
@@ -84,7 +83,7 @@ pub fn FilesLayout(cx: Scope) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let router = use_navigator(cx);
+    let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
     use_allow_block_folder_nav(cx, &files_in_queue_to_upload);

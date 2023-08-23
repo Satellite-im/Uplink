@@ -104,7 +104,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
         active: routes_[0].clone(),
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
-            eval(&scroll_script);
+            let _ = eval(&scroll_script);
         }
     }))
 }
@@ -140,7 +140,7 @@ fn render_selector<'a>(
                     #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = false;
-                        eval(focus_script.to_string());
+                        let _ = eval(focus_script);
                     }
                 },
                 id: "emoji_selector",

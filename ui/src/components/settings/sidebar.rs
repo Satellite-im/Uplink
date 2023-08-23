@@ -63,7 +63,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
-    let router = dioxus_router::hooks::use_navigator(cx);
+    let _router = dioxus_router::hooks::use_navigator(cx);
 
     let profile = UIRoute {
         to: "profile",
