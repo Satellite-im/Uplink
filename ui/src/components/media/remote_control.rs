@@ -205,13 +205,14 @@ pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     ch.send(CallDialogCmd::Hangup(call.id));
                 },
             },
-            Button {
+            //Currently not impl
+            /*Button {
                 icon: Icon::Cog6Tooth,
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
                     //TODO
                 },
-            }
+            }*/
 
         }
     }))
