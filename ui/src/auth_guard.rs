@@ -49,7 +49,7 @@ pub fn AuthGuard(cx: Scope, page: UseState<AuthPages>) -> Element {
             match *page.current() {
                 AuthPages::Unlock => rsx!(UnlockLayout { page: page.clone(), pin: pin.clone() }),
                 AuthPages::CreateAccount => rsx!(CreateAccountLayout { page: page.clone(), pin: pin.clone() }),
-                _ => panic!("asd"),
+                _ => unreachable!("this view should disappear when an account is unlocked or created"),
             }
         }
     ))

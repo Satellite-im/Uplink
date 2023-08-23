@@ -7,6 +7,7 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
+use kit::elements::tooltip::ArrowPosition;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -104,8 +105,7 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
             with_nav: cx.render(rsx!(
                 crate::AppNav {
                     active: cx.props.active.clone(),
-                    // todo: add tooltip_direction to AppNav
-                    //tooltip_direction: ArrowPosition::Left,
+                    tooltip_direction: ArrowPosition::Left,
                     onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
