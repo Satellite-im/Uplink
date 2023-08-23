@@ -35,7 +35,6 @@
 ## Global Variables
 - Uplink uses global variables to do some important things. They are all in `main.rs`. 
 - `STATIC_ARGS` is for constant variables which may be affected by command line options
-- `UPLINK_ROUTES` is for use with Dioxus Router. 
 - the rest of the variables are channels. 
 
 ## Global Channels

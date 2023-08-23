@@ -105,7 +105,7 @@ fn build_nav(cx: Scope) -> Element<'a> {
 
     cx.render(rsx!(Nav {
         routes: routes.clone(),
-        active: routes[0].clone(),
+        active: routes[0].to,
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
             let _ = eval(&scroll_script);

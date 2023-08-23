@@ -528,17 +528,12 @@ pub fn FilesLayout(cx: Scope) -> Element {
                             }
                         }),
                     },
-                }
-
-                // (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                //     Nav {
-                //         routes: cx.props.route_info.routes.clone(),
-                //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.files).cloned().unwrap_or_default(),
-                //         onnavigate: move |r| {
-                //             router.replace(r);
-                //         }
-                //     }
-                // ))
+                },
+                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                    crate::AppNav { 
+                        active: crate::UplinkRoute::FilesLayout{},
+                    }
+                ))
             }
         }
     ))

@@ -5,7 +5,6 @@ use common::{
     notifications::{NotificationAction, NOTIFICATION_LISTENER},
 };
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
 use kit::{
     elements::{button::Button, Appearance},
     layout::topbar::Topbar,
@@ -105,7 +104,6 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
     log::trace!("rendering MinimalFriendsLayout");
     let state = use_shared_state::<State>(cx)?;
     let route = cx.props.route;
-    let _navigator = use_navigator(cx).clone();
 
     let view = if !state.read().ui.sidebar_hidden {
         rsx!(ChatSidebar {})
@@ -122,13 +120,9 @@ pub fn MinimalFriendsLayout<'a>(cx: Scope<'a, MinimalProps>) -> Element<'a> {
                 },
                 // TODO: Will need to determine if we're loading or not once state is update, and display a loading view if so. (see friends-list)
                 render_route(cx, route.get().clone()),
-                // Nav {
-                //     routes: cx.props.route_info.routes.clone(),
-                //     active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.friends).cloned().unwrap_or_default(),
-                //     onnavigate: move |r| {
-                //         navigator.replace(r);
-                //     }
-                // }
+                crate::AppNav {
+                    active: crate::UplinkRoute::FriendsLayout{},
+                }
             }
         )
     };

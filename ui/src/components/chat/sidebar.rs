@@ -105,7 +105,7 @@ pub fn Sidebar(cx: Scope) -> Element {
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
-        router.replace(UplinkRoute::ChatLayout {  });
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
@@ -189,22 +189,19 @@ pub fn Sidebar(cx: Scope) -> Element {
                     }
                 }
             )),
-            // todo: uncomment this
-            // with_nav: cx.render(rsx!(
-            //     Nav {
-            //         routes: cx.props.route_info.routes.clone(),
-            //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.chat).cloned().unwrap_or_default(),
-            //         onnavigate: move |r| {
-            //             if state.read().configuration.audiovideo.interface_sounds {
-            //                 common::sounds::Play(common::sounds::Sounds::Interaction);
-            //             }
-            //             if state.read().ui.is_minimal_view() {
-            //                 state.write().mutate(Action::SidebarHidden(true));
-            //             }
-            //             router.replace(r);
-            //         }
-            //     },
-            // )),
+            with_nav: cx.render(rsx!(
+                crate::AppNav { 
+                    active: UplinkRoute::ChatLayout{},
+                    onnavigate: move |_| {
+                        if state.read().configuration.audiovideo.interface_sounds {
+                            common::sounds::Play(common::sounds::Sounds::Interaction);
+                        }
+                        if state.read().ui.is_minimal_view() {
+                            state.write().mutate(Action::SidebarHidden(true));
+                        }
+                    } 
+                }
+            )),
             with_call_controls: cx.render(rsx!(
                 active_media_chat.is_some().then(|| rsx!(
                     RemoteControls {

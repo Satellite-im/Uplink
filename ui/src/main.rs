@@ -117,7 +117,7 @@ fn main() {
     dioxus_desktop::launch_cfg(app, webview_config::webview_config())
 }
 
-#[derive(Routable, Clone)]
+#[derive(Routable, Clone, Eq, PartialEq)]
 enum UplinkRoute {
     // We want to wrap every router in a layout that renders the content via an outlet
     #[layout(app_layout)]
@@ -349,7 +349,6 @@ fn use_app_coroutines(cx: &ScopeState) -> Option<()> {
                 }
                 let size = webview.inner_size();
                 let metadata = state.read().ui.metadata.clone();
-                log::debug!("resize {:?}", size);
                 let new_metadata = WindowMeta {
                     focused: desktop.is_focused(),
                     maximized: desktop.is_maximized(),
@@ -1060,4 +1059,78 @@ fn get_window_minimal_width(desktop: &std::rc::Rc<DesktopService>) -> u32 {
     } else {
         600
     }
+}
+
+#[inline_props]
+fn AppNav<'a>(
+    cx: Scope,
+    active: UplinkRoute,
+    onnavigate: Option<EventHandler<'a, ()>>,
+) -> Element<'a> {
+    use kit::components::nav::Route as UIRoute;
+
+    let state = use_shared_state::<State>(cx)?;
+    let navigator = use_navigator(cx);
+    let pending_friends = state.read().friends().incoming_requests.len();
+
+    let chat_route = UIRoute {
+        to: "/chat",
+        name: get_local_text("uplink.chats"),
+        icon: Icon::ChatBubbleBottomCenterText,
+        ..UIRoute::default()
+    };
+    let settings_route = UIRoute {
+        to: "/settings",
+        name: get_local_text("settings.settings"),
+        icon: Icon::Cog6Tooth,
+        ..UIRoute::default()
+    };
+    let friends_route = UIRoute {
+        to: "/friends",
+        name: get_local_text("friends.friends"),
+        icon: Icon::Users,
+        with_badge: if pending_friends > 0 {
+            Some(pending_friends.to_string())
+        } else {
+            None
+        },
+        loading: None,
+    };
+    let files_route = UIRoute {
+        to: "/files",
+        name: get_local_text("files.files"),
+        icon: Icon::Folder,
+        ..UIRoute::default()
+    };
+    let _routes = vec![
+        chat_route.clone(),
+        files_route.clone(),
+        friends_route.clone(),
+        settings_route.clone(),
+    ];
+
+    render!(kit::components::nav::Nav {
+        routes: _routes,
+        active: match active {
+            UplinkRoute::ChatLayout {} => "/chat",
+            UplinkRoute::SettingsLayout {} => "/settings",
+            UplinkRoute::FriendsLayout {} => "/friends",
+            UplinkRoute::FilesLayout {} => "/files",
+        },
+        onnavigate: move |r| {
+            if let Some(f) = onnavigate {
+                f.call(());
+            }
+
+            let new_layout = match r {
+                "/chat" => UplinkRoute::ChatLayout {},
+                "/settings" => UplinkRoute::SettingsLayout {},
+                "/friends" => UplinkRoute::FriendsLayout {},
+                "/files" => UplinkRoute::FilesLayout {},
+                _ => UplinkRoute::ChatLayout {},
+            };
+
+            navigator.replace(new_layout);
+        },
+    })
 }

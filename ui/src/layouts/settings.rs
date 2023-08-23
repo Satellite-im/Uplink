@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
 
 use crate::{
     components::settings::{
@@ -29,7 +28,6 @@ use kit::layout::topbar::Topbar;
 pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
-    let _router = use_navigator(cx);
 
     state.write_silent().ui.current_layout = ui::Layout::Settings;
 
@@ -85,15 +83,11 @@ pub fn SettingsLayout(cx: Scope) -> Element {
                     class: "full-width",
                     settings_page
                 },
-                // (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                //     Nav {
-                //         routes: cx.props.route_info.routes.clone(),
-                //         active: cx.props.route_info.routes.iter().find(|r| r.to == UPLINK_ROUTES.settings).cloned().unwrap_or_default(),
-                //         onnavigate: move |r| {
-                //             router.replace(r);
-                //         }
-                //     }
-                // ))
+                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                    crate::AppNav { 
+                        active: crate::UplinkRoute::SettingsLayout{},
+                    }
+                 ))
             },
         }
     ))

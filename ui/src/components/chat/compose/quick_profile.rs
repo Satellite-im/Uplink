@@ -22,8 +22,6 @@ use warp::{crypto::DID, logging::tracing::log};
 
 use crate::UplinkRoute;
 
-// use crate::UPLINK_ROUTES;
-
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
     id: &'a String,

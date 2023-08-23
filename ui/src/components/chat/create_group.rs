@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-// use crate::UPLINK_ROUTES;
 use common::{
     icons::outline::Shape as Icon,
     language::get_local_text,
