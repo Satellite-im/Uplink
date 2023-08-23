@@ -19,7 +19,7 @@ use common::language::get_local_text;
 use dioxus_desktop::use_eval;
 
 use uuid::Uuid;
-use warp::{crypto::DID, logging::tracing::log};
+use warp::{crypto::DID, logging::tracing::log, raygun::Location};
 
 use crate::UPLINK_ROUTES;
 
@@ -207,6 +207,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                         let cmd = RayGunCmd::SendMessage {
                             conv_id: c,
                             msg,
+                            location: Location::Disk,
                             attachments: Vec::new(),
                             ui_msg_id: uuid,
                             rsp: tx,

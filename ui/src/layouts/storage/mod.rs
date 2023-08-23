@@ -16,6 +16,7 @@ use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_desktop::DesktopContext;
 use dioxus_router::*;
+use kit::elements::checkbox::Checkbox;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -31,6 +32,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 use rfd::FileDialog;
+use uuid::Uuid;
 use warp::constellation::directory::Directory;
 use warp::constellation::item::Item;
 
@@ -73,6 +75,10 @@ pub enum ChanCmd {
         new_name: String,
     },
     DeleteItems(Item),
+    SendFileToChat {
+        files_path: Vec<PathBuf>,
+        conversation_id: Uuid,
+    },
 }
 
 #[derive(PartialEq, Props)]
@@ -89,6 +95,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let select_files_to_send_mode = use_state(cx, || false);
+    let files_selected_to_send: &UseRef<Vec<Uuid>> = use_ref(cx, Vec::new);
 
     allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
 
@@ -441,6 +449,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         id: file.id().to_string(),
                                         items: cx.render(rsx!(
                                             ContextItem {
+                                                icon: Icon::ChevronDoubleRight,
+                                                aria_label: "send-file-to-chat".into(),
+                                                text: get_local_text("files.send-to-chat"),
+                                                onpress: move |_| {
+                                                    select_files_to_send_mode.set(true);
+                                                }
+                                            },
+                                            ContextItem {
                                                 icon: Icon::Pencil,
                                                 aria_label: "files-rename".into(),
                                                 text: get_local_text("files.rename"),
@@ -468,6 +484,28 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 }
                                             },
                                         )),
+                                        if *select_files_to_send_mode.get() {
+                                            rsx!( div {
+                                                position: "absolute",
+                                                Checkbox {
+                                                    disabled: false,
+                                                    width: "1em".into(),
+                                                    height: "1em".into(),
+                                                    is_checked: files_selected_to_send.read().contains(&file_id),
+                                                    on_click: move |_| {
+                                                        if *select_files_to_send_mode.get() {
+                                                            let mut files_selected = files_selected_to_send.write();
+                                                            if let Some(index) = files_selected.iter().position(|&id| id == file_id) {
+                                                                files_selected.remove(index);
+                                                            } else {
+                                                                files_selected.push(file_id);
+                                                            }
+                                                            return;
+                                                        }
+                                                    }
+                                                }
+                                            },)
+                                        }
                                         File {
                                             key: "{key}-file",
                                             thumbnail: thumbnail_to_base64(file),
@@ -475,6 +513,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             aria_label: file.name(),
                                             with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                             onpress: move |_| {
+                                                if *select_files_to_send_mode.get() {
+                                                    let mut files_selected = files_selected_to_send.write();
+                                                    if let Some(index) = files_selected.iter().position(|&id| id == file_id) {
+                                                        files_selected.remove(index);
+                                                    } else {
+                                                        files_selected.push(file_id);
+                                                    }
+                                                    return;
+                                                }
                                                 let key = file_id;
                                                 if state.read().ui.file_previews.contains_key(&key) {
                                                     state

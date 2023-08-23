@@ -141,6 +141,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                     None => RayGunCmd::SendMessage {
                         conv_id,
                         msg,
+                        location: raygun::Location::Disk,
                         attachments,
                         ui_msg_id,
                         rsp: tx,

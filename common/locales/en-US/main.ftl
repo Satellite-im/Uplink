@@ -165,6 +165,7 @@ files = Files
     .checking-thumbnail = Checking thumbnail...
     .files-in-queue = Files in queue
     .error-to-upload = Error to upload
+    .send-to-chat = Send to chat
 
 settings = Settings
     .settings = Settings
