@@ -1,6 +1,6 @@
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 
-use dioxus_router::use_router;
+use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 
 use kit::{
@@ -16,12 +16,11 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::use_eval;
 
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::UPLINK_ROUTES;
+use crate::UplinkRoute;
 
 #[derive(Props)]
 pub struct QuickProfileProps<'a> {
@@ -72,7 +71,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         async move {
             let script = update_script.get();
             if !script.is_empty() {
-                eval(script.to_string());
+                _ = eval(script);
             }
         }
     });
@@ -81,7 +80,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
     let is_friend = state.read().has_friend_with_did(did);
     let blocked = state.read().is_blocked(did);
 
-    let router = use_router(cx);
+    let router = use_navigator(cx);
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     if let Some(id) = *chat_with.get() {
@@ -90,7 +89,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace_route(UPLINK_ROUTES.chat, None, None);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<QuickProfileCmd>| {
@@ -276,7 +275,7 @@ pub fn QuickProfileContext<'a>(cx: Scope<'a, QuickProfileProps<'a>>) -> Element<
                     aria_label: "quick-profile-self-edit".into(),
                     text: get_local_text("quickprofile.self-edit"),
                     onpress: move |_| {
-                        router.replace_route(UPLINK_ROUTES.settings, None, None);
+                        router.replace(UplinkRoute::SettingsLayout {});
                     }
                 })
             } else {
