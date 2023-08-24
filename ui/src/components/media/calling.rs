@@ -188,7 +188,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             }
         }
         Some(c) => {
-            if !active_call.call.conversation_id.eq(&c.id) == cx.props.in_chat {
+            if active_call.call.conversation_id.eq(&c.id) != cx.props.in_chat {
                 return cx.render(rsx!(()));
             }
         }
@@ -346,7 +346,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
             }
         }
         Some(c) => {
-            if !call.conversation_id.eq(&c.id) == cx.props.in_chat {
+            if call.conversation_id.eq(&c.id) != cx.props.in_chat {
                 return cx.render(rsx!(()));
             }
         }
