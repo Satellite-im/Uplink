@@ -4,7 +4,7 @@ use std::{
 };
 
 use common::{
-    icons,
+    icons::{self, Icon},
     language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
@@ -14,6 +14,7 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
+        context_menu::{ContextItem, ContextMenu},
         embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
         user_image::UserImage,
