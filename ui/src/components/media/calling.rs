@@ -4,30 +4,30 @@ use chrono::Local;
 use dioxus::prelude::*;
 
 use futures::{channel::oneshot, StreamExt};
-use kit::elements::{
-    button::Button,
-    tooltip::{ArrowPosition, Tooltip},
-    Appearance,
+use kit::{
+    components::user_image_group::UserImageGroup,
+    elements::{
+        button::Button,
+        tooltip::{ArrowPosition, Tooltip},
+        Appearance,
+    },
 };
 
-use crate::utils::format_timestamp::format_timestamp_timeago;
-use common::state::{Action, State};
+use crate::{
+    components::calldialog::CallDialog,
+    utils::{build_participants, format_timestamp::format_timestamp_timeago},
+};
 use common::{
     icons::outline::Shape as Icon,
+    state::call::{ActiveCall, Call},
     warp_runner::{BlinkCmd, WarpCmd},
     WARP_CMD_CH,
 };
+use common::{
+    language::get_local_text,
+    state::{Action, State},
+};
 use uuid::Uuid;
-
-#[derive(Props)]
-pub struct Props<'a> {
-    users: Element<'a>,
-    call_name: String,
-    mute_text: String,
-    unmute_text: String,
-    listen_text: String,
-    silence_text: String,
-}
 
 enum CallDialogCmd {
     Hangup(Uuid),
@@ -35,26 +35,61 @@ enum CallDialogCmd {
     UnmuteSelf,
 }
 
+enum PendingCallDialogCmd {
+    Accept(Uuid),
+    Reject(Uuid),
+}
+
+#[derive(PartialEq, Eq, Props)]
+pub struct Props {
+    in_chat: bool,
+}
+
 #[allow(non_snake_case)]
-pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
+pub fn CallControl(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let active_call = state.read().ui.call_info.active_call();
-    let active_call_id = active_call.as_ref().map(|x| x.call.id);
-    let active_call_answer_time = active_call.as_ref().map(|x| x.answer_time);
+    match state.read().ui.call_info.active_call() {
+        Some(call) => cx.render(rsx!(ActiveCallControl {
+            active_call: call,
+            in_chat: cx.props.in_chat,
+            mute_text: get_local_text("remote-controls.mute"),
+            unmute_text: get_local_text("remote-controls.unmute"),
+            listen_text: get_local_text("remote-controls.listen"),
+            silence_text: get_local_text("remote-controls.silence"),
+        })),
+        None => match state.read().ui.call_info.pending_calls().first() {
+            Some(call) => cx.render(rsx!(PendingCallDialog {
+                call: call.clone(),
+                in_chat: cx.props.in_chat,
+            })),
+            None => cx.render(rsx!(())),
+        },
+    }
+}
+
+#[derive(PartialEq, Eq, Props)]
+pub struct ActiveCallProps {
+    active_call: ActiveCall,
+    in_chat: bool,
+    mute_text: String,
+    unmute_text: String,
+    listen_text: String,
+    silence_text: String,
+}
+
+#[allow(non_snake_case)]
+fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let active_call = &cx.props.active_call;
+    let active_call_id = active_call.call.id;
+    let active_call_answer_time = active_call.answer_time;
     let scope_id = cx.scope_id();
     let update_fn = cx.schedule_update_any();
 
     use_future(
         cx,
         (&scope_id, &active_call_id, &active_call_answer_time),
-        |(scope_id, active_call_id, answer_time)| async move {
-            if active_call_id.is_none() {
-                return;
-            }
-            let answer_time = match answer_time {
-                Some(r) => r,
-                None => return,
-            };
+        |(scope_id, _, answer_time)| async move {
             loop {
                 let dur_sec = Duration::from_secs(1);
                 let dur_min = Duration::from_secs(60);
@@ -143,14 +178,23 @@ pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         }
     });
 
-    let active_call = match active_call {
+    match state.read().get_active_chat() {
         None => {
-            // RemoteControls should only be rendered when there's a call
-            return cx.render(rsx!(""));
+            if cx.props.in_chat {
+                return cx.render(rsx!(()));
+            }
         }
-        Some(c) => c,
+        Some(c) => {
+            if !active_call.call.conversation_id.eq(&c.id) == cx.props.in_chat {
+                return cx.render(rsx!(()));
+            }
+        }
     };
-    let call = active_call.call;
+    let call = &active_call.call;
+
+    let participants = state.read().get_identities(&call.participants);
+    let other_participants = state.read().remove_self(&participants);
+    let participants_name = State::join_usernames(&other_participants);
 
     cx.render(rsx!(div {
         id: "remote-controls",
@@ -159,10 +203,12 @@ pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             /*Label {
                 text: cx.props.in_call_text.clone(),
             },*/
-            cx.props.users.as_ref()
+            UserImageGroup {
+                participants: build_participants(&other_participants),
+            }
             p {
                 class: "call-name",
-                "{cx.props.call_name}"
+                "{participants_name}"
             }
             p {
                 class: "call-time",
@@ -215,5 +261,110 @@ pub fn RemoteControls<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             }*/
 
         }
+    }))
+}
+
+#[derive(PartialEq, Eq, Props)]
+pub struct PendingCallProps {
+    call: Call,
+    in_chat: bool,
+}
+
+#[allow(non_snake_case)]
+fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
+    let state = use_shared_state::<State>(cx)?;
+    let ch = use_coroutine(cx, |mut rx| {
+        to_owned![state];
+        async move {
+            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+            while let Some(cmd) = rx.next().await {
+                match cmd {
+                    PendingCallDialogCmd::Accept(id) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().mutate(Action::AnswerCall(id));
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                    PendingCallDialogCmd::Reject(id) => {
+                        let (tx, rx) = oneshot::channel();
+                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
+                            call_id: id,
+                            rsp: tx,
+                        })) {
+                            log::error!("failed to send blink command");
+                            continue;
+                        }
+
+                        match rx.await {
+                            Ok(_) => {
+                                state.write().ui.call_info.reject_call(id);
+                            }
+                            Err(e) => {
+                                log::error!("warp_runner failed to answer call: {e}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    let call = &cx.props.call;
+    match state.read().get_active_chat() {
+        None => {
+            if cx.props.in_chat {
+                return cx.render(rsx!(()));
+            }
+        }
+        Some(c) => {
+            if !call.conversation_id.eq(&c.id) == cx.props.in_chat {
+                return cx.render(rsx!(()));
+            }
+        }
+    };
+    let mut participants = state.read().get_identities(&call.participants);
+    participants = state.read().remove_self(&participants);
+    let usernames = match state.read().get_chat_by_id(call.id) {
+        Some(c) => match c.conversation_name {
+            Some(name) => name,
+            None => State::join_usernames(&participants),
+        },
+        None => State::join_usernames(&participants),
+    };
+
+    cx.render(rsx!(CallDialog {
+        caller: cx.render(rsx!(UserImageGroup {
+            participants: build_participants(&participants),
+        },)),
+        usernames: usernames,
+        icon: Icon::PhoneArrowDownLeft,
+        description: get_local_text("remote-controls.incoming-call"),
+        with_accept_btn: cx.render(rsx!(Button {
+            icon: Icon::Phone,
+            appearance: Appearance::Success,
+            onpress: move |_| {
+                ch.send(PendingCallDialogCmd::Accept(call.id));
+            }
+        })),
+        with_deny_btn: cx.render(rsx!(Button {
+            icon: Icon::PhoneXMark,
+            appearance: Appearance::Danger,
+            onpress: move |_| {
+                ch.send(PendingCallDialogCmd::Reject(call.id));
+            }
+        })),
     }))
 }

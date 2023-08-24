@@ -22,7 +22,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::chat::create_group::get_input_options;
+use crate::components::{chat::create_group::get_input_options, media::calling::CallControl};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -257,6 +257,9 @@ pub fn Compose(cx: Scope) -> Element {
                     active_chat: state.read().get_active_chat(),
                 }
         )),
+        CallControl {
+            in_chat: true
+        },
         match data.as_ref() {
             None => rsx!(
                 div {

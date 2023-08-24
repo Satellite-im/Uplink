@@ -1,6 +1,6 @@
 use common::language::get_local_text;
 use common::state::{self, identity_search_result, Action, State};
-use common::warp_runner::{BlinkCmd, RayGunCmd, WarpCmd};
+use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::prelude::*;
 use dioxus_router::*;
@@ -34,9 +34,8 @@ use warp::{
     raygun::{self},
 };
 
-use crate::components::calldialog::CallDialog;
 use crate::components::chat::create_group::CreateGroup;
-use crate::components::media::remote_control::RemoteControls;
+use crate::components::media::calling::CallControl;
 use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
 
 #[allow(clippy::large_enum_variant)]
@@ -187,10 +186,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     };
 
     // todo: display a loading page if chats is not initialized
-    let (sidebar_chats, active_media_chat) = if state.read().initialized {
-        (state.read().chats_sidebar(), state.read().get_active_chat())
+    let sidebar_chats = if state.read().initialized {
+        state.read().chats_sidebar()
     } else {
-        (vec![], None)
+        vec![]
     };
 
     let show_create_group = use_state(cx, || false);
@@ -262,38 +261,17 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 },
             )),
             with_call_controls: cx.render(rsx!(
-                active_media_chat.map(|chat| {
-                    let participants = state.read().chat_participants(&chat);
-                    let other_participants =  state.read().remove_self(&participants);
-                    let user: state::Identity = other_participants.first().cloned().unwrap_or_default();
-                    let participants_name = match chat.conversation_name {
-                        Some(name) => name,
-                        None => State::join_usernames(&other_participants)
-                    };
-                    rsx!(
-                        get_call_dialog{},
-                        RemoteControls {
-                        users: cx.render(rsx!(
-                            if chat.conversation_type == ConversationType::Direct {rsx! (
-                                UserImage {
-                                    platform: user.platform().into(),
-                                    status:  user.identity_status().into(),
-                                    image: user.profile_picture(),
-                                }
-                            )} else {rsx! (
-                                UserImageGroup {
-                                    participants: build_participants(&participants),
-                                }
-                            )}
-                        )),
-                        call_name: participants_name,
+                CallControl {
+                    in_chat: false
+                }
+                    /*PendingCallDialog{},
+                    ActiveCallControl {
                         mute_text: get_local_text("remote-controls.mute"),
                         unmute_text: get_local_text("remote-controls.unmute"),
                         listen_text: get_local_text("remote-controls.listen"),
-                        silence_text: get_local_text("remote-controls.silence"),
-                    }
-                )}),
-            )),
+                        silence_text: get_local_text("remote-controls.silence"),*/
+        ),
+            ),
             search_friends{
                 identities: search_results.clone(),
                 search_dropdown_hover: on_search_dropdown_hover.clone(),
@@ -520,96 +498,4 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             },
         }
     ))
-}
-
-enum CallDialogCmd {
-    Accept(Uuid),
-    Reject(Uuid),
-}
-
-fn get_call_dialog(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let ch = use_coroutine(cx, |mut rx| {
-        to_owned![state];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    CallDialogCmd::Accept(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::AnswerCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().mutate(Action::AnswerCall(id));
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
-                    }
-                    CallDialogCmd::Reject(id) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(_e) = warp_cmd_tx.send(WarpCmd::Blink(BlinkCmd::RejectCall {
-                            call_id: id,
-                            rsp: tx,
-                        })) {
-                            log::error!("failed to send blink command");
-                            continue;
-                        }
-
-                        match rx.await {
-                            Ok(_) => {
-                                state.write().ui.call_info.reject_call(id);
-                            }
-                            Err(e) => {
-                                log::error!("warp_runner failed to answer call: {e}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    let call = match state.read().ui.call_info.active_call() {
-        Some(_) => return None,
-        None => match state.read().ui.call_info.pending_calls().first() {
-            Some(call) => call.clone(),
-            None => return None,
-        },
-    };
-    let mut participants = state.read().get_identities(&call.participants);
-    let own_id = state.read().did_key();
-    participants.retain(|x| x.did_key() != own_id);
-    let usernames = State::join_usernames(&participants);
-
-    cx.render(rsx!(CallDialog {
-        caller: cx.render(rsx!(UserImageGroup {
-            participants: build_participants(&participants),
-        },)),
-        usernames: usernames,
-        icon: Icon::PhoneArrowDownLeft,
-        description: get_local_text("remote-controls.incoming-call"),
-        with_accept_btn: cx.render(rsx!(Button {
-            icon: Icon::Phone,
-            appearance: Appearance::Success,
-            onpress: move |_| {
-                ch.send(CallDialogCmd::Accept(call.id));
-            }
-        })),
-        with_deny_btn: cx.render(rsx!(Button {
-            icon: Icon::PhoneXMark,
-            appearance: Appearance::Danger,
-            onpress: move |_| {
-                ch.send(CallDialogCmd::Reject(call.id));
-            }
-        })),
-    }))
 }

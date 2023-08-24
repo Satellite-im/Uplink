@@ -213,3 +213,66 @@
 }
   
 
+
+.call-dialog {
+    background-color: #6767953f;
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--border-subtle-color);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--padding);
+    padding: var(--padding-more) var(--padding);
+    padding-top: var(--padding);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    text-align: center;
+    left: var(--gap);
+    top: 2rem;
+
+    .call-information {
+        display: flex; 
+        gap: var(--gap);
+        p {
+            align-self: center;
+            color: var(--text-color);
+        }
+        svg {
+            fill: transparent;
+            stroke: var(--text-color);
+        }
+    }
+
+    .calling {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--gap);
+        width: calc(2.5 * var(--height-input));
+        height: calc(2.5 * var(--height-input));
+        .user-group-scale{
+            display: flex;
+            transform: scale(2.5);
+        }
+    }
+
+    .users {
+        color: var(--text-color);
+    }
+
+    .controls {
+        display: flex;
+        gap: var(--gap);
+    }
+
+    .connecting {
+        display: inline-flex;
+        svg {
+            stroke: var(--text-color-dark);
+            fill: transparent;
+        }
+    }
+}
