@@ -68,6 +68,11 @@
 }
 
 #create-group {
+  margin-left: 315px;
+  margin-top: 100px;
+  z-index: 10;
+  top: 0;
+  left: 0;
   color: var(--text-color);
   display: inline-flex;
   flex-direction: column;
