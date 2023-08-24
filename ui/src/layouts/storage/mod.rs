@@ -486,7 +486,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         )),
                                         if *select_files_to_send_mode.get() {
                                             rsx!( div {
-                                                position: "absolute",
+                                                class: "checkbox-position",
                                                 Checkbox {
                                                     disabled: false,
                                                     width: "1em".into(),
