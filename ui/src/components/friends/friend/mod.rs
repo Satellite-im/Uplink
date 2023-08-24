@@ -128,7 +128,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             Some(f) => f.call(()),
                             None => {},
                         }
-                    }
+                    },
                     aria_label: "Remove or Deny Friend".into(),
                     tooltip: cx.render(rsx!(Tooltip {
                         arrow_position: ArrowPosition::Right,
@@ -144,7 +144,7 @@ pub fn Friend<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         onpress: move |_| match &cx.props.onblock {
                             Some(f) => f.call(()),
                             None    => {},
-                        }
+                        },
                         aria_label: "Block Friend".into(),
                         tooltip: cx.render(rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,

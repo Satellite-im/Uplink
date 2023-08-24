@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use common::language::get_local_text;
 use dioxus::prelude::*;
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::{use_window, DesktopContext};
 use kit::elements::{button::Button, Appearance};
-use wry::webview::FileDropEvent;
 
 use crate::utils::{
     get_drag_event,
@@ -48,17 +48,17 @@ pub fn change_progress_percentage(window: &DesktopContext, new_percentage: Strin
     let new_script = PROGRESS_UPLOAD_PERCENTAGE_SCRIPT
         .replace("$TEXT", &new_percentage)
         .replace("$WIDTH", &new_percentage);
-    window.eval(&new_script);
+    _ = window.webview.evaluate_script(&new_script);
 }
 
 pub fn change_progress_description(window: &DesktopContext, new_description: String) {
     let new_script = PROGRESS_UPLOAD_DESCRIPTION_SCRIPT.replace("$TEXT", &new_description);
-    window.eval(&new_script);
+    _ = window.webview.evaluate_script(&new_script);
 }
 
 pub fn update_filename(window: &DesktopContext, filename: String) {
     let new_script = UPDATE_FILENAME_SCRIPT.replace("$TEXT", &filename);
-    window.eval(&new_script);
+    _ = window.webview.evaluate_script(&new_script);
 }
 
 pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
@@ -68,7 +68,7 @@ pub fn update_files_queue_len(window: &DesktopContext, files_in_queue: usize) {
             &format!(" / {}", get_local_text("files.files-in-queue")),
         )
         .replace("$FILES_IN_QUEUE", &format!("{}", files_in_queue));
-    window.eval(&new_script);
+    _ = window.webview.evaluate_script(&new_script);
 }
 
 fn update_files_to_drop_while_upload_other_file(
@@ -94,7 +94,7 @@ fn update_files_to_drop_while_upload_other_file(
             .replace("$FILES_NUMBER", "")
             .replace("$TEXT2", "")
     };
-    window.eval(&new_script);
+    _ = window.webview.evaluate_script(&new_script);
 }
 
 #[derive(Props)]
@@ -252,7 +252,7 @@ async fn drag_and_drop_function(
                     let files_to_upload_message = count_files_to_show(paths.len());
                     let new_script =
                         FILES_TO_UPLOAD_SCRIPT.replace("$TEXT", &files_to_upload_message);
-                    window.eval(&new_script);
+                    _ = window.webview.evaluate_script(&new_script);
                     update_files_to_drop_while_upload_other_file(window, paths.len(), true);
                 }
             }
