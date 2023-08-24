@@ -22,7 +22,10 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::{chat::create_group::get_input_options, media::calling::CallControl};
+use crate::components::{
+    chat::create_group::get_input_options, chat::pinned_messages::PinnedMessages,
+    media::calling::CallControl,
+};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -504,6 +507,25 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
+        div {
+            position: "relative",
+            match state.read().get_active_chat() {
+                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
+                None => cx.render(rsx!(())),
+            },
+            div {
+                id: "pin-button",
+                Button {
+                    icon: Icon::Pin,
+                    aria_label: "pin-label".into(),
+                    appearance: Appearance::Secondary,
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::TopRight,
+                        text: get_local_text("messages.pin-view"),
+                    })),
+                }
+            }
+        }
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,

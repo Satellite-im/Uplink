@@ -23,7 +23,7 @@ pub struct Props<'a> {
     on_press: Option<EventHandler<'a, MouseEvent>>,
     #[props(optional)]
     oncontextmenu: Option<EventHandler<'a, MouseEvent>>,
-    status: Status,
+    status: Option<Status>,
     platform: Platform,
 }
 
@@ -86,10 +86,12 @@ pub fn UserImage<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                             div { class: "dot dot-3" }
                         }
                     ))
-                    Indicator {
-                        status: status,
-                        platform: platform,
-                    }
+                    status.map(|s| {
+                        rsx!(Indicator {
+                            status: s,
+                            platform: platform,
+                        })
+                    })
                 },
                 (cx.props.with_username.is_some()).then(|| rsx!(
                     Label {

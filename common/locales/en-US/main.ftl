@@ -43,6 +43,7 @@ uplink = Uplink
     .check-for-updates = Check for updates
     .download-update = Download Update
     .members = Members
+    .date-time-format = %d/%m/%Y %I:%M %p
 
 updates = Updates
     .title = Uplink has an update available. Follow these steps to download and install the latest update.
@@ -88,6 +89,13 @@ messages = Messages
     .users-typing = { $users } are typing
     .users-multiple-typing = Multiple users are typing
     .maximum-amount-files-per-message = You reached { $amount } files per message limit
+    .pin = Pin Message
+    .unpin = Unpin Message
+    .pin-view = Pinned Messages
+    .pin-button-goto = Go to
+    .pin-button-unpin = Unpin
+    .pinned-none = There are no pinned messages in this chat
+    .pinned-max = You reached the maximum amount of pinned messages for this chat
     .missing-emoji-picker = Emoji extension is disabled
     
 favorites = Favorites
