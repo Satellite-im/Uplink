@@ -103,7 +103,6 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             id: "create-group",
-            margin_right: "8px",
             aria_label: "Create Group",
             div {
                 id: "create-group-name",
