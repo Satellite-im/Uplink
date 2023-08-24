@@ -59,10 +59,13 @@ impl CallInfo {
         self.active_call.take();
     }
 
-    pub fn answer_call(&mut self, id: Uuid) -> anyhow::Result<Call> {
+    pub fn answer_call(&mut self, id: Uuid, did: Option<DID>) -> anyhow::Result<Call> {
         match self.pending_calls.iter().position(|x| x.id == id) {
             Some(idx) => {
-                let call = self.pending_calls.remove(idx);
+                let mut call = self.pending_calls.remove(idx);
+                if let Some(did) = did {
+                    call.participant_joined(did);
+                }
                 self.active_call.replace(call.clone().into());
                 Ok(call)
             }

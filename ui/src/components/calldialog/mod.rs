@@ -7,6 +7,7 @@ pub struct Props<'a> {
     icon: Icon,
     description: String,
     usernames: String,
+    in_chat: bool,
     #[props(optional)]
     with_accept_btn: Option<Element<'a>>,
     #[props(optional)]
@@ -27,7 +28,7 @@ pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     };
     cx.render(rsx! (
         div {
-            class: "call-dialog",
+            class:format_args!("call-dialog {}", if cx.props.in_chat {"in-chat"} else {""}),
             div {
                 class: "call-information",
                 rsx!(
@@ -53,10 +54,10 @@ pub fn CallDialog<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                     &cx.props.caller,
                 }
             },
-            div {
+            (!cx.props.in_chat).then(||rsx!(div {
                 class: "users",
                 "{cx.props.usernames}",
-            }
+            }))
             div {
                 class: "controls",
                 with_accept_btn,

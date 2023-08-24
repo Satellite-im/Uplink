@@ -275,7 +275,11 @@ impl State {
             Action::ToggleMute => self.toggle_mute(),
             Action::ToggleSilence => self.toggle_silence(),
             Action::SetId(identity) => self.set_own_identity(identity),
-            Action::AnswerCall(id) => match self.ui.call_info.answer_call(id) {
+            Action::AnswerCall(id) => match self
+                .ui
+                .call_info
+                .answer_call(id, Some(self.get_own_identity().did_key())) //Update call with own did immediately
+            {
                 Ok(call) => {
                     self.set_active_media(call.conversation_id);
                 }
@@ -290,7 +294,7 @@ impl State {
                     call.conversation_id,
                     call.participants,
                 );
-                let _ = self.ui.call_info.answer_call(call.id);
+                let _ = self.ui.call_info.answer_call(call.id, None);
                 self.set_active_media(call.conversation_id);
             }
             Action::EndCall => {

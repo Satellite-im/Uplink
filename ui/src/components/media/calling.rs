@@ -8,6 +8,7 @@ use kit::{
     components::user_image_group::UserImageGroup,
     elements::{
         button::Button,
+        label::Label,
         tooltip::{ArrowPosition, Tooltip},
         Appearance,
     },
@@ -79,11 +80,13 @@ pub struct ActiveCallProps {
 
 #[allow(non_snake_case)]
 fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
+    log::trace!("Rendering active call window");
     let state = use_shared_state::<State>(cx)?;
     let active_call = &cx.props.active_call;
     let active_call_id = active_call.call.id;
     let active_call_answer_time = active_call.answer_time;
     let scope_id = cx.scope_id();
+    let outgoing = active_call.call.participants_joined.is_empty();
     let update_fn = cx.schedule_update_any();
 
     use_future(
@@ -198,20 +201,32 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
 
     cx.render(rsx!(div {
         id: "remote-controls",
+        class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
+        div {
+            class: "call-label",
+            outgoing.then(|| rsx!(Label {
+                text: get_local_text("remote-controls.outgoing-call"),
+            }))
+        }
         div {
             class: "call-info",
-            /*Label {
-                text: cx.props.in_call_text.clone(),
-            },*/
-            UserImageGroup {
-                participants: build_participants(&other_participants),
+            div {
+                class: format_args!("calling {}", if cx.props.in_chat {"in-chat"} else {""}),
+                div {
+                    class: format_args!("user-group-scale {}", if cx.props.in_chat {"in-chat"} else {""}),
+                    UserImageGroup {
+                        participants: build_participants(&other_participants),
+                    },
+                }
             }
+            (!cx.props.in_chat).then(||rsx!(
+                p {
+                    class: "call-name",
+                    "{participants_name}"
+                }
+            )),
             p {
-                class: "call-name",
-                "{participants_name}"
-            }
-            p {
-                class: "call-time",
+                class: format_args!("call-time {}", if cx.props.in_chat {"in-chat"} else {""}),
                 format_timestamp_timeago(active_call.answer_time.into(), &state.read().settings.language_id()),
             }
         },
@@ -272,6 +287,7 @@ pub struct PendingCallProps {
 
 #[allow(non_snake_case)]
 fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
+    log::trace!("Rendering pending call window");
     let state = use_shared_state::<State>(cx)?;
     let ch = use_coroutine(cx, |mut rx| {
         to_owned![state];
@@ -349,6 +365,7 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
         caller: cx.render(rsx!(UserImageGroup {
             participants: build_participants(&participants),
         },)),
+        in_chat: cx.props.in_chat,
         usernames: usernames,
         icon: Icon::PhoneArrowDownLeft,
         description: get_local_text("remote-controls.incoming-call"),
