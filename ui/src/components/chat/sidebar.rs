@@ -1,7 +1,9 @@
+use common::icons::Icon as IconElement;
 use common::language::get_local_text;
-use common::state::{self, identity_search_result, Action, State};
+use common::state::{self, identity_search_result, Action, Chat, Identity, State};
 use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
+use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
 use dioxus_router::*;
 use futures::channel::oneshot;
@@ -51,44 +53,259 @@ pub struct Props {
 
 #[derive(Props)]
 pub struct SearchProps<'a> {
-    // username, did
+    search_typed_chars: UseRef<String>,
+    search_friends_is_focused: UseRef<bool>,
     search_dropdown_hover: UseRef<bool>,
     identities: UseState<Vec<identity_search_result::Entry>>,
+    friends_identities: UseState<Vec<Identity>>,
+    chats: UseState<Vec<Chat>>,
     onclick: EventHandler<'a, identity_search_result::Identifier>,
 }
+
 fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
-    if cx.props.identities.get().is_empty() {
+    let state = use_shared_state::<State>(cx)?;
+    if cx.props.identities.get().is_empty() || !*cx.props.search_friends_is_focused.read() {
         return None;
     }
-    let mut identities = cx.props.identities.get().clone();
-    identities.sort_by_key(|entry| entry.display_name.clone());
+
+    let mut friends_identities = cx.props.friends_identities.get().clone();
+    let chats = cx.props.chats.get().clone();
+
+    friends_identities.sort_by_key(|identity| identity.username());
+
     cx.render(rsx!(
         div {
             class: "searchbar-dropdown",
             aria_label: "searchbar-dropwdown",
+            onblur: |_| {
+                *cx.props.search_friends_is_focused.write() = false;
+            },
             onmouseenter: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = true;
             },
             onmouseleave: |_| {
                 *cx.props.search_dropdown_hover.write_silent() = false;
             },
-            identities.iter().cloned().enumerate().map(|(k, entry)| {
+            if !friends_identities.is_empty() {
                 rsx!(
-                    a {
-                        class: "search-friends-dropdown",
-                        aria_label: "search-friends-result",
-                        href: "#{entry.display_name}",
+                    div {
+                        id: "users-searchdropdown-label",
+                        class: "users-groups-label",
+                        p {
+                            get_local_text("uplink.users")
+                        }
+                    })
+            }
+            friends_identities.iter().cloned().map(|identity| {
+                let username = identity.username();
+                let did = identity.did_key();
+                let did2 = did.clone();
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let start = username.to_lowercase().find(&search_typed_chars.to_lowercase()).unwrap_or(0);
+                let end = start + search_typed_chars.len();
+                let blocked_friends: Vec<DID> = state
+                    .read()
+                    .blocked_fr_identities()
+                    .iter()
+                    .map(|f| f.did_key())
+                    .collect();
+
+                rsx!(
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "identity-header-sidebar",
+                        opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
                         prevent_default: "onclick",
-                        rel: "noopener noreferrer",
                         onclick: move |evt| {
-                            evt.stop_propagation();
-                            cx.props.onclick.call(entry.id.clone());
+                            if !blocked_friends.contains(&did2) {
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                            }
                         },
-                        "{entry.display_name}"
-                    },
-                    if (cx.props.identities.get().len() - 1) != k {
-                        rsx!(div { class:"border", })
+                        UserImage {
+                            platform: identity.platform().into(),
+                            status: identity.identity_status().into(),
+                            image: identity.profile_picture()
+                        },
+                        div {
+                            class: "search-friends-dropdown-name",
+                            rsx!(
+                                span { &username[0..start] },
+                                span {
+                                    class: "highlight-search-typed-chars", 
+                                    &username[start..end]
+                                },
+                                span { &username[end..] },
+                            )
+                        }
+                        if blocked_friends.contains(&did2) {
+                            rsx!(
+                                div {
+                                    padding_right: "32px",
+                                    IconElement {
+                                        size: 40,
+                                        fill: "var(--text-color-muted)",
+                                        icon: Icon::NoSymbol,
+                                    },
+                                }
+                            )
+                        }
                     }
+                )
+            })
+            if !chats.is_empty() && !friends_identities.is_empty() {
+                rsx!(div { class:"border", })
+            }
+            if !chats.is_empty() {
+                rsx!(
+                    div {
+                        id: "groups-searchdropdown-label",
+                        class: "users-groups-label",
+                        p {
+                            get_local_text("uplink.groups")
+                        }
+                    }
+                )
+            }
+            chats.iter().cloned().map(|chat| {
+                let id = chat.id;
+                let participants = state.read().chat_participants(&chat);
+                let participants2 = participants.clone();
+
+                let other_participants_names = State::join_usernames(&participants);
+                let conversation_title = match chat.conversation_name.as_ref() {
+                    Some(n) => n.clone(),
+                    None => other_participants_names,
+                };
+                let search_typed_chars = cx.props.search_typed_chars.read().clone();
+                let text_to_find = search_typed_chars.to_lowercase();
+                let search_typed_chars2 = search_typed_chars.clone();
+
+                rsx!(
+                    div {
+                        class: "identity-header-sidebar",
+                        aria_label: "identity-header-sidebar",
+                        prevent_default: "onclick",
+                        onclick: move |evt|  {
+                                evt.stop_propagation();
+                                *cx.props.search_friends_is_focused.write_silent() = false;
+                                cx.props.onclick.call(identity_search_result::Identifier::Uuid(id));
+                        },
+                        rsx! (
+                            div {
+                                class: "user-image-group",
+                                div {
+                                    aria_label: "user-image-group-wrap",
+                                    class: "user-image-group-wrap group",
+                                    rsx!(
+                                        UserImageGroup {
+                                            loading: false,
+                                            participants: build_participants(&participants),
+                                        }
+                                    )
+                                },
+                            }
+                        div {
+                                class: "search-friends-dropdown-name",
+                                if let Some(start) = conversation_title.to_lowercase().find(&text_to_find) {
+                                    let end = start + search_typed_chars2.len();
+                                    rsx!(
+                                        span { &conversation_title[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars", 
+                                            &conversation_title[start..end]
+                                        },
+                                        span { &conversation_title[end..] },
+                                    )
+                                } else {
+                                    rsx!(span { conversation_title})
+                                }
+                            }
+                        )
+                    }
+                    if !participants2.is_empty() &&
+                    participants2.iter().any(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
+                    &&
+                    identity.did_key() != state.read().did_key()
+                ) {
+                        rsx!(
+                            div {
+                                id: "members-searchdropdown-label",
+                                padding_left: "48px",
+                                padding_top: "4px",
+                                p {
+                                    color: "var(--text-color)",
+                                    font_size: "12px",
+                                    get_local_text("uplink.members")
+                                }
+                            }
+                        )
+                    },
+                    participants2.iter().cloned()
+                    .filter(|identity| identity.username().to_lowercase().starts_with(&search_typed_chars.to_lowercase())
+                    &&
+                    identity.did_key() != state.read().did_key()
+                )
+                    .map(|identity| {
+                        let typed_chars = search_typed_chars.clone();
+                        let username = identity.username();
+                        let did = identity.did_key();
+                        let did2 = did.clone();
+                        let start = username.to_lowercase().find(&typed_chars.to_lowercase()).unwrap_or(0);
+                        let end = start + typed_chars.len();
+                        let blocked_friends: Vec<DID> = state
+                        .read()
+                        .blocked_fr_identities()
+                        .iter()
+                        .map(|f| f.did_key())
+                        .collect();
+
+
+                        rsx!(
+                            div {
+                                class: "identity-header-sidebar-participants-in-group",
+                                opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
+                                aria_label: "identity-header-sidebar-participants-in-group",
+                                prevent_default: "onclick",
+                                onclick: move |evt| {
+                                    if !blocked_friends.contains(&did2) {
+                                        evt.stop_propagation();
+                                        *cx.props.search_friends_is_focused.write_silent() = false;
+                                        cx.props.onclick.call(identity_search_result::Identifier::Did(did.clone()));
+                                    }
+                                },
+                                UserImage {
+                                    platform: identity.platform().into(),
+                                    status: identity.identity_status().into(),
+                                    image: identity.profile_picture()
+                                },
+                                div {
+                                    class: "search-friends-dropdown-name",
+                                    rsx!(
+                                        span { &username[0..start] },
+                                        span {
+                                            class: "highlight-search-typed-chars", 
+                                            &username[start..end]
+                                        },
+                                        span { &username[end..] },
+                                    )
+                                }
+                                if blocked_friends.contains(&did2) {
+                                    rsx!(
+                                        div {
+                                            padding_right: "32px",
+                                            IconElement {
+                                                size: 40,
+                                                fill: "var(--text-color-muted)",
+                                                icon: Icon::NoSymbol,
+                                            },
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    })
                 )
             })
         }
@@ -100,11 +317,14 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
+    let search_results_friends_identities = use_state(cx, Vec::<Identity>::new);
+    let search_results_chats = use_state(cx, Vec::<Chat>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
     let router = use_router(cx);
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
+    let search_friends_is_focused = use_ref(cx, || false);
 
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
@@ -201,6 +421,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
         .filter(|ext| ext.details().location == extensions::Location::Sidebar)
         .map(|ext| rsx!(ext.render(cx.scope)))
         .collect::<Vec<_>>();
+    let search_typed_chars = use_ref(cx, String::new);
 
     cx.render(rsx!(
         ReusableSidebar {
@@ -221,10 +442,15 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                             clear_on_submit: true,
                             ..Options::default()
                         },
-                        onreturn: move |(v, _, _): (String, _, _)| {
-                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i)) {
+                        onreturn: move |(v, _, key): (String, _, Code)| {
+                            if key == Code::Escape {
+                                *search_friends_is_focused.write() = false;
+                            }
+                            if !v.is_empty() && on_search_dropdown_hover.with(|i| !(*i))  {
                                  if let Some(entry) = search_results.get().first() {
-                                    select_identifier(entry.id.clone());
+                                    if !*search_friends_is_focused.read() {
+                                        select_identifier(entry.id.clone());
+                                    }
                                 }
                                 search_results.set(Vec::new());
                             }
@@ -232,14 +458,18 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         onchange: move |(v, _): (String, _)| {
                             if v.is_empty() {
                                 search_results.set(Vec::new());
+                                *search_friends_is_focused.write_silent() = false;
                             } else {
-                                let mut friends = state.read().search_identities(&v);
-                                let chats = state.read().search_group_chats(&v);
+                                let (mut friends_entries, friends_identities) = state.read().search_identities(&v);
+                                let (chats_entries, chats) = state.read().search_group_chats(&v);
+                                friends_entries.extend(chats_entries);
                                 // todo: sort this somehow
-                                friends.extend(chats);
-                                search_results.set(friends);
+                                search_results.set(friends_entries);
+                                search_results_friends_identities.set(friends_identities);
+                                search_results_chats.set(chats);
+                                *search_typed_chars.write_silent() = v;
+                                *search_friends_is_focused.write_silent() = true;
                                 on_search_dropdown_hover.with_mut(|i| *i = false);
-
                             }
                         },
                     }
@@ -264,24 +494,23 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 CallControl {
                     in_chat: false
                 }
-                    /*PendingCallDialog{},
-                    ActiveCallControl {
-                        mute_text: get_local_text("remote-controls.mute"),
-                        unmute_text: get_local_text("remote-controls.unmute"),
-                        listen_text: get_local_text("remote-controls.listen"),
-                        silence_text: get_local_text("remote-controls.silence"),*/
-        ),
-            ),
-            search_friends{
-                identities: search_results.clone(),
-                search_dropdown_hover: on_search_dropdown_hover.clone(),
-                onclick: move |identifier: identity_search_result::Identifier| {
-                    select_identifier(identifier);
-                    search_results.set(Vec::new());
-                    reset_searchbar.set(true);
-                    on_search_dropdown_hover.with_mut(|i| *i = false);
-                }
-            },
+            )),
+            if *search_friends_is_focused.read() {
+                rsx!(search_friends{
+                    search_typed_chars: search_typed_chars.clone(),
+                    search_friends_is_focused: search_friends_is_focused.clone(),
+                    identities: search_results.clone(),
+                    friends_identities: search_results_friends_identities.clone(),
+                    chats: search_results_chats.clone(),
+                    search_dropdown_hover: on_search_dropdown_hover.clone(),
+                    onclick: move |identifier: identity_search_result::Identifier| {
+                        select_identifier(identifier);
+                        search_results.set(Vec::new());
+                        reset_searchbar.set(true);
+                        on_search_dropdown_hover.with_mut(|i| *i = false);
+                    }
+                })
+            }
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
