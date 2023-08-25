@@ -22,6 +22,7 @@ uplink = Uplink
     .delete-conversation = Apagar conversa
     .hide-chat = Ocultar conversa
     .search-placeholder = Procurar...
+    .nothing-here = Nada aqui...
     .end = Fim
     .pre-release = Pré-lançamento | Problemas/Feedback
     .username = Nome de utilizador
@@ -85,6 +86,7 @@ messages = Mensagens
     .users-typing = { $users } estão a escrever
     .users-multiple-typing = Vários membros estão a escrever
     .maximum-amount-files-per-message = Atingiste o limite de { $amount } ficheiros por mensagem.
+    .group-creator-label = Criador do Grupo
 
 favorites = Favoritos
     .favorites = Favoritos

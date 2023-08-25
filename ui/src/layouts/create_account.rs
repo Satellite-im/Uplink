@@ -98,14 +98,14 @@ pub fn CreateAccountLayout(cx: Scope, page: UseState<AuthPages>, pin: UseRef<Str
                     with_clear_btn: true,
                     clear_on_submit: false,
                     ..Default::default()
-                }
+                },
                 onchange: |(val, is_valid): (String, bool)| {
                     let should_disable = !is_valid;
                     if *button_disabled.get() != should_disable {
                         button_disabled.set(should_disable);
                     }
                     username.set(val);
-                }
+                },
                 onreturn: move |_| {
                     if !*button_disabled.get() {
                         ch.send((username.get().to_string(), pin.read().to_string()));

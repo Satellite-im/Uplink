@@ -1,18 +1,64 @@
 use crate::icons::outline::Shape as Icon;
+use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{hash_map, HashMap, HashSet},
     rc::Weak,
 };
 use uuid::Uuid;
 use warp::logging::tracing::log;
-use wry::webview::WebView;
 
 use super::{call, notifications::Notifications};
 
 pub type EmojiList = HashMap<String, u64>;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EmojiCounter {
+    list: EmojiList,
+}
+
+impl EmojiCounter {
+    pub fn new() -> Self {
+        Self {
+            list: EmojiList::new(),
+        }
+    }
+
+    pub fn new_with(list: EmojiList) -> Self {
+        Self { list }
+    }
+
+    pub fn increment_emoji(&mut self, emoji: String) {
+        let count = self.list.entry(emoji).or_insert(0);
+        *count = count.saturating_add(1);
+    }
+
+    pub fn get_sorted_vec(&self, count: Option<usize>) -> Vec<(String, u64)> {
+        let mut emojis: Vec<_> = self.list.iter().collect();
+
+        // sort the list by the emoji with the most usage
+        emojis.sort_by(|a, b| match b.1.cmp(a.1) {
+            Ordering::Equal => b.0.cmp(a.0),
+            x => x,
+        });
+
+        let to_take = count.unwrap_or(emojis.len());
+        emojis
+            .into_iter()
+            .take(to_take)
+            .map(|(emoji, usage)| (emoji.clone(), *usage))
+            .collect()
+    }
+}
+
+impl Default for EmojiCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
 pub struct WindowMeta {
@@ -41,21 +87,22 @@ fn bool_true() -> bool {
     true
 }
 
-fn default_emojis() -> EmojiList {
-    HashMap::from([
-        ("👍".to_string(), 1),
-        ("👎".to_string(), 1),
-        ("❤️".to_string(), 1),
-        ("🖖".to_string(), 1),
-        ("😂".to_string(), 1),
-    ])
+fn default_emojis() -> EmojiCounter {
+    EmojiCounter::new_with(HashMap::from([
+        ("👍".to_string(), 0),
+        ("👎".to_string(), 0),
+        ("❤️".to_string(), 0),
+        ("🖖".to_string(), 0),
+        ("😂".to_string(), 0),
+    ]))
 }
 
 /// Used to determine where the Emoji should be routed.
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub enum EmojiDestination {
     Chatbar,
-    Message(Uuid),
+    // Conversation Uuid, Message Uuid
+    Message(Uuid, Uuid),
 }
 
 impl Default for EmojiDestination {
@@ -89,13 +136,14 @@ pub struct UI {
     pub window_height: u32,
     pub metadata: WindowMeta,
     #[serde(default = "default_emojis")]
-    pub emoji_list: EmojiList,
-    pub emoji_destination: EmojiDestination,
+    pub emojis: EmojiCounter,
+    pub emoji_destination: Option<EmojiDestination>,
+    pub emoji_picker_visible: bool,
     #[serde(skip)]
     pub current_layout: Layout,
     // overlays or other windows are created via DesktopContext::new_window. they are stored here so they can be closed later.
     #[serde(skip)]
-    pub overlays: Vec<Weak<WebView>>,
+    pub overlays: Vec<Weak<DesktopService>>,
     #[serde(default)]
     pub extensions: Extensions,
     #[serde(skip)]
@@ -126,8 +174,9 @@ impl Default for UI {
             window_width: Default::default(),
             window_height: Default::default(),
             metadata: Default::default(),
-            emoji_list: default_emojis(),
+            emojis: default_emojis(),
             emoji_destination: Default::default(),
+            emoji_picker_visible: false,
             current_layout: Default::default(),
             overlays: Default::default(),
             extensions: Default::default(),
@@ -170,6 +219,13 @@ impl Extensions {
     pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
         self.map.values()
     }
+
+    pub fn enabled_extension(&self, extension: &str) -> bool {
+        match self.map.get(extension) {
+            Some(ext) => ext.enabled(),
+            None => false,
+        }
+    }
 }
 
 impl Drop for UI {
@@ -180,17 +236,7 @@ impl Drop for UI {
 
 impl UI {
     pub fn track_emoji_usage(&mut self, emoji: String) {
-        let count = self.emoji_list.entry(emoji).or_insert(0);
-        *count += 1;
-    }
-
-    pub fn get_emoji_sorted_by_usage(&self) -> EmojiList {
-        // let emojis = self.emoji_list.clone();
-
-        // // emojis.sort_by(|a, b| b.1.cmp(&a.1));
-
-        // emojis
-        self.emoji_list.clone()
+        self.emojis.increment_emoji(emoji);
     }
 
     pub fn get_meta(&self) -> WindowMeta {
@@ -240,6 +286,7 @@ impl UI {
         for overlay in &self.overlays {
             if let Some(window) = Weak::upgrade(overlay) {
                 window
+                    .webview
                     .evaluate_script("close()")
                     .expect("failed to close webview");
             }
@@ -248,25 +295,20 @@ impl UI {
     }
 
     pub fn remove_overlay(&mut self, id: WindowId) {
-        let to_keep: Vec<Weak<WebView>> = self
-            .overlays
-            .iter()
-            .filter(|x| match Weak::upgrade(x) {
-                None => false,
-                Some(window) => {
-                    if window.window().id() == id {
-                        window
-                            .evaluate_script("close()")
-                            .expect("failed to close webview");
-                        false
-                    } else {
-                        true
-                    }
+        self.overlays.retain(|x| match Weak::upgrade(x) {
+            None => false,
+            Some(window) => {
+                if window.id() == id {
+                    window
+                        .webview
+                        .evaluate_script("close()")
+                        .expect("failed to close webview");
+                    false
+                } else {
+                    true
                 }
-            })
-            .cloned()
-            .collect();
-        self.overlays = to_keep;
+            }
+        });
     }
 
     fn take_call_popout_id(&mut self) -> Option<WindowId> {

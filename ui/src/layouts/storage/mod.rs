@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use std::path::Path;
+use std::rc::Rc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
@@ -14,13 +15,9 @@ use common::upload_file_channel::{
 use common::warp_runner::thumbnail_to_base64;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
-use dioxus_desktop::DesktopContext;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 use kit::{
-    components::{
-        context_menu::{ContextItem, ContextMenu},
-        nav::Nav,
-    },
+    components::context_menu::{ContextItem, ContextMenu},
     elements::{
         button::Button,
         file::File,
@@ -38,9 +35,10 @@ pub mod controller;
 pub mod file_modal;
 pub mod functions;
 
-use crate::components::chat::{sidebar::Sidebar as ChatSidebar, RouteInfo};
+use crate::components::chat::sidebar::Sidebar as ChatSidebar;
 use crate::components::files::upload_progress_bar::UploadProgressBar;
 use crate::components::paste_files_with_shortcut;
+use crate::layouts::slimbar::SlimbarLayout;
 use crate::layouts::storage::file_modal::get_file_modal;
 
 use self::controller::{StorageController, UploadFileController};
@@ -74,22 +72,20 @@ pub enum ChanCmd {
     DeleteItems(Item),
 }
 
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
-
 #[allow(non_snake_case)]
-pub fn FilesLayout(cx: Scope<Props>) -> Element {
+pub fn FilesLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     state.write_silent().ui.current_layout = ui::Layout::Storage;
+
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
+    let _router = use_navigator(cx);
+    let eval: &UseEvalFn = use_eval(cx);
 
-    allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
+    use_allow_block_folder_nav(cx, &files_in_queue_to_upload);
 
     let ch: &Coroutine<ChanCmd> = functions::init_coroutine(cx, storage_controller);
 
@@ -140,7 +136,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         if state.read().ui.metadata.focused {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
-                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, window);
+                    add_files_in_queue_to_upload(&files_in_queue_to_upload, files_local_path, eval);
                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                 },
             })
@@ -155,7 +151,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     on_download: move |_| {
                         let file_name = file2.clone().name();
                         download_file(&file_name, ch);
-                    }
+                    },
                     file: file.clone()
                 }
             )
@@ -172,14 +168,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
-            },
+            SlimbarLayout { active: crate::UplinkRoute::FilesLayout{} },
+            ChatSidebar { },
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
                 Topbar {
-                    with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                    with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                     onback: move |_| {
                         let current = state.read().ui.sidebar_hidden;
                         state.write().mutate(Action::SidebarHidden(!current));
@@ -212,14 +207,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         arrow_position: ArrowPosition::Top,
                                         text: get_local_text("files.upload"),
                                     }
-                                ))
+                                )),
                                 onpress: move |_| {
                                     storage_controller.with_mut(|i|  i.is_renaming_map = None);
                                     let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
                                         Some(path) => path,
                                         None => return
                                     };
-                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window);
+                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, eval);
                                     upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
                                 },
                             }
@@ -276,7 +271,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                     files_been_uploaded: upload_file_controller.files_been_uploaded,
                     disable_cancel_upload_button: upload_file_controller.disable_cancel_upload_button,
                     on_update: move |files_to_upload: Vec<PathBuf>|  {
-                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, window);
+                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_to_upload, eval);
                     },
                     on_cancel: move |_| {
                         let _ = tx_cancel_file_upload.send(true);
@@ -415,7 +410,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             if key_code == Code::Enter {
                                                 ch.send(ChanCmd::RenameItem{old_name: folder_name2.clone(), new_name: val});
                                             }
-                                        }
+                                        },
                                         onpress: move |_| {
                                             storage_controller.with_mut(|i| i.is_renaming_map = None);
                                             ch.send(ChanCmd::OpenDirectory(folder_name.clone()));
@@ -432,121 +427,119 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file3 = file.clone();
                             let key = file.id();
                             let file_id = file.id();
-                            rsx!(ContextMenu {
-                                        key: "{key}-menu",
-                                        id: file.id().to_string(),
-                                        items: cx.render(rsx!(
-                                            ContextItem {
-                                                icon: Icon::Pencil,
-                                                aria_label: "files-rename".into(),
-                                                text: get_local_text("files.rename"),
-                                                onpress: move |_| {
-                                                    storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
-                                                }
-                                            },
-                                            ContextItem {
-                                                icon: Icon::ArrowDownCircle,
-                                                aria_label: "files-download".into(),
-                                                text: get_local_text("files.download"),
-                                                onpress: move |_| {
-                                                    download_file(&file_name2, ch);
-                                                },
-                                            },
-                                            hr {},
-                                            ContextItem {
-                                                icon: Icon::Trash,
-                                                danger: true,
-                                                aria_label: "files-delete".into(),
-                                                text: get_local_text("uplink.delete"),
-                                                onpress: move |_| {
-                                                    let item = Item::from(file2.clone());
-                                                    ch.send(ChanCmd::DeleteItems(item));
-                                                }
-                                            },
-                                        )),
-                                        File {
-                                            key: "{key}-file",
-                                            thumbnail: thumbnail_to_base64(file),
-                                            text: file.name(),
-                                            aria_label: file.name(),
-                                            with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
+                            rsx! {
+                                ContextMenu {
+                                    key: "{key}-menu",
+                                    id: file.id().to_string(),
+                                    items: cx.render(rsx!(
+                                        ContextItem {
+                                            icon: Icon::Pencil,
+                                            aria_label: "files-rename".into(),
+                                            text: get_local_text("files.rename"),
                                             onpress: move |_| {
-                                                let key = file_id;
-                                                if state.read().ui.file_previews.contains_key(&key) {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.file-already-opened"),
-                                                            None,
-                                                            2,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
-                                                if file3.thumbnail().is_empty() {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.no-thumbnail-preview"),
-                                                            None,
-                                                            3,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
-                                                let file4 = file3.clone();
-                                                storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                                storage_controller.with_mut(|i| i.is_renaming_map = Some(key));
+                                            }
+                                        },
+                                        ContextItem {
+                                            icon: Icon::ArrowDownCircle,
+                                            aria_label: "files-download".into(),
+                                            text: get_local_text("files.download"),
+                                            onpress: move |_| {
+                                                download_file(&file_name2, ch);
                                             },
-                                            onrename: move |(val, key_code)| {
-                                                let new_name: String = val;
-                                                if new_name == file_name3 {
-                                                    storage_controller.with(|i| i.is_renaming_map.is_none());
-                                                    storage_controller.write().finish_renaming_item(false);
-                                                    return;
-                                                };
-                                                if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
-                                                    state
-                                                    .write()
-                                                    .mutate(common::state::Action::AddToastNotification(
-                                                        ToastNotification::init(
-                                                            "".into(),
-                                                            get_local_text("files.file-already-with-name"),
-                                                            None,
-                                                            3,
-                                                        ),
-                                                    ));
-                                                    return;
-                                                }
+                                        },
+                                        hr {},
+                                        ContextItem {
+                                            icon: Icon::Trash,
+                                            danger: true,
+                                            aria_label: "files-delete".into(),
+                                            text: get_local_text("uplink.delete"),
+                                            onpress: move |_| {
+                                                let item = Item::from(file2.clone());
+                                                ch.send(ChanCmd::DeleteItems(item));
+                                            }
+                                        },
+                                    )),
+                                    File {
+                                        key: "{key}-file",
+                                        thumbnail: thumbnail_to_base64(file),
+                                        text: file.name(),
+                                        aria_label: file.name(),
+                                        with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
+                                        onpress: move |_| {
+                                            let key = file_id;
+                                            if state.read().ui.file_previews.contains_key(&key) {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.file-already-opened"),
+                                                        None,
+                                                        2,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            if file3.thumbnail().is_empty() {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.no-thumbnail-preview"),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            let file4 = file3.clone();
+                                            storage_controller.with_mut(|i| i.show_file_modal = Some(file4));
+                                        },
+                                        onrename: move |(val, key_code)| {
+                                            let new_name: String = val;
+                                            if new_name == file_name3 {
                                                 storage_controller.with(|i| i.is_renaming_map.is_none());
                                                 storage_controller.write().finish_renaming_item(false);
-                                                if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
-                                                    ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
-                                                }
+                                                return;
+                                            };
+                                            if  storage_controller.read().files_list.iter().any(|file| file.name() == new_name) {
+                                                state
+                                                .write()
+                                                .mutate(common::state::Action::AddToastNotification(
+                                                    ToastNotification::init(
+                                                        "".into(),
+                                                        get_local_text("files.file-already-with-name"),
+                                                        None,
+                                                        3,
+                                                    ),
+                                                ));
+                                                return;
+                                            }
+                                            storage_controller.with(|i| i.is_renaming_map.is_none());
+                                            storage_controller.write().finish_renaming_item(false);
+                                            if key_code == Code::Enter && !new_name.is_empty() && !new_name.chars().all(char::is_whitespace) {
+                                                ch.send(ChanCmd::RenameItem{old_name: file_name.clone(), new_name});
                                             }
                                         }
                                     }
-                              )
+                                }
+                            }
                         }),
                     },
-                }
-
+                },
                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                    Nav {
-                        routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.active.clone(),
-                        onnavigate: move |r| {
-                            use_router(cx).replace_route(r, None, None);
-                        }
+                    crate::AppNav {
+                        active: crate::UplinkRoute::FilesLayout{},
                     }
                 ))
             }
         }
     ))
 }
+
+type UseEvalFn = Rc<dyn Fn(&str) -> Result<UseEval, EvalError>>;
 
 fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
     let file_extension = std::path::Path::new(&file_name)
@@ -577,34 +570,32 @@ fn download_file(file_name: &str, ch: &Coroutine<ChanCmd>) {
 fn add_files_in_queue_to_upload(
     files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
     files_path: Vec<PathBuf>,
-    window: &DesktopContext,
+    eval: &UseEvalFn,
 ) {
     let tx_upload_file = UPLOAD_FILE_LISTENER.tx.clone();
-    allow_folder_navigation(window, false);
+    allow_folder_navigation(eval, false);
     files_in_queue_to_upload
         .write_silent()
         .extend(files_path.clone());
     let _ = tx_upload_file.send(UploadFileAction::UploadFiles(files_path));
 }
 
-fn allow_block_folder_nav(
-    cx: &Scoped<'_, Props>,
-    window: &DesktopContext,
-    files_in_queue_to_upload: &UseRef<Vec<PathBuf>>,
-) {
+fn use_allow_block_folder_nav(cx: &ScopeState, files_in_queue_to_upload: &UseRef<Vec<PathBuf>>) {
+    let eval: &UseEvalFn = use_eval(cx);
+
     // Block directories navigation if there is a file been uploaded
     // use_future here to verify before render elements on first render
     use_future(cx, (), |_| {
-        to_owned![window, files_in_queue_to_upload];
+        to_owned![eval, files_in_queue_to_upload];
         async move {
-            allow_folder_navigation(&window, files_in_queue_to_upload.read().is_empty());
+            allow_folder_navigation(&eval, files_in_queue_to_upload.read().is_empty());
         }
     });
     // This is to run on all re-renders
-    allow_folder_navigation(window, files_in_queue_to_upload.read().is_empty());
+    allow_folder_navigation(eval, files_in_queue_to_upload.read().is_empty());
 }
 
-fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
+fn allow_folder_navigation(eval: &UseEvalFn, allow_navigation: bool) {
     let new_script = if allow_navigation {
         ALLOW_FOLDER_NAVIGATION
             .replace("$POINTER_EVENT", "")
@@ -614,5 +605,6 @@ fn allow_folder_navigation(window: &DesktopContext, allow_navigation: bool) {
             .replace("$POINTER_EVENT", "none")
             .replace("$OPACITY", "0.5")
     };
-    window.eval(&new_script);
+
+    _ = eval(&new_script);
 }

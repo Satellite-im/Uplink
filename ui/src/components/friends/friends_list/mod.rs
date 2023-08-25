@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus::prelude::*;
-use dioxus_router::use_router;
+use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -23,7 +23,7 @@ use warp::{crypto::DID, logging::tracing::log, multipass::identity::Relationship
 
 use crate::{
     components::friends::friend::{Friend, SkeletalFriend},
-    UPLINK_ROUTES,
+    UplinkRoute,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -49,7 +49,7 @@ pub fn Friends(cx: Scope) -> Element {
     let remove_in_progress: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
 
     let friends = State::get_friends_by_first_letter(friends_list);
-    let router = use_router(cx);
+    let router = use_navigator(cx);
 
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
 
@@ -59,7 +59,7 @@ pub fn Friends(cx: Scope) -> Element {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace_route(UPLINK_ROUTES.chat, None, None);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {

@@ -2,11 +2,11 @@ use std::{collections::HashMap, path::PathBuf, rc::Weak};
 
 use derive_more::Display;
 
+use dioxus_desktop::DesktopService;
 use dioxus_desktop::{tao::window::WindowId, DesktopContext};
 use extensions::UplinkExtension;
 use uuid::Uuid;
 use warp::crypto::DID;
-use wry::webview::WebView;
 
 use crate::warp_runner::ui_adapter;
 
@@ -15,7 +15,7 @@ use super::{
     identity::Identity,
     notifications::NotificationKind,
     route::To,
-    ui::{Font, Theme, ToastNotification, WindowMeta},
+    ui::{EmojiDestination, Font, Theme, ToastNotification, WindowMeta},
 };
 
 /// used exclusively by State::mutate
@@ -51,10 +51,14 @@ pub enum Action<'a> {
     SetFontScale(f32),
     #[display(fmt = "TrackEmojiUsage")]
     TrackEmojiUsage(String),
+    #[display(fmt = "SetEmojiPickerVisible")]
+    SetEmojiPickerVisible(bool),
     // RemoveToastNotification,
     /// Sets the active call and active media id
     #[display(fmt = "AnswerCall")]
     AnswerCall(Uuid),
+    #[display(fmt = "RejectCall")]
+    RejectCall(Uuid),
     /// creates a Call struct and joins the call
     #[display(fmt = "OfferCall")]
     OfferCall(call::Call),
@@ -66,7 +70,7 @@ pub enum Action<'a> {
     SetId(Identity),
     /// adds an overlay. currently only used for demonstration purposes
     #[display(fmt = "AddOverlay")]
-    AddOverlay(Weak<WebView>),
+    AddOverlay(Weak<DesktopService>),
     /// used for the popout player or media player
     #[display(fmt = "SetPopout")]
     SetCallPopout(WindowId),
@@ -144,7 +148,6 @@ pub enum Action<'a> {
     /// Adds or removes a chat from the favorites page
     #[display(fmt = "ToggleFavorite")]
     ToggleFavorite(&'a Uuid),
-
     // Messaging
     /// React to a given message by ID
     /// conversation id, message id, reaction
@@ -153,6 +156,9 @@ pub enum Action<'a> {
     /// conversation id, message id, reaction
     #[display(fmt = "RemoveReaction")]
     RemoveReaction(Uuid, Uuid, String),
+    /// Sets the destination for emoji's
+    #[display(fmt = "SetEmojiDestination")]
+    SetEmojiDestination(Option<EmojiDestination>),
     /// chat id, message id
     #[display(fmt = "StartReplying")]
     StartReplying(&'a Uuid, &'a ui_adapter::Message),

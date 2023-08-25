@@ -132,6 +132,10 @@ pre code {
   border-radius: none;
 }
 
+.void {
+  display: none;
+}
+
 
 .fs-10 {
   font-size: 0.1rem;
@@ -221,17 +225,15 @@ pre code {
   --border-radius-less: 2px;
   --border-radius-more: 20px;
   --border-radius-app-window: 10px;
-
-  --border-color: #141414;
-  --border-subtle-color: #212529;
-
   --border-color: #fff;
-  --border-subtle-color: #0f0f0f;
+  --border-subtle-color: #141414;
+  
   --text-color: #f8f9fa;
   --text-color-muted: #dee2e6;
   --text-color-dark: #343a40;
   --text-color-bright: #ffffff;
   --text-color-link: #ff860d;
+  --text-selection: #e0e0e0;
   --placeholder: #fff;
   --primary: #fcfbf4;
   --primary-dark: color-mix(in srgb, var(--primary) 50%, black);
@@ -242,7 +244,7 @@ pre code {
   --secondary-dark: #212529;
   --background: #000000;
   --background-light: var(--secondary-light);
-  --background-dark: #000000;
+  --background-dark: #474747;
   --success: #1dd1a1;
   --success-light: #00c29c;
   --info: #1B9CFC;
@@ -254,10 +256,10 @@ pre code {
 }
 
 ::selection {
-  background: var(--text-color-bright); /* WebKit/Blink Browsers */
+  background: var(--text-selection); /* WebKit/Blink Browsers */
 }
 ::-moz-selection {
-  background: var(--text-color-bright); /* Gecko Browsers */
+  background: var(--text-selection); /* Gecko Browsers */
 }
 
 .skeletal {

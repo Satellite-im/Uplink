@@ -12,6 +12,8 @@ use warp::{
     logging::tracing::log,
 };
 
+use common::icons::outline::Shape as Icon;
+
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
@@ -85,6 +87,8 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     attachments_pending_uploads: Option<Vec<Progression>>,
+
+    pinned: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -170,6 +174,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let formatted_text_clone = formatted_text.clone();
 
     cx.render(rsx! (
+        cx.props.pinned.then(|| {
+            rsx!(div {
+                class: "pin-indicator",
+                common::icons::Icon {
+                    ..common::icons::IconProps {
+                        class: None,
+                        size: 14,
+                        fill:"currentColor",
+                        icon: Icon::Pin,
+                        disabled: false,
+                        disabled_fill: "#9CA3AF"
+                    },
+                },
+            })
+        }),
         div {
             class: {
                 format_args!(
@@ -310,14 +329,14 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 }
 
 #[derive(Props, PartialEq)]
-struct ChatMessageProps {
+pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
 }
 
 #[allow(non_snake_case)]
-fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
@@ -361,9 +380,10 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
-                link: l.to_string()
-                remote: cx.props.remote
-            })))
+                    link: l.to_string(),
+                    remote: cx.props.remote
+                })
+            ))
         }
     ))
 }

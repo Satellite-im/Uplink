@@ -32,8 +32,8 @@ textarea::-webkit-scrollbar-thumb:horizontal {
 
 .input-char-counter {
 	padding: 2px 9px;
-	position: absolute;
-	font-size: var(--text-size-less);
-	right: 0;
-	top: var(--height-input);
+    position: absolute;
+    font-size: var(--text-size-less);
+    right: 0;
+    bottom: -17px;
 }

@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use common::{
     icons::outline::Shape as Icon,
@@ -61,6 +61,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                     options: Options {
                         with_clear_btn: true,
                         react_to_esc_key: true,
+                        clear_on_submit: false,
                         ..Options::default()
                     },
                     onchange: move |(v, _): (String, _)| {
@@ -69,7 +70,7 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
                 }
             }
                 render_friends {
-                    friends: _friends_in_group,
+                    group_participants: group_participants,
                     name_prefix: friend_prefix.clone(),
                     creator: creator_id,
                 },
@@ -79,44 +80,49 @@ pub fn GroupUsers(cx: Scope<Props>) -> Element {
 
 #[derive(PartialEq, Props)]
 pub struct FriendsProps {
-    friends: BTreeMap<char, Vec<Identity>>,
+    group_participants: Vec<Identity>,
     name_prefix: UseState<String>,
     creator: DID,
 }
 
 fn render_friends(cx: Scope<FriendsProps>) -> Element {
     let name_prefix = cx.props.name_prefix.get();
+    let mut group_participants = cx.props.group_participants.clone();
+    // reduce group participants vector to just the name_prefix matched
+    group_participants.retain(|friend| {
+        friend
+            .username()
+            .to_ascii_lowercase()
+            .contains(&name_prefix.to_ascii_lowercase())
+    });
+
     cx.render(rsx!(
         div {
             class: "friend-list vertically-scrollable",
             aria_label: "friends-list",
-            cx.props.friends.iter().map(
-                |(letter, sorted_friends)| {
-                    let group_letter = letter.to_string();
-                    rsx!(
-                        div {
-                            key: "friend-group-{group_letter}",
-                            class: "friend-group",
-                            sorted_friends.iter().filter(|friend| {
-                                let name = friend.username();
-                                if name.len() < name_prefix.len() {
-                                    false
-                                } else {
-                                    name[..(name_prefix.len())].eq_ignore_ascii_case(name_prefix)
-                                }
-                            } ).map(|_friend| {
-                                let friendid = _friend.did_key();
-                                let creator = cx.props.creator.clone();
-                                rsx!(
-                                render_friend {
-                                    friend: _friend.clone(),
-                                    is_creator: friendid == creator,
-                                }
-                            )})
-                        }
-                    )
-                }
-            ),
+            if !group_participants.is_empty() {
+                rsx!(
+                    div {
+                        key: "friend-group",
+                        class: "friend-group",
+                        group_participants.iter().map(|_friend| {
+                            let friendid = _friend.did_key();
+                            let creator = cx.props.creator.clone();
+                            rsx!(render_friend {
+                                friend: _friend.clone(),
+                                is_creator: friendid == creator,
+                            }
+                        )})
+                    }
+                )
+            } else {
+                rsx!(
+                    div {
+                        class: "friend-group",
+                        get_local_text("uplink.nothing-here")
+                    }
+                )
+            }
         }
     ))
 }

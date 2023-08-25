@@ -9,7 +9,8 @@ use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        indicator::Platform, message_group::MessageGroupSkeletal, user_image::UserImage,
+        indicator::Platform, invisible_closer::InvisibleCloser,
+        message_group::MessageGroupSkeletal, user_image::UserImage,
         user_image_group::UserImageGroup,
     },
     elements::{
@@ -21,7 +22,7 @@ use kit::{
     layout::topbar::Topbar,
 };
 
-use crate::components::chat::create_group::get_input_options;
+use crate::components::chat::{create_group::get_input_options, pinned_messages::PinnedMessages};
 
 use common::{
     icons::outline::Shape as Icon,
@@ -44,7 +45,7 @@ use warp::{
     raygun::ConversationType,
 };
 
-use wry::webview::FileDropEvent;
+use dioxus_desktop::wry::webview::FileDropEvent;
 
 use crate::{
     components::chat::{edit_group::EditGroup, group_users::GroupUsers},
@@ -179,27 +180,34 @@ pub fn Compose(cx: Scope) -> Element {
 
     let is_edit_group = show_edit_group.map_or(false, |group_chat_id| (group_chat_id == chat_id));
 
+    let upload_files = move |_| {
+        if drag_event.with(|i| i.clone()).is_none() {
+            cx.spawn({
+                to_owned![drag_event, window, state];
+                async move {
+                    let new_files = drag_and_drop_function(&window, &drag_event).await;
+                    let mut new_files_to_upload: Vec<_> = state
+                        .read()
+                        .get_active_chat()
+                        .map(|f| f.files_attached_to_send)
+                        .unwrap_or_default()
+                        .iter()
+                        .filter(|file_name| !new_files.contains(file_name))
+                        .cloned()
+                        .collect();
+                    new_files_to_upload.extend(new_files);
+                    state
+                        .write()
+                        .mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
+                }
+            });
+        }
+    };
+
     cx.render(rsx!(
         div {
             id: "compose",
-            ondragover: move |_| {
-                if drag_event.with(|i| i.clone()).is_none() {
-                    cx.spawn({
-                        to_owned![drag_event, window, state];
-                        async move {
-                           let new_files = drag_and_drop_function(&window, &drag_event).await;
-                            let mut new_files_to_upload: Vec<_> = state.read().get_active_chat().map(|f| f.files_attached_to_send)
-                                .unwrap_or_default()
-                                .iter()
-                                .filter(|file_name| !new_files.contains(file_name))
-                                .cloned()
-                                .collect();
-                            new_files_to_upload.extend(new_files);
-                            state.write().mutate(Action::SetChatAttachments(chat_id, new_files_to_upload));
-                        }
-                    });
-                }
-            },
+            ondragover: upload_files,
             div {
                 id: "overlay-element",
                 class: "overlay-element",
@@ -208,7 +216,7 @@ pub fn Compose(cx: Scope) -> Element {
                 p {id: "overlay-text", class: "overlay-text"}
             },
             Topbar {
-                with_back_button: state.read().ui.is_minimal_view() || state.read().ui.sidebar_hidden,
+                with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
                 onback: move |_| {
                     let current = state.read().ui.sidebar_hidden;
                     state.write().mutate(Action::SidebarHidden(!current));
@@ -230,10 +238,10 @@ pub fn Compose(cx: Scope) -> Element {
                     is_edit_group: is_edit_group,
                 }
             },
-            // may need this later when video calling is possible. 
+            // may need this later when video calling is possible.
             // data.as_ref().and_then(|data| data.active_media.then(|| rsx!(
             //     MediaPlayer {
-            //         settings_text: get_local_text("settings.settings"), 
+            //         settings_text: get_local_text("settings.settings"),
             //         enable_camera_text: get_local_text("media-player.enable-camera"),
             //         fullscreen_text: get_local_text("media-player.fullscreen"),
             //         popout_player_text: get_local_text("media-player.popout-player"),
@@ -243,6 +251,11 @@ pub fn Compose(cx: Scope) -> Element {
             // ))),
         show_edit_group
             .map_or(false, |group_chat_id| (group_chat_id == chat_id)).then(|| rsx!(
+            InvisibleCloser {
+                onclose: move |_| {
+                    show_edit_group.set(None);
+                }
+            }
             EditGroup {}
         )),
         show_group_users
@@ -333,7 +346,7 @@ enum ControlsCmd {
 }
 
 enum EditGroupCmd {
-    UpdateGroupName(String),
+    UpdateGroupName((Uuid, String)),
 }
 
 fn get_controls(cx: Scope<ComposeProps>) -> Element {
@@ -495,6 +508,25 @@ fn get_controls(cx: Scope<ComposeProps>) -> Element {
                 }
             }
         },
+        div {
+            position: "relative",
+            match state.read().get_active_chat() {
+                Some(chat) => cx.render(rsx!(PinnedMessages{ active_chat: chat })),
+                None => cx.render(rsx!(())),
+            },
+            div {
+                id: "pin-button",
+                Button {
+                    icon: Icon::Pin,
+                    aria_label: "pin-label".into(),
+                    appearance: Appearance::Secondary,
+                    tooltip: cx.render(rsx!(Tooltip {
+                        arrow_position: ArrowPosition::TopRight,
+                        text: get_local_text("messages.pin-view"),
+                    })),
+                }
+            }
+        }
         Button {
             icon: Icon::PhoneArrowUpRight,
             disabled: !state.read().configuration.developer.experimental_features || *call_pending.current() || call_in_progress,
@@ -573,28 +605,25 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
 
     let conv_id = data.active_chat.id;
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| {
-        to_owned![conv_id];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    EditGroupCmd::UpdateGroupName(new_conversation_name) => {
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
-                                conv_id,
-                                new_conversation_name,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-                        let res = rx.await.expect("command canceled");
-                        if let Err(e) = res {
-                            log::error!("failed to update group conversation name: {}", e);
-                        }
+    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<EditGroupCmd>| async move {
+        let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+        while let Some(cmd) = rx.next().await {
+            match cmd {
+                EditGroupCmd::UpdateGroupName((conv_id, new_conversation_name)) => {
+                    let (tx, rx) = oneshot::channel();
+                    if let Err(e) =
+                        warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::UpdateConversationName {
+                            conv_id,
+                            new_conversation_name,
+                            rsp: tx,
+                        }))
+                    {
+                        log::error!("failed to send warp command: {}", e);
+                        continue;
+                    }
+                    let res = rx.await.expect("command canceled");
+                    if let Err(e) = res {
+                        log::error!("failed to update group conversation name: {}", e);
                     }
                 }
             }
@@ -635,17 +664,19 @@ fn get_topbar_children(cx: Scope<ComposeProps>) -> Element {
                                     return;
                                 }
                                 if v != conversation_title.clone() {
-                                    ch.send(EditGroupCmd::UpdateGroupName(v));
+                                    ch.send(EditGroupCmd::UpdateGroupName((conv_id, v)));
                                 }
                             },
                         },
                 })
             } else {rsx!(
                 p {
+                    aria_label: "user-info-username",
                     class: "username",
                     "{conversation_title}"
                 },
                 p {
+                    aria_label: "user-info-status",
                     class: "status",
                     if direct_message {
                         rsx! (span {
@@ -694,7 +725,7 @@ async fn drag_and_drop_function(
                             ),
                         ));
                     }
-                    window.eval(&script);
+                    _ = window.webview.evaluate_script(&script);
                 }
             }
             FileDropEvent::Dropped { paths, .. } => {
@@ -705,14 +736,14 @@ async fn drag_and_drop_function(
                     script.push_str(ANIMATION_DASH_SCRIPT);
                     script.push_str(SELECT_CHAT_BAR);
                     window.set_focus();
-                    window.eval(&script);
+                    _ = window.webview.evaluate_script(&script);
                     break;
                 }
             }
             _ => {
                 *drag_event.write_silent() = None;
                 let script = OVERLAY_SCRIPT.replace("$IS_DRAGGING", "false");
-                window.eval(&script);
+                _ = window.webview.evaluate_script(&script);
                 break;
             }
         };
