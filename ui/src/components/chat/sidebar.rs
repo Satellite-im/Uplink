@@ -136,7 +136,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                 },
                                 span {
                                     aria_label: "remaining-match-search",
-                                    &username[end..] 
+                                    &username[end..]
                                 },
                             )
                         }
@@ -223,7 +223,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                         },
                                         span {
                                             aria_label: "remaining-match-search",
-                                            &conversation_title[end..] 
+                                            &conversation_title[end..]
                                         },
                                     )
                                 } else {
@@ -299,9 +299,9 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                             aria_label: "highlight-search-typed-chars",
                                             &username[start..end]
                                         },
-                                        span { 
+                                        span {
                                             aria_label: "remaining-match-search",
-                                            &username[end..] 
+                                            &username[end..]
                                         },
                                     )
                                 }

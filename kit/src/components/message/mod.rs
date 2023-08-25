@@ -316,6 +316,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
+        aria_label: "edit-message-input".into(),
         ignore_focus: false,
         value: input,
         onchange: move |_| {},
