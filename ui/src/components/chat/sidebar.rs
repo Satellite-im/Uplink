@@ -5,7 +5,7 @@ use common::warp_runner::{RayGunCmd, WarpCmd};
 use common::{icons::outline::Shape as Icon, WARP_CMD_CH};
 use dioxus::html::input_data::keyboard_types::Code;
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 use futures::channel::oneshot;
 use futures::StreamExt;
 use kit::components::invisible_closer::InvisibleCloser;
@@ -14,7 +14,6 @@ use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
         indicator::{Platform, Status},
-        nav::Nav,
         user::User,
         user_image::UserImage,
         user_image_group::UserImageGroup,
@@ -38,17 +37,13 @@ use warp::{
 
 use crate::components::chat::create_group::CreateGroup;
 use crate::components::media::calling::CallControl;
-use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
+use crate::utils::build_participants;
+use crate::UplinkRoute;
 
 #[allow(clippy::large_enum_variant)]
 enum MessagesCommand {
     CreateConversation { recipient: DID },
     DeleteConversation { conv_id: Uuid },
-}
-
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
 }
 
 #[derive(Props)]
@@ -313,7 +308,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-pub fn Sidebar(cx: Scope<Props>) -> Element {
+pub fn Sidebar(cx: Scope) -> Element {
     log::trace!("rendering chats sidebar layout");
     let state = use_shared_state::<State>(cx)?;
     let search_results = use_state(cx, Vec::<identity_search_result::Entry>::new);
@@ -321,7 +316,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     let search_results_chats = use_state(cx, Vec::<Chat>::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
     let reset_searchbar = use_state(cx, || false);
-    let router = use_router(cx);
+    let router = use_navigator(cx);
     let show_delete_conversation = use_ref(cx, || true);
     let on_search_dropdown_hover = use_ref(cx, || false);
     let search_friends_is_focused = use_ref(cx, || false);
@@ -329,63 +324,11 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
     if let Some(chat) = *chat_with.get() {
         chat_with.set(None);
         state.write().mutate(Action::ChatWith(&chat, true));
-        if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-            router.replace_route(UPLINK_ROUTES.chat, None, None);
-        }
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
-    let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<MessagesCommand>| {
-        to_owned![chat_with, show_delete_conversation];
-        async move {
-            let warp_cmd_tx = WARP_CMD_CH.tx.clone();
-            while let Some(cmd) = rx.next().await {
-                match cmd {
-                    MessagesCommand::CreateConversation { recipient } => {
-                        // if not, create the chat
-                        let (tx, rx) = oneshot::channel();
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
-                                recipient,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-
-                        match rsp {
-                            Ok(c) => chat_with.set(Some(c)),
-                            Err(e) => {
-                                log::error!("failed to create conversation: {}", e);
-                                continue;
-                            }
-                        };
-                    }
-                    MessagesCommand::DeleteConversation { conv_id } => {
-                        *show_delete_conversation.write_silent() = false;
-                        let (tx, rx) = futures::channel::oneshot::channel();
-
-                        if let Err(e) =
-                            warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
-                                conv_id,
-                                rsp: tx,
-                            }))
-                        {
-                            log::error!("failed to send warp command: {}", e);
-                            continue;
-                        }
-
-                        let res = rx.await.expect("command canceled");
-                        if res.is_err() {
-                            log::error!("failed to delete conversation");
-                        }
-                        *show_delete_conversation.write_silent() = true;
-                    }
-                };
-            }
-        }
+    let ch = use_coroutine(cx, |rx: UnboundedReceiver<MessagesCommand>| {
+        conversation_coroutine(rx, chat_with.clone(), show_delete_conversation.clone())
     });
 
     let select_identifier = move |id: identity_search_result::Identifier| match id {
@@ -474,21 +417,19 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         },
                     }
                 }
-            ))
+            )),
             with_nav: cx.render(rsx!(
-                Nav {
-                    routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
-                    onnavigate: move |r| {
+                crate::AppNav {
+                    active: UplinkRoute::ChatLayout{},
+                    onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
                         if state.read().ui.is_minimal_view() {
                             state.write().mutate(Action::SidebarHidden(true));
                         }
-                        router.replace_route(r, None, None);
                     }
-                },
+                }
             )),
             with_call_controls: cx.render(rsx!(
                 CallControl {
@@ -496,7 +437,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 }
             )),
             if *search_friends_is_focused.read() {
-                rsx!(search_friends{
+                render! { search_friends {
                     search_typed_chars: search_typed_chars.clone(),
                     search_friends_is_focused: search_friends_is_focused.clone(),
                     identities: search_results.clone(),
@@ -509,8 +450,8 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                         reset_searchbar.set(true);
                         on_search_dropdown_hover.with_mut(|i| *i = false);
                     }
-                })
-            }
+                }}
+            },
             // Load extensions
             for node in ext_renders {
                 rsx!(node)
@@ -580,7 +521,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                     let chat_with = chat.clone();
                     let clear_unreads = chat.clone();
 
-                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name? 
+                    // todo: how to tell who is participating in a group chat if the chat has a conversation_name?
                     let participants_name = match chat.conversation_name {
                         Some(name) => name,
                         None => State::join_usernames(&other_participants)
@@ -635,10 +576,10 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                         ContextItem {
                                             icon: Icon::Trash,
                                             danger: true,
-                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")} 
-                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")} 
+                                            text: if is_group_conv && is_creator {get_local_text("uplink.delete-group-chat")}
+                                            else if is_group_conv && !is_creator  {get_local_text("uplink.leave-group")}
                                             else {get_local_text("uplink.delete-conversation")},
-                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()} 
+                                            aria_label: if is_group_conv && is_creator {"chats-delete-group".into()}
                                             else if is_group_conv && !is_creator {"chats-leave-group".into()}
                                             else {"chats-delete-conversation".into()},
                                             onpress: move |_| {
@@ -675,9 +616,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                                     if state.read().ui.is_minimal_view() {
                                         state.write().mutate(Action::SidebarHidden(true));
                                     }
-                                    if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                        router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                    }
+                                    router.replace(UplinkRoute::ChatLayout {  });
                                 }
                             }
                         }
@@ -727,4 +666,55 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             },
         }
     ))
+}
+
+async fn conversation_coroutine(
+    mut rx: UnboundedReceiver<MessagesCommand>,
+    chat_with: UseState<Option<Uuid>>,
+    show_delete_conversation: UseRef<bool>,
+) {
+    let warp_cmd_tx = WARP_CMD_CH.tx.clone();
+    while let Some(cmd) = rx.next().await {
+        match cmd {
+            MessagesCommand::CreateConversation { recipient } => {
+                // if not, create the chat
+                let (tx, rx) = oneshot::channel();
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::CreateConversation {
+                    recipient,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let rsp = rx.await.expect("command canceled");
+
+                match rsp {
+                    Ok(c) => chat_with.set(Some(c)),
+                    Err(e) => {
+                        log::error!("failed to create conversation: {}", e);
+                        continue;
+                    }
+                };
+            }
+            MessagesCommand::DeleteConversation { conv_id } => {
+                *show_delete_conversation.write_silent() = false;
+                let (tx, rx) = futures::channel::oneshot::channel();
+
+                if let Err(e) = warp_cmd_tx.send(WarpCmd::RayGun(RayGunCmd::DeleteConversation {
+                    conv_id,
+                    rsp: tx,
+                })) {
+                    log::error!("failed to send warp command: {}", e);
+                    continue;
+                }
+
+                let res = rx.await.expect("command canceled");
+                if res.is_err() {
+                    log::error!("failed to delete conversation");
+                }
+                *show_delete_conversation.write_silent() = true;
+            }
+        };
+    }
 }
