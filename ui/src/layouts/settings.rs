@@ -1,24 +1,20 @@
 use dioxus::prelude::*;
-use dioxus_router::use_router;
 
 use crate::{
-    components::{
-        chat::RouteInfo,
-        settings::{
-            sidebar::{Page, Sidebar},
-            sub_pages::{
-                about::AboutPage,
-                accessibility::AccessibilitySettings,
-                audio::AudioSettings,
-                developer::DeveloperSettings,
-                extensions::ExtensionSettings,
-                general::GeneralSettings,
-                licenses::Licenses,
-                notifications::NotificationSettings,
-                // files::FilesSettings,
-                // privacy::PrivacySettings,
-                profile::ProfileSettings,
-            },
+    components::settings::{
+        sidebar::{Page, Sidebar},
+        sub_pages::{
+            about::AboutPage,
+            accessibility::AccessibilitySettings,
+            audio::AudioSettings,
+            developer::DeveloperSettings,
+            extensions::ExtensionSettings,
+            general::GeneralSettings,
+            licenses::Licenses,
+            notifications::NotificationSettings,
+            // files::FilesSettings,
+            // privacy::PrivacySettings,
+            profile::ProfileSettings,
         },
     },
     layouts::slimbar::SlimbarLayout,
@@ -26,15 +22,10 @@ use crate::{
 
 use common::state::{ui, Action, State};
 
-use kit::{components::nav::Nav, layout::topbar::Topbar};
-
-#[derive(PartialEq, Props)]
-pub struct Props {
-    route_info: RouteInfo,
-}
+use kit::layout::topbar::Topbar;
 
 #[allow(non_snake_case)]
-pub fn SettingsLayout(cx: Scope<Props>) -> Element {
+pub fn SettingsLayout(cx: Scope) -> Element {
     let state = use_shared_state::<State>(cx)?;
     let to = use_state(cx, || Page::Profile);
 
@@ -66,11 +57,8 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
         div {
             id: "settings-layout",
             aria_label: "settings-layout",
-            SlimbarLayout {
-                route_info: cx.props.route_info.clone()
-            },
+            SlimbarLayout { active: crate::UplinkRoute::SettingsLayout{} },
             Sidebar {
-                route_info: cx.props.route_info.clone(),
                 onpress: move |p| {
                     // If on mobile, we should hide the sidebar here.
                     if state.read().ui.is_minimal_view() {
@@ -95,15 +83,11 @@ pub fn SettingsLayout(cx: Scope<Props>) -> Element {
                     class: "full-width",
                     settings_page
                 },
-                (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
-                    Nav {
-                        routes: cx.props.route_info.routes.clone(),
-                        active: cx.props.route_info.active.clone(),
-                        onnavigate: move |r| {
-                            use_router(cx).replace_route(r, None, None);
-                        }
+                 (state.read().ui.sidebar_hidden && state.read().ui.metadata.minimal_view).then(|| rsx!(
+                    crate::AppNav {
+                        active: crate::UplinkRoute::SettingsLayout{},
                     }
-                ))
+                 ))
             },
         }
     ))

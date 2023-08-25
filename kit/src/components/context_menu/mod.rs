@@ -4,7 +4,7 @@ use dioxus::{
     events::{MouseData, MouseEvent},
     prelude::*,
 };
-use dioxus_desktop::{use_eval, use_window};
+use dioxus_desktop::use_window;
 use warp::crypto::DID;
 
 use crate::components::indicator::Indicator;
@@ -134,7 +134,7 @@ pub fn ContextMenu<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         to_owned![eval];
         async move {
             let script = include_str!("./context.js").replace("UUID", &id);
-            eval(script);
+            let _ = eval(&script);
         }
     });
 
