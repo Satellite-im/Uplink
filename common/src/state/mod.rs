@@ -584,6 +584,19 @@ impl State {
             }
             MessageEvent::RecipientRemoved { conversation } => {
                 if let Some(chat) = self.chats.all.get_mut(&conversation.id()) {
+                    // Also remove the recipient from the active call if present
+                    if let Some(call) = self.ui.call_info.active_call() {
+                        if call.call.conversation_id.eq(&conversation.id()) {
+                            for did in &chat.participants {
+                                if !conversation.recipients().contains(did) {
+                                    let _ = self
+                                        .ui
+                                        .call_info
+                                        .remove_participants(call.call.id, did.clone());
+                                }
+                            }
+                        }
+                    }
                     chat.participants = HashSet::from_iter(conversation.recipients());
                 }
             }
