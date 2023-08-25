@@ -35,7 +35,7 @@ pub struct Props<'a> {
     onnavigate: Option<EventHandler<'a, To>>,
     routes: Vec<Route>,
     #[props(optional)]
-    active: Option<Route>,
+    active: Option<To>,
     #[props(optional)]
     bubble: Option<bool>,
     pub tooltip_direction: Option<ArrowPosition>,
@@ -50,8 +50,8 @@ pub fn emit(cx: &Scope<Props>, to: &To) {
 }
 
 /// Gets the appearance for a nav button based on the active route
-pub fn get_appearance(active_route: &Route, route: &Route) -> Appearance {
-    if active_route.to == route.to {
+pub fn get_appearance(active_route: To, route: To) -> Appearance {
+    if active_route == route {
         Appearance::Primary
     } else {
         Appearance::Transparent
@@ -64,17 +64,8 @@ pub fn get_badge(route: &Route) -> String {
 }
 
 /// Gets the active route, or returns a void one
-pub fn get_active(cx: &Scope<Props>) -> Route {
-    match &cx.props.active {
-        Some(f) => f.to_owned(),
-        None => Route {
-            to: "!void",
-            name: "!void".to_owned(),
-            icon: Icon::ExclamationTriangle,
-            with_badge: None,
-            loading: None,
-        },
-    }
+pub fn get_active(cx: &Scope<Props>) -> To {
+    cx.props.active.unwrap_or("!void")
 }
 
 /// Returns a nav component generated based on given props.
@@ -133,7 +124,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         aria_label: aria_label.to_lowercase() + "-button",
                         icon: route.icon,
                         onpress: move |_| {
-                            active.set(route.to_owned());
+                            active.set(route.to);
                             emit(&cx, &route.to)
                         },
                         text: {
@@ -141,7 +132,7 @@ pub fn Nav<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         },
                         with_badge: badge,
                         tooltip: tooltip,
-                        appearance: get_appearance(active, route)
+                        appearance: get_appearance(active, route.to)
                     }
                 )
             })

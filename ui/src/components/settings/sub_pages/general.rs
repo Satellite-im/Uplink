@@ -174,7 +174,7 @@ pub fn GeneralSettings(cx: Scope) -> Element {
                         icon: Icon::NoSymbol,
                         onpress: move |_| {
                             state.write().mutate(Action::ClearAccentColor);
-                        }
+                        },
                         tooltip: cx.render(rsx!(Tooltip {
                             arrow_position: ArrowPosition::Right,
                             text: get_local_text("settings-general.clear-accent"),

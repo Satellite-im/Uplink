@@ -5,15 +5,12 @@ use common::language::get_local_text;
 use common::sounds;
 use common::state::State;
 use dioxus::prelude::*;
-use dioxus_router::*;
 use kit::{
     components::nav::Nav,
     components::nav::Route as UIRoute,
     elements::input::{Input, Options},
     layout::sidebar::Sidebar as ReusableSidebar,
 };
-
-use crate::components::chat::RouteInfo;
 
 pub enum Page {
     About,
@@ -52,7 +49,6 @@ impl FromStr for Page {
 
 #[derive(Props)]
 pub struct Props<'a> {
-    route_info: RouteInfo,
     #[props(optional)]
     onpress: Option<EventHandler<'a, Page>>,
 }
@@ -67,6 +63,7 @@ pub fn emit(cx: &Scope<Props>, e: Page) {
 #[allow(non_snake_case)]
 pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let state = use_shared_state::<State>(cx)?;
+    let _router = dioxus_router::hooks::use_navigator(cx);
 
     let profile = UIRoute {
         to: "profile",
@@ -172,20 +169,18 @@ pub fn Sidebar<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                 }
             )),
             with_nav: cx.render(rsx!(
-                Nav {
-                    routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
-                    onnavigate: move |route| {
+                crate::AppNav {
+                    active: crate::UplinkRoute::SettingsLayout{},
+                    onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
-                            sounds::Play(sounds::Sounds::Interaction);
+                            common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
-                        use_router(cx).replace_route(route, None, None);
                     }
-                },
+                }
             )),
             Nav {
                 routes: routes.clone(),
-                active: active_route,
+                active: active_route.to,
                 bubble: true,
                 onnavigate: move |route| {
                     if state.read().configuration.audiovideo.interface_sounds {
