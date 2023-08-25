@@ -35,7 +35,6 @@ use common::{
 };
 
 use common::language::get_local_text;
-use dioxus_desktop::use_eval;
 use rfd::FileDialog;
 
 use uuid::Uuid;
@@ -155,7 +154,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 None => return,
             };
             if let Some(uuid) = state.write_silent().check_message_scroll(&currently_active) {
-                eval(include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()));
+                let _ = eval(
+                    &include_str!("../scroll_to_message.js").replace("$UUID", &uuid.to_string()),
+                );
             }
         }
     });
@@ -169,9 +170,9 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
             if *prev_chat_id.read() != id {
                 *prev_chat_id.write_silent() = id;
                 let script = include_str!("../scroll_to_bottom.js");
-                eval(script.to_string());
+                _ = eval(script);
             }
-            eval(SETUP_CONTEXT_PARENT.to_string());
+            _ = eval(SETUP_CONTEXT_PARENT);
         }
     });
 
@@ -616,17 +617,19 @@ fn render_message_group<'a>(cx: Scope<'a, MessageGroupProps<'a>>) -> Element<'a>
     cx.render(rsx!(
         blocked_element,
         MessageGroup {
-            user_image: cx.render(rsx!(UserImage {
+            user_image: render!(UserImage {
                 image: sender.profile_picture(),
                 platform: sender.platform().into(),
                 status: sender_status,
                 on_press: move |e| {
                     cx.props.on_context_menu_action.call((e, sender.to_owned()));
-                }
+                },
                 oncontextmenu: move |e| {
-                    cx.props.on_context_menu_action.call((e, sender_clone.to_owned()));
+                    cx.props
+                        .on_context_menu_action
+                        .call((e, sender_clone.to_owned()));
                 }
-            })),
+            }),
             timestamp: format_timestamp_timeago(last_message.inner.date(), active_language),
             sender: sender_name.clone(),
             remote: group.remote,
@@ -865,7 +868,7 @@ fn render_message<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         //             class: "{reactions_class} pointer",
         //             tabindex: "0",
         //             onmouseleave: |_| {
-        //                 #[cfg(not(target_os = "macos"))] 
+        //                 #[cfg(not(target_os = "macos"))]
         //                 {
         //                     eval(focus_script.to_string());
         //                 }

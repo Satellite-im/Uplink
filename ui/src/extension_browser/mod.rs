@@ -140,7 +140,7 @@ pub fn ExtensionsBrowser(cx: Scope) -> Element {
             id: "extensions-browser",
             aria_label: "extensions-browser",
             Nav {
-                active: routes[0].clone(),
+                active: routes[0].to,
                 bubble: true,
                 routes: routes,
                 onnavigate: move |r| {

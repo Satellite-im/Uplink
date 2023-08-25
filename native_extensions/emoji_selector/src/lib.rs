@@ -4,7 +4,6 @@ use common::{
     state::{scope_ids::ScopeIds, ui::EmojiDestination, Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use emojis::Group;
 use extensions::{export_extension, Details, Extension, Location, Meta, Type};
 use futures::StreamExt;
@@ -117,10 +116,10 @@ fn build_nav(cx: Scope) -> Element<'a> {
 
     cx.render(rsx!(Nav {
         routes: routes.clone(),
-        active: routes[0].clone(),
+        active: routes[0].to,
         onnavigate: move |r| {
             let scroll_script = scroll_script.to_string().replace("$EMOJI_CONTAINER", r);
-            eval(scroll_script);
+            let _ = eval(&scroll_script);
         }
     }))
 }
@@ -179,16 +178,16 @@ fn render_selector<'a>(
     cx.render(rsx! (
             div {
                 onmouseenter: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = true;
                     }
                 },
                 onmouseleave: |_| {
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         *mouse_over_emoji_selector.write_silent() = false;
-                        eval(focus_script.to_string());
+                        let _ = eval(focus_script);
                     }
                 },
                 id: "emoji_selector",
@@ -205,7 +204,7 @@ fn render_selector<'a>(
                             state.write().mutate(Action::SetEmojiPickerVisible(false));
                         }
                     }
-                    #[cfg(not(target_os = "macos"))] 
+                    #[cfg(not(target_os = "macos"))]
                     {
                         if !*mouse_over_emoji_button.read() && !*mouse_over_emoji_selector.read() {
                             state.write().mutate(Action::SetEmojiPickerVisible(false));

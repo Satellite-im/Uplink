@@ -9,7 +9,6 @@ use common::{
 };
 use dioxus::prelude::*;
 
-use dioxus_desktop::use_eval;
 use futures::StreamExt;
 use kit::components::{embeds::file_embed::FileEmbed, message::ChatText, user_image::UserImage};
 use uuid::Uuid;
@@ -96,7 +95,7 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
     use_effect(cx, (), |_| {
         to_owned![eval];
         async move {
-            eval(script.to_string());
+            let _ = eval(script);
         }
     });
 
@@ -205,7 +204,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                         class: "pinned-buttons",
                                         onclick: move |_| {
                                             if cx.props.is_loaded {
-                                                eval(include_str!("../scroll_to_message.js").replace("$UUID", &id.to_string()));
+                                                let _ = eval(&include_str!("../scroll_to_message.js").replace("$UUID", &id.to_string()));
                                             } else {
                                                 cx.props.ch.send(ChannelCommand::ScrollToUnloaded(chat_id, id, date))
                                             }

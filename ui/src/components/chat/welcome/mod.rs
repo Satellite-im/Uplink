@@ -1,27 +1,22 @@
 use common::get_images_dir;
 use common::state::{Action, State};
 use dioxus::prelude::*;
+use dioxus_router::prelude::use_navigator;
 use kit::layout::topbar::Topbar;
 
-use crate::UPLINK_ROUTES;
 use common::icons::outline::Shape as Icon;
 use common::language::get_local_text;
-use dioxus_router::use_router;
 use kit::elements::{button::Button, Appearance};
+
+use crate::UplinkRoute;
 
 #[allow(non_snake_case)]
 pub fn Welcome(cx: Scope) -> Element {
-    let router = use_router(cx).clone();
+    let router = use_navigator(cx);
     let state = use_shared_state::<State>(cx)?;
-
     let cta_text = get_local_text("friends.cta-text");
-    let image_path = get_images_dir()
-        .unwrap_or_default()
-        .join("mascot")
-        .join("better_with_friends.webp")
-        .to_str()
-        .map(|x| x.to_string())
-        .unwrap_or_default();
+    let image_path = use_image_path(cx);
+
     cx.render(rsx! {
         div {
             id: "welcome",
@@ -52,9 +47,21 @@ pub fn Welcome(cx: Scope) -> Element {
                 text: get_local_text("friends.add"),
                 appearance: Appearance::Secondary,
                 onpress: move |_| {
-                    router.replace_route(UPLINK_ROUTES.friends, None, None);
+                    router.replace(UplinkRoute::FriendsLayout {  });
                 }
             },
         }
+    })
+}
+
+fn use_image_path(cx: &ScopeState) -> &str {
+    cx.use_hook(|| {
+        get_images_dir()
+            .unwrap_or_default()
+            .join("mascot")
+            .join("better_with_friends.webp")
+            .to_str()
+            .map(|x| x.to_string())
+            .unwrap_or_default()
     })
 }
