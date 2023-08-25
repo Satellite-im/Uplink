@@ -84,6 +84,7 @@ pub enum ChanCmd {
 #[derive(PartialEq, Props)]
 pub struct Props {
     route_info: RouteInfo,
+    send_files_to_chat_mode: Option<UseState<bool>>,
 }
 
 #[allow(non_snake_case)]
@@ -95,7 +96,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let select_files_to_send_mode = use_state(cx, || false);
+    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode {
+        Some(_) => use_state(cx, || true),
+        None => use_state(cx, || false),
+    };
     let files_selected_to_send: &UseRef<Vec<Uuid>> = use_ref(cx, Vec::new);
 
     allow_block_folder_nav(cx, window, &files_in_queue_to_upload);
@@ -139,13 +143,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
     cx.render(rsx!(
-        div {
-            id: "overlay-element",
-            class: "overlay-element",
-            div {id: "dash-element", class: "dash-background active-animation"},
-            p {id: "overlay-text0", class: "overlay-text"},
-            p {id: "overlay-text", class: "overlay-text"}
-        },
         if state.read().ui.metadata.focused {
             rsx!(paste_files_with_shortcut::PasteFilesShortcut {
                 on_paste: move |files_local_path| {
@@ -171,7 +168,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
         }
         div {
             id: "files-layout",
-            color: "red",
             aria_label: "files-layout",
             ondragover: move |_| {
                     if upload_file_controller.are_files_hovering_app.with(|i| !(i)) {
@@ -181,107 +177,113 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             onclick: |_| {
                 storage_controller.write().finish_renaming_item(false);
             },
-            SlimbarLayout {
-                route_info: cx.props.route_info.clone()
-            },
-            ChatSidebar {
-                route_info: cx.props.route_info.clone()
-            },
+            if !*select_files_to_send_mode.get() {
+                rsx!(
+                    SlimbarLayout {
+                        route_info: cx.props.route_info.clone()
+                    },
+                    ChatSidebar {
+                        route_info: cx.props.route_info.clone()
+                    },
+                )
+            }
             div {
                 class: "files-body disable-select",
                 aria_label: "files-body",
-                Topbar {
-                    with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
-                    onback: move |_| {
-                        let current = state.read().ui.sidebar_hidden;
-                        state.write().mutate(Action::SidebarHidden(!current));
-                    },
-                    controls: cx.render(
-                        rsx! (
-                            Button {
-                                icon: Icon::FolderPlus,
-                                disabled: *upload_file_controller.files_been_uploaded.read(),
-                                appearance: Appearance::Secondary,
-                                aria_label: "add-folder".into(),
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: get_local_text("files.new-folder"),
-                                    }
-                                )),
-                                onpress: move |_| {
-                                    if !*upload_file_controller.files_been_uploaded.read() {
-                                        storage_controller.write().finish_renaming_item(true);
-                                    }
+                if !*select_files_to_send_mode.get() {
+                    rsx!(Topbar {
+                        with_back_button: state.read().ui.is_minimal_view() && state.read().ui.sidebar_hidden,
+                        onback: move |_| {
+                            let current = state.read().ui.sidebar_hidden;
+                            state.write().mutate(Action::SidebarHidden(!current));
+                        },
+                        controls: cx.render(
+                            rsx! (
+                                Button {
+                                    icon: Icon::FolderPlus,
+                                    disabled: *upload_file_controller.files_been_uploaded.read(),
+                                    appearance: Appearance::Secondary,
+                                    aria_label: "add-folder".into(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.new-folder"),
+                                        }
+                                    )),
+                                    onpress: move |_| {
+                                        if !*upload_file_controller.files_been_uploaded.read() {
+                                            storage_controller.write().finish_renaming_item(true);
+                                        }
+                                    },
                                 },
-                            },
-                            Button {
-                                icon: Icon::Plus,
-                                appearance: Appearance::Secondary,
-                                aria_label: "upload-file".into(),
-                                tooltip: cx.render(rsx!(
-                                    Tooltip {
-                                        arrow_position: ArrowPosition::Top,
-                                        text: get_local_text("files.upload"),
-                                    }
-                                ))
-                                onpress: move |_| {
-                                    storage_controller.with_mut(|i|  i.is_renaming_map = None);
-                                    let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
-                                        Some(path) => path,
-                                        None => return
-                                    };
-                                    add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window);
-                                    upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
-                                },
-                            }
-                        )
-                    ),
-                    div {
-                        class: "files-info",
-                        aria_label: "files-info",
-                        if storage_controller.read().storage_size.0.is_empty() {
-                            rsx!(div {
-                                class: "skeletal-texts",
-                                div {
-                                    class: "skeletal-text",
-                                    div {
-                                        class: "skeletal-text-content skeletal",
-                                    }
-                                },
-                            },
-                            div {
-                                class: "skeletal-texts",
-                                div {
-                                    class: "skeletal-text",
-                                    div {
-                                        class: "skeletal-text-content skeletal",
-                                    }
-                                },
-                            })
-                        } else {
-                            rsx!(
-                                p {
-                                    class: "free-space",
-                                    aria_label: "free-space-max-size",
-                                    format!("{}", get_local_text("files.storage-max-size")),
-                                    span {
-                                        class: "count",
-                                       format!("{}", storage_controller.read().storage_size.0),
-                                    }
-                                },
-                                p {
-                                    class: "free-space",
-                                    aria_label: "free-space-current-size",
-                                    format!("{}", get_local_text("files.storage-current-size")),
-                                    span {
-                                        class: "count",
-                                       format!("{}", storage_controller.read().storage_size.1),
-                                    }
-                                },
+                                Button {
+                                    icon: Icon::Plus,
+                                    appearance: Appearance::Secondary,
+                                    aria_label: "upload-file".into(),
+                                    tooltip: cx.render(rsx!(
+                                        Tooltip {
+                                            arrow_position: ArrowPosition::Top,
+                                            text: get_local_text("files.upload"),
+                                        }
+                                    ))
+                                    onpress: move |_| {
+                                        storage_controller.with_mut(|i|  i.is_renaming_map = None);
+                                        let files_local_path = match FileDialog::new().set_directory(".").pick_files() {
+                                            Some(path) => path,
+                                            None => return
+                                        };
+                                        add_files_in_queue_to_upload(upload_file_controller.files_in_queue_to_upload, files_local_path, window);
+                                        upload_file_controller.files_been_uploaded.with_mut(|i| *i = true);
+                                    },
+                                }
                             )
+                        ),
+                        div {
+                            class: "files-info",
+                            aria_label: "files-info",
+                            if storage_controller.read().storage_size.0.is_empty() {
+                                rsx!(div {
+                                    class: "skeletal-texts",
+                                    div {
+                                        class: "skeletal-text",
+                                        div {
+                                            class: "skeletal-text-content skeletal",
+                                        }
+                                    },
+                                },
+                                div {
+                                    class: "skeletal-texts",
+                                    div {
+                                        class: "skeletal-text",
+                                        div {
+                                            class: "skeletal-text-content skeletal",
+                                        }
+                                    },
+                                })
+                            } else {
+                                rsx!(
+                                    p {
+                                        class: "free-space",
+                                        aria_label: "free-space-max-size",
+                                        format!("{}", get_local_text("files.storage-max-size")),
+                                        span {
+                                            class: "count",
+                                           format!("{}", storage_controller.read().storage_size.0),
+                                        }
+                                    },
+                                    p {
+                                        class: "free-space",
+                                        aria_label: "free-space-current-size",
+                                        format!("{}", get_local_text("files.storage-current-size")),
+                                        span {
+                                            class: "count",
+                                           format!("{}", storage_controller.read().storage_size.1),
+                                        }
+                                    },
+                                )
+                            }
                         }
-                    }
+                    })
                 }
                 UploadProgressBar {
                     are_files_hovering_app: upload_file_controller.are_files_hovering_app,

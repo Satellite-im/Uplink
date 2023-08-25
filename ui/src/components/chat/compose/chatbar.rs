@@ -10,6 +10,8 @@ use common::{
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
+use common::icons::outline::Shape as Icon;
+use kit::{components::nav::Route as UIRoute, layout::modal::Modal};
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
@@ -17,7 +19,7 @@ use kit::{
         context_menu::{ContextItem, ContextMenu},
         embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
-        user_image::UserImage,
+        user_image::UserImage, nav::Route,
     },
     elements::{
         button::Button,
@@ -34,13 +36,15 @@ const MAX_CHARS_LIMIT: usize = 1024;
 const MAX_FILES_PER_MESSAGE: usize = 8;
 
 use crate::{
-    components::paste_files_with_shortcut,
+    components::{
+        chat::{compose::context_file_location::FileLocationContext, RouteInfo}, paste_files_with_shortcut,
+    },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
             check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
         },
-    },
+    }, layouts::storage::FilesLayout, UPLINK_ROUTES,
 };
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
@@ -75,6 +79,10 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
         .map(|data| data.active_chat.id)
         .unwrap_or(Uuid::nil());
     let can_send = use_state(cx, || state.read().active_chat_has_draft());
+    let update_script = use_state(cx, String::new);
+    let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
+    let show_storage_modal = use_state(cx, || false);
+
 
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
@@ -482,7 +490,30 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         disabled: is_loading || disabled,
                         aria_label: "upload-button".into(),
                         appearance: Appearance::Primary,
-                        onpress: move |_| {
+                        onpress: move |e: Event<MouseData>| {
+                            let mouse_data = e;
+                            let script = include_str!("../show_context.js")
+                                .replace("UUID", upload_button_menu_uuid)
+                                .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
+                                .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string());
+                            update_script.set(script);
+                           
+                        },
+                        tooltip: cx.render(rsx!(
+                            Tooltip {
+                                arrow_position: ArrowPosition::Bottom,
+                                text: get_local_text("files.upload"),
+                            }
+                        )),
+                    }
+                    FileLocationContext {
+                        id: upload_button_menu_uuid,
+                        update_script: update_script,
+                        on_press_storage: move |_| {
+                            show_storage_modal.set(true);
+                           
+                        },
+                        on_press_local_disk: move |_| {
                             if disabled {
                                 return;
                             }
@@ -501,12 +532,38 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 update_send();
                             }
                         },
-                        tooltip: cx.render(rsx!(
-                            Tooltip {
-                                arrow_position: ArrowPosition::Bottom,
-                                text: get_local_text("files.upload"),
+                    }
+                    if *show_storage_modal.get() {
+                        let files_route = UIRoute {
+                            to: UPLINK_ROUTES.files,
+                            name: get_local_text("files.files"),
+                            icon: Icon::Folder,
+                            ..UIRoute::default()
+                        };
+                        let routes = vec![files_route.clone()];
+                        rsx!(
+                            Modal {
+                                open: *show_storage_modal.clone(),
+                                onclose: move |_| show_storage_modal.set(false),
+                                div {
+                                    top: "40%", 
+                                    left: "40%",
+                                    border: "1px solid var(--primary)",
+                                    background_color: "var(--background)",
+                                    background: "var(--background)",
+                                    height: "600px",
+                                    width: "600px",
+                                    FilesLayout {
+                                        send_files_to_chat_mode: show_storage_modal.clone(),
+                                        route_info: RouteInfo {
+                                            routes: routes.clone(),
+                                            active: files_route,
+                                        }
+                                    }
+                                }
+                                
                             }
-                        )),
+                        )
                     }
                 ),
             )
