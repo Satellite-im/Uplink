@@ -20,7 +20,10 @@ use crate::{
 };
 use common::{
     icons::outline::Shape as Icon,
-    state::call::{ActiveCall, Call},
+    state::{
+        call::{ActiveCall, Call},
+        ui::Layout,
+    },
     warp_runner::{BlinkCmd, WarpCmd},
     WARP_CMD_CH,
 };
@@ -180,19 +183,20 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
             }
         }
     });
-
-    match state.read().get_active_chat() {
-        None => {
-            if cx.props.in_chat {
-                return cx.render(rsx!(()));
+    if state.read().ui.current_layout == Layout::Compose {
+        match state.read().get_active_chat() {
+            None => {
+                if cx.props.in_chat {
+                    return cx.render(rsx!(()));
+                }
             }
-        }
-        Some(c) => {
-            if active_call.call.conversation_id.eq(&c.id) != cx.props.in_chat {
-                return cx.render(rsx!(()));
+            Some(c) => {
+                if active_call.call.conversation_id.eq(&c.id) != cx.props.in_chat {
+                    return cx.render(rsx!(()));
+                }
             }
-        }
-    };
+        };
+    }
     let call = &active_call.call;
 
     let participants = state.read().get_identities(&call.participants);
@@ -339,18 +343,20 @@ fn PendingCallDialog(cx: Scope<PendingCallProps>) -> Element {
     });
 
     let call = &cx.props.call;
-    match state.read().get_active_chat() {
-        None => {
-            if cx.props.in_chat {
-                return cx.render(rsx!(()));
+    if state.read().ui.current_layout == Layout::Compose {
+        match state.read().get_active_chat() {
+            None => {
+                if cx.props.in_chat {
+                    return cx.render(rsx!(()));
+                }
             }
-        }
-        Some(c) => {
-            if call.conversation_id.eq(&c.id) != cx.props.in_chat {
-                return cx.render(rsx!(()));
+            Some(c) => {
+                if call.conversation_id.eq(&c.id) != cx.props.in_chat {
+                    return cx.render(rsx!(()));
+                }
             }
-        }
-    };
+        };
+    }
     let mut participants = state.read().get_identities(&call.participants);
     participants = state.read().remove_self(&participants);
     let usernames = match state.read().get_chat_by_id(call.id) {
