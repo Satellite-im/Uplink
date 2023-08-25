@@ -11,7 +11,6 @@ use common::{
     STATIC_ARGS, WARP_CMD_CH,
 };
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
@@ -539,7 +538,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                 rsx!(div {
                     class: "btn scroll-bottom-btn",
                     onclick: |_| {
-                        use_eval(cx)(SCROLL_BOTTOM.to_string());
+                        let _ = use_eval(cx)(SCROLL_BOTTOM);
                     },
                     get_local_text("messages.scroll-bottom"),
                 })

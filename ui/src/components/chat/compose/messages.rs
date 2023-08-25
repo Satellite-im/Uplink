@@ -24,7 +24,7 @@ use common::{
     language::get_local_text_args_builder,
     state::{
         group_messages, pending_group_messages, pending_message::PendingMessage,
-        ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
+        scope_ids::ScopeIds, ui::EmojiDestination, GroupedMessage, MessageGroup, ToastNotification,
     },
     warp_runner::ui_adapter::{self},
 };
@@ -429,12 +429,14 @@ pub fn get_messages(cx: Scope, data: Rc<super::ComposeData>) -> Element {
                 let update = cx.schedule_update_any();
                 to_owned![eval, update, state, active_chat];
                 async move {
-                    if let Ok(val) = eval(READ_SCROLL.to_string()).await{
-                        if let Some(uuid) = active_chat.read().as_ref() {
-                            state.write_silent().update_chat_scroll(*uuid, val.as_i64().unwrap_or_default());
-                            if let Some(id) = state.read().scope_ids.chatbar{
-                                update(ScopeIds::scope_id_from_usize(id));
-                            };
+                    if let Ok(val) = eval(READ_SCROLL){
+                        if let Ok(result) = val.recv().await {
+                            if let Some(uuid) = active_chat.read().as_ref() {
+                                state.write_silent().update_chat_scroll(*uuid, result.as_i64().unwrap_or_default());
+                                if let Some(id) = state.read().scope_ids.chatbar{
+                                    update(ScopeIds::scope_id_from_usize(id));
+                                };
+                            }
                         }
                     }
                 }
