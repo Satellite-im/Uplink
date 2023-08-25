@@ -177,6 +177,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.pinned.then(|| {
             rsx!(div {
                 class: "pin-indicator",
+                aria_label: "pin-indicator",
                 common::icons::Icon {
                     ..common::icons::IconProps {
                         class: None,

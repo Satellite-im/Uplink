@@ -86,6 +86,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     div {
                         id: "users-searchdropdown-label",
                         class: "users-groups-label",
+                        aria_label: "users-groups-label",
                         p {
                             get_local_text("uplink.users")
                         }
@@ -108,7 +109,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
-                        aria_label: "identity-header-sidebar",
+                        aria_label: "search-result-user",
                         opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
                         prevent_default: "onclick",
                         onclick: move |evt| {
@@ -125,19 +126,25 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         },
                         div {
                             class: "search-friends-dropdown-name",
+                            aria_label: "search-friends-dropdown-name",
                             rsx!(
                                 span { &username[0..start] },
                                 span {
-                                    class: "highlight-search-typed-chars", 
+                                    class: "highlight-search-typed-chars",
+                                    aria_label: "highlight-search-typed-chars",
                                     &username[start..end]
                                 },
-                                span { &username[end..] },
+                                span {
+                                    aria_label: "remaining-match-search",
+                                    &username[end..] 
+                                },
                             )
                         }
                         if blocked_friends.contains(&did2) {
                             rsx!(
                                 div {
                                     padding_right: "32px",
+                                    aria_label: "search-result-blocked-user",
                                     IconElement {
                                         size: 40,
                                         fill: "var(--text-color-muted)",
@@ -157,6 +164,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                     div {
                         id: "groups-searchdropdown-label",
                         class: "users-groups-label",
+                        aria_label: "users-groups-label",
                         p {
                             get_local_text("uplink.groups")
                         }
@@ -180,7 +188,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                 rsx!(
                     div {
                         class: "identity-header-sidebar",
-                        aria_label: "identity-header-sidebar",
+                        aria_label: "search-result-group",
                         prevent_default: "onclick",
                         onclick: move |evt|  {
                                 evt.stop_propagation();
@@ -203,15 +211,20 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             }
                         div {
                                 class: "search-friends-dropdown-name",
+                                aria_label: "search-friends-dropdown-name",
                                 if let Some(start) = conversation_title.to_lowercase().find(&text_to_find) {
                                     let end = start + search_typed_chars2.len();
                                     rsx!(
                                         span { &conversation_title[0..start] },
                                         span {
-                                            class: "highlight-search-typed-chars", 
+                                            class: "highlight-search-typed-chars",
+                                            aria_label: "highlight-search-typed-chars",
                                             &conversation_title[start..end]
                                         },
-                                        span { &conversation_title[end..] },
+                                        span {
+                                            aria_label: "remaining-match-search",
+                                            &conversation_title[end..] 
+                                        },
                                     )
                                 } else {
                                     rsx!(span { conversation_title})
@@ -227,6 +240,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                         rsx!(
                             div {
                                 id: "members-searchdropdown-label",
+                                aria_label: "members-searchdropdown-label",
                                 padding_left: "48px",
                                 padding_top: "4px",
                                 p {
@@ -261,7 +275,7 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                             div {
                                 class: "identity-header-sidebar-participants-in-group",
                                 opacity: format_args!("{}", if blocked_friends.contains(&did2) {"0.5"} else {"1"}),
-                                aria_label: "identity-header-sidebar-participants-in-group",
+                                aria_label: "search-result-participant-in-group",
                                 prevent_default: "onclick",
                                 onclick: move |evt| {
                                     if !blocked_friends.contains(&did2) {
@@ -277,19 +291,25 @@ fn search_friends<'a>(cx: Scope<'a, SearchProps<'a>>) -> Element<'a> {
                                 },
                                 div {
                                     class: "search-friends-dropdown-name",
+                                    aria_label: "search-friends-dropdown-name",
                                     rsx!(
                                         span { &username[0..start] },
                                         span {
-                                            class: "highlight-search-typed-chars", 
+                                            class: "highlight-search-typed-chars",
+                                            aria_label: "highlight-search-typed-chars",
                                             &username[start..end]
                                         },
-                                        span { &username[end..] },
+                                        span { 
+                                            aria_label: "remaining-match-search",
+                                            &username[end..] 
+                                        },
                                     )
                                 }
                                 if blocked_friends.contains(&did2) {
                                     rsx!(
                                         div {
                                             padding_right: "32px",
+                                            aria_label: "search-result-blocked-user-in-group",
                                             IconElement {
                                                 size: 40,
                                                 fill: "var(--text-color-muted)",
