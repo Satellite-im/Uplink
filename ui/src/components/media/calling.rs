@@ -203,7 +203,7 @@ fn ActiveCallControl(cx: Scope<ActiveCallProps>) -> Element {
         id: "remote-controls",
         class: format_args!("{}", if cx.props.in_chat {"in-chat"} else {""}),
         div {
-            class: "call-label",
+            class: format_args!("call-label {}", if cx.props.in_chat {"in-chat"} else {""}),
             outgoing.then(|| rsx!(Label {
                 text: get_local_text("remote-controls.outgoing-call"),
             }))

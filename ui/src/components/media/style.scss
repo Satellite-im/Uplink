@@ -171,8 +171,8 @@
     border-top: 1px solid var(--border-subtle-color);
     display: flex;
     flex-direction: column;
-    gap: var(--gap);
-    padding: var(--padding);
+    gap: var(--gap-less);
+    padding: var(--padding-less);
     justify-content: space-between;
     background: var(--secondary-dark);
     border: 2px solid var(--success-light);
@@ -180,7 +180,9 @@
     border-top-right-radius: 10px;
     .call-label {
         align-self: center;
-        min-height: 20px;
+        .in-chat {
+            min-height: 20px;
+        }
     }
     .call-info {
         color: var(--success-light);
@@ -252,8 +254,7 @@
     display: inline-flex;
     flex-direction: column;
     gap: var(--gap);
-    padding: var(--padding-more) var(--padding);
-    padding-top: var(--padding);
+    padding: var(--padding-less);
     align-items: center;
     justify-content: center;
     z-index: 1000;
