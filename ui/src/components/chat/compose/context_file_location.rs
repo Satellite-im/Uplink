@@ -1,6 +1,5 @@
 use common::icons::outline::Shape as Icon;
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use kit::components::context_menu::{ContextItem, ContextMenu};
 
 #[derive(Props)]
@@ -20,7 +19,7 @@ pub fn FileLocationContext<'a>(cx: Scope<'a, FileLocationProps<'a>>) -> Element<
         async move {
             let script = update_script.get();
             if !script.is_empty() {
-                eval(script.to_string());
+                let _ = eval(script.to_string().as_str());
             }
         }
     });
