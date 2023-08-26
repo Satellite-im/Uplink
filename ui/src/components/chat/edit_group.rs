@@ -82,7 +82,7 @@ pub fn EditGroup(cx: Scope) -> Element {
     friends.sort_by_key(|d| d.username());
 
     let add_friends = rsx!(a {
-        class: "float-right-link",
+        class: "btn appearance-default btn-small float-right-link",
         aria_label: "edit-group-add-members",
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Add);
@@ -91,7 +91,7 @@ pub fn EditGroup(cx: Scope) -> Element {
     });
 
     let remove_friends = rsx!(a {
-        class: "float-right-link",
+        class: "btn appearance-default btn-small float-right-link",
         aria_label: "edit-group-current-members",
         onclick: move |_| {
             edit_group_action.set(EditGroupAction::Remove);
@@ -122,16 +122,16 @@ pub fn EditGroup(cx: Scope) -> Element {
                         onchange: move |(v, _): (String, _)| {
                             friend_prefix.set(v);
                         },
-                    }
+                    },
                     if *edit_group_action.get() == EditGroupAction::Remove {
                         rsx! {
                             add_friends,
                         }
-                        } else {
-                            rsx! {
+                    } else {
+                        rsx! {
                             remove_friends,
-                            }
-                        },
+                        }
+                    },
                 },
 
             },

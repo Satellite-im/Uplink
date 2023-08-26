@@ -57,6 +57,7 @@ use dioxus_desktop::wry::application::event::Event as WryEvent;
 use crate::components::debug_logger::DebugLogger;
 use crate::components::toast::Toast;
 use crate::components::topbar::release_info::Release_Info;
+use crate::layouts::community::community::CommunityLayout;
 use crate::layouts::create_account::CreateAccountLayout;
 use crate::layouts::friends::FriendsLayout;
 use crate::layouts::loading::LoadingLayout;
@@ -110,6 +111,7 @@ pub struct UplinkRoutes<'a> {
     pub friends: &'a str,
     pub files: &'a str,
     pub settings: &'a str,
+    pub community: &'a str,
 }
 
 pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
@@ -118,6 +120,7 @@ pub static UPLINK_ROUTES: UplinkRoutes = UplinkRoutes {
     friends: "/friends",
     files: "/files",
     settings: "/settings",
+    community: "/community",
 };
 
 // serve as a sort of router while the user logs in]
@@ -1273,6 +1276,12 @@ fn get_router(cx: Scope) -> Element {
         icon: Icon::ChatBubbleBottomCenterText,
         ..UIRoute::default()
     };
+    let community_route = UIRoute {
+        to: UPLINK_ROUTES.community,
+        name: get_local_text("uplink.community"),
+        icon: Icon::ChatBubbleBottomCenterText,
+        ..UIRoute::default()
+    };
     let settings_route = UIRoute {
         to: UPLINK_ROUTES.settings,
         name: get_local_text("settings.settings"),
@@ -1310,6 +1319,15 @@ fn get_router(cx: Scope) -> Element {
             Route {
                 to: UPLINK_ROUTES.loading,
                 LoadingLayout{}
+            },
+            Route {
+                to: UPLINK_ROUTES.community,
+                CommunityLayout {
+                    route_info: RouteInfo {
+                        routes: routes.clone(),
+                        active: community_route.clone(),
+                    }
+                }
             },
             Route {
                 to: UPLINK_ROUTES.chat,

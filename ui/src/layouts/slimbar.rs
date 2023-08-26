@@ -7,6 +7,8 @@ use common::{
 };
 use dioxus::prelude::*;
 use dioxus_router::*;
+use kit::elements::button::Button;
+use kit::elements::tooltip::Tooltip;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
@@ -25,13 +27,14 @@ pub struct Props {
 #[allow(non_snake_case)]
 pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let router: &std::rc::Rc<RouterService> = use_router(cx);
 
     let favorites = if state.read().initialized {
         state.read().chats_favorites()
     } else {
         vec![]
     };
+
+    let router: &std::rc::Rc<RouterService> = use_router(cx);
 
     cx.render(rsx!(
         Slimbar { // TODO: This should hide when the sidebar is hidden if the view is minimal (mobile).
@@ -123,6 +126,20 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                     }
                 },
             )),
+            state.read().configuration.developer.experimental_features.then(|| rsx!(
+                Button {
+                    icon: Icon::Plus,
+                    tooltip: cx.render(rsx!(
+                        Tooltip {
+                            arrow_position: ArrowPosition::Left,
+                            text: "Create Community".into()
+                        }
+                    )),
+                    onpress: move |_| {
+                        router.replace_route(UPLINK_ROUTES.community, None, None);
+                    }
+                }
+            ))
         }
     ))
 }
