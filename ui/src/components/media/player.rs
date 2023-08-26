@@ -1,9 +1,8 @@
-use crate::UPLINK_ROUTES;
 use common::state::{Action, State};
 
 use dioxus::prelude::*;
 use dioxus_desktop::use_window;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
@@ -15,6 +14,8 @@ use kit::{
     },
     layout::topbar::Topbar,
 };
+
+use crate::UplinkRoute;
 
 #[derive(Eq, PartialEq, Props)]
 pub struct Props {
@@ -41,6 +42,8 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
         .unwrap_or(false);
 
     let _silenced_str = silenced.to_string();
+
+    let router = use_navigator(cx);
 
     cx.render(rsx!(div {
         id: "media-player",
@@ -160,7 +163,7 @@ pub fn _MediaPlayer(cx: Scope<Props>) -> Element {
                 )),
                 // TODO: Navigate to media settings
                 onpress: move |_| {
-                    use_router(cx).replace_route(UPLINK_ROUTES.settings, None, None);
+                    router.replace(UplinkRoute::SettingsLayout {});
                 }
             },
         }

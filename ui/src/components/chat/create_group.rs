@@ -8,7 +8,7 @@ use common::{
     WARP_CMD_CH,
 };
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::prelude::use_navigator;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::user_image::UserImage,
@@ -23,7 +23,7 @@ use kit::{
 use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log};
 
-use crate::UPLINK_ROUTES;
+use crate::UplinkRoute;
 
 #[derive(Props)]
 pub struct Props<'a> {
@@ -34,7 +34,7 @@ pub struct Props<'a> {
 pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering create_group");
     let state = use_shared_state::<State>(cx)?;
-    let router = use_router(cx);
+    let router = use_navigator(cx);
     let friend_prefix = use_state(cx, String::new);
     let selected_friends: &UseState<HashSet<DID>> = use_state(cx, HashSet::new);
     let chat_with: &UseState<Option<Uuid>> = use_state(cx, || None);
@@ -53,7 +53,7 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         if state.read().ui.is_minimal_view() {
             state.write().mutate(Action::SidebarHidden(true));
         }
-        router.replace_route(UPLINK_ROUTES.chat, None, None);
+        router.replace(UplinkRoute::ChatLayout {});
     }
 
     // the leading underscore is to pass this to a prop named "friends"
@@ -103,7 +103,6 @@ pub fn CreateGroup<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             id: "create-group",
-            margin_right: "8px",
             aria_label: "Create Group",
             div {
                 id: "create-group-name",
@@ -267,7 +266,7 @@ fn render_friend(cx: Scope<FriendProps>) -> Element {
             UserImage {
                 platform: cx.props.friend.platform().into(),
                 status: cx.props.friend.identity_status().into(),
-                image: cx.props.friend.profile_picture()
+                image: cx.props.friend.profile_picture(),
                 on_press: move |_| {
                     update_fn();
                 },

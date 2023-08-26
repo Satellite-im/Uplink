@@ -61,6 +61,8 @@ use self::storage::Storage;
 use self::ui::{Font, Layout};
 use self::utils::get_available_themes;
 
+pub const MAX_PINNED_MESSAGES: usize = 100;
+
 // todo: create an Identity cache and only store UUID in state.friends and state.chats
 // store the following information in the cache: key: DID, value: { Identity, HashSet<UUID of conversations this identity is participating in> }
 // the HashSet would be used to determine when to evict an identity. (they are not participating in any conversations and are not a friend)
@@ -491,7 +493,14 @@ impl State {
                         .iter_mut()
                         .find(|msg| msg.inner.id() == message.inner.id())
                     {
-                        *msg = message;
+                        *msg = message.clone();
+                    }
+                    if let Some(msg) = chat
+                        .pinned_messages
+                        .iter_mut()
+                        .find(|m| m.id() == message.inner.id())
+                    {
+                        *msg = message.inner;
                     }
                 }
             }
@@ -518,6 +527,7 @@ impl State {
                         }
                     }
                     chat.messages.retain(|msg| msg.inner.id() != message_id);
+                    chat.pinned_messages.retain(|msg| msg.id() != message_id);
                 }
 
                 if should_decrement_notifications {
@@ -527,11 +537,17 @@ impl State {
                     ));
                 }
             }
+            MessageEvent::MessagePinned { message } => {
+                self.pin_message(message);
+            }
+            MessageEvent::MessageUnpinned { message } => {
+                self.unpin_message(message);
+            }
             MessageEvent::MessageReactionAdded { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::MessageReactionRemoved { message } => {
-                self.update_message(message);
+                self.update_reactions(message);
             }
             MessageEvent::TypingIndicator {
                 conversation_id,
@@ -741,6 +757,7 @@ impl State {
                 conv.has_more_messages = chat.has_more_messages;
                 conv.conversation_name = chat.conversation_name;
                 conv.creator = chat.creator;
+                conv.pinned_messages = chat.pinned_messages;
             } else {
                 self.chats.all.insert(id, chat);
             }
@@ -946,6 +963,21 @@ impl State {
         }
     }
 
+    /// Enqueues a message scroll action that gets executed when message component updates
+    pub fn enqueue_message_scroll(&mut self, conversation_id: &Uuid, message_id: Uuid) {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            chat.scroll_to = Some(message_id);
+        }
+    }
+
+    /// Obtains a potential message to scroll to resetting the value in the process
+    pub fn check_message_scroll(&mut self, conversation_id: &Uuid) -> Option<Uuid> {
+        if let Some(chat) = self.chats.all.get_mut(conversation_id) {
+            return chat.scroll_to.take();
+        }
+        None
+    }
+
     /// Check if given chat is favorite on `State` struct.
     ///
     /// # Arguments
@@ -955,7 +987,75 @@ impl State {
         self.chats.favorites.contains(&chat.id)
     }
 
-    pub fn update_message(&mut self, mut message: warp::raygun::Message) {
+    pub fn reached_max_pinned(&self, chat: &Uuid) -> bool {
+        let conv = match self.chats.all.get(chat) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return true;
+            }
+        };
+        conv.pinned_messages.len() >= MAX_PINNED_MESSAGES
+    }
+
+    pub fn message_exist(&self, message: &warp::raygun::Message) -> bool {
+        let conv = match self.chats.all.get(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to get nonexistent conversation");
+                return false;
+            }
+        };
+        conv.messages.iter().any(|m| m.inner.id() == message.id())
+    }
+
+    fn pin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.push(message);
+        conv.pinned_messages
+            .sort_by_key(|r| std::cmp::Reverse(r.date()));
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(true);
+        }
+    }
+
+    fn unpin_message(&mut self, message: warp::raygun::Message) {
+        let message_id = message.id();
+        let conv = match self.chats.all.get_mut(&message.conversation_id()) {
+            Some(c) => c,
+            None => {
+                log::warn!("attempted to update message in nonexistent conversation");
+                return;
+            }
+        };
+
+        conv.pinned_messages.retain(|x| x.id() != message_id);
+
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
+            msg.inner.set_pinned(false);
+        }
+    }
+
+    // this is used for adding/removing reactions.
+    // if pinned messages ever need to display a reaction, additional code may be needed here.
+    pub fn update_reactions(&mut self, mut message: warp::raygun::Message) {
         let conv = match self.chats.all.get_mut(&message.conversation_id()) {
             Some(c) => c,
             None => {
@@ -964,10 +1064,11 @@ impl State {
             }
         };
         let message_id = message.id();
-        for msg in &mut conv.messages {
-            if msg.inner.id() != message_id {
-                continue;
-            }
+        if let Some(msg) = conv
+            .messages
+            .iter_mut()
+            .find(|m| m.inner.id() == message_id)
+        {
             let mut reactions: Vec<Reaction> = Vec::new();
             for mut reaction in message.reactions() {
                 let users_not_duplicated: HashSet<DID> =
@@ -976,11 +1077,10 @@ impl State {
                 reactions.insert(0, reaction);
             }
             message.set_reactions(reactions);
-            msg.inner = message;
-            return;
+            msg.inner = message.clone();
+        } else {
+            log::warn!("attempted to update a message which wasn't found");
         }
-
-        log::warn!("attempted to update a message which wasn't found");
     }
 
     /// Remove a chat from the sidebar on `State` struct.
@@ -1361,8 +1461,12 @@ impl State {
         self.ui.cached_username = Some(identity.username());
         self.identities.insert(identity.did_key(), identity);
     }
-    pub fn search_identities(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
-        self.identities
+    pub fn search_identities(
+        &self,
+        name_prefix: &str,
+    ) -> (Vec<identity_search_result::Entry>, Vec<Identity>) {
+        let entries = self
+            .identities
             .values()
             .filter(|id| {
                 let un = id.username();
@@ -1374,10 +1478,30 @@ impl State {
             })
             .filter(|id| id.did_key() != self.did_key())
             .map(|id| identity_search_result::Entry::from_identity(id.username(), id.did_key()))
-            .collect()
+            .collect();
+
+        let identities = self
+            .identities
+            .values()
+            .filter(|id| {
+                let un = id.username();
+                if un.len() < name_prefix.len() {
+                    false
+                } else {
+                    un[..name_prefix.len()].eq_ignore_ascii_case(name_prefix)
+                }
+            })
+            .filter(|f| f.did_key() != self.did_key())
+            .cloned()
+            .collect();
+
+        (entries, identities)
     }
     // lets the user search for a group chat by chat name or, if a chat is not named, by the names of its participants
-    pub fn search_group_chats(&self, name_prefix: &str) -> Vec<identity_search_result::Entry> {
+    pub fn search_group_chats(
+        &self,
+        name_prefix: &str,
+    ) -> (Vec<identity_search_result::Entry>, Vec<Chat>) {
         let get_display_name = |chat: &Chat| -> String {
             let names: Vec<_> = chat
                 .participants
@@ -1397,7 +1521,8 @@ impl State {
             }
         };
 
-        self.chats
+        let chats_entries = self
+            .chats
             .all
             .iter()
             .filter(|(_, v)| v.conversation_type == ConversationType::Group)
@@ -1425,7 +1550,32 @@ impl State {
                     identity_search_result::Entry::from_chat(name, *k)
                 }
             })
-            .collect()
+            .collect();
+
+        let chats: Vec<Chat> = self
+            .chats
+            .all
+            .iter()
+            .filter(|(_, v)| v.conversation_type == ConversationType::Group)
+            .filter(|(_k, v)| {
+                let names: Vec<_> = v
+                    .participants
+                    .iter()
+                    .filter_map(|id| self.identities.get(id))
+                    .map(|x| x.username())
+                    .collect();
+
+                let user_name_match = names.iter().any(|n| compare_str(n));
+                let group_name_match = match v.conversation_name.as_ref() {
+                    Some(n) => compare_str(n),
+                    None => false,
+                };
+
+                user_name_match || group_name_match
+            })
+            .map(|(_, v)| v.clone())
+            .collect();
+        (chats_entries, chats)
     }
     pub fn update_identity(&mut self, id: DID, ident: identity::Identity) {
         if let Some(friend) = self.identities.get_mut(&id) {

@@ -1,4 +1,3 @@
-use common::state::State;
 use dioxus::prelude::*;
 use kit::components::{
     channel::{Channel, ChannelType},
@@ -7,16 +6,31 @@ use kit::components::{
 
 #[allow(non_snake_case)]
 pub fn SidebarInner(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-
     let mut channel_groups = Vec::new();
     channel_groups.push(ChannelGroup {
         name: "Group One".into(),
-        channels: vec![Channel {
-            id: "1".into(),
-            name: "General".into(),
-            kind: ChannelType::Text,
-        }],
+        channels: vec![
+            Channel {
+                id: "1".into(),
+                name: "General".into(),
+                kind: ChannelType::Text,
+            },
+            Channel {
+                id: "2".into(),
+                name: "Robot Vomit".into(),
+                kind: ChannelType::Robot,
+            },
+            Channel {
+                id: "3".into(),
+                name: "Announcements".into(),
+                kind: ChannelType::Announcements,
+            },
+            Channel {
+                id: "8".into(),
+                name: "Shared Folder".into(),
+                kind: ChannelType::SharedFolder,
+            },
+        ],
     });
 
     channel_groups.push(ChannelGroup {
@@ -28,12 +42,12 @@ pub fn SidebarInner(cx: Scope) -> Element {
                 kind: ChannelType::Text,
             },
             Channel {
-                id: "2".into(),
+                id: "5".into(),
                 name: "Off Topic".into(),
                 kind: ChannelType::Text,
             },
             Channel {
-                id: "3".into(),
+                id: "6".into(),
                 name: "Pic Dump".into(),
                 kind: ChannelType::Text,
             },

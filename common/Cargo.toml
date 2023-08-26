@@ -35,7 +35,7 @@ walkdir = { workspace = true }
 extensions = { workspace = true }
 
 futures = { workspace = true }
-# do we really want to pull in all of tokio? 
+# do we really want to pull in all of tokio?
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 
@@ -47,12 +47,9 @@ warp-blink-wrtc = { workspace = true }
 
 
 dioxus = { workspace = true }
-dioxus-desktop = { workspace = true, features = [
-    "transparent",
-] }
+dioxus-desktop = { workspace = true, features = ["transparent"] }
 derive_more = { workspace = true }
 either = { workspace = true }
-wry = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.24.1"

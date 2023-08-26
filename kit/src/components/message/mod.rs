@@ -12,6 +12,8 @@ use warp::{
     logging::tracing::log,
 };
 
+use common::icons::outline::Shape as Icon;
+
 use crate::{components::embeds::file_embed::FileEmbed, elements::textarea};
 
 use super::embeds::link_embed::EmbedLinks;
@@ -85,6 +87,8 @@ pub struct Props<'a> {
 
     // Progress for attachments which are being uploaded
     attachments_pending_uploads: Option<Vec<Progression>>,
+
+    pinned: bool,
 }
 
 fn wrap_links_with_a_tags(text: &str) -> String {
@@ -170,6 +174,21 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let formatted_text_clone = formatted_text.clone();
 
     cx.render(rsx! (
+        cx.props.pinned.then(|| {
+            rsx!(div {
+                class: "pin-indicator",
+                common::icons::Icon {
+                    ..common::icons::IconProps {
+                        class: None,
+                        size: 14,
+                        fill:"currentColor",
+                        icon: Icon::Pin,
+                        disabled: false,
+                        disabled_fill: "#9CA3AF"
+                    },
+                },
+            })
+        }),
         div {
             class: {
                 format_args!(
@@ -285,6 +304,60 @@ struct EditProps<'a> {
     on_enter: EventHandler<'a, String>,
 }
 
+fn replace_tags(s: &str) -> String {
+    let mut result = String::new();
+    let mut inside_strong = false;
+    let mut inside_em = false;
+
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '_' {
+            if let Some(&next) = chars.peek() {
+                if next == '_' {
+                    if inside_strong {
+                        result.push_str("</strong>");
+                    } else {
+                        result.push_str("<strong>");
+                    }
+                    inside_strong = !inside_strong;
+                    chars.next(); // Consume the second underscore
+                } else {
+                    result.push(c);
+                }
+            } else {
+                result.push(c);
+            }
+        } else if c == '*' {
+            if let Some(&next) = chars.peek() {
+                if next == '*' {
+                    if inside_em {
+                        result.push_str("</em>");
+                    } else {
+                        result.push_str("<em>");
+                    }
+                    inside_em = !inside_em;
+                    chars.next(); // Consume the second asterisk
+                } else {
+                    result.push(c);
+                }
+            } else {
+                result.push(c);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+
+    result
+}
+
+fn restore_tags(s: &str) -> String {
+    s.replace("<strong>", "__")
+        .replace("</strong>", "__")
+        .replace("<em>", "*")
+        .replace("</em>", "*")
+}
+
 #[allow(non_snake_case)]
 fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     log::trace!("rendering EditMsg");
@@ -293,6 +366,12 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
     if input.ends_with('\n') {
         input.truncate(length - 1);
     }
+    if input.starts_with("<p>") {
+        if let Some(remainder) = input.strip_prefix("<p>") {
+            input = remainder.to_string();
+        }
+    }
+    input = restore_tags(&input);
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
@@ -301,7 +380,8 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
         onchange: move |_| {},
         onreturn: move |(s, is_valid, _): (String, bool, _)| {
             if is_valid && !s.is_empty() {
-                cx.props.on_enter.call(s);
+                let new_replacement = replace_tags(&s);
+                cx.props.on_enter.call(new_replacement);
             } else {
                 cx.props.on_enter.call(cx.props.text.clone());
             }
@@ -310,14 +390,14 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 }
 
 #[derive(Props, PartialEq)]
-struct ChatMessageProps {
+pub struct ChatMessageProps {
     text: String,
     remote: bool,
     pending: bool,
 }
 
 #[allow(non_snake_case)]
-fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
+pub fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
     let finder = LinkFinder::new();
     let links: Vec<String> = finder
         .spans(&cx.props.text)
@@ -361,9 +441,10 @@ fn ChatText(cx: Scope<ChatMessageProps>) -> Element {
             },
             links.first().and_then(|l| cx.render(rsx!(
                 EmbedLinks {
-                link: l.to_string()
-                remote: cx.props.remote
-            })))
+                    link: l.to_string(),
+                    remote: cx.props.remote
+                })
+            ))
         }
     ))
 }

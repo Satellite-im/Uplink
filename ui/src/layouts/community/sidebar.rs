@@ -2,23 +2,22 @@ use common::icons::outline::Shape as Icon;
 use common::state::Action;
 use common::state::State;
 use dioxus::prelude::*;
-use dioxus_router::*;
 use kit::elements::input::Input;
 use kit::elements::input::Options;
-use kit::{components::nav::Nav, layout::sidebar::Sidebar as ReusableSidebar};
+use kit::elements::tooltip::ArrowPosition;
+use kit::layout::sidebar::Sidebar as ReusableSidebar;
 
-use crate::components::chat::RouteInfo;
 use crate::components::community::sidebar::SidebarInner;
+use crate::UplinkRoute;
 
 #[derive(PartialEq, Props)]
 pub struct Props {
-    route_info: RouteInfo,
+    pub active: UplinkRoute,
 }
 
 #[allow(non_snake_case)]
 pub fn Sidebar(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let router: &std::rc::Rc<RouterService> = use_router(cx);
 
     cx.render(rsx!(ReusableSidebar {
         hidden: state.read().ui.sidebar_hidden,
@@ -37,19 +36,20 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
                 }
             }
         )),
-        with_nav: cx.render(rsx!(Nav {
-            routes: cx.props.route_info.routes.clone(),
-            active: cx.props.route_info.active.clone(),
-            onnavigate: move |r| {
-                if state.read().configuration.audiovideo.interface_sounds {
-                    common::sounds::Play(common::sounds::Sounds::Interaction);
-                }
-                if state.read().ui.is_minimal_view() {
-                    state.write().mutate(Action::SidebarHidden(true));
-                }
-                router.replace_route(r, None, None);
-            }
-        })),
+        with_nav: cx.render(rsx!(
+            crate::AppNav {
+                active: cx.props.active.clone(),
+                tooltip_direction: ArrowPosition::Left,
+                onnavigate: move |_| {
+                    if state.read().configuration.audiovideo.interface_sounds {
+                        common::sounds::Play(common::sounds::Sounds::Interaction);
+                    }
+                    if state.read().ui.is_minimal_view() {
+                        state.write().mutate(Action::SidebarHidden(true));
+                    }
+                },
+            },
+        )),
         SidebarInner {}
     }))
 }
