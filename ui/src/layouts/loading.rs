@@ -1,21 +1,37 @@
-use common::{get_images_dir, state::State};
+use common::state::State;
 use dioxus::prelude::*;
-use dioxus_desktop::{use_window, LogicalSize};
-use dioxus_router::use_router;
-use futures::channel::oneshot;
-use wry::application::dpi::LogicalPosition;
+use dioxus_desktop::wry::application::dpi::LogicalPosition;
+use dioxus_desktop::LogicalSize;
 
-use crate::{utils::unzip_prism_langs, UPLINK_ROUTES};
+pub fn LoadingWash(cx: Scope) -> Element {
+    let img_path = cx.use_hook(|| {
+        common::get_images_dir()
+            .unwrap_or_default()
+            .join("uplink.gif")
+            .to_string_lossy()
+            .to_string()
+    });
 
-#[allow(non_snake_case)]
-pub fn LoadingLayout(cx: Scope) -> Element {
-    let state = use_shared_state::<State>(cx)?;
-    let router = use_router(cx);
-    let desktop = use_window(cx);
+    render! {
+        img {
+            style: "width: 100%",
+            src: "{img_path}"
+        }
+    }
+}
 
-    let desktop_resized = use_future(cx, (), |_| {
+pub fn use_loaded_assets(cx: &ScopeState) -> &UseFuture<Result<(), tokio::task::JoinError>> {
+    let desktop = dioxus_desktop::use_window(cx);
+    let state = use_shared_state::<State>(cx).unwrap();
+
+    use_future(cx, (), |_| {
         to_owned![desktop, state];
         async move {
+            let res = tokio::task::spawn_blocking(|| {
+                crate::utils::unzip_prism_langs();
+            })
+            .await;
+
             // Here we set the size larger, and bump up the min size in preparation for rendering the main app.
             if state.read().ui.window_maximized {
                 desktop.set_outer_position(LogicalPosition::new(0, 0));
@@ -24,26 +40,8 @@ pub fn LoadingLayout(cx: Scope) -> Element {
                 desktop.set_inner_size(LogicalSize::new(950.0, 600.0));
             }
             desktop.set_min_inner_size(Some(LogicalSize::new(300.0, 500.0)));
+
+            res
         }
-    });
-
-    let fut = use_future(cx, (), |_| async move {
-        let (tx, rx) = oneshot::channel::<()>();
-        std::thread::spawn(|| {
-            unzip_prism_langs();
-            let _ = tx.send(());
-        });
-        let _ = rx.await;
-    });
-
-    if fut.value().is_some() && desktop_resized.value().is_some() && state.read().initialized {
-        router.replace_route(UPLINK_ROUTES.chat, None, None);
-    }
-
-    let img_path = get_images_dir().unwrap_or_default().join("uplink.gif");
-    let img_path = img_path.to_string_lossy().to_string();
-    cx.render(rsx!(img {
-        style: "width: 100%",
-        src: "{img_path}"
-    }))
+    })
 }

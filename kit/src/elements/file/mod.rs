@@ -147,7 +147,7 @@ pub fn File<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                         ..Validation::default()
                                     }),
                                     ..Options::default()
-                                }
+                                },
                                 // todo: use is_valid
                                 onreturn: move |(s, is_valid, key_code)| {
                                     if is_valid || key_code == Code::Escape  {
