@@ -1,4 +1,5 @@
 use crate::elements::button::Button;
+use crate::elements::label::Label;
 use crate::elements::Appearance;
 use common::icons::outline::Shape as Icon;
 
@@ -7,6 +8,7 @@ use dioxus::prelude::*;
 #[derive(Props)]
 pub struct Props<'a> {
     open: bool,
+    with_title: Option<String>,
     transparent: bool,
     children: Element<'a>,
     onclose: EventHandler<'a, ()>,
@@ -16,6 +18,7 @@ pub struct Props<'a> {
 #[allow(non_snake_case)]
 pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     let transparent_class = cx.props.transparent.then(|| "transparent").unwrap_or("");
+    let title = cx.props.with_title.clone().unwrap_or_default();
 
     cx.render(rsx!(cx.props.open.then(|| rsx!(
         div {
@@ -34,6 +37,11 @@ pub fn Modal<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             )),
             div {
                 class: "modal {cx.props.class.unwrap_or_default()}",
+                cx.props.with_title.is_some().then(|| rsx!(
+                    Label {
+                        text: title,
+                    }
+                )),
                 &cx.props.children
             }
         },

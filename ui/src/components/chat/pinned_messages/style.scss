@@ -10,14 +10,15 @@
     max-height: 300px;
     overflow-y: auto;
     flex: 1;
-    padding: var(--gap);
     gap: var(--gap);
+    min-width: var(--width-sidebar);
 }
 
 .full-flex {
     width: 100%;
     display: inline-flex;
     align-items: center;
+    gap: var(--gap);
 }
 .pinned-empty {
     width: 100%; 

@@ -492,6 +492,7 @@ pub fn Sidebar(cx: Scope) -> Element {
                         Modal {
                             class: "create-group-modal",
                             open: *show_create_group.clone(),
+                            with_title: get_local_text("messages.create-group-chat"),
                             transparent: true,
                             onclose: move |_| {
                                 show_create_group.set(false);
