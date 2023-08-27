@@ -38,6 +38,10 @@
         right: var(--gap-less);
         display: inline-flex;
         flex-direction: column;
+
+        label:first-of-type  {
+          margin-bottom: var(--gap);
+        }
       }
     }
 }

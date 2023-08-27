@@ -25,7 +25,7 @@ pub fn Sidebar(cx: Scope<Props>) -> Element {
             div {
                 class: "search-input",
                 Input {
-                    placeholder: "Search Community".into(),
+                    placeholder: "The Uplink Community".into(),
                     aria_label: "settings-search-input".into(),
                     icon: Icon::MagnifyingGlass,
                     disabled: true,

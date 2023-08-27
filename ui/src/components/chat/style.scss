@@ -9,9 +9,6 @@
   flex-direction: column;
   gap: var(--gap);
   padding-right: var(--gap);
-  label {
-    align-self: center;
-  }
   /* overflow scroll adds padding that disrupt the grab handle resizer.
 	   this keeps functionality but hides scroller.
 	*/
@@ -25,6 +22,9 @@
     display: inline-flex;
     justify-content: space-between;
 
+    label {
+      align-self: center;
+    }
     .btn {
       height: var(--height-input-less);
       width: var(--height-input-less);
@@ -123,7 +123,8 @@
     width: 100%;
     border-bottom: none;
     padding: unset;
-    }
+    height: fit-content;
+  }
 
   ::-webkit-scrollbar-track {
     background: var(--secondary-dark);
@@ -524,7 +525,8 @@
 }
 
 #profile-name {
-  max-width: 240px;
+  max-width: 100%;
+  margin-left: var(--padding);
 
   p {
     width: 100%;
@@ -532,16 +534,27 @@
     text-overflow: ellipsis;
     display: block;
     overflow: hidden;
+    font-size: var(--text-size-more);
+  }
+}
+
+.profile-context-items {
+  margin: var(--padding-less);
+  display: inline-flex;
+  gap: var(--gap);
+  flex-direction: column;
+
+  .context-item {
+    width: 100%;
+    
   }
 }
 
 #profile-status {
   word-break: break-word;
-  max-width: 240px;
-  hr {
-    border-bottom: 5px solid;
-    visibility: hidden;
-  }
+  max-width: 100%;
+  margin-left: var(--padding);
+  margin-bottom: var(--padding);
 }
 
 .bold {
