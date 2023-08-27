@@ -19,13 +19,14 @@ pub enum ChannelCommand {
     ScrollToUnloaded(Uuid, Uuid, DateTime<Utc>),
 }
 
-#[derive(Props, Eq, PartialEq)]
-pub struct Props {
+#[derive(Props)]
+pub struct Props<'a> {
     active_chat: Chat,
+    onclose: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
-pub fn PinnedMessages(cx: Scope<Props>) -> Element {
+pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
     log::trace!("rendering pinned_messages");
     let chat = &cx.props.active_chat;
     let state = use_shared_state::<State>(cx)?;
@@ -89,24 +90,9 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
             }
         }
     });
-
-    let script = include_str!("./script.js");
-    let eval = use_eval(cx);
-    use_effect(cx, (), |_| {
-        to_owned![eval];
-        async move {
-            let _ = eval(script);
-        }
-    });
-
     cx.render(rsx!(div {
         id: "pinned-messages-container",
-        class: "hidden",
         aria_label: "pinned-messages-label",
-        div {
-            class: "pinned-header",
-            get_local_text("messages.pin-view")
-        }
         div {
             class: "pinned-messages",
             if chat.pinned_messages.is_empty() {
@@ -127,6 +113,9 @@ pub fn PinnedMessages(cx: Scope<Props>) -> Element {
                             let conv = &msg.conversation_id();
                             ch.send(ChannelCommand::RemovePinnedMessage(*conv, msg.id()))
                         },
+                        onclose: move |_| {
+                            cx.props.onclose.call(());
+                        },
                         time: time,
                         is_loaded: state.read().message_exist(message),
                         ch: ch.clone()
@@ -146,6 +135,7 @@ pub struct PinnedMessageProp<'a> {
     time: String,
     is_loaded: bool,
     ch: Coroutine<ChannelCommand>,
+    onclose: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
@@ -193,7 +183,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         class: "pinned-sender-container",
                         cx.props.sender.as_ref().map(|sender| {
                             rsx!(div {
-                                display: "inline-flex",
+                                class: "full-flex",
                                 p {
                                     class: "pinned-sender",
                                     sender.username()
@@ -203,10 +193,12 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                     button {
                                         class: "pinned-buttons",
                                         onclick: move |_| {
+                                            cx.props.onclose.call(());
+                                            
                                             if cx.props.is_loaded {
                                                 let _ = eval(&include_str!("../scroll_to_message.js").replace("$UUID", &id.to_string()));
                                             } else {
-                                                cx.props.ch.send(ChannelCommand::ScrollToUnloaded(chat_id, id, date))
+                                                cx.props.ch.send(ChannelCommand::ScrollToUnloaded(chat_id, id, date));
                                             }
                                         },
                                         get_local_text("messages.pin-button-goto")

@@ -16,7 +16,6 @@
   width: 95%;
   margin-left: var(--gap);
   color: var(--text-color);
-  padding: var(--padding-less);
   align-content: center;
   align-self: flex-end;
 
@@ -65,7 +64,7 @@
   }
 }
 .file-embed:hover {
-  background-color: var(--background-light);
+  cursor: pointer;
 }
 
 .icon {

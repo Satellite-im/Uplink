@@ -784,6 +784,7 @@ pub fn get_download_modal<'a>(
     cx.render(rsx!(Modal {
         onclose: move |_| on_dismiss.call(()),
         open: true,
+        transparent: false,
         children: cx.render(rsx!(
             div {
             class: "download-modal disp-flex col",
