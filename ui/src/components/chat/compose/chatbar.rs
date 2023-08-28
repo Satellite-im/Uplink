@@ -8,11 +8,11 @@ use common::{
     language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH, MAX_FILES_PER_MESSAGE,
+    MAX_FILES_PER_MESSAGE, STATIC_ARGS, WARP_CMD_CH,
 };
-use kit::layout::modal::Modal;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
+use kit::layout::modal::Modal;
 use kit::{
     components::{
         embeds::file_embed::FileEmbed,
@@ -36,12 +36,13 @@ use crate::{
     components::{
         chat::compose::context_file_location::FileLocationContext, paste_files_with_shortcut,
     },
+    layouts::storage::FilesLayout,
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
             check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
         },
-    }, layouts::storage::FilesLayout,
+    },
 };
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
@@ -79,7 +80,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
     let update_script = use_state(cx, String::new);
     let upload_button_menu_uuid = &*cx.use_hook(|| Uuid::new_v4().to_string());
     let show_storage_modal = use_state(cx, || false);
-
 
     let update_send = move || {
         let valid = state.read().active_chat_has_draft()
@@ -494,7 +494,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 .replace("$PAGE_X", &mouse_data.page_coordinates().x.to_string())
                                 .replace("$PAGE_Y", &mouse_data.page_coordinates().y.to_string());
                             update_script.set(script);
-                           
                         },
                         tooltip: cx.render(rsx!(
                             Tooltip {
@@ -508,7 +507,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         update_script: update_script,
                         on_press_storage: move |_| {
                             show_storage_modal.set(true);
-                           
                         },
                         on_press_local_disk: move |_| {
                             if disabled {
@@ -542,7 +540,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                         chat_id: chat_id,
                                     }
                                 }
-                                
                             }
                         )
                     }

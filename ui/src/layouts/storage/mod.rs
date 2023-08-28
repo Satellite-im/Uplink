@@ -4,7 +4,6 @@ use std::rc::Rc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
-use common::MAX_FILES_PER_MESSAGE;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_args_builder};
@@ -14,6 +13,7 @@ use common::upload_file_channel::{
     UploadFileAction, CANCEL_FILE_UPLOADLISTENER, UPLOAD_FILE_LISTENER,
 };
 use common::warp_runner::thumbnail_to_base64;
+use common::MAX_FILES_PER_MESSAGE;
 use dioxus::{html::input_data::keyboard_types::Code, prelude::*};
 use dioxus_desktop::use_window;
 use dioxus_router::prelude::use_navigator;
@@ -100,12 +100,14 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
     let files_selected_to_send: &UseRef<Vec<String>> = use_ref(cx, Vec::new);
-    let current_dir_path = storage_controller.read().dirs_opened_ref
+    let current_dir_path = storage_controller
+        .read()
+        .dirs_opened_ref
         .iter()
         .filter(|dir| dir.name() != ROOT_DIR_NAME)
-        .map(|dir| dir.name()).collect::<Vec<_>>()
+        .map(|dir| dir.name())
+        .collect::<Vec<_>>()
         .join("/");
-
 
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
@@ -149,7 +151,6 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
             upload_file_controller.clone(),
         );
     }
-
 
     let tx_cancel_file_upload = CANCEL_FILE_UPLOADLISTENER.tx.clone();
 
@@ -319,11 +320,11 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                 aria_label: "send_files_modal_send_button".into(),
                                 appearance: Appearance::Success,
                                 onpress: move |_| {
-                                    ch.send(ChanCmd::SendFileToChat { 
+                                    ch.send(ChanCmd::SendFileToChat {
                                         files_path: files_selected_to_send.read().clone()
                                         .into_iter()
                                         .map(PathBuf::from)
-                                        .collect(), 
+                                        .collect(),
                                         conversation_id: chat_id });
                                         select_files_to_send_mode.set(false);
                                 }
@@ -372,10 +373,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                     aria_label: "{folder_name_formatted}",
                                     "{folder_name_formatted}"
                                 }
-                                
                             },)
                         }
-                        
                     })
                 },
                 span {
