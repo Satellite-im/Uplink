@@ -81,22 +81,33 @@ pub enum ChanCmd {
 #[derive(PartialEq, Props)]
 pub struct Props {
     send_files_to_chat_mode: Option<UseState<bool>>,
+    chat_id: Option<Uuid>,
 }
 
 #[allow(non_snake_case)]
 pub fn FilesLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    state.write_silent().ui.current_layout = ui::Layout::Storage;
+    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode {
+        Some(_) => use_state(cx, || true),
+        None => use_state(cx, || false),
+    };
+    if !*select_files_to_send_mode.get() {
+        state.write_silent().ui.current_layout = ui::Layout::Storage;
+    }
+    let chat_id = cx.props.chat_id.unwrap_or_default().clone();
     let storage_controller = StorageController::new(cx, state);
     let upload_file_controller = UploadFileController::new(cx, state.clone());
     let window = use_window(cx);
     let files_in_queue_to_upload = upload_file_controller.files_in_queue_to_upload.clone();
     let files_been_uploaded = upload_file_controller.files_been_uploaded.clone();
-    let select_files_to_send_mode = match cx.props.send_files_to_chat_mode {
-        Some(_) => use_state(cx, || true),
-        None => use_state(cx, || false),
-    };
-    let files_selected_to_send: &UseRef<Vec<Uuid>> = use_ref(cx, Vec::new);
+    let files_selected_to_send: &UseRef<Vec<String>> = use_ref(cx, Vec::new);
+    let current_dir_path = storage_controller.read().dirs_opened_ref
+        .iter()
+        .filter(|dir| dir.name() != ROOT_DIR_NAME)
+        .map(|dir| dir.name()).collect::<Vec<_>>()
+        .join("/");
+
+
     let _router = use_navigator(cx);
     let eval: &UseEvalFn = use_eval(cx);
 
@@ -280,6 +291,27 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             }
                         }
                     })
+                } else {
+                    rsx! (div {
+                        background: "grey", 
+                        height: "100px",
+                        Button {
+                            text: "Send File(s)".into(),
+                            aria_label: "Send File(s)".into(),
+                            appearance: Appearance::Success,
+                            onpress: move |_| {
+                                ch.send(ChanCmd::SendFileToChat { 
+                                    files_path: files_selected_to_send.read().clone()
+                                    .into_iter()
+                                    .map(|s| PathBuf::from(s))
+                                    .collect(), 
+                                    conversation_id: chat_id });
+                            }
+                        },
+                        p {
+                            format!("File(s) selected: {:?}", files_selected_to_send.read()),
+                        }
+                    })
                 }
                 UploadProgressBar {
                     are_files_hovering_app: upload_file_controller.are_files_hovering_app,
@@ -438,6 +470,8 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             let file_name = file.name();
                             let file_name2 = file.name();
                             let file_name3 = file.name();
+                            let file_path = format!("{}/{}", current_dir_path, file_name3.clone());
+                            let file_path2 = format!("{}/{}", current_dir_path, file_name3.clone());
                             let file2 = file.clone();
                             let file3 = file.clone();
                             let key = file.id();
@@ -475,6 +509,28 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                             }
                                         },
                                     )),
+                                    if *select_files_to_send_mode.get() {
+                                        rsx!( div {
+                                            class: "checkbox-position",
+                                            Checkbox {
+                                                disabled: false,
+                                                width: "1em".into(),
+                                                height: "1em".into(),
+                                                is_checked: files_selected_to_send.read().contains(&file_path.clone()),
+                                                on_click: move |_| {
+                                                    if *select_files_to_send_mode.get() {
+                                                        let mut files_selected = files_selected_to_send.write();
+                                                        if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path.clone()) {
+                                                            files_selected.remove(index);
+                                                        } else {
+                                                            files_selected.push(file_path.clone());
+                                                        }
+                                                        return;
+                                                    }
+                                                }
+                                            }
+                                        },)
+                                    }
                                     File {
                                         key: "{key}-file",
                                         thumbnail: thumbnail_to_base64(file),
@@ -482,6 +538,15 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         aria_label: file.name(),
                                         with_rename: storage_controller.with(|i| i.is_renaming_map == Some(key)),
                                         onpress: move |_| {
+                                            if *select_files_to_send_mode.get() {
+                                                let mut files_selected = files_selected_to_send.write();
+                                                if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path2.clone()) {
+                                                    files_selected.remove(index);
+                                                } else {
+                                                    files_selected.push(file_path2.clone());
+                                                }
+                                                return;
+                                            }
                                             let key = file_id;
                                             if state.read().ui.file_previews.contains_key(&key) {
                                                 state
