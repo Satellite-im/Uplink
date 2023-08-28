@@ -4,22 +4,20 @@ use std::{
 };
 
 use common::{
-    icons::{self, Icon},
+    icons::{self},
     language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
     STATIC_ARGS, WARP_CMD_CH,
 };
-use common::icons::outline::Shape as Icon;
-use kit::{components::nav::Route as UIRoute, layout::modal::Modal};
+use kit::layout::modal::Modal;
 use dioxus::prelude::*;
 use futures::{channel::oneshot, StreamExt};
 use kit::{
     components::{
-        context_menu::{ContextItem, ContextMenu},
         embeds::file_embed::FileEmbed,
         indicator::{Platform, Status},
-        user_image::UserImage, nav::Route,
+        user_image::UserImage,
     },
     elements::{
         button::Button,
@@ -37,14 +35,14 @@ const MAX_FILES_PER_MESSAGE: usize = 8;
 
 use crate::{
     components::{
-        chat::{compose::context_file_location::FileLocationContext, RouteInfo}, paste_files_with_shortcut,
+        chat::compose::context_file_location::FileLocationContext, paste_files_with_shortcut,
     },
     utils::{
         build_user_from_identity,
         clipboard::clipboard_data::{
             check_if_there_is_file_or_string_in_clipboard, ClipboardDataType,
         },
-    }, layouts::storage::FilesLayout, UPLINK_ROUTES,
+    }, layouts::storage::FilesLayout,
 };
 
 type ChatInput = (Vec<String>, Uuid, Option<Uuid>, Option<Uuid>);
@@ -534,13 +532,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                         },
                     }
                     if *show_storage_modal.get() {
-                        let files_route = UIRoute {
-                            to: UPLINK_ROUTES.files,
-                            name: get_local_text("files.files"),
-                            icon: Icon::Folder,
-                            ..UIRoute::default()
-                        };
-                        let routes = vec![files_route.clone()];
                         rsx!(
                             Modal {
                                 open: *show_storage_modal.clone(),
@@ -555,10 +546,6 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                     width: "600px",
                                     FilesLayout {
                                         send_files_to_chat_mode: show_storage_modal.clone(),
-                                        route_info: RouteInfo {
-                                            routes: routes.clone(),
-                                            active: files_route,
-                                        }
                                     }
                                 }
                                 

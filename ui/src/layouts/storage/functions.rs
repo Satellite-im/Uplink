@@ -7,7 +7,9 @@ use common::{
     warp_runner::{ConstellationCmd, RayGunCmd, WarpCmd},
     WARP_CMD_CH,
 };
-use dioxus_core::Scoped;
+use dioxus_core::{ScopeState, Scoped};
+#[cfg(not(target_os = "macos"))]
+use dioxus_desktop::wry::webview::FileDropEvent;
 use dioxus_desktop::DesktopContext;
 use dioxus_hooks::{
     to_owned, use_coroutine, use_future, Coroutine, UnboundedReceiver, UseRef, UseSharedState,
@@ -60,10 +62,7 @@ pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanC
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn allow_drag_event_for_non_macos_systems(
-    cx: &Scoped<Props>,
-    are_files_hovering_app: &UseRef<bool>,
-) {
+pub fn allow_drag_event_for_non_macos_systems(cx: &Scoped, are_files_hovering_app: &UseRef<bool>) {
     use_future(cx, (), |_| {
         to_owned![are_files_hovering_app];
         async move {
@@ -126,7 +125,7 @@ pub fn format_item_size(item_size: usize) -> String {
 }
 
 pub fn init_coroutine<'a>(
-    cx: &'a Scoped<'a, Props>,
+    cx: &'a ScopeState,
     controller: &'a UseRef<StorageController>,
 ) -> &'a Coroutine<ChanCmd> {
     let ch = use_coroutine(cx, |mut rx: UnboundedReceiver<ChanCmd>| {
@@ -377,7 +376,7 @@ pub fn init_coroutine<'a>(
 /// and tries to upload a second file, then leaves and returns again,
 /// it was not possible to cancel that upload in the coroutine).
 pub fn start_upload_file_listener(
-    cx: &Scoped<Props>,
+    cx: &ScopeState,
     window: &DesktopContext,
     state: &UseSharedState<State>,
     controller: &UseRef<StorageController>,

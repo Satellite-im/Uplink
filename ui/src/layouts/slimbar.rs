@@ -1,4 +1,4 @@
-use crate::{components::chat::RouteInfo, utils::build_participants, UPLINK_ROUTES};
+use crate::{utils::build_participants, UplinkRoute};
 use common::icons::outline::Shape as Icon;
 
 use common::{
@@ -6,26 +6,25 @@ use common::{
     state::{Action, State},
 };
 use dioxus::prelude::*;
-use dioxus_router::*;
+use dioxus_router::prelude::*;
+use kit::elements::tooltip::ArrowPosition;
 use kit::{
     components::{
         context_menu::{ContextItem, ContextMenu},
-        nav::Nav,
         user_image_group::UserImageGroup,
     },
-    elements::tooltip::ArrowPosition,
     layout::slimbar::Slimbar,
 };
 
 #[derive(PartialEq, Props)]
 pub struct Props {
-    route_info: RouteInfo,
+    pub active: UplinkRoute,
 }
 
 #[allow(non_snake_case)]
 pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
     let state = use_shared_state::<State>(cx)?;
-    let router: &std::rc::Rc<RouterService> = use_router(cx);
+    let router = use_navigator(cx);
 
     let favorites = if state.read().initialized {
         state.read().chats_favorites()
@@ -71,9 +70,7 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                                                     state.write().mutate(Action::SidebarHidden(true));
                                                 }
                                                 state.write().mutate(Action::ChatWith(&favorites_chat.id, false));
-                                                if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                    router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                                }
+                                                router.replace(UplinkRoute::ChatLayout{});
                                             }
                                         },
                                         ContextItem {
@@ -95,9 +92,7 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
                                                 state.write().mutate(Action::SidebarHidden(true));
                                             }
                                             state.write().mutate(Action::ChatWith(&chat.id, false));
-                                            if cx.props.route_info.active.to != UPLINK_ROUTES.chat {
-                                                router.replace_route(UPLINK_ROUTES.chat, None, None);
-                                            }
+                                            router.replace(UplinkRoute::ChatLayout{});
                                         }
                                     }
                                 }
@@ -108,19 +103,17 @@ pub fn SlimbarLayout(cx: Scope<Props>) -> Element {
             )),
             navbar_visible: state.read().ui.sidebar_hidden,
             with_nav: cx.render(rsx!(
-                Nav {
-                    routes: cx.props.route_info.routes.clone(),
-                    active: cx.props.route_info.active.clone(),
+                crate::AppNav {
+                    active: cx.props.active.clone(),
                     tooltip_direction: ArrowPosition::Left,
-                    onnavigate: move |r| {
+                    onnavigate: move |_| {
                         if state.read().configuration.audiovideo.interface_sounds {
                             common::sounds::Play(common::sounds::Sounds::Interaction);
                         }
                         if state.read().ui.is_minimal_view() {
                             state.write().mutate(Action::SidebarHidden(true));
                         }
-                        router.replace_route(r, None, None);
-                    }
+                    },
                 },
             )),
         }

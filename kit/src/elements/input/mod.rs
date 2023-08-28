@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use common::language::get_local_text;
 use dioxus::prelude::*;
-use dioxus_desktop::use_eval;
 use dioxus_html::input_data::keyboard_types::Code;
 use uuid::Uuid;
 
@@ -364,7 +363,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
             to_owned![eval];
             async move {
                 if focus {
-                    eval(focus_script);
+                    let _ = eval(&focus_script);
                 }
             }
         },
@@ -431,7 +430,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                         };
                         emit(&cx, current_val, is_valid);
                     },
-                    // after a valid submission, don't keep the input box green. 
+                    // after a valid submission, don't keep the input box green.
                     onkeyup: move |evt| {
                         if evt.code() == Code::Enter || evt.code() == Code::NumpadEnter {
                             if cx.props.validate_on_return_with_val_empty && val.read().to_string().is_empty() {
@@ -471,7 +470,7 @@ pub fn Input<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
                                 error.set(validation_result);
                             }
                             // re-focus the input after clearing it
-                            eval(focus_script.clone());
+                            let _ = eval(&focus_script);
                             emit(&cx, String::new(), *valid.get());
                         },
                         IconElement {
