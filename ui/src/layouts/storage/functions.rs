@@ -306,30 +306,6 @@ pub fn init_coroutine<'a>(
                             }
                         }
                     }
-                    ChanCmd::DeleteItems(item) => {
-                        let (tx, rx) = oneshot::channel::<Result<Storage, warp::error::Error>>();
-
-                        if let Err(e) = warp_cmd_tx.send(WarpCmd::Constellation(
-                            ConstellationCmd::DeleteItems {
-                                item: item.clone(),
-                                rsp: tx,
-                            },
-                        )) {
-                            log::error!("failed to delete items {}, item {:?}", e, item.name());
-                            continue;
-                        }
-
-                        let rsp = rx.await.expect("command canceled");
-                        match rsp {
-                            Ok(storage) => {
-                                controller.with_mut(|i| i.storage_state = Some(storage));
-                            }
-                            Err(e) => {
-                                log::error!("failed to delete items {}, item {:?}", e, item.name());
-                                continue;
-                            }
-                        }
-                    }
                     ChanCmd::SendFileToChat {
                         files_path,
                         conversation_id,
