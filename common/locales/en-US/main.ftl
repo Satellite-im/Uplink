@@ -170,7 +170,7 @@ files = Files
     .error-to-upload = Error to upload
     .send-to-chat = Send to chat
     .send-files-text-amount = Send { $amount } File(s)
-    .files-selected-paths = Files Selected: { $files_path }
+    .files-selected-paths = File(s) Selected: { $files_path }
 
 settings = Settings
     .settings = Settings

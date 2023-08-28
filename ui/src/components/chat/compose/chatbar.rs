@@ -8,7 +8,7 @@ use common::{
     language::{get_local_text, get_local_text_args_builder},
     state::{Action, Identity, State},
     warp_runner::{RayGunCmd, WarpCmd},
-    STATIC_ARGS, WARP_CMD_CH,
+    STATIC_ARGS, WARP_CMD_CH, MAX_FILES_PER_MESSAGE,
 };
 use kit::layout::modal::Modal;
 use dioxus::prelude::*;
@@ -31,7 +31,6 @@ use uuid::Uuid;
 use warp::{crypto::DID, logging::tracing::log, raygun};
 
 const MAX_CHARS_LIMIT: usize = 1024;
-const MAX_FILES_PER_MESSAGE: usize = 8;
 
 use crate::{
     components::{
@@ -537,13 +536,7 @@ pub fn get_chatbar<'a>(cx: &'a Scoped<'a, super::ComposeProps>) -> Element<'a> {
                                 open: *show_storage_modal.clone(),
                                 onclose: move |_| show_storage_modal.set(false),
                                 div {
-                                    top: "40%", 
-                                    left: "40%",
-                                    border: "1px solid var(--primary)",
-                                    background_color: "var(--background)",
-                                    background: "var(--background)",
-                                    max_height: "90vh",
-                                    width: "80vw",
+                                    class: "modal-div-files-layout",
                                     FilesLayout {
                                         send_files_to_chat_mode: show_storage_modal.clone(),
                                         chat_id: chat_id.clone(),

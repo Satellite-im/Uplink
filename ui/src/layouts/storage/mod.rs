@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::time::Duration;
 use std::{ffi::OsStr, path::PathBuf};
 
+use common::MAX_FILES_PER_MESSAGE;
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
 use common::language::{get_local_text, get_local_text_args_builder};
@@ -309,7 +310,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             class: "send-files-button",
                             Button {
                                 text: get_local_text_args_builder("files.send-files-text-amount", |m| {
-                                    m.insert("amount", files_selected_to_send.read().len().into());
+                                    m.insert("amount", format!("{}/{}", files_selected_to_send.read().len(), MAX_FILES_PER_MESSAGE).into());
                                 }),
                                 aria_label: "send_files_modal_send_button".into(),
                                 appearance: Appearance::Success,
@@ -522,7 +523,7 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                         rsx!( div {
                                             class: "checkbox-position",
                                             Checkbox {
-                                                disabled: false,
+                                                disabled: files_selected_to_send.read().len() >= MAX_FILES_PER_MESSAGE,
                                                 width: "1em".into(),
                                                 height: "1em".into(),
                                                 is_checked: files_selected_to_send.read().contains(&file_path.clone()),
@@ -532,7 +533,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                         if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path.clone()) {
                                                             files_selected.remove(index);
                                                         } else {
-                                                            files_selected.push(file_path.clone());
+                                                            if files_selected.len() < MAX_FILES_PER_MESSAGE {
+                                                                files_selected.push(file_path.clone());
+                                                            }
                                                         }
                                                         return;
                                                     }
@@ -552,7 +555,9 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                                                 if let Some(index) = files_selected.iter().position(|path| path.clone() == file_path2.clone()) {
                                                     files_selected.remove(index);
                                                 } else {
-                                                    files_selected.push(file_path2.clone());
+                                                    if files_selected.len() < MAX_FILES_PER_MESSAGE {
+                                                        files_selected.push(file_path2.clone());
+                                                    }
                                                 }
                                                 return;
                                             }

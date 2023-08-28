@@ -131,6 +131,7 @@
   .files-list {
     display: flex;
     flex-wrap: wrap;
+    padding-left: 16px;
     width: 100%;
     gap: var(--gap);
   }
