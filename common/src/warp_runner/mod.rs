@@ -344,7 +344,7 @@ async fn warp_initialization(tesseract: Tesseract) -> Result<manager::Warp, warp
     log::debug!("warp initialization");
 
     let path = &STATIC_ARGS.warp_path;
-    let mut config = Config::production(path, STATIC_ARGS.experimental);
+    let mut config = Config::production(path);
     config.ipfs_setting.portmapping = true;
     config.ipfs_setting.agent_version = Some(format!("uplink/{}", env!("CARGO_PKG_VERSION")));
     config.store_setting.emit_online_event = true;
