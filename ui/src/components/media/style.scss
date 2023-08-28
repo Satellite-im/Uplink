@@ -229,7 +229,7 @@
         border: transparent;
         border-radius: 0;
         border-bottom: 1px solid var(--border-subtle-color);
-        background: transparent;
+        background: color-mix(in srgb, var(--secondary) 80%, transparent);
     }
 }
 
@@ -309,7 +309,7 @@
         border: transparent;
         border-radius: 0;
         border-bottom: 1px solid var(--border-subtle-color);
-        background: transparent;
+        background: color-mix(in srgb, var(--secondary) 80%, transparent);
         padding: var(--padding);
     }
 }
