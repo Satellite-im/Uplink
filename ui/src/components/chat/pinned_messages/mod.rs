@@ -95,9 +95,11 @@ pub fn PinnedMessages<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         aria_label: "pinned-messages-label",
         div {
             class: "pinned-messages",
+            aria_label: "pinned-messages-container",
             if chat.pinned_messages.is_empty() {
                 rsx!(div {
                     class: "pinned-empty",
+                    aria_label: "pinned-empty",
                     div {
                         get_local_text("messages.pinned-none")
                     }
@@ -167,6 +169,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
     cx.render(rsx!(
         div {
             class: "pinned-message-wrap",
+            aria_label: "pinned-message-wrap",
             cx.props.sender.as_ref().map(|sender| {
                 rsx!(UserImage {
                     image: sender.profile_picture(),
@@ -186,12 +189,15 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                 class: "full-flex",
                                 p {
                                     class: "pinned-sender",
+                                    aria_label: "pinned-sender",
                                     sender.username()
                                 },
                                 div {
                                     class: "pinned-button-container",
+                                    aria_label: "pinned-button-container",
                                     button {
                                         class: "pinned-buttons",
+                                        aria_label: "pin-button-go-to",
                                         onclick: move |_| {
                                             cx.props.onclose.call(());
                                             
@@ -205,6 +211,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                                     },
                                     button {
                                         class: "pinned-buttons",
+                                        aria_label: "pin-button-unpin",
                                         onclick: move |e| {
                                             cx.props.onremove.call((e, cx.props.message.clone()));
                                         },
@@ -215,6 +222,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                         }),
                         p {
                             class: "pinned-sender-time",
+                            aria_label: "pinned-time",
                             "{cx.props.time}"
                         }
                     }
@@ -228,6 +236,7 @@ pub fn PinnedMessage<'a>(cx: Scope<'a, PinnedMessageProp<'a>>) -> Element<'a> {
                     rsx!(
                         div {
                             class: "attachment-list",
+                            aria_label: "pinned-attachments",
                             attachment_list.map(|list| {
                                 rsx!(list)
                             })

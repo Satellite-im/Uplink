@@ -68,7 +68,6 @@ pub struct UplinkExtension {
     lib: libloading::Library,
     details: Details,
     stylesheet: String,
-    is_enabled: bool,
     rustc_version: &'static str,
     cargo_version: &'static str,
 }
@@ -87,7 +86,6 @@ impl UplinkExtension {
                 lib,
                 details,
                 stylesheet,
-                is_enabled: false,
                 rustc_version,
                 cargo_version,
             })
@@ -120,14 +118,6 @@ impl UplinkExtension {
 
     pub fn cargo_version(&self) -> &'static str {
         self.cargo_version
-    }
-
-    pub fn enabled(&self) -> bool {
-        self.is_enabled
-    }
-
-    pub fn set_enabled(&mut self, b: bool) {
-        self.is_enabled = b;
     }
 }
 

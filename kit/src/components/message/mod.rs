@@ -177,6 +177,7 @@ pub fn Message<'a>(cx: Scope<'a, Props<'a>>) -> Element<'a> {
         cx.props.pinned.then(|| {
             rsx!(div {
                 class: "pin-indicator",
+                aria_label: "pin-indicator",
                 common::icons::Icon {
                     ..common::icons::IconProps {
                         class: None,
@@ -375,6 +376,7 @@ fn EditMsg<'a>(cx: Scope<'a, EditProps<'a>>) -> Element<'a> {
 
     cx.render(rsx!(textarea::Input {
         id: cx.props.id.clone(),
+        aria_label: "edit-message-input".into(),
         ignore_focus: false,
         value: input,
         onchange: move |_| {},

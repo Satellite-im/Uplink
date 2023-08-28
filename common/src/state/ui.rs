@@ -5,7 +5,7 @@ use extensions::UplinkExtension;
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
-    collections::{hash_map, HashMap, HashSet},
+    collections::{hash_map, HashMap},
     rc::Weak,
 };
 use uuid::Uuid;
@@ -191,38 +191,44 @@ impl Default for UI {
 #[derive(Default, Deserialize, Serialize)]
 pub struct Extensions {
     #[serde(default)]
-    enabled: HashSet<String>,
+    enabled: HashMap<String, bool>,
     #[serde(skip)]
     map: HashMap<String, UplinkExtension>,
 }
 
 impl Extensions {
     pub fn enable(&mut self, name: String) {
-        self.enabled.insert(name.clone());
-        if let Some(ext) = self.map.get_mut(&name) {
-            ext.set_enabled(true)
+        if self.map.get_mut(&name).is_some() {
+            self.enabled.insert(name, true);
         }
     }
 
     pub fn disable(&mut self, name: String) {
-        self.enabled.remove(&name);
-        if let Some(ext) = self.map.get_mut(&name) {
-            ext.set_enabled(false)
+        if self.map.get_mut(&name).is_some() {
+            self.enabled.insert(name, false);
         }
     }
 
-    pub fn insert(&mut self, name: String, mut extension: UplinkExtension) {
-        extension.set_enabled(self.enabled.contains(&name));
+    pub fn insert(&mut self, name: String, extension: UplinkExtension, enabled: bool) {
+        if self.enabled.get(&name).is_none() {
+            self.enabled.insert(name.clone(), enabled);
+        }
         self.map.insert(name, extension);
     }
 
-    pub fn values(&self) -> hash_map::Values<String, UplinkExtension> {
-        self.map.values()
+    pub fn values(&self) -> impl Iterator<Item = (bool, &UplinkExtension)> {
+        self.map
+            .iter()
+            .map(|(id, ext)| (self.enabled_extension(id), ext))
+    }
+
+    pub fn ext(&self) -> hash_map::Keys<String, UplinkExtension> {
+        self.map.keys()
     }
 
     pub fn enabled_extension(&self, extension: &str) -> bool {
-        match self.map.get(extension) {
-            Some(ext) => ext.enabled(),
+        match self.enabled.get(extension) {
+            Some(enabled) => *enabled,
             None => false,
         }
     }
