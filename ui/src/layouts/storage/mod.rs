@@ -6,7 +6,7 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use common::icons::outline::Shape as Icon;
 use common::icons::Icon as IconElement;
-use common::language::get_local_text;
+use common::language::{get_local_text, get_local_text_args_builder};
 use common::state::ToastNotification;
 use common::state::{ui, Action, State};
 use common::upload_file_channel::{
@@ -304,16 +304,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                 }
                 if *select_files_to_send_mode.get() {
                     rsx! (div {
-                        background: "var(--secondary)", 
-                        justify_content: "center",
-                        align_items: "center",
-                        height: "60px",
+                        class: "send-files-top-stripe",
                         div {
-                            position: "relative",
-                            z_index: "2", 
-                            right: "16px",
+                            class: "send-files-button",
                             Button {
-                                text: format!("Send {} File(s)", files_selected_to_send.read().len()),
+                                text: get_local_text_args_builder("files.send-files-text-amount", |m| {
+                                    m.insert("amount", files_selected_to_send.read().len().into());
+                                }),
                                 aria_label: "send_files_modal_send_button".into(),
                                 appearance: Appearance::Success,
                                 onpress: move |_| {
@@ -328,13 +325,10 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
                             },
                         }
                         p {
-                            color: "var(--text-color)",
-                            padding_left: "8px",
-                            max_width:  "50vw",
-                            white_space: "nowrap",
-                            overflow: "hidden",
-                            text_overflow: "ellipsis",
-                            format!("File(s) selected: {:?}", files_selected_to_send.read()),
+                            class: "files-selected-text",
+                            get_local_text_args_builder("files.files-selected-paths", |m| {
+                                m.insert("files_path", files_selected_to_send.read().join(", ").into());
+                            })
                         }
                     })
                 }
