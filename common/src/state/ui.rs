@@ -198,19 +198,19 @@ pub struct Extensions {
 
 impl Extensions {
     pub fn enable(&mut self, name: String) {
-        if let Some(_) = self.map.get_mut(&name) {
+        if self.map.get_mut(&name).is_some() {
             self.enabled.insert(name, true);
         }
     }
 
     pub fn disable(&mut self, name: String) {
-        if let Some(_) = self.map.get_mut(&name) {
+        if self.map.get_mut(&name).is_some() {
             self.enabled.insert(name, false);
         }
     }
 
     pub fn insert(&mut self, name: String, extension: UplinkExtension, enabled: bool) {
-        if let None = self.enabled.get(&name) {
+        if self.enabled.get(&name).is_none() {
             self.enabled.insert(name.clone(), enabled);
         }
         self.map.insert(name, extension);
