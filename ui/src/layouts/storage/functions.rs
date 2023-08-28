@@ -62,7 +62,10 @@ pub fn get_items_from_current_directory(cx: &Scoped<Props>, ch: &Coroutine<ChanC
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn allow_drag_event_for_non_macos_systems(cx: &Scoped, are_files_hovering_app: &UseRef<bool>) {
+pub fn allow_drag_event_for_non_macos_systems(
+    cx: &Scoped<Props>,
+    are_files_hovering_app: &UseRef<bool>,
+) {
     use_future(cx, (), |_| {
         to_owned![are_files_hovering_app];
         async move {

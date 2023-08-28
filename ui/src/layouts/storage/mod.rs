@@ -144,13 +144,13 @@ pub fn FilesLayout(cx: Scope<Props>) -> Element {
     );
 
     functions::get_items_from_current_directory(cx, ch);
-    #[cfg(not(target_os = "macos"))]
-    functions::allow_drag_event_for_non_macos_systems(
-        cx,
-        upload_file_controller.are_files_hovering_app,
-    );
 
     if !*select_files_to_send_mode.get() {
+        #[cfg(not(target_os = "macos"))]
+        functions::allow_drag_event_for_non_macos_systems(
+            cx,
+            upload_file_controller.are_files_hovering_app,
+        );
         functions::start_upload_file_listener(
             cx,
             window,
